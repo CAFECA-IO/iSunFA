@@ -77,27 +77,12 @@ const SubscriptionsPageBody = ({
   const cancelSubscription = async () => {
     if (!teamForCancelSubscription) return;
     const teamId = teamForCancelSubscription.id;
-    const plan = teamForCancelSubscription.plan.toLowerCase();
-    // Info: (20250410 - Anna) Debug
-    // eslint-disable-next-line no-console
-    console.log('[取消訂閱] 發送 API 請求 : params', { teamId: String(teamId) });
-    // Info: (20250410 - Anna) Debug
-    // eslint-disable-next-line no-console
-    console.log('[取消訂閱] 發送 API 請求 : body', {
-      plan,
-      autoRenew: false,
-    });
+    const planId = teamForCancelSubscription.plan;
     const { success } = await updateSubscriptionAPI({
-      params: { teamId: String(teamId) },
-      body: {
-        plan,
-        autoRenew: false, // Info: (20250410 - Anna) 關閉自動續約即為取消訂閱
-      },
+      params: { teamId },
+      body: { plan: planId, autoRenewal: false }, // Info: (20250410 - Anna) 關閉自動續約即為取消訂閱
     });
     if (success) {
-      // Info: (20250410 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.log('[取消訂閱] API 成功回應');
       closeCancelSubscriptionModal();
       getUserOwnedTeams();
     }

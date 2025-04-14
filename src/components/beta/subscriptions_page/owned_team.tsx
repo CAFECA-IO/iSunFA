@@ -144,7 +144,7 @@ const OwnedTeam = ({
               )}
 
               {/* Info: (20250410 - Anna) 設計稿有改，「開啟自動續訂Toggle」先隱藏 */}
-              <div className="hidden">
+              <div className="">
                 <span className="text-lg font-semibold text-text-neutral-primary">
                   {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
                 </span>
