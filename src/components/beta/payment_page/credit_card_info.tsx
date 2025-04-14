@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import { PiSpinner } from 'react-icons/pi';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
@@ -12,6 +13,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -27,14 +29,13 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
   isHideSubscribeButton,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
   const { toastHandler } = useModalContext();
+  const router = useRouter();
 
   const [isSubscribeBtnDisabled, setIsSubscribeBtnDisabled] = useState(false);
 
@@ -106,6 +107,8 @@ const CreditCardInfo = ({
 
     // Info: (20250414 - Julian) 執行中，禁用訂閱按鈕
     setIsSubscribeBtnDisabled(true);
+    // Info: (20250414 - Julian) 取消阻止離開頁面
+    setIsDirty(false);
 
     try {
       const { success } = await updateSubscriptionAPI({
@@ -127,8 +130,8 @@ const CreditCardInfo = ({
           closeable: true,
         });
 
-        // Info: (20250414 - Julian) 如果更新訂閱成功，就不用顯示確認離開的 modal
-        setIsDirty(false);
+        // Info: (20250414 - Julian) 導引到訂閱管理首頁
+        router.push(ISUNFA_ROUTE.SUBSCRIPTIONS);
       } else {
         toastHandler({
           id: 'UPDATE_SUBSCRIPTION_FAILED',
