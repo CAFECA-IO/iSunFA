@@ -91,15 +91,15 @@
   },
   "HAPPY_CUSTOMER": {
     "MAIN_TITLE": "Trusted by Happy Customer",
-    "MESSAGE_1": "Uses AI to improve company decision-making quality",
-    "MESSAGE_2": "Continuous auditing to grasp critical growth data",
-    "MESSAGE_3": "Reduces the daily workload of audit teams",
-    "MESSAGE_4": "Focusing the finance team on corporate development planning",
-    "MESSAGE_5": "Aligns with multiple international accounting standards",
-    "MESSAGE_6": "Enables auditors to review company data at any time and take immediate action if issues are detected",
-    "MESSAGE_7": "Identify and resolve potential risks and problems more quickly to reduce the risks faced by the business",
-    "MESSAGE_8": "Complies with continuous auditing regulations in specific industries and jurisdictions",
-    "MESSAGE_9": "Demonstrate to investors the company's continuous attention and supervision of operations, and enhance corporate trust and transparency"
+    "MESSAGE_1": "I used to rely on Excel and handwritten reports, and just organizing monthly income and expenses meant staying up late. Now with iSunFA, my workload has been drastically reduced—it's a total game-changer.",
+    "MESSAGE_2": "Whether it's cash or a bank transfer, I just snap a photo of the receipt with my phone and it automatically logs and categorizes the transaction—even the client info gets saved. It’s incredibly convenient!",
+    "MESSAGE_3": "For me, managing finances has always been something I dread—too easy to make mistakes and too much hassle. But using iSunFA feels like having an extra accounting assistant. It gives me peace of mind and saves me a ton of time!",
+    "MESSAGE_4": "I only need to spend 10 minutes a week to understand how the clinic is doing—it's honestly like even a doctor can be an accountant with ease!",
+    "MESSAGE_5": "iSunFA allows us to spend more time acting as financial advisors, rather than constantly fixing other people’s books.",
+    "MESSAGE_6": "Tax season used to be a total disaster—I had to dig through piles of receipts. Now, with just one click, I can export all the reports, instantly see which projects made money and which ones burned through cash, and even file taxes directly!",
+    "MESSAGE_7": "I no longer have to wrestle with numbers in Excel every night after closing the shop!",
+    "MESSAGE_8": "I'm no longer constantly chased by accounting tasks—my quotes are more accurate, and I can finally take on more projects with peace of mind!",
+    "MESSAGE_9": "As an investor, my focus has never been solely on making investments, but rather on how to monitor them after the fact. With the continuous auditing feature, I can stay up-to-date on a company's operational performance in real time, allowing me to make faster, more informed decisions and adjustments."
   },
   "FOOTER": {
     "QUICK_LINKS": "Quick Links",

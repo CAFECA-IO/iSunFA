@@ -21,7 +21,10 @@
     "PAYMENT_FAILED": "付款失敗",
     "UPDATE_PAYMENT": "重新設定付款資訊",
     "RETURNING_TO_BEGINNER_IN": "",
-    "DAYS": " 天後恢復為基礎版方案"
+    "DAYS": " 天後恢復為基礎版方案",
+    "CANCEL_SUBSCRIPTION_TITLE": "取消訂閱",
+    "CANCEL_SUBSCRIPTION_MESSAGE": "您確定要取消<bold>{{planName}}</bold>訂閱嗎？ <br/><red>* 目前的方案會繼續生效至下次續訂日前，且本期的費用不予退還。</red>",
+    "YES_CANCEL_SUBSCRIPTION": "是的，取消我的方案"
   },
 
   "PLAN_NAME": {
