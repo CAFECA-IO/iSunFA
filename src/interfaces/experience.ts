@@ -19,6 +19,7 @@ export type IEducationDate = {
 };
 
 export interface IEducationExperience {
+  id: number;
   degree: Degree;
   schoolName: string;
   department: string;
@@ -27,17 +28,35 @@ export interface IEducationExperience {
   status: SchoolStatus;
 }
 
-export const dummyEducationExperience: IEducationExperience = {
-  degree: Degree.BACHELOR,
-  schoolName: 'National Taiwan University',
-  department: 'Computer Science and Information Engineering',
-  start: {
-    year: 2020,
-    month: 9,
+export const dummyEducationExperience: IEducationExperience[] = [
+  {
+    id: 1,
+    degree: Degree.JUNIOR,
+    schoolName: 'National Taipei University of Technology',
+    department: 'Department of Computer Science and Information Engineering',
+    start: {
+      year: 2018,
+      month: 9,
+    },
+    end: {
+      year: 2020,
+      month: 6,
+    },
+    status: SchoolStatus.GRADUATED,
   },
-  end: {
-    year: 2024,
-    month: 6,
+  {
+    id: 2,
+    degree: Degree.BACHELOR,
+    schoolName: 'National Taiwan University',
+    department: 'Computer Science and Information Engineering',
+    start: {
+      year: 2020,
+      month: 9,
+    },
+    end: {
+      year: 2024,
+      month: 6,
+    },
+    status: SchoolStatus.GRADUATED,
   },
-  status: SchoolStatus.GRADUATED,
-};
+];

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import OwnedTeams from '@/components/beta/subscriptions_page/owned_teams';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import { IUserOwnedTeam } from '@/interfaces/subscription';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
@@ -22,9 +22,18 @@ const SubscriptionsPageBody = ({
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
+  // Info: (20250410 - Anna) 開啟或關閉取消訂閱的 Modal 狀態
+  const [teamForCancelSubscription, setTeamForCancelSubscription] = useState<
+    IUserOwnedTeam | undefined
+  >();
+
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
     setTeamForAutoRenewalOff(undefined);
+  };
+
+  const closeCancelSubscriptionModal = () => {
+    setTeamForCancelSubscription(undefined);
   };
 
   // Info: (20250120 - Liz) 開啟自動續約、關閉自動續約 API
@@ -64,6 +73,21 @@ const SubscriptionsPageBody = ({
     }
   };
 
+  // Info: (20250410 - Anna) 打 API 取消訂閱
+  const cancelSubscription = async () => {
+    if (!teamForCancelSubscription) return;
+    const teamId = teamForCancelSubscription.id;
+    const planId = teamForCancelSubscription.plan;
+    const { success } = await updateSubscriptionAPI({
+      params: { teamId },
+      body: { plan: planId, autoRenewal: false }, // Info: (20250410 - Anna) 關閉自動續約即為取消訂閱
+    });
+    if (success) {
+      closeCancelSubscriptionModal();
+      getUserOwnedTeams();
+    }
+  };
+
   const messageModalDataForTurnOnRenewal: IMessageModal = {
     title: t('subscriptions:SUBSCRIPTIONS_PAGE.TURN_ON_AUTO_RENEWAL_TITLE'),
     content: t('subscriptions:SUBSCRIPTIONS_PAGE.TURN_ON_AUTO_RENEWAL_MESSAGE'),
@@ -84,6 +108,34 @@ const SubscriptionsPageBody = ({
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
+  // Info: (20250410 - Anna) 取消訂閱的Modal
+  const messageModalDataForCancelSubscription: IMessageModal = {
+    title: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE'),
+    content: (
+      <div className="max-w-300px leading-6">
+        <Trans
+          i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_MESSAGE"
+          components={{
+            bold: <span className="font-semibold" />,
+            br: <br />,
+            red: <span className="text-red-600" />,
+          }}
+          values={{
+            planName: t(`subscriptions:PLAN_NAME.${teamForCancelSubscription?.plan.toUpperCase()}`),
+          }}
+        />
+      </div>
+    ),
+    submitBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.YES_CANCEL_SUBSCRIPTION'),
+    submitBtnFunction: cancelSubscription,
+    messageType: MessageType.WARNING,
+    backBtnFunction: closeCancelSubscriptionModal,
+    backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
+    backBtnClassName: 'border-orange-500 text-orange-600',
+    submitBtnClassName:
+      'bg-orange-400 text-orange-900 hover:bg-button-surface-strong-primary-hover',
+  };
+
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <div className="flex items-center gap-8px">
@@ -91,13 +143,12 @@ const SubscriptionsPageBody = ({
         <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.MY_SUBSCRIPTIONS')}</h1>
         <span className="h-1px flex-auto bg-divider-stroke-lv-1"></span>
       </div>
-
       <OwnedTeams
         userOwnedTeams={userOwnedTeams}
         setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
         setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
+        setTeamForCancelSubscription={setTeamForCancelSubscription}
       />
-
       {teamForAutoRenewalOn && (
         <MessageModal
           messageModalData={messageModalDataForTurnOnRenewal}
@@ -105,12 +156,20 @@ const SubscriptionsPageBody = ({
           modalVisibilityHandler={closeAutoRenewalModal}
         />
       )}
-
       {teamForAutoRenewalOff && (
         <MessageModal
           messageModalData={messageModalDataForTurnOffRenewal}
           isModalVisible={!!teamForAutoRenewalOff}
           modalVisibilityHandler={closeAutoRenewalModal}
+        />
+      )}
+
+      {/* Info: (20250410 - Anna) 取消訂閱的Modal */}
+      {teamForCancelSubscription && (
+        <MessageModal
+          messageModalData={messageModalDataForCancelSubscription}
+          isModalVisible={!!teamForCancelSubscription}
+          modalVisibilityHandler={closeCancelSubscriptionModal}
         />
       )}
     </main>
