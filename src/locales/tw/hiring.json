@@ -1,0 +1,83 @@
+{
+  "JOIN_US_PAGE": {
+    "HEAD_TITLE": "加入我們",
+    "MAIN_TITLE": "成為我們團隊的一員",
+    "MAIN_DESCRIPTION": "科技無限，我們也無限！立即加入我們！",
+    "AVAILABLE_POSITION": "空缺職位：",
+    "SEARCH_PLACEHOLDER": "查詢職位名稱、地點、關鍵字",
+    "APPLY_NOW_BTN": "立即應徵"
+  },
+  "JOB_TYPE": {
+    "ALL": "全部",
+    "MY_FAVORITE": "我的最愛"
+  },
+  "LOCATION": {
+    "ALL": "全部",
+    "LOCATION": "地點",
+    "TAIPEI": "台北市"
+  },
+  "SORT": {
+    "NEWEST": "最新",
+    "OLDEST": "最舊"
+  },
+  "RESUME_PAGE": {
+    "HEAD_TITLE": "履歷",
+    "MAIN_TITLE": "我們該如何認識您？",
+    "MAIN_SUBTITLE": "歡迎",
+    "UPLOAD_RESUME_BTN": "上傳履歷",
+    "CREATE_RESUME_BTN": "建立新履歷",
+    "STEP_PERSONAL": "個人資訊",
+    "STEP_EXPERIENCE": "經歷",
+    "STEP_SKILLS": "技能",
+    "STEP_PREFERENCE": "偏好",
+    "STEP_ATTACHMENT": "附件"
+  },
+  "PERSONAL_INFO": {
+    "FIRST_NAME_TITLE": "名",
+    "LAST_NAME_TITLE": "姓",
+    "PHONE_TITLE": "聯絡電話",
+    "EMAIL_TITLE": "電子郵件",
+    "ADDRESS_TITLE": "通訊地址",
+    "QUESTION_1_TITLE": "Have you ever worked for a related company?",
+    "QUESTION_2_TITLE": "Do you currently have any relatives working at iSunCloud?",
+    "QUESTION_3_TITLE": "Do you have any criminal records or a history of bad credit?",
+    "QUESTION_4_TITLE": "Where did you learn about this job opening?",
+    "YES": "是",
+    "NO": "否",
+    "WHERE_OPTION_104": "104",
+    "WHERE_OPTION_FB": "Facebook",
+    "WHERE_OPTION_LINKEDIN": "LinkedIn",
+    "WHERE_OPTION_OW": "官方網站",
+    "WHERE_OPTION_OTHERS": "其他"
+  },
+  "EXPERIENCE": {
+    "EDUCATION_TITLE": "學歷",
+    "WORK_TITLE": "工作經歷",
+    "DEGREE": "學位",
+    "DEGREE_OPTION_ELEMENTARY": "國小",
+    "DEGREE_OPTION_JUNIOR": "國中",
+    "DEGREE_OPTION_HIGH": "高中",
+    "DEGREE_OPTION_BACHELOR": "學士",
+    "DEGREE_OPTION_MASTER": "碩士",
+    "DEGREE_OPTION_PROFESSIONAL": "專科",
+    "SCHOOL_NAME": "學校名稱",
+    "DEPARTMENT": "科系",
+    "START": "起始於",
+    "END": "結束於",
+    "STATUS": "就學狀態",
+    "STATUS_OPTION_GRADUATED": "已畢業",
+    "STATUS_OPTION_IN_SCHOOL": "在學中",
+    "STATUS_OPTION_DROPOUT": "肄業"
+  },
+  "FINISH_PAGE": {
+    "MAIN_TITLE": "感謝您的應徵！",
+    "TEXT": "感謝您的應徵！由於候選人數量眾多，我們需要時間仔細審核每一份申請。我們會透過電子郵件通知您結果。",
+    "DONE_BTN": "完成"
+  },
+  "COMMON": {
+    "PREVIOUS": "上一步",
+    "NEXT": "下一步",
+    "DELETE": "刪除",
+    "SAVE": "儲存"
+  }
+}

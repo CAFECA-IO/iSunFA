@@ -17,8 +17,6 @@
     "BALANCE_SHEET": "Balance Sheet",
     "INCOME_STATEMENT": "Income Statement",
     "STATEMENT_OF_CASH_FLOWS": "Statement of Cash Flows",
-    "TAX_REPORT": "Tax Report",
-    "BUSINESS_TAX_RETURN_401": "Business Tax Return (401)",
     "DAILY_REPORT": "Daily Report",
     "LEDGER": "Ledger",
     "TRIAL_BALANCE": "Trial Balance",
@@ -30,7 +28,9 @@
     "ACCOUNT_BOOK_SETTINGS": "Account Book Settings",
     "ACCOUNTING_SETTINGS": "Accounting Settings",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "Clients/Suppliers Management",
-    "BACK_TO_DASHBOARD": "Back to Dashboard"
+    "BACK_TO_DASHBOARD": "Back to Dashboard",
+    "CURRENT_ACCOUNT_BOOK": "Current Account Book",
+    "SELECT_ACCOUNT_BOOK": "Select Account Book"
   },
 
   "TOAST": {

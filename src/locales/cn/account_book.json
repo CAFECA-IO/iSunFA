@@ -46,7 +46,8 @@
     "CHANGE_WORK_TAG": "更改标签",
     "DELETE": "删除",
     "DELETE_MESSAGE_TITLE": "删除账本",
-    "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？"
+    "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？",
+    "WAITING_FOR_TRANSFERRING": "等待转移中"
   },
   "DELETE": {
     "TITLE": "删除账本",
@@ -60,5 +61,8 @@
     "CONTENT": "转移账本会将其所有相关资料（包括公司详细资料和财务记录）转移到另一个团队。在启动流程之前，请确保接收团队有授权并且有能力管理转移的账本。",
     "TRANSFER": "转移",
     "CANCEL": "取消"
+  },
+  "ACCOUNT_BOOK_PRIVACY_MODAL": {
+    "CHANGE_ACCOUNT_BOOK_PRIVACY": "更改账本隐私"
   }
 }

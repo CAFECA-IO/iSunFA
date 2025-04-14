@@ -26,7 +26,7 @@ import { TranslateFunction } from '@/interfaces/locale';
 // import Notification from '@/components/notification/notification';
 import Skeleton from '@/components/skeleton/skeleton';
 import { UploadType } from '@/constants/file';
-import { CANCEL_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 
 const NavBar = () => {
   const { t }: { t: TranslateFunction } = useTranslation('common');
@@ -35,15 +35,15 @@ const NavBar = () => {
     isSignIn,
     signOut,
     username,
-    selectedAccountBook,
+    connectedAccountBook,
     userAuth,
     isAuthLoading,
-    selectAccountBook,
+    connectAccountBook,
   } = useUserCtx();
   const { profileUploadModalDataHandler, profileUploadModalVisibilityHandler } = useGlobalCtx();
   const router = useRouter();
 
-  const companyName = selectedAccountBook?.name.split(' ')[0] ?? '';
+  const companyName = connectedAccountBook?.name.split(' ')[0] ?? '';
   const abbreviateCompanyName =
     companyName.length > 10 ? companyName.slice(0, 5) + '...' : companyName;
 
@@ -97,7 +97,7 @@ const NavBar = () => {
   };
 
   const companyChangeClickHandler = () => {
-    selectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
+    connectAccountBook(CANCEL_ACCOUNT_BOOK_ID);
   };
 
   const redirectTo = (target: string) => {
@@ -182,7 +182,7 @@ const NavBar = () => {
       <button
         type="button"
         onClick={appMenuMobileClickHandler}
-        className={`${selectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
+        className={`${connectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <div className="flex flex-1 items-center gap-8px">
           <TbGridDots size={20} />
@@ -193,7 +193,7 @@ const NavBar = () => {
       </button>
       <Link
         href={ISUNFA_ROUTE.DASHBOARD}
-        className={`${selectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
+        className={`${connectedAccountBook ? 'flex' : 'hidden'} w-full items-center gap-8px px-24px py-10px text-button-text-secondary hover:text-button-text-primary-hover`}
       >
         <FiLayout size={20} />
 
@@ -330,7 +330,7 @@ const NavBar = () => {
         <Button
           variant={'secondaryBorderless'}
           onClick={companyChangeClickHandler}
-          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${selectedAccountBook ? '' : 'pointer-events-none text-button-text-disable'}`}
+          className={`mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 ${connectedAccountBook ? '' : 'pointer-events-none text-button-text-disable'}`}
         >
           <div className="my-auto flex items-center justify-center">
             <BiBuildings size={20} />
@@ -341,7 +341,7 @@ const NavBar = () => {
         </Button>
         <Button
           variant={'secondaryBorderless'}
-          disabled={!selectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!connectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           // Info: (20240809 - Shirley) disabled for now
           className="mt-3 hidden w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
@@ -355,7 +355,7 @@ const NavBar = () => {
         <Button
           onClick={() => redirectTo(ISUNFA_ROUTE.COMPANY_INFO)}
           variant={'secondaryBorderless'}
-          disabled={!selectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+          disabled={!connectedAccountBook} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
           className="mt-3 flex w-full justify-start rounded-xs px-4 py-2.5 disabled:text-button-text-disable"
         >
           <div className="my-auto flex items-center justify-center">
@@ -387,15 +387,15 @@ const NavBar = () => {
   );
 
   const displayedCompanyChangeBtn =
-    !isAuthLoading && selectedAccountBook ? (
+    !isAuthLoading && connectedAccountBook ? (
       <button
         type="button"
         onClick={companyChangeClickHandler}
         className="flex items-center gap-x-4px rounded-full bg-badge-surface-strong-secondary p-6px font-semibold text-badge-text-invert"
       >
         <Image
-          alt={`${selectedAccountBook?.name}_icon`}
-          src={selectedAccountBook.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
+          alt={`${connectedAccountBook?.name}_icon`}
+          src={connectedAccountBook.imageId ?? DEFAULT_COMPANY_IMAGE_URL}
           width={16}
           height={16}
           className="rounded-full"
@@ -485,7 +485,7 @@ const NavBar = () => {
             <Link
               href={ISUNFA_ROUTE.DASHBOARD}
               // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
-              className={`${selectedAccountBook ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5`}
+              className={`${connectedAccountBook ? 'flex' : 'hidden'} justify-center gap-2 rounded-xs px-3 py-2.5 text-button-text-secondary hover:text-button-text-primary-hover max-md:px-5`}
             >
               <div className="my-auto flex items-center justify-center">
                 <FiLayout size={22} />
@@ -519,7 +519,7 @@ const NavBar = () => {
             <button
               type="button"
               onClick={appMenuClickHandler}
-              className={selectedAccountBook ? 'flex' : 'hidden'} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
+              className={connectedAccountBook ? 'flex' : 'hidden'} // Info: (20240513 - Julian) 如果沒有選擇 company 就不能使用
             >
               <Image src="/icons/app.svg" alt="app_icon" width={24} height={24} />
             </button>

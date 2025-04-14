@@ -136,8 +136,8 @@ const ViewFinancialSection = ({
 
   // Info: (20240807 - Anna)
   // const globalCtx = useGlobalCtx();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  // const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id; // Deprecated: (20241129 - Liz)
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  // const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id; // Deprecated: (20241129 - Liz)
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]); // Info: (20240909 - tzuhan)  保存縮略圖的 URL
@@ -158,7 +158,7 @@ const ViewFinancialSection = ({
   //     APIName.REPORT_GET_BY_ID,
   //     {
   //       params: {
-  //         companyId: selectedAccountBook?.id,
+  //         companyId: connectedAccountBook?.id,
   //         reportId: reportId ?? NON_EXISTING_REPORT_ID,
   //       },
   //     },
@@ -171,7 +171,7 @@ const ViewFinancialSection = ({
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedAccountBook) return;
+    if (isAuthLoading || !connectedAccountBook) return;
     if (isReportFinancialIsLoading) return;
     setIsReportFinancialIsLoading(true);
 
@@ -182,7 +182,7 @@ const ViewFinancialSection = ({
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedAccountBook.id, reportId },
+          params: { companyId: connectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
@@ -207,7 +207,7 @@ const ViewFinancialSection = ({
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
-  }, [isAuthLoading, reportId, selectedAccountBook]);
+  }, [isAuthLoading, reportId, connectedAccountBook]);
 
   const isInvalidReport = useMemo(() => {
     if (!financialReport) return true;

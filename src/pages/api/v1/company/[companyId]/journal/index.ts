@@ -2,13 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { getSession } from '@/lib/utils/session';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { listInvoiceVoucherJournal } from '@/lib/utils/repo/beta_transition.repo';
@@ -22,59 +20,54 @@ async function handleGetRequest(req: NextApiRequest) {
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      const { query } = validateRequest(APIName.JOURNAL_LIST, req, userId);
+    const { query } = validateRequest(APIName.JOURNAL_LIST, req, userId);
 
-      if (query) {
-        const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
-          query;
-        try {
-          const uploadedPaginatedJournalList = await listInvoiceVoucherJournal(
-            companyId,
-            JOURNAL_EVENT.UPLOADED,
-            eventType,
-            page,
-            pageSize,
-            sortBy,
-            sortOrder,
-            startDate,
-            endDate,
-            searchQuery
-          );
-          const upComingPaginatedJournalList = await listInvoiceVoucherJournal(
-            companyId,
-            JOURNAL_EVENT.UPCOMING,
-            eventType,
-            page,
-            pageSize,
-            sortBy,
-            sortOrder,
-            startDate,
-            endDate,
-            searchQuery
-          );
+    if (query) {
+      const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
+        query;
+      try {
+        const uploadedPaginatedJournalList = await listInvoiceVoucherJournal(
+          companyId,
+          JOURNAL_EVENT.UPLOADED,
+          eventType,
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+          startDate,
+          endDate,
+          searchQuery
+        );
+        const upComingPaginatedJournalList = await listInvoiceVoucherJournal(
+          companyId,
+          JOURNAL_EVENT.UPCOMING,
+          eventType,
+          page,
+          pageSize,
+          sortBy,
+          sortOrder,
+          startDate,
+          endDate,
+          searchQuery
+        );
 
-          const uploadedPaginatedJournalListItems = {
-            ...uploadedPaginatedJournalList,
-            data: formatIJournalListItems(uploadedPaginatedJournalList.data),
-          };
+        const uploadedPaginatedJournalListItems = {
+          ...uploadedPaginatedJournalList,
+          data: formatIJournalListItems(uploadedPaginatedJournalList.data),
+        };
 
-          const upComingPaginatedJournalListItems = {
-            ...upComingPaginatedJournalList,
-            data: formatIJournalListItems(upComingPaginatedJournalList.data),
-          };
+        const upComingPaginatedJournalListItems = {
+          ...upComingPaginatedJournalList,
+          data: formatIJournalListItems(upComingPaginatedJournalList.data),
+        };
 
-          payload = {
-            [JOURNAL_EVENT.UPLOADED]: uploadedPaginatedJournalListItems,
-            [JOURNAL_EVENT.UPCOMING]: upComingPaginatedJournalListItems,
-          };
-          statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-        } catch (error) {
-          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-        }
+        payload = {
+          [JOURNAL_EVENT.UPLOADED]: uploadedPaginatedJournalListItems,
+          [JOURNAL_EVENT.UPCOMING]: upComingPaginatedJournalListItems,
+        };
+        statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+      } catch (error) {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
     }
   }

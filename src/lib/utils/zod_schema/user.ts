@@ -17,10 +17,6 @@ const userPutBodySchema = z.object({
   email: z.string(),
 });
 
-const userDeleteQuerySchema = z.object({
-  userId: zodStringToNumber,
-});
-
 export const userPrismaSchema = z.object({
   id: z.number().int(),
   name: z.string(),
@@ -32,8 +28,21 @@ export const userPrismaSchema = z.object({
   deletedAt: z.number().int().nullable(),
 });
 
+export const userProfileSchema = z.object({
+  id: z.number().int(),
+  name: z.string(),
+  email: z.string(),
+  imageId: z.string(),
+  agreementList: z.array(z.string()),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+  deletedAt: z.number().int().nullable(),
+  device: z.string(),
+  ip: z.string(),
+});
+
 export const userOutputSchema = userPrismaSchema.transform((data) => {
-  const userImpl: IUser = {
+  const userData: IUser = {
     id: data.id,
     name: data.name,
     email: data.email,
@@ -43,7 +52,8 @@ export const userOutputSchema = userPrismaSchema.transform((data) => {
     updatedAt: data.updatedAt,
     deletedAt: data.deletedAt ?? 0,
   };
-  return userImpl;
+
+  return userData;
 });
 
 /**
@@ -78,7 +88,7 @@ export const userGetSchema = {
     querySchema: userGetQuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: userOutputSchema,
+  outputSchema: userProfileSchema,
   frontend: nullSchema,
 };
 
@@ -91,20 +101,4 @@ export const userPutSchema = {
   frontend: nullSchema,
 };
 
-export const userDeletionPutSchema = {
-  input: {
-    querySchema: userPutQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: userOutputSchema,
-  frontend: nullSchema,
-};
-
-export const userDeleteSchema = {
-  input: {
-    querySchema: userDeleteQuerySchema,
-    bodySchema: nullSchema,
-  },
-  outputSchema: userOutputSchema,
-  frontend: nullSchema,
-};
+export type IUserProfile = z.infer<typeof userProfileSchema>;

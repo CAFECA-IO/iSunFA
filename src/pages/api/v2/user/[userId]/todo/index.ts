@@ -1,124 +1,114 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IPaginatedData } from '@/interfaces/pagination';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { Company, File, Todo } from '@prisma/client';
-import { createTodo, listTodo } from '@/lib/utils/repo/todo.repo';
-import { ITodoCompany } from '@/interfaces/todo';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
 import {
-  todoListPostApiUtils as postUtils,
-  todoListGetListApiUtils as getUtils,
-} from '@/pages/api/v2/user/[userId]/todo/route_utils';
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { todoListPostApiUtils as postUtils } from '@/pages/api/v2/user/[userId]/todo/route_utils';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import { createTodo, listTodoMapped } from '@/lib/utils/repo/todo.repo';
+import { validateOutputData } from '@/lib/utils/validator';
+import { ITodoAccountBook } from '@/interfaces/todo';
 
-const handleGetRequest: IHandleRequest<
-  APIName.TODO_LIST,
-  (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[]
-> = async ({ query }) => {
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Todo & { userTodoCompanies: { company: Company & { imageFile: File } }[] })[] = [];
+  let payload: ITodoAccountBook[] | null = null;
+  await checkSessionUser(session, APIName.TODO_LIST, req);
+  await checkUserAuthorization(APIName.TODO_LIST, req, session);
 
-  const { userId } = query;
-  const todoListFromPrisma = await listTodo(userId);
+  const { query } = checkRequestData(APIName.TODO_LIST, req, session);
 
-  const todoList = todoListFromPrisma
-    .map((todo) => {
-      const { startTime, endTime, note } = getUtils.splitStartEndTimeInNote(todo.note);
-      return {
-        ...todo,
-        startTime,
-        endTime,
-        note,
-      };
-    })
-    .sort((a, b) => {
-      return a.endTime - b.endTime;
-    });
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
-  payload = todoList;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  const todoList = await listTodoMapped(userId);
 
-  return { statusMessage, payload };
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.TODO_LIST, todoList);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-const handlePostRequest: IHandleRequest<
-  APIName.CREATE_TODO,
-  Todo & {
-    userTodoCompanies: { company: Company & { imageFile: File } }[];
-    startTime: number;
-    endTime: number;
-  }
-> = async ({ query, body }) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload:
-    | (Todo & {
-        userTodoCompanies: { company: Company & { imageFile: File } }[];
-        startTime: number;
-        endTime: number;
-      })
-    | null = null;
+  let payload: ITodoAccountBook | null = null;
+  await checkSessionUser(session, APIName.CREATE_TODO, req);
+  await checkUserAuthorization(APIName.CREATE_TODO, req, session);
+
+  const { query, body } = checkRequestData(APIName.CREATE_TODO, req, session);
+
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  statusMessage = STATUS_MESSAGE.SUCCESS;
 
   const { userId } = query;
-  const { companyId, name, note, deadline, startTime, endTime } = body;
+  const { note, startDate, endDate } = body;
 
   const noteWithTime = postUtils.combineStartEndTimeInNote({
     note,
-    startTime,
-    endTime,
+    startDate,
+    endDate,
   });
 
-  const createdTodo = await createTodo(userId, name, deadline, noteWithTime, companyId);
+  const createdTodo = await createTodo({ ...body, note: noteWithTime, userId });
 
-  payload = {
-    ...createdTodo,
-    startTime,
-    endTime,
-  };
-  statusMessage = STATUS_MESSAGE.CREATED;
-
-  return { statusMessage, payload };
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.CREATE_TODO, createdTodo);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{
-    statusMessage: string;
-    payload: ITodoCompany | ITodoCompany[] | null;
-  }>;
-} = {
-  GET: (req) => withRequestValidation(APIName.TODO_LIST, req, handleGetRequest),
-  POST: (req) => withRequestValidation(APIName.CREATE_TODO, req, handlePostRequest),
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<
-    IResponseData<IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null>
-  >
-) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoCompany | ITodoCompany[] | null = null;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.TODO_LIST;
+  const session = await getSession(req);
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.TODO_LIST;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.POST:
+        apiName = APIName.CREATE_TODO;
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<
-      IPaginatedData<ITodoCompany[]> | ITodoCompany | ITodoCompany[] | null
-    >(statusMessage, payload);
-    res.status(httpCode).json(result);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+  await logUserAction(session, apiName, req, statusMessage);
+  res.status(httpCode).json(result);
 }

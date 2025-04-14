@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BsEnvelope, BsPlusLg } from 'react-icons/bs';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
@@ -12,10 +12,13 @@ import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/account_books_page/no_data';
 import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250411 - Liz) 未來會替換成下個版本的建立帳本 Modal (AccountBookInfoModal)
+// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250411 - Liz) 未來會使用這個 Modal
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
+import EditInfoModal from '@/components/beta/account_books_page/edit_info_modal';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -25,20 +28,30 @@ const AccountBooksPageBody = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
-  const [accountBookToTransfer, setAccountBookToTransfer] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<ICompanyAndRole | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<ICompanyAndRole | undefined>();
+  const [accountBookToTransfer, setAccountBookToTransfer] = useState<
+    IAccountBookWithTeam | undefined
+  >();
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
+  const [accountBookToDelete, setAccountBookToDelete] = useState<
+    IAccountBookWithTeam | undefined
+  >();
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    ICompanyAndRole | undefined
+    IAccountBookWithTeam | undefined
+  >();
+  const [accountBookToEditInfo, setAccountBookToEditInfo] = useState<
+    IAccountBookWithTeam | undefined
   >();
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [accountBookList, setAccountBookList] = useState<ICompanyAndRole[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
 
   const isNoData = accountBookList.length === 0;
 
-  const toggleCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen((prev) => !prev);
+  const openCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(true);
+  };
+  const closeCreateAccountBookModal = () => {
+    setIsCreateAccountBookModalOpen(false);
   };
 
   const closeDeleteModal = () => {
@@ -50,15 +63,16 @@ const AccountBooksPageBody = () => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.company.id);
+      const data = await deleteAccountBook(accountBookToDelete.id);
 
-      if (data) {
-        setRefreshKey((prev) => prev + 1);
-      } else {
+      if (!data) {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
         console.log('刪除帳本失敗');
+        return;
       }
+
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       // Deprecated: (20241115 - Liz)
       // eslint-disable-next-line no-console
@@ -76,32 +90,35 @@ const AccountBooksPageBody = () => {
     backBtnStr: t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CANCEL'),
   };
 
-  const handleApiResponse = (resData: IPaginatedData<ICompanyAndRole[]>) => {
+  const handleApiResponse = (resData: IPaginatedData<IAccountBookWithTeam[]>) => {
     setAccountBookList(resData.data);
     setTotalPage(resData.totalPages);
-    setCurrentPage(resData.page);
+
+    // Info: (20250325 - Liz) 只有當 API 回傳的 page 與 currentPage 不同時才更新
+    if (resData.page !== currentPage) setCurrentPage(resData.page);
   };
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
       <section className="flex items-center gap-40px">
         {userId && (
-          <FilterSection<ICompanyAndRole[]>
+          <FilterSection<IAccountBookWithTeam[]>
             key={refreshKey}
             disableDateSearch
             className="flex-auto"
             params={{ userId }}
-            apiName={APIName.LIST_USER_COMPANY}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             onApiResponse={handleApiResponse}
             page={currentPage}
             pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
+            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
           />
         )}
 
         <div className="flex items-center gap-16px">
           <button
             type="button"
-            onClick={toggleCreateAccountBookModal}
+            onClick={openCreateAccountBookModal}
             className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
           >
             <BsPlusLg size={20} />
@@ -127,6 +144,9 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+            setAccountBookToEditInfo={setAccountBookToEditInfo}
+            setRefreshKey={setRefreshKey}
+            shouldGroupByTeam
           />
           <Pagination
             totalPages={totalPage}
@@ -139,7 +159,7 @@ const AccountBooksPageBody = () => {
       {/* // Info: (20241108 - Liz) Modals */}
       {isCreateAccountBookModalOpen && (
         <CreateAccountBookModal
-          modalVisibilityHandler={toggleCreateAccountBookModal}
+          closeCreateAccountBookModal={closeCreateAccountBookModal}
           setRefreshKey={setRefreshKey}
         />
       )}
@@ -148,13 +168,13 @@ const AccountBooksPageBody = () => {
         <TransferAccountBookModal
           accountBookToTransfer={accountBookToTransfer}
           setAccountBookToTransfer={setAccountBookToTransfer}
+          setRefreshKey={setRefreshKey}
         />
       )}
 
       {accountBookToEdit && (
         <ChangeTagModal
           accountBookToEdit={accountBookToEdit}
-          isModalOpen={!!accountBookToEdit}
           setAccountBookToEdit={setAccountBookToEdit}
           setRefreshKey={setRefreshKey}
         />
@@ -163,8 +183,15 @@ const AccountBooksPageBody = () => {
       {accountBookToUploadPicture && (
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
-          isModalOpen={!!accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToEditInfo && (
+        <EditInfoModal
+          accountBookToEditInfo={accountBookToEditInfo}
+          setAccountBookToEditInfo={setAccountBookToEditInfo}
           setRefreshKey={setRefreshKey}
         />
       )}

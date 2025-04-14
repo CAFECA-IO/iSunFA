@@ -12,7 +12,7 @@
     "FREE_TRIAL_BTN": "Start Your Free Trial Now",
     "BUSINESS_DESCRIPTION": "Helping companies with\nbookkeeping and tax operations",
     "BUSINESS_BTN": "Apply Business Account",
-    "FIRM_DESCRIPTION": "Providing clients with financial\nstatements and audit reports",
+    "FIRM_DESCRIPTION": "Providing clients with financial\nstatements",
     "FIRM_BTN": "Apply Firm Account",
     "PERSONAL_DESCRIPTION": "Outsourcing financial work through\nthe platform",
     "PERSONAL_BTN": "Apply Personal Account"
@@ -33,7 +33,7 @@
   },
   "REAL_TIME_REPORT": {
     "MAIN_TITLE": "Real-Time\nFinancial Report",
-    "DESCRIPTION_1": "iSunFA makes it easy to generate real-time financial statements, including Balance Sheets, Income Statements, Cash Flow Statements, and Form 401 for VAT filings—all at the click of a button. Get a clear, instant overview of your financial health. Our platform offers transparent data analysis and saves you significant time, empowering you to make informed decisions faster.",
+    "DESCRIPTION_1": "iSunFA makes it easy to generate real-time financial statements, including Balance Sheets, Income Statements, and Cash Flow Statements—all at the click of a button. Get a clear, instant overview of your financial health. Our platform offers transparent data analysis and saves you significant time, empowering you to make informed decisions faster.",
     "DESCRIPTION_2": "From daily financial management to preparing for external audits, iSunFA provides precise, real-time solutions to keep your business running smoothly and efficiently. Choose iSunFA to take charge of your finances and usher in a new era of smart, efficient financial management!"
   },
   "FLEXIBLE_FEATURE_SELECTION": {

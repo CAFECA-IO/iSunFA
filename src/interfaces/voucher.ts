@@ -23,7 +23,7 @@ import {
   UserVoucher as PrismaUserVoucher,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
@@ -159,6 +159,7 @@ export interface IVoucherDetailForFrontend {
 export enum FromWhere {
   LEDGER = 'ledger',
   ARandAP = 'ARandAP',
+  VOUCHER_ITEM = 'voucher_item',
 }
 
 export const defaultVoucherDetail: IVoucherDetailForFrontend = {

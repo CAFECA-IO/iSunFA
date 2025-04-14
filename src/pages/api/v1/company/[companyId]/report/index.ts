@@ -21,8 +21,6 @@ import {
 import { createReport, findManyReports, getReportIdByFromTo } from '@/lib/utils/repo/report.repo';
 import { formatIPaginatedReport } from '@/lib/utils/formatter/report.formatter';
 import { getSession } from '@/lib/utils/session';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { BalanceSheetOtherInfo, IPaginatedReport, IReportContent } from '@/interfaces/report';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
@@ -322,12 +320,10 @@ export async function handleGetRequest(
 
   const session = await getSession(req);
   const { userId, companyId } = session;
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
+  if (!userId) {
+    statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     return { statusMessage, payload };
   }
-
   const {
     statusString,
     targetPageNumber,
@@ -364,11 +360,7 @@ export async function handlePostRequest(req: NextApiRequest) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
     return { statusMessage, payload };
   }
-  const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
-  if (!isAuth) {
-    statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    return { statusMessage, payload };
-  }
+
   const {
     projectIdNumber,
     reportLanguageString,

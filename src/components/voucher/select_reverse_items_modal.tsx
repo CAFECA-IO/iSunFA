@@ -22,8 +22,9 @@ interface ISelectReverseItemsModal {
 
 interface IReverseItemProps {
   reverseData: IReverseItemUI;
-  selectHandler: (id: number) => void;
-  amountChangeHandler: (id: number, value: number) => void;
+  // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+  selectHandler: (id: number, itemIndex: number) => void;
+  amountChangeHandler: (id: number, itemIndex: number, value: number) => void;
 }
 
 const ReverseItem: React.FC<IReverseItemProps> = ({
@@ -36,18 +37,33 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
   const { voucherId, voucherNo, account, description, amount, isSelected, reverseAmount } =
     reverseData;
 
+  // Info: (20250326 - Anna) 初始化 displayAmount：將 reverseAmount 加上千分位符號，用來顯示在 input 上
+  const [displayAmount, setDisplayAmount] = useState<string>(
+    numberWithCommas(reverseAmount.toString())
+  );
+
   const accountCode = account?.code ?? '';
   const accountName = account?.name ?? '';
 
-  const checkboxChangeHandler = () => selectHandler(voucherId);
+  // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+  const checkboxChangeHandler = () => selectHandler(voucherId, reverseData.lineItemIndex);
+
   const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Info: (20241105 - Julian) 金額只能輸入數字
     const num = parseInt(e.target.value, 10);
     const numValue = Number.isNaN(num) ? 0 : num;
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
     const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
-    amountChangeHandler(voucherId, valueInRange);
+    // Info: (20250326 - Anna) 顯示值加上千分位
+    setDisplayAmount(numberWithCommas(e.target.value));
+    // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+    amountChangeHandler(voucherId, reverseData.lineItemIndex, valueInRange);
   };
+
+  // Info: (20250326 - Anna) 當 reverseAmount 改變，同步更新顯示值 displayAmount
+  useEffect(() => {
+    setDisplayAmount(numberWithCommas(reverseAmount.toString()));
+  }, [reverseAmount]);
 
   return (
     <>
@@ -85,7 +101,8 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
           <input
             type="string"
             className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
-            value={reverseAmount}
+            // Info: (20250326 - Anna) 傳入有千分位符號的顯示值(displayAmount)
+            value={displayAmount}
             placeholder="0"
             onChange={reverseAmountChangeHandler}
             disabled={!isSelected}
@@ -113,10 +130,10 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 }) => {
   const { t } = useTranslation(['common', 'journal']);
   const { addReverseListHandler } = useAccountingCtx();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const params = {
-    companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
+    companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
     accountId: modalData.account?.id,
   };
 
@@ -161,11 +178,12 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   };
 
   const handleApiResponse = (resData: IPaginatedData<IReverseItem[]>) => {
-    const reverseItemList: IReverseItemUI[] = resData.data.map((reverse) => {
+    const reverseItemList: IReverseItemUI[] = resData.data.map((reverse, index) => {
       return {
         ...reverse,
-        lineItemIndex: 0,
-        reverseAmount: 0,
+        // Info: (20250213 - Anna) 使用 `index` 作為 `lineItemIndex`，確保每筆資料都有獨立的索引，不會互相影響
+        lineItemIndex: index,
+        reverseAmount: reverse.amount,
         isSelected: false,
       };
     });
@@ -201,10 +219,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     uiReverseItemList.length > 0 ? (
       uiReverseItemList.map((reverse) => {
         // Info: (20241104 - Julian) 單選
-        const selectCountHandler = (id: number) => {
+        // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+        const selectCountHandler = (id: number, itemIndex: number) => {
           setUiReverseItemList((prev) => {
             return prev.map((voucher) => {
-              if (voucher.voucherId === id) {
+              if (voucher.voucherId === id && voucher.lineItemIndex === itemIndex) {
                 return {
                   ...voucher,
                   isSelected: !voucher.isSelected,
@@ -216,10 +235,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         // Info: (20241104 - Julian) reverse 金額變更
-        const amountChangeHandler = (id: number, value: number) => {
+        // Info: (2025-213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
+        const amountChangeHandler = (id: number, itemIndex: number, value: number) => {
           setUiReverseItemList((prev) => {
             return prev.map((item) => {
-              if (item.voucherId === id) {
+              if (item.voucherId === id && item.lineItemIndex === itemIndex) {
                 return {
                   ...item,
                   reverseAmount: value,
@@ -231,8 +251,9 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         return (
+          // Info: (2025-213 - Anna) 確保 key 唯一
           <ReverseItem
-            key={reverse.voucherId}
+            key={`${reverse.voucherId}-${reverse.lineItemIndex}`}
             reverseData={reverse}
             selectHandler={selectCountHandler}
             amountChangeHandler={amountChangeHandler}
@@ -272,53 +293,59 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
           {/* Info: (20241104 - Julian) Table */}
           <div className="flex w-full flex-1 flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
-            {/* Info: (20241104 - Julian) summary */}
-            <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
-              {/* Info: (20241104 - Julian) Select */}
-              <p className="text-text-neutral-secondary">
-                ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
-              </p>
-              {/* Info: (20241104 - Julian) Total reverse amount */}
-              <p className="text-text-neutral-secondary">
-                {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
-                <span className="text-text-neutral-primary">
-                  {numberWithCommas(totalReverseAmount)}
-                </span>{' '}
-                {t('common:CURRENCY_ALIAS.TWD')}
-              </p>
-            </div>
-            <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
-              {/* Info: (20241104 - Julian) Table header */}
-              <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
-                {/* Info: (20241104 - Julian) Checkbox */}
-                <div className="col-start-1 col-end-2">
-                  <input
-                    type="checkbox"
-                    className={checkboxStyle}
-                    checked={isSelectedAll}
-                    onChange={checkAllHandler}
-                    disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
-                  />
-                </div>
-                {/* Info: (20241104 - Julian) Voucher No */}
-                <div className="col-start-2 col-end-4">{t('journal:REVERSE_MODAL.VOUCHER_NO')}</div>
-                {/* Info: (20241104 - Julian) Accounting */}
-                <div className="col-start-4 col-end-7">{t('journal:REVERSE_MODAL.ACCOUNTING')}</div>
-                {/* Info: (20241104 - Julian) Particulars */}
-                <div className="col-start-7 col-end-9">
-                  {t('journal:REVERSE_MODAL.PARTICULARS')}
-                </div>
-                {/* Info: (20241104 - Julian) Amount */}
-                <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
-                {/* Info: (20241104 - Julian) Reverse Amount */}
-                <div className="col-start-11 col-end-15 text-right">
-                  {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
-                </div>
+            <div className="max-h-300px overflow-y-auto">
+              {/* Info: (20241104 - Julian) summary */}
+              <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
+                {/* Info: (20241104 - Julian) Select */}
+                <p className="text-text-neutral-secondary">
+                  ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
+                </p>
+                {/* Info: (20241104 - Julian) Total reverse amount */}
+                <p className="text-text-neutral-secondary">
+                  {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
+                  <span className="text-text-neutral-primary">
+                    {numberWithCommas(totalReverseAmount)}
+                  </span>
+                  {t('common:CURRENCY_ALIAS.TWD')}
+                </p>
               </div>
+              <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
+                {/* Info: (20241104 - Julian) Table header */}
+                <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
+                  {/* Info: (20241104 - Julian) Checkbox */}
+                  <div className="col-start-1 col-end-2">
+                    <input
+                      type="checkbox"
+                      className={checkboxStyle}
+                      checked={isSelectedAll}
+                      onChange={checkAllHandler}
+                      disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
+                    />
+                  </div>
+                  {/* Info: (20241104 - Julian) Voucher No */}
+                  <div className="col-start-2 col-end-4">
+                    {t('journal:REVERSE_MODAL.VOUCHER_NO')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Accounting */}
+                  <div className="col-start-4 col-end-7">
+                    {t('journal:REVERSE_MODAL.ACCOUNTING')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Particulars */}
+                  <div className="col-start-7 col-end-9">
+                    {t('journal:REVERSE_MODAL.PARTICULARS')}
+                  </div>
+                  {/* Info: (20241104 - Julian) Amount */}
+                  <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
+                  {/* Info: (20241104 - Julian) Reverse Amount */}
+                  <div className="col-start-11 col-end-15 text-right">
+                    {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
+                  </div>
+                </div>
 
-              {/* Info: (20241104 - Julian) Table body */}
-              <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
-                {reverseList}
+                {/* Info: (20241104 - Julian) Table body */}
+                <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
+                  {reverseList}
+                </div>
               </div>
             </div>
           </div>

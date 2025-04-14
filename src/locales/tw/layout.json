@@ -17,8 +17,6 @@
     "BALANCE_SHEET": "資產負債表",
     "INCOME_STATEMENT": "損益表",
     "STATEMENT_OF_CASH_FLOWS": "現金流量表",
-    "TAX_REPORT": "稅務報表",
-    "BUSINESS_TAX_RETURN_401": "營業稅申報表 (401)",
     "DAILY_REPORT": "每日報表",
     "LEDGER": "總帳/分類帳",
     "TRIAL_BALANCE": "試算表",
@@ -30,7 +28,9 @@
     "ACCOUNT_BOOK_SETTINGS": "帳本設定",
     "ACCOUNTING_SETTINGS": "會計設定",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客戶/供應商",
-    "BACK_TO_DASHBOARD": "回到儀表板"
+    "BACK_TO_DASHBOARD": "回到儀表板",
+    "CURRENT_ACCOUNT_BOOK": "目前連結帳本",
+    "SELECT_ACCOUNT_BOOK": "請連結帳本"
   },
 
   "TOAST": {

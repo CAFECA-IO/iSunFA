@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Pagination from '@/components/pagination/pagination';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -9,10 +9,10 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
-import { SortOrder } from '@/constants/sort';
 import WorkTag from '@/components/account_book_settings/work_tag';
 import AccountBookEditModal from '@/components/account_book_settings/account_book_edit_modal';
 import { useUserCtx } from '@/contexts/user_context';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 interface AccountBookListModalProps {
   toggleModal: () => void;
@@ -23,26 +23,27 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [accountBookList, setAccountBookList] = useState<ICompanyAndRole[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedAccountBook, setSelectedCompany] = useState<ICompanyAndRole | null>(null);
+  const [selectedAccountBook, setSelectedAccountBook] = useState<IAccountBookWithTeam | null>(null);
   const { userAuth } = useUserCtx();
 
+  // ToDo: (20250328 - Liz) 根據工作標籤排序功能尚未實作
   const displayedType = SortingButton({
     string: t('account_book:INFO.WORK_TAG'),
     sortOrder: typeSort,
     setSortOrder: setTypeSort,
   });
 
-  const handleApiResponse = (data: IPaginatedData<ICompanyAndRole[]>) => {
+  const handleApiResponse = (data: IPaginatedData<IAccountBookWithTeam[]>) => {
     setTotalCount(data.totalCount);
     setTotalPages(data.totalPages);
     setAccountBookList(data.data);
   };
 
-  const handleEditModal = (company: ICompanyAndRole) => {
-    setSelectedCompany(company);
+  const handleEditModal = (accountBook: IAccountBookWithTeam) => {
+    setSelectedAccountBook(accountBook);
     setIsEditModalOpen(true);
   };
 
@@ -50,11 +51,11 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       {isEditModalOpen && selectedAccountBook && (
         <AccountBookEditModal
-          companyAndRole={selectedAccountBook}
+          accountBook={selectedAccountBook}
           toggleModal={() => setIsEditModalOpen((prev) => !prev)}
         />
       )}
-      <div className="ml-250px flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
+      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
@@ -64,14 +65,15 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           </button>
         </section>
         <section className="flex flex-col gap-lv-5">
-          <FilterSection<ICompanyAndRole[]>
+          <FilterSection<IAccountBookWithTeam[]>
             className="mt-2"
-            apiName={APIName.LIST_USER_COMPANY}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             params={{ userId: userAuth?.id }}
             onApiResponse={handleApiResponse}
             page={page}
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
+            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
           />
           <div id="company-settings-list" className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
@@ -109,13 +111,13 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                 {accountBookList.map((accountBook, index) => (
                   <div
                     className="group table-row h-72px text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10"
-                    key={`${accountBook.company.taxId}-${index + 1}`}
+                    key={`${accountBook.taxId}-${index + 1}`}
                   >
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-primary">{accountBook.company.name}</div>
+                      <div className="text-text-neutral-primary">{accountBook.name}</div>
                     </div>
                     <div className="relative table-cell text-center align-middle">
-                      <div className="text-text-neutral-tertiary">{accountBook.company.taxId}</div>
+                      <div className="text-text-neutral-tertiary">{accountBook.taxId}</div>
                     </div>
                     <div className="relative table-cell"></div>
                     <div className="relative table-cell justify-center align-middle">
@@ -123,7 +125,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
                     </div>
                     <div
                       className="relative table-cell justify-center align-middle"
-                      onClick={handleEditModal.bind(null, accountBook)}
+                      onClick={() => handleEditModal(accountBook)}
                     >
                       <Image
                         alt="edit"

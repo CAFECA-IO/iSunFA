@@ -1,6 +1,6 @@
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';
 import { LuFileCheck } from 'react-icons/lu';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import { useTranslation } from 'next-i18next';
 
 interface WorkTagProps {
@@ -30,7 +30,7 @@ const CompanyTag = ({ tag }: WorkTagProps) => {
     case WORK_TAG.ALL:
       backgroundColor = 'bg-badge-surface-soft-secondary';
       textColor = 'text-badge-text-secondary-solid';
-      icon = <LuFileCheck size={16} className="text-navy-blue-400" />;
+      icon = <LuFileCheck size={16} className="text-surface-brand-secondary-moderate" />;
       break;
 
     default:

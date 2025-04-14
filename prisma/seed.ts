@@ -1,11 +1,12 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Tag } from '@prisma/client';
+// import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
-import admins from '@/seed_json/admin.json';
+// import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
-import roles from '@/seed_json/role.json';
+// import roles from '@/seed_json/role.json';
 import users from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
 
@@ -19,10 +20,11 @@ import values from '@/seed_json/value.json';
 import sales from '@/seed_json/sale.json';
 import workRates from '@/seed_json/work_rate.json';
 import plans from '@/seed_json/plan.json';
+// import tPlans from '@/seed_json/t_plan.json';
 import subscriptions from '@/seed_json/subscription.json';
 import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
-import invitations from '@/seed_json/invitation.json';
+// import invitations from '@/seed_json/invitation.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
@@ -88,11 +90,11 @@ async function createPendingReports() {
   });
 }
 
-async function createRole() {
-  await prisma.role.createMany({
-    data: roles,
-  });
-}
+// async function createRole() {
+//   await prisma.role.createMany({
+//     data: roles,
+//   });
+// }
 
 async function createUser() {
   await prisma.user.createMany({
@@ -108,7 +110,10 @@ async function createAccount() {
 
 async function createCompany() {
   await prisma.company.createMany({
-    data: companies,
+    data: companies.map((company) => ({
+      ...company,
+      tag: company.tag as Tag,
+    })),
   });
 }
 
@@ -183,11 +188,11 @@ async function createPaymentRecord() {
   });
 }
 
-async function createAdmin() {
-  await prisma.admin.createMany({
-    data: admins,
-  });
-}
+// async function createAdmin() {
+//   await prisma.admin.createMany({
+//     data: admins,
+//   });
+// }
 
 async function createProjects() {
   await prisma.project.createMany({
@@ -201,11 +206,11 @@ async function createIncomeExpenses() {
   });
 }
 
-async function createInvitation() {
-  await prisma.invitation.createMany({
-    data: invitations,
-  });
-}
+// async function createInvitation() {
+//   await prisma.invitation.createMany({
+//     data: invitations,
+//   });
+// }
 
 async function createJournal() {
   await prisma.journal.createMany({
@@ -332,6 +337,40 @@ async function createInvoice() {
   });
 }
 
+/*
+async function createTPlan() {
+  await Promise.all(
+    tPlans.map(async (plan) => {
+      const createdPlan = await prisma.teamPlan.create({
+        data: {
+          type: plan.type as TeamPlanType,
+          planName: plan.planName,
+          price: plan.price,
+          extraMemberPrice: plan.extraMemberPrice || null,
+          createdAt: Math.floor(new Date().getTime() / 1000),
+          updatedAt: Math.floor(new Date().getTime() / 1000),
+        },
+      });
+
+      // Info: (20250221 - tzuhan) 插入 Feature 資料
+      if (plan.features) {
+        await prisma.teamPlanFeature.createMany({
+          data: plan.features.map((feature) => ({
+            planId: createdPlan.id,
+            featureKey: feature.featureKey,
+            featureValue: Array.isArray(feature.featureValue)
+              ? JSON.stringify(feature.featureValue)
+              : feature.featureValue,
+            createdAt: Math.floor(new Date().getTime() / 1000),
+            updatedAt: Math.floor(new Date().getTime() / 1000),
+          })),
+        });
+      }
+    })
+  );
+}
+*/
+
 async function main() {
   try {
     await createFile();
@@ -348,10 +387,10 @@ async function main() {
     await createAccountingSetting();
     await createCompanySetting();
     await createUserSetting();
-    await createRole();
+    // await createRole();
     await createCompanyKYC();
     await createAccount();
-    await createAdmin();
+    // await createAdmin();
     await createDepartment();
     await createEmployee();
     await createProjects();
@@ -360,10 +399,11 @@ async function main() {
     await createEmployeeProject();
     await createWorkRate();
     await createPlan();
+    // await createTPlan();
     await createOrder();
     await createPaymentRecord();
     await createSubscription();
-    await createInvitation();
+    // await createInvitation();
     await new Promise((resolve) => {
       setTimeout(resolve, 5000);
     });

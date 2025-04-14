@@ -30,8 +30,8 @@ const UploadArea = ({
   onChange: (key: UploadDocumentKeys, id: number | undefined) => void;
 }) => {
   const { t } = useTranslation(['common', 'kyc']);
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   const { toastHandler, messageModalDataHandler, messageModalVisibilityHandler } =
     useModalContext();
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -77,12 +77,12 @@ const UploadArea = ({
 
   const handleFileUpload = async (file: File) => {
     if (!hasCompanyId) return;
-    const selectedCompanyIdStr = String(selectedAccountBook?.id);
+    const selectedCompanyIdStr = String(connectedAccountBook?.id);
     const formData = new FormData();
     formData.append('file', file);
     const { success, code, data } = await uploadFileAPI({
       params: {
-        companyId: selectedAccountBook?.id,
+        companyId: connectedAccountBook?.id,
       },
       query: {
         type: UploadType.KYC,
@@ -214,7 +214,7 @@ const UploadArea = ({
     if (uploadedFileId) {
       const result = await deleteFileAPI({
         params: {
-          companyId: selectedAccountBook?.id,
+          companyId: connectedAccountBook?.id,
           fileId: uploadedFileId,
         },
       });
@@ -246,7 +246,7 @@ const UploadArea = ({
       if (id && file) {
         getFile({
           params: {
-            companyId: selectedAccountBook?.id,
+            companyId: connectedAccountBook?.id,
             fileId: id,
           },
         });

@@ -1,0 +1,81 @@
+{
+  "TEAM_PAGE": {
+    "META_TITLE": "團隊管理",
+    "INFORMATION": "資訊",
+    "COPIED": "已複製",
+    "CHANGE_TEAM_PICTURE": "變更團隊圖片",
+    "MEMBER": "成員"
+  },
+  "ERROR": {
+    "TEAM_DATA_NOT_FOUND": "找不到團隊資料"
+  },
+  "TEAM_ROLE": {
+    "OWNER": "擁有者",
+    "ADMIN": "管理者",
+    "EDITOR": "編輯者",
+    "VIEWER": "檢視者"
+  },
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "成員清單",
+    "MEMBERS": "位成員",
+    "ADD_MEMBER": "新增成員"
+  },
+  "INVITE_MEMBERS_MODAL": {
+    "INVITE_MEMBERS": "邀請成員",
+    "EMAIL": "電子信箱",
+    "ENTER_EMAIL": "輸入電子信箱後按下 Enter 或者加號按鈕",
+    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "請輸入有效的電子信箱",
+    "CANCEL": "取消",
+    "INVITE": "邀請"
+  },
+
+  "MY_ACCOUNT_PAGE": {
+    "PAGE_TITLE": "我的帳號",
+    "USER_INFO_TITLE": "使用者資訊",
+    "MY_TEAM_TITLE": "我的團隊",
+    "ADD_TEAM_BTN": "新增團隊",
+    "PLAN_BEGINNER": "免費版",
+    "PLAN_PROFESSIONAL": "專業版",
+    "PLAN_ENTERPRISE": "企業版",
+    "ROLE_OWNER": "擁有者",
+    "ROLE_ADMIN": "管理者",
+    "ROLE_EDITOR": "編輯者",
+    "ROLE_VIEWER": "檢視者",
+    "TEAM_LIST_IS_EMPTY": "目前尚未擁有任何團隊"
+  },
+  "CREATE_TEAM_MODAL": {
+    "MODAL_TITLE": "建立團隊",
+    "STEP_1": "團隊名稱",
+    "STEP_2": "團隊成員",
+    "STEP_3": "訂閱方案",
+    "TEAM_NAME": "團隊名稱",
+    "MEMBER_EMAIL": "成員的電子郵件",
+    "EMAIL_HINT": "請輸入有效的電子郵件地址。",
+    "PLAN_HINT": "如果您選擇跳過此步驟，我們將自動將您的團隊設置為免費版本。您可以選擇暫時使用服務的免費版本，享受基本功能，但可能會受到與高級方案相比的潛在限制。",
+    "SKIP_BTN": "暫時跳過",
+    "CONTINUE_BTN": "繼續",
+    "CREATE_BTN": "建立團隊"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "編輯團隊名稱",
+    "ADD_DESCRIPTION": "添加描述",
+    "ABOUT": "關於",
+    "TEAM_PROFILE": "團隊簡介",
+    "ADD_BANK_ACCOUNT": "新增銀行帳戶",
+    "BANK_ACCOUNT": "銀行帳戶",
+    "DESCRIPTION_PLACEHOLDER": "輸入您的團隊的描述",
+    "LINK": "連結",
+    "BANK_ACCOUNT_NUMBER": "銀行帳戶號碼",
+    "TEAM_PLAN": "團隊方案",
+    "TEAM_MEMBER": "團隊成員",
+    "MEMBER_SINGLE": "位成員",
+    "MEMBER_PLURAL": "位成員",
+    "LEDGER_SINGLE": "本帳本",
+    "LEDGER_PLURAL": "本帳本",
+    "LIBRARIES": "圖書館",
+    "TEAM_BANK_ACCOUNT": "團隊銀行帳戶",
+    "NO_TEAM_INFORMATION_AVAILABLE": "沒有團隊資料",
+    "PLEASE_CREATE_NEW_TEAM": "請新增團隊",
+    "BANK_CODE": "銀行代碼"
+  }
+}

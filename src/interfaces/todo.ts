@@ -1,4 +1,4 @@
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 
 export interface ITodo {
   id: number;
@@ -12,9 +12,7 @@ export interface ITodo {
   endTime: number;
 }
 
-export interface ITodoCompany extends ITodo {
-  id: number;
-  company: ICompany;
-  createdAt: number;
-  updatedAt: number;
+export interface ITodoAccountBook extends ITodo {
+  company: IAccountBook;
 }
+// ToDo: (20250306 - Liz) 這個 interface 預計改成 ITodoAccountBook

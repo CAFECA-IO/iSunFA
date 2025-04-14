@@ -1,5 +1,5 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z, ZodRawShape } from 'zod';
+import { z } from 'zod';
 import {
   ILineItemBetaValidator,
   iLineItemBodyValidatorV2,
@@ -50,18 +50,9 @@ const iVoucherValidator = z.object({
   lineItems: z.array(iLineItemValidator),
 });
 
-const voucherCreateQueryValidator = z.object({});
 const voucherCreateBodyValidator = z.object({
   voucher: iVoucherValidator,
 });
-
-export const voucherCreateValidator: IZodValidator<
-  (typeof voucherCreateQueryValidator)['shape'],
-  (typeof voucherCreateBodyValidator)['shape']
-> = {
-  query: voucherCreateQueryValidator,
-  body: voucherCreateBodyValidator,
-};
 
 const voucherUpdateQueryValidator = z.object({
   voucherId: zodStringToNumber,
@@ -73,13 +64,6 @@ export const voucherUpdateValidator: IZodValidator<
 > = {
   query: voucherUpdateQueryValidator,
   body: voucherCreateBodyValidator,
-};
-
-export const voucherRequestValidatorsV1: {
-  [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
-} = {
-  POST: voucherCreateValidator,
-  PUT: voucherUpdateValidator,
 };
 
 /**
@@ -928,6 +912,18 @@ export const voucherDeleteSchema = {
   input: {
     querySchema: voucherDeleteQueryValidatorV2,
     bodySchema: voucherNullSchema,
+  },
+  outputSchema: z.union([z.number(), z.null()]),
+  frontend: z.number(),
+};
+
+// Info: (20250218 - Shirley) Restore voucher schema
+export const voucherRestoreSchema = {
+  input: {
+    querySchema: z.object({
+      voucherId: zodStringToNumber,
+    }),
+    bodySchema: nullSchema,
   },
   outputSchema: z.union([z.number(), z.null()]),
   frontend: z.number(),

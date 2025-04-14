@@ -1,8 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { HTTP_STATUS } from '@/constants/http';
 import { PAYMENT } from '@/constants/service';
 import { getSession } from '@/lib/utils/session';
-import { HttpMethod } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import { createPaymentGateway } from '@/lib/utils/payment/factory';
+import { IGetCardBindingUrlOptions, IPaymentGateway } from '@/interfaces/payment_gateway';
+import { logUserAction } from '@/lib/utils/middleware';
+import { formatApiResponse } from '@/lib/utils/common';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
 
 /* Info: (20250111 - Luphia) 導向綁定信用卡頁面
  * 1. 取得 Session 資訊
@@ -19,46 +24,23 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
 
+  // Info: (20250318 - Luphia) step 2 只要有登入 userId 即可操作
+
+  // Info: (20250318 - Luphia) step 3 沒有 input
+
   // Info: (20250113 - Luphia) step 4
-  const paymentToken = process.env.PAYMENT_TOKEN as string;
-  const paymentId = process.env.PAYMENT_ID as string;
-  /* ToDo: (20250115 - Luphia) 需區分測試環境與正式環境
-  const oenGetIdApi =
-    process.env.NODE_ENV === 'development'
-      ? 'https://payment-api.testing.oen.tw/checkout-token'
-      : 'https://payment-api.oen.tw/checkout-token';
-  const oenPaymentUrl =
-    process.env.NODE_ENV === 'development'
-      ? `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`
-      : `https://${paymentId}.oen.tw/checkout/subscription/create/`;
-   */
-  const oenGetIdApi = 'https://payment-api.testing.oen.tw/checkout-token';
-  const oenPaymentUrl = `https://${paymentId}.testing.oen.tw/checkout/subscription/create/`;
-  const successUrl =
-    new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true';
-  const failureUrl = new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?failure';
-  // Info: (20250114 - Luphia) POST request to get payment id with Bearer token in header and json body
-  const options = {
-    merchantId: paymentId,
-    successUrl,
-    failureUrl,
-    customId: userId,
+  const paymentGateway = createPaymentGateway() as IPaymentGateway;
+
+  const getCardBindingUrlOptions: IGetCardBindingUrlOptions = {
+    successUrl: new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?success=true',
+    failureUrl: new URL('/api/payment/callback/oen', process.env.NEXTAUTH_URL) + '?failure',
+    customId: userId?.toString(),
   };
-
-  const response = await fetch(oenGetIdApi, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${paymentToken}`,
-    },
-    body: JSON.stringify(options),
-  });
-
-  const oenResponse = await response.json();
-  const url = oenPaymentUrl + oenResponse.data.id;
+  const cardBindingUrl = await paymentGateway.getCardBindingUrl(getCardBindingUrlOptions);
   const httpCode = 302;
   // Info: (20250113 - Luphia) step 7
-  const result = { httpCode, result: url };
+  const result = { httpCode, result: cardBindingUrl };
+  // Info: (20250318 - Luphia) step 8
   return result;
 };
 
@@ -67,8 +49,10 @@ export const oenPaymentHandler = async (req: NextApiRequest) => {
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || HttpMethod.GET;
-  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  const session = await getSession(req);
+  let httpCode;
   let result;
+  let statusMessage;
   let paymentHandler;
   const paymentService = process.env.PAYMENT_SERVICE;
 
@@ -83,11 +67,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       case HttpMethod.GET:
       default:
         ({ httpCode, result } = await paymentHandler(req));
+        res.writeHead(httpCode, { Location: result });
     }
   } catch (error) {
-    // Info: (20250113 - Luphia) unexpected exception, pass to global handler
+    loggerBack.error(error);
+    const err = error as Error;
+    statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    ({ httpCode, result } = formatApiResponse(statusMessage, {}));
+    res.status(httpCode).json(result);
   }
-
-  res.writeHead(httpCode, { Location: result });
+  await logUserAction(
+    session,
+    APIName.PAYMENT_METHOD_REGISTER_REDIRECT,
+    req,
+    statusMessage as string
+  );
   res.end();
 }

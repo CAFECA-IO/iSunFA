@@ -26,16 +26,18 @@ const BillingPage = () => {
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Info: (20250117 - Liz) 取得團隊資料 API
-  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  // Info: (20250117 - Liz) 取得使用者擁有的團隊資料 API (user is the owner of the team)
+  const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.GET_SUBSCRIPTION_BY_TEAM_ID
+  );
 
-  // Info: (20250117 - Liz) 打 API 取得團隊資料
-  const getTeamData = useCallback(async () => {
+  // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊資料
+  const getOwnedTeam = useCallback(async () => {
     if (!teamIdString) return;
     setIsLoading(true);
 
     try {
-      const { data: teamData, success } = await getTeamDataAPI({
+      const { data: teamData, success } = await getOwnedTeamAPI({
         params: { teamId: teamIdString },
       });
 
@@ -52,8 +54,8 @@ const BillingPage = () => {
   }, [teamIdString]);
 
   useEffect(() => {
-    getTeamData();
-  }, [getTeamData]);
+    getOwnedTeam();
+  }, [getOwnedTeam]);
 
   // Info: (20250116 - Liz) team.paymentStatus 為 UNPAID 時，顯示付款失敗的 Toast
   useEffect(() => {
@@ -72,7 +74,11 @@ const BillingPage = () => {
     const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
 
     // Info: (20250117 - Liz) 付款失敗後提醒三天後會降級為 Beginner 方案
-    if (team.paymentStatus === TPaymentStatus.UNPAID && remainingDays <= 3 && remainingDays >= 0) {
+    if (
+      team.paymentStatus === TPaymentStatus.PAYMENT_FAILED &&
+      remainingDays <= 3 &&
+      remainingDays >= 0
+    ) {
       toastHandler({
         id: ToastId.SUBSCRIPTION_PAYMENT_STATUS_UNPAID,
         type: ToastType.ERROR,
@@ -103,7 +109,7 @@ const BillingPage = () => {
 
     // Info: (20250117 - Liz) 到期日前三天提醒
     if (
-      team.paymentStatus === TPaymentStatus.UNPAID &&
+      team.paymentStatus === TPaymentStatus.PAYMENT_FAILED &&
       threeDaysBeforeExpiration <= 3 &&
       threeDaysBeforeExpiration >= 0
     ) {
@@ -189,7 +195,7 @@ const BillingPage = () => {
         pageTitle={`${t('subscriptions:BILLING_PAGE.PAGE_TITLE_PREFIX')} ${team.name} ${t('subscriptions:BILLING_PAGE.PAGE_TITLE_SUFFIX')}`}
         goBackUrl={ISUNFA_ROUTE.SUBSCRIPTIONS}
       >
-        <BillingPageBody team={team} getTeamData={getTeamData} />
+        <BillingPageBody team={team} getOwnedTeam={getOwnedTeam} />
       </Layout>
     </>
   );

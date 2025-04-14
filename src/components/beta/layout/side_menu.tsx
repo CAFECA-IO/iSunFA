@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiLayout } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
+import { GoArrowSwitch } from 'react-icons/go';
 import Image from 'next/image';
 import Link from 'next/link';
 import useOuterClick from '@/lib/hooks/use_outer_click';
@@ -12,6 +13,8 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import packageJson from '@package';
+import { TeamRole } from '@/interfaces/team';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 interface IDefaultMenuOption {
   title: string;
@@ -20,6 +23,7 @@ interface IDefaultMenuOption {
   iconWidth: number;
   iconHeight: number;
   disabled?: boolean;
+  hiddenForRole?: TeamRole;
 }
 
 interface IMenuOptionWithLink extends IDefaultMenuOption {
@@ -29,13 +33,14 @@ interface IMenuOptionWithLink extends IDefaultMenuOption {
 
 interface IMenuOptionWithSubMenu extends IDefaultMenuOption {
   link?: undefined;
-  subMenu: ISubMenuSubMenuSection[];
+  subMenu: ISubMenuSection[];
 }
 
 type TMenuOption = IMenuOptionWithLink | IMenuOptionWithSubMenu;
 
-interface ISubMenuSubMenuSection {
+interface ISubMenuSection {
   caption: string;
+  hiddenForRole?: TeamRole;
   subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithButton)[];
 }
 
@@ -43,6 +48,7 @@ interface IDefaultSubMenuOption {
   title: string;
   disabled?: boolean;
   needToVerifyAccountBook: boolean;
+  hiddenForRole?: TeamRole;
 }
 
 enum SubMenuOptionType {
@@ -69,6 +75,7 @@ const MENU_CONFIG: TMenuOption[] = [
     subMenu: [
       {
         caption: 'ACCOUNTING',
+        hiddenForRole: TeamRole.VIEWER,
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
@@ -109,6 +116,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'asset_management_icon',
     iconWidth: 24,
     iconHeight: 24,
+    hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'ASSET',
@@ -138,6 +146,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'reports_icon',
     iconWidth: 20.58,
     iconHeight: 23.85,
+    hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'FINANCIAL_REPORT',
@@ -158,17 +167,6 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'STATEMENT_OF_CASH_FLOWS',
             link: ISUNFA_ROUTE.CASH_FLOW,
-            needToVerifyAccountBook: true,
-          },
-        ],
-      },
-      {
-        caption: 'TAX_REPORT',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'BUSINESS_TAX_RETURN_401',
-            link: ISUNFA_ROUTE.BUSINESS_TAX,
             needToVerifyAccountBook: true,
           },
         ],
@@ -228,6 +226,7 @@ const MENU_CONFIG: TMenuOption[] = [
             title: 'ACCOUNTING_SETTINGS',
             link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
             needToVerifyAccountBook: true,
+            hiddenForRole: TeamRole.VIEWER,
           },
           {
             type: SubMenuOptionType.LINK,
@@ -260,13 +259,15 @@ const SubMenuOption = ({
   link,
   disabled,
   needToVerifyAccountBook,
+  hiddenForRole,
   toggleOverlay = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
-  const noSelectedCompany = !selectedAccountBook;
+  const { connectedAccountBook } = useUserCtx();
+  const noSelectedCompany = !connectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
+  const { teamRole } = useUserCtx();
 
   const toggleEmbedCodeModal = () => {
     setIsEmbedCodeModalOpen((prev) => !prev);
@@ -322,6 +323,9 @@ const SubMenuOption = ({
     }
   };
 
+  // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
+  if (hiddenForRole && hiddenForRole === teamRole) return null;
+
   if (type === SubMenuOptionType.LINK) {
     return (
       <Link
@@ -359,20 +363,26 @@ const SubMenuOption = ({
 };
 
 interface SubMenuSectionProps {
-  subMenu: ISubMenuSubMenuSection;
+  subMenuSection: ISubMenuSection;
   toggleOverlay: () => void;
 }
 
-const SubMenuSection = ({ subMenu, toggleOverlay }: SubMenuSectionProps) => {
+const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) => {
+  const { teamRole } = useUserCtx();
+
   const { t } = useTranslation(['layout']);
+
+  // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
+  if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
+
   return (
     <>
       <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
-        {t(`layout:SIDE_MENU.${subMenu.caption}`)}
+        {t(`layout:SIDE_MENU.${subMenuSection.caption}`)}
       </h4>
 
-      {subMenu.subMenu.map((item) => (
-        <SubMenuOption key={item.title} {...item} toggleOverlay={toggleOverlay} />
+      {subMenuSection.subMenu.map((option) => (
+        <SubMenuOption key={option.title} {...option} toggleOverlay={toggleOverlay} />
       ))}
     </>
   );
@@ -392,7 +402,7 @@ const SubMenu = ({ selectedMenuOption, toggleOverlay }: SubMenuProps) => {
     <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
       <div className="flex flex-col gap-24px">
         {subMenu.map((item) => (
-          <SubMenuSection key={item.caption} subMenu={item} toggleOverlay={toggleOverlay} />
+          <SubMenuSection key={item.caption} subMenuSection={item} toggleOverlay={toggleOverlay} />
         ))}
       </div>
     </div>
@@ -454,12 +464,14 @@ interface SideMenuProps {
 const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const { version } = packageJson;
   const { t } = useTranslation(['layout']);
-  const [isSideMenuOpen, setIsSideMenuOpen] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
+  const { isSideMenuOpen, toggleSideMenu } = useDashboardCtx();
+  const { teamRole, connectedAccountBook } = useUserCtx();
 
-  const toggleSideMenu = () => {
-    setIsSideMenuOpen((prev) => !prev);
-  };
+  const hasConnectedAccountBook = !!connectedAccountBook;
+  const userAvatarSrc = hasConnectedAccountBook
+    ? connectedAccountBook.imageId
+    : '/images/default_account_book_image.svg';
 
   const {
     targetRef: subMenuTargetRef,
@@ -491,29 +503,78 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
           className="relative flex h-full w-280px flex-none flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-32px shadow-SideMenu"
           ref={subMenuTargetRef}
         >
-          {/* // Info: (20241121 - Liz) Side Menu Icon */}
+          {/* Info: (20241121 - Liz) Side Menu Icon */}
           <div>
             <button type="button" onClick={toggleSideMenu} className="p-10px">
               <FiLayout size={24} />
             </button>
           </div>
 
-          {/* // Info: (20241121 - Liz) Side Menu Content */}
+          {/* Info: (20250401 - Liz) Profile (Connected Account Book) */}
+          <section className="flex items-center gap-16px">
+            <div className="items-center justify-center">
+              <Image
+                src={userAvatarSrc}
+                alt="user_avatar"
+                width={64}
+                height={64}
+                className="rounded-full"
+              ></Image>
+            </div>
+
+            <div className="flex flex-auto items-center justify-between">
+              <div>
+                <h3 className="text-base font-medium tracking-tight-016 text-text-neutral-tertiary">
+                  {t('layout:SIDE_MENU.CURRENT_ACCOUNT_BOOK')}
+                </h3>
+
+                {hasConnectedAccountBook && (
+                  <h4 className="text-xl font-bold leading-8 text-text-neutral-secondary">
+                    {connectedAccountBook.name}
+                  </h4>
+                )}
+
+                {!hasConnectedAccountBook && (
+                  <Link
+                    href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
+                    className="text-start text-lg font-semibold tracking-tight-018 text-link-text-primary"
+                  >
+                    {t('layout:SIDE_MENU.SELECT_ACCOUNT_BOOK')}
+                  </Link>
+                )}
+              </div>
+
+              {hasConnectedAccountBook && (
+                <Link href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE} className="text-button-text-secondary">
+                  <GoArrowSwitch size={24} />
+                </Link>
+              )}
+            </div>
+          </section>
+
+          {/* Info: (20250401 - Liz) Divider */}
+          <div className="h-1px bg-divider-stroke-lv-4"></div>
+
+          {/* Info: (20241121 - Liz) Side Menu Content */}
           <div className="flex flex-auto flex-col gap-24px">
-            {MENU_CONFIG.map((menu) => (
-              <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
-            ))}
+            {MENU_CONFIG.map((menu) => {
+              // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 menuOption
+              if (menu.hiddenForRole && menu.hiddenForRole === teamRole) return null;
+              return (
+                <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
+              );
+            })}
           </div>
 
           {isSubMenuOpen && (
             <SubMenu selectedMenuOption={selectedMenuOption} toggleOverlay={toggleOverlay} />
           )}
 
-          {/* // Info: (20241121 - Liz) Side Menu Footer */}
+          {/* Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
             <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
 
-            {/* // Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
+            {/* Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
               <Link href={ISUNFA_ROUTE.PRIVACY_POLICY} className="text-link-text-primary">
                 {t('layout:SIDE_MENU.PRIVACY_POLICY')}

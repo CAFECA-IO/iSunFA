@@ -1,25 +1,129 @@
-import { IAccountBookNode, IAccountBookNodeJSON } from '@/interfaces/account_book_node';
-import { ILineItemEntity } from '@/interfaces/line_item';
+import { LocaleKey } from '@/constants/normal_setting';
+import { ITeam } from '@/interfaces/team';
 
-/* Info: (20241117 - Luphia)
- * 設計一個 Account Book 的資料結構，參考 N-ary Tree 的架構
- * 具備 nodes 屬性，以 Map 的方式儲存所有節點，key 為節點的 id，value 為節點本身
- * 具備 toJSON 方法，將樹狀結構轉換為 JSON 格式，可帶入 filter 來篩選需要的屬性，可產出 Trial Balance 要的資料
- * 具備 toLedgerJSON 方法，將樹狀結構轉換為 Ledger JSON 格式，可帶入 filter 來篩選需要的屬性
- * 具備 findNode 方法，用來尋找特定的節點
- * 具備 findNodes 方法，用來尋找特定的節點，並回傳所有符合條件的節點
- * 具備 insertNode 方法，用來插入新的節點
- * 具備 deleteNode 方法，用來刪除特定的節點
- * 具備 addDate 方法，用來更新特定的節點
- * 具備 traverse 方法，用來遍歷整個樹狀結構
- */
+export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
+export const NO_ACCOUNT_BOOK_ID = 555;
+export const CANCEL_ACCOUNT_BOOK_ID: number = -1;
+
+export enum ACCOUNT_BOOK_ROLE {
+  ACCOUNTANT = 'ACCOUNTANT',
+  BOOKKEEPER = 'BOOKKEEPER',
+  EDUCATOR = 'EDUCATOR',
+  COMPANY = 'COMPANY',
+}
+
+export enum WORK_TAG {
+  ALL = 'ALL',
+  FINANCIAL = 'FINANCIAL',
+  TAX = 'TAX',
+}
+
+export enum ACCOUNT_BOOK_UPDATE_ACTION {
+  UPDATE_TAG = 'updateTag',
+}
+
+// Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
+// Info: (20250226 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到
 export interface IAccountBook {
-  nodes: Map<number, IAccountBookNode>;
-  toJSON(): IAccountBookNodeJSON[];
-  findNode(id: number): IAccountBookNode | null;
-  findNodes(filter: (node: IAccountBookNode) => boolean): IAccountBookNode[];
-  insertNode(node: IAccountBookNode): void;
-  deleteNode(id: number): void;
-  addData(data: ILineItemEntity): void;
-  traverse(callback: (node: IAccountBookNode) => void): void;
+  id: number;
+  teamId: number;
+  userId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+  isPrivate?: boolean; // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
+}
+
+export interface IAccountBookWithTeam extends IAccountBook {
+  team: ITeam;
+  isTransferring: boolean;
+}
+
+// Info: (20250411 - Liz) getAccountBookInfoByBookId API payload
+export interface ICountry {
+  id: string;
+  code: LocaleKey;
+  name: string;
+  localeKey: LocaleKey;
+  currencyCode: string;
+  phoneCode: string;
+  phoneExample: string;
+}
+
+// Info: (20250411 - Liz) getAccountBookInfoByBookId API payload
+export interface IAccountBookDetails {
+  id: string;
+  name: string;
+  taxId: string;
+  taxSerialNumber: string;
+  representativeName: string;
+  country: ICountry;
+  phoneNumber: string;
+  address: string;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ICompanyTaxIdAndName {
+  taxId: string;
+  name: string;
+}
+
+/**
+ * Info: (20241023 - Murky)
+ * @description Company entity interface specific for backend
+ * @note use parsePrismaCompanyToCompanyEntity to convert Prisma.Company to ICompanyEntity
+ * @note use initCompanyEntity to create a new ICompanyEntity from scratch
+ */
+export interface ICompanyEntity {
+  /**
+   * Info: (20241023 - Murky)
+   * @description id in database, 0 if not yet saved in database
+   */
+  id: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description the name of company
+   */
+  name: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description 統一編號
+   */
+  taxId: string;
+
+  // Deprecated: (20241023 - Murky) - tag will be removed after 20241030
+  // tag: string;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @description when this company is formed in real life
+   * @note need to be in seconds
+   */
+  startDate: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
+  createdAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds
+   */
+  updatedAt: number;
+
+  /**
+   * Info: (20241023 - Murky)
+   * @note need to be in seconds, null if not
+   */
+  deletedAt: number | null;
 }

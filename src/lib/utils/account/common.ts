@@ -1,4 +1,4 @@
-import { PUBLIC_ACCOUNT_BOOK_ID } from '@/constants/company';
+import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import {
   IAccountForSheetDisplay,
   IAccountNode,
@@ -9,7 +9,6 @@ import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { AccountType } from '@/constants/account';
 import { Account as PrismaAccount } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import { AccountBookNode } from '@/lib/utils/account/account_book_node';
 
 export function initAccountEntity(
   dto: Partial<PrismaAccount> & {
@@ -646,18 +645,4 @@ export function reverseNetIncome(netIncome: number = 0, originalNumber: number =
 
 export function absoluteNetIncome(netIncome: number = 0, originalNumber: number = 0): number {
   return Math.abs(netIncome + originalNumber);
-}
-
-export function isNodeCircularReference(
-  node: AccountBookNode,
-  newParent: AccountBookNode
-): boolean {
-  let current = newParent;
-  while (current) {
-    if (current.id === node.id) {
-      return true;
-    }
-    current = current.parent as AccountBookNode;
-  }
-  return false;
 }

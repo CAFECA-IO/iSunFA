@@ -16,6 +16,11 @@ import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_set
 import { AssetDepreciationMethod } from '@/constants/asset';
 import { calculateRemainingLife } from '@/lib/utils/asset';
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
+import { getSession } from '@/lib/utils/session';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -43,13 +48,40 @@ interface IHandlerResponse extends IHandlerResult {
   payload: IHandlerResultPayload;
 }
 
-export const handleGetRequest: IHandleRequest<
-  APIName.ASSET_GET_BY_ID_V2,
-  IGetResult['payload']
-> = async ({ query }) => {
+const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['payload']> = async ({
+  query,
+  req,
+}) => {
   const { assetId, companyId } = query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
+
+  const { teams } = await getSession(req);
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const asset = await getLegitAssetById(assetId, companyId);
   if (!asset) {
@@ -99,10 +131,11 @@ export const handleGetRequest: IHandleRequest<
 };
 
 // TODO: (20241211 - Shirley) 使用 body.updateDate 更新資產相關的 voucher
-export const handlePutRequest: IHandleRequest<
-  APIName.UPDATE_ASSET_V2,
-  IPutResult['payload']
-> = async ({ query, body }) => {
+const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payload']> = async ({
+  query,
+  body,
+  req,
+}) => {
   const { assetId, companyId } = query;
   const {
     assetName,
@@ -117,6 +150,33 @@ export const handlePutRequest: IHandleRequest<
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
+
+  const { teams } = await getSession(req);
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const asset = await getLegitAssetById(assetId, companyId);
   if (!asset) {
@@ -174,14 +234,41 @@ export const handlePutRequest: IHandleRequest<
   return { statusMessage, payload };
 };
 
-export const handleDeleteRequest: IHandleRequest<
+const handleDeleteRequest: IHandleRequest<
   APIName.DELETE_ASSET_V2,
   IDeleteResult['payload']
-> = async ({ query }) => {
+> = async ({ query, req }) => {
   const { assetId, companyId } = query;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
+
+  const { teams } = await getSession(req);
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const asset = await getLegitAssetById(assetId, companyId);
 

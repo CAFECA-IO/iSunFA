@@ -31,6 +31,9 @@ export enum SortBy {
   ACCUMULATED_DEPRECIATION = 'AccumulatedDepreciation',
   RESIDUAL_VALUE = 'ResidualValue',
   REMAINING_LIFE = 'RemainingLife',
+  CREATED_AT = 'CreatedAt',
+  UPDATED_AT = 'UpdatedAt',
+  JOINED_AT = 'JoinedAt',
 
   /**
    * Info: (20241104 - Murky)
@@ -69,7 +72,7 @@ export enum SortBy {
 
   /**
    * Info: (20241210 - Shirley)
-   * @description 資產列表排序
+   * @description 資產清單排序
    */
   ACQUISITION_DATE = 'AcquisitionDate',
 }

@@ -5,8 +5,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { IFile } from '@/interfaces/file';
 import { getSession } from '@/lib/utils/session';
 import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
-import { checkAuthorization } from '@/lib/utils/auth_check';
-import { AuthFunctionsKeys } from '@/interfaces/auth';
 import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
 import { File } from '@prisma/client';
 
@@ -15,41 +13,35 @@ async function handleGetRequest(req: NextApiRequest) {
   let payload: IFile | null = null;
 
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId } = session;
 
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    try {
+      const { fileId } = req.query;
+      const fileName = String(fileId);
 
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      try {
-        const { fileId } = req.query;
-        const fileName = String(fileId);
+      let file: File | null;
 
-        let file: File | null;
-
-        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
-        if (isStringNumber(fileName)) {
-          const fileIdInt = Number(fileName);
-          file = await findFileById(fileIdInt);
-        } else {
-          file = await findFileInDBByName(fileName);
-        }
-
-        if (file) {
-          const filePath = file.url;
-          const stat = await fs.stat(filePath);
-          payload = { id: file.id, name: file.name, size: stat.size, existed: true };
-        } else {
-          payload = { id: -1, name: 'not found', size: 0, existed: false };
-        }
-        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-      } catch (error) {
-        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+      if (isStringNumber(fileName)) {
+        const fileIdInt = Number(fileName);
+        file = await findFileById(fileIdInt);
+      } else {
+        file = await findFileInDBByName(fileName);
       }
+
+      if (file) {
+        const filePath = file.url;
+        const stat = await fs.stat(filePath);
+        payload = { id: file.id, name: file.name, size: stat.size, existed: true };
+      } else {
+        payload = { id: -1, name: 'not found', size: 0, existed: false };
+      }
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    } catch (error) {
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
 
@@ -61,47 +53,41 @@ async function handleDeleteRequest(req: NextApiRequest) {
   let payload: IFile | null = null;
 
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId } = session;
 
   if (!userId) {
     statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
   } else {
-    const isAuth = await checkAuthorization([AuthFunctionsKeys.admin], { userId, companyId });
+    try {
+      const { fileId } = req.query;
+      const fileName = fileId as string;
 
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-    } else {
-      try {
-        const { fileId } = req.query;
-        const fileName = fileId as string;
+      let file: File | null = null;
 
-        let file: File | null = null;
-
-        // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
-        if (isStringNumber(fileName)) {
-          const fileIdInt = Number(fileName);
-          file = await deleteFileById(fileIdInt);
-        } else {
-          const fileForDelete = await findFileInDBByName(fileName);
-          if (fileForDelete) {
-            file = await deleteFileById(fileForDelete.id);
-          }
+      // Info: (20240902 - Murky) FileId 可以給數字或是檔案名稱
+      if (isStringNumber(fileName)) {
+        const fileIdInt = Number(fileName);
+        file = await deleteFileById(fileIdInt);
+      } else {
+        const fileForDelete = await findFileInDBByName(fileName);
+        if (fileForDelete) {
+          file = await deleteFileById(fileForDelete.id);
         }
-
-        if (file) {
-          const stat = await fs.stat(file.url);
-          await fs.unlink(file.url);
-
-          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: file.id, name: file.name, size: stat.size, existed: false };
-        } else {
-          statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-          payload = { id: -1, name: 'not found', size: 0, existed: false };
-        }
-      } catch (error) {
-        // ToDo: (20240828 - Jacky) Log error message
-        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
+
+      if (file) {
+        const stat = await fs.stat(file.url);
+        await fs.unlink(file.url);
+
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+        payload = { id: file.id, name: file.name, size: stat.size, existed: false };
+      } else {
+        statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+        payload = { id: -1, name: 'not found', size: 0, existed: false };
+      }
+    } catch (error) {
+      // ToDo: (20240828 - Jacky) Log error message
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
 

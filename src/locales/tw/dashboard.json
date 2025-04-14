@@ -14,7 +14,7 @@
     "ACCOUNT_BOOKS": "帳本清單",
     "COMPANY_NOT_YET_CREATED": "尚未建立公司",
     "PLEASE_PROCEED_TO": "請前往",
-    "CREATE_A_COMPANY": "建立公司",
+    "CREATE_AN_ACCOUNT_BOOK": "建立帳本",
     "LATEST_NEWS": "最新消息",
     "FINANCIAL": "財經新聞",
     "SYSTEM": "系統資訊",
@@ -127,7 +127,7 @@
     "TEAM": "團隊",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帳本",
     "ENTER_NAME": "輸入名稱",
-    "ENTER_NUMBER": "輸入統一編號",
+    "ENTER_TAX_ID": "輸入統一編號",
     "ENTER_FULL_ADDRESS": "輸入完整地址",
     "CANCEL": "取消",
     "ADD": "新增",
@@ -135,12 +135,52 @@
     "CHOOSE_TEAM": "選擇團隊",
     "PLEASE_ENTER_THE_NAME": "請輸入名稱",
     "PLEASE_SELECT_A_WORK_TAG": "請選擇工作標籤",
-    "PLEASE_SELECT_A_TEAM": "請選擇團隊"
+    "PLEASE_SELECT_A_TEAM": "請選擇團隊",
+    "CREATE_ACCOUNT_BOOK_FAILED": "建立帳本失敗",
+    "ERROR_CODE": "錯誤代碼",
+    "ERROR_MESSAGE": "錯誤訊息"
   },
 
   "WORK_TAG": {
     "FINANCIAL": "財務",
     "TAX": "稅務",
     "ALL": "全部"
+  },
+
+  "ACCOUNT_BOOK_INFO_MODAL": {
+    "BASIC_INFO": "基本資訊",
+    "COMPANY_NAME": "公司名稱",
+    "TAX_ID": "統一編號",
+    "WORK_TAG": "工作標籤",
+    "TEAM": "團隊",
+    "CREATE_NEW_ACCOUNT_BOOK": "建立新帳本",
+    "ENTER_NAME": "輸入名稱",
+    "ENTER_TAX_ID": "輸入統一編號",
+    "ENTER_FULL_ADDRESS": "輸入完整地址",
+    "CANCEL": "取消",
+    "ADD": "新增",
+    "CHOOSE_WORK_TAG": "選擇工作標籤",
+    "CHOOSE_TEAM": "選擇團隊",
+    "CREATE_ACCOUNT_BOOK_FAILED": "建立帳本失敗",
+    "ERROR_CODE": "錯誤代碼",
+    "ERROR_MESSAGE": "錯誤訊息",
+
+    "COMPANY_ADDRESS": "公司地址",
+    "CHOOSE_CITY": "選擇縣市",
+    "CHOOSE_DISTRICT": "選擇行政區",
+    "RESPONSIBLE_PERSON": "負責人",
+    "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
+
+    "TAX_SERIAL_NUMBER": "稅籍編號",
+    "ENTER_TAX_SERIAL_NUMBER": "輸入稅籍編號",
+    "PHONE_NUMBER": "電話號碼",
+    "ENTER_PHONE_NUMBER": "輸入電話號碼",
+
+    "PLEASE_ENTER_THE_NAME": "請輸入名稱",
+    "PLEASE_ENTER_RESPONSIBLE_PERSON": "請輸入負責人姓名",
+    "PLEASE_ENTER_TAX_ID": "請輸入統一編號",
+    "PLEASE_ENTER_TAX_SERIAL_NUMBER": "請輸入稅籍編號",
+    "PLEASE_SELECT_A_WORK_TAG": "請選擇工作標籤",
+    "PLEASE_SELECT_A_TEAM": "請選擇團隊"
   }
 }

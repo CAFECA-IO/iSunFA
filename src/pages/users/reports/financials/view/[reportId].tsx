@@ -1,5 +1,4 @@
 // import NavBar from '@/components/nav_bar/nav_bar'; // ToDo: (20241129 - Liz) 使用新版的 Layout
-import ReportsSidebar from '@/components/reports_sidebar/reports_sidebar';
 import ViewFinancialSection from '@/components/view_financial_section/view_financial_section';
 import {
   BaifaReportTypeToReportType,
@@ -29,7 +28,7 @@ interface IServerSideProps {
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation(['reports']);
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook, isAuthLoading } = useUserCtx();
+  const { connectedAccountBook, isAuthLoading } = useUserCtx();
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[
       BaifaReportTypeToReportType[reportType as keyof typeof BaifaReportTypeToReportType]
@@ -45,7 +44,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
   const { trigger: getFinancialReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_BY_ID);
 
   useEffect(() => {
-    if (isAuthLoading || !selectedAccountBook) return;
+    if (isAuthLoading || !connectedAccountBook) return;
 
     const getFinancialReport = async () => {
       try {
@@ -54,7 +53,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: selectedAccountBook.id, reportId },
+          params: { companyId: connectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
@@ -81,7 +80,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
     console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
-  }, [isAuthLoading, reportId, reportType, selectedAccountBook, t, toastHandler]);
+  }, [isAuthLoading, reportId, reportType, connectedAccountBook, t, toastHandler]);
 
   const displayedBody =
     isAuthLoading || !isGetFinancialReportSuccess ? (
@@ -90,10 +89,6 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
       </div>
     ) : (
       <div>
-        <div className="flex w-full flex-1 flex-col overflow-x-hidden">
-          <ReportsSidebar />
-        </div>
-
         <div className="h-1400px bg-surface-neutral-main-background">
           <ViewFinancialSection
             reportTypesName={

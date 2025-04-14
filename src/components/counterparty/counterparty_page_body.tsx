@@ -12,16 +12,15 @@ import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
 
 const CounterpartyPageBody = () => {
-  const { t } = useTranslation(['search', 'common']);
+  const { t } = useTranslation(['search', 'common', 'settings']);
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { addCounterPartyModalVisibilityHandler, addCounterPartyModalDataHandler } =
     useModalContext();
 
   // Info: (20241112 - Anna) 新增用於儲存 API 回傳資料的狀態，並定義 counterpartyList 為 ICounterparty 型別的陣列
   const [counterparties, setCounterparties] = useState<ICounterparty[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>(''); // Info: (20241106 - Anna) 定義搜尋關鍵字狀態
-  // const [isModalOpen, setIsModalOpen] = useState(false); // Info: (20241106 - Anna) State to handle modal visibility
   const queryCondition = {
     limit: 99999, // Info: (20241105 - Anna) 限制每次取出 99999 筆
     forUser: true,
@@ -34,68 +33,29 @@ const CounterpartyPageBody = () => {
     APIName.COUNTERPARTY_LIST
   );
   const fetchCounterpartyData = async () => {
-    if (!selectedAccountBook?.id) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('公司 ID 不存在，無法呼叫 API');
+    if (!connectedAccountBook?.id) {
       return;
     }
 
     try {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.log('Fetching counterparty data...');
       const response = await getCounterpartyList({
-        params: { companyId: selectedAccountBook.id },
+        params: { companyId: connectedAccountBook.id },
         query: queryCondition,
       });
-      // Deprecate: (20241118 - Anna) 檢查 response 的結構
-      // eslint-disable-next-line no-console
-      console.log('完整的 response:', response);
       const { success, data: responseData } = response;
 
       // Info: (20241118 - Anna) 檢查 response.success 是否為 true
       if (!success) {
-        // Deprecate: (20241118 - Anna) debug
-        // eslint-disable-next-line no-console
-        console.error('API response 不成功:', response);
         return;
       }
 
-      // Info: (20241118 - Anna) 檢查 response.data 是否有正確的結構
-      //  const responseData = response.data as { data: { data: ICounterparty[] } };
-
       if (responseData && Array.isArray(responseData.data)) {
-        // Deprecate: (20241118 - Anna) debug
-        // eslint-disable-next-line no-console
-        console.log('成功取得交易夥伴列表:', responseData.data);
         setCounterparties(responseData.data);
       } else {
         // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
         console.error('responseData 結構不正確:', responseData);
       }
-
-      // if (!responseData.data || !Array.isArray(responseData.data.data)) {
-      //   // eslint-disable-next-line no-console
-      //   console.error('responseData 結構不正確:', responseData);
-      //   return;
-      // }
-
-      // 若以上檢查都通過，則設定交易夥伴列表
-      // eslint-disable-next-line no-console
-      // console.log('成功取得交易夥伴列表:', responseData.data.data);
-      // setCounterparties(responseData.data.data);
-
-      //   const responseData = response.data as { data: { data: ICounterparty[] } };
-      //   if (response.success && Array.isArray(responseData.data.data)) {
-      //     // eslint-disable-next-line no-console
-      //     console.log('成功取得交易夥伴列表:', responseData.data.data);
-      //     setCounterparties(responseData.data.data); // 設定交易夥伴列表
-      //   } else {
-      //     // eslint-disable-next-line no-console
-      //     console.error('取回交易夥伴列表失敗', response);
-      //   }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error fetching data:', error);
@@ -105,19 +65,9 @@ const CounterpartyPageBody = () => {
   // Info: (20241112 - Anna) 呼叫 API 並儲存回傳資料到狀態
   useEffect(() => {
     fetchCounterpartyData();
-  }, [selectedAccountBook]);
-
-  // const handleModalOpen = () => {
-  //   setIsModalOpen(true); // Info: (20241106 - Anna) Function to open the modal
-  // };
-
-  // const handleModalClose = () => {
-  //   setIsModalOpen(false); // Info: (20241106 - Anna)  Function to close the modal
-  // };
+  }, [connectedAccountBook]);
 
   const handleSave = async () => {
-    // Info: (20241106 - Anna) Handle the data from the modal
-    // setIsModalOpen(false); // Info: (20241106 - Anna) Close modal after saving
     setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件
     await fetchCounterpartyData(); // Info: (20241113 - Anna) 重新加載交易夥伴列表
   };
@@ -140,7 +90,7 @@ const CounterpartyPageBody = () => {
             onClick={addCounterPartyModalVisibilityHandler}
           >
             <MdPersonAddAlt1 size={24} />
-            {t('setting:NORMAL.ADD_NEW_CLIENT_SUPPLIER')}
+            {t('settings:NORMAL.ADD_NEW_CLIENT_SUPPLIER')}
           </Button>
         </div>
         {/* Info: (20241112 - Anna) 傳入 API 資料到 CounterpartyList */}

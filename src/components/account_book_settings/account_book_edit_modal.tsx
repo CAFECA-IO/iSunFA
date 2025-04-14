@@ -1,12 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompanySetting } from '@/interfaces/company_setting';
-import { ICompanyAndRole } from '@/interfaces/company';
+import { IAccountBook, IAccountBookDetails } from '@/interfaces/account_book';
 import { Button } from '@/components/button/button';
 import { LocaleKey } from '@/constants/normal_setting';
 import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
@@ -18,48 +17,53 @@ import { MessageType } from '@/interfaces/message_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface AccountBookEditModalProps {
-  companyAndRole: ICompanyAndRole;
+  accountBook: IAccountBook;
   toggleModal: () => void;
 }
 
-const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
-  companyAndRole,
-  toggleModal,
-}) => {
+const AccountBookEditModal = ({ accountBook, toggleModal }: AccountBookEditModalProps) => {
   const { t } = useTranslation(['settings', 'common', 'account_book']);
   const router = useRouter();
-  const [companyName, setCompanyName] = React.useState('');
-  const [businessTaxId, setBusinessTaxId] = React.useState('');
-  const [taxSerialNumber, setTaxSerialNumber] = React.useState('');
-  const [representativeName, setRepresentativeName] = React.useState('');
-  const [companyAddress, setCompanyAddress] = React.useState('');
-  const [country, setCountry] = React.useState<LocaleKey>(LocaleKey.en);
-  const [countryCode, setCountryCode] = React.useState<LocaleKey>(LocaleKey.en);
-  const [phoneNumber, setPhoneNumber] = React.useState<string | undefined>('');
+
+  const [accountBookName, setAccountBookName] = useState<string>('');
+  const [businessTaxId, setBusinessTaxId] = useState<string>('');
+  const [taxSerialNumber, setTaxSerialNumber] = useState<string>('');
+  const [representativeName, setRepresentativeName] = useState<string>('');
+  const [accountBookAddress, setCompanyAddress] = useState<string>('');
+
+  const [countryCode, setCountryCode] = useState<LocaleKey | undefined>(undefined);
+  const [phoneCountryCode, setPhoneCountryCode] = useState<LocaleKey | undefined>(undefined);
+
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+
   const { toastHandler, messageModalVisibilityHandler, messageModalDataHandler } =
     useModalContext();
-  const { trigger: getCompanySettingAPI } = APIHandler<ICompanySetting>(
-    APIName.COMPANY_SETTING_GET
-  );
-  const { trigger: updateAccountBookSettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
-  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.COMPANY_DELETE);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const { trigger: updateAccountBookSettingAPI } = APIHandler(APIName.COMPANY_SETTING_UPDATE);
+  const { trigger: deleteAccountBookAPI } = APIHandler(APIName.DELETE_ACCOUNT_BOOK);
+
+  // Info: (20250411 - Liz) 取得帳本詳細資訊 API
+  const { trigger: getAccountBookInfoByIdAPI } = APIHandler<IAccountBookDetails>(
+    APIName.GET_ACCOUNT_BOOK_INFO_BY_ID
+  );
+
+  // ToDo: (20250411 - Liz) 移除舊的 API 改串新的 API (updateAccountBookInfo)
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (companyAndRole) {
+    if (accountBook) {
       try {
         const res = await updateAccountBookSettingAPI({
           params: {
-            companyId: companyAndRole.company.id,
+            accountBookId: accountBook.id,
           },
           body: {
-            companyName,
-            companyTaxId: businessTaxId,
+            accountBookName,
+            accountBookTaxId: businessTaxId,
             taxSerialNumber,
             representativeName,
-            address: companyAddress,
-            country,
-            countryCode,
+            address: accountBookAddress,
+            country: countryCode,
+            countryCode, // Deprecated: (20250411 - Liz)
             phone: phoneNumber,
           },
         });
@@ -85,12 +89,13 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
     }
   };
 
+  // ToDo: (20250411 - Liz) 移除舊的 API 改串新的 API
   const procedureOfDelete = () => {
-    if (!companyAndRole) return;
+    if (!accountBook) return;
     messageModalVisibilityHandler();
     deleteAccountBookAPI({
       params: {
-        companyId: companyAndRole.company.id,
+        accountBookId: accountBook.id,
       },
     });
 
@@ -98,7 +103,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
   };
 
   const deleteCompanyClickHandler = () => {
-    if (!companyAndRole) return;
+    if (!accountBook) return;
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: t('account_book:DELETE.TITLE'),
@@ -110,53 +115,55 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
     messageModalVisibilityHandler();
   };
 
-  const getCompanySetting = async () => {
-    if (companyAndRole) {
+  // Info: (20250411 - Liz) 取得帳本詳細資訊 (getAccountBookInfoByBookId)
+  useEffect(() => {
+    if (!accountBook) return;
+
+    const getAccountBookInfo = async () => {
       try {
-        const res = await getCompanySettingAPI({
-          params: { companyId: companyAndRole.company.id },
+        const { success, data } = await getAccountBookInfoByIdAPI({
+          params: { accountBookId: accountBook.id },
         });
-        const { success, data } = res;
+
         if (success && data) {
-          setCompanyName(data.companyName);
-          setBusinessTaxId(data.companyTaxId);
+          setAccountBookName(data.name);
+          setBusinessTaxId(data.taxId);
           setTaxSerialNumber(data.taxSerialNumber);
           setRepresentativeName(data.representativeName);
           setCompanyAddress(data.address);
-          setCountry(data.country as LocaleKey); // Info: (202411007 - Tzuhan)  需跟後端確認是否可以直接轉型
-          setCountryCode(LocaleKey.en); // ToDo: (202411007 - Tzuhan) 需跟後端確認是否有 countryCode
-          setPhoneNumber(data.phone);
+          setCountryCode(data.country.code);
+          setPhoneCountryCode(data.country.localeKey);
+          setPhoneNumber(data.phoneNumber);
         }
-      } catch (err) {
+      } catch (error) {
         toastHandler({
-          id: ToastId.COMPANY_SETTING_GET_ERROR,
+          id: ToastId.ACCOUNT_BOOK_SETTING_GET_ERROR,
           type: ToastType.ERROR,
-          content: (err as Error).message,
+          content: '取得帳本資訊失敗',
           closeable: true,
         });
       }
-    }
-  };
+    };
 
-  useEffect(() => {
-    getCompanySetting();
-  }, []);
+    getAccountBookInfo();
+  }, [accountBook]);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="ml-250px flex max-h-90vh flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
+      <div className="flex max-h-90vh flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
         <section className="flex items-center justify-between">
           <Button variant="secondaryBorderless" className="p-0" type="button" onClick={toggleModal}>
             <Image width={20} height={20} src="/icons/back.svg" alt="language icon" />
             <p>{t('account_book:EDIT.BACK')}</p>
           </Button>
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {companyAndRole.company.name}
+            {accountBook.name}
           </h1>
           <Button variant="secondaryBorderless" className="p-0" onClick={toggleModal}>
             <IoCloseOutline size={24} />
           </Button>
         </section>
+
         <section className="flex flex-col gap-lv-5">
           <div className="flex items-center gap-4">
             <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
@@ -172,6 +179,7 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
             <hr className="flex-1 border-divider-stroke-lv-4" />
           </div>
         </section>
+
         <form className="flex flex-col gap-lv-7" onSubmit={handleSubmit}>
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
@@ -179,20 +187,21 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
                 {t('account_book:EDIT.COMPANY_NAME')}
               </p>
               <input
-                id="company-name-input"
+                id="accountBook-name-input"
                 type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                value={accountBookName}
+                onChange={(e) => setAccountBookName(e.target.value)}
                 placeholder={t('account_book:PLACEHOLDER.ENTER_NAME')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
+
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('account_book:EDIT.BUSINESS_TAX_ID')}
               </p>
               <input
-                id="company-tax-id-input"
+                id="accountBook-tax-id-input"
                 type="text"
                 value={businessTaxId}
                 onChange={(e) => setBusinessTaxId(e.target.value)}
@@ -200,12 +209,13 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
+
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('account_book:EDIT.TAX_SERIAL_NUMBER')}
               </p>
               <input
-                id="company-tax-serial-number-input"
+                id="accountBook-tax-serial-number-input"
                 type="text"
                 value={taxSerialNumber}
                 onChange={(e) => setTaxSerialNumber(e.target.value)}
@@ -214,13 +224,14 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
               />
             </div>
           </div>
+
           <div className="grid grid-cols-3 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('account_book:EDIT.COMPANY_REPRESENTATIVE_NAME')}
               </p>
               <input
-                id="company-representative-name-input"
+                id="accountBook-representative-name-input"
                 type="text"
                 value={representativeName}
                 onChange={(e) => setRepresentativeName(e.target.value)}
@@ -228,32 +239,34 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
-            <SelectCountryDropdown country={country} onSelect={setCountry} />
+            <SelectCountryDropdown countryCode={countryCode} onSelect={setCountryCode} />
             <PhoneNumberInput
-              countryCode={countryCode}
-              onSelect={setCountryCode}
+              countryCode={phoneCountryCode}
+              onSelect={setPhoneCountryCode}
               phoneNumber={phoneNumber}
               onUpdate={(e) => setPhoneNumber(e.target.value)}
             />
           </div>
+
           <div className="grid grid-cols-1 gap-lv-7">
             <div className="flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('account_book:EDIT.COMPANY_ADDRESS')}
               </p>
               <input
-                id="company-address-input"
+                id="accountBook-address-input"
                 type="text"
-                value={companyAddress}
+                value={accountBookAddress}
                 onChange={(e) => setCompanyAddress(e.target.value)}
                 placeholder={t('account_book:PLACEHOLDER.ENTER_FULL_ADDRESS')}
                 className={`rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder`}
               />
             </div>
           </div>
+
           <div className="grid grid-cols-1 gap-lv-7">
             <Button
-              id="settings-remove-company"
+              id="settings-remove-accountBook"
               type="button"
               variant="errorBorderless"
               className="justify-start p-0"
@@ -264,8 +277,9 @@ const AccountBookEditModal: React.FC<AccountBookEditModalProps> = ({
               </p>
             </Button>
           </div>
+
           <div className="flex justify-end space-x-4">
-            <Button type="button" variant="secondaryBorderless">
+            <Button type="button" variant="secondaryBorderless" onClick={toggleModal}>
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button type="submit" variant="default">

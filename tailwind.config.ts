@@ -690,6 +690,7 @@ module.exports = {
         'landing-page': {
           black: '#000A12',
           black2: '#585142',
+          black3: '#1C22294D',
 
           mute: '#1C2229',
 
@@ -698,6 +699,8 @@ module.exports = {
           white: '#FFFFFF',
 
           gray: '#C9C9C9',
+          gray2: '#CED7E4',
+          gray3: '#CDD1D9',
 
           taupe: '#E7E0D4',
           taupe2: '#C1B192',
@@ -745,6 +748,10 @@ module.exports = {
         digital: 'url("/elements/digital.png")',
         sunrise: 'url("/elements/sunrise.png")',
         'magic-ball': "url('/elements/magic_ball.png')",
+        'privacy-policy': 'url("/elements/sun_light.png")',
+        'join-us': 'url("/elements/join_us_bg.png")',
+        'job-detail': "url('/elements/job_detail.png')",
+        finish: "url('/elements/finish.png')",
       },
       zIndex: {
         '-10': '-10',
@@ -1011,6 +1018,7 @@ module.exports = {
         '140px': '140px',
         '150px': '150px',
         '160px': '160px',
+        '168px': '168px',
         '170px': '170px',
         '177px': '177px',
         '180px': '180px',
@@ -1100,6 +1108,7 @@ module.exports = {
         '726px': '726px',
         '750px': '750px',
         '800px': '800px',
+        '840px': '840px',
         '850px': '850px',
         '865px': '865px',
         '894px': '894px',
@@ -1110,6 +1119,7 @@ module.exports = {
         '978px': '978px',
         '1000px': '1000px',
         '1024px': '1024px',
+        '1050px': '1050px',
         '1100px': '1100px',
         '1200px': '1200px',
         '1280px': '1280px',
@@ -1214,6 +1224,7 @@ module.exports = {
         '75%': '75%',
         '82.5%': '82.5%',
         '83%': '83%',
+        '99%': '99%',
         '100%': '100%',
         0.5: '50%',
         '1/2': '50%',
@@ -1251,8 +1262,11 @@ module.exports = {
         '80%': '80%',
         '95%': '95%',
 
+        '40vh': '40vh',
         '46vh': '46vh',
+        '50vh': '50vh',
         '60vh': '60vh',
+        '65vh': '65vh',
         '70vh': '70vh',
         '75vh': '75vh',
         '80vh': '80vh',
@@ -1420,6 +1434,7 @@ module.exports = {
         'landing-btn-hover':
           'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4), 0px 0px 70px 10px rgba(255, 182, 50, 0.5)',
         'technical-card': '0px 0px 80px 50px #120C00',
+        job: 'inset 2px 2px 8px 0px rgba(255, 255, 255, 0.4), inset -2px -2px 8px 0px rgba(255, 255, 255, 0.4)',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
@@ -1450,6 +1465,8 @@ module.exports = {
         '280px': '280px',
         '300px': '300px',
         '400px': '400px',
+        'with-sidebar': 'calc(100vw - 280px)',
+        'with-collapsed-sidebar': 'calc(100vw - 66px)',
       },
       minWidth: {
         '200px': '200px',
@@ -1547,6 +1564,11 @@ module.exports = {
       listStyleType: {
         arrow: '"‣ "',
       },
+      listStyleImage: {
+        'blue-star': 'url("/icons/blue_star.svg")',
+        'orange-check': 'url("/icons/check_mark.svg")',
+        'orange-plus': 'url("/icons/plus_mark.svg")',
+      },
       gridTemplateColumns: {
         'dynamic-fit': 'repeat(auto-fit, minmax(200px, 1fr))', // Info: (20240925 - Tzuhan) 定義一個可重用的模板
         'dynamic-fill': 'repeat(auto-fill, minmax(200px, 1fr))',
@@ -1568,6 +1590,10 @@ module.exports = {
       },
       skew: {
         20: '20deg', // Info: (20241004 - Liz) 用來創造平行四邊形，例如: skew-x-20
+      },
+      letterSpacing: {
+        'tight-016': '0.16px',
+        'tight-018': '0.18px',
       },
     },
   },

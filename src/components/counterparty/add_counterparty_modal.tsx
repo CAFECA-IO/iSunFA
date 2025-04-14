@@ -12,7 +12,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -27,7 +27,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>('');
   const [inputTaxId, setInputTaxId] = useState<string>('');
   const [inputType, setInputType] = useState<null | CounterpartyType>(null);
@@ -65,8 +65,11 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         },
       });
 
-      if (companyData) {
-        setInputName(companyData.name || ''); // Info: (20241212 - Anna) 更新公司名稱
+      if (companyData?.name) {
+        setSuggestions([companyData]); // Info: (20250219 - Anna) 儲存 API 回傳的名稱作為建議，而非直接取代 inputName
+        setDropdownOpen(true); // Info: (20250219 - Anna) 顯示下拉選單，讓用戶選擇
+      } else {
+        setDropdownOpen(false);
       }
     } catch (fetchError) {
       // Deprecate: (20241212 - Anna) remove eslint-disable
@@ -230,6 +233,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       // Deprecate: (20241212 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       fetchCompanyNameByTaxId(newTaxId).catch(console.error);
+    } else {
+      setDropdownOpen(false);
     }
   };
 
@@ -259,7 +264,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       };
 
       await addCounterpartyTrigger({
-        params: { companyId: selectedAccountBook?.id },
+        params: { companyId: connectedAccountBook?.id },
         body: apiData,
       });
     }
@@ -336,7 +341,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   }, []);
 
   const displayedDropdown =
-    isDropdownOpen && suggestions.length > 0 && inputName !== '' ? ( // Info: (20241223 - Anna) 渲染下拉選單
+    isDropdownOpen && suggestions.length > 0 ? ( // Info: (20241223 - Anna) 渲染下拉選單
       <div
         ref={dropdownRef}
         className="absolute top-75px z-30 w-full rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-5px shadow-dropmenu"

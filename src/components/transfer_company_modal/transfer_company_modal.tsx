@@ -1,11 +1,12 @@
+// Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/button/button';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
-import { useUserCtx } from '@/contexts/user_context';
-import { IAdmin } from '@/interfaces/admin';
+// import APIHandler from '@/lib/utils/api_handler';
+// import { APIName } from '@/constants/api_connection';
+// import { useUserCtx } from '@/contexts/user_context';
+// import { IAdmin } from '@/interfaces/admin';
 import { useTranslation } from 'next-i18next';
 
 interface ITransferCompanyModal {
@@ -21,15 +22,17 @@ const TransferCompanyModal = ({
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { selectedAccountBook } = useUserCtx();
+  // const { connectedAccountBook } = useUserCtx();
 
   // Info: (20240729 - Liz) API Handler
-  const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER);
+  // const { trigger: transferOwner } = APIHandler<IAdmin[]>(APIName.TRANSFER_OWNER); // Info: (20250326 - Tzuhan) This Api is deprecated and should be removed
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSubmit = (newOwnerId: string) => {
-    if (!selectedAccountBook?.id) return;
+    /** Info: (20250326 - Tzuhan) This Api is deprecated and should be removed
+    if (!connectedAccountBook?.id) return;
     transferOwner({
-      params: { companyId: selectedAccountBook?.id },
+      params: { companyId: connectedAccountBook?.id },
       body: {
         newOwnerId,
       },
@@ -74,6 +77,7 @@ const TransferCompanyModal = ({
         });
         messageModalVisibilityHandler();
       });
+      */
   };
 
   const saveClickHandler = async () => {

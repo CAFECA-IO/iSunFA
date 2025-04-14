@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
+import BigNumber from 'bignumber.js';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   value: number;
@@ -20,20 +22,28 @@ const formatDisplayValue = (
     const intValue = parseInt(stringValue, 10);
     stringValue = Number.isNaN(intValue) ? '0' : intValue.toString();
   }
+  // Info: (20250319 - Anna) 小數時，只對整數部分加逗號
+  if (hasComma) {
+    const [integerPart, decimalPart] = stringValue.split('.');
+    const formattedInteger = numberWithCommas(integerPart);
+    return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+  }
 
-  return hasComma ? numberWithCommas(stringValue) : stringValue;
+  return stringValue;
 };
 
-const NumericInput = ({
+const NumericInput: React.FC<INumericInputProps> = ({
   value,
   setValue,
   isDecimal,
   hasComma,
   triggerWhenChanged,
   ...props
-}: INumericInputProps) => {
-  // Info: (20240723 - Liz) displayValue 是顯示在 input 上的顯示值
-  const [displayValue, setDisplayValue] = useState<string>(value.toString());
+}) => {
+  // Info: (20250319 - Anna) displayValue 是顯示在 input 上的顯示值
+  const [displayValue, setDisplayValue] = useState<string>(
+    formatDisplayValue(value, isDecimal, hasComma)
+  );
 
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
   const [dbValue, setDbValue] = useState<number>(value);
@@ -52,35 +62,89 @@ const NumericInput = ({
     // Info: (20240723 - Liz) 整理輸入的值
     const sanitizedValue =
       inputValue
-        .replace(/^0+/, '') // 移除開頭的零
+        .replace(/^0+(\d)/, '$1') // Info: (20250319 - Anna) 避免 01，但允許 0.1
         .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
         .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
 
-    // Info: (20240723 - Liz) 轉換成數值 (整數或浮點數) 為了存入 DB
-    const numericValue = isDecimal
-      ? parseFloat(sanitizedValue) // 如果解析失敗，會是 NaN
-      : parseInt(sanitizedValue, 10); // 如果解析失敗，會是 NaN
+    // Info: (20250319 - Anna) 允許輸入 `.`，但顯示 `0.`
+    if (sanitizedValue === '.') {
+      setDisplayValue('0.');
+      return;
+    }
 
-    // Info: (20240723 - Liz) 處理 NaN 的情況
-    const validNumericValue = Number.isNaN(numericValue) ? 0 : numericValue;
+    // Info: (20250321 - Anna) 使用 BigNumber.js 確保數字精度
+    let validNumericValue = isDecimal
+      ? new BigNumber(sanitizedValue) // Info: (20250321 - Anna) 小數轉 BigNumber
+      : new BigNumber(parseInt(sanitizedValue || '0', 10)); // Info: (20250321 - Anna) 整數轉 int，避免變小數 123 ➝ 123.0
+
+    // Info: (20250321 - Anna) 處理 NaN 的情況
+    if (validNumericValue.isNaN()) {
+      validNumericValue = new BigNumber(0);
+    }
 
     // Info: (20240723 - Liz) 根據 isDecimal 和 hasComma 的值來決定顯示值的格式
     const formattedDisplayValue = formatDisplayValue(sanitizedValue, isDecimal, hasComma);
 
     // Info: (20240723 - Liz) 更新儲存值
-    setDbValue(validNumericValue);
+    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
+    setDbValue(validNumericValue.toNumber());
 
     // Info: (20240723 - Liz) 更新顯示值
     setDisplayValue(formattedDisplayValue);
 
     if (triggerWhenChanged) {
-      triggerWhenChanged(validNumericValue, event);
+      // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
+      triggerWhenChanged(validNumericValue.toNumber(), event);
     }
   };
 
-  // Info: (20240723 - Liz) 處理 displayValue 為空或僅為點的情況
+  // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
+  function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Info: (20250313 - Julian) 執行預設行為: Tab, Backspace, Delete, ArrowLeft, ArrowRight
+    if (
+      event.code === KEYBOARD_EVENT_CODE.TAB ||
+      event.code === KEYBOARD_EVENT_CODE.BACKSPACE ||
+      event.code === KEYBOARD_EVENT_CODE.DELETE ||
+      event.code === KEYBOARD_EVENT_CODE.ARROW_LEFT ||
+      event.code === KEYBOARD_EVENT_CODE.ARROW_RIGHT
+    ) {
+      return;
+    }
+
+    event.preventDefault(); // Info: (20250306 - Julian) 阻止預設事件
+
+    let temp = displayValue; // Info: (20250306 - Julian) 取得目前顯示值
+    let code = ''; // Info: (20250306 - Julian) 按鍵 code
+
+    const input = event.currentTarget; // Info: (20250306 - Julian) 取得 input 元件
+    const cursorPos = input.selectionStart ?? displayValue.length; // Info: (20250306 - Julian) 取得當前游標位置
+
+    // Info: (20250321 - Julian) 數字鍵正規表達式：digit0 ~ digit9, numpad0 ~ numpad9
+    const regex = /^(Digit|Numpad)[0-9]$/;
+
+    // Info: (20250306 - Julian) 如果按下的是數字鍵
+    if (regex.test(event.code)) {
+      code = event.code.replace(/\D/g, ''); // Info: (20250321 - Julian) 取得數字 (去掉前面的字符)
+      // Info: (20250319 - Anna) 允許輸入小數點，但只能輸入一次
+    } else if (
+      (event.key === '.' || event.code === KEYBOARD_EVENT_CODE.PERIOD) &&
+      !displayValue.includes('.')
+    ) {
+      code = '.';
+    }
+
+    // Info: (20250306 - Julian) 插入數字
+    if (code) {
+      temp = temp.slice(0, cursorPos) + code + temp.slice(cursorPos);
+
+      // Info: (20250306 - Julian) 變更顯示值
+      handleChange({ target: { value: temp } } as React.ChangeEvent<HTMLInputElement>);
+    }
+  }
+
+  // Info: (20250319 - Anna) 處理 displayValue 為空的情況
   const handleBlur = () => {
-    if (!displayValue || displayValue === '.') {
+    if (!displayValue) {
       setDisplayValue('0');
       setDbValue(0);
     }
@@ -106,6 +170,7 @@ const NumericInput = ({
       onFocus={handleFocus}
       onBlur={handleBlur}
       onWheel={handleWheel}
+      onKeyDown={convertInput}
       {...props}
     />
   );

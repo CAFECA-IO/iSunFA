@@ -14,9 +14,25 @@ interface IVoucherItemProps {
   voucher: IVoucherUI;
   selectHandler: (id: number) => void;
   isCheckBoxOpen: boolean; // Info: (20241022 - Julian) checkbox 是否顯示
+  selectedStartDate?: number;
+  selectedEndDate?: number;
+  selectedType?: string;
+  keyword?: string;
+  currentPage?: number;
+  fullVoucherList: IVoucherUI[];
 }
 
-const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCheckBoxOpen }) => {
+const VoucherItem: React.FC<IVoucherItemProps> = ({
+  voucher,
+  selectHandler,
+  isCheckBoxOpen,
+  selectedStartDate,
+  selectedEndDate,
+  selectedType,
+  keyword,
+  currentPage,
+  fullVoucherList,
+}) => {
   const { t } = useTranslation('common');
 
   const {
@@ -75,17 +91,21 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     <div className="flex flex-col">
       {note && <p className="text-hxs text-text-neutral-primary">{note}</p>}
       {deletedReverseVouchers.length > 0 &&
-        deletedReverseVouchers.map((deletedReverseVoucher) => (
-          <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
-            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
-            <Link
-              href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
-              className="px-1 text-link-text-primary"
-            >
-              {deletedReverseVoucher.voucherNo}
-            </Link>
-            {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
-            {/* <Trans
+        deletedReverseVouchers.map((deletedReverseVoucher) => {
+          // Info: (20250325 - Anna) 多一個判斷條件，只有當Link的那個voucherId，有屬性deletedAt，才要顯示「因刪除...傳票生成的反轉分錄」
+          const matchedVoucher = fullVoucherList.find((v) => v.id === deletedReverseVoucher.id);
+          if (matchedVoucher?.deletedAt) {
+            return (
+              <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
+                {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_1')}
+                <Link
+                  href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+                  className="px-1 text-link-text-primary"
+                >
+                  {deletedReverseVoucher.voucherNo}
+                </Link>
+                {t('journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER_2')}
+                {/* <Trans
               i18nKey="journal:VOUCHER_DETAIL_PAGE.DELETED_REVERSE_VOUCHER"
               values={{ voucherNo: deletedReverseVoucher.voucherNo }}
               components={{
@@ -97,8 +117,23 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
                 ),
               }}
             /> */}
-          </p>
-        ))}
+              </p>
+            );
+          } else {
+            // Info: (20250325 - Anna)：沒有 deletedAt 沖銷(正常收付款的沖銷)
+            return (
+              <p key={deletedReverseVoucher.id} className="text-hxs text-text-neutral-primary">
+                {t('journal:VOUCHER.REVERSE')}
+                <Link
+                  href={`/users/accounting/${deletedReverseVoucher.id}?voucherNo=${deletedReverseVoucher.voucherNo}`}
+                  className="px-1 text-link-text-primary"
+                >
+                  {deletedReverseVoucher.voucherNo}
+                </Link>
+              </p>
+            );
+          }
+        })}
       {!note && deletedReverseVouchers.length === 0 && (
         <p className="text-hxs text-text-neutral-primary">-</p>
       )}
@@ -133,9 +168,11 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const displayedDebit = (
     <>
       <div className="flex flex-col text-right text-hxs">
-        {debit.map((de) => (
+        {debit.map((de, index) => (
           <p
-            key={de}
+            // Deprecated: (20250221 - Julian) remove eslint-disable
+            // eslint-disable-next-line react/no-array-index-key
+            key={index}
             className={de === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
             {numberWithCommas(de)}
@@ -149,9 +186,11 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
   const displayedCredit = (
     <>
       <div className="flex flex-col text-right text-hxs">
-        {credit.map((cre) => (
+        {credit.map((cre, index) => (
           <p
-            key={cre}
+            // Deprecated: (20250221 - Julian) remove eslint-disable
+            // eslint-disable-next-line react/no-array-index-key
+            key={index}
             className={cre === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
             {numberWithCommas(cre)}
@@ -226,7 +265,18 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({ voucher, selectHandler, isCh
     </div>
   ) : (
     <Link
-      href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
+      href={{
+        pathname: `/users/accounting/${voucher.id}`,
+        query: {
+          voucherNo,
+          from: 'voucher_item', // Info: (20250324 - Anna) from=voucher_item 為了返回時能回到傳票清單頁面，並且保留篩選條件
+          ...(selectedStartDate && { startDate: selectedStartDate }),
+          ...(selectedEndDate && { endDate: selectedEndDate }),
+          ...(selectedType && { type: selectedType }),
+          ...(keyword && { keyword }),
+          ...(currentPage && { page: currentPage }),
+        },
+      }}
       className="table-row font-medium odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:cursor-pointer hover:bg-surface-brand-primary-10"
     >
       {content}

@@ -4,7 +4,7 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { ICompany } from '@/interfaces/company';
+import { IAccountBook } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
@@ -17,9 +17,9 @@ interface ITeamSettingModal {
 // ToDo: (20240822 - Julian) [Beta] i18n
 const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSettingModal) => {
   const { t } = useTranslation(['common', 'settings']);
-  const { selectedAccountBook, selectAccountBook } = useUserCtx();
+  const { connectedAccountBook, connectAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
-  const [companyName, setCompanyName] = useState<string>(selectedAccountBook?.name ?? '');
+  const [companyName, setCompanyName] = useState<string>(connectedAccountBook?.name ?? '');
 
   const {
     trigger: updateTeam,
@@ -28,17 +28,17 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     error: updateTeamError,
     code: updateTeamCode,
     success: updateTeamSuccess,
-  } = APIHandler<ICompany>(APIName.COMPANY_UPDATE);
+  } = APIHandler<IAccountBook>(APIName.COMPANY_UPDATE);
 
   const saveClickHandler = async () => {
-    if (companyName && selectedAccountBook && companyName !== selectedAccountBook.name) {
+    if (companyName && connectedAccountBook && companyName !== connectedAccountBook.name) {
       updateTeam({
         params: {
-          companyId: selectedAccountBook.id,
+          companyId: connectedAccountBook.id,
         },
         body: {
           name: companyName,
-          code: selectedAccountBook.taxId,
+          code: connectedAccountBook.taxId,
           regional: 'Taiwan', // Deprecated: (20240930 - Jacky) Mock data for beta change
         },
       });
@@ -52,7 +52,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     if (isUpdateTeamLoading) return;
 
     if (updateTeamSuccess && updatedTeam) {
-      selectAccountBook(updatedTeam.id);
+      connectAccountBook(updatedTeam.id);
     } else if (updateTeamError) {
       toastHandler({
         id: `update_team-${updateTeamCode}`,
@@ -65,9 +65,9 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
 
   useEffect(() => {
     if (isModalVisible) {
-      setCompanyName(selectedAccountBook?.name ?? '');
+      setCompanyName(connectedAccountBook?.name ?? '');
     }
-  }, [isModalVisible, selectedAccountBook]);
+  }, [isModalVisible, connectedAccountBook]);
 
   const isDisplayedRegisterModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50">
@@ -119,7 +119,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
                   onChange={(e) => setCompanyName(e.target.value)}
                   type="text"
                   className="mx-2 w-full bg-input-surface-input-background px-1 py-2.5 text-base placeholder:text-input-text-input-placeholder focus:outline-none"
-                  placeholder={selectedAccountBook?.name ?? t('common:COMMON.YOUR_COMPANY_NAME')}
+                  placeholder={connectedAccountBook?.name ?? t('common:COMMON.YOUR_COMPANY_NAME')}
                 />
               </div>
             </div>
@@ -138,8 +138,8 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               disabled={
                 isUpdateTeamLoading ||
                 !companyName ||
-                !selectedAccountBook ||
-                companyName === selectedAccountBook?.name
+                !connectedAccountBook ||
+                companyName === connectedAccountBook?.name
               }
               variant={'tertiary'}
               onClick={saveClickHandler}

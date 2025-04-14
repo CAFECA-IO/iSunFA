@@ -11,6 +11,7 @@ import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
 import { IVoucherBeta, IVoucherListSummary, IVoucherUI } from '@/interfaces/voucher';
 import { useUserCtx } from '@/contexts/user_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -18,14 +19,20 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { VoucherTabs } from '@/constants/voucher';
 import { ToastType } from '@/interfaces/toastify';
+import { useRouter } from 'next/router';
 
 const VoucherListPageBody: React.FC = () => {
+  const router = useRouter();
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
+  const { flagOfRefreshVoucherList } = useAccountingCtx();
 
   const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
-  const [page, setPage] = useState(1);
+  // Info: (20250324 - Anna) 預設是從 URL 中取得的 page，若無則為 1
+  const queryPage = typeof router.query.page === 'string' ? Number(router.query.page) : 1;
+  const [page, setPage] = useState(queryPage);
+
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [unRead, setUnRead] = useState<{
@@ -49,6 +56,49 @@ const VoucherListPageBody: React.FC = () => {
     | undefined
   >();
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
+
+  // Info: (20250324 - Anna) 流程2:為了將篩選條件傳遞給 VoucherItem，非用於給 FilterSection 打 API
+  const [selectedStartDate, setSelectedStartDate] = useState<number>();
+  const [selectedEndDate, setSelectedEndDate] = useState<number>();
+  const [selectedType, setSelectedType] = useState<string>();
+  const [keyword, setKeyword] = useState<string>();
+
+  // Info: (20250324 - Anna) 流程4:從 router.query 中擷取篩選條件
+  const queryStartDate =
+    typeof router.query.startDate === 'string' ? Number(router.query.startDate) : undefined;
+  const queryEndDate =
+    typeof router.query.endDate === 'string' ? Number(router.query.endDate) : undefined;
+  const queryType = typeof router.query.type === 'string' ? router.query.type : undefined;
+  const queryKeyword = typeof router.query.keyword === 'string' ? router.query.keyword : undefined;
+
+  // Info: (20250324 - Anna) 流程5:初始時嘗試從 URL 中獲取篩選條件
+  useEffect(() => {
+    if (!router.isReady) return;
+    const {
+      startDate = '',
+      endDate = '',
+      type = '',
+      keyword: urlKeyword = '',
+      page: urlPage = 1,
+    } = router.query;
+
+    if (startDate && endDate) {
+      setSelectedStartDate(Number(startDate));
+      setSelectedEndDate(Number(endDate));
+    }
+
+    if (type) {
+      setSelectedType(String(type));
+    }
+
+    if (urlKeyword) {
+      setKeyword(String(urlKeyword));
+    }
+
+    if (urlPage) {
+      setPage(Number(urlPage));
+    }
+  }, [router.isReady]);
 
   useEffect(() => {
     let sort: { by: SortBy; order: SortOrder } | undefined;
@@ -80,7 +130,7 @@ const VoucherListPageBody: React.FC = () => {
       .filter((key) => key !== EventType.OPENING), // Info: (20250124 - Julian) 不顯示開帳
   ];
 
-  const params = { companyId: selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
+  const params = { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID };
 
   const handleApiResponse = useCallback(
     (data: IPaginatedData<IVoucherBeta[]>) => {
@@ -126,6 +176,12 @@ const VoucherListPageBody: React.FC = () => {
         setDebitSort={setDebitSort}
         isHideReversals={isHideReversals}
         hideReversalsToggleHandler={hideReversalsToggleHandler}
+        // Info: (20250324 - Anna) 流程3:傳遞篩選條件
+        selectedStartDate={selectedStartDate}
+        selectedEndDate={selectedEndDate}
+        selectedType={selectedType}
+        keyword={keyword}
+        currentPage={page}
       />
     ) : (
       <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
@@ -169,6 +225,20 @@ const VoucherListPageBody: React.FC = () => {
           */
           sort={selectedSort}
           hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
+          flagOfRefresh={flagOfRefreshVoucherList}
+          // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
+          onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
+            setSelectedStartDate(startDate);
+            setSelectedEndDate(endDate);
+            setSelectedType(type);
+            setKeyword(passKeyword);
+          }}
+          // Info: (20250324 - Anna) 流程6:傳初始值
+          initialStartDate={queryStartDate}
+          initialEndDate={queryEndDate}
+          initialType={queryType}
+          initialKeyword={queryKeyword}
+          initialPage={queryPage}
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}

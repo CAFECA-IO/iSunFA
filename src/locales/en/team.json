@@ -1,0 +1,81 @@
+{
+  "TEAM_PAGE": {
+    "META_TITLE": "Team",
+    "INFORMATION": "Information",
+    "COPIED": "Copied",
+    "CHANGE_TEAM_PICTURE": "Change team picture",
+    "MEMBER": "Member"
+  },
+  "ERROR": {
+    "TEAM_DATA_NOT_FOUND": "Team data not found"
+  },
+  "TEAM_ROLE": {
+    "OWNER": "Owner",
+    "ADMIN": "Admin",
+    "EDITOR": "Editor",
+    "VIEWER": "Viewer"
+  },
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "Member List",
+    "MEMBERS": "members",
+    "ADD_MEMBER": "Add Member"
+  },
+  "INVITE_MEMBERS_MODAL": {
+    "INVITE_MEMBERS": "Invite Members",
+    "EMAIL": "Email",
+    "ENTER_EMAIL": "Enter an email address and press Enter or the plus button",
+    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "Please enter a valid email address",
+    "CANCEL": "Cancel",
+    "INVITE": "Invite"
+  },
+
+  "MY_ACCOUNT_PAGE": {
+    "PAGE_TITLE": "My Account",
+    "USER_INFO_TITLE": "User information",
+    "MY_TEAM_TITLE": "My team",
+    "ADD_TEAM_BTN": "Add Team",
+    "PLAN_BEGINNER": "Free",
+    "PLAN_PROFESSIONAL": "Professional",
+    "PLAN_ENTERPRISE": "Enterprise",
+    "ROLE_OWNER": "Owner",
+    "ROLE_ADMIN": "Admin",
+    "ROLE_EDITOR": "Editor",
+    "ROLE_VIEWER": "Viewer",
+    "TEAM_LIST_IS_EMPTY": "You currently do not have any teams."
+  },
+  "CREATE_TEAM_MODAL": {
+    "MODAL_TITLE": "Create a Team",
+    "STEP_1": "Team Name",
+    "STEP_2": "Member",
+    "STEP_3": "Sub Plan",
+    "TEAM_NAME": "Team Name",
+    "MEMBER_EMAIL": "Member Email",
+    "EMAIL_HINT": "Please enter a valid email address.",
+    "PLAN_HINT": "If you choose to skip this step, we will automatically set your team to the free version.You can opt to use the free version of the service temporarily, enjoying basic features with potential limitations compared to premium plans.",
+    "SKIP_BTN": "Skip for Now",
+    "CONTINUE_BTN": "Continue",
+    "CREATE_BTN": "Create Team"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "Change Team Name",
+    "ADD_DESCRIPTION": "Add a description",
+    "ABOUT": "About",
+    "TEAM_PROFILE": "Team Profile",
+    "ADD_BANK_ACCOUNT": "Add a Bank Account",
+    "BANK_ACCOUNT": "Bank Account",
+    "DESCRIPTION_PLACEHOLDER": "Enter a description for your team",
+    "LINK": "Link",
+    "BANK_ACCOUNT_NUMBER": "Bank Account number",
+    "TEAM_PLAN": "Team Plan",
+    "TEAM_MEMBER": "Team Member",
+    "MEMBER_SINGLE": "Member",
+    "MEMBER_PLURAL": "Members",
+    "LEDGER_SINGLE": "Ledger",
+    "LEDGER_PLURAL": "Ledgers",
+    "LIBRARIES": "Libraries",
+    "TEAM_BANK_ACCOUNT": "Team Bank Account",
+    "NO_TEAM_INFORMATION_AVAILABLE": "No team information available.",
+    "PLEASE_CREATE_NEW_TEAM": "Please create a new team.",
+    "BANK_CODE": "Code"
+  }
+}

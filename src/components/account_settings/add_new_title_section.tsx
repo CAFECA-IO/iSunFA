@@ -34,9 +34,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const { t } = useTranslation('common');
 
   const { toastHandler } = useModalContext();
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const queryCondition = {
     limit: 9999, // Info: (20250212 - Julian) 全部取出
     forUser: true,

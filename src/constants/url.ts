@@ -31,11 +31,12 @@ export const ISUNFA_ROUTE = {
   BALANCE_SHEET: '/users/reports/financials/balance_sheet',
   INCOME_STATEMENT: '/users/reports/financials/income_statement',
   CASH_FLOW: '/users/reports/financials/cash_flow',
-  BUSINESS_TAX: '/users/reports/tax/business_tax',
   LEDGER: '/users/accounting/ledger',
   TRIAL_BALANCE: '/users/accounting/trial_balance',
   COUNTERPARTY: '/users/setting/counterparty',
   SUBSCRIPTIONS: '/users/subscriptions',
+  MY_ACCOUNT_PAGE: '/users/my_account_page',
+  TEAM_PAGE: '/users/team', // Info: (20250218 - Liz) /users/team/:teamId
 
   KYC: '/users/kyc',
   SALARY: '/users/salary',
@@ -62,6 +63,8 @@ export const ISUNFA_ROUTE = {
   UPLOAD: `mobile_upload`,
 
   ACCOUNTING_SETTINGS: '/users/setting/accounting_setting',
+
+  JOIN_US: '/join_us',
 };
 
 export const EXTERNAL_API = {

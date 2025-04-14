@@ -1,0 +1,91 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { IResponseData } from '@/interfaces/response_data';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { APIName } from '@/constants/api_connection';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { IHandleRequest } from '@/interfaces/handleRequest';
+import { loggerError } from '@/lib/utils/logger_back';
+import { voucherAPIRestoreUtils as restoreUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+
+interface IHandlerResult {
+  statusMessage: string;
+}
+
+interface IRestoreResult extends IHandlerResult {
+  payload: number | null;
+}
+
+type IHandlerResultPayload = IRestoreResult['payload'];
+
+interface IHandlerResponse extends IHandlerResult {
+  payload: IHandlerResultPayload;
+  userId?: string;
+}
+
+export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, number> = async ({
+  query,
+  session,
+}) => {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: number | null = null;
+  const { userId, companyId } = session;
+  const { voucherId } = query;
+
+  try {
+    const now = getTimestampNow();
+    const restoredVoucher = await restoreUtils.restoreVoucherAndRelations({
+      voucherId,
+      companyId,
+      now,
+      userId,
+    });
+
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+    payload = restoredVoucher?.id ?? null;
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError({
+      userId,
+      errorType: 'Voucher Restore handleRestoreRequest',
+      errorMessage: error.message,
+    });
+    statusMessage = error.message;
+  }
+
+  return {
+    statusMessage,
+    payload,
+    userId,
+  };
+};
+
+const methodHandlers: {
+  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
+} = {
+  POST: (req) => withRequestValidation(APIName.VOUCHER_RESTORE_V2, req, handleRestoreRequest),
+};
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<IHandlerResultPayload>>
+) {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IHandlerResultPayload = null;
+
+  try {
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    }
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(statusMessage, payload);
+    res.status(httpCode).json(result);
+  }
+}

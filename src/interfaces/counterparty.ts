@@ -1,5 +1,5 @@
 import { CounterpartyType } from '@/constants/counterparty';
-import type { ICompanyEntity } from '@/interfaces/company';
+import type { ICompanyEntity } from '@/interfaces/account_book';
 
 export interface ICounterparty {
   id: number;

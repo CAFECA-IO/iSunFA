@@ -136,7 +136,7 @@ const CertificateUploaderModal: React.FC<CertificateUploaderModalProps> = ({ isO
           className="absolute right-4 top-4 text-checkbox-text-primary"
           onClick={handleClose}
         >
-          <RxCross1 size={28} />
+          <RxCross1 size={24} />
         </button>
         {/* Info: (20241213 - tzuhan) 返回按鈕 */}
         <button

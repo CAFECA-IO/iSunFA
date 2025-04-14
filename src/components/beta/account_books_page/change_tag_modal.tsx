@@ -2,21 +2,24 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import { ICompanyAndRole } from '@/interfaces/company';
-import { WORK_TAG } from '@/constants/company';
+import {
+  WORK_TAG,
+  IAccountBookWithTeam,
+  ACCOUNT_BOOK_UPDATE_ACTION,
+} from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
-  accountBookToEdit: ICompanyAndRole;
-  isModalOpen: boolean;
-  setAccountBookToEdit: Dispatch<SetStateAction<ICompanyAndRole | undefined>>;
+  accountBookToEdit: IAccountBookWithTeam;
+  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
+  getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const ChangeTagModal = ({
   accountBookToEdit,
-  isModalOpen,
   setAccountBookToEdit,
   setRefreshKey,
+  getAccountBookListByTeamId,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { updateAccountBook } = useUserCtx();
@@ -42,27 +45,26 @@ const ChangeTagModal = ({
     setIsLoading(true);
 
     try {
-      const data = await updateAccountBook({
-        companyId: accountBookToEdit.company.id,
-        action: 'updateTag',
+      const success = await updateAccountBook({
+        accountBookId: accountBookToEdit.id.toString(),
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG,
         tag,
       });
 
-      if (data) {
-        // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
-        setTag(WORK_TAG.ALL);
-        closeChangeTagModal();
-
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
-
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 API 變更標籤成功, api return data:', data);
-      } else {
+      if (!success) {
         // Deprecated: (20241113 - Liz)
         // eslint-disable-next-line no-console
         console.log('變更公司標籤失敗');
+        return;
       }
+
+      // Info: (20241113 - Liz) 更新公司成功後清空表單並關閉 modal
+      setTag(WORK_TAG.ALL);
+      closeChangeTagModal();
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+
+      if (getAccountBookListByTeamId) await getAccountBookListByTeamId();
     } catch (error) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -73,7 +75,7 @@ const ChangeTagModal = ({
     }
   };
 
-  return isModalOpen ? (
+  return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
         <section className="flex items-center justify-between py-16px pl-40px pr-20px">
@@ -86,7 +88,7 @@ const ChangeTagModal = ({
         </section>
 
         <section className="flex flex-col gap-24px px-40px py-16px">
-          {/* Company Name */}
+          {/* Info: (20241025 - Liz) Company Name */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('account_book:INFO.COMPANY_NAME')}
@@ -96,11 +98,11 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={accountBookToEdit.company.name}
+              value={accountBookToEdit.name}
             />
           </div>
 
-          {/* Work Tag / Company Tag */}
+          {/* Info: (20241112 - Liz) Work Tag / Company Tag */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('account_book:INFO.WORK_TAG')}
@@ -163,7 +165,7 @@ const ChangeTagModal = ({
         </section>
       </div>
     </main>
-  ) : null;
+  );
 };
 
 export default ChangeTagModal;

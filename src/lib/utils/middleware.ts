@@ -26,6 +26,9 @@ export async function checkSessionUser(
   if (!session.userId || session.userId === DefaultValue.USER_ID.GUEST) {
     isLogin = false;
   }
+  if (!isLogin) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
 
   return isLogin;
 }
@@ -46,6 +49,7 @@ export async function checkUserAuthorization<T extends APIName>(
       errorType: `Forbidden Access for ${apiName} in middleware.ts`,
       errorMessage: 'User is not authorized',
     });
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
   return isAuth;
 }
@@ -63,6 +67,7 @@ export function checkRequestData<T extends APIName>(
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
       errorMessage: req.body,
     });
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
   return { query, body };
@@ -104,6 +109,18 @@ export async function logUserAction<T extends APIName>(
       errorMessage: error as Error,
     });
   }
+}
+
+/**
+ * Info: (20250310 - Shirley) 驗證輸出數據是否有效
+ * 如果無效，拋出 INVALID_OUTPUT_DATA 錯誤
+ */
+export function checkOutputDataValid<T extends APIName>(apiName: T, data: unknown) {
+  const { isOutputDataValid, outputData } = validateOutputData(apiName, data);
+  if (!isOutputDataValid) {
+    throw new Error(STATUS_MESSAGE.INVALID_OUTPUT_DATA);
+  }
+  return outputData;
 }
 
 // TODO: (20241111 - Shirley) separate middleware according to different functionality

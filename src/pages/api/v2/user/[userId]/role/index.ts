@@ -1,85 +1,101 @@
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
-import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse } from '@/lib/utils/common';
 import {
-  createUserRole,
-  getUserRoleByUserAndRoleId,
-  listUserRole,
-} from '@/lib/utils/repo/user_role.repo';
-import { UserRole } from '@prisma/client';
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IUserRole } from '@/interfaces/user_role';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import loggerBack from '@/lib/utils/logger_back';
+import { validateOutputData } from '@/lib/utils/validator';
+import {
+  createUserRoleIfNotExists,
+  getUserRoleListByUserId,
+} from '@/lib/utils/repo/user_role.repo';
 
-const handleGetRequest: IHandleRequest<APIName.USER_ROLE_LIST, UserRole[]> = async ({ query }) => {
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: UserRole[] | null = null;
-  const { userId } = query;
-  const listedUserRole = await listUserRole(userId);
+  let payload: IUserRole[] | null = null;
+  await checkSessionUser(session, APIName.USER_ROLE_LIST, req);
+  await checkUserAuthorization(APIName.USER_ROLE_LIST, req, session);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-  payload = listedUserRole;
-
-  return { statusMessage, payload };
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  const options: IUserRole[] = await getUserRoleListByUserId(userId);
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.USER_ROLE_LIST, options);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-const handlePostRequest: IHandleRequest<APIName.USER_CREATE_ROLE, UserRole | null> = async ({
-  query,
-  body,
-}) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: UserRole | null = null;
+  let payload: IUserRole | null = null;
+  await checkSessionUser(session, APIName.USER_CREATE_ROLE, req);
+  await checkUserAuthorization(APIName.USER_CREATE_ROLE, req, session);
 
-  // Deprecated: (20240924 - Jacky) Mock data for connection
-  statusMessage = STATUS_MESSAGE.CREATED;
-  const { userId } = query;
-  const { roleId } = body;
-  const getUserRole = await getUserRoleByUserAndRoleId(userId, roleId);
-  if (getUserRole) {
-    statusMessage = STATUS_MESSAGE.DUPLICATE_ROLE;
-  } else {
-    const createdUserRole = await createUserRole(userId, roleId);
-    payload = createdUserRole;
+  const { body } = checkRequestData(APIName.USER_CREATE_ROLE, req, session);
+  loggerBack.info(`user: ${userId} create role with body: ${JSON.stringify(body)}`);
+
+  if (body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  return { statusMessage, payload };
+  statusMessage = STATUS_MESSAGE.SUCCESS;
+  const userRole = await createUserRoleIfNotExists({ userId, roleName: body.roleName });
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.USER_CREATE_ROLE, userRole);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+  }
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IUserRole | IUserRole[] | null }>;
-} = {
-  GET: (req) => withRequestValidation(APIName.USER_ROLE_LIST, req, handleGetRequest),
-  POST: (req) => withRequestValidation(APIName.USER_CREATE_ROLE, req, handlePostRequest),
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IUserRole | IUserRole[] | null>>
-) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IUserRole | IUserRole[] | null = null;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.USER_ROLE_LIST;
+  const session = await getSession(req);
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.USER_ROLE_LIST;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.POST:
+        apiName = APIName.USER_CREATE_ROLE;
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IUserRole | IUserRole[] | null>(
-      statusMessage,
-      payload
-    );
-    res.status(httpCode).json(result);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+  await logUserAction(session, apiName, req, statusMessage);
+  res.status(httpCode).json(result);
 }

@@ -7,7 +7,7 @@ import { Button } from '@/components/button/button';
 import CreateTodoModal from '@/components/beta/todo_list_page/create_todo_modal';
 import UpdateTodoModal from '@/components/beta/todo_list_page/update_todo_modal';
 import TodoList from '@/components/beta/todo_list_page/todo_list';
-import { ITodoCompany } from '@/interfaces/todo';
+import { ITodoAccountBook } from '@/interfaces/todo';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -29,10 +29,10 @@ const NoData = () => {
 const TodoListPageBody = () => {
   const { t } = useTranslation('dashboard');
   const { userAuth } = useUserCtx();
-  const [todoList, setTodoList] = useState<ITodoCompany[]>([]);
+  const [todoList, setTodoList] = useState<ITodoAccountBook[]>([]);
   const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
-  const [todoToUpdate, setTodoToUpdate] = useState<ITodoCompany | undefined>(undefined);
-  const [todoToDelete, setTodoToDelete] = useState<ITodoCompany | undefined>(undefined);
+  const [todoToUpdate, setTodoToUpdate] = useState<ITodoAccountBook | undefined>(undefined);
+  const [todoToDelete, setTodoToDelete] = useState<ITodoAccountBook | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const userId = userAuth?.id;
@@ -50,10 +50,10 @@ const TodoListPageBody = () => {
   };
 
   // Info: (20241125 - Liz) 刪除待辦事項 API
-  const { trigger: deleteTodoAPI } = APIHandler<ITodoCompany>(APIName.DELETE_TODO);
+  const { trigger: deleteTodoAPI } = APIHandler<ITodoAccountBook>(APIName.DELETE_TODO);
 
-  // Info: (20241121 - Liz) 打 API 取得待辦事項列表
-  const { trigger: listUserTodoAPI } = APIHandler<ITodoCompany[]>(APIName.TODO_LIST);
+  // Info: (20241121 - Liz) 打 API 取得待辦事項清單
+  const { trigger: listUserTodoAPI } = APIHandler<ITodoAccountBook[]>(APIName.TODO_LIST);
 
   const getTodoList = useCallback(async () => {
     if (!userId) return;
@@ -68,12 +68,12 @@ const TodoListPageBody = () => {
       } else {
         // Deprecated: (20241121 - Liz)
         // eslint-disable-next-line no-console
-        console.log('取得待辦事項列表失敗');
+        console.log('取得待辦事項清單失敗');
       }
     } catch (error) {
       // Deprecated: (20241121 - Liz)
       // eslint-disable-next-line no-console
-      console.log('取得待辦事項列表失敗');
+      console.log('取得待辦事項清單失敗');
     }
   }, [userId]);
 

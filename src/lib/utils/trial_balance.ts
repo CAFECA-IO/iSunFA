@@ -1,6 +1,5 @@
 import { IAccountNodeWithDebitAndCredit } from '@/interfaces/accounting_account';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { IAccountBookNodeJSON } from '@/interfaces/account_book_node';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import {
   ILineItemInTrialBalanceItem,
@@ -11,182 +10,6 @@ import {
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
 import { Account } from '@prisma/client';
-
-export function filterUserAccounts(nodes: IAccountBookNodeJSON[]): IAccountBookNodeJSON[] {
-  const filteredAccounts = nodes.reduce((filtered, node) => {
-    // Info: (20241130 - Shirley) 遞迴處理子節點
-    const filteredChildren = node.children.length > 0 ? filterUserAccounts(node.children) : [];
-
-    // Info: (20241130 - Shirley) 如果當前節點是 forUser: true，則加入該節點（但不包含子節點）
-    if (node.forUser) {
-      filtered.push({
-        ...node,
-        children: [], // Info: (20241130 - Shirley) 重置 children 為空陣列
-      } as IAccountBookNodeJSON);
-    }
-
-    // Info: (20241130 - Shirley) 將子節點的結果合併到當前層級
-    filtered.push(...filteredChildren);
-
-    return filtered;
-  }, [] as IAccountBookNodeJSON[]);
-
-  return filteredAccounts;
-}
-
-export function organizeIntoTreeForUserAcc(
-  flatAccounts: IAccountBookNodeJSON[]
-): IAccountBookNodeJSON[] {
-  const accountMap = new Map<number, IAccountBookNodeJSON>();
-  const rootNodes: IAccountBookNodeJSON[] = [];
-
-  // Info: (20241130 - Shirley) 第一步：建立所有節點的映射
-  flatAccounts.forEach((account) => {
-    accountMap.set(account.id, { ...account, children: [] });
-  });
-
-  // Info: (20241130 - Shirley) 第二步：建立樹狀結構
-  flatAccounts.forEach((account) => {
-    const node = accountMap.get(account.id);
-    if (node) {
-      if (!account.parentId || !accountMap.has(account.parentId)) {
-        // Info: (20241130 - Shirley) 在 forUser 的會計科目中，如果沒有父節點或父節點不在映射中，則作為根節點
-        rootNodes.push(node);
-      } else {
-        // Info: (20241130 - Shirley) 將節點加入到父節點的 children 中
-        const parent = accountMap.get(account.parentId);
-        if (parent) {
-          parent.children.push(node);
-        }
-      }
-    }
-  });
-
-  return rootNodes;
-}
-
-// Info: (20241130 - Shirley) 收集所有時期的帳目
-const collectAccounts = (
-  accountMap: Map<
-    number,
-    {
-      beginning?: IAccountBookNodeJSON;
-      midterm?: IAccountBookNodeJSON;
-      ending?: IAccountBookNodeJSON;
-    }
-  >,
-  accounts: IAccountBookNodeJSON[],
-  period: 'beginning' | 'midterm' | 'ending'
-) => {
-  accounts.forEach((account) => {
-    const existing = accountMap.get(account.id) || {};
-    accountMap.set(account.id, {
-      ...existing,
-      [period]: account,
-    });
-  });
-};
-
-/* Info: (20241130 - Shirley)
- * 將三個時期的帳目組合成試算表項目格式
- * @param beginningAccounts 期初帳目
- * @param midtermAccounts 期中帳目
- * @param endingAccounts 期末帳目
- * @returns TrialBalanceItem[] 試算表項目陣列
- */
-export function combineAccountsToTrialBalance(
-  beginningAccounts: IAccountBookNodeJSON[],
-  midtermAccounts: IAccountBookNodeJSON[],
-  endingAccounts: IAccountBookNodeJSON[]
-): TrialBalanceItem[] {
-  // Info: (20241130 - Shirley) 建立科目代碼到節點的映射
-  const accountMap = new Map<
-    number,
-    {
-      beginning?: IAccountBookNodeJSON;
-      midterm?: IAccountBookNodeJSON;
-      ending?: IAccountBookNodeJSON;
-    }
-  >();
-
-  collectAccounts(accountMap, beginningAccounts, 'beginning');
-  collectAccounts(accountMap, midtermAccounts, 'midterm');
-  collectAccounts(accountMap, endingAccounts, 'ending');
-
-  const convertToTrialBalanceItemInFunction = (data: {
-    beginning?: IAccountBookNodeJSON;
-    midterm?: IAccountBookNodeJSON;
-    ending?: IAccountBookNodeJSON;
-  }): TrialBalanceItem => {
-    const { beginning, midterm, ending } = data;
-    const account = beginning || midterm || ending; // Info: (20250107 - Shirley) 使用任一個存在的帳目來獲取基本資訊
-
-    const beginSummary = beginning?.summary || { debit: 0, credit: 0 };
-    const midtermSummary = midterm?.summary || { debit: 0, credit: 0 };
-    const endingSummary = ending?.summary || { debit: 0, credit: 0 };
-
-    // Info: (20241130 - Shirley) 遞迴處理子科目
-    const subAccounts: TrialBalanceItem[] = [];
-    if (account?.children.length) {
-      const childrenMap = new Map<
-        number,
-        {
-          beginning?: IAccountBookNodeJSON;
-          midterm?: IAccountBookNodeJSON;
-          ending?: IAccountBookNodeJSON;
-        }
-      >();
-
-      // Info: (20241130 - Shirley) 收集所有子科目
-      if (beginning?.children) {
-        beginning.children.forEach((child) => {
-          const existing = childrenMap.get(child.id) || {};
-          childrenMap.set(child.id, { ...existing, beginning: child });
-        });
-      }
-      if (midterm?.children) {
-        midterm.children.forEach((child) => {
-          const existing = childrenMap.get(child.id) || {};
-          childrenMap.set(child.id, { ...existing, midterm: child });
-        });
-      }
-      if (ending?.children) {
-        ending.children.forEach((child) => {
-          const existing = childrenMap.get(child.id) || {};
-          childrenMap.set(child.id, { ...existing, ending: child });
-        });
-      }
-
-      // Info: (20241130 - Shirley) 遞迴轉換子科目
-      childrenMap.forEach((childData) => {
-        subAccounts.push(convertToTrialBalanceItemInFunction(childData));
-      });
-    }
-
-    return {
-      id: account?.id || 0,
-      no: account?.code || '',
-      accountingTitle: account?.name || '',
-      beginningCreditAmount: beginSummary.credit,
-      beginningDebitAmount: beginSummary.debit,
-      midtermCreditAmount: midtermSummary.credit,
-      midtermDebitAmount: midtermSummary.debit,
-      endingCreditAmount: endingSummary.credit,
-      endingDebitAmount: endingSummary.debit,
-      createAt: 0,
-      updateAt: 0,
-      subAccounts,
-    };
-  };
-
-  // Info: (20241130 - Shirley) 轉換所有科目
-  const result: TrialBalanceItem[] = [];
-  accountMap.forEach((data) => {
-    result.push(convertToTrialBalanceItemInFunction(data));
-  });
-
-  return result;
-}
 
 export function sortTrialBalanceItem(
   items: TrialBalanceItem[],
@@ -326,35 +149,6 @@ export function convertToTrialBalanceData(sortedItems: TrialBalanceItem[]): ITri
     sort: [],
     note: JSON.stringify({ total }),
   };
-}
-
-export function convertAccountBookJsonToTrialBalanceItem(
-  beginAccountBookJSON: IAccountBookNodeJSON[],
-  midAccountBookJSON: IAccountBookNodeJSON[],
-  endAccountBookJSON: IAccountBookNodeJSON[],
-  sortOption: {
-    sortBy: SortBy;
-    sortOrder: SortOrder;
-  }[]
-) {
-  const beginFilteredAccounts = filterUserAccounts(beginAccountBookJSON);
-  const midFilteredAccounts = filterUserAccounts(midAccountBookJSON);
-  const endFilteredAccounts = filterUserAccounts(endAccountBookJSON);
-
-  const beginOrganizedAccounts = organizeIntoTreeForUserAcc(beginFilteredAccounts);
-  const midOrganizedAccounts = organizeIntoTreeForUserAcc(midFilteredAccounts);
-  const endOrganizedAccounts = organizeIntoTreeForUserAcc(endFilteredAccounts);
-
-  const trialBalanceItems = combineAccountsToTrialBalance(
-    beginOrganizedAccounts,
-    midOrganizedAccounts,
-    endOrganizedAccounts
-  );
-
-  const sortedTrialBalanceItems = sortTrialBalanceItem(trialBalanceItems, sortOption);
-  const trialBalanceData = convertToTrialBalanceData(sortedTrialBalanceItems);
-
-  return trialBalanceData;
 }
 
 export const convertTrialBalanceDataToCsvData = (trialBalanceData: ITrialBalancePayload) => {
@@ -732,55 +526,59 @@ export function processLineItems(
   arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[];
 } {
   const array = [...data];
-  // Info: (20250107 - Shirley) 保留原始資料的會計科目清單
   const arrWithChildren: ILineItemInTrialBalanceItemWithHierarchy[] = [];
-  // Info: (20250107 - Shirley) 包含虛擬科目的會計科目清單
   const arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[] = [];
 
-  array.forEach((targetItem) => {
-    // Info: (20250106 - Shirley) 從下往上建立從屬關係分類
-    if (targetItem.account.code.includes('-')) {
-      // Info: (20250107 - Shirley) 找到會計分錄裡是否有父科目，有的話就將子科目加進父科目的 children 裡
-      const parentItem = array.find((item) => targetItem.account.parentId === item.account.id);
-      if (parentItem) {
-        const existingParent = arrWithChildren.find(
-          (item) => item.account.id === parentItem.account.id
-        );
+  // Info: (20250217 - Shirley) 第一步：建立科目金額的映射
+  const accountAmounts = new Map<number, { debitAmount: number; creditAmount: number }>();
+  array.forEach((item) => {
+    const existing = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
+    accountAmounts.set(item.accountId, {
+      debitAmount: existing.debitAmount + item.debitAmount,
+      creditAmount: existing.creditAmount + item.creditAmount,
+    });
+  });
 
-        if (existingParent) {
-          existingParent.children.push({
-            ...targetItem,
-            accountCode: targetItem.account.code,
-            accountName: targetItem.account.name,
-            children: [],
-          });
-        } else {
-          arrWithChildren.push({
-            ...parentItem,
-            accountCode: parentItem.account.code,
-            accountName: parentItem.account.name,
-            children: [
-              {
-                ...targetItem,
-                accountCode: targetItem.account.code,
-                accountName: targetItem.account.name,
-                children: [],
-              },
-            ],
-          });
+  // Info: (20250217 - Shirley) 第二步：建立所有科目的基本資料
+  array.forEach((item) => {
+    const amounts = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
+    if (!arrWithChildren.some((existing) => existing.accountId === item.accountId)) {
+      const baseItem: ILineItemInTrialBalanceItemWithHierarchy = {
+        ...item,
+        accountCode: item.account.code,
+        accountName: item.account.name,
+        debitAmount: amounts.debitAmount,
+        creditAmount: amounts.creditAmount,
+        children: [],
+      };
+      arrWithChildren.push(baseItem);
+    }
+  });
+
+  // Info: (20250217 - Shirley) 第三步：建立父子關係
+  arrWithChildren.forEach((item) => {
+    if (item.account.parentId) {
+      const parentItem = arrWithChildren.find(
+        (parent) => parent.account.id === item.account.parentId
+      );
+
+      if (parentItem) {
+        // Info: (20250217 - Shirley) 如果找到父科目，將當前項目加入其子項目列表
+        if (!parentItem.children.some((child) => child.accountId === item.accountId)) {
+          parentItem.children.push(item);
         }
       } else {
-        // Info: (20250107 - Shirley) 如果會計分錄裡沒有父科目作帳的紀錄，則從 accounts 找出父科目的資料，並依此創建父科目的資料後，將子科目加進父科目的 children 裡
-        const parentAccount = accounts.find((item) => item.id === targetItem.account.parentId);
+        // Info: (20250217 - Shirley) 如果在現有資料中找不到父科目(沒有用父科目作帳的紀錄)，從 accounts 中建立
+        const parentAccount = accounts.find((acc) => acc.id === item.account.parentId);
         if (parentAccount) {
-          const parentAccountItem: ILineItemInTrialBalanceItemWithHierarchy = {
+          const newParentItem: ILineItemInTrialBalanceItemWithHierarchy = {
             accountCode: parentAccount.code,
             accountName: parentAccount.name,
             debitAmount: 0,
             creditAmount: 0,
+            amount: 0,
             id: parentAccount.id,
             debit: parentAccount.debit,
-            amount: 0,
             description: '',
             accountId: parentAccount.id,
             voucherId: 0,
@@ -796,93 +594,60 @@ export function processLineItems(
               type: '',
               no: '',
             },
-            children: [
-              {
-                ...targetItem,
-                accountCode: targetItem.account.code,
-                accountName: targetItem.account.name,
-                children: [],
-              },
-            ],
+            children: [item],
             createdAt: parentAccount.createdAt,
             updatedAt: parentAccount.updatedAt,
             deletedAt: null,
           };
-          arrWithChildren.push(parentAccountItem);
+          arrWithChildren.push(newParentItem);
         }
       }
-    } else {
-      arrWithChildren.push({
-        ...targetItem,
-        accountCode: targetItem.account.code,
-        accountName: targetItem.account.name,
-        children: [],
-      });
     }
   });
 
-  const newArrWithChildren = [...arrWithChildren];
-
-  newArrWithChildren.forEach((item) => {
-    // Info: (20250106 - Shirley) 如果該科目有子科目，則新增一個虛擬科目，將該科目借方或貸方金額加入虛擬科目，列為其子科目，並將自身的金額歸零
+  // Info: (20250217 - Shirley) 第四步：處理虛擬科目和金額計算
+  arrWithChildren.forEach((item) => {
     if (item.children && item.children.length > 0) {
-      const {
-        account,
-        debitAmount,
-        creditAmount,
-        accountId,
-        accountName,
-        accountCode,
-        children,
-        ...rest
-      } = item;
+      // Info: (20250217 - Shirley) 計算本科目的原始金額
+      const selfAmounts = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
 
-      const copyAccountInfo = {
-        id: account.id * 10,
-        code: `${account.code}-0`,
-        name: `${account.name}-虛擬會計科目（原${account.code}）`,
-        parentId: account.id,
-      };
-
-      // Info: (20250106 - Shirley) 複製自身科目成為虛擬科目
-      const copy: ILineItemInTrialBalanceItemWithHierarchy = {
-        accountId: copyAccountInfo.id,
-        accountCode: copyAccountInfo.code,
-        accountName: copyAccountInfo.name,
-        account: copyAccountInfo,
-        debitAmount,
-        creditAmount,
+      // Info: (20250217 - Shirley) 建立虛擬科目（保存本科目的原始金額）
+      const virtualItem: ILineItemInTrialBalanceItemWithHierarchy = {
+        ...item,
+        accountId: item.account.id * 10,
+        accountCode: `${item.account.code}-0`,
+        accountName: `${item.account.name}-虛擬會計科目（原${item.account.code}）`,
+        debitAmount: selfAmounts.debitAmount,
+        creditAmount: selfAmounts.creditAmount,
+        account: {
+          ...item.account,
+          id: item.account.id * 10,
+          code: `${item.account.code}-0`,
+          name: `${item.account.name}-虛擬會計科目（原${item.account.code}）`,
+        },
         children: [],
-        ...rest,
       };
 
-      // Info: (20250106 - Shirley) 把虛擬科目加到自己的第一個子科目
-      item.children.unshift(copy);
+      // Info: (20250217 - Shirley) 計算總金額（包含本科目和所有子科目）
+      const totalDebit =
+        selfAmounts.debitAmount + item.children.reduce((sum, child) => sum + child.debitAmount, 0);
+      const totalCredit =
+        selfAmounts.creditAmount +
+        item.children.reduce((sum, child) => sum + child.creditAmount, 0);
 
-      /* Info: (20250107 - Shirley) 將科目複製為虛擬科目，移除其子科目重新計算 debitAmount 與 creditAmount
-       * 原始的 debitAmount 與 creditAmount 並未累加 children 的金額，此處統一加總
-       * 此處需確保 processedItem 不存在 call by reference 的問題，用 deep clone 來處理會是較安全的方式
-       */
       const processedItem: ILineItemInTrialBalanceItemWithHierarchy = {
         ...item,
-        debitAmount: item.children.reduce((sum, child) => sum + child.debitAmount, 0),
-        creditAmount: item.children.reduce((sum, child) => sum + child.creditAmount, 0),
+        debitAmount: totalDebit,
+        creditAmount: totalCredit,
+        children: [virtualItem, ...item.children],
       };
 
-      // Info: (20250107 - Shirley) 確認此科目 id 是否存在於包含虛擬科目的清單中
-      const existingItem = arrWithCopySelf.find((i) => i.account.id === processedItem.account.id);
-      if (existingItem) {
-        // Info: (20250107 - Shirley) 存在，表示已處理過這個科目，應該略過
-      } else {
-        // Info: (20250107 - Shirley) 不存在，將虛擬科目加入清單中
-        arrWithCopySelf.push(processedItem);
-      }
+      arrWithCopySelf.push(processedItem);
     } else {
       arrWithCopySelf.push(item);
     }
   });
 
-  // Info: (20250107 - Shirley) arrWithChildren 為不包含虛擬科目的會計科目從屬架構，可用於驗算，實際上尚未使用
   return { arrWithChildren, arrWithCopySelf };
 }
 
@@ -996,7 +761,12 @@ export function convertToAPIFormat(
     return item;
   });
 
-  const newItems = itemsWithSubAccounts.filter((item) => item !== null);
+  // const newItems = itemsWithSubAccounts.filter((item) => item !== null);
+  // Info: (20250307 - Liz) 這行程式碼讓 npm run build 失敗，因為 TypeScript 仍然認為 newItems 的型別是 (TrialBalanceItem | null)[]，而不是 TrialBalanceItem[]
+
+  const newItems = itemsWithSubAccounts.filter((item): item is TrialBalanceItem => item !== null);
+  // Info: (20250307 - Liz) 由於 .filter() 不會自動改變陣列的型別，我們可以用 Type Predicate 讓 TypeScript 正確推斷 newItems 的型別是 TrialBalanceItem[]
+  // ToDo: (20250307 - Liz) 先暫時解這個 build error 會再與後端討論這個問題
 
   const sortedItems = sortTrialBalanceItem(newItems, sortOption);
 

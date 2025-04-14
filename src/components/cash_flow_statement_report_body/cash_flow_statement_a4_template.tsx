@@ -305,8 +305,7 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             className={`${printContentClass} relative h-a4-height overflow-y-hidden`}
           >
             {renderedHeader(false)}
-            <div className="text-sm">{pageContent}</div>{' '}
-            {/* Info: (20241130 - Anna) 渲染 pageContent */}
+            <div className="text-sm">{pageContent}</div>
             {renderedFooter(firstBlockSplitPages.length + secondBlockSplitPages.length + index + 1)}
           </div>
         </div>

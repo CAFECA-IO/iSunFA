@@ -13,6 +13,10 @@ import { createManyAssets } from '@/lib/utils/repo/asset.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { z } from 'zod';
 import { IAssetBulkPostOutputValidator } from '@/lib/utils/zod_schema/asset';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -33,7 +37,7 @@ export const handlePostRequest: IHandleRequest<
   IAssetBulkPostRepoOutput
 > = async ({ query, body, session }) => {
   const { companyId } = query;
-  const { userId } = session;
+  const { userId, teams } = session;
   const {
     assetName,
     assetType,
@@ -63,6 +67,31 @@ export const handlePostRequest: IHandleRequest<
     usefulLife,
     note,
   };
+
+  // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.BOOKKEEPING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
   const rs = await createManyAssets(newAsset, amount, userId);

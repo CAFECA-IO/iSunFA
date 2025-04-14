@@ -18,20 +18,13 @@ import {
   certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import {
-  companyDeleteSchema,
-  companyGetByIdSchema,
-  companyListSchema,
-  companyPostSchema,
   companyPutIconSchema,
   companyPutSchema,
   companySearchSchema,
-  companySelectSchema,
 } from '@/lib/utils/zod_schema/company';
-import { invoiceRequestValidators } from '@/lib/utils/zod_schema/invoice';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
-import { ocrRequestValidators } from '@/lib/utils/zod_schema/ocr';
 import {
   companyPendingTaskSchema,
   userPendingTaskSchema,
@@ -63,8 +56,8 @@ import {
   voucherPostSchema,
   voucherPostValidatorV2,
   voucherPutSchema,
-  voucherRequestValidatorsV1,
   voucherWasReadValidatorV2,
+  voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
@@ -103,13 +96,7 @@ import {
   filePutSchema,
 } from '@/lib/utils/zod_schema/file';
 import { imageGetSchema } from '@/lib/utils/zod_schema/image';
-import {
-  userDeleteSchema,
-  userDeletionPutSchema,
-  userGetSchema,
-  userListSchema,
-  userPutSchema,
-} from '@/lib/utils/zod_schema/user';
+import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
 import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
@@ -123,6 +110,19 @@ import {
 } from '@/lib/utils/zod_schema/asset';
 import { exportLedgerPostSchema } from '@/lib/utils/zod_schema/export_ledger';
 import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
+import { teamSchemas } from '@/lib/utils/zod_schema/team';
+import { paymentPlanListSchema } from '@/lib/utils/zod_schema/payment_plan';
+import {
+  accountBookCreateSchema,
+  accountBookListSchema,
+  connectAccountBookSchema,
+  getAccountBookInfoSchema,
+  updateAccountBookSchema,
+  updateAccountBookInfoSchema,
+  listAccountBooksByTeamIdSchema,
+  createAccountBookSchema,
+  deleteAccountBookSchema,
+} from '@/lib/utils/zod_schema/account_book';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -138,19 +138,8 @@ import { subscriptionSchemas } from '@/lib/utils/zod_schema/subscription';
 // ToDo: (20241204 - Luphia) unknown for zod schema
 export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
-  [APIName.INVOICE_CREATE]: invoiceRequestValidators.POST,
-  [APIName.INVOICE_GET_BY_ID]: invoiceRequestValidators.GET_ONE,
-  [APIName.INVOICE_UPDATE]: invoiceRequestValidators.PUT,
-  [APIName.JOURNAL_DELETE]: journalRequestValidators.DELETE,
-  [APIName.JOURNAL_GET_BY_ID]: journalRequestValidators.GET_ONE,
   [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
   [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
-  [APIName.OCR_DELETE]: ocrRequestValidators.DELETE,
-  [APIName.OCR_LIST]: ocrRequestValidators.GET_LIST,
-  [APIName.OCR_RESULT_GET_BY_ID]: ocrRequestValidators.GET_ONE,
-  [APIName.OCR_UPLOAD]: ocrRequestValidators.POST,
-  [APIName.VOUCHER_CREATE]: voucherRequestValidatorsV1.POST,
-  [APIName.VOUCHER_UPDATE]: voucherRequestValidatorsV1.PUT,
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
@@ -169,12 +158,11 @@ export const API_ZOD_SCHEMA = {
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
 export const ZOD_SCHEMA_API = {
-  [APIName.LIST_USER_COMPANY]: companyListSchema,
-  [APIName.CREATE_USER_COMPANY]: companyPostSchema,
-  [APIName.COMPANY_SELECT]: companySelectSchema,
-  [APIName.COMPANY_GET_BY_ID]: companyGetByIdSchema,
+  [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.COMPANY_UPDATE]: companyPutSchema,
-  [APIName.COMPANY_DELETE]: companyDeleteSchema,
+  [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
+  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
+  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
   [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
   [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
@@ -184,7 +172,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.COUNTERPARTY_UPDATE]: counterpartyPutSchema,
   [APIName.COUNTERPARTY_DELETE]: counterpartyDeleteSchema,
   [APIName.USER_PENDING_TASK_GET]: userPendingTaskSchema,
-  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.USER_ROLE_LIST]: userRoleListSchema,
   [APIName.USER_SELECT_ROLE]: userRoleSelectSchema,
   [APIName.USER_CREATE_ROLE]: userRolePostSchema,
@@ -212,6 +199,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
   [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
   [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
+  [APIName.VOUCHER_RESTORE_V2]: voucherRestoreSchema,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
@@ -223,49 +211,19 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_EXPORT]: assetExportSchema, // ToDo: (20241112 - Luphia) need to define the schema for file export
 
   [APIName.AGREE_TO_TERMS]: UserAgreementPostSchema,
-  [APIName.CREATE_CHALLENGE]: nullAPISchema,
   [APIName.EMAIL]: nullAPISchema,
   [APIName.USER_LIST]: userListSchema,
   [APIName.USER_GET_BY_ID]: userGetSchema,
   [APIName.USER_UPDATE]: userPutSchema,
-  [APIName.USER_DELETION_UPDATE]: userDeletionPutSchema,
-  [APIName.USER_DELETE]: userDeleteSchema,
-  [APIName.COMPANY_ADD]: nullAPISchema,
-  [APIName.COMPANY_GET]: nullAPISchema,
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
-  [APIName.COMPANY_ADD_BY_INVITATION_CODE]: nullAPISchema,
   [APIName.CERTIFICATE_PUT_V2]: nullAPISchema,
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
-  [APIName.PROFIT_GET_INSIGHT]: nullAPISchema,
-  [APIName.INCOME_EXPENSE_GET_TREND_IN_PERIOD]: nullAPISchema,
-  [APIName.LABOR_COST_CHART]: nullAPISchema,
-  [APIName.PROFIT_GET_TREND_IN_PERIOD]: nullAPISchema,
-  [APIName.PROJECT_LIST_PROGRESS]: nullAPISchema,
-  [APIName.PROJECT_LIST_PROFIT_COMPARISON]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_LIST]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_ADD]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_GET_BY_ID]: nullAPISchema,
-  [APIName.ASSET_MANAGEMENT_UPDATE]: nullAPISchema,
-  [APIName.OCR_UPLOAD]: nullAPISchema,
-  [APIName.OCR_DELETE]: nullAPISchema,
-  [APIName.OCR_RESULT_GET_BY_ID]: nullAPISchema,
-  [APIName.OCR_LIST]: nullAPISchema,
-  [APIName.INVOICE_CREATE]: nullAPISchema,
-  [APIName.INVOICE_UPDATE]: nullAPISchema,
-  [APIName.INVOICE_GET_BY_ID]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: nullAPISchema,
-  [APIName.ASK_AI_RESULT]: nullAPISchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
-  [APIName.VOUCHER_CREATE]: nullAPISchema,
-  [APIName.VOUCHER_UPDATE]: nullAPISchema,
   [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
-  [APIName.JOURNAL_GET_BY_ID]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
-  // [APIName.JOURNAL_UPDATE]: nullAPISchema, // Info: (20240723 - Tzuhan)
-  [APIName.JOURNAL_DELETE]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
   [APIName.REPORT_GET_V2]: nullAPISchema,
@@ -274,21 +232,14 @@ export const ZOD_SCHEMA_API = {
   [APIName.ACCOUNT_LIST]: accountGetV2Schema,
   [APIName.FILE_UPLOAD]: filePostSchema,
   [APIName.FILE_DELETE]: fileDeleteSchema,
+  [APIName.FILE_DELETE_V2]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
-  [APIName.ROLE_GET_BY_ID]: nullAPISchema,
-  [APIName.ROLE_DELETE]: nullAPISchema,
-  [APIName.ROLE_UPDATE]: nullAPISchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
   [APIName.ACCOUNT_GET_BY_ID]: nullAPISchema,
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: nullAPISchema,
   [APIName.DELETE_ACCOUNT_BY_ID]: nullAPISchema,
-  [APIName.TRANSFER_OWNER]: nullAPISchema,
-  [APIName.PROJECT_LIST]: nullAPISchema,
-  [APIName.CREATE_PROJECT]: nullAPISchema,
-  [APIName.GET_PROJECT_BY_ID]: nullAPISchema,
-  [APIName.UPDATE_PROJECT_BY_ID]: nullAPISchema,
   [APIName.PUBLIC_KEY_GET]: nullAPISchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
@@ -308,10 +259,41 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
   [APIName.REMOVE_LOGIN_DEVICE]: nullAPISchema,
 
-  [APIName.LIST_TEAM]: subscriptionSchemas.list,
-  [APIName.GET_TEAM_BY_ID]: subscriptionSchemas.get,
+  [APIName.CREATE_TEAM]: teamSchemas.create,
+  [APIName.LIST_TEAM]: teamSchemas.list,
+  [APIName.GET_TEAM_BY_ID]: teamSchemas.get,
+  [APIName.UPDATE_TEAM_BY_ID]: teamSchemas.update,
+  [APIName.UPDATE_MEMBER]: teamSchemas.updateMember,
+  [APIName.DELETE_MEMBER]: teamSchemas.deleteMember,
+  [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: listAccountBooksByTeamIdSchema,
+  [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
+  [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: teamSchemas.requestTransferAccountBook,
+  [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: teamSchemas.cancelTransferAccountBook,
+  [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: teamSchemas.acceptTransferAccountBook,
+  [APIName.DECLINE_TRANSFER_ACCOUNT_BOOK]: teamSchemas.declineTransferAccountBook,
+  [APIName.LEAVE_TEAM]: teamSchemas.leaveTeam,
+
+  [APIName.LIST_TEAM_SUBSCRIPTION]: subscriptionSchemas.list,
+  [APIName.GET_SUBSCRIPTION_BY_TEAM_ID]: subscriptionSchemas.get,
   [APIName.UPDATE_SUBSCRIPTION]: subscriptionSchemas.update,
   [APIName.LIST_TEAM_INVOICE]: subscriptionSchemas.listInvoiceList,
-  [APIName.GET_TEAM_INVOICE_BY_ID]: subscriptionSchemas.getInvoice,
+  [APIName.GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID]: subscriptionSchemas.getInvoice,
+
   [APIName.GET_CREDIT_CARD_INFO]: subscriptionSchemas.getCreditCard,
+
+  [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
+
+  [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
+  [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
+  [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
+  [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
+  [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
+  [APIName.ACCOUNT_BOOK_CREATE]: createAccountBookSchema,
+  [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,
+
+  [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
+  [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,
+  [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: nullAPISchema,
+  [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: nullAPISchema,
 };

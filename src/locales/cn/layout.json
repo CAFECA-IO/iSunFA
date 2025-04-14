@@ -17,8 +17,6 @@
     "BALANCE_SHEET": "资产负债表",
     "INCOME_STATEMENT": "损益表",
     "STATEMENT_OF_CASH_FLOWS": "现金流量表",
-    "TAX_REPORT": "税务报表",
-    "BUSINESS_TAX_RETURN_401": "营业税申报表 (401)",
     "DAILY_REPORT": "每日报表",
     "LEDGER": "总帐/分类帐",
     "TRIAL_BALANCE": "试算表",
@@ -30,7 +28,9 @@
     "ACCOUNT_BOOK_SETTINGS": "帐本设定",
     "ACCOUNTING_SETTINGS": "会计设定",
     "CLIENTS_SUPPLIERS_MANAGEMENT": "客户/供应商",
-    "BACK_TO_DASHBOARD": "回到仪表板"
+    "BACK_TO_DASHBOARD": "回到仪表板",
+    "CURRENT_ACCOUNT_BOOK": "目前连结帐本",
+    "SELECT_ACCOUNT_BOOK": "请连结帐本"
   },
 
   "TOAST": {

@@ -7,6 +7,7 @@ import {
   KeyboardEvent,
   forwardRef,
   useImperativeHandle,
+  useState,
 } from 'react';
 import { useRouter } from 'next/router';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
@@ -14,6 +15,7 @@ import { RxTrackPrevious, RxTrackNext } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import useStateRef from 'react-usestateref';
 import { Button } from '@/components/button/button';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 export interface IPaginationProps {
   className?: string;
@@ -39,8 +41,9 @@ const Pagination = forwardRef(
     ref
   ) => {
     const { t } = useTranslation(['common']);
-    const [, setTargetPage, targetPageRef] = useStateRef<number>(currentPage);
+    const [, setTargetPage, targetPageRef] = useStateRef<number | string>('');
     const router = useRouter();
+    const [isInputFocused, setIsInputFocused] = useState(false);
 
     // Info: (20240712 - Shirley) 從 URL 獲取初始頁碼
     useEffect(() => {
@@ -88,16 +91,25 @@ const Pagination = forwardRef(
 
     // Info: (20240712 - Shirley) input 的 onChange 事件處理函數
     const pageChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
-      const value = Math.min(Math.max(1, parseInt(e.target.value, 10)), totalPages);
+      const rawValue = e.target.value;
+
+      // Info: (20250325 - Liz) 允許空值，這樣使用者可以刪除輸入內容
+      if (rawValue === '') {
+        setTargetPage(rawValue); // Info: (20250325 - Liz)  暫時設為空字串，避免強制變成 1
+        return;
+      }
+
+      // Info: (20250325 - Liz) 解析數字並限制範圍
+      const value = parseInt(rawValue, 10);
       if (!Number.isNaN(value)) {
-        setTargetPage(value);
+        setTargetPage(Math.min(Math.max(1, value), totalPages));
       }
     };
 
     // Info: (20240419 - Julian) 按下 Enter 鍵後，輸入頁數
     const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter' && targetPageRef.current !== currentPage) {
-        changePage(targetPageRef.current);
+      if (e.key === KEYBOARD_EVENT_CODE.ENTER && targetPageRef.current !== currentPage) {
+        if (typeof targetPageRef.current === 'number') changePage(targetPageRef.current);
       }
     };
 
@@ -160,16 +172,28 @@ const Pagination = forwardRef(
       </Button>
     );
 
+    // Info: (20250326 - Liz) 輸入框的 onFocus 和 onBlur 事件處理函數: 用來顯示/隱藏 placeholder
+    const onFocus = () => {
+      setIsInputFocused(true);
+      setTargetPage('');
+    };
+    const onBlur = () => {
+      setIsInputFocused(false);
+      setTargetPage(currentPage);
+    };
+
     const displayPageInput = (
       <input
         name="page"
         type="number"
-        placeholder={`${currentPage}`}
+        placeholder={isInputFocused ? '' : `${currentPage}`}
         min={1}
         max={totalPages}
         value={targetPageRef.current}
         onChange={pageChangeHandler}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
+        onBlur={onBlur}
         className="h-44px w-44px rounded border border-input-stroke-input bg-transparent text-center text-sm font-semibold text-date-picker-text-input-placeholder outline-none placeholder:text-date-picker-text-input-placeholder disabled:border-input-stroke-input"
       />
     );

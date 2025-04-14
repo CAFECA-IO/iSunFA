@@ -63,7 +63,8 @@
     "CASH_INFLOWS_FROM_OPERATING": "營業活動現金流入",
     "PROPERTY_PLANT_EQUIPMENT": "不動產、廠房及設備",
     "EXPENDITURES_ON_INTANGIBLE_ASSETS": "無形資產支出",
-    "AVAILABLE_CASH_FLOW": "自由現金流量"
+    "AVAILABLE_CASH_FLOW": "自由現金流量",
+    "EXPORT_TAX_FILING_FILE": "匯出媒體檔案"
   },
   "PLUGIN": {
     "RESERVE_RATIO_BLOCK_TITLE": "最新的 TideBit ",

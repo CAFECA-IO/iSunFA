@@ -16,6 +16,7 @@ import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
+import BigNumber from 'bignumber.js';
 
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
@@ -23,6 +24,8 @@ interface IVoucherLineBlockProps {
 
   flagOfClear: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
   flagOfSubmit: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
+
+  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉提示
 
   setIsTotalZero: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否為 0
   setIsTotalNotEqual: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否不相等
@@ -45,6 +48,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   flagOfClear,
   flagOfSubmit,
+
+  isShowReverseHint,
 
   setIsTotalZero,
   setIsTotalNotEqual,
@@ -81,13 +86,17 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
-    // Info: (20241004 - Julian) 計算總借貸金額
+    // Info: (20250321 - Anna) 計算總借貸金額
     const debitTotal = lineItems.reduce((acc, item) => {
-      return item.debit === true ? acc + item.amount : acc;
-    }, 0);
+      const amount = new BigNumber(item.amount);
+      return item.debit === true ? acc.plus(amount) : acc;
+    }, new BigNumber(0));
+
     const creditTotal = lineItems.reduce((acc, item) => {
-      return item.debit === false ? acc + item.amount : acc;
-    }, 0);
+      const amount = new BigNumber(item.amount);
+      return item.debit === false ? acc.plus(amount) : acc;
+    }, new BigNumber(0));
+
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
     const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
@@ -103,11 +112,15 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    setTotalDebit(debitTotal);
-    setTotalCredit(creditTotal);
+    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
+    setTotalDebit(debitTotal.toNumber());
+    setTotalCredit(creditTotal.toNumber());
 
-    setIsTotalZero(debitTotal === 0 && creditTotal === 0);
-    setIsTotalNotEqual(debitTotal !== creditTotal);
+    // Info: (20250319 - Anna) 判斷總借貸金額是否為 0
+    setIsTotalZero(debitTotal.isZero() && creditTotal.isZero());
+
+    // Info: (20250319 - Anna) 判斷總借貸金額是否相等
+    setIsTotalNotEqual(!debitTotal.eq(creditTotal));
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
     setIsVoucherLineEmpty(lineItems.length === 0);
@@ -128,6 +141,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           accountIsNull={lineItem.account === null}
           amountIsZero={lineItem.amount === 0}
           amountNotEqual={totalCredit !== totalDebit}
+          isShowReverseHint={isShowReverseHint}
         />
       ))
     ) : (
@@ -139,8 +153,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
-      {/* Info: (20240927 - Julian) Table Header */}
-      <div className="grid w-full grid-cols-13 gap-x-24px">
+      <div className="grid w-full grid-cols-13 gap-x-lv-5">
+        {/* Info: (20240927 - Julian) Table Header */}
         <div className="col-span-3 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
         </div>
@@ -153,10 +167,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         <div className="col-span-3 col-start-10 font-semibold text-text-neutral-invert">
           {t('journal:VOUCHER_LINE_BLOCK.CREDIT')}
         </div>
-      </div>
 
-      {/* Info: (20240927 - Julian) Table Body */}
-      <div className="grid w-full grid-cols-13 gap-x-24px gap-y-10px">
+        {/* Info: (20240927 - Julian) Table Body */}
         {voucherLines}
 
         {/* Info: (20240927 - Julian) Total calculation */}

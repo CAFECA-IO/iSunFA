@@ -1,0 +1,56 @@
+import { TeamRole } from '@/interfaces/team';
+
+export const MAX_TEAM_LIMIT = 3; // Info: (20250321 - Tzuhan) 團隊數量限制
+
+export enum TeamPermissionAction {
+  // Info: (20250313 - Tzuhan) 團隊操作權限
+  INVITE_MEMBER = 'INVITE_MEMBER', // Info: (20250320 - Liz) 邀請成員
+  LEAVE_TEAM = 'LEAVE_TEAM', // Info: (20250320 - Liz) 離開團隊
+  DELETE_TEAM = 'DELETE_TEAM', // Info: (20250320 - Liz) 刪除團隊(設計目前沒有)
+  MODIFY_NAME = 'MODIFY_NAME', // Info: (20250320 - Liz) 編輯團隊名稱 name
+  MODIFY_IMAGE = 'MODIFY_IMAGE', // Info: (20250320 - Liz) 編輯團隊照片 imageId
+  MODIFY_ABOUT = 'MODIFY_ABOUT', // Info: (20250320 - Liz) 編輯團隊關於 about
+  MODIFY_PROFILE = 'MODIFY_PROFILE', // Info: (20250320 - Liz) 編輯團隊介紹 profile
+  VIEW_BANK_INFO = 'VIEW_BANK_INFO', // Info: (20250320 - Liz) 查看團隊銀行帳號 bankAccount
+  MODIFY_BANK_ACCOUNT = 'MODIFY_BANK_ACCOUNT', // Info: (20250320 - Liz) 編輯團隊銀行帳號 bankAccount
+  MODIFY_PLAN = 'MODIFY_PLAN', // Info: (20250320 - Liz) 編輯團隊訂閱方案 planType
+  VIEW_TEAM_INFO = 'VIEW_TEAM_INFO', // Info: (20250320 - Liz) 查看團隊資訊
+  VIEW_SUBSCRIPTION = 'VIEW_SUBSCRIPTION', // Info: (20250320 - Liz) 查看目前團隊訂閱方案
+  MODIFY_SUBSCRIPTION = 'MODIFY_SUBSCRIPTION', // Info: (20250411 - Tzuhan) 編輯團隊訂閱方案
+  VIEW_SUBSCRIPTION_INVOICE = 'VIEW_SUBSCRIPTION_INVOICE', // Info: (20250411 - Tzuhan) 查看訂閱發票
+
+  // Info: (20250313 - Tzuhan) 帳本權限
+  CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK', // Info: (20250320 - Liz) 建立帳本
+  DELETE_ACCOUNT_BOOK = 'DELETE_ACCOUNT_BOOK', // Info: (20250320 - Liz) 刪除帳本
+  MODIFY_ACCOUNT_BOOK = 'MODIFY_ACCOUNT_BOOK', // Info: (20250320 - Liz) 修改帳本名稱 & 修改帳本照片
+  MODIFY_TAG = 'MODIFY_TAG', // Info: (20250320 - Liz) 修改工作標籤
+  MODIFY_PRIVACY = 'MODIFY_PRIVACY',
+  CREATE_PRIVATE_ACCOUNT_BOOK = 'CREATE_PRIVATE_ACCOUNT_BOOK',
+  VIEW_PRIVATE_ACCOUNT_BOOK = 'VIEW_PRIVATE_ACCOUNT_BOOK',
+  VIEW_PUBLIC_ACCOUNT_BOOK = 'VIEW_PUBLIC_ACCOUNT_BOOK',
+
+  // Info: (20250313 - Tzuhan) 帳本轉移
+  REQUEST_ACCOUNT_BOOK_TRANSFER = 'REQUEST_ACCOUNT_BOOK_TRANSFER', // Info: (20250320 - Liz) 請求轉移帳本
+  CANCEL_ACCOUNT_BOOK_TRANSFER = 'CANCEL_ACCOUNT_BOOK_TRANSFER', // Info: (20250320 - Liz) 取消轉移帳本
+  ACCEPT_ACCOUNT_BOOK_TRANSFER = 'ACCEPT_ACCOUNT_BOOK_TRANSFER', // Info: (20250320 - Liz) 接受轉移帳本
+  DECLINE_ACCOUNT_BOOK_TRANSFER = 'DECLINE_ACCOUNT_BOOK_TRANSFER', // Info: (20250320 - Liz) 拒絕轉移帳本
+
+  // Info: (20250313 - Tzuhan) 帳務相關
+  BOOKKEEPING = 'BOOKKEEPING',
+  ACCOUNTING_SETTING = 'ACCOUNTING_SETTING',
+
+  // Info: (20250313 - Tzuhan) 變更角色
+  CHANGE_TEAM_ROLE = 'CHANGE_TEAM_ROLE', // Info: (20250320 - Liz) 編輯成員權限
+}
+
+export interface IWhatTeamRoleCanDo {
+  teamRole: TeamRole;
+  canDo: TeamPermissionAction;
+}
+
+export interface IResolvedTeamPermission {
+  teamRole: TeamRole;
+  canDo: TeamPermissionAction;
+  can: boolean;
+  alterableRoles?: TeamRole[]; // 只在 CHANGE_TEAM_ROLE 有值
+}

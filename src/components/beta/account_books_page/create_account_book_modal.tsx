@@ -1,34 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ITeam } from '@/interfaces/team';
-import { FAKE_TEAM_LIST } from '@/constants/team';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface CreateCompanyModalProps {
-  modalVisibilityHandler: () => void;
+  closeCreateAccountBookModal: () => void;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
-  getCompanyList?: () => void;
+  getAccountBookList?: () => void;
 }
 
 const CreateAccountBookModal = ({
-  modalVisibilityHandler,
+  closeCreateAccountBookModal,
   setRefreshKey,
-  getCompanyList,
+  getAccountBookList,
 }: CreateCompanyModalProps) => {
   const { t } = useTranslation(['dashboard']);
-  const { createAccountBook } = useUserCtx();
+  const { createAccountBook, userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState<string>('');
   const [taxId, setTaxId] = useState<string>('');
   const [tag, setTag] = useState<WORK_TAG | null>(null);
-  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單後存入 teamList state
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [teamList, setTeamList] = useState<ITeam[] | null>(FAKE_TEAM_LIST);
+  const [teamList, setTeamList] = useState<ITeam[] | null>(null);
   const [team, setTeam] = useState<ITeam | null>(null);
   const [isTagDropdownOpen, setIsTagDropdownOpen] = useState<boolean>(false);
   const [isTeamDropdownOpen, setIsTeamDropdownOpen] = useState<boolean>(false);
@@ -36,6 +36,9 @@ const CreateAccountBookModal = ({
   const [companyNameError, setCompanyNameError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
+
+  // Info: (20250303 - Liz) 取得團隊清單 API
+  const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
   const toggleTagDropdown = () => {
     setIsTagDropdownOpen((prevState) => !prevState);
@@ -47,6 +50,7 @@ const CreateAccountBookModal = ({
     setIsTagDropdownOpen(false);
   };
 
+  // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async () => {
     // Info: (20241114 - Liz) 防止重複點擊
     if (isLoading) return;
@@ -73,32 +77,36 @@ const CreateAccountBookModal = ({
         name: companyName,
         taxId,
         tag,
+        teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
       });
 
-      if (success) {
-        // Info: (20241114 - Liz) 新增公司成功後清空表單並關閉 modal
-        setCompanyName('');
-        setTaxId('');
-        setTag(WORK_TAG.ALL);
-        modalVisibilityHandler();
-
-        if (getCompanyList) getCompanyList(); // Info: (20241209 - Liz) 重新取得公司列表
-
-        if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the company list after creating a new company
-      } else {
-        // Info: (20241114 - Liz) 新增公司失敗時顯示錯誤訊息
+      if (!success) {
+        // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
           id: 'create-company-failed',
           type: ToastType.ERROR,
           content: (
             <p>
-              Create company failed. Error code: {code} Error message: {errorMsg}
+              {`${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
+              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_CODE')}: ${code}
+              ${t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
             </p>
           ),
           closeable: true,
           position: ToastPosition.TOP_CENTER,
         });
+        return;
       }
+
+      // Info: (20241114 - Liz) 新增帳本成功後清空表單並關閉 modal
+      setCompanyName('');
+      setTaxId('');
+      setTag(WORK_TAG.ALL);
+      closeCreateAccountBookModal();
+
+      if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
       // Deprecated: (20241104 - Liz)
       // eslint-disable-next-line no-console
@@ -109,21 +117,46 @@ const CreateAccountBookModal = ({
     }
   };
 
-  // ToDo: (20250213 - Liz) 打 API 取得使用者的團隊清單
+  // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
+  useEffect(() => {
+    if (!userAuth) return;
+    const getTeamList = async () => {
+      try {
+        const { success, data } = await getTeamListAPI({
+          params: { userId: userAuth.id },
+          query: {
+            canCreateAccountBookOnly: true,
+            page: 1,
+            pageSize: 999,
+          },
+        });
+
+        if (success) {
+          setTeamList(data?.data ?? []);
+        }
+      } catch (error) {
+        // Deprecated: (20250303 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('CreateAccountBookModal getTeamList error:', error);
+      }
+    };
+
+    getTeamList();
+  }, [userAuth]);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-lg">
-        <div className="flex max-h-80vh w-400px flex-col gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 p-40px">
-          <section className="flex items-center justify-between">
-            <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-              {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
-            </h1>
-            <button type="button" onClick={modalVisibilityHandler}>
-              <IoCloseOutline size={24} />
-            </button>
-          </section>
+        <header className="flex items-center justify-between bg-surface-neutral-surface-lv2 px-40px pb-24px pt-40px">
+          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+            {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
+          </h1>
+          <button type="button" onClick={closeCreateAccountBookModal}>
+            <IoCloseOutline size={24} />
+          </button>
+        </header>
 
+        <div className="max-h-65vh w-400px gap-24px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
           <main className="flex flex-col gap-40px">
             <section className="flex flex-col gap-40px">
               {/* // Info: (20250213 - Liz) Company Name */}
@@ -153,14 +186,14 @@ const CreateAccountBookModal = ({
                 </h4>
                 <input
                   type="text"
-                  placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_NUMBER')}
+                  placeholder={t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.ENTER_TAX_ID')}
                   className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
                   value={taxId}
                   onChange={(e) => setTaxId(e.target.value)}
                 />
               </div>
 
-              {/* // Info: (20250213 - Liz) Work Tag */}
+              {/* // Info: (20250213 - Liz) Work Tag 工作標籤 */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
                   {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.WORK_TAG')}
@@ -217,7 +250,7 @@ const CreateAccountBookModal = ({
                 </div>
               </div>
 
-              {/* // Info: (20250213 - Liz) Team */}
+              {/* // Info: (20250213 - Liz) Team 選擇團隊 */}
               <div className="flex flex-col gap-8px">
                 <h4 className="font-semibold text-input-text-primary">
                   {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.TEAM')}
@@ -280,7 +313,7 @@ const CreateAccountBookModal = ({
             <section className="flex justify-end gap-12px">
               <button
                 type="button"
-                onClick={modalVisibilityHandler}
+                onClick={closeCreateAccountBookModal}
                 className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
               >
                 {t('dashboard:CREATE_ACCOUNT_BOOK_MODAL.CANCEL')}

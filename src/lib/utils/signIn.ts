@@ -11,6 +11,9 @@ import { UserActionLogActionType } from '@/constants/user_action_log';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DefaultValue } from '@/constants/default_value';
+import { createDefaultTeamForUser } from '@/lib/utils/repo/team.repo';
+import { handleInviteTeamMember } from '@/lib/utils/repo/user.repo';
+import { getUserTeams } from '@/lib/utils/repo/team_member.repo';
 
 export const fetchImageInfo = async (
   imageUrl: string
@@ -91,7 +94,16 @@ export const handleSignInSession = async (
       imageId: file?.id ?? PUBLIC_IMAGE_ID,
     });
 
-    session = await setSession(session, { userId: createdUser.user.id });
+    await createDefaultTeamForUser(createdUser.user.id, createdUser.user.name);
+    await handleInviteTeamMember(createdUser.user.id, createdUser.user.email ?? '');
+
+    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    const userTeams = await getUserTeams(createdUser.user.id);
+
+    session = await setSession(session, {
+      userId: createdUser.user.id,
+      teams: userTeams,
+    });
 
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = createdUser;
@@ -99,7 +111,14 @@ export const handleSignInSession = async (
     // Info: (20240829 - Anna) 與邀請碼相關，目前先註解
     // Dbuser = getUser;
     // ToDo: (20241121 - Jacky) Delete User from DB if deletedAt + 7 days is less than current date
-    session = await setSession(session, { userId: existingUser.user.id });
+
+    // Info: (20250324 - Shirley) 獲取用戶所屬的所有團隊及其角色
+    const userTeams = await getUserTeams(existingUser.user.id);
+
+    session = await setSession(session, {
+      userId: existingUser.user.id,
+      teams: userTeams,
+    });
   }
   const log = {
     sessionId: session.isunfa,

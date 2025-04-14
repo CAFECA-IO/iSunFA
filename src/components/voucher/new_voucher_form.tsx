@@ -50,6 +50,7 @@ import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -73,13 +74,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const { t } = useTranslation('common');
   const router = useRouter();
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { temporaryAssetList, clearTemporaryAssetHandler, reverseList, clearReverseListHandler } =
     useAccountingCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const temporaryAssetListByUser = temporaryAssetList[accountBookId] ?? [];
 
@@ -181,7 +182,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
-  const [selectedIds, setSelectedIds] = React.useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
@@ -239,14 +240,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
-    (ids: number[], isSelected: boolean) => {
-      const updatedData = {
-        ...certificates,
-      };
-      ids.forEach((id) => {
-        updatedData[id] = {
-          ...updatedData[id],
-          isSelected,
+    (ids: number[]) => {
+      // Info: (20250312 - Julian) 複製一份資料
+      const updatedData = { ...certificates };
+      // Info: (20250312 - Julian) 更新選擇狀態：包含在 ids 中的 isSelected 為 true，不在 ids 中的為 false
+      Object.keys(updatedData).forEach((key) => {
+        updatedData[key] = {
+          ...updatedData[key],
+          isSelected: ids.includes(Number(key)), // Info: (20250312 - Julian) 須轉換成數字
         };
       });
 
@@ -265,7 +266,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAIAnalysis(targetIds);
     },
-    [certificates]
+    [certificates, selectedIds]
   );
 
   const handleDelete = useCallback(
@@ -291,6 +292,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   useEffect(() => {
     const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
+    setIsShowReverseHint(false); // Info: (20250304 - Julian) 重置沖銷提示
   }, [voucherLineItems]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
@@ -893,7 +895,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         const newCertificatesUI: { [id: string]: ICertificateUI } = {
           [newCertificate.id]: {
             ...newCertificate,
-            isSelected: false,
+            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
             actions: !newCertificate.voucherNo
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
@@ -1094,28 +1096,22 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             lineItems={aiLineItems}
           />
         ) : (
-          <>
-            {isShowReverseHint ? (
-              <p className="text-text-state-error">
-                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
-              </p>
-            ) : null}
-            <div ref={voucherLineRef} className="col-span-2">
-              <VoucherLineBlock
-                lineItems={voucherLineItems}
-                setLineItems={setLineItems}
-                flagOfClear={flagOfClear}
-                flagOfSubmit={flagOfSubmit}
-                setIsTotalZero={setIsTotalZero}
-                setIsTotalNotEqual={setIsTotalNotEqual}
-                setHaveZeroLine={setHaveZeroLine}
-                setIsAccountingNull={setIsAccountingNull}
-                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-                setIsCounterpartyRequired={setIsCounterpartyRequired}
-                setIsAssetRequired={setIsAssetRequired}
-              />
-            </div>
-          </>
+          <div ref={voucherLineRef} className="col-span-2">
+            <VoucherLineBlock
+              lineItems={voucherLineItems}
+              setLineItems={setLineItems}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+              isShowReverseHint={isShowReverseHint}
+              setIsTotalZero={setIsTotalZero}
+              setIsTotalNotEqual={setIsTotalNotEqual}
+              setHaveZeroLine={setHaveZeroLine}
+              setIsAccountingNull={setIsAccountingNull}
+              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+              setIsCounterpartyRequired={setIsCounterpartyRequired}
+              setIsAssetRequired={setIsAssetRequired}
+            />
+          </div>
         )}
         {/* Info: (20240926 - Julian) buttons */}
         <div className="col-span-2 ml-auto flex items-center gap-12px">
@@ -1131,7 +1127,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             id="voucher-save-button"
             type="submit"
             onKeyDown={(e) => {
-              if (e.key === 'Enter') e.preventDefault();
+              if (e.key === KEYBOARD_EVENT_CODE.ENTER) e.preventDefault();
             }}
             disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
           >

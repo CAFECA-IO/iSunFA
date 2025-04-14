@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils/common';
 
 // Info: (20240319 - Shirley) 用 cva 來定義 button 的樣式
 const buttonVariants = cva(
-  '"gap gap-8px ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
+  '"gap ring-offset-background focus-visible:ring-ring group inline-flex items-center justify-center whitespace-nowrap rounded-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-100 disabled:cursor-not-allowed',
   {
     variants: {
       variant: {
@@ -15,7 +15,7 @@ const buttonVariants = cva(
         tertiaryOutline:
           'border border-button-surface-strong-secondary text-button-surface-strong-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover group-hover:border-button-stroke-primary-hover group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryOutlineGrey:
-          'border border-button-surface-strong-secondary text-button-surface-strong-secondary bg-button-surface-soft-secondary disabled:text-button-text-disable disabled:border-button-stroke-disable',
+          'border border-button-surface-strong-secondary text-button-surface-strong-secondary bg-button-surface-soft-secondary disabled:text-button-text-disable disabled:border-button-stroke-disable hover:bg-button-surface-soft-secondary-hover',
         secondaryOutline:
           'border border-button-text-secondary text-button-text-secondary hover:border-button-text-primary hover:text-button-text-primary-hover group-hover:border-button-text-primary group-hover:text-button-text-primary-hover disabled:text-button-text-disable disabled:border-button-stroke-disable',
         tertiaryBorderless:
@@ -31,10 +31,10 @@ const buttonVariants = cva(
         errorBorderless: 'border-none text-text-state-error  disabled:text-button-text-disable',
       },
       size: {
-        large: 'px-32px py-14px', // Info: (20241106 - Liz) 設計稿 Size: Large
-        default: 'px-24px py-10px', // Info: (20241106 - Liz) 設計稿 Size: Regular
+        large: 'px-32px py-14px gap-8px', // Info: (20241106 - Liz) 設計稿 Size: Large
+        default: 'px-24px py-10px gap-8px', // Info: (20241106 - Liz) 設計稿 Size: Regular
         medium: 'px-5 py-2',
-        small: 'px-16px py-8px', // Info: (20241106 - Liz) 設計稿 Size: Small
+        small: 'px-16px py-8px gap-4px', // Info: (20241106 - Liz) 設計稿 Size: Small
         extraSmall: 'px-2 py-1',
         defaultSquare: 'p-10px w-44px h-44px',
         smallSquare: 'p-10px w-36px h-36px',

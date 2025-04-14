@@ -12,10 +12,12 @@ import path from 'path';
 import { DefaultValue } from '@/constants/default_value';
 import { parseSessionId } from '@/lib/utils/parser/session';
 import { getCurrentTimestamp } from '@/lib/utils/common';
-import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device';
-import { sessionOptionToSession } from '@/lib/utils/formatter/session';
+import { sessionDataToLoginDevice } from '@/lib/utils/formatter/login_device.formatter';
+import { sessionOptionToSession } from '@/lib/utils/formatter/session.formatter';
 import { ALWAYS_LOGIN, SESSION_DEVELOPER } from '@/constants/session';
-import { checkAbnormalDevice } from '@/lib/utils/analyzer/security';
+import { checkAbnormalDevice } from '@/lib/utils/analyzer/security.analyzer';
+import loggerBack from '@/lib/utils/logger_back';
+import { TeamRole } from '@/interfaces/team';
 
 // ToDo: (20250108 - Luphia) encrypt string
 // Deprecated: (20250108 - Luphia) remove eslint-disable
@@ -235,12 +237,19 @@ export const getSession = async (req: NextApiRequest) => {
 // Info: (20250107 - Luphia) 設定用戶 session 資料
 export const setSession = async (
   sessoin: ISessionData,
-  data: { userId?: number; companyId?: number; challenge?: string; roleId?: number }
+  data: {
+    userId?: number;
+    companyId?: number;
+    challenge?: string;
+    roleId?: number;
+    teams?: { id: number; role: string }[];
+  }
 ) => {
   const sessionId = parseSessionId(sessoin);
   const oldSession = (await sessionHandler.read(sessionId)) || ({} as ISessionData);
   const newSession = { ...oldSession, ...data };
   const resultSession = await sessionHandler.update(sessionId, newSession);
+
   return resultSession;
 };
 
@@ -271,3 +280,104 @@ export const kickDevice = async (session: ISessionData, targetDeviceId: string) 
   }
   return result;
 };
+
+/**
+ * Info: (20250402 - Shirley)
+ * 更新團隊成員的 session 資料
+ * @param userId 用戶 ID
+ * @param teamId 團隊 ID
+ * @param role 新的團隊角色（如果為 null 則表示刪除該團隊成員）
+ */
+export async function updateTeamMemberSession(
+  userId: number,
+  teamId: number,
+  role: TeamRole | null
+): Promise<void> {
+  try {
+    // Info: (20250402 - Shirley) 更新用戶的 session 資料，移除或更新團隊角色
+    const sessionHandlerInstance = SessionHandler.getInstance(sessionHandlerOption);
+    const sessions = Array.from(sessionHandlerInstance.data.values());
+    const userSessions = sessions.filter((session) => session.userId === userId);
+
+    // Deprecated: (20250416 - Shirley) 移除 log
+    loggerBack.info({
+      message: 'Updating team member session',
+      userId,
+      teamId,
+      role,
+      sessionsCount: userSessions.length,
+    });
+
+    await Promise.all(
+      userSessions.map(async (session) => {
+        const teams = session.teams || [];
+        let updatedTeams: { id: number; role: string }[] = [];
+
+        if (role === null) {
+          // Info: (20250402 - Shirley) 移除用戶
+          updatedTeams = teams.filter((team) => team.id !== teamId);
+          // Deprecated: (20250416 - Shirley) 移除 log
+          loggerBack.info({
+            message: 'Removing team from user session',
+            userId,
+            teamId,
+            sessionId: session.isunfa,
+          });
+        } else {
+          // Info: (20250402 - Shirley) 檢查用戶是否已在團隊中
+          const existingTeamIndex = teams.findIndex((team) => team.id === teamId);
+
+          if (existingTeamIndex === -1) {
+            // Info: (20250402 - Shirley) 用戶不在團隊中，新增團隊資訊
+            updatedTeams = [...teams, { id: teamId, role }];
+            // Deprecated: (20250416 - Shirley) 移除 log
+            loggerBack.info({
+              message: 'Adding team to user session',
+              userId,
+              teamId,
+              role,
+              sessionId: session.isunfa,
+            });
+          } else {
+            // Info: (20250402 - Shirley) 用戶已在團隊中，更新角色
+            updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, role } : team));
+            // Deprecated: (20250416 - Shirley) 移除 log
+            loggerBack.info({
+              message: 'Updating user role in team session',
+              userId,
+              teamId,
+              role,
+              sessionId: session.isunfa,
+            });
+          }
+        }
+
+        const beforeSession = { ...session };
+        const updatedSession = await sessionHandlerInstance.update(session.isunfa, {
+          ...session,
+          teams: updatedTeams,
+        });
+        // Deprecated: (20250416 - Shirley) 移除 log
+        loggerBack.info({
+          message: 'Session updated successfully',
+          userId,
+          teamId,
+          sessionId: session.isunfa,
+          beforeTeams: beforeSession.teams?.length || 0,
+          afterTeams: updatedSession.teams?.length || 0,
+        });
+
+        return updatedSession;
+      })
+    );
+  } catch (error) {
+    // Deprecated: (20250416 - Shirley) 移除 log
+    loggerBack.warn({
+      message: 'Failed to update team member session',
+      error,
+      userId,
+      teamId,
+      role,
+    });
+  }
+}

@@ -12,6 +12,7 @@ import { PLANS } from '@/constants/subscription';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
 
 const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -20,22 +21,26 @@ const PaymentPage = () => {
   const teamIdString = teamId ? (Array.isArray(teamId) ? teamId[0] : teamId) : '';
   const spString = sp ? (Array.isArray(sp) ? sp[0] : sp) : '';
 
+  const { handleBindingResult } = useUserCtx();
+
   // Info: (20250114 - Liz) 找出 spString 所對應的 plan 資料
   const planFromUrl = PLANS.find((p) => p.id === spString);
 
   const [team, setTeam] = useState<IUserOwnedTeam | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Info: (20250117 - Liz) 取得團隊資料 API
-  const { trigger: getTeamDataAPI } = APIHandler<IUserOwnedTeam>(APIName.GET_TEAM_BY_ID);
+  // Info: (20250117 - Liz) 取得使用者擁有的團隊資料 API (user is the owner of the team)
+  const { trigger: getOwnedTeamAPI } = APIHandler<IUserOwnedTeam>(
+    APIName.GET_SUBSCRIPTION_BY_TEAM_ID
+  );
 
-  // Info: (20250117 - Liz) 打 API 取得團隊資料
-  const getTeamData = useCallback(async () => {
+  // Info: (20250117 - Liz) 打 API 取得使用者擁有的團隊資料
+  const getOwnedTeam = useCallback(async () => {
     if (!teamIdString) return;
     setIsLoading(true);
 
     try {
-      const { data: teamData, success } = await getTeamDataAPI({
+      const { data: teamData, success } = await getOwnedTeamAPI({
         params: { teamId: teamIdString },
       });
 
@@ -52,8 +57,29 @@ const PaymentPage = () => {
   }, [teamIdString]);
 
   useEffect(() => {
-    getTeamData();
-  }, [getTeamData]);
+    getOwnedTeam();
+  }, [getOwnedTeam]);
+
+  // Info: (20250321 - Julian) 接收來自第三方金流的訊息
+  useEffect(() => {
+    const receiveMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      if (event.data) {
+        handleBindingResult(event.data === 'true');
+      } else {
+        handleBindingResult(null);
+      }
+    };
+
+    window.addEventListener('message', receiveMessage);
+
+    return () => {
+      window.removeEventListener('message', receiveMessage);
+    };
+  }, []);
 
   // Info: (20250117 - Liz) 如果打 API 還在載入中，顯示載入中頁面
   if (isLoading) {
@@ -101,7 +127,7 @@ const PaymentPage = () => {
         pageTitle={t('subscriptions:PAYMENT_PAGE.PAGE_TITLE')}
         goBackUrl={`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdString}`}
       >
-        <PaymentPageBody team={team} subscriptionPlan={planFromUrl} getTeamData={getTeamData} />
+        <PaymentPageBody team={team} subscriptionPlan={planFromUrl} getOwnedTeam={getOwnedTeam} />
       </Layout>
     </>
   );

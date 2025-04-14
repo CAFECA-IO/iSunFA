@@ -1,4 +1,4 @@
-import { WORK_TAG } from '@/constants/company';
+import { WORK_TAG } from '@/interfaces/account_book';
 import React from 'react';
 import { LuFileCheck } from 'react-icons/lu';
 import { RiCheckboxMultipleLine, RiCoinsFill } from 'react-icons/ri';

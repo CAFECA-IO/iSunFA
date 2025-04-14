@@ -6,8 +6,9 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { ICompanyAndRole } from '@/interfaces/company';
-import { ITodoCompany } from '@/interfaces/todo';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { ITodoAccountBook } from '@/interfaces/todo';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 const ToDoListNotLink = () => {
   const { t } = useTranslation('dashboard');
@@ -32,52 +33,52 @@ const ToDoListNotLink = () => {
 };
 
 interface TodayTodoListProps {
-  todayTodoList: ITodoCompany[];
+  todayTodoList: ITodoAccountBook[];
 }
 
 const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
-  const [companyList, setCompanyList] = useState<ICompanyAndRole[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBook[]>([]);
 
-  // Info: (20241122 - Liz) 判斷是否有公司列表
-  const isToDoListLink = companyList.length > 0;
+  // Info: (20241122 - Liz) 判斷是否有帳本清單
+  const isToDoListLink = accountBookList.length > 0;
 
   const { userAuth } = useUserCtx();
 
-  // Info: (20241122 - Liz) 打 API 取得使用者擁有的公司列表 (simple version)
-  const { trigger: listUserCompanyAPI } = APIHandler<ICompanyAndRole[]>(APIName.LIST_USER_COMPANY);
+  // Info: (20250306 - Liz) 打 API 取得使用者擁有的帳本清單(原為公司)
+  const { trigger: getAccountBookListByUserIdAPI } = APIHandler<
+    IPaginatedData<IAccountBookWithTeam[]>
+  >(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID);
 
-  const getCompanyList = useCallback(async () => {
+  const getAccountBookList = useCallback(async () => {
     if (!userAuth) return;
 
     try {
-      const {
-        data: userCompanyList,
-        success,
-        code,
-      } = await listUserCompanyAPI({
+      const { data, success, code } = await getAccountBookListByUserIdAPI({
         params: { userId: userAuth.id },
-        query: { simple: true },
+        query: { page: 1, pageSize: 999 },
       });
 
-      if (success && userCompanyList && userCompanyList.length > 0) {
-        // Info: (20241120 - Liz) 取得使用者擁有的公司列表成功時更新公司列表
-        setCompanyList(userCompanyList);
+      const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
+
+      if (success && accountBookListData && accountBookListData.length > 0) {
+        // Info: (20241120 - Liz) 取得使用者擁有的帳本清單成功時設定帳本清單
+        setAccountBookList(accountBookListData);
       } else {
-        // Info: (20241120 - Liz) 取得使用者擁有的公司列表失敗時顯示錯誤訊息
+        // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
         // Deprecated: (20241120 - Liz)
         // eslint-disable-next-line no-console
-        console.log('listUserCompanyAPI(Simple) failed:', code);
+        console.log('取得使用者擁有的帳本清單 failed:', code);
       }
     } catch (error) {
       // Deprecated: (20241120 - Liz)
       // eslint-disable-next-line no-console
-      console.error('listUserCompanyAPI(Simple) error:', error);
+      console.error('取得使用者擁有的帳本清單 error:', error);
     }
   }, [userAuth]);
 
   useEffect(() => {
-    getCompanyList();
-  }, [getCompanyList]);
+    getAccountBookList();
+  }, [getAccountBookList]);
 
   if (!isToDoListLink) {
     return (

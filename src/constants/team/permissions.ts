@@ -1,0 +1,84 @@
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { TeamRole } from '@/interfaces/team';
+
+export const TEAM_ROLE_DESCRIPTIONS = {
+  [TeamRole.OWNER]: '最高權限，管理所有團隊與帳本權限',
+  [TeamRole.ADMIN]: '管理團隊與帳本，無法更改訂閱方案',
+  [TeamRole.EDITOR]: '可編輯帳本，但無法管理團隊與帳本隱私權',
+  [TeamRole.VIEWER]: '只能檢視帳本與團隊資訊，無法修改',
+};
+
+export const TEAM_PENDING_DECISIONS = {
+  DELETE_TEAM_WITH_ACCOUNT_BOOKS: false, // Info: (20250311 - Tzuhan) ❌ 是否允許刪除仍有帳本的團隊（待決議）
+  ACCOUNT_BOOK_TRANSFER_BETWEEN_PAID_PLANS: false, // Info: (20250311 - Tzuhan) ❌ 付費版帳本轉移問題（待決議）
+};
+
+// Info: (20250313 - Tzuhan) ✅ 把所有權限統一管理在一個 `ALL_PERMISSIONS` 物件
+export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
+  // Info: (20250313 - Tzuhan) 團隊操作權限
+  [TeamPermissionAction.INVITE_MEMBER]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.LEAVE_TEAM]: [TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER],
+  [TeamPermissionAction.DELETE_TEAM]: [TeamRole.OWNER],
+  [TeamPermissionAction.MODIFY_NAME]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.MODIFY_IMAGE]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.MODIFY_ABOUT]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.MODIFY_PROFILE]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.MODIFY_BANK_ACCOUNT]: [TeamRole.OWNER],
+  [TeamPermissionAction.MODIFY_PLAN]: [TeamRole.OWNER],
+  [TeamPermissionAction.VIEW_TEAM_INFO]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.VIEW_BANK_INFO]: [TeamRole.OWNER],
+  [TeamPermissionAction.VIEW_SUBSCRIPTION]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.MODIFY_SUBSCRIPTION]: [TeamRole.OWNER],
+  [TeamPermissionAction.VIEW_SUBSCRIPTION_INVOICE]: [TeamRole.OWNER],
+
+  // Info: (20250313 - Tzuhan) 帳本權限
+  [TeamPermissionAction.CREATE_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_TAG]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_PRIVACY]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.CREATE_PRIVATE_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.VIEW_PRIVATE_ACCOUNT_BOOK]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+
+  // Info: (20250313 - Tzuhan) 帳本轉移
+  [TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER]: [TeamRole.OWNER, TeamRole.ADMIN],
+  [TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER]: [TeamRole.OWNER, TeamRole.ADMIN],
+
+  // Info: (20250313 - Tzuhan) 帳務相關
+  [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+};
+
+// Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理
+export const TEAM_ROLE_TRANSITIONS: Record<TeamRole, TeamRole[]> = {
+  [TeamRole.OWNER]: [TeamRole.ADMIN, TeamRole.EDITOR, TeamRole.VIEWER],
+  [TeamRole.ADMIN]: [TeamRole.EDITOR, TeamRole.VIEWER],
+  [TeamRole.EDITOR]: [TeamRole.VIEWER],
+  [TeamRole.VIEWER]: [],
+};
+
+// Info: (20250311 - Tzuhan) 🌟 訂閱方案限制
+export const SUBSCRIPTION_PLAN_LIMITS = {
+  BEGINNER: 1, // Info: (20250311 - Tzuhan) 免費版最多只能有 1 個帳本，但為了方便測試，這裡設定為 100
+  PROFESSIONAL: Infinity, // Info: (20250311 - Tzuhan) 專業版無限制
+  ENTERPRISE: Infinity, // Info: (20250311 - Tzuhan) 企業版無限制
+} as const;

@@ -52,17 +52,13 @@ const UserInfo: React.FC<UserInfoProps> = ({
   };
 
   return (
-    <div className="bg-brand-gradient flex items-center gap-lv-7 rounded-md p-4 shadow-normal_setting_brand">
+    <div className="bg-brand-gradient flex items-center justify-between gap-lv-7 rounded-md border border-stroke-brand-primary px-40px py-16px">
       {isIPModalOpen && (
         <IPModal userId={userId} toggleModal={toggleIPModal} pageData={loginDevices} />
       )}
-      <Image
-        alt="avatar"
-        src={imageId}
-        width={80}
-        height={80}
-        className="rounded-full group-hover:brightness-50"
-      />
+      <div className="h-80px w-80px flex-none overflow-hidden rounded-full group-hover:brightness-50">
+        <Image alt="avatar" src={imageId} width={80} height={80} />
+      </div>
       <div>
         <div className="mb-lv-4 flex items-center gap-3 text-sm text-gray-700">
           <TbUserCircle size={16} />

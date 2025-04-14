@@ -19,7 +19,7 @@ import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty'
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import Loader, { LoaderSize } from '@/components/loader/loader';
-import { ICompanyTaxIdAndName } from '@/interfaces/company';
+import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 interface ICounterpartyInputProps {
   counterparty: ICounterpartyOptional | undefined;
@@ -40,8 +40,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const { counterparty, counterpartyList, onSelect, flagOfSubmit, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
-    const { selectedAccountBook } = useUserCtx();
-    const companyId = selectedAccountBook?.id;
+    const { connectedAccountBook } = useUserCtx();
+    const companyId = connectedAccountBook?.id;
 
     const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
       APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID

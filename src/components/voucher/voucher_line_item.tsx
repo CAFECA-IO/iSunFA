@@ -8,9 +8,8 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleDropmenu from '@/components/voucher/account_title_dropmenu';
-import NumericInput from '@/components/voucher/numeric_input';
-// import { useHotkeys } from 'react-hotkeys-hook';
+import AccountTitleSelector from '@/components/voucher/account_title_selector';
+import NumericInput from '@/components/numeric_input/numeric_input';
 
 interface IVoucherLineItemProps {
   id: number;
@@ -21,6 +20,7 @@ interface IVoucherLineItemProps {
   accountIsNull: boolean;
   amountNotEqual: boolean;
   amountIsZero: boolean;
+  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉分錄提示
 }
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
@@ -32,6 +32,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   accountIsNull,
   amountNotEqual,
   amountIsZero,
+  isShowReverseHint,
 }) => {
   const { t } = useTranslation('common');
   const { reverseList: commonReverseList, addReverseListHandler } = useAccountingCtx();
@@ -196,8 +197,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
 
   // Info: (20241007 - Julian) input state
   const [particulars, setParticulars] = useState<string>('');
-  const [debitInput, setDebitInput] = useState<number | undefined>();
-  const [creditInput, setCreditInput] = useState<number | undefined>();
+  const [debitInput, setDebitInput] = useState<number>(0);
+  const [creditInput, setCreditInput] = useState<number>(0);
 
   // Info: (20241007 - Julian) input style
   const [amountStyle, setAmountStyle] = useState<string>(inputStyle.NORMAL);
@@ -266,14 +267,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   useEffect(() => {
     // Info: (20241004 - Julian) Reset All State
     setParticulars('');
-    setDebitInput(undefined);
-    setCreditInput(undefined);
+    setDebitInput(0);
+    setCreditInput(0);
   }, [flagOfClear]);
 
   useEffect(() => {
     setAmountStyle(
       // Info: (20241007 - Julian) 檢查借貸金額是否為零
-      (amountIsZero && (debitInput === undefined || creditInput === undefined)) ||
+      (amountIsZero && (debitInput === 0 || creditInput === 0)) ||
         // Info: (20241007 - Julian) 檢查借貸金額是否相等
         amountNotEqual
         ? inputStyle.ERROR
@@ -287,8 +288,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   }, [debitInput, creditInput]);
 
   // Info: (20241118 - Julian) 若借方金額不為 0，則禁用貸方金額輸入；反之亦然
-  const isDebitDisabled = creditInput !== 0 && creditInput !== undefined;
-  const isCreditDisabled = debitInput !== 0 && debitInput !== undefined;
+  const isDebitDisabled = creditInput !== 0;
+  const isCreditDisabled = debitInput !== 0;
 
   const particularsInputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setParticulars(e.target.value);
@@ -356,7 +357,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setLineItems((prev) => prev.filter((item) => item.id !== data.id));
   };
 
-  // Info: (20241125 - Julian)
+  // Info: (20250305 - Julian) 選擇會計科目
   const accountSelectedHandler = (account: IAccount) => {
     setLineItems((prev) => {
       const duplicateList = [...prev];
@@ -368,17 +369,53 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     });
   };
 
+  const displayedAddItem = isShowReverseHint ? (
+    // Info: (20250304 - Julian) 紅字
+    <button
+      id="add-reverse-item-button"
+      type="button"
+      className="group flex items-center gap-4px text-sm text-text-state-error-invert hover:text-text-state-error"
+      onClick={addReverseHandler}
+    >
+      <div className="p-8px">
+        <FaPlus size={16} />
+      </div>
+      <p>
+        {t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}
+        <span>*</span>
+      </p>
+
+      <p className="ml-10px">{t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}</p>
+    </button>
+  ) : (
+    <button
+      id="add-reverse-item-button"
+      type="button"
+      className="group flex items-center gap-4px text-sm text-text-neutral-solid-light"
+      onClick={addReverseHandler}
+    >
+      <div className="p-8px text-button-text-primary group-hover:text-button-text-primary-hover">
+        <FaPlus size={16} />
+      </div>
+      <p>
+        {t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}
+        <span className="text-text-state-error-invert">*</span>
+      </p>
+    </button>
+  );
+
   return (
     <>
       {/* Info: (20241121 - Julian) Line Item */}
       <>
         {/* Info: (20241125 - Julian) Accounting */}
-        <AccountTitleDropmenu
+        <AccountTitleSelector
           id={id}
           defaultAccount={lineItemAccount}
           accountSelectedHandler={accountSelectedHandler}
           accountIsNull={accountIsNull}
           flagOfSubmit={flagOfSubmit}
+          className="col-span-3 mt-lv-5"
         />
         {/* Info: (20240927 - Julian) Particulars */}
         <input
@@ -386,36 +423,36 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           type="string"
           value={particulars}
           onChange={particularsInputChangeHandler}
-          className="col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
+          className="col-span-3 mt-lv-5 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-input-text-input-filled"
         />
         {/* Info: (20240927 - Julian) Debit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-debit"
+          name="input-debit"
           value={debitInput}
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={debitInputChangeHandler}
           disabled={isDebitDisabled}
         />
         {/* Info: (20240927 - Julian) Credit */}
         <NumericInput
-          id="input-price-before-tax"
-          name="input-price-before-tax"
+          id="input-credit"
+          name="input-credit"
           value={creditInput}
           isDecimal
           required
           hasComma
-          className={`${amountStyle} col-span-3 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
+          className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
           triggerWhenChanged={creditInputChangeHandler}
           disabled={isCreditDisabled}
         />
         {/* Info: (20240927 - Julian) Delete button */}
         <div
           id={`delete-line-item-btn-${id}`}
-          className="text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
+          className="mt-lv-5 text-center text-stroke-neutral-invert hover:text-button-text-primary-hover"
         >
           <button type="button" className="p-12px" onClick={deleteLineHandler}>
             <LuTrash2 size={22} />
@@ -445,15 +482,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       {/* Info: (20241104 - Julian) 如果需要反轉分錄，則顯示新增按鈕 */}
       {isShowReverse ? (
         <div key={`add-reverse-item-${id}`} className="col-start-1 col-end-13">
-          <button
-            id="add-reverse-item-button"
-            type="button"
-            className="flex items-center gap-4px text-text-neutral-invert"
-            onClick={addReverseHandler}
-          >
-            <FaPlus />
-            <p>{t('journal:VOUCHER_LINE_BLOCK.REVERSE_ITEM')}</p>
-          </button>
+          {displayedAddItem}
         </div>
       ) : null}
     </>

@@ -7,6 +7,7 @@ import VoucherItem from '@/components/voucher/voucher_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
+import { useAccountingCtx } from '@/contexts/accounting_context';
 // import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { IVoucherUI } from '@/interfaces/voucher';
@@ -27,6 +28,11 @@ interface IVoucherListProps {
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   isHideReversals: boolean;
   hideReversalsToggleHandler: () => void;
+  selectedStartDate?: number;
+  selectedEndDate?: number;
+  selectedType?: string;
+  keyword?: string;
+  currentPage?: number;
 }
 
 const VoucherList: React.FC<IVoucherListProps> = ({
@@ -39,11 +45,17 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   setDateSort,
   isHideReversals,
   hideReversalsToggleHandler,
+  selectedStartDate,
+  selectedEndDate,
+  selectedType,
+  keyword,
+  currentPage,
 }) => {
   const { t } = useTranslation('common');
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
+  const { refreshVoucherListHandler } = useAccountingCtx();
   // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241022 - Julian) checkbox 是否開啟
@@ -54,6 +66,8 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   // Info: (20241022 - Julian) 被選中的 voucher
   const [selectedVoucherList, setSelectedVoucherList] = useState<IVoucherUI[]>([]);
+  // Info: (20241022 - Julian) 暫存選中的 voucher，用於刪除後的還原
+  const [stashedVoucherList, setStashedVoucherList] = useState<IVoucherUI[]>([]);
 
   // Info: (20240920 - Julian) css string
   const tableCellStyles = 'table-cell text-xs text-center align-middle';
@@ -73,6 +87,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     success: deleteSuccess,
     error: deleteError,
   } = APIHandler(APIName.VOUCHER_DELETE_V2);
+
+  // Info: (20250221 - Julian) Restore voucher API
+  const {
+    trigger: restoreVoucher,
+    isLoading: isRestoring,
+    success: restoreSuccess,
+    error: restoreError,
+  } = APIHandler(APIName.VOUCHER_RESTORE_V2);
 
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
@@ -119,17 +141,29 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     });
   };
 
+  // Info: (20250221 - Julian) 恢復刪除的傳票
+  const undoDeleteVoucher = async () => {
+    if (!isRestoring) {
+      stashedVoucherList.forEach((voucher) => {
+        restoreVoucher({
+          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
+        });
+      });
+    }
+  };
+
   // Info: (20241220 - Julian) 刪除功能
   const removeVoucher = async () => {
     // Info: (20241220 - Julian) 避免重複送出
     if (!isDeleting) {
       selectedVoucherList.forEach((voucher) => {
         deleteVoucher({
-          params: { companyId: selectedAccountBook?.id, voucherId: voucher.id },
+          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
         });
       });
 
-      // Info: (20250107 - Julian) 刪除傳票後關閉選擇狀態
+      // Info: (20250107 - Julian) 刪除傳票後，先將被刪除的 voucher 暫存，再關閉 modal 和清空選取
+      setStashedVoucherList(selectedVoucherList);
       setIsSelectedAll(false);
       setIsCheckBoxOpen(false);
       messageModalVisibilityHandler();
@@ -184,6 +218,20 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     setUiVoucherList(voucherList);
   }, [voucherList]);
 
+  // Info: (20250221 - Julian) 關閉選擇狀態後，清空選取的 voucher
+  useEffect(() => {
+    if (!isCheckBoxOpen) {
+      setUiVoucherList((prev) => {
+        return prev.map((voucher) => {
+          return {
+            ...voucher,
+            isSelected: false,
+          };
+        });
+      });
+    }
+  }, [isCheckBoxOpen]);
+
   useEffect(() => {
     // Info: (20241022 - Julian) 更新被選中的 voucher
     setSelectedVoucherList(uiVoucherList.filter((voucher) => voucher.isSelected === true));
@@ -194,15 +242,32 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     setIsSelectedAll(selectedCount === totalCount);
   }, [uiVoucherList]);
 
+  // Info: (20250221 - Julian) 刪除後的事件
   useEffect(() => {
     if (deleteSuccess) {
       // Info: (20241220 - Julian) 刪除成功
       toastHandler({
         id: 'delete-voucher-success',
         type: ToastType.SUCCESS,
-        content: t('journal:VOUCHER.DELETE_VOUCHERS_SUCCESSFULLY'),
+        content: (
+          <div className="flex w-full items-center justify-between">
+            <p className="text-text-neutral-primary">
+              {t('journal:VOUCHER.DELETE_VOUCHERS_SUCCESSFULLY')}
+            </p>
+            <button
+              type="button"
+              onClick={undoDeleteVoucher}
+              disabled={isRestoring}
+              className="font-semibold text-link-text-success"
+            >
+              {t('journal:COMMON.UNDO')}
+            </button>
+          </div>
+        ),
         closeable: true,
       });
+      // Info: (20250221 - Julian) 刪除成功後，重新整理頁面
+      refreshVoucherListHandler();
     } else if (deleteError) {
       // Info: (20241220 - Julian) 刪除失敗
       toastHandler({
@@ -213,6 +278,27 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       });
     }
   }, [deleteSuccess, deleteError]);
+
+  // Info: (20250221 - Julian) 恢復後的事件
+  useEffect(() => {
+    if (restoreSuccess) {
+      toastHandler({
+        id: 'restore-voucher-toast',
+        type: ToastType.SUCCESS,
+        content: t('journal:COMMON.RESTORE_SUCCESS_TOAST'),
+        closeable: true,
+      });
+      // Info: (20250221 - Julian) 恢復成功後，重新整理頁面
+      refreshVoucherListHandler();
+    } else if (restoreError) {
+      toastHandler({
+        id: 'restore-voucher-toast',
+        type: ToastType.ERROR,
+        content: t('journal:COMMON.RESTORE_FAIL_TOAST'),
+        closeable: true,
+      });
+    }
+  }, [restoreSuccess]);
 
   // Info: (20240920 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
@@ -324,6 +410,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         voucher={voucher}
         selectHandler={selectHandler}
         isCheckBoxOpen={isCheckBoxOpen}
+        selectedStartDate={selectedStartDate}
+        selectedEndDate={selectedEndDate}
+        selectedType={selectedType}
+        keyword={keyword}
+        currentPage={currentPage}
+        fullVoucherList={uiVoucherList}
       />
     );
   });

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaPlus, FaArrowRight } from 'react-icons/fa6';
-import { FiTrash2, FiBookOpen } from 'react-icons/fi';
+import { FiTrash2 } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import { APIName } from '@/constants/api_connection';
-import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IAccount } from '@/interfaces/accounting_account';
 import APIHandler from '@/lib/utils/api_handler';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { useModalContext } from '@/contexts/modal_context';
@@ -17,7 +16,9 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import AccountTitleSelector from '@/components/voucher/account_title_selector';
 import { EVENT_TYPE } from '@/constants/account';
+import { ToastId } from '@/constants/toast_id';
 
 interface IManualAccountOpeningModalProps {
   isModalVisible: boolean;
@@ -27,9 +28,8 @@ interface IManualAccountOpeningModalProps {
 interface IManualAccountOpeningItemProps {
   data: IManualAccountOpeningItem;
   cellStyle: string;
-  setFocusIndex: React.Dispatch<React.SetStateAction<number | null>>;
-  setSearchWord: React.Dispatch<React.SetStateAction<string>>;
   setAmount: (amount: number, isDebit: boolean) => void;
+  setAccountTitle: (account: IAccount) => void;
   deleteHandler: () => void;
 }
 
@@ -54,36 +54,23 @@ const tableCellStyle =
 const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   data,
   cellStyle,
-  setFocusIndex,
-  setSearchWord,
+  setAccountTitle,
   setAmount,
   deleteHandler,
 }) => {
-  const { t } = useTranslation('settings');
   const { id, subcategory, isDebit, beginningAmount } = data;
 
-  // Info: (20241112 - Julian) 設定 debit 和 credit 的金額
-  const [debit, setDebit] = useState<number>(isDebit === null ? 0 : isDebit ? beginningAmount : 0);
-  const [credit, setCredit] = useState<number>(
-    isDebit === null ? 0 : isDebit ? 0 : beginningAmount
-  );
+  // Info: (20250313 - Julian) 如果 isDebit 為 true，則將 beginningAmount 設為初始借值，否則為 0
+  const initialDebit = isDebit !== null ? 0 : isDebit ? beginningAmount : 0;
+  // Info: (20250313 - Julian) 如果 isDebit 為 false，則將 beginningAmount 設為初始貸值，否則為 0
+  const initialCredit = isDebit !== null ? 0 : isDebit ? 0 : beginningAmount;
 
-  const subcategoryPlaceholder = subcategory
-    ? `${subcategory.code} ${subcategory.name}`
-    : t('settings:MANUAL_ACCOUNT_OPENING_MODAL.DROPMENU_PLACEHOLDER');
+  // Info: (20241112 - Julian) 設定 debit 和 credit 的金額
+  const [debit, setDebit] = useState<number>(initialDebit);
+  const [credit, setCredit] = useState<number>(initialCredit);
 
   const debitDisabled = credit !== 0;
   const creditDisabled = debit !== 0;
-
-  const {
-    targetRef: subcategoryInputRef,
-    componentVisible: isEditing,
-    setComponentVisible: setEditing,
-  } = useOuterClick<HTMLInputElement>(false);
-
-  const toggleEditing = () => setEditing(!isEditing);
-  const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setSearchWord(e.target.value);
 
   const changeDebitAmountHandler = (amount: number) => {
     setDebit(amount);
@@ -95,48 +82,17 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
     setAmount(amount, false);
   };
 
-  useEffect(() => {
-    // Info: (20241112 - Julian) 編輯模式時，自動 focus 到 subcategoryInput
-    if (isEditing) {
-      subcategoryInputRef.current?.focus();
-      setFocusIndex(id);
-    } else {
-      setFocusIndex(null);
-    }
-  }, [isEditing]);
-
-  const subcategoryStr = isEditing ? (
-    <input
-      type="text"
-      ref={subcategoryInputRef}
-      onChange={changeSearchWordHandler}
-      className="w-9/10 bg-transparent outline-none"
-      placeholder={subcategoryPlaceholder}
-    />
-  ) : (
-    <>
-      <div
-        className={`flex-1 truncate text-left ${subcategory ? 'text-input-text-input-filled' : 'text-input-text-input-placeholder'}`}
-      >
-        {subcategoryPlaceholder}
-      </div>
-      <div className="text-icon-surface-single-color-primary">
-        <FiBookOpen size={20} />
-      </div>
-    </>
-  );
+  const accountSelectedHandler = (account: IAccount) => setAccountTitle(account);
 
   return (
     <div className="table-row bg-surface-neutral-surface-lv2 text-sm">
       {/* Info: (20241112 - Julian) Subcategory Type */}
-      <div className={`${cellStyle} w-200px border-r`}>
-        <div
-          onClick={toggleEditing}
-          className="relative flex w-200px items-center rounded-sm border border-input-stroke-input px-12px py-10px hover:cursor-pointer"
-        >
-          {subcategoryStr}
-        </div>
-      </div>
+      <AccountTitleSelector
+        id={id}
+        defaultAccount={subcategory}
+        accountSelectedHandler={accountSelectedHandler}
+        className={`${cellStyle} max-w-200px border-r`}
+      />
       {/* Info: (20241112 - Julian) Beginning Debit */}
       <div className={`${cellStyle} border-r`}>
         <NumericInput
@@ -187,7 +143,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 }) => {
   const { t } = useTranslation('common');
 
-  const { selectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const initialManualAccountOpeningList = [
@@ -200,8 +156,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
   // Info: (20241114 - Julian) 用來判斷是否展開 subcategory menu，以及展開的項目 index
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
-  // Info: (20241114 - Julian) 用來搜尋會計科目
-  const [searchWord, setSearchWord] = useState<string>('');
   // Info: (20241114 - Julian) 開帳日期
   const [openingDate, setOpeningDate] = useState<IDatePeriod>(default30DayPeriodInSec);
   // Info: (20241114 - Julian) 用來儲存新增的會計科目列表
@@ -212,27 +166,10 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
 
-  const accountBookId = selectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
 
   const totalStyle =
     totalDebit === totalCredit ? 'text-text-state-success' : 'text-text-state-error';
-
-  const queryCondition = {
-    limit: 9999, // Info: (20241212 - Julian) 全部取出
-    forUser: true,
-    sortBy: 'code', // Info: (20241108 - Julian) 依 code 排序
-    sortOrder: 'asc',
-    isDeleted: false, // Info: (20250102 - Julian) 只取未刪除的
-  };
-
-  // Info: (20241115 - Julian) 取得會計科目列表
-  const { trigger: getAccountList, data: accountList } = APIHandler<IPaginatedAccount>(
-    APIName.ACCOUNT_LIST,
-    { params: { companyId: accountBookId }, query: queryCondition },
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
-    false,
-    true
-  );
 
   // Info: (20241115 - Julian) 新增傳票的 API
   const {
@@ -242,11 +179,8 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     error: createVoucherError,
   } = APIHandler(APIName.VOUCHER_POST_V2);
 
-  const subcategoryList = accountList?.data ?? [];
   // Info: (20241114 - Julian) 如果有 focusIndex，則代表有展開的 subcategory menu
   const isExpanded = focusIndex !== null;
-  // Info: (20241114 - Julian) 根據 focusIndex 來決定 subcategory menu 的位置
-  // const topStyle = focusIndex && focusIndex !== 0 ? `top-${90 + 60 * focusIndex}px` : 'top-90px';
 
   const dropmenuRef = useRef<HTMLDivElement>(null);
 
@@ -304,7 +238,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       if (createVoucherSuccess) {
         // Info: (20241115 - Julian) 如果開帳成功，則提示成功訊息
         toastHandler({
-          id: 'manual-account-opening-success',
+          id: ToastId.MANUAL_ACCOUNT_OPENING_SUCCESS,
           type: ToastType.SUCCESS,
           content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_SUCCESS'),
           closeable: true,
@@ -313,7 +247,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       } else if (createVoucherError) {
         // Info: (20241115 - Julian) 如果開帳失敗，則提示錯誤訊息
         toastHandler({
-          id: 'manual-account-opening-error',
+          id: ToastId.MANUAL_ACCOUNT_OPENING_ERROR,
           type: ToastType.ERROR,
           content: t('settings:MANUAL_ACCOUNT_OPENING_MODAL.TOAST_OPENING_FAIL'),
           closeable: true,
@@ -332,22 +266,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
       setOpeningDate(default30DayPeriodInSec);
     }
   }, [isModalVisible]);
-
-  useEffect(() => {
-    // Info: (20241114 - Julian) 關鍵字搜尋
-    getAccountList({
-      params: { companyId: accountBookId },
-      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
-      query: { ...queryCondition, searchKey: searchWord },
-    });
-  }, [searchWord]);
-
-  useEffect(() => {
-    // Info: (20241114 - Julian) 如果 focusIndex 重置，則清空搜尋字串
-    if (focusIndex === null) {
-      setSearchWord('');
-    }
-  }, [focusIndex]);
 
   useEffect(() => {
     // Info: (20250102 - Julian) 選單重新展開時，將滾動條拉到最上方
@@ -388,6 +306,14 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           );
         };
 
+        const accountTitleChangeHandler = (account: IAccount) => {
+          setManualAccountOpeningList(
+            manualAccountOpeningList.map((list) => {
+              return list.id === duplicateItem.id ? { ...list, subcategory: account } : list;
+            })
+          );
+        };
+
         // Info: (20250102 - Julian) 刪除列
         const deleteHandler = () => {
           setManualAccountOpeningList(
@@ -399,8 +325,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           <ManualAccountOpeningItem
             key={item.id}
             data={item}
-            setFocusIndex={setFocusIndex}
-            setSearchWord={setSearchWord}
+            setAccountTitle={accountTitleChangeHandler}
             setAmount={amountChangeHandler}
             cellStyle={cellStyle}
             deleteHandler={deleteHandler}
@@ -412,54 +337,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
         <p>{t('settings:MANUAL_ACCOUNT_OPENING_MODAL.ADD_NEW_ROW')}</p>
       </div>
     );
-
-  const subcategoryMenu =
-    subcategoryList.length > 0 ? (
-      subcategoryList.map((title) => {
-        const subcategoryClickHandler = () => {
-          // Info: (20241114 - Julian) 根據 focusIndex 來決定要修改哪一筆資料
-          if (focusIndex !== null) {
-            // Info: (20241114 - Julian)  先複製一份資料
-            const targetId = manualAccountOpeningList.findIndex((list) => list.id === focusIndex);
-            const duplicateList = { ...manualAccountOpeningList[targetId] };
-            duplicateList.subcategory = title;
-            // Info: (20241114 - Julian)  更新資料
-            setManualAccountOpeningList(
-              manualAccountOpeningList.map((list, index) => {
-                return index === targetId ? duplicateList : list;
-              })
-            );
-          }
-        };
-        return (
-          <div
-            key={title.id}
-            onClick={subcategoryClickHandler}
-            className="flex items-center gap-4px px-12px py-8px text-left text-xs hover:cursor-pointer hover:bg-drag-n-drop-surface-hover"
-          >
-            <p className="text-dropdown-text-primary">{title.code}</p>
-            <p className="text-dropdown-text-secondary">{title.name}</p>
-          </div>
-        );
-      })
-    ) : (
-      <div className="text-xs text-input-text-input-placeholder">
-        {t('settings:MANUAL_ACCOUNT_OPENING_MODAL.NO_ACCOUNTING_FOUND')}
-      </div>
-    );
-
-  const displaySubcategoryMenu = (
-    <div
-      className={`absolute left-15px w-200px ${'top-10px'} z-10 grid w-1/5 rounded-sm ${isExpanded ? 'grid-rows-1 shadow-dropmenu' : 'grid-rows-0'} overflow-hidden transition-all duration-300 ease-in-out`}
-    >
-      <div
-        ref={dropmenuRef}
-        className="flex max-h-180px flex-col overflow-y-auto overflow-x-hidden rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px"
-      >
-        {subcategoryMenu}
-      </div>
-    </div>
-  );
 
   const displayTable = (
     <div className="table w-full overflow-hidden rounded-md border border-stroke-neutral-quaternary">
@@ -519,7 +396,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
           {/* Info: (20241112 - Julian) table */}
           <div className="flex w-full flex-col">
             <div className="max-h-300px overflow-y-auto rounded-md">{displayTable}</div>
-            <div className="relative">{displaySubcategoryMenu}</div>
           </div>
 
           {/* Info: (20250102 - Julian) Calculate total amount */}

@@ -1,0 +1,81 @@
+{
+  "TEAM_PAGE": {
+    "META_TITLE": "团队管理",
+    "INFORMATION": "资讯",
+    "COPIED": "已复制",
+    "CHANGE_TEAM_PICTURE": "变更团队图片",
+    "MEMBER": "成员"
+  },
+  "ERROR": {
+    "TEAM_DATA_NOT_FOUND": "找不到团队资料"
+  },
+  "TEAM_ROLE": {
+    "OWNER": "拥有者",
+    "ADMIN": "管理者",
+    "EDITOR": "编辑者",
+    "VIEWER": "检视者"
+  },
+  "MEMBER_LIST_MODAL": {
+    "MEMBER_LIST": "成员清单",
+    "MEMBERS": "位成员",
+    "ADD_MEMBER": "添加成员"
+  },
+  "INVITE_MEMBERS_MODAL": {
+    "INVITE_MEMBERS": "邀请成员",
+    "EMAIL": "电子邮箱",
+    "ENTER_EMAIL": "输入电子邮箱后按下 Enter 或者加号按钮",
+    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "请输入有效的电子邮箱",
+    "CANCEL": "取消",
+    "INVITE": "邀请"
+  },
+
+  "MY_ACCOUNT_PAGE": {
+    "PAGE_TITLE": "我的帐号",
+    "USER_INFO_TITLE": "使用者资讯",
+    "MY_TEAM_TITLE": "我的团队",
+    "ADD_TEAM_BTN": "新增团队",
+    "PLAN_BEGINNER": "免费版",
+    "PLAN_PROFESSIONAL": "专业版",
+    "PLAN_ENTERPRISE": "企业版",
+    "ROLE_OWNER": "拥有者",
+    "ROLE_ADMIN": "管理者",
+    "ROLE_EDITOR": "编辑者",
+    "ROLE_VIEWER": "检视者",
+    "TEAM_LIST_IS_EMPTY": "目前尚未拥有任何团队"
+  },
+  "CREATE_TEAM_MODAL": {
+    "MODAL_TITLE": "建立团队",
+    "STEP_1": "团队名称",
+    "STEP_2": "团队成员",
+    "STEP_3": "订阅方案",
+    "TEAM_NAME": "团队名称",
+    "MEMBER_EMAIL": "成员的电子邮件",
+    "EMAIL_HINT": "请输入有效的电子邮件地址。",
+    "PLAN_HINT": "如果您选择跳过此步骤，我们将自动将您的团队设置为免费版本。您可以选择暂时使用服务的免费版本，享受基本功能，但可能会受到与高级方案相比的潜在限制。",
+    "SKIP_BTN": "暂时跳过",
+    "CONTINUE_BTN": "继续",
+    "CREATE_BTN": "建立团队"
+  },
+  "TEAM_INFO_PAGE": {
+    "EDIT_TEAM_NAME": "编辑团队名称",
+    "ADD_DESCRIPTION": "添加描述",
+    "ABOUT": "关于",
+    "TEAM_PROFILE": "团队简介",
+    "ADD_BANK_ACCOUNT": "新增银行帐户",
+    "BANK_ACCOUNT": "银行帐户",
+    "DESCRIPTION_PLACEHOLDER": "输入您的团队的描述",
+    "LINK": "连结",
+    "BANK_ACCOUNT_NUMBER": "银行帐户号码",
+    "TEAM_PLAN": "团队方案",
+    "TEAM_MEMBER": "团队成员",
+    "MEMBER_SINGLE": "位成员",
+    "MEMBER_PLURAL": "位成员",
+    "LEDGER_SINGLE": "本帐本",
+    "LEDGER_PLURAL": "本帐本",
+    "LIBRARIES": "图书馆",
+    "TEAM_BANK_ACCOUNT": "团队银行帐户",
+    "NO_TEAM_INFORMATION_AVAILABLE": "没有团队数据",
+    "PLEASE_CREATE_NEW_TEAM": "请新增团队",
+    "BANK_CODE": "银行代码"
+  }
+}

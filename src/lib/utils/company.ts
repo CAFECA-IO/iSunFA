@@ -1,6 +1,6 @@
 import { Company as PrismaCompany } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
-import { ICompanyEntity } from '@/interfaces/company';
+import { ICompanyEntity } from '@/interfaces/account_book';
 
 /**
  * Info: (20241023 - Murky)

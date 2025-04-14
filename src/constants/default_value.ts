@@ -40,4 +40,14 @@ export const DefaultValue = {
   PAGE: 1,
   TOTAL_PAGES: 1,
   PAGE_SIZE: 10,
+  TEAM_ID: {
+    UNKNOWN: 0,
+  },
+  TEAM_ROLE: {
+    UNKNOWN: 'UNKNOWN',
+  },
+  PAYMENT_METHOD_NUMBER: '**** **** **** ****',
+  PAYMENT_METHOD_EXPIRATION_DATE: '**/**',
+  PAYMENT_METHOD_CVV: '***',
+  BASIC_MEMBER_COUNT: 3,
 };

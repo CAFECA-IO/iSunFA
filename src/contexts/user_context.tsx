@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICompany, ICompanyAndRole } from '@/interfaces/company';
+import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -14,9 +14,11 @@ import { ILoginPageProps } from '@/interfaces/page_props';
 import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
-import { IRole } from '@/interfaces/role';
 import { IUserRole } from '@/interfaces/user_role';
-import { WORK_TAG } from '@/constants/company';
+import { ITeam, TeamRole } from '@/interfaces/team';
+import { RoleName } from '@/constants/role';
+import { IPaymentMethod } from '@/interfaces/payment';
+import { IStatusInfo } from '@/interfaces/status_info';
 
 interface UserContextType {
   credential: string | null;
@@ -26,10 +28,10 @@ interface UserContextType {
   isSignIn: boolean;
   isAgreeTermsOfService: boolean;
   isSignInError: boolean;
-  createRole: (roleId: number) => Promise<IUserRole | null>;
-  selectRole: (roleId: number) => Promise<IUserRole | null>;
+  createRole: (roleName: RoleName) => Promise<{ success: boolean; userRole: IUserRole | null }>;
+  selectRole: (roleName: RoleName) => Promise<{ success: boolean }>;
   getUserRoleList: () => Promise<IUserRole[] | null>;
-  getSystemRoleList: () => Promise<IRole[] | null>;
+  getSystemRoleList: () => Promise<RoleName[] | null>;
   selectedRole: string | null; // Info: (20241101 - Liz) 存 role name
   switchRole: () => void;
 
@@ -37,48 +39,44 @@ interface UserContextType {
     name,
     taxId,
     tag,
+    teamId,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
+    teamId: number;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  selectedAccountBook: ICompany | null;
-  selectAccountBook: (companyId: number) => Promise<ICompany | null>;
+  connectedAccountBook: IAccountBook | null;
+  team: ITeam | null;
+  teamRole: TeamRole | null;
+  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
+
   updateAccountBook: ({
-    companyId,
+    accountBookId,
     action,
     tag,
   }: {
-    companyId: number;
+    accountBookId: string;
     action: string;
     tag: WORK_TAG;
-  }) => Promise<ICompanyAndRole | null>;
-  deleteAccountBook: (companyId: number) => Promise<ICompany | null>;
-  deleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
-  cancelDeleteAccount: () => Promise<{
-    success: boolean;
-    data: IUser | null;
-    code: string;
-    error: Error | null;
-  }>;
+  }) => Promise<{ success: boolean }>;
+
+  deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
   isAuthLoading: boolean;
-  checkIsRegistered: () => Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }>;
 
   handleUserAgree: (hash: Hash) => Promise<boolean>;
   authenticateUser: (selectProvider: Provider, props: ILoginPageProps) => Promise<void>;
   handleAppleSignIn: () => void;
+
+  bindingResult: boolean | null;
+  handleBindingResult: (bindingResult: boolean | null) => void;
+
+  paymentMethod: IPaymentMethod[] | null;
+  handlePaymentMethod: (paymentMethod: IPaymentMethod[] | null) => void;
 }
 
 export const UserContext = createContext<UserContextType>({
@@ -89,37 +87,45 @@ export const UserContext = createContext<UserContextType>({
   isSignIn: false,
   isAgreeTermsOfService: false,
   isSignInError: false,
-  createRole: async () => null,
-  selectRole: async () => null,
+  createRole: async () => ({ success: false, userRole: null }),
+  selectRole: async () => ({ success: false }),
   getUserRoleList: async () => null,
   getSystemRoleList: async () => null,
   selectedRole: null,
   switchRole: () => {},
   createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
 
-  selectedAccountBook: null,
-  selectAccountBook: async () => null,
-  updateAccountBook: async () => null,
+  connectedAccountBook: null,
+  team: null,
+  teamRole: null,
+  connectAccountBook: async () => ({ success: false }),
+  updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => null,
-  deleteAccount: async () => Promise.resolve({ success: false, data: null, code: '', error: null }),
-  cancelDeleteAccount: async () =>
-    Promise.resolve({ success: false, data: null, code: '', error: null }),
 
   errorCode: null,
   toggleIsSignInError: () => {},
   isAuthLoading: false,
-  checkIsRegistered: async () => {
-    return { isRegistered: false, credentials: null };
-  },
 
   handleUserAgree: async () => false,
   authenticateUser: async () => {},
   handleAppleSignIn: () => {},
+
+  bindingResult: false,
+  handleBindingResult: () => {},
+
+  paymentMethod: null,
+  handlePaymentMethod: () => {},
 });
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const EXPIRATION_TIME = 1000 * 60 * 60 * 1; // Info: (20240822) 1 hours
+  const EXCLUDED_PATHS = [
+    ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE,
+    ISUNFA_ROUTE.MY_ACCOUNT_PAGE,
+    ISUNFA_ROUTE.TEAM_PAGE,
+    ISUNFA_ROUTE.GENERAL_SETTINGS,
+  ];
 
   const [, setIsSignIn, isSignInRef] = useStateRef(false);
   const [, setCredential, credentialRef] = useStateRef<string | null>(null);
@@ -127,42 +133,57 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-  const [, setSelectedAccountBook, selectedAccountBookRef] = useStateRef<ICompany | null>(null);
+  const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
+    null
+  );
+  const [, setTeam, teamRef] = useStateRef<ITeam | null>(null); // Info: (20250325 - Liz) 已連結帳本的所屬團隊
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
   const [, setIsAuthLoading, isAuthLoadingRef] = useStateRef(false);
   const [, setIsAgreeTermsOfService, isAgreeTermsOfServiceRef] = useStateRef(false);
 
+  const [, setBindingResult, bindingResultRef] = useStateRef<boolean | null>(null);
+  const [, setPaymentMethod, paymentMethodRef] = useStateRef<IPaymentMethod[] | null>(null);
+
   const isRouteChanging = useRef(false);
 
   const { trigger: signoutAPI } = APIHandler<string>(APIName.SIGN_OUT);
-  const { trigger: createChallengeAPI } = APIHandler<string>(APIName.CREATE_CHALLENGE);
   const { trigger: agreementAPI } = APIHandler<null>(APIName.AGREE_TO_TERMS);
-  const { trigger: getStatusInfoAPI } = APIHandler<{
-    user: IUser;
-    company: ICompany;
-    role: IRole;
-  }>(APIName.STATUS_INFO_GET);
-  // Info: (20241108 - Liz) 取得系統角色列表 API
-  const { trigger: systemRoleListAPI } = APIHandler<IRole[]>(APIName.ROLE_LIST);
-  // Info: (20241104 - Liz) 取得使用者角色列表 API
+  const { trigger: getStatusInfoAPI } = APIHandler<IStatusInfo>(APIName.STATUS_INFO_GET);
+  // Info: (20241108 - Liz) 取得系統角色清單 API
+  const { trigger: systemRoleListAPI } = APIHandler<RoleName[]>(APIName.ROLE_LIST);
+  // Info: (20241104 - Liz) 取得使用者建立的所有角色
   const { trigger: userRoleListAPI } = APIHandler<IUserRole[]>(APIName.USER_ROLE_LIST);
   // Info: (20241104 - Liz) 建立角色 API
   const { trigger: createRoleAPI } = APIHandler<IUserRole>(APIName.USER_CREATE_ROLE);
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
-  // Info: (20241104 - Liz) 建立帳本 API(原為公司)
-  const { trigger: createAccountBookAPI } = APIHandler<ICompanyAndRole>(
-    APIName.CREATE_USER_COMPANY
+
+  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_ACCOUNT_BOOK);
+
+  // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
+  const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
+    APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
-  // Info: (20241111 - Liz) 選擇帳本 API(原為公司)
-  const { trigger: selectAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_SELECT);
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<ICompanyAndRole>(APIName.COMPANY_UPDATE);
-  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
-  const { trigger: deleteAccountBookAPI } = APIHandler<ICompany>(APIName.COMPANY_DELETE);
-  const { trigger: deleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETE);
-  const { trigger: cancelDeleteAccountAPI } = APIHandler<IUser>(APIName.USER_DELETION_UPDATE);
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
+
+  // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
+  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
+
+  // Info: (20250329 - Liz) 取得團隊資訊 API
+  const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
+
+  // Info: (20250321 - Julian) 從第三方金流獲取綁定信用卡的結果
+  const handleBindingResult = (bindingResult: boolean | null) => {
+    setBindingResult(bindingResult);
+  };
+
+  // Info: (20250324 - Julian) 從第三方金流獲取信用卡資訊
+  const handlePaymentMethod = (paymentMethod: IPaymentMethod[] | null) => {
+    setPaymentMethod(paymentMethod);
+  };
 
   const toggleIsSignInError = () => {
     setIsSignInError(!isSignInErrorRef.current);
@@ -175,7 +196,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     setIsSignIn(false);
     setIsSignInError(false);
     setSelectedRole(null);
-    setSelectedAccountBook(null);
+    setConnectedAccountBook(null);
+    setTeam(null);
+    setBindingResult(null);
     clearAllItems(); // Info: (20240822 - Shirley) 清空 IndexedDB 中的數據
   };
 
@@ -211,6 +234,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241111 - Liz) 前往儀表板
   const goToDashboard = () => {
+    if (EXCLUDED_PATHS.some((path) => router.pathname.startsWith(path))) return;
+
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
     // Deprecated: (20241111 - Liz)
@@ -235,44 +260,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241209 - Liz) 切換角色的功能
   const switchRole = () => {
     setSelectedRole(null);
-    setSelectedAccountBook(null);
+    setConnectedAccountBook(null);
+    setTeam(null);
     goToSelectRolePage();
-  };
-
-  const checkIsRegistered = async (): Promise<{
-    isRegistered: boolean;
-    credentials: PublicKeyCredential | null;
-  }> => {
-    // Info: (20240730 - Tzuhan) 生成挑戰
-    const { data: newChallengeBase64, success, code } = await createChallengeAPI();
-
-    if (!success || !newChallengeBase64) {
-      throw new Error(code);
-    }
-
-    // Info: (20240730 - Tzuhan) 將 base64 轉換成 Uint8Array
-    const newChallenge = Uint8Array.from(atob(newChallengeBase64), (c) => c.charCodeAt(0));
-
-    // Info: (20240730 - Tzuhan) 檢查是否已有綁定的憑證
-    const credentials = (await navigator.credentials.get({
-      publicKey: {
-        challenge: newChallenge, // Info: (20240730 - Tzuhan)  使用生成的挑戰
-        allowCredentials: [], // Info: (20240730 - Tzuhan)  查詢已綁定的憑證
-        timeout: 60000,
-        userVerification: 'required',
-      },
-    })) as PublicKeyCredential;
-
-    if (credentials) {
-      return {
-        isRegistered: true,
-        credentials,
-      };
-    }
-    return {
-      isRegistered: false,
-      credentials: null,
-    };
   };
 
   const signOut = async () => {
@@ -300,6 +290,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasLocalStorageData = userId && expiredAt;
     const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
+    // Deprecated: (20250329 - Liz)
+    // eslint-disable-next-line no-console
+    console.log('userId:', userId, 'expiredAt:', expiredAt, 'isSessionExpired:', isSessionExpired);
+
     if (isSessionExpired) {
       signOut();
       return false;
@@ -309,25 +303,39 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // ===============================================================================
 
-  // Info: (20241001 - Liz) 此函數處理公司資訊:
-  // 如果公司資料存在且不為空，它會設定選定的公司 (setSelectedAccountBook)，最後回傳公司資訊。
-  // 如果公司資料不存在，會將公司資訊設為 null，並回傳 null。
-  const processCompanyInfo = (company: ICompany) => {
-    if (!company || Object.keys(company).length === 0) {
-      setSelectedAccountBook(null);
+  // Info: (20241001 - Liz) 此函數處理已連結帳本資訊:
+  // 如果帳本資料存在且不為空，它會設定選定的帳本 (setConnectedAccountBook)，最後回傳帳本資訊。
+  // 如果帳本資料不存在，會將帳本資訊設為 null，並回傳 null。
+  const processAccountBookInfo = (accountBook: IStatusInfo['company']) => {
+    if (!accountBook || Object.keys(accountBook).length === 0) {
+      setConnectedAccountBook(null);
+      setTeam(null);
       return null;
     }
-    setSelectedAccountBook(company);
-    return company;
+    setConnectedAccountBook(accountBook);
+    setTeam(accountBook.team);
+    return accountBook;
   };
 
+  // Deprecated: (20250408 - Liz) 預計於 20250501 刪除
+  // const processTeamsInfo = ({
+  //   teams,
+  //   teamId,
+  // }: {
+  //   teams: IStatusInfo['teams'];
+  //   teamId: IAccountBook['teamId'] | null;
+  // }) => {
+  //   const team = teams?.find((t) => t.id === teamId) ?? null;
+  //   setTeam(team);
+  // };
+
   // Info: (20241101 - Liz) 此函數處理角色資訊:
-  const processRoleInfo = (role: IRole) => {
+  const processRoleInfo = (role: IStatusInfo['role']) => {
     if (!role || Object.keys(role).length === 0) {
       setSelectedRole(null);
       return null;
     }
-    setSelectedRole(role.name);
+    setSelectedRole(role.roleName);
     return role;
   };
 
@@ -335,7 +343,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // 如果使用者資料不存在，會回傳 null。
   // 如果使用者資料存在且有效，會設定使用者認證、名稱，並標記為已登入，
   // 並且將使用者的 userId 和過期時間儲存在 localStorage 中，最後回傳使用者資訊。
-  const processUserInfo = (user: IUser) => {
+  const processUserInfo = (user: IStatusInfo['user']) => {
     if (!user || Object.keys(user).length === 0) return null;
 
     setUserAuth(user);
@@ -347,14 +355,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     return user;
   };
 
-  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、公司、角色，並根據處理結果來決定下一步的操作:
-  // 它會呼叫 processUserInfo, processCompanyInfo, 和 processRoleInfo 分別處理使用者、公司、角色資訊。
+  // Info: (20241009 - Liz) 此函數是在處理 getStatusInfo 獲得的資料，包含使用者、已連結帳本、角色，並根據處理結果來決定下一步的操作:
+  // 它會呼叫 processUserInfo, processAccountBookInfo, 和 processRoleInfo 分別處理使用者、已連結帳本、角色資訊。
   // 依據處理結果，它會執行不同的自動導向邏輯。
-  const handleProcessData = (statusInfo: { user: IUser; company: ICompany; role: IRole }) => {
+  const handleProcessData = (statusInfo: IStatusInfo) => {
     const processedUser = processUserInfo(statusInfo.user);
-    const processedRole = processRoleInfo(statusInfo.role);
-    const processedCompany = processCompanyInfo(statusInfo.company);
-
     if (!processedUser) {
       clearStates();
       clearLocalStorage();
@@ -362,39 +367,43 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    const processedRole = processRoleInfo(statusInfo.role);
+    const processedAccountBook = processAccountBookInfo(statusInfo.company);
+
+    // Deprecated: (20250408 - Liz) 預計於 20250501 刪除
+    // processTeamsInfo({
+    //   teamId: statusInfo.company?.teamId ?? null,
+    //   teams: statusInfo.teams,
+    // });
+
     // Info: (20241117 - Liz) 檢查是否已經同意服務條款和隱私政策
     const hasAgreedToTermsOfService = processedUser.agreementList.includes(
       Hash.HASH_FOR_TERMS_OF_SERVICE
     );
-    // const hasAgreedToPrivacyPolicy = processedUser.agreementList.includes(
-    //   Hash.HASH_FOR_PRIVACY_POLICY
-    // );
 
     setIsAgreeTermsOfService(hasAgreedToTermsOfService);
-    // setIsAgreePrivacyPolicy(hasAgreedToPrivacyPolicy);
-    // const hasAgreedToAll = hasAgreedToTermsOfService && hasAgreedToPrivacyPolicy;
 
     if (!hasAgreedToTermsOfService) return;
-
     if (!processedRole) {
       goToSelectRolePage();
       return;
     }
-
-    if (!processedCompany) {
+    if (!processedAccountBook) {
       goToDashboard();
       return;
     }
     goBackToOriginalPath();
   };
 
-  // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者和公司狀態資訊。
+  // Info: (20241001 - Liz) 此函數使用 useCallback 封裝，用來非同步取得使用者狀態資訊。
   // 它首先檢查是否需要取得使用者資料 (isProfileFetchNeeded)，如果不需要，則直接結束。
   // 當資料獲取中，它會設定載入狀態 (setIsAuthLoading)
-  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、公司、角色資訊。
+  // 當 API 回傳成功且有資料時，它會呼叫 handleProcessData 分別處理使用者、已連結帳本、角色資訊。
   // 如果獲取資料失敗，它會執行未登入的處理邏輯: 清除狀態、導向登入頁面、設定登入錯誤狀態、設定錯誤代碼。
   // 最後，它會將載入狀態設為完成。
   const getStatusInfo = useCallback(async () => {
+    if (router.pathname === ISUNFA_ROUTE.LANDING_PAGE) return; // Info: (20250329 - Liz) 在首頁不獲取使用者資料
+
     if (!isProfileFetchNeeded()) {
       // Deprecated: (20241113 - Liz)
       // eslint-disable-next-line no-console
@@ -509,15 +518,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241029 - Liz) 建立角色的功能
-  const createRole = async (roleId: number) => {
-    // Deprecated: (20241108 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('call createRole, roleId:', roleId);
-
+  const createRole = async (roleName: RoleName) => {
     try {
       const { success, data: userRole } = await createRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
@@ -525,38 +530,35 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         // Deprecated: (20241111 - Liz)
         // eslint-disable-next-line no-console
         console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
-        return userRole;
+        return { success, userRole };
       }
 
       // Info: (20241107 - Liz) 建立失敗回傳 null
-      return null;
+      return { success: false, userRole: null };
     } catch (error) {
-      // Info: (20241107 - Liz) 例外發生視為建立失敗回傳 null
-      // console.error('Error creating role:', error);
-      return null;
+      return { success: false, userRole: null };
     }
   };
 
   // Info: (20241101 - Liz) 選擇角色的功能
-  const selectRole = async (roleId: number) => {
+  const selectRole = async (roleName: RoleName) => {
     try {
       const { success, data: userRole } = await selectRoleAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { roleId },
+        body: { roleName },
       });
 
       if (success && userRole) {
-        setSelectedRole(userRole.role.name);
-        return userRole;
+        setSelectedRole(userRole.roleName);
+        return { success };
       }
-
-      return null;
+      return { success: false };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
-  // Info: (20241108 - Liz) 取得系統角色列表
+  // Info: (20241108 - Liz) 取得系統角色清單
   const getSystemRoleList = async () => {
     try {
       const { data: systemRoleList, success } = await systemRoleListAPI({
@@ -572,7 +574,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241025 - Liz) 取得使用者擁有的所有角色
+  // Info: (20241025 - Liz) 取得使用者建立的所有角色
   const getUserRoleList = async () => {
     try {
       const { data: userRoleList, success } = await userRoleListAPI({
@@ -595,15 +597,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     name,
     taxId,
     tag,
+    teamId,
   }: {
     name: string;
     taxId: string;
     tag: WORK_TAG;
+    teamId: number;
   }) => {
     try {
       const { success, code, error } = await createAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { name, taxId, tag },
+        body: { name, taxId, tag, teamId },
       });
 
       if (!success) {
@@ -616,46 +620,51 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241111 - Liz) 選擇帳本的功能(原為公司)
-  const selectAccountBook = async (companyId: number) => {
+  // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
+  const connectAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: userCompany } = await selectAccountBookAPI({
-        params: { userId: userAuthRef.current?.id },
-        body: { companyId },
+      const { success, data } = await connectAccountBookAPI({
+        params: { accountBookId },
       });
 
-      if (success) {
-        setSelectedAccountBook(userCompany);
-        return userCompany;
-      }
-      return null;
+      if (!success || !data) return { success: false };
+      setConnectedAccountBook(data);
+
+      // Info: (20250329 - Liz) 打 API 取得團隊資訊
+      const { success: getTeamSuccess, data: team } = await getTeamAPI({
+        params: { teamId: data.teamId },
+      });
+      if (!getTeamSuccess || !team) return { success: false };
+      // Deprecated: (20250329 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('connectAccountBook 取得團隊資訊成功: team', team);
+      setTeam(team);
+      return { success: true };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
-  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更標籤
+  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更工作標籤
   const updateAccountBook = async ({
-    companyId,
+    accountBookId,
     action,
     tag,
   }: {
-    companyId: number;
+    accountBookId: string;
     action: string;
     tag: WORK_TAG;
   }) => {
     try {
-      const { success, data: companyAndRole } = await updateAccountBookAPI({
-        params: { companyId },
+      const { success } = await updateAccountBookAPI({
+        params: { accountBookId },
         body: { action, tag },
       });
 
-      if (success && companyAndRole) {
-        return companyAndRole;
-      }
-      return null;
+      if (!success) return { success: false };
+      return { success: true };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
@@ -667,35 +676,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (success && company) {
-        setSelectedAccountBook(null);
+        setConnectedAccountBook(null);
         return company;
       }
       return null;
     } catch (error) {
       return null;
     }
-  };
-
-  const deleteAccount = async () => {
-    const res = await deleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
-  };
-
-  const cancelDeleteAccount = async () => {
-    const res = await cancelDeleteAccountAPI({
-      params: { userId: userAuthRef.current?.id },
-    });
-
-    if (res.success && res.data) {
-      setUserAuth(res.data);
-    }
-    return res;
   };
 
   const throttledGetStatusInfo = useCallback(
@@ -799,29 +786,37 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       switchRole,
       createAccountBook,
-      selectAccountBook,
+      connectAccountBook,
       updateAccountBook,
       deleteAccountBook,
-      deleteAccount,
-      cancelDeleteAccount,
-      selectedAccountBook: selectedAccountBookRef.current,
+      connectedAccountBook: connectedAccountBookRef.current,
+      team: teamRef.current,
+      teamRole: teamRef.current?.role ?? null,
       errorCode: errorCodeRef.current,
       toggleIsSignInError,
       isAuthLoading: isAuthLoadingRef.current,
-      checkIsRegistered,
       handleUserAgree,
       authenticateUser,
       handleAppleSignIn,
+
+      bindingResult: bindingResultRef.current,
+      handleBindingResult,
+
+      paymentMethod: paymentMethodRef.current,
+      handlePaymentMethod,
     }),
     [
       credentialRef.current,
       selectedRoleRef.current,
-      selectedAccountBookRef.current,
+      teamRef.current,
+      connectedAccountBookRef.current,
       errorCodeRef.current,
       isSignInErrorRef.current,
       isAuthLoadingRef.current,
       router.pathname,
       userAuthRef.current,
+      bindingResultRef.current,
+      paymentMethodRef.current,
     ]
   );
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
@@ -834,49 +829,3 @@ export const useUserCtx = () => {
   }
   return context;
 };
-
-/** Info: (20240903 - Shirley)
- * 前端登入流程：
- * 1. 當用戶點擊登入按鈕時，會調用 `authenticateUser` 函數，傳入選擇的登入方式（如 Google 或 Apple）和登入頁面的 props。
- * 2. `authenticateUser` 函數會調用 `authSignIn` 函數（來自 `next-auth/react`），傳入選擇的登入方式和額外的參數，開始 OAuth2.0 的登入流程。
- * 3. 登入流程跳轉到 `[...nextauth].ts` 中的 `/api/auth/signin` 路由，該路由由 NextAuth 處理。
- * 4. NextAuth 根據選擇的登入方式（如 Google 或 Apple），跳轉到相應的 OAuth 提供者進行用戶認證。
- * 5. 用戶在 OAuth 提供者的頁面上輸入憑證並授權應用訪問其資料。
- * 6. OAuth 提供者認證成功後，會將用戶重定向回應用的 `/api/auth/callback/:provider` 路由，該路由也由 NextAuth 處理。
- * 7. NextAuth 在 `[...nextauth].ts` 的 `signIn` 回調函數中處理登入成功後的邏輯：
- *    - 檢查用戶是否已存在於資料庫中，如果不存在則創建新用戶。
- *    - 調用 `setSession` 函數（來自 `session.ts`）將用戶的 ID 存儲在 session 中。
- * 8. 登入成功後，NextAuth 會將用戶重定向到應用的主頁面(iSunFA login page)。
- * 9. 在主頁面(iSunFA login page)中，`UserProvider` 組件會調用 `getStatusInfo` 函數來獲取當前登入用戶和公司的資料。
- *    - `getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 會攜帶 NextAuth 管理的 session。
- *    - 在 `status_info.ts` 中的 `handleGetRequest` 函數中，通過調用 `getSession` 函數（來自 `session.ts`）獲取當前請求的 session，並從中獲取用戶的 ID 和公司 ID。
- *    - 根據獲取到的用戶 ID 和公司 ID，從資料庫中獲取相應的用戶和公司資料，並返回給前端。
- *    - 如果回傳的資料有 user 但沒有 company，透過 `redirectToSelectCompanyPage` 將用戶導向選擇公司的頁面，有 user 跟 company 則透過 `handleReturnUrl` 將用戶導向之前儀表板/嘗試訪問的頁面。
- * 10. 如果 `getStatusInfoAPI` 請求成功，並且返回的數據中包含用戶和公司的資訊：
- *     - 將這些資料存儲到 React 的 state 中。
- *     - 將用戶 ID 存儲到 localStorage 中。
- *     - 設置一個過期時間（例如 1 小時後），並將其存儲到 localStorage 中。
- * 11. React state 中的用戶和公司資料會通過 `UserContext` 提供給應用的其他組件使用。
- * 12. 檢查用戶是否已同意所有必要的條款：
- *     - 如果用戶尚未同意所有必要的條款（如資訊收集同意書和服務條款），系統會顯示相應的同意書頁面。
- *     - 用戶需要閱讀並同意這些條款。
- * 13. 當用戶同意條款時：
- *     - 調用 `handleUserAgree` 函數，該函數會發送 API 請求（`agreementAPI`）來更新用戶的同意狀態。
- *     - 如果 API 請求成功，更新本地 state 中的用戶同意狀態（`setIsAgreeTermsOfService` 和 `setIsAgreePrivacyPolicy`）。
- * 14. 當用戶同意所有必要的條款後：
- *     - 如果用戶尚未選擇公司，系統會將用戶重定向到選擇公司的頁面。
- *     - 如果用戶已經選擇了公司，系統會將用戶重定向到儀表板或之前嘗試訪問的頁面（如果有的話）。
- * 15. 在每次頁面加載或路由變更時，系統會檢查 localStorage 中的用戶 ID 和過期時間：
- *     - 如果存在有效的用戶 ID 和未過期的時間戳，系統會嘗試重新獲取用戶狀態（調用 `getStatusInfo`）。
- *     - 如果 localStorage 中的數據已過期或不存在，系統會清除 state 並將用戶重定向到登入頁面。
- *
- * 總結：
- * - NextAuth 負責管理 OAuth2.0 的登入流程，並在登入成功後調用 `setSession` 函數將用戶的 ID 存儲在 session 中。
- * - 在主頁面(iSunFA login page)中，`getStatusInfo` 函數會調用 `getStatusInfoAPI`，該 API 通過 `getSession` 函數從 NextAuth 管理的 session 中獲取當前登入用戶的 ID 和公司 ID，並根據這些 ID 從資料庫中獲取相應的用戶和公司資料。
- * - 獲取到的用戶和公司資料會存儲到 React 的 state 中，並通過 `UserContext` 提供給應用的其他組件使用。
- * - 用戶 ID 和登入狀態的過期時間會被存儲在 localStorage 中，用於在頁面刷新或重新訪問時快速恢復用戶狀態。
- * - `session.ts` 中提供的 `getSession` 和 `setSession` 函數封裝了 `next-session` 庫的功能，不僅 NextAuth 可以使用這些函數來操作 session，其他後端檔案（如 API 路由）也可以通過調用這些函數來讀取和修改 session。
- * - 登入流程包含了檢查和處理用戶同意條款的邏輯，確保用戶在使用系統之前已經同意了所有必要的條款。
- * - 用戶同意條款的狀態會被更新到資料庫中，並反映在本地 state 中，影響後續的導航邏輯。
- * - 系統使用 localStorage 來保存用戶的登入狀態，以提高用戶體驗並減少不必要的 API 請求。
- */

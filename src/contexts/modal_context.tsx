@@ -7,8 +7,6 @@ import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
 
 interface ModalContextType {
-  isConfirmModalVisible: boolean;
-  confirmModalVisibilityHandler: () => void;
   isMessageModalVisible: boolean;
   messageModalVisibilityHandler: () => void;
   messageModalData: IMessageModal;
@@ -27,7 +25,6 @@ interface ModalProviderProps {
   children: React.ReactNode;
 }
 export const ModalProvider = ({ children }: ModalProviderProps) => {
-  const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -37,10 +34,6 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       //  onClose: () => {},
       onSave: () => {},
     });
-
-  const confirmModalVisibilityHandler = () => {
-    setIsConfirmModalVisible(!isConfirmModalVisible);
-  };
 
   const messageModalVisibilityHandler = () => {
     setIsMessageModalVisible(!isMessageModalVisible);
@@ -173,8 +166,6 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
   };
   const value = useMemo(
     () => ({
-      isConfirmModalVisible,
-      confirmModalVisibilityHandler,
       isMessageModalVisible,
       messageModalVisibilityHandler,
       messageModalDataHandler,
@@ -189,8 +180,6 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       addCounterPartyModalDataHandler,
     }),
     [
-      isConfirmModalVisible,
-      confirmModalVisibilityHandler,
       isMessageModalVisible,
       messageModalVisibilityHandler,
       messageModalDataHandler,

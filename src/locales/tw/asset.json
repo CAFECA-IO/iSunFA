@@ -18,7 +18,8 @@
     "EXPORT_ASSET_LIST_WARNING_CONTENT": "請至少選擇一個資產以匯出。",
     "TOAST_EXPORT_SUCCESS": "資產已成功匯出。",
     "TOAST_EXPORT_FAILED": "資產匯出失敗，請稍後再試。",
-    "OK_BTN": "好"
+    "OK_BTN": "好",
+    "TOAST_GET_ACCOUNT_LIST_FAILED": "取得資產類別列表失敗。"
   },
   "STATUS_SETTING_MODAL": {
     "TITLE": "狀態設定",

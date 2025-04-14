@@ -14,7 +14,7 @@
     "ACCOUNT_BOOKS": "Account Books",
     "COMPANY_NOT_YET_CREATED": "Company not yet created",
     "PLEASE_PROCEED_TO": "Please proceed to",
-    "CREATE_A_COMPANY": "create a company",
+    "CREATE_AN_ACCOUNT_BOOK": "create an account book",
     "LATEST_NEWS": "Latest News",
     "FINANCIAL": "Financial",
     "SYSTEM": "System",
@@ -127,7 +127,7 @@
     "TEAM": "Team",
     "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
-    "ENTER_NUMBER": "Enter Tax ID",
+    "ENTER_TAX_ID": "Enter Tax ID",
     "ENTER_FULL_ADDRESS": "Please enter the full address",
     "CANCEL": "Cancel",
     "ADD": "Add",
@@ -135,12 +135,52 @@
     "CHOOSE_TEAM": "Choose Team",
     "PLEASE_ENTER_THE_NAME": "Please enter the name",
     "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
-    "PLEASE_SELECT_A_TEAM": "Please select a team"
+    "PLEASE_SELECT_A_TEAM": "Please select a team",
+    "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
+    "ERROR_CODE": "Error Code",
+    "ERROR_MESSAGE": "Error Message"
   },
 
   "WORK_TAG": {
     "FINANCIAL": "Financial",
     "TAX": "Tax",
     "ALL": "All"
+  },
+
+  "ACCOUNT_BOOK_INFO_MODAL": {
+    "BASIC_INFO": "Basic Info",
+    "COMPANY_NAME": "Company Name",
+    "TAX_ID": "Business Tax ID Number",
+    "WORK_TAG": "Work Tag",
+    "TEAM": "Team",
+    "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
+    "ENTER_NAME": "Enter Name",
+    "ENTER_TAX_ID": "Enter Tax ID",
+    "ENTER_FULL_ADDRESS": "Please enter the full address",
+    "CANCEL": "Cancel",
+    "ADD": "Add",
+    "CHOOSE_WORK_TAG": "Choose Work Tag",
+    "CHOOSE_TEAM": "Choose Team",
+    "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
+    "ERROR_CODE": "Error Code",
+    "ERROR_MESSAGE": "Error Message",
+
+    "COMPANY_ADDRESS": "Company Address",
+    "CHOOSE_CITY": "Choose City",
+    "CHOOSE_DISTRICT": "Choose District",
+    "RESPONSIBLE_PERSON": "Responsible Person",
+    "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
+
+    "TAX_SERIAL_NUMBER": "Tax Serial Number",
+    "ENTER_TAX_SERIAL_NUMBER": "Enter Tax Serial Number",
+    "PHONE_NUMBER": "Phone Number",
+    "ENTER_PHONE_NUMBER": "Enter Phone Number",
+
+    "PLEASE_ENTER_THE_NAME": "Please enter the name",
+    "PLEASE_ENTER_RESPONSIBLE_PERSON": "Please enter responsible person",
+    "PLEASE_ENTER_TAX_ID": "Please enter tax ID",
+    "PLEASE_ENTER_TAX_SERIAL_NUMBER": "Please enter tax serial number",
+    "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
+    "PLEASE_SELECT_A_TEAM": "Please select a team"
   }
 }

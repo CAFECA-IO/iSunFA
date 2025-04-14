@@ -16,27 +16,30 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { useTranslation } from 'next-i18next';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
-import { useGlobalCtx } from '@/contexts/global_context';
 import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
+import DownloadCashFlowStatement from '@/components/cash_flow_statement_report_body/download_cash_flow_statement';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
   isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
+  downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
+  downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   selectedDateRange,
   isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
+  downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
+  downloadFn, // Info: (20250327 - Anna) 使用下載函數
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
-  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
-  const { isAuthLoading, selectedAccountBook } = useUserCtx();
-  const hasCompanyId = isAuthLoading === false && !!selectedAccountBook?.id;
+  const { isAuthLoading, connectedAccountBook } = useUserCtx();
+  const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false); // Info: (20241024 - Anna) 追蹤是否已經成功請求過一次 API
@@ -96,7 +99,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: selectedAccountBook?.id,
+          companyId: connectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp, // Info: (20241001 - Anna) 根據選擇的日期範圍傳遞參數
@@ -113,7 +116,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     } catch (error) {
       (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
     }
-  }, [hasCompanyId, selectedAccountBook?.id, selectedDateRange, trigger]);
+  }, [hasCompanyId, connectedAccountBook?.id, selectedDateRange, trigger]);
 
   // Info: (20241024 - Anna) 在 useEffect 中依賴 getCashFlowReport，當日期範圍變更時觸發 API 請求
   useEffect(() => {
@@ -202,6 +205,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   }
 
   const renderTable = (data: FinancialReportItem[]) => {
+    // Info: (20250213 - Anna) 先去除重複，確保相同 `code` 只顯示一次
+    const uniqueData = Array.from(new Map(data.map((item) => [item.code, item])).values());
     return (
       <table className="relative z-1 w-full border-collapse bg-white">
         <thead>
@@ -221,46 +226,52 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </tr>
         </thead>
         <tbody>
-          {data.map((value) => {
-            if (!value.code) {
+          {uniqueData
+            // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
+            .filter(
+              (value) =>
+                !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
+            )
+            .map((value) => {
+              if (!value.code) {
+                return (
+                  <tr key={value.code}>
+                    <td
+                      colSpan={6}
+                      className="border border-stroke-neutral-quaternary p-10px font-bold"
+                    >
+                      {value.name}
+                    </td>
+                  </tr>
+                );
+              }
               return (
                 <tr key={value.code}>
-                  <td
-                    colSpan={6}
-                    className="border border-stroke-neutral-quaternary p-10px font-bold"
-                  >
-                    {value.name}
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                    {value.code}
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                    {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                    {
+                      value.curPeriodAmount === 0
+                        ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                        : value.curPeriodAmount < 0
+                          ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
+                          : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
+                    }
+                  </td>
+                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                    {value.prePeriodAmount === 0
+                      ? '-'
+                      : value.prePeriodAmount < 0
+                        ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
+                        : value.prePeriodAmount.toLocaleString()}
                   </td>
                 </tr>
               );
-            }
-            return (
-              <tr key={value.code}>
-                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                  {value.code}
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                  {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {
-                    value.curPeriodAmount === 0
-                      ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                      : value.curPeriodAmount < 0
-                        ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
-                        : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
-                  }
-                </td>
-                <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {value.prePeriodAmount === 0
-                    ? '-'
-                    : value.prePeriodAmount < 0
-                      ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
-                      : value.prePeriodAmount.toLocaleString()}
-                </td>
-              </tr>
-            );
-          })}
+            })}
         </tbody>
       </table>
     );
@@ -424,7 +435,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-24px">
-          <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
+          <DownloadButton onClick={downloadFn} />
           {/* Info: (20241021 - Anna) 列印按鈕：只有中文可用 */}
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
@@ -769,6 +780,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         {investmentRatio}
         {freeCashFlow}
       </div>
+      <DownloadCashFlowStatement reportFinancial={reportFinancial} downloadRef={downloadRef} />
     </div>
   );
 };

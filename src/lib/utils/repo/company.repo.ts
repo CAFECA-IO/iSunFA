@@ -1,7 +1,6 @@
 import prisma from '@/client';
-import { Admin, Company, Prisma, File, CompanySetting } from '@prisma/client';
+import { Company, Prisma, File, CompanySetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { CompanyRoleName } from '@/constants/role';
 
 export async function getCompanyById(
   companyId: number
@@ -49,31 +48,13 @@ export async function getCompanyWithSettingById(companyId: number): Promise<
   return company;
 }
 
-export async function getCompanyWithOwner(companyId: number): Promise<
-  | (Company & {
-      admins: Admin[];
-    })
-  | null
-> {
-  let company:
-    | (Company & {
-        admins: Admin[];
-      })
-    | null = null;
+export async function getCompanyWithOwner(companyId: number): Promise<Company | null> {
+  let company: Company | null = null;
   if (companyId > 0) {
     company = await prisma.company.findUnique({
       where: {
         id: companyId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
-      },
-      include: {
-        admins: {
-          where: {
-            role: {
-              name: CompanyRoleName.OWNER,
-            },
-          },
-        },
       },
     });
   }
