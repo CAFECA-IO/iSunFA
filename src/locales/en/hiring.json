@@ -67,7 +67,15 @@
     "STATUS": "Status",
     "STATUS_OPTION_GRADUATED": "Graduated",
     "STATUS_OPTION_IN_SCHOOL": "In School",
-    "STATUS_OPTION_DROPOUT": "Dropout"
+    "STATUS_OPTION_DROPOUT": "Dropout",
+    "COMPANY_NAME": "Company Name",
+    "POSITION": "Position",
+    "JOB_DESCRIPTION": "Job Description",
+    "LEAVING_REASON": "Leaving Reason"
+  },
+  "SKILLS": {
+    "LANGUAGE": "Language",
+    "CERTIFICATE": "Certificate"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",

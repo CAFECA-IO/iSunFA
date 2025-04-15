@@ -4,6 +4,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import ResumeStepper from '@/components/join_us/resume_stepper';
 import PersonalInfoForm from '@/components/join_us/personal_info_form';
 import ExperienceForm from '@/components/join_us/experience_form';
+import SkillForm from '@/components/join_us/skill_form';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
@@ -28,13 +29,14 @@ const ResumeProcessBody: React.FC = () => {
       <PersonalInfoForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
     ) : currentStep === 2 ? (
       <ExperienceForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
+    ) : currentStep === 3 ? (
+      <SkillForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
     ) : null;
 
   return (
     <div className="flex flex-col items-center gap-90px py-60px">
       <ResumeStepper currentStep={currentStep} />
       {showingForm}
-      {/* <ExperienceForm toPrevStep={toPrevStep} toNextStep={toNextStep} /> */}
     </div>
   );
 };
