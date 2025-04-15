@@ -21,7 +21,7 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { convertTeamRoleCanDo, getGracePeriodInfo } from '@/lib/shared/permission';
 import { createOrderByList } from '@/lib/utils/sort';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
@@ -328,6 +328,8 @@ export const listAccountBookByUserId = async (
     data: accountBooks.map((book) => {
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
+      const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
       return {
         id: book.id,
@@ -359,7 +361,9 @@ export const listAccountBookByUserId = async (
                   : '',
                 editable: false,
               },
-              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
