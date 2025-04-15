@@ -73,6 +73,10 @@
     "JOB_DESCRIPTION": "Job Description",
     "LEAVING_REASON": "Leaving Reason"
   },
+  "SKILLS": {
+    "LANGUAGE": "Language",
+    "CERTIFICATE": "Certificate"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
     "TEXT": "Thank you for applying! Due to a high number of candidates, our team needs time to carefully review each application. We’ll notify you of the results via email.",
