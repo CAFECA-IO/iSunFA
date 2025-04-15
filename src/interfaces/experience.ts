@@ -13,7 +13,7 @@ export enum SchoolStatus {
   DROPOUT = 'Dropout',
 }
 
-export type IEducationDate = {
+export type IExperienceDate = {
   year: number;
   month: number;
 };
@@ -23,8 +23,8 @@ export interface IEducationExperience {
   degree: Degree;
   schoolName: string;
   department: string;
-  start: IEducationDate;
-  end: IEducationDate;
+  start: IExperienceDate;
+  end: IExperienceDate;
   status: SchoolStatus;
 }
 

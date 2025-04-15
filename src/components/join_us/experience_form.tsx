@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { IEducationExperience, dummyEducationExperience } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import EducationExperienceModal from '@/components/join_us/education_experience_modal';
+import WorkExperienceModal from '@/components/join_us/work_experience_modal';
 
 interface IExperienceFormProps {
   toPrevStep: () => void;
@@ -58,6 +59,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   const [isShowLeftArrow, setIsShowLeftArrow] = useState(false);
   const [isShowRightArrow, setIsShowRightArrow] = useState(true);
   const [isShowEducationModal, setIsShowEducationModal] = useState(false);
+  const [isShowWorkModal, setIsShowWorkModal] = useState(false);
 
   // ToDo: (20250411 - Julian) during the development
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,6 +86,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   }, [milestoneRef]);
 
   const toggleEducationModal = () => setIsShowEducationModal((prev) => !prev);
+  const toggleWorkModal = () => setIsShowWorkModal((prev) => !prev);
 
   const scrollMilestone = (direction: 'L' | 'R') => {
     const container = milestoneRef.current;
@@ -186,7 +189,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       </div>
 
       <div className="flex items-center justify-between">
-        <LandingButton variant="primary" className="font-bold">
+        <LandingButton variant="primary" className="font-bold" onClick={toggleWorkModal}>
           <FaPlus size={20} /> {t('hiring:EXPERIENCE.WORK_TITLE')}
         </LandingButton>
 
@@ -207,6 +210,9 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       {isShowEducationModal && (
         <EducationExperienceModal modalVisibilityHandler={toggleEducationModal} />
       )}
+
+      {/* Info: (20250415 - Julian) Work Experience Modal */}
+      {isShowWorkModal && <WorkExperienceModal modalVisibilityHandler={toggleWorkModal} />}
     </div>
   );
 };
