@@ -12,7 +12,7 @@ import { listTeamTransaction } from '@/lib/utils/repo/team_subscription.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId } = session;
+  const teamId = parseInt(req.query.teamId as string, 10);
   const isLogin = await checkSessionUser(session, APIName.LIST_TEAM_INVOICE, req);
   if (!isLogin) {
     throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
@@ -26,7 +26,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const options: IPaginatedOptions<ITeamInvoice[]> = await listTeamTransaction(userId);
+  const options: IPaginatedOptions<ITeamInvoice[]> = await listTeamTransaction(teamId);
 
   const payload: IPaginatedData<ITeamInvoice[]> = toPaginatedData(options);
   const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, payload);
