@@ -99,7 +99,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             </p>
             <input
               type="text"
-              placeholder="Place holder"
+              placeholder="ASDF Inc."
               value={companyNameInput}
               onChange={changeCompanyNameInput}
               className={inputStyle}
@@ -114,7 +114,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             </p>
             <input
               type="text"
-              placeholder="Economic"
+              placeholder="Software Engineer"
               value={positionInput}
               onChange={changePositionInput}
               className={inputStyle}
@@ -156,7 +156,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             </p>
             <input
               type="text"
-              placeholder="Economic"
+              placeholder="If so, can you describe the job?"
               value={descriptionInput}
               onChange={changeDescriptionInput}
               className={inputStyle}
@@ -167,7 +167,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             <p className="ml-27px text-base font-normal">{t('hiring:EXPERIENCE.LEAVING_REASON')}</p>
             <input
               type="text"
-              placeholder="Economic"
+              placeholder="Would you mind sharing the reason?"
               value={leavingReasonInput}
               onChange={changeLeavingReasonInput}
               className={inputStyle}

@@ -87,9 +87,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
     >
       {/* Info: (20250415 - Julian) 工作經歷的 line bar 在上方 */}
       {type === ExperienceType.WORK && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full`}>
-          {startPosition} - {endPosition}
-        </div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
       )}
       <p className={`${mainColor.text} font-semibold`}>{mainTitle}</p>
       <p className="">
@@ -100,9 +98,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
       </p>
       {/* Info: (20250415 - Julian) 學歷的 line bar 在下方 */}
       {type === ExperienceType.EDUCATION && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full`}>
-          {startPosition} - {endPosition}
-        </div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
       )}
     </div>
   );
@@ -290,7 +286,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
         {isDisplayRightArrow}
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="z-100 flex items-center justify-between">
         <LandingButton variant="primary" className="font-bold" onClick={toggleWorkModal}>
           <FaPlus size={20} /> {t('hiring:EXPERIENCE.WORK_TITLE')}
         </LandingButton>
