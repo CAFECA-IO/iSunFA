@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle } from '@/constants/display';
-import { IExperienceDate } from '@/interfaces/experience';
+import { IExperienceDate, IWorkExperience } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 
 interface IWorkExperienceModalProps {
@@ -58,9 +58,19 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const workExperience: IWorkExperience = {
+      id: 0, // Info: (20250415 - Julian) This will be set by the backend
+      companyName: companyNameInput,
+      position: positionInput,
+      start: startDate,
+      end: endDate,
+      description: descriptionInput,
+      leavingReason: leavingReasonInput,
+    };
+
     // Deprecated: (20250415 - Julian) For debugging purpose
     // eslint-disable-next-line no-console
-    console.log('Work Experience:');
+    console.log('Work Experience:', workExperience);
   };
 
   return (
@@ -82,7 +92,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
         {/* Info: (20250415 - Julian) Form Content */}
         <div className="mt-40px grid grid-cols-2 gap-x-44px gap-y-24px px-150px">
           {/* Info: (20250415 - Julian) Company Name */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.COMPANY_NAME')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -97,7 +107,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             />
           </div>
           {/* Info: (20250415 - Julian) Position */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.POSITION')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -112,7 +122,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             />
           </div>
           {/* Info: (20250415 - Julian) Start Date */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.START')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -126,7 +136,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             />
           </div>
           {/* Info: (20250415 - Julian) End Date */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.END')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -140,10 +150,9 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
             />
           </div>
           {/* Info: (20250415 - Julian) Job Description */}
-          <div className="col-span-2 flex flex-col gap-6px pb-32px">
+          <div className="col-span-2 flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.JOB_DESCRIPTION')}
-              <span className="ml-4px text-stroke-state-error">*</span>
             </p>
             <input
               type="text"
@@ -151,22 +160,17 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
               value={descriptionInput}
               onChange={changeDescriptionInput}
               className={inputStyle}
-              required
             />
           </div>
           {/* Info: (20250415 - Julian) Leaving Reason */}
-          <div className="col-span-2 flex flex-col gap-6px pb-32px">
-            <p className="ml-27px text-base font-normal">
-              {t('hiring:EXPERIENCE.LEAVING_REASON')}
-              <span className="ml-4px text-stroke-state-error">*</span>
-            </p>
+          <div className="col-span-2 flex flex-col gap-6px">
+            <p className="ml-27px text-base font-normal">{t('hiring:EXPERIENCE.LEAVING_REASON')}</p>
             <input
               type="text"
               placeholder="Economic"
               value={leavingReasonInput}
               onChange={changeLeavingReasonInput}
               className={inputStyle}
-              required
             />
           </div>
         </div>

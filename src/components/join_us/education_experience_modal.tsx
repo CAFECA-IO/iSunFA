@@ -150,7 +150,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
         {/* Info: (20250411 - Julian) Form Content */}
         <div className="mt-40px grid grid-cols-2 gap-x-44px gap-y-24px px-150px">
           {/* Info: (20250411 - Julian) Degree */}
-          <div ref={targetRef} className="relative flex flex-col gap-6px pb-32px">
+          <div ref={targetRef} className="relative flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.DEGREE')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -167,7 +167,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
             {degreeDropdown}
           </div>
           {/* Info: (20250411 - Julian) School Name */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.SCHOOL_NAME')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -182,7 +182,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
             />
           </div>
           {/* Info: (20250411 - Julian) Department */}
-          <div className="col-span-2 flex flex-col gap-6px pb-32px">
+          <div className="col-span-2 flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.DEPARTMENT')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -197,7 +197,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
             />
           </div>
           {/* Info: (20250411 - Julian) Start Date */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.START')}
               <span className="ml-4px text-stroke-state-error">*</span>
@@ -211,7 +211,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
             />
           </div>
           {/* Info: (20250411 - Julian) End Date */}
-          <div className="flex flex-col gap-6px pb-32px">
+          <div className="flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
               {t('hiring:EXPERIENCE.END')}
               <span className="ml-4px text-stroke-state-error">*</span>

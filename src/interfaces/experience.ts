@@ -28,6 +28,16 @@ export interface IEducationExperience {
   status: SchoolStatus;
 }
 
+export interface IWorkExperience {
+  id: number;
+  companyName: string;
+  position: string;
+  start: IExperienceDate;
+  end: IExperienceDate;
+  description?: string;
+  leavingReason?: string;
+}
+
 export const dummyEducationExperience: IEducationExperience[] = [
   {
     id: 1,
