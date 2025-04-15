@@ -179,5 +179,9 @@
     "UPLOAD_FILE": "上傳檔案",
     "UPLOADING": "上傳中",
     "COMPLETED": "已完成"
+  },
+  "OUTPUT_CERTIFICATE": {
+    "OUTPUT_CERTIFICATE": "銷項憑證",
+    "MARK_RETURN_OR_ALLOWANCE": "標記為退回或折讓"
   }
 }

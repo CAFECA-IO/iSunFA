@@ -1,0 +1,888 @@
+import Image from 'next/image';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'next-i18next';
+import { FaChevronDown } from 'react-icons/fa6';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import NumericInput from '@/components/numeric_input/numeric_input';
+import { Button } from '@/components/button/button';
+import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
+import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
+import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { useModalContext } from '@/contexts/modal_context';
+import { IoCloseOutline, IoArrowBackOutline, IoArrowForward } from 'react-icons/io5';
+import { LuTrash2 } from 'react-icons/lu';
+import { CurrencyType } from '@/constants/currency';
+import CounterpartyInput, {
+  CounterpartyInputRef,
+} from '@/components/certificate/counterparty_input';
+import EditableFilename from '@/components/certificate/edible_file_name';
+import Magnifier from '@/components/magnifier/magifier';
+import { IInvoiceBetaOptional } from '@/interfaces/invoice';
+import APIHandler from '@/lib/utils/api_handler';
+// Info: (20250414 - Anna)
+// import { IAccountingSetting, ITaxSetting } from '@/interfaces/accounting_setting';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
+import { APIName } from '@/constants/api_connection';
+import TaxMenu from '@/components/certificate/certificate_tax_menu';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { HiCheck } from 'react-icons/hi';
+
+interface OutputCertificateEditModalProps {
+  isOpen: boolean;
+  companyId: number;
+  toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
+  currencyAlias: CurrencyType;
+  certificate?: ICertificateUI;
+  onUpdateFilename: (certificateId: number, name: string) => void;
+  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - tzuhan) 保存數據的回調函數
+  onDelete: (id: number) => void;
+  certificates: ICertificateUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
+  editingId: number; // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
+  setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
+}
+
+const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
+  isOpen,
+  companyId,
+  toggleModel,
+  currencyAlias,
+  certificate,
+  onUpdateFilename,
+  onSave,
+  onDelete,
+  certificates,
+  editingId,
+  setEditingId,
+}) => {
+  // Info: (20250415 - Anna) 過濾憑證類型
+  //   const selectableInvoiceType = Object.values(InvoiceType).filter(
+  //     (type) => type !== InvoiceType.ALL
+  //   );
+  const selectableInvoiceType: InvoiceType[] = [
+    InvoiceType.SALES_TRIPLICATE_INVOICE,
+    InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
+    InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
+    InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
+    InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
+    InvoiceType.SALES_NON_UNIFORM_INVOICE,
+  ];
+  const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
+  const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  // Info: (20250414 - Anna)
+  //   const [taxSetting, setTaxSetting] = useState<ITaxSetting>();
+
+  // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
+  const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
+
+  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET
+  );
+  const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
+    APIName.COUNTERPARTY_LIST
+  );
+  const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
+  // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
+  if (!isOpen || !certificate) return null;
+  const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
+  const [date, setDate] = useState<IDatePeriod>({
+    startTimeStamp: certificate.invoice?.date ?? 0,
+    endTimeStamp: 0,
+  });
+  const { isMessageModalVisible } = useModalContext();
+  //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
+  const [formState, setFormState] = useState(
+    () =>
+      ({
+        // Info: (20250414 - Anna) 這個組件改為全為銷項
+        // inputOrOutput: certificate.invoice.inputOrOutput ?? InvoiceTransactionDirection.INPUT,
+        inputOrOutput: InvoiceTransactionDirection.OUTPUT,
+        date: certificate.invoice.date,
+        no: certificate.invoice.no,
+        priceBeforeTax: certificate.invoice.priceBeforeTax,
+        taxRatio: certificate.invoice.taxRatio,
+        taxPrice: certificate.invoice.taxPrice,
+        totalPrice: certificate.invoice.totalPrice,
+        counterParty: certificate.invoice.counterParty,
+        type: certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
+        deductible: certificate.invoice.deductible,
+      }) as IInvoiceBetaOptional
+  );
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
+
+  // Info: (20250414 - Anna) 紀錄是否「已經打過一次保存的 API」
+  //   const [hasSavedOnce, setHasSavedOnce] = useState(false);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formState;
+
+    if (!selectedDate || selectedDate <= 0) {
+      newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_DATE');
+    }
+    if (!priceBeforeTax || priceBeforeTax <= 0) {
+      newErrors.priceBeforeTax = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_PRICE');
+    }
+    if (!totalPrice || totalPrice <= 0) {
+      newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+    }
+    if (!counterParty?.name) {
+      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = useCallback(
+    (
+      field: keyof typeof formState,
+      value:
+        | string
+        | number
+        | InvoiceTransactionDirection
+        | ICounterpartyOptional
+        | InvoiceType
+        | boolean
+        | null
+    ) => {
+      setFormState((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const getSettingTaxRatio = useCallback(async () => {
+    const { success, data } = await getAccountSetting({
+      params: { companyId },
+    });
+    if (success && data) {
+      // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，稅率選單不會再變動
+      //   setTaxSetting(data.taxSettings);
+      if (formState.taxRatio === undefined) {
+        // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，所以不需再判斷 if (formState.inputOrOutput === OUTPUT)
+
+        // if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
+        //   handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
+        // } else {
+        //   handleInputChange('taxRatio', 0);
+        // }
+        handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
+      }
+    }
+    // Info: (20250414 - Anna) 因為這個組件改為全為銷項，所以移除inputOrOutput、formState 依賴
+    //   }, [companyId, formState, formState.taxRatio]);
+  }, [companyId, formState.taxRatio]);
+
+  const listCounterparty = useCallback(async () => {
+    const { success, data } = await getCounterpartyList({
+      params: { companyId },
+    });
+    if (success) {
+      setCounterpartyList(data?.data ?? []);
+    }
+  }, [companyId]);
+
+  const {
+    targetRef: invoiceTypeMenuRef,
+    componentVisible: isInvoiceTypeMenuOpen,
+    setComponentVisible: setIsInvoiceTypeMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250415 - Anna) 建立發票前綴選單的狀態和 Ref
+  const {
+    targetRef: invoicePrefixMenuRef,
+    componentVisible: isInvoicePrefixMenuOpen,
+    setComponentVisible: setIsInvoicePrefixMenuOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const invoiceTypeMenuClickHandler = () => {
+    setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
+  };
+
+  // Info: (20250415 - Anna) 點擊切換發票前綴下拉狀態;
+  const invoicePrefixMenuClickHandler = () => {
+    setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
+  };
+
+  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    setIsInvoiceTypeMenuOpen(false);
+    handleInputChange('type', id);
+    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
+    setIsReturnOrAllowance(false);
+  };
+
+  const formStateRef = useRef(formState);
+
+  // Info: (20250415 - Anna) 點選發票前綴的選項
+  const invoicePrefixOptionClickHandler = (prefix: string) => {
+    const latestNo = formStateRef.current.no ?? '';
+    const suffix = latestNo.substring(2);
+    handleInputChange('no', `${prefix}${suffix}`);
+    setIsInvoicePrefixMenuOpen(false);
+  };
+
+  const priceBeforeTaxChangeHandler = (value: number) => {
+    handleInputChange('priceBeforeTax', value);
+    const updateTaxPrice = Math.round((value * (formState.taxRatio ?? 0)) / 100);
+    handleInputChange('taxPrice', updateTaxPrice);
+    handleInputChange('totalPrice', value + updateTaxPrice);
+  };
+
+  const selectTaxHandler = (value: number | null) => {
+    // Deprecated: (20250103 - tzuhan) Debug purpose
+    // eslint-disable-next-line no-console
+    console.log(`selectTaxHandler value:`, value);
+    handleInputChange('taxRatio', value);
+    const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * (value ?? 0)) / 100);
+    handleInputChange('taxPrice', updateTaxPrice);
+    handleInputChange('totalPrice', (formState.priceBeforeTax ?? 0) + updateTaxPrice);
+  };
+
+  const totalPriceChangeHandler = (value: number) => {
+    handleInputChange('totalPrice', value);
+    const ratio = (100 + (formState.taxRatio ?? 0)) / 100;
+    const updatePriceBeforeTax = Math.round(value / ratio);
+    handleInputChange('priceBeforeTax', updatePriceBeforeTax);
+    const updateTaxPrice = value - updatePriceBeforeTax;
+    handleInputChange('taxPrice', updateTaxPrice);
+  };
+
+  // Info: (20241206 - Julian) currency alias setting
+  const currencyAliasImageSrc = `/currencies/${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasStr = t(
+    `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
+  );
+
+  // Info: (20250414 - Anna) 用來記錄 setTimeout 的任務 ID，供 debounce 清除使用
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Todo: (20250415 - Anna) 發票前綴選單假資料
+  const InvoiceNumberPrefix = ['AB', 'CD'];
+
+  // Info: (20240924 - tzuhan) 處理保存
+  //   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
+  //     event.preventDefault();
+  //     if (!validateForm()) return;
+  //     const updatedData: ICertificate = {
+  //       ...certificate,
+  //       invoice: {
+  //         ...certificate.invoice,
+  //         ...formStateRef.current,
+  //       },
+  //     };
+  //     await onSave(updatedData);
+  //     toggleModel();
+  //     if (counterpartyInputRef.current) {
+  //       counterpartyInputRef.current.triggerSearch();
+  //     }
+  //   };
+
+  // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
+  const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    return !keys1.some((key) => {
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+
+      if (key === 'counterParty') {
+        const cp1 = val1 as ICounterpartyOptional;
+        const cp2 = val2 as ICounterpartyOptional;
+        return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
+      }
+
+      return val1 !== val2;
+    });
+  };
+  const handleSave = useCallback(async () => {
+    if (!validateForm()) return;
+
+    const updatedInvoice = {
+      ...certificate.invoice,
+      ...formStateRef.current,
+    };
+
+    // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
+    if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
+
+    const updatedData: ICertificate = {
+      ...certificate,
+      invoice: updatedInvoice,
+    };
+    // eslint-disable-next-line no-console
+    console.log('📤 Calling onSave with:', updatedData);
+    await onSave(updatedData);
+
+    // Info: (20250414 - Anna) 更新最新儲存成功的內容
+    savedInvoiceRef.current = updatedInvoice;
+  }, [certificate, onSave]);
+
+  // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
+  const currentIndex = certificates.findIndex((c) => c.id === editingId);
+  const hasPrev = currentIndex > 0;
+  const hasNext = currentIndex < certificates.length - 1;
+
+  // Info: (20250414 - Anna) 初始化 formStateRef，避免剛打開 modal 時 formStateRef.current 是 undefined，導致比對失效，無法觸發 handleSave()
+  useEffect(() => {
+    formStateRef.current = formState;
+  }, []);
+
+  // Info: (20250414 - Anna) 初始化 savedInvoiceRef，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
+  useEffect(() => {
+    // Info: (20250414 - Anna) 確保 savedInvoiceRef.current 被正確初始化為 certificate.invoice
+    if (certificate?.invoice) {
+      // eslint-disable-next-line no-console
+      console.log('📌 Initialize savedInvoiceRef with:', certificate.invoice);
+      // eslint-disable-next-line no-console
+      console.log('📷 憑證圖片網址:', certificate.file.url);
+      savedInvoiceRef.current = certificate.invoice;
+    }
+  }, [certificate?.invoice]);
+
+  // Info: (20250414 - Anna) 用戶輸入新內容都同步放入formStateRef.current，用來和前面兩種舊資料內容比較
+  useEffect(() => {
+    formStateRef.current = formState;
+  }, [formState]);
+
+  useEffect(() => {
+    getSettingTaxRatio();
+    listCounterparty();
+  }, []);
+
+  // Info: (20250414 - Anna) 當使用者修改任何欄位，停止輸入超過 1 秒且資料有變動，就自動觸發儲存 API
+  useEffect(() => {
+    // Info: (20250414 - Anna) 取消上一次的 debounce 任務（如果還沒執行），避免重複打 API
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    // Todo: (20250414 - Anna) 下面只是Debug，要再解開原本的
+    //     debounceTimer.current = setTimeout(() => {
+    //       if (!shallowEqual(formStateRef.current, savedInvoiceRef.current) && validateForm()) {
+    //         handleSave(); // Info: (20250414 - Anna) 只有在資料變了、且通過驗證才打 API
+    //       }
+    //     }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
+    //   }, [formState]);
+
+    debounceTimer.current = setTimeout(() => {
+      const isSame = shallowEqual(formStateRef.current, savedInvoiceRef.current);
+      const isValid = validateForm();
+      // eslint-disable-next-line no-console
+      console.log('📌 shallowEqual result:', isSame);
+      // eslint-disable-next-line no-console
+      console.log('📌 validateForm result:', isValid);
+
+      if (!isSame && isValid) {
+        // eslint-disable-next-line no-console
+        console.log('✅ Trigger handleSave');
+        handleSave();
+      }
+    }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
+  }, [formState]);
+
+  // Info: (20250415 - Anna) certificate 或 editingId 變動時，重新初始化表單狀態、formRef、savedInvoiceRef、日期 等，為了做前後筆切換
+  useEffect(() => {
+    if (!certificate) return;
+
+    const {
+      type,
+      //  Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
+      date: certificateDate,
+      no,
+      taxRatio,
+      counterParty,
+      priceBeforeTax,
+      taxPrice,
+      totalPrice,
+    } = certificate.invoice;
+
+    // Info: (20250415 - Anna) 初始化 formState
+    const newFormState: IInvoiceBetaOptional = {
+      inputOrOutput: InvoiceTransactionDirection.OUTPUT,
+      date: certificateDate,
+      no,
+      priceBeforeTax,
+      taxRatio,
+      taxPrice,
+      totalPrice,
+      counterParty,
+      type: type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
+    };
+
+    // Info: (20250415 - Anna) 更新 state 與 Ref
+    setFormState(newFormState);
+    formStateRef.current = newFormState;
+    savedInvoiceRef.current = {
+      ...certificate.invoice,
+      ...newFormState,
+    };
+
+    // Info: (20250415 - Anna) Debug 日期內容
+    // eslint-disable-next-line no-console
+    console.log('📌 切換的 date 是:', certificateDate);
+    // eslint-disable-next-line no-console
+    console.log('📅 對應時間:', new Date((certificateDate ?? 0) * 1000));
+
+    if (certificateDate) {
+      setDate({
+        startTimeStamp: certificateDate,
+        // Info: (20250415 - Anna) 補足當天結束時間（23:59:59）(24 小時 × 60 分鐘 × 60 秒 = 86400 秒，86400 - 1 = 86399 秒)
+        endTimeStamp: certificateDate + 86399,
+      });
+    }
+
+    // Info: (20250415 - Anna) 依據憑證類型判斷是否為折讓
+    if (
+      type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC ||
+      type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM
+    ) {
+      setIsReturnOrAllowance(true);
+    } else {
+      setIsReturnOrAllowance(false);
+    }
+
+    // Info: (20250415 - Anna) Debug
+    // eslint-disable-next-line no-console
+    console.log('📌 useEffect - 切換前後筆的 ID:', certificate.id);
+  }, [certificate, editingId]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
+    >
+      <form
+        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
+        // onSubmit={handleSave}
+        onSubmit={(e) => e.preventDefault()} // Info: (20250414 - Anna) 防止表單預設行為
+      >
+        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+        <button
+          type="button"
+          className="absolute right-4 top-4 text-checkbox-text-primary"
+          onClick={toggleModel}
+        >
+          <IoCloseOutline size={32} />
+        </button>
+
+        <EditableFilename
+          certificate={certificate}
+          certificateFilename={certificateFilename}
+          setCertificateFilename={setCertificateFilename}
+          onUpdateFilename={onUpdateFilename}
+        />
+
+        {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+        <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
+          {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
+          <Magnifier imageUrl={certificate.file.url} className="w-210px min-w-210px" />
+          {/* Info: (20240924 - tzuhan) 編輯表單 */}
+          {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+          <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
+            {/* Info: (20240924 - tzuhan) Invoice Type */}
+            <div className="flex w-full flex-col items-start gap-2">
+              <p className="text-sm font-semibold text-input-text-primary">
+                {t('certificate:EDIT.INVOICE_TYPE')}
+              </p>
+              <div className="flex w-full items-center gap-4">
+                <div className="flex w-full">
+                  <div
+                    ref={invoiceTypeMenuRef}
+                    id="invoice-type-menu"
+                    onClick={invoiceTypeMenuClickHandler}
+                    className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                  >
+                    <p className="flex h-46px w-full items-center justify-between">
+                      <span className="h-24px overflow-hidden">
+                        {t(`filter_section_type:FILTER_SECTION_TYPE.${formState.type}`)}
+                      </span>
+                      <div className="flex h-20px w-20px items-center justify-center">
+                        <FaChevronDown
+                          className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
+                        />
+                      </div>
+                    </p>
+                    <div
+                      className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                    >
+                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
+                        {Object.values(selectableInvoiceType).map((value) => (
+                          <li
+                            key={`taxable-${value}`}
+                            value={value}
+                            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
+                            onClick={invoiceTypeMenuOptionClickHandler.bind(null, value)}
+                          >
+                            {t(`filter_section_type:FILTER_SECTION_TYPE.${value}`)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Info: (20240924 - tzuhan) Invoice Date */}
+            <div className="flex w-full flex-col items-start gap-2">
+              <p className="text-sm font-semibold text-input-text-primary">
+                {t('certificate:EDIT.DATE')}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <DatePicker
+                period={date}
+                setFilteredPeriod={setDate}
+                type={DatePickerType.TEXT_DATE}
+                datePickerClassName="z-120"
+                datePickerHandler={(start: number) => handleInputChange('date', start)}
+              />
+              {errors.date && (
+                <p className="-translate-y-1 self-start text-sm text-text-state-error">
+                  {errors.date}
+                </p>
+              )}
+            </div>
+
+            {/* Info: (20240924 - tzuhan) Invoice Number */}
+            <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+              <div id="price" className="absolute -top-20"></div>
+              <p className="text-sm font-semibold text-input-text-primary">
+                {t('certificate:EDIT.INVOICE_NUMBER')}
+                <span className="text-text-state-error">*</span>
+              </p>
+
+              {formState.type === InvoiceType.SALES_NON_UNIFORM_INVOICE ? (
+                // Info: (20250415 - Anna) 免用統一發票的UI
+                <div className="flex w-full items-center">
+                  <input
+                    id="invoiceno"
+                    type="text"
+                    value={formState.no}
+                    onChange={(e) => handleInputChange('no', e.target.value)}
+                    className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                    placeholder="AB-12345678"
+                  />
+                </div>
+              ) : (
+                // Info: (20250415 - Anna) 其他憑證類型的UI
+                <div className="flex w-full items-center">
+                  {/* Info: (20250415 - Anna) 輸入發票前綴，如果最終改為不用下拉選單，可以解開這個 */}
+                  {/* <input
+                    id="invoice-prefix"
+                    type="text"
+                    maxLength={2}
+                    value={formState.no?.substring(0, 2) ?? ''}
+                    onChange={(e) => {
+                      const latestNo = formStateRef.current.no ?? '';
+                      const suffix = latestNo.substring(2);
+                      handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
+                    }}
+                    className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                    placeholder="AB"
+                  /> */}
+
+                  {/* Info: (20250415 - Anna) 「選擇」發票前綴 */}
+                  <div
+                    ref={invoicePrefixMenuRef}
+                    onClick={invoicePrefixMenuClickHandler}
+                    className={`relative h-44px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                  >
+                    <p className="flex h-44px w-full items-center justify-between gap-x-2">
+                      <span className="overflow-hidden">{formState.no?.substring(0, 2) ?? ''}</span>
+                      <div className="flex h-6px w-12px items-center justify-center">
+                        <FaChevronDown
+                          className={isInvoicePrefixMenuOpen ? 'rotate-180' : 'rotate-0'}
+                        />
+                      </div>
+                    </p>
+                    <div
+                      className={`absolute left-0 top-44px grid w-full grid-cols-1 shadow-dropmenu ${isInvoicePrefixMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                    >
+                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
+                        {InvoiceNumberPrefix.map((prefix) => (
+                          <li
+                            key={prefix}
+                            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
+                            onClick={() => invoicePrefixOptionClickHandler(prefix)}
+                          >
+                            {prefix}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <input
+                    id="invoice-number"
+                    type="text"
+                    maxLength={8}
+                    value={formState.no?.substring(2) ?? ''}
+                    onChange={(e) => {
+                      const latestNo = formStateRef.current.no ?? '';
+                      const prefix = latestNo.substring(0, 2);
+                      handleInputChange('no', `${prefix}${e.target.value}`);
+                    }}
+                    className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                    placeholder="12345678"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Info: (20250414 - Anna) Tax Type */}
+            <div className="flex w-full flex-col items-start gap-2">
+              <p className="text-sm font-semibold text-input-text-primary">
+                {t('certificate:EDIT.TAX')}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <div className="flex w-full items-center gap-2">
+                <TaxMenu selectTaxHandler={selectTaxHandler} />
+              </div>
+              {errors.taxPrice && (
+                <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                  {errors.taxPrice}
+                </p>
+              )}
+            </div>
+
+            {/* Info: (20240924 - tzuhan) CounterParty */}
+            <CounterpartyInput
+              ref={counterpartyInputRef}
+              counterparty={formState.counterParty}
+              counterpartyList={counterpartyList}
+              //   onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
+              onSelect={(cp: ICounterpartyOptional) => {
+                if (cp && cp.name) {
+                  handleInputChange('counterParty', cp);
+                }
+              }}
+            />
+            {errors.counterParty && (
+              <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                {errors.counterParty}
+              </p>
+            )}
+
+            <div className="flex w-full items-center gap-2">
+              {/* Info: (20240924 - tzuhan) Price Before Tax */}
+              <div className="relative flex flex-1 flex-col items-start gap-2">
+                <div id="price" className="absolute -top-20"></div>
+                <p className="text-sm font-semibold text-input-text-primary">
+                  {t('certificate:EDIT.PRICE_BEFORE_TAX')}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="flex w-full items-center">
+                  <NumericInput
+                    id="input-price-before-tax"
+                    name="input-price-before-tax"
+                    value={formState.priceBeforeTax ?? 0}
+                    isDecimal
+                    required
+                    hasComma
+                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                    triggerWhenChanged={priceBeforeTaxChangeHandler}
+                  />
+                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                    <Image
+                      src={currencyAliasImageSrc}
+                      width={16}
+                      height={16}
+                      alt={currencyAliasImageAlt}
+                      className="rounded-full"
+                    />
+                    <p>{currencyAliasStr}</p>
+                  </div>
+                </div>
+                {errors.priceBeforeTax && (
+                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                    {errors.priceBeforeTax}
+                  </p>
+                )}
+              </div>
+
+              {/* Info: (20250414 - Anna) Tax */}
+              <div className="relative flex flex-1 flex-col items-start gap-2">
+                <p className="text-sm font-semibold text-input-text-primary">
+                  Tax
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="flex w-full items-center">
+                  <NumericInput
+                    id="input-tax"
+                    name="input-tax"
+                    value={formState.taxPrice ?? 0}
+                    isDecimal
+                    required
+                    hasComma
+                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                  />
+                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                    <Image
+                      src={currencyAliasImageSrc}
+                      width={16}
+                      height={16}
+                      alt={currencyAliasImageAlt}
+                      className="rounded-full"
+                    />
+                    <p>{currencyAliasStr}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Info: (20240924 - tzuhan) Total Price */}
+            <div className="hidden">
+              <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+                <div id="price" className="absolute -top-20"></div>
+                <p className="text-sm font-semibold text-input-text-primary">
+                  {t('certificate:EDIT.TOTAL_PRICE')}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="flex w-full items-center">
+                  <NumericInput
+                    id="input-total-price"
+                    name="input-total-price"
+                    value={formState.totalPrice ?? 0}
+                    isDecimal
+                    required
+                    hasComma
+                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                    triggerWhenChanged={totalPriceChangeHandler}
+                  />
+                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                    <Image
+                      src={currencyAliasImageSrc}
+                      width={16}
+                      height={16}
+                      alt={currencyAliasImageAlt}
+                      className="rounded-full"
+                    />
+                    <p>{currencyAliasStr}</p>
+                  </div>
+                </div>
+                {errors.totalPrice && (
+                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                    {errors.totalPrice}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Info: (20250414 - Anna) 退回或折讓checkbox */}
+            <div className="flex w-full items-center gap-2">
+              <div
+                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
+                  isReturnOrAllowance
+                    ? 'bg-checkbox-surface-selected'
+                    : 'bg-checkbox-surface-unselected'
+                }`}
+                onClick={() => {
+                  const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
+                  setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
+
+                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                  if (
+                    formState.type === InvoiceType.SALES_TRIPLICATE_INVOICE &&
+                    isTogglingToReturnOrAllowance
+                  ) {
+                    handleInputChange('type', InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC);
+                  } else if (
+                    formState.type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC &&
+                    !isTogglingToReturnOrAllowance
+                  ) {
+                    handleInputChange('type', InvoiceType.SALES_TRIPLICATE_INVOICE);
+                  } else if (
+                    formState.type === InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE &&
+                    isTogglingToReturnOrAllowance
+                  ) {
+                    handleInputChange('type', InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM);
+                  } else if (
+                    formState.type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM &&
+                    !isTogglingToReturnOrAllowance
+                  ) {
+                    handleInputChange('type', InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE);
+                  }
+                }}
+              >
+                {isReturnOrAllowance && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <HiCheck className="text-neutral-white" />
+                  </div>
+                )}
+              </div>
+
+              {/* Info: (20250414 - Anna) Checkbox label */}
+              <span className="text-sm font-medium text-input-text-primary">
+                {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
+              </span>
+            </div>
+          </div>
+        </div>
+        {/* Info: (20240924 - tzuhan) Save 按鈕 */}
+        <div className="flex items-center">
+          {!certificate.voucherNo && (
+            <Button
+              id="certificate-delete-btn"
+              type="button"
+              className="px-16px py-8px"
+              onClick={() => onDelete(certificate.id)}
+              variant="errorOutline"
+            >
+              <LuTrash2 size={20} />
+              <p>{t('common:COMMON.DELETE')}</p>
+            </Button>
+          )}
+          <div className="ml-auto flex items-center gap-4">
+            {/* Info: (20250415 - Anna) 取消 按鈕改成「上一筆」 */}
+            {/* <Button
+              id="certificate-cancel-btn"
+              type="button"
+              className="px-16px py-8px"
+              onClick={toggleModel}
+              variant="tertiaryOutline"
+            >
+              <p>{t('common:COMMON.CANCEL')}</p>
+            </Button> */}
+            <Button
+              type="button"
+              disabled={!hasPrev}
+              onClick={() => setEditingId(certificates[currentIndex - 1].id)}
+              variant="tertiaryOutline"
+              className="px-16px py-8px"
+            >
+              <IoArrowBackOutline size={20} />
+              <p>上一筆</p>
+            </Button>
+            {/* Info: (20250415 - Anna) Save 按鈕改成「下一筆」 */}
+            {/* <Button
+              id="certificate-save-btn"
+              type="submit"
+              variant="tertiary"
+              className="px-16px py-8px"
+            >
+              <p>{t('common:COMMON.SAVE')}</p>
+              <BiSave size={20} />
+            </Button> */}
+            <Button
+              onClick={() => setEditingId(certificates[currentIndex + 1].id)}
+              type="button"
+              disabled={!hasNext}
+              variant="tertiary"
+              className="px-16px py-8px"
+            >
+              <p>下一筆</p>
+              <IoArrowForward size={20} />
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default OutputCertificateEditModal;
