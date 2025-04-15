@@ -1,5 +1,5 @@
 import { ITeamInvoice } from '@/interfaces/subscription';
-import { formatTimestampWithHyphen } from '@/constants/time';
+import { timestampToString } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
 import SortingButton from '@/components/voucher/sorting_button';
@@ -11,7 +11,7 @@ interface InvoiceProps {
 
 const Invoice = ({ invoice }: InvoiceProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const billingDate = formatTimestampWithHyphen(invoice.issuedTimestamp);
+  const billingDate = timestampToString(invoice.issuedTimestamp).date;
 
   return (
     <section key={invoice.id} className="flex h-72px bg-surface-neutral-surface-lv2">
