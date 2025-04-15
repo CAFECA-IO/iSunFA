@@ -168,5 +168,23 @@
   },
   "ERROR": {
     "FETCH_DATA": "There was an error fetching the data, please try again later."
+  },
+  "ACCOUNT_BOOK_INFO": {
+    "ACCOUNT_BOOK_INFORMATION": "Account Book Information",
+    "COMPANY_NAME": "Company Name",
+    "ENTER_NAME": "Enter company name",
+    "BUSINESS_TAX_ID_NUMBER": "Business Tax ID Number",
+    "ENTER_NUMBER": "Enter number",
+    "TAX_SERIAL_NUMBER": "Tax Serial Number",
+    "COMPANY_REPRESENTATIVE_NAME": "Company Representative Name",
+    "ENTER_REPRESENTATIVE_NAME": "Enter representative name",
+    "COUNTRY_OF_INCORPORATION": "Country of Incorporation",
+    "SELECT_COUNTRY": "Select country",
+    "PHONE_NUMBER": "Phone Number",
+    "COMPANY_ADDRESS": "Company Address",
+    "PLEASE_ENTER_THE_FULL_ADDRESS": "Please enter the full address",
+    "REMOVE_ACCOUNT_BOOK": "Remove Account Book",
+    "CANCEL": "Cancel",
+    "SAVE": "Save"
   }
 }
