@@ -18,3 +18,10 @@ export enum PAYMENT_GATEWAY {
   ALIPAY = 'ALIPAY',
   WECHAT_PAY = 'WE',
 }
+
+export enum PAYEE {
+  NAME = '墨沫有限公司',
+  ADDRESS = '105402 臺北市松山區民生東路三段156號9樓',
+  PHONE = '02-2546-6225',
+  TAX_ID = '52650861',
+}

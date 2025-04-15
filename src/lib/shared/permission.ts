@@ -30,3 +30,17 @@ export function convertTeamRoleCanDo(input: {
     can,
   };
 }
+
+export function getGracePeriodInfo(expiredAt: number): {
+  inGracePeriod: boolean;
+  gracePeriodEndAt: number;
+} {
+  const now = Math.floor(Date.now() / 1000);
+  const gracePeriodSeconds = 14 * 24 * 60 * 60;
+  const gracePeriodEndAt = expiredAt + gracePeriodSeconds;
+
+  return {
+    inGracePeriod: now > expiredAt && now <= gracePeriodEndAt,
+    gracePeriodEndAt,
+  };
+}
