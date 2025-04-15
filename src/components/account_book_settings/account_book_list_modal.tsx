@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
 import WorkTag from '@/components/account_book_settings/work_tag';
-import AccountBookEditModal from '@/components/account_book_settings/account_book_edit_modal';
+import AccountBookInfoModal from '@/components/account_book_settings/account_book_info_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { SortBy, SortOrder } from '@/constants/sort';
 
@@ -25,7 +25,9 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
   const [totalPages, setTotalPages] = useState(0);
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [typeSort, setTypeSort] = useState<null | SortOrder>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20250415 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
+
+  const [isAccountBookListModalOpen, setIsAccountBookListModalOpen] = useState(false);
   const [selectedAccountBook, setSelectedAccountBook] = useState<IAccountBookWithTeam | null>(null);
   const { userAuth } = useUserCtx();
 
@@ -44,15 +46,16 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
 
   const handleEditModal = (accountBook: IAccountBookWithTeam) => {
     setSelectedAccountBook(accountBook);
-    setIsEditModalOpen(true);
+    setIsAccountBookListModalOpen(true);
   };
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      {isEditModalOpen && selectedAccountBook && (
-        <AccountBookEditModal
+      {isAccountBookListModalOpen && selectedAccountBook && (
+        <AccountBookInfoModal
           accountBook={selectedAccountBook}
-          toggleModal={() => setIsEditModalOpen((prev) => !prev)}
+          setIsAccountBookListModalOpen={setIsAccountBookListModalOpen}
+          setRefreshKey={setRefreshKey}
         />
       )}
       <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
@@ -66,6 +69,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
         </section>
         <section className="flex flex-col gap-lv-5">
           <FilterSection<IAccountBookWithTeam[]>
+            key={refreshKey}
             className="mt-2"
             apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
             params={{ userId: userAuth?.id }}
