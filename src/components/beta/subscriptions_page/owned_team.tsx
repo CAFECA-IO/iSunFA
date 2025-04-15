@@ -5,7 +5,7 @@ import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscrip
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
-import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
@@ -134,7 +134,7 @@ const OwnedTeam = ({
                       {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
                     </span>{' '}
                     <span className="text-2xl font-semibold leading-8 text-neutral-600">
-                      {formatTimestamp(team.expiredTimestamp)}
+                      {timestampToString(team.expiredTimestamp).dateWithSlash}
                     </span>
                   </p>
                   {setTeamForCancelSubscription && (
