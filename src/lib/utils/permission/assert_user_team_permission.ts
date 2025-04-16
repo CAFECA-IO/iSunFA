@@ -1,4 +1,4 @@
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { convertTeamRoleCanDo, getGracePeriodInfo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import prisma from '@/client';
@@ -37,7 +37,6 @@ export async function assertUserIsTeamMember(
   teamId: number
 ): Promise<TeamMemberRoleInfo> {
   const nowInSecond = Math.floor(Date.now() / 1000);
-  const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
 
   const member = await prisma.teamMember.findFirst({
     where: {
@@ -74,9 +73,7 @@ export async function assertUserIsTeamMember(
 
   const { role, team } = member;
   const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
-  const gracePeriodEndAt = expiredAt + THREE_DAYS_IN_SECONDS;
-
-  const inGracePeriod = expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
+  const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
   const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
 
   return {

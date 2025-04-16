@@ -78,6 +78,8 @@ enum ErrorCode {
   TRANSFER_RECORD_IS_CANCELLED = '409ISF0009',
   TRANSFER_RECORD_IS_DECLINED = '409ISF0010',
   TRANSFER_RECORD_IS_FAILED = '409ISF0011',
+  ACCOUNT_BOOK_ALREADY_TRANSFERRING = '409ISF0012',
+  TEAM_PLAN_INVALID = '409ISF0013',
 }
 
 enum SuccessMessage {
@@ -160,6 +162,8 @@ enum ErrorMessage {
   TRANSFER_RECORD_IS_CANCELLED = 'Transfer record is cancelled',
   TRANSFER_RECORD_IS_DECLINED = 'Transfer record is declined',
   TRANSFER_RECORD_IS_FAILED = 'Transfer record is failed',
+  ACCOUNT_BOOK_ALREADY_TRANSFERRING = 'Account book is already transferring',
+  TEAM_PLAN_INVALID = 'Team plan invalid',
 }
 
 export const STATUS_MESSAGE = {

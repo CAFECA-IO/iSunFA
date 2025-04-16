@@ -17,6 +17,7 @@ import {
   assertUserCan,
   assertUserIsTeamMember,
 } from '@/lib/utils/permission/assert_user_team_permission';
+import { getGracePeriodInfo } from '@/lib/shared/permission';
 
 export const getTeamList = async (
   userId: number,
@@ -81,10 +82,7 @@ export const getTeamList = async (
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
       const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
-      const gracePeriodEndAt = expiredAt + THREE_DAYS_IN_SECONDS;
-      const inGracePeriod =
-        expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
-
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
       if (syncSession) {
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
@@ -164,8 +162,7 @@ export const createTeamWithTrial = async (
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
     const expired = getUnixTime(addMonths(now, 1));
-    const gracePeriodEndAt = expired + 3 * 24 * 60 * 60;
-
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     const plan = await tx.teamPlan.findFirst({
       where: {
         type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
@@ -279,7 +276,7 @@ export const createTeamWithTrial = async (
         editable: true,
       },
       expiredAt: expired,
-      inGracePeriod: false,
+      inGracePeriod,
       gracePeriodEndAt,
     };
   });
@@ -305,7 +302,7 @@ export const createTeam = async (
     const now = new Date();
     const nowInSecond = getUnixTime(now);
     const expired = getUnixTime(addMonths(now, 1));
-    const gracePeriodEndAt = expired + 3 * 24 * 60 * 60;
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
 
     // Info: (20250304 - Tzuhan) 2. 取得 `planId`
     const plan = await tx.teamPlan.findFirst({
@@ -422,7 +419,7 @@ export const createTeam = async (
         editable: true,
       },
       expiredAt: expired,
-      inGracePeriod: false,
+      inGracePeriod,
       gracePeriodEndAt,
     };
   });
@@ -638,9 +635,7 @@ export const getTeamsByUserIdAndTeamIds = async (
     const expiredAt = subscription?.expiredDate ?? 0;
     const planType = (member.team.subscriptions[0]?.plan?.type as TPlanType) ?? TPlanType.BEGINNER;
 
-    const gracePeriodEndAt = expiredAt + THREE_DAYS_IN_SECONDS;
-    const inGracePeriod =
-      expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
     const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
     const effectiveRole = isExpired ? TeamRole.VIEWER : actualRole;
 
