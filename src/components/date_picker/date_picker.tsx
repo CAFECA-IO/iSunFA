@@ -568,7 +568,7 @@ const DatePicker = ({
       className={cn('relative flex w-full flex-col gap-8px max-md:max-w-full', datePickerClassName)}
     >
       {/* Info: (20240417 - Shirley) Select Period button */}
-      {/* Info: (20250416 - Anna) 新增標籤 */}
+      {/* Info: (20250416 - Anna) 標籤 */}
       {label && (
         <p className="text-sm font-semibold text-neutral-300">
           {t(`date_picker:DATE_PICKER.${label.toUpperCase()}`)}

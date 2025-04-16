@@ -52,7 +52,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
         }
       }}
     >
-      {/* Info: (20240924 - tzuhan) CheckBox */}
+      {/* Info: (20240924 - Anna) CheckBox */}
       {activeSelection && (
         <BorderCell isSelected={certificate.isSelected} className="max-w-32px px-8px">
           <div

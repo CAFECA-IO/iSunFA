@@ -12,8 +12,8 @@ interface OutputCertificateTableProps {
   activeTab: InvoiceTabs;
   certificates: ICertificateUI[];
   currencyAlias: CurrencyType;
-  activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態 // Info: (20240923 - tzuhan) 選中的項目 ID 列表
-  handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - tzuhan) 當選擇變更時的回調函數
+  activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
+  handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
   handleSelectAll: () => void;
   isSelectedAll: boolean;
   onEdit: (id: number) => void;
@@ -41,13 +41,13 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceNoSort, // Info: (20250416 - Anna)
-  invoiceTypeSort, // Info: (20250416 - Anna)
+  invoiceNoSort,
+  invoiceTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceNoSort, // Info: (20250416 - Anna)
-  setInvoiceTypeSort, // Info: (20250416 - Anna)
+  setInvoiceNoSort,
+  setInvoiceTypeSort,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -57,8 +57,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null); // Info: (20250416 - Anna)
-      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
@@ -69,8 +69,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null); // Info: (20250416 - Anna)
-      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
@@ -81,12 +81,12 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setInvoiceNoSort(null); // Info: (20250416 - Anna)
-      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
-  // Info: (20250416 - Anna)
+  // Info: (20250416 - Anna) 憑證號碼表頭
   const displayedInvoiceNo = SortingButton({
     string: t('certificate:TABLE.INVOICE_NUMBER'),
     sortOrder: invoiceNoSort,
@@ -99,7 +99,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     },
   });
 
-  // Info: (20250416 - Anna)
+  // Info: (20250416 - Anna) 憑證類型表頭
   const displayedInvoiceType = SortingButton({
     string: t('certificate:TABLE.INVOICE_TYPE'),
     sortOrder: invoiceTypeSort,
@@ -113,9 +113,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   });
 
   return (
-    // Info: (20241210 - tzuhan) 隱藏 scrollbar
-    // Deprecate: (20241211 tzuhan) remove eslint-disable
-    // eslint-disable-next-line tailwindcss/no-custom-classname
+    // Info: (20241210 - Anna) 隱藏 scrollbar
     <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
       <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
         <div className="table-header-group w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
@@ -134,13 +132,9 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
               {displayedIssuedDate}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              {/* Info: (20250416 - Anna) */}
-              {/* <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div> */}
               {displayedInvoiceNo}
             </div>
             <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {/* Info: (20250416 - Anna) */}
-              {/* {t('certificate:TABLE.INVOICE_TYPE')} */}
               {displayedInvoiceType}
             </div>
 
@@ -164,7 +158,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
         </div>
 
         <div className="table-row-group">
-          {/* Deprecated: (20240919 - tzuhan) Example of dynamic rows, should map actual data here */}
+          {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <OutputCertificateItem
               currencyAlias={currencyAlias}

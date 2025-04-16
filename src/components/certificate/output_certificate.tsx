@@ -37,7 +37,6 @@ interface OutputCertificateProps {
 }
 
 // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
-
 const OutputCertificate: React.FC<OutputCertificateProps> = ({
   activeTab,
   page,
@@ -57,13 +56,13 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceNoSort, // Info: (20250416 - Anna)
-  invoiceTypeSort, // Info: (20250416 - Anna)
+  invoiceNoSort,
+  invoiceTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceNoSort, // Info: (20250416 - Anna)
-  setInvoiceTypeSort, // Info: (20250416 - Anna)
+  setInvoiceNoSort,
+  setInvoiceTypeSort,
 }) => {
   return (
     <>
@@ -80,13 +79,13 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
           dateSort={dateSort}
           amountSort={amountSort}
           voucherSort={voucherSort}
-          invoiceNoSort={invoiceNoSort} // Info: (20250416 - Anna)
-          invoiceTypeSort={invoiceTypeSort} // Info: (20250416 - Anna)
+          invoiceNoSort={invoiceNoSort}
+          invoiceTypeSort={invoiceTypeSort}
           setDateSort={setDateSort}
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
-          setInvoiceNoSort={setInvoiceNoSort} // Info: (20250416 - Anna)
-          setInvoiceTypeSort={setInvoiceTypeSort} // Info: (20250416 - Anna)
+          setInvoiceNoSort={setInvoiceNoSort}
+          setInvoiceTypeSort={setInvoiceTypeSort}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (

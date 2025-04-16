@@ -182,6 +182,8 @@
   },
   "OUTPUT_CERTIFICATE": {
     "OUTPUT_CERTIFICATE": "Output Certificate",
-    "MARK_RETURN_OR_ALLOWANCE": "Mark as return or allowance"
+    "MARK_RETURN_OR_ALLOWANCE": "Mark as return or allowance",
+    "PREVIOUS": "Previous",
+    "NEXT": "Next"
   }
 }

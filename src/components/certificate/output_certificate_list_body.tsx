@@ -46,10 +46,9 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
-  ); // Info: (20241128 - Murky) @tzuhan 這邊會回傳成功被刪掉的certificate
+  ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  // const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
 
@@ -62,8 +61,6 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     withoutVoucher: 0,
   });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
-  // Info: (20250416 - Anna) 新的設計稿沒有 viewType 和 viewToggleHandler
-  // const [viewType, setViewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
   const [viewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -91,7 +88,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     return editingId ? certificates.find((certificate) => certificate.id === editingId) : undefined;
   }, [editingId, certificates]);
 
-  // Info: (20241204 - tzuhan) 通用文件狀態更新函數
+  // Info: (20241204 - Anna) 通用文件狀態更新函數
   const updateFileStatus = (
     fileId: number | null,
     fileName: string,
@@ -110,12 +107,12 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     );
   };
 
-  // Info: (20241204 - tzuhan) 暫停文件上傳
+  // Info: (20241204 - Anna) 暫停文件上傳
   const pauseFileUpload = useCallback((fileId: number | null, fileName: string) => {
     updateFileStatus(fileId, fileName, ProgressStatus.PAUSED);
   }, []);
 
-  // Info: (20241204 - tzuhan) 刪除文件
+  // Info: (20241204 - Anna) 刪除文件
   const deleteFile = useCallback((fileId: number | null, fileName: string) => {
     setFiles((prev) =>
       prev.filter((f) => (f.id && fileId && f.id !== fileId) || f.name !== fileName)
@@ -179,21 +176,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     },
   ]);
 
-  // {
-  //   totalInvoicePrice: number;
-  //   unRead: {
-  //     withVoucher: number;
-  //     withoutVoucher: number;
-  //   };
-  //   currency: string;
-  //   certificates: ICertificate[];
-  // }
-
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<ICertificate[]>) => {
-      // Info: (20250415 - Anna) 打印整份 API 回傳資料
-      // eslint-disable-next-line no-console
-      console.log('📦 CERTIFICATE_LIST_V2 回傳資料:', resData);
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalInvoicePrice: number;
@@ -255,7 +239,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, selectedCertificates]
   );
 
-  // Info: (20240920 - tzuhan) 全選操作
+  // Info: (20240920 - Anna) 全選操作
   const handleSelectAll = useCallback(() => {
     const ids = certificates
       .filter((certificate) => {
@@ -400,9 +384,6 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          // Deprecate: (20241218 - tzuhan) Debugging purpose
-          // eslint-disable-next-line no-console
-          console.log('updatedCertificate', updatedCertificate);
           let updatedData: ICertificateUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
@@ -415,20 +396,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
               ],
             };
-            // Deprecate: (20241218 - tzuhan) Debugging purpose
-            // eslint-disable-next-line no-console
-            console.log(
-              `updatedData[certificate.id:${certificate.id}]`,
-              updatedData[certificate.id]
-            );
             return updatedData;
           });
-          // toastHandler({
-          //   id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
-          //   type: ToastType.SUCCESS,
-          //   content: t('certificate:EDIT.SUCCESS'),
-          //   closeable: true,
-          // });
         } else {
           toastHandler({
             id: ToastId.UPDATE_CERTIFICATE_ERROR,
@@ -534,9 +503,6 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
-          //   certificate={
-          //     editingId ? certificates.find((certificate) => certificate.id === editingId) : undefined
-          //   }
           certificate={currentEditingCertificate}
           onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
@@ -546,19 +512,19 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           setEditingId={setEditingId} // Info: (20250415 - Anna) 前後筆切換時用
         />
       )}
-      {/* Info: (20240919 - tzuhan) Main Content */}
+      {/* Info: (20240919 - Anna) Main Content */}
       <div
-        // Info: (20241210 - tzuhan) 隱藏 scrollbar
+        // Info: (20241210 - Anna) 隱藏 scrollbar
         className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
-        {/* Info: (20240919 - tzuhan) Upload Area */}
+        {/* Info: (20240919 - Anna) Upload Area */}
         <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
         <FloatingUploadPopup
           files={files}
           pauseFileUpload={pauseFileUpload}
           deleteFile={deleteFile}
         />
-        {/* Info: (20240919 - tzuhan) Tabs */}
+        {/* Info: (20240919 - Anna) Tabs */}
         <Tabs
           tabs={Object.values(InvoiceTabs)}
           tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
@@ -567,7 +533,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           counts={unRead ? [unRead.withoutVoucher, unRead.withVoucher] : [0, 0]}
         />
 
-        {/* Info: (20240919 - tzuhan) Filter Section */}
+        {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
           params={{ companyId }}
@@ -576,7 +542,6 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
-          // types={Object.values(InvoiceType)}
           types={[
             InvoiceType.ALL,
             InvoiceType.SALES_TRIPLICATE_INVOICE,
@@ -586,18 +551,11 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
             InvoiceType.SALES_NON_UNIFORM_INVOICE,
           ]}
-          // Info: (20250416 - Anna) 新的設計稿沒有 viewType 和 viewToggleHandler
-          // viewType={viewType}
-          // viewToggleHandler={setViewType}
-          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
-          dateSort={dateSort}
-          otherSorts={otherSorts}
-          */
           sort={selectedSort}
           labelClassName="text-neutral-300"
         />
 
-        {/* Info: (20240919 - tzuhan) Certificate Table */}
+        {/* Info: (20240919 - Anna) Certificate Table */}
         {Object.values(certificates) && Object.values(certificates).length > 0 ? (
           <>
             <SelectionToolbar

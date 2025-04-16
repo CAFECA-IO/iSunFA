@@ -77,8 +77,8 @@ const Magnifier: React.FC<MagnifierProps> = ({
         ref={imgRef}
         src={imageUrl}
         alt="Zoomable"
-        width={450} // Todo: (20250414 - Anna) 先給一個，排除錯誤
-        height={650} // Todo: (20250414 - Anna) 先給一個，排除錯誤
+        width={450} // Info: (20250414 - Anna) 憑證寬度
+        height={650} // Info: (20250414 - Anna) 憑證高度
         className="mx-auto h-auto max-h-full max-w-full select-none object-contain"
         priority
       />

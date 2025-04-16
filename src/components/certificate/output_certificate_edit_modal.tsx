@@ -21,8 +21,6 @@ import EditableFilename from '@/components/certificate/edible_file_name';
 import Magnifier from '@/components/magnifier/magifier';
 import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
-// Info: (20250414 - Anna)
-// import { IAccountingSetting, ITaxSetting } from '@/interfaces/accounting_setting';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
@@ -57,10 +55,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   editingId,
   setEditingId,
 }) => {
-  // Info: (20250415 - Anna) 過濾憑證類型
-  //   const selectableInvoiceType = Object.values(InvoiceType).filter(
-  //     (type) => type !== InvoiceType.ALL
-  //   );
   const selectableInvoiceType: InvoiceType[] = [
     InvoiceType.SALES_TRIPLICATE_INVOICE,
     InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
@@ -71,8 +65,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  // Info: (20250414 - Anna)
-  //   const [taxSetting, setTaxSetting] = useState<ITaxSetting>();
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
@@ -92,12 +84,10 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
-  //  const [isAddCounterPartyModalOpen, setIsAddCounterPartyModalOpen] = useState(false);
   const [formState, setFormState] = useState(
     () =>
       ({
         // Info: (20250414 - Anna) 這個組件改為全為銷項
-        // inputOrOutput: certificate.invoice.inputOrOutput ?? InvoiceTransactionDirection.INPUT,
         inputOrOutput: InvoiceTransactionDirection.OUTPUT,
         date: certificate.invoice.date,
         no: certificate.invoice.no,
@@ -110,20 +100,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         deductible: certificate.invoice.deductible,
       }) as IInvoiceBetaOptional
   );
-  // Info: (20250416 - Anna) 不要跳出錯誤警示，讓使用者順順填完
-  // const [errors, setErrors] = useState<Record<string, string>>({});
   const [errors] = useState<Record<string, string>>({});
   const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
-
-  // Info: (20250414 - Anna) 紀錄是否「已經打過一次保存的 API」
-  //   const [hasSavedOnce, setHasSavedOnce] = useState(false);
 
   const formStateRef = useRef(formState);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
     // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
-    // const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formState;
     const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
@@ -139,8 +124,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
-    // Info: (20250416 - Anna) 不要跳出錯誤警示，讓使用者順順填完
-    // setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -162,7 +145,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       // Info: (20250416 - Anna) 每次輸入都重置 debounce timer
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-      // setFormState((prev) => ({ ...prev, [field]: value }));
       setFormState((prev) => {
         const updated = { ...prev, [field]: value };
         formStateRef.current = updated; // Info: (20250416 - Anna) 同步更新 Ref
@@ -177,21 +159,11 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       params: { companyId },
     });
     if (success && data) {
-      // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，稅率選單不會再變動
-      //   setTaxSetting(data.taxSettings);
       if (formState.taxRatio === undefined) {
         // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，所以不需再判斷 if (formState.inputOrOutput === OUTPUT)
-
-        // if (formState.inputOrOutput === InvoiceTransactionDirection.OUTPUT) {
-        //   handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
-        // } else {
-        //   handleInputChange('taxRatio', 0);
-        // }
         handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
       }
     }
-    // Info: (20250414 - Anna) 因為這個組件改為全為銷項，所以移除inputOrOutput、formState 依賴
-    //   }, [companyId, formState, formState.taxRatio]);
   }, [companyId, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
@@ -248,9 +220,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   };
 
   const selectTaxHandler = (value: number | null) => {
-    // Deprecated: (20250103 - tzuhan) Debug purpose
-    // eslint-disable-next-line no-console
-    console.log(`selectTaxHandler value:`, value);
     handleInputChange('taxRatio', value);
     const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * (value ?? 0)) / 100);
     handleInputChange('taxPrice', updateTaxPrice);
@@ -283,24 +252,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     ...invoiceTracks.D,
   ];
 
-  // Info: (20240924 - tzuhan) 處理保存
-  //   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-  //     event.preventDefault();
-  //     if (!validateForm()) return;
-  //     const updatedData: ICertificate = {
-  //       ...certificate,
-  //       invoice: {
-  //         ...certificate.invoice,
-  //         ...formStateRef.current,
-  //       },
-  //     };
-  //     await onSave(updatedData);
-  //     toggleModel();
-  //     if (counterpartyInputRef.current) {
-  //       counterpartyInputRef.current.triggerSearch();
-  //     }
-  //   };
-
+  // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
   const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
     const keys1 = Object.keys(obj1);
@@ -336,8 +288,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       ...certificate,
       invoice: updatedInvoice,
     };
-    // eslint-disable-next-line no-console
-    console.log('📤 Calling onSave with:', updatedData);
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
@@ -358,10 +308,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   useEffect(() => {
     // Info: (20250414 - Anna) 確保 savedInvoiceRef.current 被正確初始化為 certificate.invoice
     if (certificate?.invoice) {
-      // eslint-disable-next-line no-console
-      console.log('📌 Initialize savedInvoiceRef with:', certificate.invoice);
-      // eslint-disable-next-line no-console
-      console.log('📷 憑證圖片網址:', certificate.file.url);
       savedInvoiceRef.current = certificate.invoice;
     }
   }, [certificate?.invoice]);
@@ -381,25 +327,11 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     // Info: (20250414 - Anna) 取消上一次的 debounce 任務（如果還沒執行），避免重複打 API
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-    // Todo: (20250414 - Anna) 下面只是Debug，要再解開原本的
-    //     debounceTimer.current = setTimeout(() => {
-    //       if (!shallowEqual(formStateRef.current, savedInvoiceRef.current) && validateForm()) {
-    //         handleSave(); // Info: (20250414 - Anna) 只有在資料變了、且通過驗證才打 API
-    //       }
-    //     }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
-    //   }, [formState]);
-
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedInvoiceRef.current);
       const isValid = validateForm();
-      // eslint-disable-next-line no-console
-      console.log('📌 shallowEqual result:', isSame);
-      // eslint-disable-next-line no-console
-      console.log('📌 validateForm result:', isValid);
 
       if (!isSame && isValid) {
-        // eslint-disable-next-line no-console
-        console.log('✅ Trigger handleSave');
         handleSave();
       }
     }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
@@ -443,11 +375,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     };
 
     // Info: (20250415 - Anna) Debug 日期內容
-    // eslint-disable-next-line no-console
-    console.log('📌 切換的 date 是:', certificateDate);
-    // eslint-disable-next-line no-console
-    console.log('📅 對應時間:', new Date((certificateDate ?? 0) * 1000));
-
     if (certificateDate) {
       setDate({
         startTimeStamp: certificateDate,
@@ -465,10 +392,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     } else {
       setIsReturnOrAllowance(false);
     }
-
-    // Info: (20250415 - Anna) Debug
-    // eslint-disable-next-line no-console
-    console.log('📌 useEffect - 切換前後筆的 ID:', certificate.id);
   }, [certificate, editingId]);
 
   return (
@@ -477,7 +400,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     >
       <form
         className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
-        // onSubmit={handleSave}
         onSubmit={(e) => e.preventDefault()} // Info: (20250414 - Anna) 防止表單預設行為
       >
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
@@ -591,7 +513,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               ) : (
                 // Info: (20250415 - Anna) 其他憑證類型的UI
                 <div className="flex w-full items-center">
-                  {/* Info: (20250415 - Anna) 輸入發票前綴，如果最終改為不用下拉選單，可以解開這個 */}
+                  {/* Info: (20250415 - Anna) 輸入發票前綴，如果改為不用下拉選單，可以解開這個 */}
                   {/* <input
                     id="invoice-prefix"
                     type="text"
@@ -676,7 +598,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
               counterpartyList={counterpartyList}
-              //   onSelect={(cp: ICounterpartyOptional) => handleInputChange('counterParty', cp)}
               onSelect={(cp: ICounterpartyOptional) => {
                 if (cp && cp.name) {
                   handleInputChange('counterParty', cp);
@@ -860,16 +781,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </Button>
           )}
           <div className="ml-auto flex items-center gap-4">
-            {/* Info: (20250415 - Anna) 取消 按鈕改成「上一筆」 */}
-            {/* <Button
-              id="certificate-cancel-btn"
-              type="button"
-              className="px-16px py-8px"
-              onClick={toggleModel}
-              variant="tertiaryOutline"
-            >
-              <p>{t('common:COMMON.CANCEL')}</p>
-            </Button> */}
+            {/* Info: (20250415 - Anna) 上一筆 */}
             <Button
               type="button"
               disabled={!hasPrev}
@@ -878,18 +790,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               className="px-16px py-8px"
             >
               <IoArrowBackOutline size={20} />
-              <p>上一筆</p>
+              <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
             </Button>
-            {/* Info: (20250415 - Anna) Save 按鈕改成「下一筆」 */}
-            {/* <Button
-              id="certificate-save-btn"
-              type="submit"
-              variant="tertiary"
-              className="px-16px py-8px"
-            >
-              <p>{t('common:COMMON.SAVE')}</p>
-              <BiSave size={20} />
-            </Button> */}
+            {/* Info: (20250415 - Anna) 下一筆 */}
             <Button
               onClick={() => setEditingId(certificates[currentIndex + 1].id)}
               type="button"
@@ -897,7 +800,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               variant="tertiary"
               className="px-16px py-8px"
             >
-              <p>下一筆</p>
+              <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
               <IoArrowForward size={20} />
             </Button>
           </div>
