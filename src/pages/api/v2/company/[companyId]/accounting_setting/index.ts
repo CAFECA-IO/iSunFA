@@ -71,12 +71,37 @@ const handleGetRequest: IHandleRequest<
 const handlePutRequest: IHandleRequest<
   APIName.ACCOUNTING_SETTING_UPDATE,
   IAccountingSetting
-> = async ({ query, body }) => {
+> = async ({ query, body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountingSetting | null = null;
 
   const { companyId } = query;
   const accountingSetting = body;
+  const { teams } = session;
+  // Info: (20250416 - Shirley) 添加權限檢查邏輯，與 GET 請求保持一致
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   try {
     const updatedAccountingSetting = await updateAccountingSettingById(
