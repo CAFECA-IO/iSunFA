@@ -26,68 +26,62 @@ async function handleAssetExport(
   res: NextApiResponse,
   body: IAssetExportRequestBody
 ): Promise<void> {
-  try {
-    const { fileType, filters, sort, options } = body;
+  const { fileType, filters, sort, options } = body;
 
-    const { companyId } = req.query;
-    if (!companyId || typeof companyId !== 'string') {
-      throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
-    }
-
-    const parsedCompanyId = parseInt(companyId, 10);
-
-    const assets = await exportAssets(
-      {
-        filters,
-        sort,
-        options,
-        fileType,
-      },
-      parsedCompanyId
-    );
-
-    let processedAssets = assets;
-    const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
-
-    if (options?.fields) {
-      processedAssets = selectFields(
-        processedAssets,
-        options.fields as (keyof AssetHeader)[]
-      ) as typeof assets;
-    }
-
-    const newData = processedAssets.map((asset) => {
-      const formattedDate = formatTimestampByTZ(
-        asset.acquisitionDate,
-        options?.timezone || DEFAULT_TIMEZONE,
-        'YYYY-MM-DD'
-      );
-
-      return {
-        ...asset,
-        acquisitionDate: formattedDate,
-        number: asset.number,
-      };
-    });
-
-    const fields: (keyof AssetHeader)[] =
-      (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;
-
-    const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
-      fields,
-      newData as AssetHeaderWithStringDate[],
-      AssetFieldsMap
-    );
-
-    const fileName = `assets_${getTimestampNow()}.csv`;
-
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.status(200).send(csv);
-  } catch (error) {
-    const err = error as Error;
-    throw err;
+  const { companyId } = req.query;
+  if (!companyId || typeof companyId !== 'string') {
+    throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
   }
+
+  const parsedCompanyId = parseInt(companyId, 10);
+
+  const assets = await exportAssets(
+    {
+      filters,
+      sort,
+      options,
+      fileType,
+    },
+    parsedCompanyId
+  );
+
+  let processedAssets = assets;
+  const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
+
+  if (options?.fields) {
+    processedAssets = selectFields(
+      processedAssets,
+      options.fields as (keyof AssetHeader)[]
+    ) as typeof assets;
+  }
+
+  const newData = processedAssets.map((asset) => {
+    const formattedDate = formatTimestampByTZ(
+      asset.acquisitionDate,
+      options?.timezone || DEFAULT_TIMEZONE,
+      'YYYY-MM-DD'
+    );
+
+    return {
+      ...asset,
+      acquisitionDate: formattedDate,
+      number: asset.number,
+    };
+  });
+
+  const fields: (keyof AssetHeader)[] = (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;
+
+  const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
+    fields,
+    newData as AssetHeaderWithStringDate[],
+    AssetFieldsMap
+  );
+
+  const fileName = `assets_${getTimestampNow()}.csv`;
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+  res.status(200).send(csv);
 }
 
 const methodHandlers: {
@@ -116,6 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isAuth = await checkUserAuthorization(APIName.ASSET_LIST_EXPORT, req, session);
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
     }
 
     const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req, session);
@@ -127,7 +122,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const { companyId } = req.query;
     if (!companyId || typeof companyId !== 'string') {
-      throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
+      statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
+      throw new Error(statusMessage);
     }
 
     const { teams } = await getSession(req);
@@ -135,31 +131,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
     const company = await getCompanyById(+companyId);
     if (!company) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      throw new Error(statusMessage);
     }
 
     const { teamId: companyTeamId } = company;
     if (!companyTeamId) {
-      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      throw new Error(statusMessage);
     }
 
     const userTeam = teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
     }
 
     const assertResult = convertTeamRoleCanDo({
       teamRole: userTeam?.role as TeamRole,
-      canDo: TeamPermissionAction.BOOKKEEPING,
+      canDo: TeamPermissionAction.VIEW_ASSETS,
     });
 
     if (!assertResult.can) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
     }
 
     res.setHeader('Content-Type', 'text/csv');
     if (!res.getHeader('Content-Type') || res.getHeader('Content-Type') !== 'text/csv') {
-      throw new Error(STATUS_MESSAGE.INVALID_CONTENT_TYPE);
+      statusMessage = STATUS_MESSAGE.INVALID_CONTENT_TYPE;
+      throw new Error(statusMessage);
     }
 
     const handleRequest = methodHandlers[req.method || ''];
@@ -172,7 +173,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const responseBody = res.getHeader('Content-Disposition');
     if (!responseBody || typeof responseBody !== 'string' || !responseBody.endsWith('.csv"')) {
-      throw new Error(STATUS_MESSAGE.INVALID_FILE_FORMAT);
+      statusMessage = STATUS_MESSAGE.INVALID_FILE_FORMAT;
+      throw new Error(statusMessage);
     }
   } catch (error) {
     const err = error as Error;
