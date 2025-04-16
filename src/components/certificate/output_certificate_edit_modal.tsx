@@ -116,9 +116,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   // Info: (20250414 - Anna) 紀錄是否「已經打過一次保存的 API」
   //   const [hasSavedOnce, setHasSavedOnce] = useState(false);
 
+  const formStateRef = useRef(formState);
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formState;
+    // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
+    // const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formState;
+    const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_DATE');
@@ -137,6 +141,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Info: (20250414 - Anna) 用來記錄 setTimeout 的任務 ID，供 debounce 清除使用
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+
   const handleInputChange = useCallback(
     (
       field: keyof typeof formState,
@@ -149,7 +156,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         | boolean
         | null
     ) => {
-      setFormState((prev) => ({ ...prev, [field]: value }));
+      // Info: (20250416 - Anna) 每次輸入都重置 debounce timer
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+      // setFormState((prev) => ({ ...prev, [field]: value }));
+      setFormState((prev) => {
+        const updated = { ...prev, [field]: value };
+        formStateRef.current = updated; // Info: (20250416 - Anna) 同步更新 Ref
+        return updated;
+      });
     },
     []
   );
@@ -214,8 +229,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     setIsReturnOrAllowance(false);
   };
 
-  const formStateRef = useRef(formState);
-
   // Info: (20250415 - Anna) 點選發票前綴的選項
   const invoicePrefixOptionClickHandler = (prefix: string) => {
     const latestNo = formStateRef.current.no ?? '';
@@ -256,9 +269,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   const currencyAliasStr = t(
     `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
-
-  // Info: (20250414 - Anna) 用來記錄 setTimeout 的任務 ID，供 debounce 清除使用
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Todo: (20250415 - Anna) 發票前綴選單假資料
   const InvoiceNumberPrefix = ['AB', 'CD'];
