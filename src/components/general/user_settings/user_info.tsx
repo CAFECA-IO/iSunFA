@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { FiLink, FiMail } from 'react-icons/fi';
 import { TbUserCircle } from 'react-icons/tb';
 import { Button } from '@/components/button/button';
-import IPModal, { extractLoginDevice } from '@/components/user_settings/ip_modal';
+import IPModal, { extractLoginDevice } from '@/components/general/user_settings/ip_modal';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ILoginDevice } from '@/interfaces/login_device';
 

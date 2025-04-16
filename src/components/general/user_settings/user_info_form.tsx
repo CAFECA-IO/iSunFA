@@ -9,9 +9,9 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
 import { Button } from '@/components/button/button';
-import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
-import SelectLanguageDropdown from '@/components/user_settings/select_language_dropdown';
-import PhoneNumberInput from '@/components/user_settings/phone_number_input';
+import SelectCountryDropdown from '@/components/general/user_settings/select_country_dropdown';
+import SelectLanguageDropdown from '@/components/general/user_settings/select_language_dropdown';
+import PhoneNumberInput from '@/components/general/user_settings/phone_number_input';
 import { toConstantCase } from '@/lib/utils/common';
 
 interface UserInfoFormProps {
