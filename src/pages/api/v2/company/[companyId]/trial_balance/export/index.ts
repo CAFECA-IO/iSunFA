@@ -27,6 +27,10 @@ import { SortOrder } from '@/constants/sort';
 import { ILineItemInTrialBalanceItem } from '@/interfaces/trial_balance';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { parseSortOption } from '@/lib/utils/sort';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
   const { fileType, filters, options } = req.body;
@@ -111,6 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isAuth = await checkUserAuthorization(APIName.TRIAL_BALANCE_EXPORT, req, session);
     if (!isAuth) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
     }
 
     const { query, body } = checkRequestData(APIName.TRIAL_BALANCE_EXPORT, req, session);
@@ -119,9 +124,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(statusMessage);
     }
 
+    const { companyId } = req.query;
+    if (!companyId || typeof companyId !== 'string') {
+      statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
+      throw new Error(statusMessage);
+    }
+
+    const { teams } = session;
+
+    const company = await getCompanyById(+companyId);
+    if (!company) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      throw new Error(statusMessage);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      throw new Error(statusMessage);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.VIEW_TRIAL_BALANCE,
+    });
+
+    if (!assertResult.can) {
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      throw new Error(statusMessage);
+    }
+
     res.setHeader('Content-Type', 'text/csv');
     if (!res.getHeader('Content-Type') || res.getHeader('Content-Type') !== 'text/csv') {
-      throw new Error(STATUS_MESSAGE.INVALID_CONTENT_TYPE);
+      statusMessage = STATUS_MESSAGE.INVALID_CONTENT_TYPE;
+      throw new Error(statusMessage);
     }
 
     const handleRequest = methodHandlers[req.method || ''];
@@ -134,7 +176,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const responseBody = res.getHeader('Content-Disposition');
     if (!responseBody || typeof responseBody !== 'string' || !responseBody.endsWith('.csv"')) {
-      throw new Error(STATUS_MESSAGE.INVALID_FILE_FORMAT);
+      statusMessage = STATUS_MESSAGE.INVALID_FILE_FORMAT;
+      throw new Error(statusMessage);
     }
   } catch (error) {
     const err = error as Error;
