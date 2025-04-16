@@ -41,11 +41,13 @@ export enum TeamPermissionAction {
 
   // Info: (20250313 - Tzuhan) 變更角色
   CHANGE_TEAM_ROLE = 'CHANGE_TEAM_ROLE', // Info: (20250320 - Liz) 編輯成員權限
-}
 
-export interface IWhatTeamRoleCanDo {
-  teamRole: TeamRole;
-  canDo: TeamPermissionAction;
+  CREATE_VOUCHER = 'CREATE_VOUCHER',
+  MODIFY_VOUCHER = 'MODIFY_VOUCHER',
+  DELETE_VOUCHER = 'DELETE_VOUCHER',
+  RESTORE_VOUCHER = 'RESTORE_VOUCHER',
+  VIEW_VOUCHER_LIST = 'VIEW_VOUCHER_LIST',
+  VIEW_VOUCHER = 'VIEW_VOUCHER',
 }
 
 export interface IResolvedTeamPermission {

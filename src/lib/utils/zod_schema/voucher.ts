@@ -44,6 +44,7 @@ import { isUserReadCertificate } from '@/lib/utils/user_certificate';
 import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
+import loggerBack from '@/lib/utils/logger_back';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -313,6 +314,10 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
     data: parsedVouchers,
     note: data.note,
   };
+
+  loggerBack.info(
+    `voucherGetAllOutputValidatorV2: ${JSON.stringify(data.note)},  ${JSON.stringify(parsedData)}`
+  );
   return parsedData;
 });
 

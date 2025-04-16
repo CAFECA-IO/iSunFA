@@ -1,51 +1,104 @@
-// ToDo: (20241029 - Murky) 記得刪掉上面這一段
+// Info: (20250416 - Tzuhan) Voucher List API handler 改寫為統一風格
 import { NextApiRequest, NextApiResponse } from 'next';
-
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import { getSession } from '@/lib/utils/session';
+import {
+  checkSessionUser,
+  checkRequestData,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   voucherAPIPostUtils as postUtils,
   voucherAPIGetUtils as getUtils,
   IGetManyVoucherBetaEntity,
 } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
-import { withRequestValidation } from '@/lib/utils/middleware';
-
-import { IHandleRequest } from '@/interfaces/handleRequest';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { initCounterPartyEntity } from '@/lib/utils/counterparty';
-import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IEventEntity } from '@/interfaces/event';
-import { IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
+import { IGetManyVoucherResponseButOne, IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { EventType, TransactionStatus } from '@/constants/account';
+import { HTTP_STATUS } from '@/constants/http';
+import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { validateOutputData } from '@/lib/utils/validator';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 type IVoucherGetOutput = IPaginatedData<IGetManyVoucherBetaEntity[]>;
 
-/**
- * Info: (20241120 - Murky)
- * @todo
- * - 需要同時滿足一般傳票回傳一般voucher和payable, receivable回傳
- * - sortBy 需要提供 issue day, total credit/total debit, payable amount, paid amount, remain amount
- * - 需要同時Post voucherRead
- * - 回傳的時候需要回傳未讀voucher數量
- */
-export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherGetOutput> = async ({
-  query,
-  session,
-}) => {
-  // ToDo: (20240927 - Murky) Remember to add auth check
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IVoucherGetOutput | null = null;
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+export const buildVoucherBeta = (
+  voucher: IGetManyVoucherResponseButOne
+): IGetManyVoucherBetaEntity => {
+  const entity = getUtils.initVoucherEntity(voucher);
 
+  const lineItems = getUtils.initLineItemAndAccountEntities(voucher);
+  const originalEvents = getUtils.initOriginalEventEntities(voucher);
+  const resultEvents = getUtils.initResultEventEntities(voucher);
+  const lineItemSum = getUtils.getLineItemAmountSum(lineItems);
+
+  const { payableInfo, receivingInfo } = getUtils.getPayableReceivableInfoFromVoucher(
+    [...originalEvents, ...resultEvents],
+    lineItems
+  );
+
+  return {
+    ...entity,
+    counterParty: getUtils.initCounterPartyEntity(voucher),
+    issuer: getUtils.initIssuerAndFileEntity(voucher),
+    readByUsers: getUtils.initUserVoucherEntities(voucher),
+    lineItems,
+    sum: {
+      debit: false,
+      amount: lineItemSum ?? 0,
+    },
+    payableInfo: {
+      total: payableInfo?.total ?? 0,
+      alreadyHappened: payableInfo?.alreadyHappened ?? 0,
+      remain: payableInfo?.remain ?? 0,
+    },
+    receivingInfo: {
+      total: receivingInfo?.total ?? 0,
+      alreadyHappened: receivingInfo?.alreadyHappened ?? 0,
+      remain: receivingInfo?.remain ?? 0,
+    },
+    originalEvents,
+    resultEvents,
+  };
+};
+
+const handleGetRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.VOUCHER_LIST_V2;
+  const session = await getSession(req);
   const { userId, companyId } = session;
+  await checkSessionUser(session, apiName, req);
+  await checkUserAuthorization(apiName, req, session);
+
+  const { can } = await assertUserCanByCompany({
+    userId,
+    companyId,
+    action: TeamPermissionAction.VIEW_VOUCHER_LIST,
+  });
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query) {
+    const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
+    throw error;
+  }
 
   const {
     page,
@@ -58,162 +111,122 @@ export const handleGetRequest: IHandleRequest<APIName.VOUCHER_LIST_V2, IVoucherG
     type,
     hideReversedRelated,
   } = query;
-  function getTypeFilter(selectedType: EventType | TransactionStatus | undefined) {
+
+  const getTypeFilter = (selectedType: EventType | TransactionStatus | undefined) => {
     switch (selectedType) {
       case EventType.INCOME:
-        return { type: EventType.INCOME, condition: undefined };
       case EventType.OPENING:
-        return { type: EventType.OPENING, condition: undefined };
       case EventType.PAYMENT:
-        return { type: EventType.PAYMENT, condition: undefined };
       case EventType.TRANSFER:
-        return { type: EventType.TRANSFER, condition: undefined };
+        return { type: selectedType, condition: undefined };
       case TransactionStatus.REVERSED:
       case TransactionStatus.PENDING:
         return { type: undefined, condition: selectedType };
       default:
         return { type: undefined, condition: undefined };
     }
-  }
-  const paginationVouchersFromPrisma = await getUtils.getVoucherListFromPrisma({
-    companyId,
-    page,
-    pageSize,
-    startDate,
-    endDate,
-    tab,
-    sortOption,
-    searchQuery,
-    type: getTypeFilter(type).type,
-    hideReversedRelated,
-  });
-  const { data: vouchersFromPrisma, where, ...pagination } = paginationVouchersFromPrisma;
+  };
+
+  let statusMessage: string = STATUS_MESSAGE.SUCCESS_LIST;
+  let payload: IPaginatedData<IVoucherBeta[]> | null = null;
+
   try {
-    const nowInSecond = getTimestampNow();
-    const voucherBetas: IGetManyVoucherBetaEntity[] = vouchersFromPrisma.map(
-      (voucherFromPrisma) => {
-        const voucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
-        const lineItemEntities = getUtils.initLineItemAndAccountEntities(voucherFromPrisma);
-        const counterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
-        const issuerEntity = getUtils.initIssuerAndFileEntity(voucherFromPrisma);
-        const readByUsers = getUtils.initUserVoucherEntities(voucherFromPrisma);
-        const sum = getUtils.getLineItemAmountSum(lineItemEntities);
-        const originalEventEntities = getUtils.initOriginalEventEntities(voucherFromPrisma);
-        const resultEventEntities = getUtils.initResultEventEntities(voucherFromPrisma);
-        const { payableInfo, receivingInfo } = getUtils.getPayableReceivableInfoFromVoucher(
-          [...originalEventEntities, ...resultEventEntities],
-          lineItemEntities
-        );
-
-        const voucherBeta: IGetManyVoucherBetaEntity = {
-          ...voucherEntity,
-          counterParty: counterPartyEntity,
-          issuer: issuerEntity,
-          readByUsers,
-          lineItems: lineItemEntities,
-          sum: {
-            debit: false, // Info: (20241104 - Murky) 這個其實永遠是false, 因為debit和credit相同, 然後總和放在credit
-            amount: sum,
-          },
-          payableInfo,
-          receivingInfo,
-          originalEvents: originalEventEntities,
-          resultEvents: resultEventEntities,
-        };
-
-        return voucherBeta;
-      }
-    );
-
-    // ToDo: (20241121 - Murky) Sort by total credit/total debit, payable amount, paid amount, remain amount
-    getUtils.sortVoucherBetaList(voucherBetas, {
-      sortOption,
+    const typeFilter = getTypeFilter(type);
+    const paginationVouchers = await getUtils.getVoucherListFromPrisma({
+      companyId,
+      page,
+      pageSize,
+      startDate,
+      endDate,
       tab,
+      sortOption,
+      searchQuery,
+      type: typeFilter.type,
+      hideReversedRelated,
     });
 
-    // ToDo: (20241121 - Murky) Get upload and upcoming unread voucher count
-    const unreadUploadedVoucherCounts = await getUtils.getUnreadVoucherCount({
-      userId,
-      where,
-      tab: VoucherListTabV2.UPLOADED,
-    });
+    const { data, where, ...pagination } = paginationVouchers;
 
-    const unreadUpcomingEventCounts = await getUtils.getUnreadVoucherCount({
-      userId,
-      where,
-      tab: VoucherListTabV2.UPCOMING,
-    });
-
-    const unreadReceivedVoucherCounts = await getUtils.getUnreadVoucherCount({
-      userId,
-      where,
-      tab: VoucherListTabV2.RECEIVING,
-    });
-
-    const unreadPayableVoucherCounts = await getUtils.getUnreadVoucherCount({
-      userId,
-      where,
-      tab: VoucherListTabV2.PAYMENT,
-    });
-    // ToDo: (20241121 - Murky) Post Read info
-    getUtils.upsertUserReadVoucher({
-      userId,
-      voucherIdsBeenRead: voucherBetas.map((voucher) => voucher.id),
-      nowInSecond,
-    });
-
-    payload = {
-      page: pagination.page,
-      totalPages: pagination.totalPages,
-      totalCount: pagination.totalCount,
-      pageSize: pagination.pageSize,
-      hasNextPage: pagination.hasNextPage,
-      hasPreviousPage: pagination.hasPreviousPage,
-      sort: sortOption,
-      data: getUtils.filterTransactionStatus(voucherBetas, tab, getTypeFilter(type).condition),
-      note: JSON.stringify({
-        unRead: {
-          uploadedVoucher: unreadUploadedVoucherCounts,
-          upcomingEvents: unreadUpcomingEventCounts,
-          paymentVoucher: unreadPayableVoucherCounts,
-          receivingVoucher: unreadReceivedVoucherCounts,
-        },
-      }),
+    const voucherBetas = data.map(buildVoucherBeta);
+    const note = {
+      unRead: {
+        uploadedVoucher: await getUtils.getUnreadVoucherCount({
+          userId,
+          where,
+          tab: VoucherListTabV2.UPLOADED,
+        }),
+        upcomingEvents: await getUtils.getUnreadVoucherCount({
+          userId,
+          where,
+          tab: VoucherListTabV2.UPCOMING,
+        }),
+        paymentVoucher: await getUtils.getUnreadVoucherCount({
+          userId,
+          where,
+          tab: VoucherListTabV2.PAYMENT,
+        }),
+        receivingVoucher: await getUtils.getUnreadVoucherCount({
+          userId,
+          where,
+          tab: VoucherListTabV2.RECEIVING,
+        }),
+      },
     };
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
+
+    const vouchers: IVoucherGetOutput = toPaginatedData({
+      ...pagination,
+      sort: sortOption,
+      data: getUtils.filterTransactionStatus(voucherBetas, tab, typeFilter.condition),
+      note: JSON.stringify(note),
+    });
+
+    const { isOutputDataValid, outputData } = validateOutputData(APIName.VOUCHER_LIST_V2, vouchers);
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    } else {
+      payload = outputData;
+    }
+  } catch (error) {
+    statusMessage = (error as Error).message;
     loggerBack.error(error);
   }
-  return {
-    statusMessage,
-    payload,
-  };
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-/**
- * Info: (20241025 - Murky)
- * @todo
- * 1. voucher, line_items, recurring_event, asset, revertVoucher 建立 isXXXExist
- * 2. line_items 不存在時直接throw error
- * 3. 將Input 依照voucher, line_items, recurring_event, asset, revertVoucher 進行拆解並建立Entity
- * 4 如果有 recurring_event 建立, upcoming_event, 並先init upcoming傳票Entity
- * 5. 如果有 asset 建立, asset_event, 並建立upcoming傳票
- * 6. 如果有 revertVoucher 建立, 建立revert_event, 並建立revert傳票
- * 7. 用Transaction包住所有的Entity, 一起建立
- * @note
- * 1. voucherNo 不可以是unique(不同公司會撞No)
- * 2. 需要Worker去把upcoming event裡的voucher轉成正式的voucher
- */
-export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucherEntity> = async ({
-  body,
-  session,
-}) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.VOUCHER_POST_V2;
+
+  const session = await getSession(req);
+  await checkSessionUser(session, apiName, req);
+  await checkUserAuthorization(apiName, req, session);
+
+  const { body } = checkRequestData(apiName, req, session);
+  if (!body) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { userId, companyId } = session;
+
+  const { can } = await assertUserCanByCompany({
+    userId,
+    companyId,
+    action: TeamPermissionAction.CREATE_VOUCHER,
+  });
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IVoucherEntity | null = null;
-  // const mockPostedVoucherId = 1002;
 
   try {
+    const nowInSecond = getTimestampNow();
+
     const {
       actions,
       certificateIds,
@@ -225,126 +238,56 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       ...voucherInfo
     } = body;
 
-    const { userId, companyId } = session;
-    // Info: (20241111 - Murky) 暫時先用1002
-
-    /**
-     * Info: (20241029 - Murky)
-     * @description all timestamp in one post use this timestamp as createdAt
-     */
-    const nowInSecond = getTimestampNow();
-
-    /**
-     * Info: (20241029 - Murky)
-     * @description Storing events throughout the process, saving to prisma in the end
-     * @property revertEvent - Revert Event Entity (if any)
-     * @property recurringEvent - Recurring Event Entity (if any)
-     * @property assetEvent - Asset Event Entity (if any)
-     */
-    const eventControlPanel: {
-      revertEvent: IEventEntity | null;
-      recurringEvent: IEventEntity | null;
-      assetEvent: IEventEntity | null;
-    } = {
+    const eventControlPanel = {
       revertEvent: null,
       recurringEvent: null,
       assetEvent: null,
+    } as {
+      revertEvent: IEventEntity | null;
+      recurringEvent: IEventEntity | null;
+      assetEvent: IEventEntity | null;
     };
 
-    // Info: (20241029 - Murky) Check which action algorithm should be executed
-    const doRevert = postUtils.isDoAction({
-      actions,
-      command: VoucherV2Action.REVERT,
-    });
+    const doRevert = postUtils.isDoAction({ actions, command: VoucherV2Action.REVERT });
+    const doAddAsset = postUtils.isDoAction({ actions, command: VoucherV2Action.ADD_ASSET });
 
-    const doAddAsset = postUtils.isDoAction({
-      actions,
-      command: VoucherV2Action.ADD_ASSET,
-    });
-
-    // const doRecurring = postUtils.isDoAction({
-    //   actions,
-    //   command: VoucherV2Action.RECURRING,
-    // });
-
-    // Info: (20241025 - Murky) Is xxx exist
-    const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
-    // const isRecurringInfoExist = postUtils.isItemExist(recurringInfo);
-    const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
-    const isAssetIdsHasItems = postUtils.isArrayHasItems(assetIds);
-    const isReverseVouchersInfoHasItems = postUtils.isArrayHasItems(reverseVouchersInfo);
     const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
-    const isVoucherEditable = true;
 
-    // Info: (20241114 - Murky) 檢查 certificateIds 是否都存在
-    if (isCertificateIdsHasItems) {
-      // Info: (20241111 - Murky) 檢查是不是所有的certificate都存在, 不存在就throw error
+    if (!isLineItemsHasItems) {
+      throw new Error('lineItems is required when post voucher');
+    }
+    if (!isVoucherInfoExist) {
+      throw new Error('voucherInfo is required when post voucher');
+    }
+
+    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
+    if (!isLineItemsBalanced) {
+      throw new Error(STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT);
+    }
+
+    if (postUtils.isArrayHasItems(certificateIds)) {
       const isAllCertificateExist = postUtils.areAllCertificatesExistById(certificateIds);
       if (!isAllCertificateExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with certificateIds, all certificate need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
+        throw new Error('All certificateIds must exist in DB');
       }
     }
 
-    // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
-    if (!isLineItemsHasItems) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'lineItems is required when post voucher',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
-    }
-
-    // Info: (20241226 - Murky) Check if lineItems credit and debit are equal
-    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
-    if (!isLineItemsBalanced) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'lineItems credit and debit should be equal',
-        statusMessage: STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT,
-      });
-    }
-
-    if (!isVoucherInfoExist) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'voucherInfo is required when post voucher',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
-    }
-
-    // Info: (20241111 - Murky) Init Company and Issuer Entity, For Voucher Meta Data and check if they exist in database
     const company = await postUtils.initCompanyFromPrisma(companyId);
     const issuer = await postUtils.initIssuerFromPrisma(userId);
-
-    // Info: (20241025 - Murky) Init Voucher, counterParty LineItems Entity
-    const newVoucherNo = ''; // Info: (20241025 - Murky) [Warning!] VoucherNo 需要在存入的transaction中取得
-
-    // Info: (20241029 - Murky) 一開始都先用public counterParty, 進入Reverse邏輯後在使用前端傳進來的counterParty
-    const counterPartyEntity: ICounterPartyEntityPartial = isCounterPartyIdExist
-      ? await postUtils.initCounterPartyFromPrisma(counterPartyId!)
-      : initCounterPartyEntity({
-          id: PUBLIC_COUNTER_PARTY.id,
-          companyId: PUBLIC_COUNTER_PARTY.companyId,
-          name: PUBLIC_COUNTER_PARTY.name,
-          taxId: PUBLIC_COUNTER_PARTY.taxId,
-          type: PUBLIC_COUNTER_PARTY.type,
-          note: PUBLIC_COUNTER_PARTY.note,
-          createdAt: PUBLIC_COUNTER_PARTY.createdAt,
-          updatedAt: PUBLIC_COUNTER_PARTY.updatedAt,
-          deletedAt: PUBLIC_COUNTER_PARTY.deletedAt,
-        });
+    const counterPartyEntity = postUtils.isItemExist(counterPartyId)
+      ? await postUtils.initCounterPartyFromPrisma(counterPartyId)
+      : initCounterPartyEntity(PUBLIC_COUNTER_PARTY);
 
     const lineItemEntities = postUtils.initLineItemEntities(lineItems);
-
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
-      counterPartyId: counterPartyEntity.id ?? PUBLIC_COUNTER_PARTY.id,
+      counterPartyId: counterPartyEntity.id!,
       companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
-      editable: isVoucherEditable,
-      no: newVoucherNo,
+      editable: true,
+      no: '',
       date: voucherInfo.voucherDate,
       note: voucherInfo.note,
     });
@@ -352,131 +295,44 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
     voucher.counterParty = counterPartyEntity;
     voucher.lineItems = lineItemEntities;
 
-    // ToDo: (20241025 - Murky) Revert Logic, 也許可以拉到別的地方
     if (doRevert) {
-      // Info: (20241029 - Murky) Revert Event need to use counterParty Provided by frontend
-
-      if (!isReverseVouchersInfoHasItems) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: 'reverseVouchers is required when post revert voucher',
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
+      if (!postUtils.isArrayHasItems(reverseVouchersInfo)) {
+        throw new Error('reverseVouchers is required when post revert voucher');
       }
 
-      // Info: (20241025 - Murky) 檢查是不是所有的revertVoucher都存在, 不存在就throw error
-      const revertVoucherIds = reverseVouchersInfo.map(
-        (reverseVoucher) => reverseVoucher.voucherId
-      );
-      const isAllRevertVoucherExist = postUtils.areAllVouchersExistById(revertVoucherIds);
-      if (!isAllRevertVoucherExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
+      const revertVoucherIds = reverseVouchersInfo.map((v) => v.voucherId);
+      if (!postUtils.areAllVouchersExistById(revertVoucherIds)) {
+        throw new Error('All reverse vouchers must exist');
       }
 
-      // Info: (20241111 - Murky) 只要檢查被Reverse 的lineItems, Reverse 別人的lineItems還沒有被建立起來
-      const revertLineItemIds = reverseVouchersInfo.map(
-        (reverseVoucher) => reverseVoucher.lineItemIdBeReversed
-      );
-      const isAllRevertLineItemExist = postUtils.areAllLineItemsExistById(revertLineItemIds);
-      if (!isAllRevertLineItemExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with reverseVouchersInfo, all reverseLineItem need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
+      const revertLineItemIds = reverseVouchersInfo.map((v) => v.lineItemIdBeReversed);
+      if (!postUtils.areAllLineItemsExistById(revertLineItemIds)) {
+        throw new Error('All reverse line items must exist');
       }
 
-      // Info: (20241025 - Murky) Create Revert Event Entity with reverseVouchersInfo (event not yet created)
-
-      const associateVouchersForRevertEvent = await postUtils.initRevertAssociateVouchers({
+      const associateVouchers = await postUtils.initRevertAssociateVouchers({
         originalVoucher: voucher,
         revertOtherLineItems: lineItemEntities,
         reverseVouchersInfo,
       });
 
-      const revertEventEntity = postUtils.initRevertEventEntity({
+      eventControlPanel.revertEvent = postUtils.initRevertEventEntity({
         nowInSecond,
-        associateVouchers: associateVouchersForRevertEvent,
+        associateVouchers,
       });
-
-      // Info: (20241030 - Murky) CounterParty只有在 "Revert事件"的時候會放在voucher裡, 其他時候都用PUBLIC_VOUCHER
-      voucher.counterParty = counterPartyEntity;
-
-      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
-      eventControlPanel.revertEvent = revertEventEntity;
     }
 
     if (doAddAsset) {
-      // Info: (20241111 - Murky) 備註： Asset 在Post 的時候就會一起建立 所有折舊的傳票，所以在這邊不需要在建立折舊的傳票
-      if (!isAssetIdsHasItems) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: 'assetIds is required when post voucher with assetIds',
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
+      if (!postUtils.isArrayHasItems(assetIds)) {
+        throw new Error('assetIds is required when post asset voucher');
+      }
+      if (!postUtils.areAllAssetsExistById(assetIds)) {
+        throw new Error('All assetIds must exist');
       }
 
-      const isAllAssetExist = postUtils.areAllAssetsExistById(assetIds);
-
-      if (!isAllAssetExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with assetIds, all asset need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
-
-      const assetEntities = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));
-
-      // Deprecated: (20241111 - Murky) 不需要再建立Depreciation Voucher, 因為在Post Asset的時候就會一起建立
-      // Info: (20241111 - Murky) [Warning!] 這就這邊沒有建立event
-
-      // Info: (20241029 - Murky) Generate all Depreciation Voucher
-      // const depreciatedExpenseVouchers = assetEntities
-      //   .map((assetEntity) => {
-      //     return postUtils.initDepreciationVoucherFromAssetEntity(assetEntity, {
-      //       nowInSecond,
-      //       issuer,
-      //       company,
-      //     });
-      //   })
-      //   .flat();
-
-      // const assetEventEntity = postUtils.initAddAssetEventEntity({
-      //   originalVoucher: voucher,
-      //   depreciatedExpenseVouchers,
-      // });
-
-      // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel , Prisma Transaction時一起建立
-      // eventControlPanel.assetEvent = assetEventEntity;
-      voucher.asset = assetEntities;
+      voucher.asset = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));
     }
 
-    // Info: (20241111 - Murky) Recurring Logic 暫時不做
-    // if (doRecurring) {
-    //   if (!isRecurringInfoExist) {
-    //     postUtils.throwErrorAndLog(loggerBack, {
-    //       errorMessage: 'recurringInfo is required when post recurring voucher',
-    //       statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-    //     });
-    //   }
-
-    //   const recurringAssociateVouchers = postUtils.initRecurringAssociateVouchers({
-    //     originalVoucher: voucher,
-    //     recurringInfo: recurringInfo!,
-    //   });
-
-    //   const recurringEventEntity = postUtils.initRecurringEventEntity({
-    //     startDateInSecond: recurringInfo!.startDate,
-    //     endDateInSecond: recurringInfo!.endDate,
-    //     associateVouchers: recurringAssociateVouchers,
-    //     frequency: recurringInfo!.type,
-    //     daysOfWeek: recurringInfo!.daysOfWeek,
-    //     monthsOfYear: recurringInfo!.monthsOfYear,
-    //   });
-
-    //   // Info: (20241030 - Murky) 將evertEvent放入eventControlPanel, Prisma Transaction時一起建立
-    //   eventControlPanel.recurringEvent = recurringEventEntity;
-    // }
     const createdVoucher = await postUtils.saveVoucherToPrisma({
       nowInSecond,
       originalVoucher: voucher,
@@ -485,61 +341,64 @@ export const handlePostRequest: IHandleRequest<APIName.VOUCHER_POST_V2, IVoucher
       issuer,
       certificateIds,
     });
-
-    // Info: (20241111 - Murky) Output formatter 只要回傳新的voucherId就可以了
     payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
+    // Todo: (20250416 - Tzuhan) 先前的 zod 寫法似乎有問題，導致無法正確驗證輸出資料
+    // const parsedVouchers = parsePrismaVoucherToVoucherEntity(createdVoucher);
+    // const { isOutputDataValid, outputData } = validateOutputData(
+    //   APIName.VOUCHER_POST_V2,
+    //   parsedVouchers
+    // );
+    // if (!isOutputDataValid) {
+    //   statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    // } else {
+    //   payload = outputData;
+    // }
+
     statusMessage = STATUS_MESSAGE.CREATED;
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
+  } catch (error) {
+    statusMessage = (error as Error).message;
     loggerBack.error(error);
   }
 
-  return {
-    statusMessage,
-    payload,
-  };
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-type APIResponse = IPaginatedData<IVoucherBeta[]> | number | null;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || HttpMethod.GET;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let apiName: APIName = APIName.VOUCHER_LIST_V2;
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{
-    statusMessage: string;
-    payload: APIResponse;
-  }>;
-} = {
-  GET: (req) => withRequestValidation(APIName.VOUCHER_LIST_V2, req, handleGetRequest),
-  POST: (req) => withRequestValidation(APIName.VOUCHER_POST_V2, req, handlePostRequest),
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<APIResponse>>
-) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = null;
-  const userId: number = -1;
-
+  const session = await getSession(req);
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.VOUCHER_LIST_V2;
+        ({
+          response: { httpCode, result },
+          statusMessage,
+        } = await handleGetRequest(req));
+        break;
+      case HttpMethod.POST:
+        apiName = APIName.VOUCHER_POST_V2;
+        ({
+          response: { httpCode, result },
+          statusMessage,
+        } = await handlePostRequest(req));
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    loggerError({
-      userId,
-      errorType: error.name,
-      errorMessage: error.message,
-    });
-    statusMessage = error.message;
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
+
+  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }
