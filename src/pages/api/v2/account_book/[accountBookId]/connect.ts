@@ -44,7 +44,7 @@ const handleGetRequest: IHandleRequest<
 
   // Info: (20250416 - Shirley) 使用團隊權限檢查方式
   if (company.teamId) {
-    // 檢查用戶是否為團隊成員並有查看帳本的權限
+    // Info: (20250416 - Shirley) 檢查用戶是否為團隊成員並有查看帳本的權限
     const userTeam = teams?.find((team) => team.id === company.teamId);
     if (userTeam) {
       const assertResult = convertTeamRoleCanDo({
