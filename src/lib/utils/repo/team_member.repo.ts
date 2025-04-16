@@ -14,6 +14,7 @@ import {
   assertUserIsTeamMember,
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { getTimestampNow } from '@/lib/utils/common';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -25,7 +26,11 @@ export const addMembersToTeam = async (
     teamId,
     action: TeamPermissionAction.INVITE_MEMBER,
   });
-  if (!can) throw new Error('PERMISSION_DENIED');
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const now = getTimestampNow();
 
@@ -132,11 +137,15 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
 
   // Info: (20250410 - tzuhan) Step 2. OWNER 不能離開團隊
   if (actualRole === TeamRole.OWNER) {
-    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
+    const error = new Error(STATUS_MESSAGE.OWNER_IS_UNABLE_TO_LEAVE);
+    error.name = STATUS_CODE.OWNER_IS_UNABLE_TO_LEAVE;
+    throw error;
   }
 
   if (!can) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250410 - tzuhan) Step 3. 檢查是否有 LEAVE_TEAM 權限
@@ -146,7 +155,9 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
   });
 
   if (!canLeave || !canLeave.can) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250410 - tzuhan) Step 4. 更新離開狀態
@@ -202,17 +213,23 @@ export const updateMemberById = async (
   });
 
   if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.MEMBER_NOT_FOUND);
+    error.name = STATUS_CODE.MEMBER_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能更新成員為 OWNER 角色
   if (role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_TO_OWNER');
+    const error = new Error(STATUS_MESSAGE.CANNOT_UPDATE_TO_OWNER);
+    error.name = STATUS_CODE.CANNOT_UPDATE_TO_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能更新 OWNER 角色
   if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
+    const error = new Error(STATUS_MESSAGE.CANNOT_UPDATE_OWNER_ROLE);
+    error.name = STATUS_CODE.CANNOT_UPDATE_OWNER_ROLE;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
@@ -222,23 +239,31 @@ export const updateMemberById = async (
   });
 
   if (!canChangeRoleResult.alterableRoles) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否可以設置成員為目標角色
   const canAlterRoles = canChangeRoleResult.alterableRoles;
   if (!canAlterRoles.includes(role)) {
-    throw new Error('CANNOT_ASSIGN_THIS_ROLE');
+    const error = new Error(STATUS_MESSAGE.CANNOT_ASSIGN_THIS_ROLE);
+    error.name = STATUS_CODE.CANNOT_ASSIGN_THIS_ROLE;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) Admin 不能更新 Admin 角色 (特殊情況)
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER);
+    error.name = STATUS_CODE.ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) Admin 不能將成員提升為 Admin
   if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_PROMOTE_TO_ADMIN);
+    error.name = STATUS_CODE.ADMIN_CANNOT_PROMOTE_TO_ADMIN;
+    throw error;
   }
 
   const updatedMember = await prisma.teamMember.update({
@@ -296,12 +321,16 @@ export const deleteMemberById = async (
   });
 
   if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.MEMBER_NOT_FOUND);
+    error.name = STATUS_CODE.MEMBER_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能刪除 OWNER
   if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_DELETE_OWNER');
+    const error = new Error(STATUS_MESSAGE.CANNOT_DELETE_OWNER);
+    error.name = STATUS_CODE.CANNOT_DELETE_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
@@ -311,11 +340,15 @@ export const deleteMemberById = async (
   });
 
   if (!canChangeRoleResult.alterableRoles) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_DELETE_ADMIN);
+    error.name = STATUS_CODE.ADMIN_CANNOT_DELETE_ADMIN;
+    throw error;
   }
 
   // Info: (20250312 - Shirley) 執行軟刪除
@@ -345,7 +378,11 @@ export const listTeamMemberByTeamId = async (
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
   const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
-  if (!effectiveRole) throw new Error('PERMISSION_DENIED');
+  if (!effectiveRole) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const { page, pageSize } = queryParams;
 
