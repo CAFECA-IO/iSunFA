@@ -17,6 +17,10 @@ import {
   sortAndCalculateBalances,
 } from '@/lib/utils/ledger';
 import { CurrencyType } from '@/constants/currency';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IPayload extends ILedgerPayload {}
 
@@ -46,11 +50,38 @@ interface IResponse {
 // TODO: (20241224 - Shirley) 寫測試
 export const handleGetRequest: IHandleRequest<APIName.LEDGER_LIST, IPayload> = async ({
   query,
+  session,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
   const { companyId, startDate, endDate, page, pageSize, labelType, startAccountNo, endAccountNo } =
     query;
+  const { teams } = session;
+
+  // Info: (20250416 - Shirley) 添加權限檢查邏輯
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.VIEW_LEDGER,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const pageNumber = page;
 

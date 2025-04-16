@@ -14,15 +14,49 @@ import {
   listCounterparty,
 } from '@/lib/utils/repo/counterparty.repo';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
+import { getSession } from '@/lib/utils/session';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 const handleGetRequest: IHandleRequest<
   APIName.COUNTERPARTY_LIST,
   IPaginatedData<ICounterparty[]>
-> = async ({ query }) => {
+> = async ({ query, req }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
   const { companyId, page, pageSize, type, searchQuery } = query;
+
+  // Info: (20250416 - Shirley) 添加團隊權限檢查
+  const { teams } = await getSession(req);
+
+  // Info: (20250416 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.VIEW_COUNTERPARTY,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   const counterpartyList: IPaginatedData<ICounterPartyEntity[]> = await listCounterparty(
     companyId,
     page,
@@ -39,12 +73,42 @@ const handleGetRequest: IHandleRequest<
 const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty> = async ({
   query,
   body,
+  req,
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICounterPartyEntity | null = null;
 
   const { companyId } = query;
   const { name, taxId, type, note } = body;
+
+  // Info: (20250416 - Shirley) 添加團隊權限檢查
+  const { teams } = await getSession(req);
+
+  // Info: (20250416 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.CREATE_COUNTERPARTY,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   const originClientByName = await getCounterpartyByName({ name, companyId });
   const originClientByTaxId = await getCounterpartyByTaxId({ taxId, companyId });
 

@@ -69,6 +69,19 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   // Info: (20250313 - Tzuhan) 帳務相關
   [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.UPDATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  [TeamPermissionAction.VIEW_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 

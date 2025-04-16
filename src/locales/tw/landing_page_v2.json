@@ -9,12 +9,12 @@
   "CTA": {
     "MAIN_TITLE": "陽光智能會計",
     "MAIN_DESCRIPTION": "解決財務大小事的會計服務平台",
-    "FREE_TRIAL_BTN": "立即開始免費試用",
-    "BUSINESS_DESCRIPTION": "為公司解決創投簡報與申請政府補助所需的記帳與稅務作業",
+    "FREE_TRIAL_BTN": "免費試用",
+    "BUSINESS_DESCRIPTION": "為公司提供創投簡報及政府補助申請所需的記帳與稅務解決方案",
     "BUSINESS_BTN": "申請企業帳號",
-    "FIRM_DESCRIPTION": "為客戶提供會計報表並提供財務稽核與審計服務",
+    "FIRM_DESCRIPTION": "為客戶提供專業的會計報表編製、財務審計及審計服務",
     "FIRM_BTN": "申請事務所帳號",
-    "PERSONAL_DESCRIPTION": "透過平台承攬財務工作",
+    "PERSONAL_DESCRIPTION": "透過平台承攬財務相關工作",
     "PERSONAL_BTN": "申請個人帳號"
   },
   "EASY_TO_USE": {
