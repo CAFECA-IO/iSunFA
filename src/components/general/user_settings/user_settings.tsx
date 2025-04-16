@@ -3,8 +3,8 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserSetting } from '@/interfaces/user_setting';
-import UserInfo from '@/components/user_settings/user_info';
-import UserInfoForm from '@/components/user_settings/user_info_form';
+import UserInfo from '@/components/general/user_settings/user_info';
+import UserInfoForm from '@/components/general/user_settings/user_info_form';
 import Image from 'next/image';
 import { ILoginDevice } from '@/interfaces/login_device';
 

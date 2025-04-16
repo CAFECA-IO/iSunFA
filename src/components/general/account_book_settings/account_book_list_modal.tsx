@@ -9,8 +9,8 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
-import WorkTag from '@/components/account_book_settings/work_tag';
-import AccountBookInfoModal from '@/components/account_book_settings/account_book_info_modal';
+import WorkTag from '@/components/general/account_book_settings/work_tag';
+import AccountBookInfoModal from '@/components/general/account_book_settings/account_book_info_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { SortBy, SortOrder } from '@/constants/sort';
 
