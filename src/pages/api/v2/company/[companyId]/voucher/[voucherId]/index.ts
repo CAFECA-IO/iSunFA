@@ -23,6 +23,7 @@ import {
 } from '@/lib/utils/repo/voucher.repo';
 import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_GET_BY_ID_V2;
@@ -59,6 +60,18 @@ const handleGetRequest = async (req: NextApiRequest) => {
     });
 
     const voucher = parsePrismaVoucherToVoucherEntity(voucherFromPrisma);
+
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.VOUCHER_GET_BY_ID_V2,
+      voucher
+    );
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    } else {
+      payload = outputData;
+    }
+
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     payload = voucher;
   } catch (error) {

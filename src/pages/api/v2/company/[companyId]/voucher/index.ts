@@ -173,14 +173,18 @@ const handleGetRequest = async (req: NextApiRequest) => {
       },
     };
 
-    const vouchers: IVoucherGetOutput = toPaginatedData({
+    const paginatedVoucher: IVoucherGetOutput = toPaginatedData({
       ...pagination,
       sort: sortOption,
       data: getUtils.filterTransactionStatus(voucherBetas, tab, typeFilter.condition),
       note: JSON.stringify(note),
     });
 
-    const { isOutputDataValid, outputData } = validateOutputData(APIName.VOUCHER_LIST_V2, vouchers);
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.VOUCHER_LIST_V2,
+      paginatedVoucher
+    );
+
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
     } else {
