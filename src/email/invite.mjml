@@ -11,6 +11,8 @@
         font-weight="500"
         font-size="10px"
         line-height="20px"
+        padding-top="0"
+        padding-bottom="16px"
       />
       <mj-class
         name="mainText"
@@ -93,8 +95,13 @@
     </mj-raw>
     <mj-section background-color="#304872" padding="40px">
       <!-- 左邊區塊 -->
-      <mj-column vertical-align="top">
-        <mj-text color="#FFFFFF" font-weight="700" font-size="12px" line-height="28px"
+      <mj-column>
+        <mj-text
+          color="#FFFFFF"
+          font-weight="700"
+          font-size="12px"
+          line-height="28px"
+          padding-top="0"
           >Contact Us</mj-text
         >
         <mj-text mj-class="text10" align="left" vertical-align="middle">
@@ -114,16 +121,14 @@
           ></mj-text
         >
         <mj-text mj-class="text10" align="left" vertical-align="middle">
-          <img width="10px" src="https://isunfa.tw/icons/alarm.svg" />
-          <span
-            >Service Hours : <br />
-            Mon to Fri, 09:00 AM - 06:00 PM.</span
-          >
+          <span><img width="10px" src="https://isunfa.tw/icons/alarm.svg" /> Service Hours : </span>
+          <br />
+          <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
         </mj-text>
       </mj-column>
 
       <!-- 右邊區塊：icon + text -->
-      <mj-column vertical-align="top">
+      <mj-column padding-top="50px">
         <mj-text align="left" padding="0">
           <mj-text style="margin-right: 24px">
             <a href="https://isunfa.tw/" target="_blank"
