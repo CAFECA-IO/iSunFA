@@ -67,6 +67,33 @@ interface ISubMenuOptionWithButton extends IDefaultSubMenuOption {
 
 const MENU_CONFIG: TMenuOption[] = [
   {
+    title: 'INVOICE_MANAGEMENT',
+    iconSrc: '/icons/invoice_management_icon.svg',
+    iconSrcAlt: 'invoice_management_icon',
+    iconWidth: 24,
+    iconHeight: 24,
+    disabled: true, // ToDo: (20250416 - Liz) 目前先暫時關閉憑證管理，之後要打開時再移除這一行就可以了
+    subMenu: [
+      {
+        caption: 'INVOICE',
+        subMenu: [
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'INPUT_INVOICE',
+            link: ISUNFA_ROUTE.INPUT_CERTIFICATE_LIST,
+            needToVerifyAccountBook: true,
+          },
+          {
+            type: SubMenuOptionType.LINK,
+            title: 'OUTPUT_INVOICE',
+            link: ISUNFA_ROUTE.OUTPUT_CERTIFICATE_LIST,
+            needToVerifyAccountBook: true,
+          },
+        ],
+      },
+    ],
+  },
+  {
     title: 'ACCOUNTING',
     iconSrc: '/icons/accounting_icon_calculator.svg',
     iconSrcAlt: 'accounting_icon_calculator',
@@ -130,15 +157,6 @@ const MENU_CONFIG: TMenuOption[] = [
         ],
       },
     ],
-  },
-  {
-    title: 'PERSONNEL_MANAGEMENT',
-    iconSrc: '/icons/personnel_management_icon.svg',
-    iconSrcAlt: 'personnel_management_icon',
-    iconWidth: 23.95,
-    iconHeight: 24,
-    disabled: true,
-    subMenu: [],
   },
   {
     title: 'REPORTS',
@@ -512,7 +530,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* Info: (20250401 - Liz) Profile (Connected Account Book) */}
           <section className="flex items-center gap-16px">
-            <div className="items-center justify-center">
+            <div className="flex-none items-center justify-center">
               <Image
                 src={userAvatarSrc}
                 alt="user_avatar"
@@ -522,14 +540,14 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
               ></Image>
             </div>
 
-            <div className="flex flex-auto items-center justify-between">
-              <div>
-                <h3 className="text-base font-medium tracking-tight-016 text-text-neutral-tertiary">
+            <div className="flex min-w-0 flex-auto items-center justify-between">
+              <div className="flex min-w-0 flex-col gap-4px">
+                <h3 className="text-xs font-semibold leading-5 tracking-tight-016 text-text-neutral-tertiary">
                   {t('layout:SIDE_MENU.CURRENT_ACCOUNT_BOOK')}
                 </h3>
 
                 {hasConnectedAccountBook && (
-                  <h4 className="break-all text-xl font-bold leading-8 text-text-neutral-secondary">
+                  <h4 className="truncate text-lg font-semibold text-text-neutral-secondary">
                     {connectedAccountBook.name}
                   </h4>
                 )}
@@ -545,7 +563,10 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
               </div>
 
               {hasConnectedAccountBook && (
-                <Link href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE} className="text-button-text-secondary">
+                <Link
+                  href={ISUNFA_ROUTE.ACCOUNT_BOOKS_PAGE}
+                  className="flex-none text-button-text-secondary"
+                >
                   <GoArrowSwitch size={24} />
                 </Link>
               )}

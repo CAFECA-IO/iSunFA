@@ -1,5 +1,3 @@
-import { FinancialReportTypesKey } from '@/interfaces/report_type';
-
 export const ISUNFA_API = {
   SIGN_UP: '/api/v1/sign_up',
   SIGN_IN: '/api/v1/sign_in',
@@ -28,42 +26,40 @@ export const ISUNFA_ROUTE = {
   MATCH_NEWS_PAGE: '/users/news_page/match_news_page',
   BETA_VOUCHER_LIST: '/users/accounting/voucher_list',
   GENERAL_SETTINGS: '/users/setting/general',
+  ACCOUNTING_SETTINGS: '/users/setting/accounting_setting',
+  COUNTERPARTY: '/users/setting/counterparty',
   BALANCE_SHEET: '/users/reports/financials/balance_sheet',
   INCOME_STATEMENT: '/users/reports/financials/income_statement',
   CASH_FLOW: '/users/reports/financials/cash_flow',
   LEDGER: '/users/accounting/ledger',
   TRIAL_BALANCE: '/users/accounting/trial_balance',
-  COUNTERPARTY: '/users/setting/counterparty',
   SUBSCRIPTIONS: '/users/subscriptions',
   MY_ACCOUNT_PAGE: '/users/my_account_page',
   TEAM_PAGE: '/users/team', // Info: (20250218 - Liz) /users/team/:teamId
-
-  KYC: '/users/kyc',
-  SALARY: '/users/salary',
-  SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
-  ACCOUNTING: '/users/accounting',
+  INPUT_CERTIFICATE_LIST: '/users/accounting/input_certificate_list',
+  OUTPUT_CERTIFICATE_LIST: '/users/accounting/output_certificate_list',
   ADD_NEW_VOUCHER: '/users/accounting/add_new_voucher',
   VOUCHER_LIST: '/users/accounting/voucher_list',
   PAYABLE_RECEIVABLE_LIST: '/users/accounting/payable_receivable_list',
   CERTIFICATE_LIST: '/users/accounting/certificate_list',
   ASSET_LIST: '/users/asset',
+  USERS_MY_REPORTS: '/users/reports/my_reports',
+  USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
 
+  // Deprecated: (20250416 - Liz) Alpha routes: (start)=====
+  KYC: '/users/kyc',
+  SALARY: '/users/salary',
+  SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',
   USERS_FINANCIAL_REPORTS_VIEW: '/users/reports/financials/view',
-  USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
-  USERS_MY_REPORTS: '/users/reports/my_reports',
   PROJECT_LIST: '/users/project',
   COMPANY_INFO: '/users/setting/company_info',
   ACCOUNTING_TITLE: '/users/setting/accounting_title',
-  USERS_FINANCIAL_REPORTS_BALANCE_SHEET: `/users/reports/financials?report_type=${FinancialReportTypesKey.balance_sheet}`,
-  USERS_FINANCIAL_REPORTS_INCOME_STATEMENT: `/users/reports/financials?report_type=${FinancialReportTypesKey.comprehensive_income_statement}`,
-  USERS_FINANCIAL_REPORTS_CASH_FLOW: `/users/reports/financials?report_type=${FinancialReportTypesKey.cash_flow_statement}`,
+  // Deprecated: (20250416 - Liz) Alpha routes (end)=====
+
   UPLOAD: `mobile_upload`,
-
-  ACCOUNTING_SETTINGS: '/users/setting/accounting_setting',
-
   JOIN_US: '/join_us',
 };
 
