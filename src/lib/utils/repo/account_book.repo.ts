@@ -32,6 +32,7 @@ import { getTeamList } from '@/lib/utils/repo/team.repo';
 import { DEFAULT_MAX_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permission';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -61,7 +62,9 @@ export const checkTeamAccountBookLimit = async (teamId: number): Promise<boolean
   });
 
   if (!team) {
-    throw new Error('RESOURCE_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    error.name = STATUS_CODE.RESOURCE_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250402 - Shirley) 獲取團隊下的帳本數量
@@ -168,7 +171,9 @@ export const createAccountBook = async (
   // Info: (20250124 - Shirley) Step 1.
   const accountBookIfExist = await getAccountBookByNameAndTeamId(teamId, taxId);
   if (accountBookIfExist) {
-    throw new Error('DUPLICATE_ACCOUNT_BOOK');
+    const error = new Error(STATUS_MESSAGE.DUPLICATE_ACCOUNT_BOOK);
+    error.name = STATUS_CODE.DUPLICATE_ACCOUNT_BOOK;
+    throw error;
   } else {
     // Info: (20250124 - Shirley) Step 2.
     const companyIcon = await generateIcon(name);
@@ -184,12 +189,16 @@ export const createAccountBook = async (
       encryptedSymmetricKey: '',
     });
     if (!file) {
-      throw new Error('INTERNAL_SERVER_ERROR');
+      const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
+      throw error;
     }
     if (teamId) {
       const hasPermission = await isEligibleToCreateAccountBookInTeam(userId, teamId);
       if (!hasPermission) {
-        throw new Error('ACCOUNT_BOOK_LIMIT_REACHED');
+        const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_LIMIT_REACHED);
+        error.name = STATUS_CODE.ACCOUNT_BOOK_LIMIT_REACHED;
+        throw error;
       }
     } else {
       // Info: (20250303 - Shirley) 如果沒有提供 teamId，則獲取用戶的 team 列表
@@ -544,13 +553,26 @@ export const requestTransferAccountBook = async (
     teamId: fromTeamId,
     action: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   });
-  if (!can) throw new Error('FORBIDDEN');
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.FORBIDDEN);
+    error.name = STATUS_CODE.FORBIDDEN;
+    throw error;
+  }
 
   const accountBook = await prisma.company.findFirst({
     where: { id: accountBookId, teamId: fromTeamId },
   });
-  if (!accountBook) throw new Error('ACCOUNT_BOOK_NOT_FOUND');
-  if (accountBook.isTransferring) throw new Error('ACCOUNT_BOOK_ALREADY_TRANSFERRING');
+  if (!accountBook) {
+    const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    error.name = STATUS_CODE.ACCOUNT_BOOK_NOT_FOUND;
+    throw error;
+  }
+  if (accountBook.isTransferring) {
+    const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_ALREADY_TRANSFERRING);
+    error.name = STATUS_CODE.ACCOUNT_BOOK_ALREADY_TRANSFERRING;
+    throw error;
+  }
 
   const [fromTeam, toTeam] = await Promise.all([
     prisma.team.findUnique({
@@ -572,17 +594,25 @@ export const requestTransferAccountBook = async (
       },
     }),
   ]);
-  if (!toTeam || !fromTeam) throw new Error('TEAM_NOT_FOUND');
+  if (!toTeam || !fromTeam) {
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND;
+    throw error;
+  }
 
   if (!fromTeam.subscriptions.length || !toTeam.subscriptions.length) {
-    throw new Error('TEAM_PLAN_INVALID');
+    const error = new Error(STATUS_MESSAGE.TEAM_PLAN_INVALID);
+    error.name = STATUS_CODE.TEAM_PLAN_INVALID;
+    throw error;
   }
 
   const targetPlan = toTeam.subscriptions[0]?.planType || TPlanType.BEGINNER;
   const toTeamAccountBookCount = await prisma.company.count({ where: { teamId: toTeamId } });
 
   if (toTeamAccountBookCount >= SUBSCRIPTION_PLAN_LIMITS[targetPlan]) {
-    throw new Error('EXCEED_PLAN_LIMIT');
+    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
+    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
+    throw error;
   }
 
   await prisma.$transaction([
@@ -626,9 +656,13 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!transfer) {
-    throw new Error('TRANSFER_RECORD_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.TRANSFER_RECORD_NOT_FOUND);
+    error.name = STATUS_CODE.TRANSFER_RECORD_NOT_FOUND;
+    throw error;
   } else if (transfer.status !== TransferStatus.PENDING) {
-    throw new Error(`TRANSFER_RECORD_IS_${transfer.status}`);
+    const error = new Error(STATUS_MESSAGE[`TRANSFER_RECORD_IS_${transfer.status}`]);
+    error.name = STATUS_CODE[`TRANSFER_RECORD_IS_${transfer.status}`];
+    throw error;
   }
 
   const { effectiveRole, can } = await assertUserCan({
@@ -638,14 +672,18 @@ export const cancelTransferAccountBook = async (
   });
 
   if (!effectiveRole || !can) {
-    throw new Error('FORBIDDEN');
+    const error = new Error(STATUS_MESSAGE.FORBIDDEN);
+    error.name = STATUS_CODE.FORBIDDEN;
+    throw error;
   }
 
   const accountBook = await prisma.company.findFirst({
     where: { id: accountBookId, teamId: transfer.fromTeamId },
   });
   if (!accountBook) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    error.name = STATUS_CODE.ACCOUNT_BOOK_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
@@ -671,14 +709,22 @@ export const acceptTransferAccountBook = async (
   const transfer = await prisma.accountBookTransfer.findFirst({
     where: { companyId: accountBookId, status: TransferStatus.PENDING },
   });
-  if (!transfer) throw new Error('TRANSFER_RECORD_NOT_FOUND');
+  if (!transfer) {
+    const error = new Error(STATUS_MESSAGE.TRANSFER_RECORD_NOT_FOUND);
+    error.name = STATUS_CODE.TRANSFER_RECORD_NOT_FOUND;
+    throw error;
+  }
 
   const { can } = await assertUserCan({
     userId,
     teamId: transfer.toTeamId,
     action: TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
   });
-  if (!can) throw new Error('FORBIDDEN');
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.FORBIDDEN);
+    error.name = STATUS_CODE.FORBIDDEN;
+    throw error;
+  }
 
   const toTeam = await prisma.team.findUnique({
     where: { id: transfer.toTeamId },
@@ -688,7 +734,11 @@ export const acceptTransferAccountBook = async (
       },
     },
   });
-  if (!toTeam?.subscriptions?.length) throw new Error('TEAM_PLAN_INVALID');
+  if (!toTeam?.subscriptions?.length) {
+    const error = new Error(STATUS_MESSAGE.TEAM_PLAN_INVALID);
+    error.name = STATUS_CODE.TEAM_PLAN_INVALID;
+    throw error;
+  }
 
   await prisma.$transaction([
     prisma.company.update({
@@ -716,14 +766,22 @@ export const declineTransferAccountBook = async (
   const transfer = await prisma.accountBookTransfer.findFirst({
     where: { companyId: accountBookId, status: TransferStatus.PENDING },
   });
-  if (!transfer) throw new Error('TRANSFER_RECORD_NOT_FOUND');
+  if (!transfer) {
+    const error = new Error(STATUS_MESSAGE.TRANSFER_RECORD_NOT_FOUND);
+    error.name = STATUS_CODE.TRANSFER_RECORD_NOT_FOUND;
+    throw error;
+  }
   // Info: (20250311 - Tzuhan) 確保用戶是 `toTeamId` 的 `Owner` 或 `Admin`
   const { can } = await assertUserCan({
     userId,
     teamId: transfer.toTeamId,
     action: TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
   });
-  if (!can) throw new Error('FORBIDDEN');
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.FORBIDDEN);
+    error.name = STATUS_CODE.FORBIDDEN;
+    throw error;
+  }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
   await prisma.$transaction([
@@ -1035,7 +1093,9 @@ export const updateAccountBook = async (
   });
   if (!accountBook) {
     loggerBack.warn(`Account book ${accountBookId} not found`);
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    error.name = STATUS_CODE.ACCOUNT_BOOK_NOT_FOUND;
+    throw error;
   }
 
   try {
@@ -1111,7 +1171,9 @@ export const deleteAccountBook = async (accountBookId: number): Promise<IAccount
     },
   });
   if (!accountBook) {
-    throw new Error('ACCOUNT_BOOK_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
+    error.name = STATUS_CODE.ACCOUNT_BOOK_NOT_FOUND;
+    throw error;
   }
   const nowInSecond = getTimestampNow();
 

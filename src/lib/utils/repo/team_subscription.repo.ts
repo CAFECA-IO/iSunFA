@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamSubscription } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ITeamInvoice, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
@@ -28,7 +28,11 @@ export const createTeamSubscription = async (
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const data = {
     teamId: options.teamId,
@@ -359,7 +363,11 @@ export async function getSubscriptionByTeamId(
     action: TeamPermissionAction.VIEW_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -425,7 +433,11 @@ export const updateSubscription = async (
     teamId,
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const now = Math.floor(Date.now() / 1000);
 

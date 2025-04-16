@@ -4,6 +4,7 @@ import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import prisma from '@/client';
 import { SortOrder } from '@/constants/sort';
 import { updateTeamMemberSession } from '@/lib/utils/session';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 const ACTION_USE_ACTUAL_ROLE: TeamPermissionAction[] = [
   // Info: (20250411 - Tzuhan) 團隊管理
@@ -69,7 +70,11 @@ export async function assertUserIsTeamMember(
     },
   });
 
-  if (!member) throw new Error('USER_NOT_IN_TEAM');
+  if (!member) {
+    const error = new Error(STATUS_MESSAGE.USER_NOT_IN_TEAM);
+    error.name = STATUS_CODE.USER_NOT_IN_TEAM;
+    throw error;
+  }
 
   const { role, team } = member;
   const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
