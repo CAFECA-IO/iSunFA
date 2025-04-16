@@ -59,6 +59,7 @@ interface FilterSectionProps<T> {
   initialType?: string;
   initialKeyword?: string;
   initialPage?: number;
+  labelClassName?: string; // Info: (20250416 - Anna) label的 className
 }
 
 const FilterSection = <T,>({
@@ -91,6 +92,7 @@ const FilterSection = <T,>({
   initialType,
   initialKeyword,
   initialPage,
+  labelClassName = '',
 }: FilterSectionProps<T>) => {
   // const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
@@ -252,6 +254,7 @@ const FilterSection = <T,>({
           selectedValue={selectedType}
           onChange={setSelectedType}
           containerClassName="flex-1"
+          labelClassName={labelClassName}
         />
       )}
 
@@ -270,6 +273,7 @@ const FilterSection = <T,>({
       {!disableDateSearch && (
         <div className="flex min-w-250px flex-1 flex-col">
           <DatePicker
+            label="Issue_Date"
             period={selectedDateRange}
             setFilteredPeriod={setSelectedDateRange}
             type={DatePickerType.TEXT_PERIOD}

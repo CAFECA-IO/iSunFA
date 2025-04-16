@@ -77,7 +77,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
       id="tax-rate-menu"
       ref={taxRatioMenuRef}
       onClick={handleMainMenuClick}
-      className={`group relative z-100 flex h-46px w-full cursor-pointer md:w-220px ${
+      className={`group relative z-100 flex h-46px w-full cursor-pointer ${
         isTaxRatioMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
           : 'border-input-stroke-input text-input-text-input-filled'

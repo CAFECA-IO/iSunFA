@@ -52,6 +52,7 @@ interface IDatePickerProps {
   alignCalendar?: DatePickerAlign;
   datePickerClassName?: string;
   disabled?: boolean;
+  label?: string; // Info: (20250416 - Anna) 選項標籤
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -315,6 +316,7 @@ const DatePicker = ({
   datePickerClassName,
   disabled,
   datePickerHandler,
+  label,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('date_picker');
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
@@ -562,9 +564,16 @@ const DatePicker = ({
     ) : null;
 
   return (
-    <div className={cn('relative flex w-full flex-col max-md:max-w-full', datePickerClassName)}>
+    <div
+      className={cn('relative flex w-full flex-col gap-8px max-md:max-w-full', datePickerClassName)}
+    >
       {/* Info: (20240417 - Shirley) Select Period button */}
-
+      {/* Info: (20250416 - Anna) 標籤 */}
+      {label && (
+        <p className="text-sm font-semibold text-neutral-300">
+          {t(`date_picker:DATE_PICKER.${label.toUpperCase()}`)}
+        </p>
+      )}
       <div ref={targetRef}>
         {displayedButtonContent}
 
