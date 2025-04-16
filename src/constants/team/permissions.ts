@@ -65,6 +65,8 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   // Info: (20250313 - Tzuhan) 帳務相關
   [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 
