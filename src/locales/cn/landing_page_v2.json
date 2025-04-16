@@ -9,12 +9,12 @@
   "CTA": {
     "MAIN_TITLE": "阳光智能会计",
     "MAIN_DESCRIPTION": "解决财务大小事的会计服务平台",
-    "FREE_TRIAL_BTN": "立即开始免费试用",
-    "BUSINESS_DESCRIPTION": "为公司解决创投简报与申请政府补助所需的记账与税务作业",
+    "FREE_TRIAL_BTN": "免费试用",
+    "BUSINESS_DESCRIPTION": "为公司提供创投简报及政府补助申请所需的记账与税务解决方案",
     "BUSINESS_BTN": "申请企业账号",
-    "FIRM_DESCRIPTION": "为客户提供会计报表并提供财务稽核与审计服务",
+    "FIRM_DESCRIPTION": "为客户提供专业的会计报表编制、财务稽核及审计服务",
     "FIRM_BTN": "申请事务所账号",
-    "PERSONAL_DESCRIPTION": "通过平台承揽财务工作",
+    "PERSONAL_DESCRIPTION": "通过平台承接财务相关工作",
     "PERSONAL_BTN": "申请个人账号"
   },
   "EASY_TO_USE": {
