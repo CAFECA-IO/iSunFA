@@ -152,7 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const assertResult = convertTeamRoleCanDo({
       teamRole: userTeam?.role as TeamRole,
-      canDo: TeamPermissionAction.VIEW_TRIAL_BALANCE,
+      canDo: TeamPermissionAction.EXPORT_TRIAL_BALANCE,
     });
 
     if (!assertResult.can) {

@@ -41,6 +41,12 @@ export enum TeamPermissionAction {
   VIEW_TRIAL_BALANCE = 'VIEW_TRIAL_BALANCE', // Info: (20250416 - Shirley) 查看試算表
   VIEW_LEDGER = 'VIEW_LEDGER', // Info: (20250416 - Shirley) 查看分類帳
   VIEW_ASSETS = 'VIEW_ASSETS', // Info: (20250714 - Shirley) 查看資產清單
+  EXPORT_TRIAL_BALANCE = 'EXPORT_TRIAL_BALANCE', // Info: (20250714 - Shirley) 匯出試算表
+  EXPORT_LEDGER = 'EXPORT_LEDGER', // Info: (20250714 - Shirley) 匯出分類帳
+  CREATE_ASSET = 'CREATE_ASSET', // Info: (20250714 - Shirley) 新增資產
+  UPDATE_ASSET = 'UPDATE_ASSET', // Info: (20250714 - Shirley) 更新資產
+  DELETE_ASSET = 'DELETE_ASSET', // Info: (20250714 - Shirley) 刪除資產
+  EXPORT_ASSET = 'EXPORT_ASSET', // Info: (20250714 - Shirley) 匯出資產清單
 
   // Info: (20250313 - Tzuhan) 變更角色
   CHANGE_TEAM_ROLE = 'CHANGE_TEAM_ROLE', // Info: (20250320 - Liz) 編輯成員權限
