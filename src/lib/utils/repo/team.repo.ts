@@ -17,6 +17,8 @@ import {
   assertUserCan,
   assertUserIsTeamMember,
 } from '@/lib/utils/permission/assert_user_team_permission';
+import { getGracePeriodInfo } from '@/lib/shared/permission';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export const getTeamList = async (
   userId: number,
@@ -81,10 +83,7 @@ export const getTeamList = async (
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
       const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
-      const gracePeriodEndAt = expiredAt + THREE_DAYS_IN_SECONDS;
-      const inGracePeriod =
-        expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
-
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
       if (syncSession) {
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
@@ -154,7 +153,9 @@ export const createTeamWithTrial = async (
       where: { ownerId: userId },
     });
     if (teamCount >= MAX_TEAM_LIMIT) {
-      throw new Error('USER_TEAM_LIMIT_REACHED');
+      const error = new Error(STATUS_MESSAGE.USER_TEAM_LIMIT_REACHED);
+      error.name = STATUS_CODE.USER_TEAM_LIMIT_REACHED;
+      throw error;
     }
 
     loggerBack.info(
@@ -164,15 +165,18 @@ export const createTeamWithTrial = async (
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
     const expired = getUnixTime(addMonths(now, 1));
-    const gracePeriodEndAt = expired + 3 * 24 * 60 * 60;
-
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     const plan = await tx.teamPlan.findFirst({
       where: {
         type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
       },
       select: { type: true },
     });
-    if (!plan) throw new Error('PLAN_NOT_FOUND');
+    if (!plan) {
+      const error = new Error(STATUS_MESSAGE.PLAN_NOT_FOUND);
+      error.name = STATUS_CODE.PLAN_NOT_FOUND;
+      throw error;
+    }
 
     // Info: (20250409 - Tzuhan) 2. 建立團隊
     const newTeam = await tx.team.create({
@@ -279,7 +283,7 @@ export const createTeamWithTrial = async (
         editable: true,
       },
       expiredAt: expired,
-      inGracePeriod: false,
+      inGracePeriod,
       gracePeriodEndAt,
     };
   });
@@ -300,19 +304,27 @@ export const createTeam = async (
   // Info: (20250321 - Tzuhan) 1️. 檢查該用戶已擁有的團隊數量
   return prisma.$transaction(async (tx) => {
     const teamCount = await tx.team.count({ where: { ownerId: userId } });
-    if (teamCount >= MAX_TEAM_LIMIT) throw new Error('USER_TEAM_LIMIT_REACHED');
+    if (teamCount >= MAX_TEAM_LIMIT) {
+      const error = new Error(STATUS_MESSAGE.USER_TEAM_LIMIT_REACHED);
+      error.name = STATUS_CODE.USER_TEAM_LIMIT_REACHED;
+      throw error;
+    }
 
     const now = new Date();
     const nowInSecond = getUnixTime(now);
     const expired = getUnixTime(addMonths(now, 1));
-    const gracePeriodEndAt = expired + 3 * 24 * 60 * 60;
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
 
     // Info: (20250304 - Tzuhan) 2. 取得 `planId`
     const plan = await tx.teamPlan.findFirst({
       where: { type: teamData.planType ?? TPlanType.BEGINNER },
       select: { id: true, type: true },
     });
-    if (!plan) throw new Error('PLAN_NOT_FOUND');
+    if (!plan) {
+      const error = new Error(STATUS_MESSAGE.PLAN_NOT_FOUND);
+      error.name = STATUS_CODE.PLAN_NOT_FOUND;
+      throw error;
+    }
 
     // Info: (20250304 - Tzuhan) 3. 創建團隊
     const newTeam = await tx.team.create({
@@ -422,7 +434,7 @@ export const createTeam = async (
         editable: true,
       },
       expiredAt: expired,
-      inGracePeriod: false,
+      inGracePeriod,
       gracePeriodEndAt,
     };
   });
@@ -471,7 +483,11 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     },
   });
 
-  if (!team) throw new Error('TEAM_NOT_FOUND');
+  if (!team) {
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND;
+    throw error;
+  }
 
   const planType = team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
 
@@ -638,9 +654,7 @@ export const getTeamsByUserIdAndTeamIds = async (
     const expiredAt = subscription?.expiredDate ?? 0;
     const planType = (member.team.subscriptions[0]?.plan?.type as TPlanType) ?? TPlanType.BEGINNER;
 
-    const gracePeriodEndAt = expiredAt + THREE_DAYS_IN_SECONDS;
-    const inGracePeriod =
-      expiredAt > 0 && nowInSecond > expiredAt && nowInSecond <= gracePeriodEndAt;
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
     const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
     const effectiveRole = isExpired ? TeamRole.VIEWER : actualRole;
 
@@ -729,7 +743,9 @@ export const updateTeamById = async (
   });
 
   if (!team) {
-    throw new Error('TEAM_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250325 - Shirley) 將 bankInfo 轉換為資料庫格式

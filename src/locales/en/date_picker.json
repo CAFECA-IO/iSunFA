@@ -43,6 +43,7 @@
     "OCT_ABR": "Oct",
     "NOV_ABR": "Nov",
     "DEC_ABR": "Dec",
-    "EVERY": "Every"
+    "EVERY": "Every",
+    "ISSUE_DATE": "Issue Date"
   }
 }

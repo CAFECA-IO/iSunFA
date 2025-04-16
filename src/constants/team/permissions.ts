@@ -1,5 +1,9 @@
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { ONE_DAY_IN_S } from '@/constants/time';
+
+export const GRACE_PERIOD_DAYS = 3; // Info: (20250311 - Tzuhan) 寬限期天數
+export const GRACE_PERIOD_SECONDS = GRACE_PERIOD_DAYS * ONE_DAY_IN_S; // Info: (20250311 - Tzuhan) 寬限期秒數
 
 export const TEAM_ROLE_DESCRIPTIONS = {
   [TeamRole.OWNER]: '最高權限，管理所有團隊與帳本權限',
