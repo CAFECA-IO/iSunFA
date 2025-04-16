@@ -14,10 +14,10 @@ interface OutputCertificateProps {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   totalCount: number;
   totalPages: number;
-  certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  certificates: ICertificateUI[]; // Info: (20240923 - Anna) 項目列表
   currencyAlias: CurrencyType;
-  viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
-  activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
+  viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - Anna) 顯示模式
+  activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   handleSelectAll: () => void;
   isSelectedAll: boolean;
@@ -36,7 +36,7 @@ interface OutputCertificateProps {
   setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
-// Deprecated: (20240919 - tzuhan) will be replaced by actual data type
+// Deprecated: (20240919 - Anna) will be replaced by actual data type
 const OutputCertificate: React.FC<OutputCertificateProps> = ({
   activeTab,
   page,
@@ -99,7 +99,7 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
         />
       )}
 
-      {/* Info: (20240919 - tzuhan) 分頁組件 */}
+      {/* Info: (20240919 - Anna) 分頁組件 */}
       <div className="flex justify-center">
         <Pagination
           className="mt-4"

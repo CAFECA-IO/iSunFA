@@ -69,7 +69,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
         </div>
       </BorderCell>
 
-      {/* Info: (20240924 - tzuhan) Invoice Information */}
+      {/* Info: (20240924 - Anna) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
           {!certificate.invoice?.isComplete && (
@@ -106,7 +106,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
           </div>
         </div>
       </BorderCell>
-      {/* Info: (20240924 - tzuhan) Price Information */}
+      {/* Info: (20240924 - Anna) Price Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-170px">
         <div className="flex-col items-center space-y-2">
           <div className="flex justify-between">
@@ -140,7 +140,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
         </div>
       </BorderCell>
 
-      {/* Info: (20240924 - tzuhan) Voucher Information */}
+      {/* Info: (20240924 - Anna) Voucher Information */}
       <BorderCell isSelected={certificate.isSelected} className="w-120px text-center">
         <div className="flex flex-col items-center space-y-2">
           {certificate?.voucherId && (

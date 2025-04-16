@@ -31,11 +31,11 @@ import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 interface OutputCertificateEditModalProps {
   isOpen: boolean;
   companyId: number;
-  toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
+  toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
   onUpdateFilename: (certificateId: number, name: string) => void;
-  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - tzuhan) 保存數據的回調函數
+  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
   onDelete: (id: number) => void;
   certificates: ICertificateUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
   editingId: number; // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
@@ -76,7 +76,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     APIName.COUNTERPARTY_LIST
   );
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-  // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
+  // Info: (20240924 - Anna) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
   const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
   const [date, setDate] = useState<IDatePeriod>({
@@ -112,16 +112,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
-      newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_DATE');
+      newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
     }
     if (!priceBeforeTax || priceBeforeTax <= 0) {
-      newErrors.priceBeforeTax = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_PRICE');
+      newErrors.priceBeforeTax = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
     if (!totalPrice || totalPrice <= 0) {
-      newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+      newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
     }
     if (!counterParty?.name) {
-      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
+      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
     return Object.keys(newErrors).length === 0;
@@ -402,7 +402,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
         onSubmit={(e) => e.preventDefault()} // Info: (20250414 - Anna) 防止表單預設行為
       >
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+        {/* Info: (20240924 - Anna) 關閉按鈕 */}
         <button
           type="button"
           className="absolute right-4 top-4 text-checkbox-text-primary"
@@ -418,14 +418,14 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
           onUpdateFilename={onUpdateFilename}
         />
 
-        {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+        {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
-          {/* Info: (20240924 - tzuhan) 發票縮略圖 */}
+          {/* Info: (20240924 - Anna) 發票縮略圖 */}
           <Magnifier imageUrl={certificate.file.url} className="w-210px min-w-210px" />
-          {/* Info: (20240924 - tzuhan) 編輯表單 */}
-          {/* Info: (20241210 - tzuhan) 隱藏 scrollbar */}
+          {/* Info: (20240924 - Anna) 編輯表單 */}
+          {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
-            {/* Info: (20240924 - tzuhan) Invoice Type */}
+            {/* Info: (20240924 - Anna) Invoice Type */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.INVOICE_TYPE')}
@@ -470,7 +470,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               </div>
             </div>
 
-            {/* Info: (20240924 - tzuhan) Invoice Date */}
+            {/* Info: (20240924 - Anna) Invoice Date */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.DATE')}
@@ -490,7 +490,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               )}
             </div>
 
-            {/* Info: (20240924 - tzuhan) Invoice Number */}
+            {/* Info: (20240924 - Anna) Invoice Number */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-input-text-primary">
@@ -593,7 +593,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               )}
             </div>
 
-            {/* Info: (20240924 - tzuhan) CounterParty */}
+            {/* Info: (20240924 - Anna) CounterParty */}
             <CounterpartyInput
               ref={counterpartyInputRef}
               counterparty={formState.counterParty}
@@ -611,7 +611,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             )}
 
             <div className="flex w-full items-center gap-2">
-              {/* Info: (20240924 - tzuhan) Price Before Tax */}
+              {/* Info: (20240924 - Anna) Price Before Tax */}
               <div className="relative flex flex-1 flex-col items-start gap-2">
                 <div id="price" className="absolute -top-20"></div>
                 <p className="text-sm font-semibold text-input-text-primary">
@@ -677,7 +677,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               </div>
             </div>
 
-            {/* Info: (20240924 - tzuhan) Total Price */}
+            {/* Info: (20240924 - Anna) Total Price */}
             <div className="hidden">
               <div className="relative flex w-full flex-1 flex-col items-start gap-2">
                 <div id="price" className="absolute -top-20"></div>
@@ -766,7 +766,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
           </div>
         </div>
-        {/* Info: (20240924 - tzuhan) Save 按鈕 */}
+        {/* Info: (20240924 - Anna) Save 按鈕 */}
         <div className="flex items-center">
           {!certificate.voucherNo && (
             <Button
