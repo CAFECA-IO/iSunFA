@@ -16,7 +16,7 @@ interface OutputCertificateProps {
   totalPages: number;
   certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
   currencyAlias: CurrencyType;
-  viewType: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
+  viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - tzuhan) 顯示模式
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   handleSelectAll: () => void;
@@ -27,9 +27,13 @@ interface OutputCertificateProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
+  invoiceNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
+  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
+  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
 // Deprecated: (20240919 - tzuhan) will be replaced by actual data type
@@ -53,9 +57,13 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
   dateSort,
   amountSort,
   voucherSort,
+  invoiceNoSort, // Info: (20250416 - Anna)
+  invoiceTypeSort, // Info: (20250416 - Anna)
   setDateSort,
   setAmountSort,
   setVoucherSort,
+  setInvoiceNoSort, // Info: (20250416 - Anna)
+  setInvoiceTypeSort, // Info: (20250416 - Anna)
 }) => {
   return (
     <>
@@ -72,9 +80,13 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
           dateSort={dateSort}
           amountSort={amountSort}
           voucherSort={voucherSort}
+          invoiceNoSort={invoiceNoSort} // Info: (20250416 - Anna)
+          invoiceTypeSort={invoiceTypeSort} // Info: (20250416 - Anna)
           setDateSort={setDateSort}
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
+          setInvoiceNoSort={setInvoiceNoSort} // Info: (20250416 - Anna)
+          setInvoiceTypeSort={setInvoiceTypeSort} // Info: (20250416 - Anna)
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (

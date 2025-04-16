@@ -20,9 +20,13 @@ interface OutputCertificateTableProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
+  invoiceNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
+  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
+  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
 const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
@@ -37,9 +41,13 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   dateSort,
   amountSort,
   voucherSort,
+  invoiceNoSort, // Info: (20250416 - Anna)
+  invoiceTypeSort, // Info: (20250416 - Anna)
   setDateSort,
   setAmountSort,
   setVoucherSort,
+  setInvoiceNoSort, // Info: (20250416 - Anna)
+  setInvoiceTypeSort, // Info: (20250416 - Anna)
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -49,6 +57,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
+      setInvoiceNoSort(null); // Info: (20250416 - Anna)
+      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
     },
   });
 
@@ -59,6 +69,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
+      setInvoiceNoSort(null); // Info: (20250416 - Anna)
+      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
     },
   });
 
@@ -69,6 +81,34 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
+      setInvoiceNoSort(null); // Info: (20250416 - Anna)
+      setInvoiceTypeSort(null); // Info: (20250416 - Anna)
+    },
+  });
+
+  // Info: (20250416 - Anna)
+  const displayedInvoiceNo = SortingButton({
+    string: t('certificate:TABLE.INVOICE_NUMBER'),
+    sortOrder: invoiceNoSort,
+    setSortOrder: setInvoiceNoSort,
+    handleReset: () => {
+      setDateSort(null);
+      setAmountSort(null);
+      setVoucherSort(null);
+      setInvoiceTypeSort(null);
+    },
+  });
+
+  // Info: (20250416 - Anna)
+  const displayedInvoiceType = SortingButton({
+    string: t('certificate:TABLE.INVOICE_TYPE'),
+    sortOrder: invoiceTypeSort,
+    setSortOrder: setInvoiceTypeSort,
+    handleReset: () => {
+      setDateSort(null);
+      setAmountSort(null);
+      setVoucherSort(null);
+      setInvoiceNoSort(null);
     },
   });
 
@@ -94,19 +134,24 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
               {displayedIssuedDate}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div>
+              {/* Info: (20250416 - Anna) */}
+              {/* <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div> */}
+              {displayedInvoiceNo}
+            </div>
+            <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {/* Info: (20250416 - Anna) */}
+              {/* {t('certificate:TABLE.INVOICE_TYPE')} */}
+              {displayedInvoiceType}
+            </div>
+
+            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {t('certificate:TABLE.TAX')}
             </div>
             <div className="col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
               <div>{t('certificate:TABLE.COUNTERPARTY')}</div>
               <div>
                 ({t('certificate:COUNTERPARTY.CLIENT')}/{t('certificate:COUNTERPARTY.SUPPLIER')})
               </div>
-            </div>
-            <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {t('certificate:TABLE.INVOICE_TYPE')}
-            </div>
-            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {t('certificate:TABLE.TAX')}
             </div>
             <div className="table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedAmount}

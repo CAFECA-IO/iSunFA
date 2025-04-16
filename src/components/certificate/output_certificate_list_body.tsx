@@ -62,13 +62,17 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     withoutVoucher: 0,
   });
   const [activeSelection, setActiveSelection] = React.useState<boolean>(false);
-  const [viewType, setViewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
+  // Info: (20250416 - Anna) 新的設計稿沒有 viewType 和 viewToggleHandler
+  // const [viewType, setViewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
+  const [viewType] = useState<DISPLAY_LIST_VIEW_TYPE>(DISPLAY_LIST_VIEW_TYPE.LIST);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
+  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
+  const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -473,6 +477,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [handleNewCertificateComing]
   );
 
+  // Todo: (20250415 - Anna) 憑證號碼和類型的排序，後端實作好後，要再來改這裡
   useEffect(() => {
     if (dateSort) {
       setSelectedSort({ by: SortBy.DATE, order: dateSort });
@@ -480,6 +485,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+    } else if (invoiceNoSort) {
+      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -579,13 +586,15 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
             InvoiceType.SALES_NON_UNIFORM_INVOICE,
           ]}
-          viewType={viewType}
-          viewToggleHandler={setViewType}
+          // Info: (20250416 - Anna) 新的設計稿沒有 viewType 和 viewToggleHandler
+          // viewType={viewType}
+          // viewToggleHandler={setViewType}
           /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
           dateSort={dateSort}
           otherSorts={otherSorts}
           */
           sort={selectedSort}
+          labelClassName="text-neutral-300"
         />
 
         {/* Info: (20240919 - tzuhan) Certificate Table */}
@@ -627,9 +636,13 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               dateSort={dateSort}
               amountSort={amountSort}
               voucherSort={voucherSort}
+              invoiceNoSort={invoiceNoSort}
+              invoiceTypeSort={invoiceTypeSort}
               setDateSort={setDateSort}
               setAmountSort={setAmountSort}
               setVoucherSort={setVoucherSort}
+              setInvoiceNoSort={setInvoiceNoSort}
+              setInvoiceTypeSort={setInvoiceTypeSort}
             />
           </>
         ) : (

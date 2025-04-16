@@ -110,8 +110,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         deductible: certificate.invoice.deductible,
       }) as IInvoiceBetaOptional
   );
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Info: (20250416 - Anna) 不要跳出錯誤警示，讓使用者順順填完
+  // const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors] = useState<Record<string, string>>({});
   const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
 
   // Info: (20250414 - Anna) 紀錄是否「已經打過一次保存的 API」
@@ -138,7 +139,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - tzuhan) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
-    setErrors(newErrors);
+    // Info: (20250416 - Anna) 不要跳出錯誤警示，讓使用者順順填完
+    // setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
@@ -505,6 +507,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-input-text-primary">
                 {t('certificate:EDIT.INVOICE_TYPE')}
+                <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center gap-4">
                 <div className="flex w-full">
@@ -527,7 +530,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     <div
                       className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
-                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px max-h-210px overflow-y-auto">
+                      <ul className="z-130 flex max-h-210px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px">
                         {Object.values(selectableInvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
@@ -607,7 +610,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   <div
                     ref={invoicePrefixMenuRef}
                     onClick={invoicePrefixMenuClickHandler}
-                    className={`relative h-44px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                    className={`relative h-44px min-w-75px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     <p className="flex h-44px w-full items-center justify-between gap-x-2">
                       <span className="overflow-hidden">{formState.no?.substring(0, 2) ?? ''}</span>

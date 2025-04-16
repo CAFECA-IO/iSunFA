@@ -81,16 +81,6 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-full text-left text-text-neutral-tertiary">
-            {certificate.invoice?.counterParty?.taxId ?? ''}
-          </div>
-          <div className="w-full text-left text-text-neutral-primary">
-            {certificate.invoice?.counterParty?.name ?? ''}
-          </div>
-        </div>
-      </BorderCell>
-      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
@@ -104,6 +94,16 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
           {certificate.invoice?.taxRatio !== undefined
             ? `Taxable ${certificate.invoice?.taxRatio} %`
             : '-'}
+        </div>
+      </BorderCell>
+      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-full text-left text-text-neutral-tertiary">
+            {certificate.invoice?.counterParty?.taxId ?? ''}
+          </div>
+          <div className="w-full text-left text-text-neutral-primary">
+            {certificate.invoice?.counterParty?.name ?? ''}
+          </div>
         </div>
       </BorderCell>
       {/* Info: (20240924 - tzuhan) Price Information */}
