@@ -6,6 +6,7 @@ import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
+import { numberWithCommas } from '@/lib/utils/common';
 
 interface OutputCertificateListIrops {
   activeSelection: boolean;
@@ -116,7 +117,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div>Pre-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {certificate.invoice?.priceBeforeTax ?? 0}
+              {numberWithCommas(certificate.invoice?.priceBeforeTax ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? currencyAlias}
               </span>
@@ -130,7 +131,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div>After-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {certificate.invoice?.totalPrice ?? 0}
+              {numberWithCommas(certificate.invoice?.totalPrice ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? currencyAlias}
               </span>

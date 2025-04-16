@@ -94,7 +94,6 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
               {displayedIssuedDate}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              <div>{t('certificate:TABLE.INVOICE_NAME')}</div>
               <div>{t('certificate:TABLE.INVOICE_NUMBER')}</div>
             </div>
             <div className="col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">

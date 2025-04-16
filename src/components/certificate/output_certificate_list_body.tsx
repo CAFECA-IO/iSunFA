@@ -419,12 +419,12 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             );
             return updatedData;
           });
-          toastHandler({
-            id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
-            type: ToastType.SUCCESS,
-            content: t('certificate:EDIT.SUCCESS'),
-            closeable: true,
-          });
+          // toastHandler({
+          //   id: ToastId.UPDATE_CERTIFICATE_SUCCESS,
+          //   type: ToastType.SUCCESS,
+          //   content: t('certificate:EDIT.SUCCESS'),
+          //   closeable: true,
+          // });
         } else {
           toastHandler({
             id: ToastId.UPDATE_CERTIFICATE_ERROR,
@@ -569,7 +569,16 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
-          types={Object.values(InvoiceType)}
+          // types={Object.values(InvoiceType)}
+          types={[
+            InvoiceType.ALL,
+            InvoiceType.SALES_TRIPLICATE_INVOICE,
+            InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
+            InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
+            InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
+            InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
+            InvoiceType.SALES_NON_UNIFORM_INVOICE,
+          ]}
           viewType={viewType}
           viewToggleHandler={setViewType}
           /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件

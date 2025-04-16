@@ -28,6 +28,7 @@ import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
+import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 
 interface OutputCertificateEditModalProps {
   isOpen: boolean;
@@ -270,8 +271,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
 
-  // Todo: (20250415 - Anna) 發票前綴選單假資料
-  const InvoiceNumberPrefix = ['AB', 'CD'];
+  // Info: (20250416 - Anna) 發票字軌選單
+  const invoiceDate = formState.date ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
+  const invoiceTracks = getInvoiceTracksByDate(new Date(invoiceDate * 1000)); // Info: (20250416 - Anna) 秒轉毫秒
+  const InvoiceNumberPrefix = [
+    ...invoiceTracks.A,
+    ...invoiceTracks.B,
+    ...invoiceTracks.C,
+    ...invoiceTracks.D,
+  ];
 
   // Info: (20240924 - tzuhan) 處理保存
   //   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -519,7 +527,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     <div
                       className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
-                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
+                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px max-h-210px overflow-y-auto">
                         {Object.values(selectableInvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
@@ -609,10 +617,11 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                         />
                       </div>
                     </p>
+
                     <div
                       className={`absolute left-0 top-44px grid w-full grid-cols-1 shadow-dropmenu ${isInvoicePrefixMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
-                      <ul className="z-130 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-8px">
+                      <ul className="z-130 flex max-h-130px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px">
                         {InvoiceNumberPrefix.map((prefix) => (
                           <li
                             key={prefix}
