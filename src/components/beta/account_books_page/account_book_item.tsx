@@ -20,7 +20,6 @@ interface AccountBookItemProps {
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
-  setAccountBookToEditInfo: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -30,7 +29,6 @@ const AccountBookItem = ({
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
-  setAccountBookToEditInfo,
   setRefreshKey,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
@@ -107,12 +105,6 @@ const AccountBookItem = ({
 
   const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
     setAccountBookToUploadPicture(accountBook);
-    closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
-  };
-
-  const openEditInfoModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAccountBookToEditInfo(accountBook);
     closeOptionsDropdown();
     e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
@@ -208,11 +200,6 @@ const AccountBookItem = ({
             <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
               {accountBook.name}
             </p>
-
-            {/* Info: (20250407 - Liz) Edit account book info */}
-            <button type="button" onClick={openEditInfoModal} className="p-8px">
-              <Image src="/icons/edit_square.svg" alt="edit icon" width={22} height={22} />
-            </button>
           </div>
         </section>
 

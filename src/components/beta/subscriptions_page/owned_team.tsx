@@ -5,13 +5,15 @@ import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscrip
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation } from 'next-i18next';
-import { formatTimestamp, ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface OwnedTeamProps {
   team: IUserOwnedTeam;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
+  setTeamForCancelSubscription?: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   isBillingButtonHidden?: boolean;
 }
 
@@ -19,9 +21,11 @@ const OwnedTeam = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
+  setTeamForCancelSubscription,
   isBillingButtonHidden = false,
 }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
+
   const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`;
   const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/billing`;
   const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
@@ -33,6 +37,7 @@ const OwnedTeam = ({
     ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
     : null;
   const price = isPlanBeginner ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE') : formatPrice;
+
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
   const openTurnOnAutoRenewalModal = () => {
@@ -81,14 +86,18 @@ const OwnedTeam = ({
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp ? formatTimestamp(team.expiredTimestamp) : ''}
+                      {team.expiredTimestamp
+                        ? timestampToString(team.expiredTimestamp).dateWithSlash
+                        : ''}
                     </span>
                   </div>
                 ) : (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp ? formatTimestamp(team.expiredTimestamp) : ''}
+                      {team.expiredTimestamp
+                        ? timestampToString(team.expiredTimestamp).dateWithSlash
+                        : ''}
                     </span>
                   </div>
                 ))}
@@ -117,16 +126,41 @@ const OwnedTeam = ({
               )}
             </div>
 
-            <div className="flex items-center gap-20px">
-              <span className="text-lg font-semibold text-text-neutral-primary">
-                {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
-              </span>
-              <SimpleToggle
-                isOn={isAutoRenewalEnabled}
-                onClick={
-                  isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
-                }
-              />
+            <div className="flex flex-col items-start gap-20px">
+              {!isPlanBeginner && (
+                <>
+                  <p>
+                    <span className="text-2xl font-semibold leading-8 text-neutral-300">
+                      {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
+                    </span>{' '}
+                    <span className="text-2xl font-semibold leading-8 text-neutral-600">
+                      {timestampToString(team.expiredTimestamp).dateWithSlash}
+                    </span>
+                  </p>
+                  {setTeamForCancelSubscription && (
+                    <p
+                      className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
+                      onClick={() => setTeamForCancelSubscription(team)}
+                    >
+                      {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
+                    </p>
+                  )}
+                </>
+              )}
+
+              {/* Info: (20250410 - Anna) 設計稿有改，「開啟自動續訂Toggle」先隱藏 */}
+              <div className="hidden">
+                <span className="text-lg font-semibold text-text-neutral-primary">
+                  {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
+                </span>
+
+                <SimpleToggle
+                  isOn={isAutoRenewalEnabled}
+                  onClick={
+                    isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
+                  }
+                />
+              </div>
             </div>
           </section>
         )}

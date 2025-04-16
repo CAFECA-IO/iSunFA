@@ -168,5 +168,23 @@
   },
   "ERROR": {
     "FETCH_DATA": "获取数据时出错，请稍后重试。"
+  },
+  "ACCOUNT_BOOK_INFO": {
+    "ACCOUNT_BOOK_INFORMATION": "帐本信息",
+    "COMPANY_NAME": "公司名称",
+    "ENTER_NAME": "输入公司名称",
+    "BUSINESS_TAX_ID_NUMBER": "统一编号",
+    "ENTER_NUMBER": "输入号码",
+    "TAX_SERIAL_NUMBER": "税籍编号",
+    "COMPANY_REPRESENTATIVE_NAME": "公司负责人姓名",
+    "ENTER_REPRESENTATIVE_NAME": "输入负责人姓名",
+    "COUNTRY_OF_INCORPORATION": "注册国家",
+    "SELECT_COUNTRY": "选择国家",
+    "PHONE_NUMBER": "电话号码",
+    "COMPANY_ADDRESS": "公司地址",
+    "PLEASE_ENTER_THE_FULL_ADDRESS": "请输入完整地址",
+    "REMOVE_ACCOUNT_BOOK": "删除帐本",
+    "CANCEL": "取消",
+    "SAVE": "保存"
   }
 }

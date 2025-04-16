@@ -12,15 +12,44 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { APIName } from '@/constants/api_connection';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { formatAccountingSetting } from '@/lib/utils/formatter/accounting_setting.formatter';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 const handleGetRequest: IHandleRequest<
   APIName.ACCOUNTING_SETTING_GET,
   IAccountingSetting
-> = async ({ query }) => {
+> = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccountingSetting | null = null;
 
   const { companyId } = query;
+  const { teams } = session;
+  // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
 
   const accountingSetting = await getAccountingSettingByCompanyId(companyId);
   if (accountingSetting) {

@@ -67,7 +67,15 @@
     "STATUS": "就學狀態",
     "STATUS_OPTION_GRADUATED": "已畢業",
     "STATUS_OPTION_IN_SCHOOL": "在學中",
-    "STATUS_OPTION_DROPOUT": "肄業"
+    "STATUS_OPTION_DROPOUT": "肄業",
+    "COMPANY_NAME": "公司名稱",
+    "POSITION": "職位",
+    "JOB_DESCRIPTION": "工作內容",
+    "LEAVING_REASON": "離職原因"
+  },
+  "SKILLS": {
+    "LANGUAGE": "語言",
+    "CERTIFICATE": "證照"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",

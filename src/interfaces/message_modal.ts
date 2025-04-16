@@ -21,6 +21,7 @@ export interface IMessageModal {
   backBtnStr?: string;
   backBtnFunction?: () => void;
   submitBtnClassName?: string;
+  backBtnClassName?: string;
   submitBtnVariant?: VariantProps<typeof buttonVariants>['variant'];
   submitBtnIcon?: React.ReactNode;
 }

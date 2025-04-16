@@ -6,12 +6,14 @@ interface UserOwnedTeamsProps {
   userOwnedTeams: IUserOwnedTeam[];
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
+  setTeamForCancelSubscription: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
 }
 
 const OwnedTeams = ({
   userOwnedTeams,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
+  setTeamForCancelSubscription,
 }: UserOwnedTeamsProps) => {
   return (
     <main className="flex flex-col gap-40px">
@@ -21,6 +23,7 @@ const OwnedTeams = ({
           team={team}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
+          setTeamForCancelSubscription={setTeamForCancelSubscription}
         />
       ))}
     </main>

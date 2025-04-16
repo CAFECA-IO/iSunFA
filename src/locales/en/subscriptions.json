@@ -21,7 +21,10 @@
     "PAYMENT_FAILED": "Payment Failed",
     "UPDATE_PAYMENT": "Update Payment",
     "RETURNING_TO_BEGINNER_IN": "Returning to Beginner in ",
-    "DAYS": " Days"
+    "DAYS": " Days",
+    "CANCEL_SUBSCRIPTION_TITLE": "Cancel Subscription",
+    "CANCEL_SUBSCRIPTION_MESSAGE": "Are you sure you want to cancel <bold>{{planName}}</bold>? <br/><red>* Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.</red>",
+    "YES_CANCEL_SUBSCRIPTION": "Yes. Cancel my plan"
   },
 
   "PLAN_NAME": {
@@ -143,6 +146,7 @@
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime.",
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
     "SUBSCRIBE": "Subscribe",
+    "PROCESSING": "Processing, please wait...",
     "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "Subscription update error",
     "DOWNGRADED_TO_BEGINNER_PLAN": "Downgraded to Beginner plan",

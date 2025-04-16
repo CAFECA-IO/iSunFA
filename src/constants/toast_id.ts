@@ -62,4 +62,7 @@ export enum ToastId {
   UPDATE_ASSET_STATUS_SUCCESS = 'toast-update-asset-status-success',
   UPDATE_ASSET_STATUS_ERROR = 'toast-update-asset-status-error',
   ACCOUNT_BOOK_SETTING_GET_ERROR = 'toast-account-book-setting-get-error',
+  ACCOUNT_BOOK_INFO_UPDATE_SUCCESS = 'toast-account-book-info-update-success',
+  ACCOUNT_BOOK_INFO_UPDATE_ERROR = 'toast-account-book-info-update-error',
+  ACCOUNT_BOOK_INFO_GET_ERROR = 'toast-account-book-info-get-error',
 }

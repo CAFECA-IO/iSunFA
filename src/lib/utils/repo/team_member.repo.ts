@@ -9,13 +9,24 @@ import { z } from 'zod';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permission';
+import {
+  assertUserCan,
+  assertUserIsTeamMember,
+} from '@/lib/utils/permission/assert_user_team_permission';
 import { getTimestampNow } from '@/lib/utils/common';
 
 export const addMembersToTeam = async (
+  userId: number,
   teamId: number,
   emails: string[]
 ): Promise<{ invitedCount: number; unregisteredEmails: string[] }> => {
+  const { can } = await assertUserCan({
+    userId,
+    teamId,
+    action: TeamPermissionAction.INVITE_MEMBER,
+  });
+  if (!can) throw new Error('PERMISSION_DENIED');
+
   const now = getTimestampNow();
 
   // Info: (20250410 - tzuhan) Step 1: 查詢已註冊用戶
@@ -329,9 +340,13 @@ export const deleteMemberById = async (
  * @returns 符合 ITeamMemberSchema 的成員列表（分頁）
  */
 export const listTeamMemberByTeamId = async (
+  userId: number,
   teamId: number,
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
+  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  if (!effectiveRole) throw new Error('PERMISSION_DENIED');
+
   const { page, pageSize } = queryParams;
 
   // Info: (20250321 - Tzuhan) Step 1: 取得總成員數
@@ -370,11 +385,10 @@ export const listTeamMemberByTeamId = async (
   // Info: (20250321 - Tzuhan) Step 3: 格式化成符合 ITeamMember 結構的資料
   const formatted: ITeamMember[] = members.map((member) => {
     const { user, role } = member;
-    const isEditable =
-      convertTeamRoleCanDo({
-        teamRole: role as TeamRole,
-        canDo: TeamPermissionAction.LEAVE_TEAM,
-      })?.can ?? false;
+    const isEditable = convertTeamRoleCanDo({
+      teamRole: role as TeamRole,
+      canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+    })?.can;
 
     return {
       id: String(member.id),
