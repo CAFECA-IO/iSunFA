@@ -55,7 +55,7 @@
     <mj-section background-color="#F4F5F7" padding="40px">
       <mj-column background-color="#FFFFFF" padding="20px 40px">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
-          >您已被邀請加入 AAA 企業的帳戶管理團隊</mj-text
+          >您已成功訂閱陽光智能會計企業版</mj-text
         >
 
         <mj-text mj-class="mainText">
@@ -64,29 +64,29 @@
           您好,
         </mj-text>
         <mj-text mj-class="mainText"
-          >我們誠摯地邀請您加入
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">AAA</span>
-          的財務管理團隊，協助共同管理企業財務及相關營運資源。<br />
-          作為我們信任的合作夥伴，您的參與對於強化團隊協作與提升管理效率至關重要。透過系統平台，您將能即時掌握財務概況、共同參與報表審閱、審核交易
-          活動，並協助企業穩健運作。</mj-text
-        >
-        <mj-text mj-class="mainText">請點選以下連結完成加入程序：</mj-text>
-        <mj-text mj-class="mainText">
-          邀請連結:
-          <a
-            href="https://isunfa.tw/users/login"
-            target="_blank"
-            style="color: #1570ef; text-decoration: underline"
-          >
-            https://isunfa.tw/users/login</a
+          >感謝您使用陽光智能會計，您已成功訂閱〔企業版〕方案，<br />
+          本次訂閱期間為：<span style="font-size: 14px; line-height: 20px; color: #cc8401"
+            >2025-04-15 至 2025-05-14</span
           >
         </mj-text>
-        <mj-text mj-class="mainText">AAA 團隊誠摯邀請</mj-text>
-
-        <mj-text mj-class="footnoteText"
-          >如您尚未擁有帳戶，系統將引導您先行註冊。完成後，即可正式加入 AAA 的管理後台。
-          若您對本邀請或使用系統有任何疑問，歡迎隨時與我們聯繫，我們將竭誠為您提供協助。 </mj-text
-        ><mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
+        <mj-text mj-class="mainText"
+          >費用為<span style="font-size: 14px; line-height: 20px; color: #cc8401">
+            新臺幣 2,399 元 </span
+          >整</mj-text
+        >
+        <mj-text mj-class="mainText">
+          本信件為付款收據通知，作為您完成付款的紀錄憑證。<br />
+          正式的電子發票將於稍後時間另行開立並寄送至您的電子信箱，敬請留意。
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >如對本次訂閱內容、付款紀錄或發票資訊有任何疑問，<br />
+          歡迎隨時與我們聯繫，我們將竭誠協助您處理。
+        </mj-text>
+        <mj-text mj-class="mainText">再次感謝您的支持與信任！</mj-text>
+        <mj-text mj-class="mainText"
+          >敬祝<br />業務順利、萬事如意 <br />陽光智能會計團隊 敬上</mj-text
+        >
+        <mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
       </mj-column>
     </mj-section>
 

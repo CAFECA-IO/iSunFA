@@ -55,7 +55,7 @@
     <mj-section background-color="#F4F5F7" padding="40px">
       <mj-column background-color="#FFFFFF" padding="20px 40px">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
-          >您已被邀請加入 AAA 企業的帳戶管理團隊</mj-text
+          >感謝您的選擇 ─ 陽光智能會計，與您一同邁向卓越</mj-text
         >
 
         <mj-text mj-class="mainText">
@@ -64,29 +64,22 @@
           您好,
         </mj-text>
         <mj-text mj-class="mainText"
-          >我們誠摯地邀請您加入
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">AAA</span>
-          的財務管理團隊，協助共同管理企業財務及相關營運資源。<br />
-          作為我們信任的合作夥伴，您的參與對於強化團隊協作與提升管理效率至關重要。透過系統平台，您將能即時掌握財務概況、共同參與報表審閱、審核交易
-          活動，並協助企業穩健運作。</mj-text
+          >感謝您選擇陽光智能會計，我們由衷感到欣喜與榮幸，能成為您創業旅程中的一部分。</mj-text
         >
-        <mj-text mj-class="mainText">請點選以下連結完成加入程序：</mj-text>
+        <mj-text mj-class="mainText"
+          >在這條充滿挑戰與希望的創業道路上，每一個選擇都至關重要。您對我們的信任，是我們持續精進服務與技術的最大動力。陽光智能會計不僅是一套智能化的財務系統，更是一位值得信賴的夥伴，將以嚴謹的專業、透明的運算與持續的陪伴，協助您穩健啟程、茁壯成長，最終邁向成熟壯大的企業格局。</mj-text
+        >
         <mj-text mj-class="mainText">
-          邀請連結:
-          <a
-            href="https://isunfa.tw/users/login"
-            target="_blank"
-            style="color: #1570ef; text-decoration: underline"
-          >
-            https://isunfa.tw/users/login</a
-          >
+          我們相信，財務透明與持續審計能力將成為企業競爭力的核心。陽光智能會計以自動化、可追溯、持續稽核為設計核心，協助您有效管理財務風險、強化企業治理，並以即時數據支援您做出關鍵決策。
         </mj-text>
-        <mj-text mj-class="mainText">AAA 團隊誠摯邀請</mj-text>
-
-        <mj-text mj-class="footnoteText"
-          >如您尚未擁有帳戶，系統將引導您先行註冊。完成後，即可正式加入 AAA 的管理後台。
-          若您對本邀請或使用系統有任何疑問，歡迎隨時與我們聯繫，我們將竭誠為您提供協助。 </mj-text
-        ><mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
+        <mj-text mj-class="mainText"
+          >未來的每一個成長里程碑，陽光智能會計都將與您並肩同行。<br />
+          我們期待與您攜手，開創值得信賴、值得驕傲的未來。
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >敬祝<br />創業順利、業務蒸蒸日上 <br />陽光智能會計團隊 敬上</mj-text
+        >
+        <mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
       </mj-column>
     </mj-section>
 

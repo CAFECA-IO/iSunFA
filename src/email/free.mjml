@@ -55,7 +55,7 @@
     <mj-section background-color="#F4F5F7" padding="40px">
       <mj-column background-color="#FFFFFF" padding="20px 40px">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
-          >您已被邀請加入 AAA 企業的帳戶管理團隊</mj-text
+          >陽光智能會計已調整為免費版</mj-text
         >
 
         <mj-text mj-class="mainText">
@@ -63,16 +63,22 @@
           <span style="font-size: 14px; line-height: 20px; color: #cc8401">Joyce Wu</span>
           您好,
         </mj-text>
-        <mj-text mj-class="mainText"
-          >我們誠摯地邀請您加入
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">AAA</span>
-          的財務管理團隊，協助共同管理企業財務及相關營運資源。<br />
-          作為我們信任的合作夥伴，您的參與對於強化團隊協作與提升管理效率至關重要。透過系統平台，您將能即時掌握財務概況、共同參與報表審閱、審核交易
-          活動，並協助企業穩健運作。</mj-text
-        >
-        <mj-text mj-class="mainText">請點選以下連結完成加入程序：</mj-text>
         <mj-text mj-class="mainText">
-          邀請連結:
+          由於近期付款未成功，我們已暫時將您的帳戶權限調整為免費版方案。 <br />
+          目前您將無法使用部分進階功能，但所有資料均已妥善保留， <br />
+          無需擔心遺失或損毀。
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >目前方案： <span style="font-size: 14px; line-height: 20px; color: #cc8401">免費版</span
+          ><br />
+          帳戶資料狀態：<span style="font-size: 14px; line-height: 20px; color: #2d7e58"
+            >完整保存</span
+          ><br />
+          恢復訂閱：您可隨時升級回原專業版或企業版，恢復所有功能與使用權限，
+          過程不會影響任何歷史資料。</mj-text
+        >
+        <mj-text mj-class="mainText">
+          若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱： <br />
           <a
             href="https://isunfa.tw/users/login"
             target="_blank"
@@ -81,12 +87,16 @@
             https://isunfa.tw/users/login</a
           >
         </mj-text>
-        <mj-text mj-class="mainText">AAA 團隊誠摯邀請</mj-text>
+        <mj-text mj-class="mainText"
+          >我們了解每一位創業者對數據的重視，因此無論您目前是否維持付費狀態，
+          我們都致力保障您的資料完整與安全。如有任何問題，也歡迎您隨時與我們聯繫，我們期待在未來繼續為您提供協助。
+        </mj-text>
 
-        <mj-text mj-class="footnoteText"
-          >如您尚未擁有帳戶，系統將引導您先行註冊。完成後，即可正式加入 AAA 的管理後台。
-          若您對本邀請或使用系統有任何疑問，歡迎隨時與我們聯繫，我們將竭誠為您提供協助。 </mj-text
-        ><mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
+        <mj-text mj-class="mainText"
+          >敬祝<br />一切順利、事業發展順心 <br />陽光智能會計團隊 敬上</mj-text
+        >
+
+        <mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
       </mj-column>
     </mj-section>
 
