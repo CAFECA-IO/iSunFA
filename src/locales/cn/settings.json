@@ -185,6 +185,14 @@
     "PLEASE_ENTER_THE_FULL_ADDRESS": "请输入完整地址",
     "REMOVE_ACCOUNT_BOOK": "删除帐本",
     "CANCEL": "取消",
-    "SAVE": "保存"
+    "SAVE": "保存",
+    "REMOVE": "删除",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "您确定要删除这个帐本吗？",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "删除帐本失败",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "删除帐本成功",
+    "GET_ACCOUNT_BOOK_FAIL": "获取帐本信息失败",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "更新帐本信息失败",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "更新帐本信息成功"
   }
 }
