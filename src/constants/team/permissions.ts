@@ -74,6 +74,10 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   [TeamPermissionAction.UPDATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.DELETE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.EXPORT_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  [TeamPermissionAction.VIEW_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 
