@@ -121,7 +121,7 @@ export const handleGetRequest: IHandleRequest<
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.BOOKKEEPING,
+    canDo: TeamPermissionAction.VIEW_ASSET,
   });
 
   if (!assertResult.can) {
@@ -257,7 +257,7 @@ export const handlePostRequest: IHandleRequest<
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.BOOKKEEPING,
+    canDo: TeamPermissionAction.CREATE_ASSET,
   });
 
   if (!assertResult.can) {

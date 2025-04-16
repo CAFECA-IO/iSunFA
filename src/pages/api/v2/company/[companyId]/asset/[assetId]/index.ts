@@ -76,7 +76,7 @@ const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['p
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.BOOKKEEPING,
+    canDo: TeamPermissionAction.VIEW_ASSET,
   });
 
   if (!assertResult.can) {
@@ -171,7 +171,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.BOOKKEEPING,
+    canDo: TeamPermissionAction.UPDATE_ASSET,
   });
 
   if (!assertResult.can) {
@@ -263,7 +263,7 @@ const handleDeleteRequest: IHandleRequest<
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.BOOKKEEPING,
+    canDo: TeamPermissionAction.DELETE_ASSET,
   });
 
   if (!assertResult.can) {
