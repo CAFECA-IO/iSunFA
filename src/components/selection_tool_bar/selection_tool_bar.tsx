@@ -5,6 +5,7 @@ import { /* FiDownload, */ FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
+import { numberWithCommas } from '@/lib/utils/common';
 
 export interface ISelectionToolBarOperation {
   operation: string;
@@ -114,7 +115,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
           {subtitle && currency && (
             <div className="font-medium text-text-neutral-tertiary">
               <span>{subtitle} </span>
-              <span className="text-black">{totalPrice ?? 0} </span>
+              <span className="text-black">{numberWithCommas(totalPrice ?? 0)}</span>
               <span>{currency}</span>
             </div>
           )}

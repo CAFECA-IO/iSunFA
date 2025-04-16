@@ -3,6 +3,7 @@ import { Prisma, User, UserAgreement, File, InviteStatus, TeamRole } from '@pris
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
 import loggerBack from '@/lib/utils/logger_back';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export async function listUser(): Promise<
   (User & { userAgreements: UserAgreement[]; imageFile: File | null })[]
@@ -139,9 +140,10 @@ export async function createUser({
 
       return createdUser;
     });
-  } catch (error) {
-    loggerBack.error(`Failed to create user: ${error}`);
-    throw new Error('CREATE_USER_FAILED');
+  } catch (e) {
+    const error = new Error(STATUS_MESSAGE.CREATE_USER_FAILED);
+    error.name = STATUS_CODE.CREATE_USER_FAILED;
+    throw error;
   }
 }
 

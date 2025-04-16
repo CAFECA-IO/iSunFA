@@ -1,5 +1,9 @@
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { ONE_DAY_IN_S } from '@/constants/time';
+
+export const GRACE_PERIOD_DAYS = 3; // Info: (20250311 - Tzuhan) 寬限期天數
+export const GRACE_PERIOD_SECONDS = GRACE_PERIOD_DAYS * ONE_DAY_IN_S; // Info: (20250311 - Tzuhan) 寬限期秒數
 
 export const TEAM_ROLE_DESCRIPTIONS = {
   [TeamRole.OWNER]: '最高權限，管理所有團隊與帳本權限',
@@ -65,6 +69,19 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   // Info: (20250313 - Tzuhan) 帳務相關
   [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.UPDATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  [TeamPermissionAction.VIEW_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 

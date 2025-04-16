@@ -179,5 +179,11 @@
     "UPLOAD_FILE": "上传档案",
     "UPLOADING": "上传中",
     "COMPLETED": "已完成"
+  },
+  "OUTPUT_CERTIFICATE": {
+    "OUTPUT_CERTIFICATE": "销项凭证",
+    "MARK_RETURN_OR_ALLOWANCE": "标记为退回或折让",
+    "PREVIOUS": "上一笔",
+    "NEXT": "下一笔"
   }
 }

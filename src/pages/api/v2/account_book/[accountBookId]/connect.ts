@@ -10,7 +10,9 @@ import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
-import { isUserTeamMember } from '@/lib/utils/repo/team_member.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IResponse {
   statusMessage: string;
@@ -23,19 +25,12 @@ const handleGetRequest: IHandleRequest<
 > = async ({ query, session }) => {
   const { accountBookId } = query as IConnectAccountBookQueryParams;
   const userId = session?.userId;
+  const { teams } = session;
 
   /**
-   * Info: (20250227 - Shirley) 連接帳本的邏輯
-   * 1. 檢查帳本是否存在
-   * 2. 檢查用戶是否有權限
-   * 3. 設置 session 中的 companyId，之後應該改成 accountBookId
-   * 4. 獲取團隊資訊並設置 session 中的 team 欄位
-   *
-   * Info: (20250402 - Shirley) 更新後的連接帳本邏輯
+   * Info: (20250416 - Shirley) 更新後的連接帳本邏輯
    * 1. 先透過 getCompanyById 檢查帳本是否存在
-   * 2. 檢查用戶權限有兩種途徑：
-   *    a. 通過 Admin 表檢查用戶是否為帳本的直接管理員
-   *    b. 如果帳本屬於某個團隊，檢查用戶是否為該團隊的成員
+   * 2. 如果帳本屬於團隊，使用 convertTeamRoleCanDo 檢查用戶是否有 VIEW_PUBLIC_ACCOUNT_BOOK 權限
    * 3. 如果用戶有權限，則設置 session 中的相關信息
    */
 
@@ -47,11 +42,18 @@ const handleGetRequest: IHandleRequest<
 
   let hasAccess = false;
 
-  // Info: (20250402 - Shirley) 途徑一: 檢查用戶是否為帳本的直接管理員
+  // Info: (20250416 - Shirley) 使用團隊權限檢查方式
   if (company.teamId) {
-    // Info: (20250402 - Shirley) 途徑二: 如果帳本屬於團隊，檢查用戶是否為團隊成員
-    // Info: (20250402 - Shirley) 使用 repo 函數替代直接的 Prisma 查詢
-    hasAccess = await isUserTeamMember(userId, company.teamId);
+    // Info: (20250416 - Shirley) 檢查用戶是否為團隊成員並有查看帳本的權限
+    const userTeam = teams?.find((team) => team.id === company.teamId);
+    if (userTeam) {
+      const assertResult = convertTeamRoleCanDo({
+        teamRole: userTeam.role as TeamRole,
+        canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
+      });
+
+      hasAccess = assertResult.can;
+    }
   }
 
   // Info: (20250402 - Shirley) 如果用戶既不是帳本的直接管理員也不是團隊成員，則返回 FORBIDDEN
