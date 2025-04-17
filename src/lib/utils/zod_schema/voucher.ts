@@ -419,53 +419,44 @@ const voucherGetOneQueryValidatorV2 = z.object({
 
 const voucherGetOneBodyValidatorV2 = z.object({});
 
-export const voucherGetOneOutputValidatorV2 = z
+const voucherGetOneOutputValidatorV2 = z
   .object({
     ...voucherEntityValidator.shape,
     issuer: userEntityValidator,
-    accountSetting: accountingSettingEntityValidator.optional(),
-    counterParty: partialCounterPartyEntityValidator.optional(),
-    originalEvents: z.array(eventEntityValidator).default([]),
-    resultEvents: z.array(eventEntityValidator).default([]),
-    asset: z.array(assetEntityValidator).default([]),
-    readByUsers: z.array(z.any()).default([]),
-    certificates: z
-      .array(
-        z.object({
-          ...certificateEntityValidator.shape,
-          invoice: invoiceEntityValidator,
-          file: fileEntityValidator.extend({
-            existed: z.boolean(),
-          }),
-          userCertificates: z.array(userCertificateEntityValidator),
-        })
-      )
-      .default([]),
-    lineItems: z
-      .array(
-        z.object({
-          ...iLineItemBodyValidatorV2.shape,
-          id: z.number(),
-          account: accountEntityValidator,
-          resultLineItems: z
-            .array(
-              z.object({
-                ...IAssociateLineItemEntitySchema.shape,
-                associateVoucher: z.object({
-                  ...IAssociateVoucherEntitySchema.shape,
-                  originalVoucher: voucherEntityValidator,
-                }),
-                originalLineItem: z.object({
-                  ...iLineItemBodyValidatorV2.shape,
-                  id: z.number(),
-                  account: accountEntityValidator,
-                }),
-              })
-            )
-            .default([]),
-        })
-      )
-      .default([]),
+    accountSetting: accountingSettingEntityValidator,
+    counterParty: partialCounterPartyEntityValidator,
+    originalEvents: z.array(eventEntityValidator),
+    resultEvents: z.array(eventEntityValidator),
+    asset: z.array(assetEntityValidator),
+    certificates: z.array(
+      z.object({
+        ...certificateEntityValidator.shape,
+        invoice: invoiceEntityValidator,
+        file: fileEntityValidator,
+        userCertificates: z.array(userCertificateEntityValidator),
+      })
+    ),
+    lineItems: z.array(
+      z.object({
+        ...iLineItemBodyValidatorV2.shape,
+        id: z.number(),
+        account: accountEntityValidator,
+        resultLineItems: z.array(
+          z.object({
+            ...IAssociateLineItemEntitySchema.shape,
+            associateVoucher: z.object({
+              ...IAssociateVoucherEntitySchema.shape,
+              originalVoucher: voucherEntityValidator,
+            }),
+            originalLineItem: z.object({
+              ...iLineItemBodyValidatorV2.shape,
+              id: z.number(),
+              account: accountEntityValidator,
+            }),
+          })
+        ),
+      })
+    ),
     payableInfo: z
       .object({
         total: z.number(),
@@ -483,57 +474,73 @@ export const voucherGetOneOutputValidatorV2 = z
     isReverseRelated: z.boolean().optional(),
   })
   .nullable()
-  .transform((data): IVoucherDetailForFrontend | null => {
-    if (!data) return null;
+  .transform((data) => {
+    if (data === null) {
+      // Info: (20241223 - Murky) 如果輸入為 null，直接返回 null
+      return null;
+    }
+    let reverseVoucherIds = Array.from(
+      new Map(
+        [
+          ...(data.originalEvents
+            ?.filter((event) => event.eventType === 'revert' || event.eventType === 'delete')
+            ?.flatMap(
+              (event) =>
+                event.associateVouchers
+                  ?.filter((associateVoucher) => associateVoucher.resultVoucher)
+                  .map((associateVoucher) => ({
+                    id: associateVoucher.resultVoucher.id,
+                    voucherNo: associateVoucher.resultVoucher.no,
+                    type: event.eventType === 'delete' ? 'reverse' : 'settlement',
+                  })) ?? []
+            ) ?? []),
 
-    const reverseVoucherIds = [
-      ...(data.originalEvents ?? []).flatMap((event) =>
-        (event.associateVouchers ?? []).map((av) => ({
-          id: av.resultVoucher?.id,
-          voucherNo: av.resultVoucher?.no,
-          type: event.eventType === 'delete' ? 'reverse' : 'settlement',
-        }))
-      ),
-      ...(data.resultEvents ?? []).flatMap((event) =>
-        (event.associateVouchers ?? []).map((av) => ({
-          id: av.originalVoucher?.id,
-          voucherNo: av.originalVoucher?.no,
-          type: 'original',
-        }))
-      ),
-    ]
-      .filter((x): x is { id: number; voucherNo: string; type: string } => x.id && x.voucherNo)
-      .reduce(
-        (map, item) => map.set(item.id, item),
-        new Map<number, { id: number; voucherNo: string; type: string }>()
-      )
-      .values();
+          // Info: (20250213 - Tzuhan)  **3. 沖銷傳票 -> 立賬傳票**
+          ...(data.resultEvents
+            ?.filter((event) => event.eventType === 'revert') // Info: (20250213 - Tzuhan)  只篩選 eventType === 'revert'
+            ?.flatMap(
+              (event) =>
+                event.associateVouchers
+                  ?.filter((associateVoucher) => associateVoucher.originalVoucher)
+                  .map((associateVoucher) => ({
+                    id: associateVoucher.originalVoucher.id,
+                    voucherNo: associateVoucher.originalVoucher.no,
+                    type: 'original',
+                  })) ?? []
+            ) ?? []),
+        ].map((item) => [item.id, item]) // Info: (20250213 - Tzuhan)  使用 Map 去重複
+      ).values()
+    );
 
-    const deletedReverseVoucherIds = (data.resultEvents ?? [])
-      .filter((e) => e.eventType === 'delete')
-      .flatMap((e) =>
-        (e.associateVouchers ?? []).map((av) => ({
-          id: av.originalVoucher?.id,
-          voucherNo: av.originalVoucher?.no,
-        }))
-      )
-      .filter((x): x is { id: number; voucherNo: string } => x.id && x.voucherNo);
+    let deletedReverseVoucherIds =
+      data.resultEvents
+        ?.filter((event) => event.eventType === 'delete')
+        ?.flatMap(
+          (event) =>
+            event.associateVouchers
+              ?.filter((associateVoucher) => associateVoucher.originalVoucher)
+              .map((associateVoucher) => ({
+                id: associateVoucher.originalVoucher.id,
+                voucherNo: associateVoucher.originalVoucher.no,
+              })) ?? []
+        ) ?? [];
 
-    return {
+    //  Info: (20250212 - Tzuhan) 過濾掉 `undefined`
+    reverseVoucherIds = reverseVoucherIds.filter((voucher) => voucher.id && voucher.voucherNo);
+    deletedReverseVoucherIds = deletedReverseVoucherIds.filter(
+      (voucher) => voucher.id && voucher.voucherNo
+    );
+    const voucherDetail: IVoucherDetailForFrontend = {
       id: data.id,
       voucherDate: data.date,
       type: data.type,
       note: data.note ?? '',
       counterParty: {
-        id: data.counterParty?.id,
-        companyId: data.counterParty?.companyId,
-        name: data.counterParty?.name,
-        taxId: data.counterParty?.taxId,
-        type: data.counterParty?.type,
-        note: data.counterParty?.note,
-        createdAt: data.counterParty?.createdAt,
-        updatedAt: data.counterParty?.updatedAt,
+        companyId: data.companyId,
+        name: data.counterParty.name,
+        taxId: data.counterParty.taxId,
       },
+      // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
       recurringInfo: {
         type: '',
         startDate: 0,
@@ -543,77 +550,105 @@ export const voucherGetOneOutputValidatorV2 = z
       },
       payableInfo: data.payableInfo,
       receivingInfo: data.receivingInfo,
-      reverseVoucherIds: Array.from(reverseVoucherIds),
+      reverseVoucherIds,
       deletedReverseVoucherIds,
       assets: data.asset.map((asset) => ({
         id: asset.id,
-        currencyAlias: data.accountSetting?.currency ?? '',
+        currencyAlias: data.accountSetting.currency,
         acquisitionDate: asset.acquisitionDate,
         assetType: asset.type,
         assetNumber: asset.number,
         assetName: asset.name,
-        assetStatus: asset.status,
         purchasePrice: asset.purchasePrice,
         accumulatedDepreciation: asset.accumulatedDepreciation,
         residualValue: asset.residualValue,
         remainingLife: asset.remainingLife,
-        depreciationStart: asset.depreciationStart,
-        depreciationMethod: asset.depreciationMethod,
-        usefulLife: asset.usefulLife,
+        assetStatus: asset.status,
         createdAt: asset.createdAt,
         updatedAt: asset.updatedAt,
         deletedAt: asset.deletedAt,
-        note: asset.note,
+        depreciationStart: asset.depreciationStart,
+        depreciationMethod: asset.depreciationMethod,
+        usefulLife: asset.usefulLife,
         relatedVouchers: [],
+        note: asset.note,
       })),
       certificates: data.certificates.map((certificate) => {
         const isRead = isUserReadCertificate(certificate.userCertificates);
-        return {
+        const certificateInstance = {
           id: certificate.id,
           name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
           companyId: certificate.companyId,
-          voucherId: data.id,
           voucherNo: data.no,
-          uploader: data.issuer.name,
-          uploaderUrl: data.issuer.imageFile?.url ?? '',
+          voucherId: data.id ?? null,
+          uploaderUrl: data.issuer.imageFile?.url || '',
           unRead: !isRead,
-          createdAt: certificate.createdAt,
-          updatedAt: certificate.updatedAt,
-          deletedAt: certificate.deletedAt,
+          uploader: data.issuer.name,
           invoice: {
-            ...certificate.invoice,
+            id: certificate.invoice.id,
+            isComplete: true,
+            inputOrOutput: certificate.invoice.inputOrOutput,
+            date: certificate.invoice.date,
+            no: certificate.invoice.no,
+            currencyAlias: certificate.invoice.currencyAlias,
+            priceBeforeTax: certificate.invoice.priceBeforeTax,
+            taxType: certificate.invoice.taxType,
+            taxRatio: certificate.invoice.taxRatio,
+            taxPrice: certificate.invoice.taxPrice,
+            totalPrice: certificate.invoice.totalPrice,
+            type: certificate.invoice.type,
+            deductible: certificate.invoice.deductible,
+            createdAt: certificate.invoice.createdAt,
+            updatedAt: certificate.invoice.updatedAt,
             name: 'InvoiceName',
             counterParty: {
-              id: data.counterParty?.id,
-              companyId: data.counterParty?.companyId,
-              name: data.counterParty?.name,
-              taxId: data.counterParty?.taxId,
-              type: data.counterParty?.type,
-              note: data.counterParty?.note,
-              createdAt: data.counterParty?.createdAt,
-              updatedAt: data.counterParty?.updatedAt,
+              id: data.counterParty.id,
+              companyId: data.counterParty.companyId,
+              name: data.counterParty.name,
+              taxId: data.counterParty.taxId,
+              type: data.counterParty.type,
+              note: data.counterParty.note,
+              createdAt: data.counterParty.createdAt,
+              updatedAt: data.counterParty.updatedAt,
             },
           },
           file: {
-            ...certificate.file,
+            id: certificate.file.id,
+            name: certificate.file.name,
+            url: certificate.file.url,
+            size: certificate.file.size,
             existed: !!certificate.file,
           },
+          createdAt: certificate.createdAt,
+          updatedAt: certificate.updatedAt,
         };
+        return certificateInstance;
       }),
-      lineItems: data.lineItems.map((li) => ({
-        ...li,
-        reverseList: li.resultLineItems.map((rl) => ({
-          voucherId: rl.associateVoucher.originalVoucherId,
-          voucherNo: rl.associateVoucher.originalVoucher.no,
-          amount: rl.amount,
-          description: rl.originalLineItem.description,
-          debit: rl.debit,
-          account: rl.originalLineItem.account,
-          lineItemBeReversedId: rl.originalLineItemId,
+      lineItems: data.lineItems.map((lineItem) => ({
+        id: lineItem.id,
+        description: lineItem.description,
+        debit: lineItem.debit,
+        amount: lineItem.amount,
+        account: {
+          ...lineItem.account,
+          note: lineItem.account.note ?? null,
+        },
+        reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
+          voucherId: resultLineItem.associateVoucher.originalVoucherId,
+          amount: resultLineItem.amount,
+          description: resultLineItem.originalLineItem.description,
+          debit: resultLineItem.debit,
+          account: {
+            ...resultLineItem.originalLineItem.account,
+            note: resultLineItem.originalLineItem.account.note ?? null,
+          },
+          voucherNo: resultLineItem.associateVoucher.originalVoucher.no,
+          lineItemBeReversedId: resultLineItem.originalLineItemId,
         })),
       })),
       isReverseRelated: data.isReverseRelated,
     };
+    return voucherDetail;
   });
 
 const IVoucherDetailForFrontendValidator = z.object({

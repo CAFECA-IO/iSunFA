@@ -24,6 +24,44 @@ import {
 import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { validateOutputData } from '@/lib/utils/validator';
+import loggerBack from '@/lib/utils/logger_back';
+import { IGetOneVoucherResponse, IVoucherEntity } from '@/interfaces/voucher';
+import { IUserEntity } from '@/interfaces/user';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
+import { IEventEntity } from '@/interfaces/event';
+import { IAssetEntity } from '@/interfaces/asset';
+import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
+import { ICertificateEntity } from '@/interfaces/certificate';
+import { IInvoiceEntity } from '@/interfaces/invoice';
+import { IFileEntity } from '@/interfaces/file';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { ILineItemEntity } from '@/interfaces/line_item';
+import { IAccountEntity } from '@/interfaces/accounting_account';
+
+type GetOneVoucherResponse = IVoucherEntity & {
+  issuer: IUserEntity;
+  accountSetting: PrismaAccountingSetting; // ToDo: (20241105 - Murky)  換成entity
+  counterParty: ICounterPartyEntityPartial;
+  originalEvents: IEventEntity[];
+  resultEvents: IEventEntity[];
+  asset: IAssetEntity[];
+  certificates: (ICertificateEntity & {
+    invoice: IInvoiceEntity;
+    file: IFileEntity;
+    userCertificates: IUserCertificateEntity[];
+  })[];
+  lineItems: (ILineItemEntity & { account: IAccountEntity })[];
+  payableInfo?: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+  receivingInfo?: {
+    total: number;
+    alreadyHappened: number;
+    remain: number;
+  };
+};
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_GET_BY_ID_V2;
@@ -54,15 +92,49 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let payload = null;
 
   try {
-    const voucherFromPrisma = await getUtils.getVoucherFromPrisma(voucherId, {
-      isVoucherNo,
-      companyId,
-    });
+    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
+      voucherId,
+      {
+        isVoucherNo,
+        companyId,
+      }
+    );
 
+    const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
+    const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
+    const accountSetting: PrismaAccountingSetting =
+      await getUtils.getAccountingSettingFromPrisma(companyId);
+    const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
+    const counterParty: ICounterPartyEntityPartial =
+      getUtils.initCounterPartyEntity(voucherFromPrisma);
+    const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
+    const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
+    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
+    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+
+    // ToDo: (20241112 - Murky) 剩下下面這兩個
+    const { payableInfo, receivingInfo } =
+      getUtils.getPayableReceivableInfoFromVoucher(originalEvents);
+    const mockVoucher: GetOneVoucherResponse = {
+      ...voucher,
+      issuer,
+      accountSetting,
+      counterParty,
+      originalEvents,
+      resultEvents,
+      asset,
+      certificates,
+      lineItems,
+      payableInfo,
+      receivingInfo,
+    };
+
+    loggerBack.info(`handleGetRequest voucherFromPrisma: ${JSON.stringify(voucherFromPrisma)}`);
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.VOUCHER_GET_BY_ID_V2,
-      voucherFromPrisma
+      mockVoucher
     );
+    loggerBack.info(`handleGetRequest outputData: ${JSON.stringify(outputData)}`);
 
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
