@@ -59,11 +59,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
       companyId,
     });
 
-    const voucher = parsePrismaVoucherToVoucherEntity(voucherFromPrisma);
-
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.VOUCHER_GET_BY_ID_V2,
-      voucher
+      voucherFromPrisma
     );
 
     if (!isOutputDataValid) {
@@ -73,7 +71,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
     }
 
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    payload = voucher;
   } catch (error) {
     statusMessage = (error as Error).message;
   }
