@@ -80,7 +80,7 @@ const GeneralSettingsPage: React.FC = () => {
       </Head>
 
       <Layout isDashboard={false} pageTitle={t('settings:NORMAL.TITLE')}>
-        <div className="mx-auto flex w-full flex-col gap-lv-7">
+        <div className="flex flex-col gap-lv-7">
           <UserSettings userSetting={userSetting} loginDevices={loginDevices} />
           <NoticeSettings userSetting={userSetting} />
           <AccountBookSettings />
