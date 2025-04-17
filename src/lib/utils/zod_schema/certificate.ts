@@ -82,6 +82,7 @@ export const certificateEntityValidator = z.object({
 });
 
 const certificateListQueryValidator = z.object({
+  companyId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   tab: z.nativeEnum(InvoiceTabs).optional(),
@@ -173,6 +174,7 @@ export const certificatePutValidator: IZodValidator<
 
 const certificateDeleteQueryValidator = z.object({
   certificateId: zodStringToNumber,
+  companyId: zodStringToNumber,
 });
 
 const certificateDeleteBodyValidator = z.object({});
@@ -226,7 +228,7 @@ export const certificateGetOneSchema = {
 
 export const certificateMultiDeleteSchema = {
   input: {
-    querySchema: nullSchema,
+    querySchema: certificateDeleteQueryValidator,
     bodySchema: z.object({
       certificateIds: z.array(z.number()),
     }),

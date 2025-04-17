@@ -29,6 +29,10 @@ import {
 } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTabs } from '@/constants/certificate';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 type APIResponse = ICertificate[] | IPaginatedData<ICertificate[]> | number[] | null;
 
@@ -48,11 +52,38 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
-  const { userId, companyId } = session;
-  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
-  const nowInSecond = getTimestampNow();
+  const { userId, teams } = session;
+  const { companyId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
+    query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.BOOKKEEPING,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const nowInSecond = getTimestampNow();
+
     const paginationCertificates = await getListUtils.getPaginatedCertificateList({
       tab,
       companyId,
@@ -181,14 +212,40 @@ export const handleGetRequest: IHandleRequest<
 export const handlePostRequest: IHandleRequest<
   APIName.CERTIFICATE_POST_V2,
   ICertificate[]
-> = async ({ body, session }) => {
+> = async ({ body, session, query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate[] | null = null;
 
   const { fileIds } = body;
-  const { userId, companyId } = session;
+  const { userId, teams } = session;
+  const { companyId } = query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.BOOKKEEPING,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     const nowInSecond = getTimestampNow();
 
     const certificates: ICertificate[] = await Promise.all(
@@ -264,14 +321,40 @@ export const handlePostRequest: IHandleRequest<
 export const handleDeleteRequest: IHandleRequest<
   APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
   number[]
-> = async ({ body, session }) => {
+> = async ({ body, session, query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number[] | null = null;
 
   const { certificateIds } = body;
-  const { userId } = session;
+  const { userId, teams } = session;
+  const { companyId } = query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.BOOKKEEPING,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     const nowInSecond = getTimestampNow();
 
     const deletedCertificateIds = await deleteUtils.deleteCertificates({
