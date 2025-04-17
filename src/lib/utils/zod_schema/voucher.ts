@@ -303,16 +303,10 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   });
 
   const parsedData: IPaginatedData<IVoucherBeta[]> = {
-    page: data.page,
-    totalPages: data.totalPages,
-    totalCount: data.totalCount,
-    pageSize: data.pageSize,
-    hasNextPage: data.hasNextPage,
-    hasPreviousPage: data.hasPreviousPage,
-    sort: data.sort,
+    ...data,
     data: parsedVouchers,
-    note: data.note,
   };
+
   return parsedData;
 });
 

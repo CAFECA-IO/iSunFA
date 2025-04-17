@@ -89,6 +89,7 @@ enum ErrorCode {
   ADMIN_CANNOT_PROMOTE_TO_ADMIN = '403ISF0020',
   CANNOT_DELETE_OWNER = '403ISF0021',
   ADMIN_CANNOT_DELETE_ADMIN = '403ISF0022',
+  TEAM_NOT_FOUND_FROM_COMPANY = '404ISF0023',
 }
 
 enum SuccessMessage {
@@ -182,6 +183,7 @@ enum ErrorMessage {
   ADMIN_CANNOT_PROMOTE_TO_ADMIN = 'Admin cannot promote to admin',
   CANNOT_DELETE_OWNER = 'Cannot delete owner',
   ADMIN_CANNOT_DELETE_ADMIN = 'Admin cannot delete admin',
+  TEAM_NOT_FOUND_FROM_COMPANY = 'Team not found from company',
 }
 
 export const STATUS_MESSAGE = {
