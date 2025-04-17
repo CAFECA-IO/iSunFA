@@ -20,6 +20,11 @@ import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTaxType } from '@/constants/invoice';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
 
 /**
  * Info: (20241127 - Murky)
@@ -34,7 +39,7 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
 
-  const { userId, companyId } = session;
+  const { userId, teams } = session;
   const { certificateId } = query;
   const {
     counterParty,
@@ -53,12 +58,51 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   const nowInSecond = getTimestampNow();
 
   try {
+    // Info: (20250417 - Shirley) 從 invoice 獲取 certificate ID
+    if (!certificateId) {
+      postUtils.throwErrorAndLog(loggerBack, {
+        errorMessage: 'Certificate not found',
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+      });
+    }
+
+    // Info: (20250417 - Shirley) 檢查 certificate 是否存在
     const isCertificateExistInDB = await postUtils.isCertificateExistInDB(certificateId);
     if (!isCertificateExistInDB) {
       postUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'Certificate not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
+    }
+
+    // Info: (20250417 - Shirley) 獲取 certificate ，從中獲取公司ID
+    const certificateData =
+      await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
+    const { companyId } = certificateData;
+
+    // Info: (20250417 - Shirley) 獲取公司以檢查團隊權限
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.CREATE_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
     const noteEmbedCounterParty = postUtils.embedCounterPartyIntoNote(no, counterParty);
@@ -114,10 +158,10 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       userCertificates: userCertificateEntities,
     };
 
-    const certificate: ICertificate =
+    const certificateResponse: ICertificate =
       certificateAPIGetListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
 
-    payload = certificate;
+    payload = certificateResponse;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;
