@@ -39,7 +39,7 @@ CREATE TABLE "team_payment" (
     "created_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::int,
     "updated_at" INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW())::int,
 
-    CONSTRAINT "TeamPayment_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "team_payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
