@@ -15,7 +15,7 @@ interface NoticeSettingsProps {
 }
 
 const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
-  const { t } = useTranslation(['settings', 'common']);
+  const { t } = useTranslation(['settings']);
   const { toastHandler } = useModalContext();
   const { trigger: updateUserSettingAPI } = APIHandler<IUserSetting>(APIName.USER_SETTING_UPDATE);
 
@@ -96,35 +96,38 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   ];
 
   return (
-    <div>
-      <div id="notice-settings-section" className="mb-lv-7 flex items-center gap-4">
-        <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
-        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+    <main className="flex flex-col gap-40px">
+      <section className="flex items-center gap-16px">
+        <div className="flex items-center gap-8px">
           <Image src="/icons/ringing_bell.svg" width={16} height={16} alt="notice_icon" />
-          <p>{t('settings:NORMAL.NOTICE_SETTINGS')}</p>
+          <span className="text-sm font-medium text-divider-text-lv-1">
+            {t('settings:NORMAL.NOTICE_SETTINGS')}
+          </span>
         </div>
-        <hr className="flex-1 border-divider-stroke-lv-4" />
-      </div>
+        <hr className="flex-auto border-t-2px border-divider-stroke-lv-1" />
+      </section>
 
-      {settings.map(({ key, icon, label }) => (
-        <div key={key} className="mb-lv-5 flex items-center space-x-2">
-          <p className="flex gap-2">
-            {typeof icon === 'string' ? (
-              <Image src={icon} width={16} height={16} alt={`${key}_icon`} />
-            ) : (
-              icon
-            )}
-            <span>{label}</span>
-          </p>
-          <Toggle
-            id={`${key}-toggle`}
-            initialToggleState={notificationSettings[key as keyof typeof notificationSettings]}
-            getToggledState={() => handleToggle(key as keyof typeof notificationSettings)}
-            toggleStateFromParent={notificationSettings[key as keyof typeof notificationSettings]}
-          />
-        </div>
-      ))}
-    </div>
+      <section className="flex flex-col gap-24px">
+        {settings.map(({ key, icon, label }) => (
+          <div key={key} className="flex items-center gap-16px">
+            <p className="flex items-center gap-8px text-base font-medium text-switch-text-primary">
+              {typeof icon === 'string' ? (
+                <Image src={icon} width={16} height={16} alt={`${key}_icon`} />
+              ) : (
+                icon
+              )}
+              <span>{label}</span>
+            </p>
+            <Toggle
+              id={`${key}-toggle`}
+              initialToggleState={notificationSettings[key as keyof typeof notificationSettings]}
+              getToggledState={() => handleToggle(key as keyof typeof notificationSettings)}
+              toggleStateFromParent={notificationSettings[key as keyof typeof notificationSettings]}
+            />
+          </div>
+        ))}
+      </section>
+    </main>
   );
 };
 
