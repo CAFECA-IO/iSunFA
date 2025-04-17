@@ -22,7 +22,7 @@ interface IDefaultMenuOption {
   iconSrcAlt: string;
   iconWidth: number;
   iconHeight: number;
-  disabled?: boolean;
+  disabled?: boolean; // Info: (20250417 - Liz) if true 會在畫面上隱藏
   hiddenForRole?: TeamRole;
 }
 
@@ -40,6 +40,7 @@ type TMenuOption = IMenuOptionWithLink | IMenuOptionWithSubMenu;
 
 interface ISubMenuSection {
   caption: string;
+  disabled?: boolean;
   hiddenForRole?: TeamRole;
   subMenu: (ISubMenuOptionWithLink | ISubMenuOptionWithButton)[];
 }
@@ -47,7 +48,7 @@ interface ISubMenuSection {
 interface IDefaultSubMenuOption {
   title: string;
   disabled?: boolean;
-  needToVerifyAccountBook: boolean;
+  needToConnectAccountBook: boolean;
   hiddenForRole?: TeamRole;
 }
 
@@ -72,7 +73,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'invoice_management_icon',
     iconWidth: 24,
     iconHeight: 24,
-    disabled: true, // ToDo: (20250416 - Liz) 目前先暫時關閉憑證管理，之後要打開時再移除這一行就可以了
+    disabled: true,
     subMenu: [
       {
         caption: 'INVOICE',
@@ -81,13 +82,13 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'INPUT_INVOICE',
             link: ISUNFA_ROUTE.INPUT_CERTIFICATE_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'OUTPUT_INVOICE',
             link: ISUNFA_ROUTE.OUTPUT_CERTIFICATE_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -108,19 +109,19 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'ADDING_VOUCHER',
             link: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'VOUCHER_LIST',
             link: ISUNFA_ROUTE.VOUCHER_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'PAYABLE_RECEIVABLE_LIST',
             link: ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -131,7 +132,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'UPLOAD_CERTIFICATE',
             link: ISUNFA_ROUTE.CERTIFICATE_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -152,7 +153,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'ASSET_LIST',
             link: ISUNFA_ROUTE.ASSET_LIST,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -173,19 +174,19 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'BALANCE_SHEET',
             link: ISUNFA_ROUTE.BALANCE_SHEET,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'INCOME_STATEMENT',
             link: ISUNFA_ROUTE.INCOME_STATEMENT,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'STATEMENT_OF_CASH_FLOWS',
             link: ISUNFA_ROUTE.CASH_FLOW,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -196,13 +197,13 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'LEDGER',
             link: ISUNFA_ROUTE.LEDGER,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'TRIAL_BALANCE',
             link: ISUNFA_ROUTE.TRIAL_BALANCE,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -212,7 +213,7 @@ const MENU_CONFIG: TMenuOption[] = [
           {
             type: SubMenuOptionType.BUTTON,
             title: 'GENERATE_EMBED_CODE',
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -232,7 +233,7 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'GENERAL_SETTINGS',
             link: ISUNFA_ROUTE.GENERAL_SETTINGS,
-            needToVerifyAccountBook: false,
+            needToConnectAccountBook: false,
           },
         ],
       },
@@ -243,14 +244,14 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'ACCOUNTING_SETTINGS',
             link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
             hiddenForRole: TeamRole.VIEWER,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'CLIENTS_SUPPLIERS_MANAGEMENT',
             link: ISUNFA_ROUTE.COUNTERPARTY,
-            needToVerifyAccountBook: true,
+            needToConnectAccountBook: true,
           },
         ],
       },
@@ -276,14 +277,14 @@ const SubMenuOption = ({
   title,
   link,
   disabled,
-  needToVerifyAccountBook,
+  needToConnectAccountBook,
   hiddenForRole,
   toggleOverlay = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
-  const noSelectedCompany = !connectedAccountBook;
+  const notConnectAccountBook = !connectedAccountBook;
   const [isEmbedCodeModalOpen, setIsEmbedCodeModalOpen] = useState<boolean>(false);
   const { teamRole } = useUserCtx();
 
@@ -291,9 +292,9 @@ const SubMenuOption = ({
     setIsEmbedCodeModalOpen((prev) => !prev);
   };
 
-  const showCompanyNeededToast = () => {
+  const showAccountBookNeededToast = () => {
     toastHandler({
-      id: ToastId.NEED_TO_SELECT_COMPANY,
+      id: ToastId.NEED_TO_SELECT_ACCOUNT_BOOK,
       type: ToastType.INFO,
       content: (
         <div className="flex items-center gap-32px">
@@ -322,8 +323,8 @@ const SubMenuOption = ({
   };
 
   const onClickButton = () => {
-    if (needToVerifyAccountBook && noSelectedCompany) {
-      showCompanyNeededToast();
+    if (needToConnectAccountBook && notConnectAccountBook) {
+      showAccountBookNeededToast();
       return;
     }
 
@@ -334,12 +335,14 @@ const SubMenuOption = ({
   };
 
   const onClickLink = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (needToVerifyAccountBook && noSelectedCompany) {
+    if (needToConnectAccountBook && notConnectAccountBook) {
       // Info: (20241018 - Liz) 阻止導航
       e.preventDefault();
-      showCompanyNeededToast();
+      showAccountBookNeededToast();
     }
   };
+
+  if (disabled) return null;
 
   // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
   if (hiddenForRole && hiddenForRole === teamRole) return null;
@@ -349,7 +352,7 @@ const SubMenuOption = ({
       <Link
         href={link}
         onClick={onClickLink}
-        className={`rounded-xs px-12px py-10px font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+        className="rounded-xs px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid"
       >
         {t(`layout:SIDE_MENU.${title}`)}
       </Link>
@@ -362,7 +365,7 @@ const SubMenuOption = ({
         <button
           type="button"
           onClick={onClickButton}
-          className={`rounded-xs px-12px py-10px text-left font-medium hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:bg-transparent disabled:text-button-text-disable ${disabled ? 'pointer-events-none text-button-text-disable' : 'text-button-text-secondary'}`}
+          className="rounded-xs px-12px py-10px text-left font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid"
         >
           {t(`layout:SIDE_MENU.${title}`)}
         </button>
@@ -389,6 +392,8 @@ const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) 
   const { teamRole } = useUserCtx();
 
   const { t } = useTranslation(['layout']);
+
+  if (subMenuSection.disabled) return null;
 
   // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
   if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
@@ -444,12 +449,14 @@ const MenuOption = ({
 }: MenuOptionProps) => {
   const { t } = useTranslation(['layout']);
 
+  if (disabled) return null;
+
   return (
     <div>
       {link ? (
         <Link
           href={link}
-          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover"
         >
           <div className="flex h-24px w-24px items-center justify-center">
             <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
@@ -460,8 +467,7 @@ const MenuOption = ({
         <button
           type="button"
           onClick={() => onClickMenuOption(title)}
-          disabled={disabled}
-          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:bg-transparent disabled:text-button-text-disable"
+          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover"
         >
           <div className="flex h-24px w-24px items-center justify-center">
             <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
