@@ -43,13 +43,13 @@ CREATE TABLE "team_payment" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "TeamPayment_team_id_key" ON "TeamPayment"("team_id");
+CREATE UNIQUE INDEX "team_payment_team_id_key" ON "team_payment"("team_id");
 
 -- AddForeignKey
-ALTER TABLE "TeamPayment" ADD CONSTRAINT "TeamPayment_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "team"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "team_payment" ADD CONSTRAINT "team_payment_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "team"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TeamPayment" ADD CONSTRAINT "TeamPayment_team_plan_type_fkey" FOREIGN KEY ("team_plan_type") REFERENCES "team_plan"("type") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "team_payment" ADD CONSTRAINT "team_payment_team_plan_type_fkey" FOREIGN KEY ("team_plan_type") REFERENCES "team_plan"("type") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "TeamPayment" ADD CONSTRAINT "TeamPayment_user_payment_info_id_fkey" FOREIGN KEY ("user_payment_info_id") REFERENCES "user_payment_info"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "team_payment" ADD CONSTRAINT "team_payment_user_payment_info_id_fkey" FOREIGN KEY ("user_payment_info_id") REFERENCES "user_payment_info"("id") ON DELETE SET NULL ON UPDATE CASCADE;
