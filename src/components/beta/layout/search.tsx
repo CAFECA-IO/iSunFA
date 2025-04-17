@@ -21,7 +21,7 @@ const Search = ({ toggleOverlay }: SearchProps) => {
   const [searchResults, setSearchResults] = useState<ISearchKeyword[]>([]);
   const router = useRouter();
   const { connectedAccountBook } = useUserCtx();
-  const noSelectedCompany = !connectedAccountBook;
+  const notConnectAccountBook = !connectedAccountBook;
   const { toastHandler } = useModalContext();
 
   const hasSearchResults = searchResults.length > 0;
@@ -43,7 +43,7 @@ const Search = ({ toggleOverlay }: SearchProps) => {
     setSearchResults([]);
   };
 
-  const showCompanyNeededToast = () => {
+  const showAccountBookNeededToast = () => {
     toastHandler({
       id: ToastId.ACCOUNT_BOOK_NEEDED,
       type: ToastType.INFO,
@@ -74,8 +74,8 @@ const Search = ({ toggleOverlay }: SearchProps) => {
   };
 
   const onClickSearchResult = (item: ISearchKeyword) => {
-    if (item.needToVerifyCompany && noSelectedCompany) {
-      showCompanyNeededToast();
+    if (item.needToVerifyCompany && notConnectAccountBook) {
+      showAccountBookNeededToast();
       return;
     }
     router.push(item.path);
@@ -101,7 +101,7 @@ const Search = ({ toggleOverlay }: SearchProps) => {
         </button>
       )}
 
-      {/* // Info: (20241226 - Liz) 搜尋結果下拉式選單 */}
+      {/* Info: (20241226 - Liz) 搜尋結果下拉式選單 */}
       {hasSearchResults && (
         <div className="absolute inset-x-0 top-full z-10 mt-10px flex max-h-300px flex-col overflow-y-auto rounded-sm bg-input-surface-input-background p-12px shadow-Dropshadow_M">
           {searchResults.map((item) => (

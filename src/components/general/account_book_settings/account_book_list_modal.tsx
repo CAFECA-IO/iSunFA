@@ -15,11 +15,11 @@ import { useUserCtx } from '@/contexts/user_context';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 interface AccountBookListModalProps {
-  toggleModal: () => void;
+  closeToggleAccountBookListModal: () => void;
 }
 
-const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
-  const { t } = useTranslation(['settings', 'common', 'account_book']);
+const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookListModalProps) => {
+  const { t } = useTranslation(['settings', 'account_book']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -63,7 +63,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
-          <button type="button" onClick={toggleModal}>
+          <button type="button" onClick={closeToggleAccountBookListModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>

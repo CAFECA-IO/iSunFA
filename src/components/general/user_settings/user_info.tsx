@@ -59,29 +59,37 @@ const UserInfo: React.FC<UserInfoProps> = ({
       <div className="h-80px w-80px flex-none overflow-hidden rounded-full group-hover:brightness-50">
         <Image alt="avatar" src={imageId} width={80} height={80} />
       </div>
-      <div>
-        <div className="mb-lv-4 flex items-center gap-3 text-sm text-gray-700">
-          <TbUserCircle size={16} />
-          <div className="flex items-center gap-1">
-            <span className="text-text-neutral-mute">{t('settings:NORMAL.USER_NAME')}:</span>
+
+      <div className="flex flex-col gap-16px">
+        <div className="flex items-center gap-3 text-sm">
+          <TbUserCircle size={16} className="flex-none text-icon-surface-single-color-primary" />
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-nowrap text-text-neutral-tertiary">
+              {t('settings:NORMAL.USER_NAME')}:
+            </span>
             <span className="text-base font-semibold text-text-neutral-primary">{username}</span>
           </div>
-          {/* <FiEdit3 size={16} /> */}
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-700">
-          <FiMail size={16} />
+
+        <div className="flex items-center gap-3 text-sm">
+          <FiMail size={16} className="flex-none text-icon-surface-single-color-primary" />
           <div className="flex max-w-280px flex-wrap items-center gap-1">
-            <span className="min-w-130px text-text-neutral-mute">
+            <span className="text-nowrap text-text-neutral-tertiary">
               {t('settings:NORMAL.LINKED_EMAIL')}:
             </span>
-            <span className="text-base font-semibold text-text-neutral-primary">{email}</span>
+            <span className="text-base font-semibold text-text-neutral-primary wrap-anywhere">
+              {email}
+            </span>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-sm text-gray-700">
-        <FiLink size={16} />
+
+      <div className="flex items-center gap-3 text-sm">
+        <FiLink size={16} className="flex-none text-icon-surface-single-color-primary" />
         <div className="flex flex-col items-start gap-1">
-          <span className="text-text-neutral-mute">{t('settings:NORMAL.LOGIN_DEVICE_N_IP')}:</span>
+          <span className="text-text-neutral-tertiary">
+            {t('settings:NORMAL.LOGIN_DEVICE_N_IP')}:
+          </span>
           <Button
             id="settings-add-company"
             type="button"
