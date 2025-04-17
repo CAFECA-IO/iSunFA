@@ -75,7 +75,7 @@ export const handleGetRequest: IHandleRequest<
 
     const assertResult = convertTeamRoleCanDo({
       teamRole: userTeam?.role as TeamRole,
-      canDo: TeamPermissionAction.BOOKKEEPING,
+      canDo: TeamPermissionAction.VIEW_CERTIFICATE,
     });
 
     if (!assertResult.can) {
@@ -239,7 +239,7 @@ export const handlePostRequest: IHandleRequest<
 
     const assertResult = convertTeamRoleCanDo({
       teamRole: userTeam?.role as TeamRole,
-      canDo: TeamPermissionAction.BOOKKEEPING,
+      canDo: TeamPermissionAction.CREATE_CERTIFICATE,
     });
 
     if (!assertResult.can) {
@@ -348,7 +348,7 @@ export const handleDeleteRequest: IHandleRequest<
 
     const assertResult = convertTeamRoleCanDo({
       teamRole: userTeam?.role as TeamRole,
-      canDo: TeamPermissionAction.BOOKKEEPING,
+      canDo: TeamPermissionAction.DELETE_CERTIFICATE,
     });
 
     if (!assertResult.can) {

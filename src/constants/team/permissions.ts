@@ -82,7 +82,7 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   [TeamPermissionAction.VIEW_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.CREATE_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 
-  // Info: (20250721 - Shirley) 憑證相關權限, 所有角色都有權限
+  // Info: (20250417 - Shirley) 憑證相關權限, 所有角色都有權限
   [TeamPermissionAction.VIEW_CERTIFICATE]: [
     TeamRole.OWNER,
     TeamRole.ADMIN,
