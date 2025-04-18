@@ -77,7 +77,7 @@ const CreditCardInfo = ({
       },
     });
 
-    //
+    // Deprecated: (20250418 - Julian) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('sendEmailHandler');
   };
