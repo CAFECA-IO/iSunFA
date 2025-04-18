@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.9.2+23",
+  "version": "0.9.2+24",
   "private": false,
   "scripts": {
     "dev": "next dev",
@@ -36,7 +36,7 @@
     "dotenv": "^16.4.5",
     "formidable": "^3.5.1",
     "html2canvas": "^1.4.1",
-    "html2pdf.js": "^0.10.2",
+    "html2pdf.js": "^0.10.3",
     "i18next": "^23.11.5",
     "jest-mock-extended": "^3.0.7",
     "jsonwebtoken": "^9.0.2",
