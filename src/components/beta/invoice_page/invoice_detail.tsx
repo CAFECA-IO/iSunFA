@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
@@ -33,7 +32,7 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
 
   const planName = t(`subscriptions:PLAN_NAME.${planId.toUpperCase()}`);
 
-  const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp / 1000).date}`;
+  const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp).date}`;
 
   const issueAndDueCard = (
     <div className="flex h-150px flex-col gap-16px rounded-md bg-surface-brand-primary-10 px-40px py-12px font-semibold print:h-auto">
@@ -41,14 +40,14 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
       <div className="flex flex-col items-start gap-6px">
         <p className="text-text-brand-primary-lv1">{t('subscriptions:INVOICE_PAGE.ISSUED')}</p>
         <p className="text-xs text-text-neutral-secondary">
-          {timestampToString(issuedTimestamp / 1000).date}
+          {timestampToString(issuedTimestamp).date}
         </p>
       </div>
       {/* Info: (20250115 - Julian) Due Date */}
       <div className="flex flex-col items-start gap-6px">
         <p className="text-text-brand-primary-lv1">{t('subscriptions:INVOICE_PAGE.DUE')}</p>
         <p className="text-xs text-text-neutral-secondary">
-          {timestampToString(dueTimestamp / 1000).date}
+          {timestampToString(dueTimestamp).date}
         </p>
       </div>
     </div>
@@ -104,8 +103,8 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
         <div className="flex flex-1 flex-col items-start">
           <p className="font-semibold">{planName}</p>
           <p>
-            {timestampToString(issuedTimestamp / 1000).date} {t('common:COMMON.TO')}{' '}
-            {timestampToString(dueTimestamp / 1000).date}
+            {timestampToString(issuedTimestamp).date} {t('common:COMMON.TO')}{' '}
+            {timestampToString(dueTimestamp).date}
           </p>
         </div>
         <p className="w-80px text-center">{planQuantity}</p>
@@ -174,7 +173,8 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
           </h1>
           <p className="font-semibold text-text-neutral-tertiary"># {invoiceId}</p>
         </div>
-        <Image src="/logo/isunfa_logo_new_icon.svg" alt="isunfa_logo" width={48} height={48} />
+        {/* Info: (20250418 - Julian) Logo for print */}
+        <img src="/logo/isunfa_logo_new_icon.svg" alt="isunfa_logo" width={48} height={48} />
       </div>
 
       {/* Info: (20250115 - Julian) Divider */}

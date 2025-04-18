@@ -303,16 +303,10 @@ const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   });
 
   const parsedData: IPaginatedData<IVoucherBeta[]> = {
-    page: data.page,
-    totalPages: data.totalPages,
-    totalCount: data.totalCount,
-    pageSize: data.pageSize,
-    hasNextPage: data.hasNextPage,
-    hasPreviousPage: data.hasPreviousPage,
-    sort: data.sort,
+    ...data,
     data: parsedVouchers,
-    note: data.note,
   };
+
   return parsedData;
 });
 
@@ -497,12 +491,7 @@ const voucherGetOneOutputValidatorV2 = z
                   .map((associateVoucher) => ({
                     id: associateVoucher.resultVoucher.id,
                     voucherNo: associateVoucher.resultVoucher.no,
-                    type:
-                      event.eventType === 'delete' // Info: (20250213 - Tzuhan)  **1. 刪除的傳票 -> 反轉傳票**
-                        ? 'reverse'
-                        : event.eventType === 'revert' // Info: (20250213 - Tzuhan)  **2. 立賬傳票 -> 沖銷傳票**
-                          ? 'settlement'
-                          : '',
+                    type: event.eventType === 'delete' ? 'reverse' : 'settlement',
                   })) ?? []
             ) ?? []),
 

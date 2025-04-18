@@ -156,4 +156,5 @@ export const AUTH_CHECK = {
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNT_BOOK_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
+  [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 };

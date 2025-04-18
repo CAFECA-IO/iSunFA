@@ -15,6 +15,7 @@ import {
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { getTimestampNow } from '@/lib/utils/common';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { sendInviteEmail } from '@/lib/email/send_invite_email';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -117,6 +118,18 @@ export const addMembersToTeam = async (
         });
       }
     });
+
+    await Promise.all(
+      emails.map((email) => {
+        const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+        return sendInviteEmail({
+          to: email,
+          inviterName: userId.toString(), // TODO: (20250418 - tzuhan) 之後要改成邀請者的名字
+          teamName: teamId.toString(), // TODO: (20250418 - tzuhan) 之後要改成團隊名稱
+          inviteLink,
+        });
+      })
+    );
 
     return { invitedCount: emails.length, unregisteredEmails: [] };
   } catch (error) {

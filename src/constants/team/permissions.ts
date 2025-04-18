@@ -103,6 +103,14 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   ],
 
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  // Info: (20250416 - Tzuhan) 傳票相關
+  [TeamPermissionAction.CREATE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.RESTORE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 
 // Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理
@@ -116,6 +124,7 @@ export const TEAM_ROLE_TRANSITIONS: Record<TeamRole, TeamRole[]> = {
 // Info: (20250311 - Tzuhan) 🌟 訂閱方案限制
 export const SUBSCRIPTION_PLAN_LIMITS = {
   BEGINNER: 1, // Info: (20250311 - Tzuhan) 免費版最多只能有 1 個帳本，但為了方便測試，這裡設定為 100
+  TRIAL: Infinity, // Info: (20250418 - Tzuhan) 試用版無限制
   PROFESSIONAL: Infinity, // Info: (20250311 - Tzuhan) 專業版無限制
   ENTERPRISE: Infinity, // Info: (20250311 - Tzuhan) 企業版無限制
 } as const;

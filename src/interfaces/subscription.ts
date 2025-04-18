@@ -26,6 +26,7 @@ interface IPlanFeature {
 }
 
 export enum TPlanType {
+  TRIAL = 'TRIAL',
   BEGINNER = 'BEGINNER',
   PROFESSIONAL = 'PROFESSIONAL',
   ENTERPRISE = 'ENTERPRISE',
