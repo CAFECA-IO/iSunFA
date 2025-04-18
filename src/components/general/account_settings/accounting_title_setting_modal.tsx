@@ -8,8 +8,8 @@ import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import AccountTitleSection from '@/components/account_settings/account_title_section';
-import AddNewTitleSection from '@/components/account_settings/add_new_title_section';
+import AccountTitleSection from '@/components/general/account_settings/account_title_section';
+import AddNewTitleSection from '@/components/general/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 

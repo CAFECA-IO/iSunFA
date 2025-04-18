@@ -5,7 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { ILoginDevice } from '@/interfaces/login_device';
-import UserInfo from '@/components/user_settings/user_info';
+import UserInfo from '@/components/general/user_settings/user_info';
 import TeamList from '@/components/beta/my_account_page/team_list';
 import CreateTeamModal from '@/components/beta/my_account_page/create_team_modal';
 import { Button } from '@/components/button/button';

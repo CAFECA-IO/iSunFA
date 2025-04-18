@@ -2,6 +2,11 @@
   "SIDE_MENU": {
     "TERMS_OF_SERVICE": "服務條款",
     "PRIVACY_POLICY": "隱私權政策",
+    "INVOICE_MANAGEMENT": "憑證管理",
+    "INVOICE": "憑證",
+    "INPUT_INVOICE": "進項憑證",
+    "OUTPUT_INVOICE": "銷項憑證",
+
     "ACCOUNTING": "會計",
     "ADDING_VOUCHER": "新增傳票",
     "VOUCHER_LIST": "傳票清單",
@@ -11,7 +16,6 @@
     "ASSET_MANAGEMENT": "資產管理",
     "ASSET": "資產",
     "ASSET_LIST": "資產清單",
-    "PERSONNEL_MANAGEMENT": "人員管理",
     "REPORTS": "報表",
     "FINANCIAL_REPORT": "財務報表",
     "BALANCE_SHEET": "資產負債表",

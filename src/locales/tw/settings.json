@@ -185,6 +185,14 @@
     "PLEASE_ENTER_THE_FULL_ADDRESS": "請輸入完整地址",
     "REMOVE_ACCOUNT_BOOK": "刪除帳本",
     "CANCEL": "取消",
-    "SAVE": "儲存"
+    "SAVE": "儲存",
+    "REMOVE": "刪除",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "您確定要刪除這個帳本嗎？",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "刪除帳本失敗",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "刪除帳本成功",
+    "GET_ACCOUNT_BOOK_FAIL": "取得帳本資訊失敗",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "更新帳本資訊失敗",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "更新帳本資訊成功"
   }
 }

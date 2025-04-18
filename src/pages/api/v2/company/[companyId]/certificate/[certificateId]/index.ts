@@ -20,6 +20,10 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 type APIResponse = ICertificate | null;
 
@@ -30,11 +34,40 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
   const { certificateId } = query;
-  const { userId } = session;
+  const { userId, teams } = session;
   const nowInSecond = getTimestampNow();
   try {
+    // Info: (20250417 - Shirley) 先獲取憑證資料
     const certificateFromPrisma =
       await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
+
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const { companyId } = certificateFromPrisma;
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.VIEW_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    // Info: (20250417 - Shirley) 權限檢查通過後繼續處理資料
     const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
     const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
     const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
@@ -76,6 +109,7 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
       errorMessage: error.message,
     };
     loggerError(errorInfo);
+    statusMessage = error.message;
   }
 
   return {

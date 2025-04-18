@@ -2,6 +2,11 @@
   "SIDE_MENU": {
     "TERMS_OF_SERVICE": "服务条款",
     "PRIVACY_POLICY": "隐私权政策",
+    "INVOICE_MANAGEMENT": "凭证管理",
+    "INVOICE": "凭证",
+    "INPUT_INVOICE": "进项凭证",
+    "OUTPUT_INVOICE": "销项凭证",
+
     "ACCOUNTING": "会计",
     "ADDING_VOUCHER": "新增传票",
     "VOUCHER_LIST": "传票清单",
@@ -11,7 +16,6 @@
     "ASSET_MANAGEMENT": "资产管理",
     "ASSET": "资产",
     "ASSET_LIST": "资产清单",
-    "PERSONNEL_MANAGEMENT": "人员管理",
     "REPORTS": "报表",
     "FINANCIAL_REPORT": "财务报表",
     "BALANCE_SHEET": "资产负债表",

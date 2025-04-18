@@ -11,6 +11,8 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
 import Skeleton from '@/components/skeleton/skeleton';
+import MessageModal from '@/components/message_modal/message_modal';
+import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 
 interface IAccountBookInfoModalProps {
   accountBook: IAccountBookWithTeam;
@@ -23,7 +25,7 @@ const AccountBookInfoModal = ({
   setIsAccountBookListModalOpen,
   setRefreshKey,
 }: IAccountBookInfoModalProps) => {
-  const { t } = useTranslation(['settings']);
+  const { t } = useTranslation(['settings', 'dashboard']);
   const { toastHandler } = useModalContext();
 
   const [name, setName] = useState<IAccountBookDetails['name']>('');
@@ -39,9 +41,11 @@ const AccountBookInfoModal = ({
 
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState<boolean>(false);
   const [isPhoneCountryDropdownOpen, setIsPhoneCountryDropdownOpen] = useState<boolean>(false);
-  const [isLoadingForGetAccountBookInfo, setIsLoadingForGetAccountBookInfo] =
-    useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+
+  const [isGetAccountBookLoading, setIsGetAccountBookLoading] = useState<boolean>(false);
+  const [isUpdateAccountBookLoading, setIsUpdateAccountBookLoading] = useState<boolean>(false);
+  const [isDeleteAccountBookLoading, setIsDeleteAccountBookLoading] = useState<boolean>(false);
 
   // Info: (20250411 - Liz) 取得帳本詳細資訊 API
   const { trigger: getAccountBookInfoByIdAPI } = APIHandler<IAccountBookDetails>(
@@ -52,6 +56,17 @@ const AccountBookInfoModal = ({
   const { trigger: updateAccountBookInfoAPI } = APIHandler<IAccountBookDetails>(
     APIName.UPDATE_ACCOUNT_BOOK_INFO
   );
+
+  // Info: (20250416 - Liz) 刪除帳本 API
+  const { trigger: deleteAccountBookAPI } = APIHandler<{
+    id: number;
+    imageId: string;
+    name: string;
+    taxId: string;
+    startDate: number;
+    createdAt: number;
+    updatedAt: number;
+  }>(APIName.DELETE_ACCOUNT_BOOK);
 
   const closeAccountBookInfoModal = () => {
     setIsAccountBookListModalOpen(false);
@@ -70,10 +85,10 @@ const AccountBookInfoModal = ({
   // Info: (20250415 - Liz) 打 API 更新帳本資訊
   const handleSubmit = async () => {
     // Info: (20250415 - Liz) 防止重複點擊
-    if (isLoading) return;
+    if (isUpdateAccountBookLoading) return;
 
     // Info: (20250415 - Liz) 開始 API 請求時設為 loading 狀態
-    setIsLoading(true);
+    setIsUpdateAccountBookLoading(true);
 
     try {
       const success = await updateAccountBookInfoAPI({
@@ -95,7 +110,7 @@ const AccountBookInfoModal = ({
         toastHandler({
           id: ToastId.ACCOUNT_BOOK_INFO_UPDATE_ERROR,
           type: ToastType.ERROR,
-          content: '更新帳本資訊失敗',
+          content: t('settings:ACCOUNT_BOOK_INFO.UPDATE_ACCOUNT_BOOK_FAIL'),
           closeable: true,
           autoClose: 2000,
         });
@@ -105,7 +120,7 @@ const AccountBookInfoModal = ({
       toastHandler({
         id: ToastId.ACCOUNT_BOOK_INFO_UPDATE_SUCCESS,
         type: ToastType.SUCCESS,
-        content: '更新帳本資訊成功',
+        content: t('settings:ACCOUNT_BOOK_INFO.UPDATE_ACCOUNT_BOOK_SUCCESS'),
         closeable: true,
         autoClose: 2000,
       });
@@ -116,21 +131,80 @@ const AccountBookInfoModal = ({
       toastHandler({
         id: ToastId.ACCOUNT_BOOK_INFO_UPDATE_ERROR,
         type: ToastType.ERROR,
-        content: '更新帳本資訊失敗',
+        content: t('settings:ACCOUNT_BOOK_INFO.UPDATE_ACCOUNT_BOOK_FAIL'),
         closeable: true,
         autoClose: 2000,
       });
     } finally {
-      setIsLoading(false);
+      setIsUpdateAccountBookLoading(false);
     }
   };
 
-  // Info: (20250415 - Liz) 取得帳本詳細資訊 (getAccountBookInfoByBookId)
+  // Info: (20250416 - Liz) 打 API 刪除帳本
+  const deleteAccountBook = async () => {
+    // Info: (20250416 - Liz) 防止重複點擊
+    if (isDeleteAccountBookLoading) return;
+
+    // Info: (20250416 - Liz) 開始 API 請求時設為 loading 狀態
+    setIsDeleteAccountBookLoading(true);
+    try {
+      const { success } = await deleteAccountBookAPI({
+        params: {
+          companyId: accountBook.id,
+        },
+      });
+      if (!success) {
+        toastHandler({
+          id: ToastId.ACCOUNT_BOOK_DELETE_ERROR,
+          type: ToastType.ERROR,
+          content: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK_FAIL'),
+          closeable: true,
+          autoClose: 2000,
+        });
+        return;
+      }
+
+      toastHandler({
+        id: ToastId.ACCOUNT_BOOK_DELETE_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK_SUCCESS'),
+        closeable: true,
+        autoClose: 2000,
+      });
+      closeAccountBookInfoModal(); // Info: (20250416 - Liz) 關閉 modal
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250416 - Liz) 重新整理帳本清單
+    } catch (error) {
+      toastHandler({
+        id: ToastId.ACCOUNT_BOOK_DELETE_ERROR,
+        type: ToastType.ERROR,
+        content: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK_FAIL'),
+        closeable: true,
+        autoClose: 2000,
+      });
+    } finally {
+      setIsDeleteAccountBookLoading(false);
+    }
+  };
+
+  const openDeleteModal = () => setIsDeleteModalOpen(true);
+  const closeDeleteModal = () => setIsDeleteModalOpen(false);
+
+  const messageModalData: IMessageModal = {
+    title: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK'),
+    content: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK_CONFIRM'),
+    submitBtnStr: t('settings:ACCOUNT_BOOK_INFO.REMOVE'),
+    submitBtnFunction: deleteAccountBook,
+    messageType: MessageType.WARNING,
+    backBtnFunction: closeDeleteModal,
+    backBtnStr: t('settings:ACCOUNT_BOOK_INFO.CANCEL'),
+  };
+
+  // Info: (20250415 - Liz) 打 API 取得帳本詳細資訊 (getAccountBookInfoByBookId)
   useEffect(() => {
     if (!accountBook) return;
 
     const getAccountBookInfo = async () => {
-      setIsLoadingForGetAccountBookInfo(true);
+      setIsGetAccountBookLoading(true);
       try {
         const { success, data } = await getAccountBookInfoByIdAPI({
           params: { accountBookId: accountBook.id },
@@ -149,11 +223,11 @@ const AccountBookInfoModal = ({
         toastHandler({
           id: ToastId.ACCOUNT_BOOK_INFO_GET_ERROR,
           type: ToastType.ERROR,
-          content: '取得帳本資訊失敗',
+          content: t('settings:ACCOUNT_BOOK_INFO.GET_ACCOUNT_BOOK_FAIL'),
           closeable: true,
         });
       } finally {
-        setIsLoadingForGetAccountBookInfo(false);
+        setIsGetAccountBookLoading(false);
       }
     };
 
@@ -161,7 +235,7 @@ const AccountBookInfoModal = ({
   }, [accountBook, toastHandler]);
 
   // Info: (20250415 - Liz) 如果打 API 還在載入中，顯示 loading 樣式
-  if (isLoadingForGetAccountBookInfo) {
+  if (isGetAccountBookLoading) {
     return (
       <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
         <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
@@ -417,9 +491,10 @@ const AccountBookInfoModal = ({
             <button
               type="button"
               className="flex items-center gap-8px text-sm font-semibold text-text-state-error"
+              onClick={openDeleteModal}
             >
               <FiTrash2 size={16} />
-              <p>{t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK')}</p>
+              <span>{t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK')}</span>
             </button>
           </section>
 
@@ -435,7 +510,7 @@ const AccountBookInfoModal = ({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isLoading}
+              disabled={isUpdateAccountBookLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
               <p>{t('settings:ACCOUNT_BOOK_INFO.SAVE')}</p>
@@ -444,6 +519,15 @@ const AccountBookInfoModal = ({
           </section>
         </div>
       </div>
+
+      {/* Info: (20250416 - Liz) Modal */}
+      {isDeleteModalOpen && (
+        <MessageModal
+          messageModalData={messageModalData}
+          isModalVisible={isDeleteModalOpen}
+          modalVisibilityHandler={closeDeleteModal}
+        />
+      )}
     </main>
   );
 };

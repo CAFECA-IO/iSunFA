@@ -958,7 +958,7 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
               include: {
                 invoices: true,
                 file: true,
-                UserCertificate: true,
+                userCertificate: true,
               },
             },
           },
@@ -1076,7 +1076,7 @@ export async function getOneVoucherByVoucherNoV2(options: {
               include: {
                 invoices: true,
                 file: true,
-                UserCertificate: true,
+                userCertificate: true,
               },
             },
           },
@@ -1456,7 +1456,7 @@ export async function getManyVoucherV2(options: {
             imageFile: true,
           },
         },
-        UserVoucher: true,
+        userVoucher: true,
         originalVouchers: {
           include: {
             event: true,
@@ -1769,7 +1769,7 @@ export async function getManyVoucherByAccountV2(options: {
             imageFile: true,
           },
         },
-        UserVoucher: true,
+        userVoucher: true,
         originalVouchers: {
           include: {
             event: true,
@@ -1893,7 +1893,7 @@ export async function getUnreadVoucherCount(options: {
       where: {
         ...where,
         status,
-        UserVoucher: {
+        userVoucher: {
           some: {
             userId,
             isRead: true,

@@ -4,7 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Layout from '@/components/beta/layout/layout';
-import AccountingSettingPageBody from '@/components/account_settings/accounting_setting_page_body';
+import AccountingSettingPageBody from '@/components/general/account_settings/accounting_setting_page_body';
 import { useUserCtx } from '@/contexts/user_context';
 import { TeamRole } from '@/interfaces/team';
 

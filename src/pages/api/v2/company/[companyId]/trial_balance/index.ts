@@ -22,11 +22,15 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { parseSortOption } from '@/lib/utils/sort';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { SortOrder } from '@/constants/sort';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 export const handleGetRequest: IHandleRequest<
   APIName.TRIAL_BALANCE_LIST,
   ITrialBalancePayload
-> = async ({ query }) => {
+> = async ({ query, session }) => {
   /* Info: (20241227 - Luphia) 指定期間取得有變動的會計科目，分析期初、期中、期末的借方與貸方金額，並總計餘額。
    * 0.1. 需求：取得當下 401 申報週期 (每兩個月為一期，例如當下時間點為 2024/11/01 ~ 2024/12/31)
    * 0.2. 需求：輸入會計分錄清單，將重複的分錄合併並加總其借貸金額，輸出合併後的會計分錄清單
@@ -62,6 +66,35 @@ export const handleGetRequest: IHandleRequest<
    */
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ITrialBalancePayload | null = null;
+
+  // Info: (20250416 - Shirley) 添加權限檢查邏輯
+  const { companyId } = query;
+  const { teams } = session;
+
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.VIEW_TRIAL_BALANCE,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
   try {
     // Info: (20250102 - Shirley) Step 1
     const { periodBegin, periodEnd } = getCurrent401Period();
@@ -72,7 +105,7 @@ export const handleGetRequest: IHandleRequest<
       endDate: query.endDate || periodEnd,
     };
 
-    const { companyId, sortOption, page, pageSize } = updatedQuery;
+    const { sortOption, page, pageSize } = updatedQuery;
 
     const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
 

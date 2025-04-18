@@ -115,9 +115,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
           {subtitle && currency && (
             <div className="font-medium text-text-neutral-tertiary">
               <span>{subtitle} </span>
-              <span className="text-black">
-                {numberWithCommas(totalPrice ?? 0)}
-              </span>
+              <span className="text-black">{numberWithCommas(totalPrice ?? 0)}</span>
               <span>{currency}</span>
             </div>
           )}

@@ -101,7 +101,7 @@ export async function createCertificateWithEmptyInvoice(options: {
           },
         },
         file: true,
-        UserCertificate: true,
+        userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -143,7 +143,7 @@ export async function getOneCertificateById(
           },
         },
         file: true,
-        UserCertificate: true,
+        userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -362,7 +362,7 @@ export async function getCertificatesV2(options: {
           },
         },
         file: true,
-        UserCertificate: true,
+        userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -434,7 +434,7 @@ export async function getUnreadCertificateCount(options: {
       where: {
         ...where,
         voucherCertificates: getVoucherCertificateRelation(tab),
-        UserCertificate: {
+        userCertificate: {
           some: {
             userId,
             isRead: true,

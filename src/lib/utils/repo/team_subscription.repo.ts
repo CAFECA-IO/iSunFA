@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamSubscription } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ITeamInvoice, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
@@ -28,7 +28,11 @@ export const createTeamSubscription = async (
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const data = {
     teamId: options.teamId,
@@ -124,13 +128,13 @@ export async function listTeamSubscription(
               plan: true,
             },
           },
-          TeamOrder: {
+          teamOrder: {
             orderBy: { createdAt: SortOrder.DESC },
             take: 1,
             include: {
-              TeamPaymentTransaction: {
+              teamPaymentTransaction: {
                 include: {
-                  TeamInvoice: true,
+                  teamInvoice: true,
                 },
               },
             },
@@ -152,9 +156,9 @@ export async function listTeamSubscription(
 
   const data: IUserOwnedTeam[] = ownerTeams.map(({ team }) => {
     const latestSub = team.subscriptions[0];
-    const latestOrder = team.TeamOrder[0];
-    const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-    const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
+    const latestOrder = team.teamOrder[0];
+    const latestTxn = latestOrder?.teamPaymentTransaction[0];
+    const hasInvoice = (latestTxn?.teamInvoice?.length ?? 0) > 0;
 
     let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
     if (latestSub) {
@@ -207,9 +211,9 @@ export async function listTeamTransaction(
     },
     select: {
       orderDetails: true,
-      TeamPaymentTransaction: {
+      teamPaymentTransaction: {
         include: {
-          TeamInvoice: true,
+          teamInvoice: true,
           userPaymentInfo: {
             select: {
               user: {
@@ -232,8 +236,8 @@ export async function listTeamTransaction(
   const planEndTimestamp = subscription?.expiredDate ?? 0;
 
   teamOrders.forEach((order) => {
-    const transaction = order.TeamPaymentTransaction?.[0];
-    const invoice = transaction?.TeamInvoice?.[0];
+    const transaction = order.teamPaymentTransaction?.[0];
+    const invoice = transaction?.teamInvoice?.[0];
     const detail = order.orderDetails?.[0];
 
     if (!transaction || !detail) return;
@@ -359,7 +363,11 @@ export async function getSubscriptionByTeamId(
     action: TeamPermissionAction.VIEW_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -371,12 +379,12 @@ export async function getSubscriptionByTeamId(
         take: 1,
         include: { plan: true },
       },
-      TeamOrder: {
+      teamOrder: {
         orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: {
-          TeamPaymentTransaction: {
-            include: { TeamInvoice: true },
+          teamPaymentTransaction: {
+            include: { teamInvoice: true },
           },
         },
       },
@@ -386,9 +394,9 @@ export async function getSubscriptionByTeamId(
   if (!team) return null;
 
   const latestSub = team.subscriptions[0];
-  const latestOrder = team.TeamOrder[0];
-  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-  const hasInvoice = latestTxn?.TeamInvoice?.length > 0;
+  const latestOrder = team.teamOrder[0];
+  const latestTxn = latestOrder?.teamPaymentTransaction[0];
+  const hasInvoice = latestTxn?.teamInvoice?.length > 0;
 
   let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
   if (latestSub) {
@@ -425,7 +433,11 @@ export const updateSubscription = async (
     teamId,
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const now = Math.floor(Date.now() / 1000);
 
@@ -466,20 +478,20 @@ export const updateSubscription = async (
         take: 1,
         include: { plan: true },
       },
-      TeamOrder: {
+      teamOrder: {
         orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: {
-          TeamPaymentTransaction: { include: { TeamInvoice: true } },
+          teamPaymentTransaction: { include: { teamInvoice: true } },
         },
       },
     },
   });
 
   const latestSub = team?.subscriptions[0];
-  const latestOrder = team?.TeamOrder[0];
-  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-  const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
+  const latestOrder = team?.teamOrder[0];
+  const latestTxn = latestOrder?.teamPaymentTransaction[0];
+  const hasInvoice = (latestTxn?.teamInvoice?.length ?? 0) > 0;
 
   let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
   if (latestSub) {

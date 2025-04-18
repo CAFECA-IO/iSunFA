@@ -3,8 +3,8 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserSetting } from '@/interfaces/user_setting';
-import UserInfo from '@/components/user_settings/user_info';
-import UserInfoForm from '@/components/user_settings/user_info_form';
+import UserInfo from '@/components/general/user_settings/user_info';
+import UserInfoForm from '@/components/general/user_settings/user_info_form';
 import Image from 'next/image';
 import { ILoginDevice } from '@/interfaces/login_device';
 
@@ -15,7 +15,7 @@ interface UserSettingsProps {
 
 const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }) => {
   const { userAuth } = useUserCtx();
-  const { t } = useTranslation(['settings', 'common']);
+  const { t } = useTranslation(['settings']);
 
   // Info: (20241218 - tzuhan) 計算用戶名稱：優先使用 userSetting，否則使用 userAuth
   const getUserName = useMemo(() => {
@@ -39,15 +39,17 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }
   }, [userSetting]);
 
   return (
-    <>
-      <div id="user-settings-section" className="flex items-center gap-4">
-        <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
-        <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+    <main className="flex flex-col gap-40px">
+      <section className="flex items-center gap-16px">
+        <div className="flex items-center gap-8px">
           <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
-          <p>{t('settings:NORMAL.USER_SETTINGS')}</p>
+          <span className="text-sm font-medium text-divider-text-lv-1">
+            {t('settings:NORMAL.USER_SETTINGS')}
+          </span>
         </div>
-        <hr className="flex-1 border-divider-stroke-lv-4" />
-      </div>
+        <hr className="flex-auto border-t-2px border-divider-stroke-lv-1" />
+      </section>
+
       <div className="mx-auto flex max-w-726px flex-col gap-lv-7">
         <UserInfo
           userId={userAuth?.id ?? 1}
@@ -64,7 +66,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ userSetting, loginDevices }
           handleUsernameUpdate={handleUsernameUpdate}
         />
       </div>
-    </>
+    </main>
   );
 };
 
