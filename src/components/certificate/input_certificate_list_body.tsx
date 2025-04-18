@@ -619,7 +619,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               addOperations={addOperations}
               exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
-              // Info: (20250418 - Anna)
               onDownload={handleDownload}
             />
             <div ref={downloadRef} className="download-page">
