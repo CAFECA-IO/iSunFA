@@ -12,14 +12,26 @@ export async function handlePostRequest(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: boolean | null = null;
 
+  const { title, content, attach } = req.body;
+
   try {
     // Info: (20240823 - Julian) 設置郵件內容
     const mailOptions: SendMailOptions = {
       from: process.env.MAIL_CLIENT_ID,
-      to: process.env.REACT_APP_RECEPIENT_EMAIL,
-      subject: 'iSunFA Contact Form',
-      text: req.body.comment, // Info: (20240823 - Julian) 純文字
-      html: `<p>${req.body.comment}</p>`, // Info: (20240823 - Julian) HTML
+      // to: process.env.REACT_APP_RECEPIENT_EMAIL,
+      to: 'julian.hsu@mermer.cc',
+      subject: title,
+      text: content, // Info: (20240823 - Julian) 純文字
+      html: content, // Info: (20240823 - Julian) HTML
+      attachments: attach
+        ? [
+            {
+              filename: attach.name,
+              content: attach.content,
+              encoding: 'base64',
+            },
+          ]
+        : [],
     };
 
     // Info: (20240823 - Julian) 發送郵件

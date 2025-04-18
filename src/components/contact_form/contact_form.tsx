@@ -72,7 +72,8 @@ function ContactForm() {
     const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
 
     const emailData = {
-      comment: `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`,
+      title: 'iSunFA Contact Form',
+      content: `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`,
     };
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫
