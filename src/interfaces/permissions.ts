@@ -48,10 +48,10 @@ export enum TeamPermissionAction {
   DELETE_ASSET = 'DELETE_ASSET',
   EXPORT_ASSET = 'EXPORT_ASSET',
 
-  // Info: (20250721 - Shirley) 憑證相關
-  VIEW_CERTIFICATE = 'VIEW_CERTIFICATE', // Info: (20250721 - Shirley) 查看憑證
-  CREATE_CERTIFICATE = 'CREATE_CERTIFICATE', // Info: (20250721 - Shirley) 創建憑證
-  DELETE_CERTIFICATE = 'DELETE_CERTIFICATE', // Info: (20250721 - Shirley) 刪除憑證
+  // Info: (20250418 - Shirley) 憑證相關
+  VIEW_CERTIFICATE = 'VIEW_CERTIFICATE', // Info: (20250418 - Shirley) 查看憑證
+  CREATE_CERTIFICATE = 'CREATE_CERTIFICATE', // Info: (20250418 - Shirley) 創建憑證
+  DELETE_CERTIFICATE = 'DELETE_CERTIFICATE', // Info: (20250418 - Shirley) 刪除憑證
 
   // Info: (20250417 - Shirley) 交易對象相關
   VIEW_COUNTERPARTY = 'VIEW_COUNTERPARTY', // Info: (20250417 - Shirley) 查看交易對象

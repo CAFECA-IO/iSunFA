@@ -1103,7 +1103,7 @@ export const updateAccountBook = async (
       where: { id: accountBookId },
       data: {
         name,
-        tag, // Info: (20250701 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
+        tag, // Info: (20250418 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
         taxId,
         teamId,
         updatedAt: getTimestampNow(),
