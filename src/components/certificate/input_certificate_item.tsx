@@ -76,12 +76,14 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
+            <div className="download-pb-4 text-text-neutral-primary">
+              {certificate.invoice?.no ?? ''}
+            </div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
           {certificate.invoice?.type
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
             : ''}
@@ -89,7 +91,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`download-pb-4 w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.invoice?.taxRatio !== undefined
             ? `Taxable ${certificate.invoice?.taxRatio} %`
@@ -114,9 +116,9 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div>Pre-Tax</div>
+              <div className="download-pb-3">Pre-Tax</div>
             </div>
-            <div className="text-text-neutral-primary">
+            <div className=" text-text-neutral-primary">
               {numberWithCommas(certificate.invoice?.priceBeforeTax ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? currencyAlias}
@@ -128,7 +130,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div>After-Tax</div>
+              <div className="download-pb-3">After-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.invoice?.totalPrice ?? 0)}

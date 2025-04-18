@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
@@ -19,7 +19,7 @@ import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
-} from '@/components/selection_tool_bar/selection_tool_bar';
+} from '@/components/certificate/certificate_selection_tool_bar_new';
 import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
@@ -32,11 +32,15 @@ import { CurrencyType } from '@/constants/currency';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface CertificateListBodyProps {}
 
 const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
+  const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250418 - Anna) 引用下載範圍
+
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
   const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
@@ -159,6 +163,44 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleExport = useCallback(() => {
     setIsExportModalOpen(true);
   }, []);
+
+  // Info: (20250418 - Anna) 匯出憑證表格
+  const handleDownload = async () => {
+    if (!downloadRef.current) return;
+
+    //  Info: (20250401 - Anna) 插入修正樣式
+    const style = document.createElement('style');
+    style.innerHTML = `
+  .download-pb-4 {
+    padding-bottom: 16px;
+  }
+      .download-pb-3 {
+    padding-bottom: 12px;
+  }
+`;
+
+    document.head.appendChild(style);
+
+    const canvas = await html2canvas(downloadRef.current, {
+      scale: 2, // Info: (20250418 - Anna) 增加解析度
+      useCORS: true, // Info: (20250418 - Anna) 若有使用圖片，允許跨域圖片
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
+    // eslint-disable-next-line new-cap
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    style.remove();
+    pdf.save('input-certificates.pdf');
+  };
 
   const onExport = useCallback(() => {
     if (exportModalData.length > 0) {
@@ -577,34 +619,38 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               addOperations={addOperations}
               exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
+              // Info: (20250418 - Anna)
+              onDownload={handleDownload}
             />
-            <InputCertificate
-              activeTab={activeTab}
-              page={page}
-              setPage={setPage}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              certificates={Object.values(certificates)}
-              currencyAlias={currency}
-              viewType={viewType}
-              activeSelection={activeSelection}
-              handleSelect={handleSelect}
-              handleSelectAll={handleSelectAll}
-              isSelectedAll={isSelectedAll}
-              onDownload={handleDownloadItem}
-              onRemove={handleDeleteItem}
-              onEdit={openEditModalHandler}
-              dateSort={dateSort}
-              amountSort={amountSort}
-              voucherSort={voucherSort}
-              invoiceNoSort={invoiceNoSort}
-              invoiceTypeSort={invoiceTypeSort}
-              setDateSort={setDateSort}
-              setAmountSort={setAmountSort}
-              setVoucherSort={setVoucherSort}
-              setInvoiceNoSort={setInvoiceNoSort}
-              setInvoiceTypeSort={setInvoiceTypeSort}
-            />
+            <div ref={downloadRef} className="download-page">
+              <InputCertificate
+                activeTab={activeTab}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                certificates={Object.values(certificates)}
+                currencyAlias={currency}
+                viewType={viewType}
+                activeSelection={activeSelection}
+                handleSelect={handleSelect}
+                handleSelectAll={handleSelectAll}
+                isSelectedAll={isSelectedAll}
+                onDownload={handleDownloadItem}
+                onRemove={handleDeleteItem}
+                onEdit={openEditModalHandler}
+                dateSort={dateSort}
+                amountSort={amountSort}
+                voucherSort={voucherSort}
+                invoiceNoSort={invoiceNoSort}
+                invoiceTypeSort={invoiceTypeSort}
+                setDateSort={setDateSort}
+                setAmountSort={setAmountSort}
+                setVoucherSort={setVoucherSort}
+                setInvoiceNoSort={setInvoiceNoSort}
+                setInvoiceTypeSort={setInvoiceTypeSort}
+              />
+            </div>
           </>
         ) : (
           <div className="flex flex-auto items-center justify-center">

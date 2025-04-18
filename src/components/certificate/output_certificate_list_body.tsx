@@ -19,7 +19,7 @@ import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
-} from '@/components/selection_tool_bar/selection_tool_bar';
+} from '@/components/certificate/certificate_selection_tool_bar_new';
 import OutputCertificate from '@/components/certificate/output_certificate';
 import OutputCertificateEditModal from '@/components/certificate/output_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
