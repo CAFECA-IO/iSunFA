@@ -1,10 +1,10 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { IPaymentInfo, IPaymentMethod } from '@/interfaces/payment';
-import { ITeamInvoice, TPlanType } from '@/interfaces/subscription';
+import { TPlanType } from '@/interfaces/subscription';
 import { z } from 'zod';
 import { getTimestampNow } from '@/lib/utils/common';
-import { Prisma } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { DefaultValue } from '@/constants/default_value';
@@ -83,9 +83,10 @@ export const TeamInvoiceSchema = z.object({
 });
 
 // Info: (20250326 - Luphia) 取得用戶支付方法
-export const getUserPaymentInfoById: (id: number) => Promise<IPaymentInfo | null> = async (
-  id: number
-) => {
+export const getUserPaymentInfoById = async (
+  id: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<IPaymentInfo | null> => {
   let paymentInfo: IPaymentInfo | null = null;
   const query = {
     where: {
@@ -93,7 +94,7 @@ export const getUserPaymentInfoById: (id: number) => Promise<IPaymentInfo | null
       deletedAt: null,
     },
   };
-  const result = await prisma.userPaymentInfo.findFirst(query);
+  const result = await tx.userPaymentInfo.findFirst(query);
   if (result) {
     paymentInfo = {
       id: result.id,
@@ -110,9 +111,10 @@ export const getUserPaymentInfoById: (id: number) => Promise<IPaymentInfo | null
 };
 
 // Info: (20250319 - Luphia) 列出用戶完整支付方法
-export const listUserPaymentInfo: (userId: number) => Promise<IPaymentInfo[]> = async (
-  userId: number
-) => {
+export const listUserPaymentInfo = async (
+  userId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<IPaymentInfo[]> => {
   if (!userId) return [];
   const query = {
     where: {
@@ -123,7 +125,7 @@ export const listUserPaymentInfo: (userId: number) => Promise<IPaymentInfo[]> = 
       default: Prisma.SortOrder.desc,
     },
   };
-  const result = await prisma.userPaymentInfo.findMany(query);
+  const result = await tx.userPaymentInfo.findMany(query);
   if (!result) return [];
   // Info: (20250319 - Luphia) 轉換回傳資訊為 IPaymentMethod，number 只保留末四碼，其餘轉換為 *，cvv 也轉換為 *
   const paymentInfoList: IPaymentInfo[] = result.map((item) => {
@@ -153,106 +155,96 @@ export const listUserPaymentInfo: (userId: number) => Promise<IPaymentInfo[]> = 
 };
 
 // Info: (20250319 - Luphia) 列出用戶支付方法摘要資訊
-export const listUserPaymentMethod: (userId: number) => Promise<IPaymentMethod[]> = async (
-  userId: number
-) => {
-  const paymentInfoList = await listUserPaymentInfo(userId);
+export const listUserPaymentMethod = async (
+  userId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<IPaymentMethod[]> => {
+  const paymentInfoList = await listUserPaymentInfo(userId, tx);
   const paymentMethodList: IPaymentMethod[] = paymentInfoList.map((item) => item.detail);
   return paymentMethodList;
 };
 
-export const createDefaultUserPaymentInfo: (
-  userPaymentInfo: IPaymentInfo
-) => Promise<IPaymentInfo> = async (userPaymentInfo: IPaymentInfo) => {
+// Info: (20250418 - Luphia) 將用戶原有支付方法改為非預設
+export const unsetDefaultUserPaymentMethod = async (
+  userId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<void> => {
+  if (!userId) return;
+  const query = {
+    where: {
+      userId,
+      default: true,
+    },
+    data: {
+      default: false,
+    },
+  };
+  await tx.userPaymentInfo.updateMany(query);
+};
+
+export const createUserPaymentInfo = async (
+  userPaymentInfo: IPaymentInfo,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<IPaymentInfo> => {
   const nowInSecond = getTimestampNow();
   const { userId } = userPaymentInfo;
   const { detail } = userPaymentInfo;
-  const paymentMethod: IPaymentMethod = {
+  const paymentMethod = {
     type: detail.type || PAYMENT_METHOD_TYPE.OTHER,
     number: detail.number || DefaultValue.PAYMENT_METHOD_NUMBER,
     expirationDate: detail.expirationDate || DefaultValue.PAYMENT_METHOD_EXPIRATION_DATE,
     cvv: detail.cvv || DefaultValue.PAYMENT_METHOD_CVV,
   };
-  // Info: (20250319 - Luphia) **check the data format carefully**
-  const newPaymentInfo: IPaymentInfo = {
+  const newPaymentInfo = {
     userId,
     token: userPaymentInfo.token,
     transactionId: userPaymentInfo.transactionId,
-    default: true,
+    default: userPaymentInfo.default,
     detail: paymentMethod,
     createdAt: userPaymentInfo.createdAt || nowInSecond,
     updatedAt: nowInSecond,
   };
-  const result = await prisma
-    .$transaction(async (tx) => {
-      const input = newPaymentInfo as unknown as Prisma.UserPaymentInfoCreateInput;
-      // Info: (20250319 - Luphia) 確認 User 是否存在
-      const user = await tx.user.findUnique({
-        where: { id: userId },
-        select: { id: true },
-      });
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Info: (20250319 - Luphia) 把該 user 其他卡改成非 default
-      if (input.default) {
-        await tx.userPaymentInfo.updateMany({
-          where: {
-            userId,
-            default: true,
-          },
-          data: { default: false },
-        });
-      }
-
-      // Info: (20250319 - Luphia) 建立 userPaymentInfo
-      const paymentInfo = await tx.userPaymentInfo.create({
-        data: input,
-      });
-
-      return paymentInfo;
-    })
-    .catch((error: Prisma.PrismaClientKnownRequestError | Error) => {
-      loggerError({
-        userId,
-        errorType: 'Create invoice in createInvoice failed',
-        errorMessage: error as Error,
-      });
-      throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
-    });
-
-  return result as unknown as IPaymentInfo;
+  const paymentInfo = await tx.userPaymentInfo.create({
+    data: newPaymentInfo,
+  });
+  if (!paymentInfo) {
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+  const result: IPaymentInfo = {
+    id: paymentInfo.id,
+    userId: paymentInfo.userId,
+    token: paymentInfo.token,
+    transactionId: paymentInfo.transactionId,
+    default: paymentInfo.default,
+    detail: paymentMethod,
+    createdAt: paymentInfo.createdAt,
+    updatedAt: paymentInfo.updatedAt,
+  };
+  return result;
 };
 
-export const mockInvoices: Record<number, ITeamInvoice> = {
-  1001: {
-    id: 100000,
-    teamId: 3,
-    status: false,
-    issuedTimestamp: 1630406400000,
-    dueTimestamp: 1630406400000,
-    planId: TPlanType.PROFESSIONAL,
-    planStartTimestamp: 1630406400000,
-    planEndTimestamp: 1630406400000,
-    planQuantity: 1,
-    planUnitPrice: 1000,
-    planAmount: 1000,
-    payer: {
-      name: 'John Doe',
-      address: '1234 Main St',
-      phone: '123-456-7890',
-      taxId: '123456789',
-    },
-    payee: {
-      name: 'Jane Doe',
-      address: '5678 Elm St',
-      phone: '098-765-4321',
-      taxId: '987654321',
-    },
-    subtotal: 899,
-    tax: 0,
-    total: 899,
-    amountDue: 899,
-  },
+export const createDefaultUserPaymentInfo = async (
+  userPaymentInfo: IPaymentInfo,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<IPaymentInfo> => {
+  let result: IPaymentInfo | null = null;
+  const { userId } = userPaymentInfo;
+  try {
+    // Info: (20250319 - Luphia) 把該 user 其他卡改成非 default
+    if (userPaymentInfo.default) {
+      await unsetDefaultUserPaymentMethod(userId, tx);
+    }
+    // Info: (20250319 - Luphia) 建立 userPaymentInfo
+    const paymentInfo = await createUserPaymentInfo(userPaymentInfo, tx);
+    result = paymentInfo;
+  } catch (error) {
+    loggerError({
+      userId,
+      errorType: STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR,
+      errorMessage: error as Error,
+    });
+    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+  }
+
+  return result;
 };

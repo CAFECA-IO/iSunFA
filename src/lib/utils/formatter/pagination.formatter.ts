@@ -2,7 +2,7 @@ import { DefaultValue } from '@/constants/default_value';
 import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 
 export const toPaginatedData = <T>(options: IPaginatedOptions<T>) => {
-  const { data, page, totalPages, totalCount, pageSize, sort } = options;
+  const { data, page, totalPages, totalCount, pageSize, sort, note } = options;
   const currentData = data as unknown[];
 
   // Info: (20250113 - Luphia) 未輸入 page 時，預設為第一頁
@@ -32,6 +32,7 @@ export const toPaginatedData = <T>(options: IPaginatedOptions<T>) => {
     hasNextPage,
     hasPreviousPage,
     sort: currentSort,
+    note,
   };
   return result;
 };

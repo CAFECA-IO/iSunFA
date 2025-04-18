@@ -1,8 +1,12 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamInvoice } from '@/interfaces/payment';
 
-export const createTeamInvoice = async (options: ITeamInvoice): Promise<ITeamInvoice> => {
+export const createTeamInvoice = async (
+  options: ITeamInvoice,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<ITeamInvoice> => {
   const data = {
     teamOrderId: options.teamOrderId,
     teamPaymentTransactionId: options.teamPaymentTransactionId,
@@ -21,7 +25,7 @@ export const createTeamInvoice = async (options: ITeamInvoice): Promise<ITeamInv
     createdAt: options.createdAt,
     updatedAt: options.updatedAt,
   };
-  const teamInvoice: ITeamInvoice = (await prisma.teamInvoice.create({
+  const teamInvoice: ITeamInvoice = (await tx.teamInvoice.create({
     data,
   })) as ITeamInvoice;
 

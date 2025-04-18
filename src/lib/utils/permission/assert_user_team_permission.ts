@@ -137,3 +137,47 @@ export const getEffectiveTeamMeta = async (userId: number, teamId: number) => {
   await updateTeamMemberSession(userId, teamId, effectiveRole);
   return { effectiveRole, expiredAt, inGracePeriod };
 };
+
+type AssertUserCanByCompanyOptions = {
+  userId: number;
+  companyId: number;
+  action: TeamPermissionAction;
+};
+
+export const assertUserCanByCompany = async ({
+  userId,
+  companyId,
+  action,
+}: AssertUserCanByCompanyOptions): Promise<{
+  teamId: number;
+  actualRole: TeamRole;
+  effectiveRole: TeamRole;
+  can: boolean;
+  alterableRoles?: TeamRole[];
+}> => {
+  const company = await prisma.company.findFirst({
+    where: {
+      id: companyId,
+    },
+    select: {
+      teamId: true,
+    },
+  });
+
+  if (!company?.teamId) {
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND_FROM_COMPANY);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND_FROM_COMPANY;
+    throw error;
+  }
+
+  const result = await assertUserCan({
+    userId,
+    teamId: company.teamId,
+    action,
+  });
+
+  return {
+    teamId: company.teamId,
+    ...result,
+  };
+};

@@ -12,7 +12,7 @@ import {
   AssociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
 import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
@@ -625,7 +625,9 @@ export async function postVoucherV2({
           );
 
           if (!resultLineItem) {
-            throw new Error('resultLineItem is not found in postVoucherV2 in voucher.repo.ts');
+            const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
+            error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+            throw error;
           }
 
           await tx.event.create({
