@@ -132,7 +132,6 @@ export const handlePostRequest = async (req: NextApiRequest) => {
           }
 
           // Info: (20250417 - Luphia) 根據訂單更新 team_payment 並儲存，作為團隊自動續訂配置
-          // ToDo: (20250417 - Luphia) 使用 DB Transaction
           const teamPaymentData = await generateTeamPayment(
             teamOrder,
             userPaymentInfo,
