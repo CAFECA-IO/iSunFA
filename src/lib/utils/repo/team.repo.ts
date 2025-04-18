@@ -168,7 +168,7 @@ export const createTeamWithTrial = async (
     const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     const plan = await tx.teamPlan.findFirst({
       where: {
-        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
+        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.TRIAL : teamData.planType,
       },
       select: { type: true },
     });
