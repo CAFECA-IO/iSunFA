@@ -23,8 +23,10 @@ interface AccountBookInfoModalProps {
 // ToDo: (20250418 - Liz) 等替換掉舊的 modal 後再改名為 CreateAccountBookModal
 const AccountBookInfoModal = ({
   closeCreateAccountBookModal,
+  // Deprecated: (20250418 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRefreshKey,
+  // Deprecated: (20250418 - Liz) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getAccountBookList,
 }: AccountBookInfoModalProps) => {
