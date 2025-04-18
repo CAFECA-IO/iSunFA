@@ -172,7 +172,8 @@
     "UPLOADED": "已上傳",
     "TOTAL": "總計",
     "CERTIFICATES": "發票",
-    "EMPTY": "無資料"
+    "EMPTY": "無資料",
+    "EXPORT_INVOICES": "匯出憑證"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤",
@@ -185,5 +186,8 @@
     "MARK_RETURN_OR_ALLOWANCE": "標記為退回或折讓",
     "PREVIOUS": "上一筆",
     "NEXT": "下一筆"
+  },
+  "INPUT_CERTIFICATE": {
+    "INPUT_CERTIFICATE": "進項憑證"
   }
 }
