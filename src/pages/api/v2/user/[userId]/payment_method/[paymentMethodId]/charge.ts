@@ -19,7 +19,7 @@ import { IUser } from '@/interfaces/user';
 import { ITeamOrder } from '@/interfaces/order';
 import { generateTeamPayment } from '@/lib/utils/generator/team_payment.generator';
 import { generateTeamPaymentTransaction } from '@/lib/utils/generator/team_payment_transaction.generator';
-import { createTeamOrder } from '@/lib/utils/repo/team_order.repo';
+import { createTeamOrder, updateTeamOrderStatus } from '@/lib/utils/repo/team_order.repo';
 import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_transaction.repo';
 import { generateTeamOrder } from '@/lib/utils/generator/team_order.generator';
 import { createTeamInvoice } from '@/lib/utils/repo/team_invoice.repo';
@@ -102,6 +102,11 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     const resultData: { teamInvoice?: ITeamInvoice; teamSubscription?: ITeamSubscription } = {};
 
     if (teamPaymentTransaction.status === TRANSACTION_STATUS.SUCCESS) {
+      // Info: (20250418 - Luphia) 根據扣款的結果更新訂單狀態
+      // ToDo: (20250418 - Luphia) 使用 DB Transaction
+      teamOrder.status = TRANSACTION_STATUS.SUCCESS;
+      await updateTeamOrderStatus(teamOrder);
+
       // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
       // ToDo: (20250330 - Luphia) 使用 DB Transaction
       const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(

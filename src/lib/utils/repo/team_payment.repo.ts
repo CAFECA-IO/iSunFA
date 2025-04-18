@@ -3,7 +3,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamPayment } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 
-export const createTeamPayment = async (options: ITeamPayment): Promise<ITeamPayment> => {
+export const createTeamPayment = async (
+  options: ITeamPayment,
+  tx = prisma
+): Promise<ITeamPayment> => {
   const nowInSecond = getTimestampNow();
   const data = {
     teamId: options.teamId,
@@ -16,7 +19,7 @@ export const createTeamPayment = async (options: ITeamPayment): Promise<ITeamPay
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
   };
-  const teamPayment: ITeamPayment = (await prisma.teamPayment.create({
+  const teamPayment: ITeamPayment = (await tx.teamPayment.create({
     data,
   })) as ITeamPayment;
 
@@ -27,8 +30,11 @@ export const createTeamPayment = async (options: ITeamPayment): Promise<ITeamPay
   return teamPayment;
 };
 
-export const getTeamPaymentByTeamId = async (teamId: number): Promise<ITeamPayment | null> => {
-  const teamPayment = await prisma.teamPayment.findUnique({
+export const getTeamPaymentByTeamId = async (
+  teamId: number,
+  tx = prisma
+): Promise<ITeamPayment | null> => {
+  const teamPayment = await tx.teamPayment.findUnique({
     where: {
       teamId,
     },
@@ -42,7 +48,10 @@ export const getTeamPaymentByTeamId = async (teamId: number): Promise<ITeamPayme
   return result;
 };
 
-export const updateTeamPayment = async (options: ITeamPayment): Promise<ITeamPayment> => {
+export const updateTeamPayment = async (
+  options: ITeamPayment,
+  tx = prisma
+): Promise<ITeamPayment> => {
   const nowInSecond = getTimestampNow();
   const { teamId } = options;
   // Info: (20250417 - Luphia) 只允許更改方案、支付方式、自動更新、開始時間、結束時間、下次收費時間
@@ -67,7 +76,7 @@ export const updateTeamPayment = async (options: ITeamPayment): Promise<ITeamPay
     updatedAt: nowInSecond,
   };
   // Info: (20250417 - Luphia) 使用 upsert，若不存在則創建，存在則更新
-  const teamPayment: ITeamPayment = (await prisma.teamPayment.upsert({
+  const teamPayment: ITeamPayment = (await tx.teamPayment.upsert({
     where: {
       teamId,
     },

@@ -20,7 +20,8 @@ import { PAYEE } from '@/constants/payment';
 import loggerBack from '@/lib/utils/logger_back';
 
 export const createTeamSubscription = async (
-  options: ITeamSubscription
+  options: ITeamSubscription,
+  tx = prisma
 ): Promise<ITeamSubscription> => {
   const permission = await assertUserCan({
     userId: options.userId,
@@ -42,7 +43,7 @@ export const createTeamSubscription = async (
     createdAt: options.createdAt,
     updatedAt: options.updatedAt,
   };
-  const teamSubscription: ITeamSubscription = (await prisma.teamSubscription.create({
+  const teamSubscription: ITeamSubscription = (await tx.teamSubscription.create({
     data,
   })) as ITeamSubscription;
 
@@ -54,7 +55,8 @@ export const createTeamSubscription = async (
 };
 
 export const updateTeamSubscription = async (
-  options: ITeamSubscription
+  options: ITeamSubscription,
+  tx = prisma
 ): Promise<ITeamSubscription> => {
   const data = {
     planType: options.planType as TeamPlanType,
@@ -62,7 +64,7 @@ export const updateTeamSubscription = async (
     expiredDate: options.expiredDate,
     updatedAt: options.updatedAt,
   };
-  const teamSubscription: ITeamSubscription = (await prisma.teamSubscription.update({
+  const teamSubscription: ITeamSubscription = (await tx.teamSubscription.update({
     where: { id: options.id },
     data,
   })) as ITeamSubscription;
@@ -72,10 +74,13 @@ export const updateTeamSubscription = async (
   return teamSubscription;
 };
 
-export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSubscription[]> => {
+export const listValidTeamSubscription = async (
+  teamId: number,
+  tx = prisma
+): Promise<ITeamSubscription[]> => {
   const nowInSecond = getTimestampNow();
   const teamSubscriptions: ITeamSubscription[] = (
-    await prisma.teamSubscription.findMany({
+    await tx.teamSubscription.findMany({
       where: {
         teamId,
         startDate: {
@@ -106,10 +111,11 @@ export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSu
 export async function listTeamSubscription(
   userId: number,
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  tx = prisma
 ): Promise<IPaginatedOptions<IUserOwnedTeam[]>> {
   // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為團隊成員成員，無需額外 assertUserCan。
-  const ownerTeams = await prisma.teamMember.findMany({
+  const ownerTeams = await tx.teamMember.findMany({
     where: {
       userId,
       // role: TeamRole.OWNER, // Info: (20250411 - Tzuhan) 這邊不需要限制角色，因為團隊擁有者均可查看訂閱資料
@@ -146,7 +152,7 @@ export async function listTeamSubscription(
     take: pageSize,
   });
 
-  const totalCount = await prisma.teamMember.count({
+  const totalCount = await tx.teamMember.count({
     where: {
       userId,
       role: TeamRole.OWNER,
@@ -196,7 +202,8 @@ export async function listTeamSubscription(
 export async function listTeamTransaction(
   teamId: number,
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  tx = prisma
 ): Promise<IPaginatedOptions<ITeamInvoice[]>> {
   loggerBack.warn('listTeamTransaction');
   loggerBack.warn({ teamId, page, pageSize });
@@ -205,7 +212,7 @@ export async function listTeamTransaction(
 
   const subscriptions = await listValidTeamSubscription(teamId);
   // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為 `role: OWNER` 成員，無需額外 assertUserCan。
-  const teamOrders = await prisma.teamOrder.findMany({
+  const teamOrders = await tx.teamOrder.findMany({
     where: {
       teamId,
     },
@@ -273,7 +280,7 @@ export async function listTeamTransaction(
     });
   });
 
-  const totalCount = await prisma.teamOrder.count({
+  const totalCount = await tx.teamOrder.count({
     where: {
       teamId,
     },
@@ -290,8 +297,11 @@ export async function listTeamTransaction(
   };
 }
 
-export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoice | null> {
-  const invoice = await prisma.teamInvoice.findUnique({
+export async function getTeamInvoiceById(
+  invoiceId: number,
+  tx = prisma
+): Promise<ITeamInvoice | null> {
+  const invoice = await tx.teamInvoice.findUnique({
     where: { id: invoiceId },
     include: {
       teamPaymentTransaction: {
@@ -350,7 +360,8 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
 
 export async function getSubscriptionByTeamId(
   userId: number,
-  teamId: number
+  teamId: number,
+  tx = prisma
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
   const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
@@ -369,7 +380,7 @@ export async function getSubscriptionByTeamId(
     throw error;
   }
 
-  const team = await prisma.team.findUnique({
+  const team = await tx.team.findUnique({
     where: { id: teamId },
     select: {
       id: true,
@@ -424,7 +435,8 @@ export async function getSubscriptionByTeamId(
 export const updateSubscription = async (
   userId: number,
   teamId: number,
-  input: { plan?: TPlanType; autoRenew?: boolean }
+  input: { plan?: TPlanType; autoRenew?: boolean },
+  tx = prisma
 ): Promise<IUserOwnedTeam> => {
   const { plan, autoRenew } = input;
 
@@ -443,7 +455,7 @@ export const updateSubscription = async (
 
   if (plan) {
     const expired = getUnixTime(addMonths(new Date(), 1));
-    await prisma.teamSubscription.create({
+    await tx.teamSubscription.create({
       data: {
         teamId,
         planType: plan,
@@ -456,19 +468,19 @@ export const updateSubscription = async (
   }
 
   if (autoRenew === false) {
-    const latestOrder = await prisma.teamOrder.findFirst({
+    const latestOrder = await tx.teamOrder.findFirst({
       where: { teamId, status: { not: ORDER_STATUS.CANCELLED } },
       orderBy: { createdAt: SortOrder.DESC },
     });
     if (latestOrder) {
-      await prisma.teamOrder.update({
+      await tx.teamOrder.update({
         where: { id: latestOrder.id },
         data: { status: ORDER_STATUS.CANCELLED },
       });
     }
   }
 
-  const team = await prisma.team.findUnique({
+  const team = await tx.team.findUnique({
     where: { id: teamId },
     select: {
       id: true,

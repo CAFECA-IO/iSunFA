@@ -4,7 +4,8 @@ import { ITeamOrder, ITeamOrderDetail } from '@/interfaces/order';
 
 const createTeamOrderDetail = async (
   orderId: number,
-  options: ITeamOrderDetail[]
+  options: ITeamOrderDetail[],
+  tx = prisma
 ): Promise<ITeamOrderDetail[]> => {
   const data = options.map((item) => ({
     orderId,
@@ -16,7 +17,7 @@ const createTeamOrderDetail = async (
     currency: item.currency,
     amount: item.amount,
   }));
-  const teamOrderDetails = await prisma.teamOrderDetail.createMany({
+  const teamOrderDetails = await tx.teamOrderDetail.createMany({
     data,
   });
   if (!teamOrderDetails) {
@@ -25,7 +26,7 @@ const createTeamOrderDetail = async (
   return options;
 };
 
-export const createTeamOrder = async (options: ITeamOrder): Promise<ITeamOrder> => {
+export const createTeamOrder = async (options: ITeamOrder, tx = prisma): Promise<ITeamOrder> => {
   const data = {
     userId: options.userId,
     teamId: options.teamId,
@@ -35,7 +36,7 @@ export const createTeamOrder = async (options: ITeamOrder): Promise<ITeamOrder> 
     createdAt: options.createdAt,
     updatedAt: options.updatedAt,
   };
-  const teamOrder: ITeamOrder = (await prisma.teamOrder.create({
+  const teamOrder: ITeamOrder = (await tx.teamOrder.create({
     data,
   })) as ITeamOrder;
 
@@ -46,4 +47,28 @@ export const createTeamOrder = async (options: ITeamOrder): Promise<ITeamOrder> 
 
   const result = { ...options, id: teamOrder.id };
   return result;
+};
+
+// Info: (20250418 - Luphia) 更新訂單只允許更改狀態
+export const updateTeamOrderStatus = async (
+  options: ITeamOrder,
+  tx = prisma
+): Promise<ITeamOrder> => {
+  const { id, status } = options;
+  const data = {
+    status,
+    updatedAt: options.updatedAt,
+  };
+  const teamOrder: ITeamOrder = (await tx.teamOrder.update({
+    where: {
+      id,
+    },
+    data,
+  })) as ITeamOrder;
+
+  if (!teamOrder) {
+    throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
+  }
+
+  return teamOrder;
 };
