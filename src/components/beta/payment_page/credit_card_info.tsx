@@ -50,7 +50,37 @@ const CreditCardInfo = ({
     APIName.USER_PAYMENT_METHOD_LIST
   );
 
+  // Info: (20250418 - Julian) 更新訂閱方案 API
   const { trigger: updateSubscriptionAPI } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
+
+  // Info: (20250418 - Julian) 發送 email API
+  const { trigger: sendEmail } = APIHandler<void>(APIName.EMAIL);
+
+  // ToDo: (20250418 - Julian) During the development
+  const sendEmailHandler = async () => {
+    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+
+    // Info: (20250418 - Julian) dummy data
+    const invoiceId = '1234567890';
+
+    sendEmail({
+      header: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: {
+        title: 'iSunFA Invoice',
+        content: `<div><h3>發票編號: ${invoiceId}，請參考附件</h3><p>${now}<p></div>`,
+        attachments: [
+          {
+            filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
+            // path: '/files/invoice_19.pdf',
+          },
+        ],
+      },
+    });
+
+    //
+    // eslint-disable-next-line no-console
+    console.log('sendEmailHandler');
+  };
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   const getCreditCardInfo = async () => {
@@ -71,6 +101,9 @@ const CreditCardInfo = ({
           content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
           closeable: true,
         });
+
+        // Info: (20250418 - Julian) 發送 email
+        sendEmailHandler();
       }
     } catch (error) {
       // Info: (20250324 - Julian) 顯示錯誤訊息

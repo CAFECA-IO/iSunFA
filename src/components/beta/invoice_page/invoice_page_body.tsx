@@ -3,12 +3,11 @@ import { useTranslation } from 'next-i18next';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
 import { useReactToPrint } from 'react-to-print';
-// import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { Button } from '@/components/button/button';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { ITeamInvoice } from '@/interfaces/subscription';
-import APIHandler from '@/lib/utils/api_handler';
-import { APIName } from '@/constants/api_connection';
 
 interface InvoicePageBodyProps {
   invoice: ITeamInvoice;
@@ -20,42 +19,52 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
 
   const { id: invoiceId } = invoice;
 
-  const { trigger: sendEmail } = APIHandler<void>(APIName.EMAIL);
-
   // Info: (20250418 - Julian) 下載發票
   const downloadClickHandler = async () => {
     if (!invoiceId || !printRef.current) return;
 
-    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-
-    // Info: (20250418 - Julian) 下載內容
+    // Info: (20250418 - Julian) 下載內容： A4 直式
     // eslint-disable-next-line new-cap
-    // const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // pdf.save(`${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`);
-
-    sendEmail({
-      header: { 'Content-Type': 'application/json; charset=UTF-8' },
-      body: {
-        title: 'iSunFA Invoice',
-        content: `<div><h3>發票編號: ${invoiceId}，請參考附件</h3><p>${now}<p></div>`,
-        attachments: [
-          {
-            filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
-            path: '/files/invoice_19.pdf',
-          },
-        ],
-      },
+    // Info: (20250418 - Julian) 設定畫布
+    const canvas = await html2canvas(printRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: true, // Info: (20250418 - Julian) 「顯示除錯訊息」到 console
     });
+    const imgData = canvas.toDataURL('image/png');
 
-    // const html2pdf = await require('html2pdf.js');
+    // Info: (20250418 - Julian) 隱藏/顯示 element
+    const hiddenElement = printRef.current.querySelector('.hidden-print');
+    if (hiddenElement) {
+      hiddenElement.classList.remove('hidden-print');
+    }
+    const visibleElement = printRef.current.querySelector('.visible-print');
+    if (visibleElement) {
+      visibleElement.classList.add('hidden-print');
+    }
 
-    // // Info: (20250418 - Julian) 下載內容
-    // html2pdf(printRef.current, {
-    //   filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
-    //   jsPDF: { format: 'a4', orientation: 'portrait' },
-    //   margin: 20,
-    // });
+    // Info: (20250418 - Julian) 圖片大小
+    const imgWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = pdf.internal.pageSize.getHeight();
+
+    // Info: (20250418 - Julian) 紙張大小
+    const pageWidth = canvas.width;
+    const pageHeight = canvas.height;
+
+    // Info: (20250418 - Julian) 計算比例
+    const widthRatio = imgWidth / pageWidth;
+    const heightRatio = imgHeight / pageHeight;
+
+    // Info: (20250418 - Julian) 計算縮放比例
+    const scaleRatio = Math.min(widthRatio, heightRatio);
+    const scaledWidth = pageWidth * scaleRatio;
+    const scaledHeight = pageHeight * scaleRatio;
+
+    // Info: (20250418 - Julian) 將圖片加入 PDF
+    pdf.addImage(imgData, 'PNG', 0, 0, scaledWidth, scaledHeight);
+    pdf.save(`${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`);
   };
 
   // Info: (20250115 - Julian) 列印發票

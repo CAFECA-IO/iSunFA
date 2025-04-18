@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { ITeamInvoice } from '@/interfaces/subscription';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
@@ -174,7 +173,8 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
           </h1>
           <p className="font-semibold text-text-neutral-tertiary"># {invoiceId}</p>
         </div>
-        <Image src="/logo/isunfa_logo_new_icon.svg" alt="isunfa_logo" width={48} height={48} />
+        {/* Info: (20250418 - Julian) Logo for print */}
+        <img src="/logo/isunfa_logo_new_icon.svg" alt="isunfa_logo" width={48} height={48} />
       </div>
 
       {/* Info: (20250115 - Julian) Divider */}
