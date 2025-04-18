@@ -165,7 +165,6 @@
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
 
-    "COMPANY_ADDRESS": "Company Address",
     "CHOOSE_CITY": "Choose City",
     "CHOOSE_DISTRICT": "Choose District",
     "RESPONSIBLE_PERSON": "Responsible Person",
@@ -182,5 +181,40 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "Please enter tax serial number",
     "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
     "PLEASE_SELECT_A_TEAM": "Please select a team"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "DECLARATION_SETTING": "Declaration Setting",
+    "DECLARANT": "Declarant"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "Filing Frequency",
+    "SELECT_FILING_FREQUENCY": "Select Filing Frequency",
+    "BIMONTHLY_FILING": "Bimonthly Filing",
+    "MONTHLY_FILING": "Monthly Filing",
+    "EVERY_TWO_MONTHS": "Every Two Months",
+    "EVERY_MONTH": "Every Month",
+    "FILING_FREQUENCY_REQUIRED": "Please select a filing frequency"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "Filing Method",
+    "SELECT_FILING_METHOD": "Select Filing Method",
+    "SINGLE_ENTITY_FILING": "Single Entity Filing",
+    "CONSOLIDATED_FILING": "Consolidated Filing",
+    "INDIVIDUAL_FILING": "Individual Filing",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "Single Head Office without Branch Units",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "Head Office Files for All Branches",
+    "EACH_UNIT_FILES_SEPARATELY": "Each Unit Files Separately",
+    "FILING_METHOD_REQUIRED": "Please select a filing method"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "Declarant Filing Method",
+    "SELECT_DECLARANT_FILING_METHOD": "Select Declarant Filing Method",
+    "SELF_FILING": "Self Filing",
+    "AGENT_FILING": "Agent Filing",
+    "DECLARANT_FILING_METHOD_REQUIRED": "Please select a declarant filing method"
   }
 }

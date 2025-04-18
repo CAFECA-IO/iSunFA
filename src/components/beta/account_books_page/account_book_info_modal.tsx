@@ -1,36 +1,46 @@
-import React, { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
+import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
+import { FaArrowRightLong } from 'react-icons/fa6';
 import { useUserCtx } from '@/contexts/user_context';
 import { WORK_TAG } from '@/interfaces/account_book';
-import { useModalContext } from '@/contexts/modal_context';
-import { ToastType, ToastPosition } from '@/interfaces/toastify';
+// import { useModalContext } from '@/contexts/modal_context';
+// import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ITeam } from '@/interfaces/team';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import Image from 'next/image';
 import { cityDistrictMap, CityList } from '@/constants/city_district';
+import StepTwoBusinessTaxSetting from '@/components/beta/account_books_page/step_two_business_tax_setting';
+import { cn } from '@/lib/utils/common';
 
 interface AccountBookInfoModalProps {
   closeCreateAccountBookModal: () => void;
-  setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
+  setRefreshKey?: Dispatch<SetStateAction<number>>;
   getAccountBookList?: () => void;
 }
-
+// ToDo: (20250418 - Liz) 等替換掉舊的 modal 後再改名為 CreateAccountBookModal
 const AccountBookInfoModal = ({
   closeCreateAccountBookModal,
+  // Deprecated: (20250418 - Liz) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setRefreshKey,
+  // Deprecated: (20250418 - Liz) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getAccountBookList,
 }: AccountBookInfoModalProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
-  const { createAccountBook, userAuth } = useUserCtx();
-  const { toastHandler } = useModalContext();
+  // const { createAccountBook, userAuth } = useUserCtx();
+  const { userAuth } = useUserCtx();
+  // const { toastHandler } = useModalContext();
 
   const [companyName, setCompanyName] = useState<string>('');
   const [responsiblePerson, setResponsiblePerson] = useState<string>('');
   const [taxId, setTaxId] = useState<string>('');
   const [taxSerialNumber, setTaxSerialNumber] = useState<string>('');
+  const [contactPerson, setContactPerson] = useState<string>('');
+  const [isSameAsResponsiblePerson, setIsSameAsResponsiblePerson] = useState<boolean>(false);
   const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   const [tag, setTag] = useState<WORK_TAG | null>(null);
@@ -47,13 +57,15 @@ const AccountBookInfoModal = ({
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState<boolean>(false);
   const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState<boolean>(false);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyNameError, setCompanyNameError] = useState<string | null>(null);
   const [responsiblePersonError, setResponsiblePersonError] = useState<string | null>(null);
   const [taxIdError, setTaxIdError] = useState<string | null>(null);
   const [taxSerialNumberError, setTaxSerialNumberError] = useState<string | null>(null);
   const [teamError, setTeamError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
+
+  const [isStepTwoBusinessTaxSettingOpen, setIsStepTwoBusinessTaxSettingOpen] =
+    useState<boolean>(false);
 
   // Info: (20250303 - Liz) 取得團隊清單 API
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
@@ -91,94 +103,155 @@ const AccountBookInfoModal = ({
   };
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
-  const handleSubmit = async () => {
-    // Info: (20241114 - Liz) 防止重複點擊
-    if (isLoading) return;
+  // const handleSubmit = async () => {
+  //   // Info: (20241114 - Liz) 防止重複點擊
+  //   if (isLoading) return;
 
-    // Info: (20250213 - Liz) 必填機制
+  //   // Info: (20250213 - Liz) 必填機制
+  //   if (!companyName) {
+  //     setCompanyNameError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_THE_NAME'));
+  //     return;
+  //   }
+  //   if (!responsiblePerson) {
+  //     setResponsiblePersonError(
+  //       t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_RESPONSIBLE_PERSON')
+  //     );
+  //     return;
+  //   }
+  //   if (!taxId) {
+  //     setTaxIdError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_ID'));
+  //     return;
+  //   }
+  //   if (!taxSerialNumber) {
+  //     setTaxSerialNumberError(
+  //       t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_SERIAL_NUMBER')
+  //     );
+  //     return;
+  //   }
+  //   if (!team) {
+  //     setTeamError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_TEAM'));
+  //     return;
+  //   }
+  //   if (!tag) {
+  //     setTagError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_WORK_TAG'));
+  //     return;
+  //   }
+
+  //   // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
+  //   setIsLoading(true);
+
+  //   try {
+  //     const { success, code, errorMsg } = await createAccountBook({
+  //       name: companyName,
+  //       taxId,
+  //       tag,
+  //       teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
+  //     });
+
+  //     if (!success) {
+  //       // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
+  //       toastHandler({
+  //         id: 'create-company-failed',
+  //         type: ToastType.ERROR,
+  //         content: (
+  //           <p>
+  //             {`${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
+  //             ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_CODE')}: ${code}
+  //             ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
+  //           </p>
+  //         ),
+  //         closeable: true,
+  //         position: ToastPosition.TOP_CENTER,
+  //       });
+  //       return;
+  //     }
+
+  //     // Info: (20250411 - Liz) 新增帳本成功後清空表單並關閉 modal
+  //     setCompanyName('');
+  //     setResponsiblePerson('');
+  //     setTaxId('');
+  //     setTaxSerialNumber('');
+  //     setPhoneNumber('');
+  //     setTag(null);
+  //     setTeam(null);
+  //     setCity(null);
+  //     setDistrict(null);
+  //     setDistrictOptions([]);
+  //     setEnteredAddress('');
+  //     closeCreateAccountBookModal();
+
+  //     if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
+
+  //     if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
+  //   } catch (error) {
+  //     // Deprecated: (20241104 - Liz)
+  //     // eslint-disable-next-line no-console
+  //     console.log('AccountBookInfoModal handleSubmit error:', error);
+  //   } finally {
+  //     // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // ToDo: (20250418 - Liz) 驗證必填欄位後才可以進入第二步驟
+  const validateRequiredFields = () => {
+    let isValid = true;
+
     if (!companyName) {
       setCompanyNameError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_THE_NAME'));
-      return;
+      isValid = false;
+    } else {
+      setCompanyNameError(null);
     }
+
     if (!responsiblePerson) {
       setResponsiblePersonError(
         t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_RESPONSIBLE_PERSON')
       );
-      return;
+      isValid = false;
+    } else {
+      setResponsiblePersonError(null);
     }
+
     if (!taxId) {
       setTaxIdError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_ID'));
-      return;
+      isValid = false;
+    } else {
+      setTaxIdError(null);
     }
+
     if (!taxSerialNumber) {
       setTaxSerialNumberError(
         t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_TAX_SERIAL_NUMBER')
       );
-      return;
+      isValid = false;
+    } else {
+      setTaxSerialNumberError(null);
     }
+
     if (!team) {
       setTeamError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_TEAM'));
-      return;
+      isValid = false;
+    } else {
+      setTeamError(null);
     }
+
     if (!tag) {
       setTagError(t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_SELECT_A_WORK_TAG'));
-      return;
+      isValid = false;
+    } else {
+      setTagError(null);
     }
 
-    // Info: (20241104 - Liz) 開始 API 請求時設為 loading 狀態
-    setIsLoading(true);
+    return isValid;
+  };
 
-    try {
-      const { success, code, errorMsg } = await createAccountBook({
-        name: companyName,
-        taxId,
-        tag,
-        teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-      });
-
-      if (!success) {
-        // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
-        toastHandler({
-          id: 'create-company-failed',
-          type: ToastType.ERROR,
-          content: (
-            <p>
-              {`${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_ACCOUNT_BOOK_FAILED')}!
-              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_CODE')}: ${code}
-              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
-            </p>
-          ),
-          closeable: true,
-          position: ToastPosition.TOP_CENTER,
-        });
-        return;
-      }
-
-      // Info: (20250411 - Liz) 新增帳本成功後清空表單並關閉 modal
-      setCompanyName('');
-      setResponsiblePerson('');
-      setTaxId('');
-      setTaxSerialNumber('');
-      setPhoneNumber('');
-      setTag(null);
-      setTeam(null);
-      setCity(null);
-      setDistrict(null);
-      setDistrictOptions([]);
-      setEnteredAddress('');
-      closeCreateAccountBookModal();
-
-      if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
-
-      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
-    } catch (error) {
-      // Deprecated: (20241104 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('AccountBookInfoModal handleSubmit error:', error);
-    } finally {
-      // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
-      setIsLoading(false);
-    }
+  const goToStepTwoBusinessTaxSetting = () => {
+    // Info: (20250418 - Liz) 驗證必填欄位
+    const isValid = validateRequiredFields();
+    if (!isValid) return;
+    // Info: (20250418 - Liz) 驗證通過後進入第二步驟
+    setIsStepTwoBusinessTaxSettingOpen(true);
   };
 
   // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
@@ -208,6 +281,11 @@ const AccountBookInfoModal = ({
     getTeamList();
   }, [userAuth]);
 
+  // Info: (20250418 - Liz) 進入第二步驟的商業稅設定
+  if (isStepTwoBusinessTaxSettingOpen) {
+    return <StepTwoBusinessTaxSetting closeAccountBookInfoModal={closeCreateAccountBookModal} />;
+  }
+
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
@@ -221,7 +299,7 @@ const AccountBookInfoModal = ({
         </header>
 
         <div className="flex max-h-65vh flex-col gap-24px overflow-y-auto px-40px pb-40px">
-          {/* Info: (20250409 - Liz) Divider */}
+          {/* Info: (20250409 - Liz) Divider - Basic info */}
           <section className="flex items-center gap-16px">
             <div className="flex items-center gap-8px">
               <Image
@@ -238,10 +316,10 @@ const AccountBookInfoModal = ({
           <section className="flex items-center gap-24px">
             <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
               <Image
-                src={'/images/no_company_image.svg'}
+                src={'/icons/upload_icon.svg'}
                 width={48}
                 height={48}
-                alt="company_image"
+                alt="upload_icon"
               ></Image>
             </div>
 
@@ -256,7 +334,7 @@ const AccountBookInfoModal = ({
                   <input
                     type="text"
                     placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_NAME')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                   />
@@ -276,7 +354,7 @@ const AccountBookInfoModal = ({
                   <input
                     type="text"
                     placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_RESPONSIBLE_PERSON')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                     value={responsiblePerson}
                     onChange={(e) => setResponsiblePerson(e.target.value)}
                   />
@@ -296,9 +374,9 @@ const AccountBookInfoModal = ({
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
-                    type="text"
+                    type="number"
                     placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                     value={taxId}
                     onChange={(e) => setTaxId(e.target.value)}
                   />
@@ -316,9 +394,9 @@ const AccountBookInfoModal = ({
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <input
-                    type="text"
+                    type="number"
                     placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_SERIAL_NUMBER')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                     value={taxSerialNumber}
                     onChange={(e) => setTaxSerialNumber(e.target.value)}
                   />
@@ -332,24 +410,77 @@ const AccountBookInfoModal = ({
             </section>
           </section>
 
-          {/* Info: (20250410 - Liz) 電話號碼 */}
-          <section className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PHONE_NUMBER')}
-            </h4>
-            <input
-              type="text"
-              placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_PHONE_NUMBER')}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-            />
+          {/* Info: (20250418 - Liz) Divider - Contact info */}
+          <section className="flex items-center gap-16px">
+            <div className="flex items-center gap-8px">
+              <Image src="/icons/phone_icon.svg" width={16} height={16} alt="phone_icon" />
+              <span>Contact info</span>
+            </div>
+            <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+          </section>
+
+          <section className="flex items-start gap-14px">
+            {/* Info: (20250410 - Liz) 聯絡人 */}
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">Contact Person</h4>
+
+              <div className="flex overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_SM">
+                <input
+                  type="text"
+                  placeholder="Enter name"
+                  className="bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
+                  value={isSameAsResponsiblePerson ? responsiblePerson : contactPerson}
+                  onChange={(e) => setContactPerson(e.target.value)}
+                />
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={isSameAsResponsiblePerson}
+                  onClick={() => setIsSameAsResponsiblePerson((prev) => !prev)}
+                  className="flex flex-none items-center gap-8px px-12px py-10px outline-none"
+                >
+                  <div
+                    className={cn(
+                      'flex h-16px w-16px items-center justify-center rounded-xxs border border-checkbox-stroke-unselected bg-checkbox-surface-unselected',
+                      {
+                        'bg-checkbox-surface-selected': isSameAsResponsiblePerson,
+                        'hover:bg-checkbox-surface-hover': !isSameAsResponsiblePerson,
+                      }
+                    )}
+                  >
+                    {isSameAsResponsiblePerson && (
+                      <Image
+                        src="/icons/checked_white.svg"
+                        alt="checkbox_icon"
+                        width={10}
+                        height={10}
+                      />
+                    )}
+                  </div>
+                  <span className="text-base font-medium text-input-text-input-placeholder">
+                    Same as responsible person
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Info: (20250410 - Liz) 電話號碼 */}
+            <div className="flex flex-auto flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PHONE_NUMBER')}
+              </h4>
+              <input
+                type="number"
+                placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_PHONE_NUMBER')}
+                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              />
+            </div>
           </section>
 
           <section className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">
-              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.COMPANY_ADDRESS')}
-            </h4>
+            <h4 className="font-semibold text-input-text-primary">Business address</h4>
 
             <main className="flex gap-14px">
               {/* Info: (20250409 - Liz) 縣市 City */}
@@ -480,7 +611,7 @@ const AccountBookInfoModal = ({
               <div className="relative flex flex-col">
                 <button
                   type="button"
-                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                   onClick={toggleTeamDropdown}
                 >
                   <p className="px-12px py-10px text-base font-medium">
@@ -539,7 +670,7 @@ const AccountBookInfoModal = ({
               <div className="relative flex flex-col">
                 <button
                   type="button"
-                  className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                  className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                   onClick={toggleTagDropdown}
                 >
                   <p className="px-12px py-10px text-base font-medium">
@@ -563,7 +694,7 @@ const AccountBookInfoModal = ({
 
                 {isTagDropdownOpen && (
                   <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                    <div className="mb-20px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+                    <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
                       {Object.values(WORK_TAG).map((item) => (
                         <button
                           key={item}
@@ -594,14 +725,14 @@ const AccountBookInfoModal = ({
               {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CANCEL')}
             </button>
 
+            {/* Info: (20250418 - Liz) 進入第二步驟的商業稅設定 */}
             <button
               type="button"
-              onClick={handleSubmit}
-              disabled={isLoading}
+              onClick={goToStepTwoBusinessTaxSetting}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
-              <p>{t('dashboard:COMMON.SAVE')}</p>
-              <IoSaveOutline size={16} />
+              <p>Next</p>
+              <FaArrowRightLong size={16} />
             </button>
           </section>
         </div>

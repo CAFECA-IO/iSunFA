@@ -165,7 +165,6 @@
     "ERROR_CODE": "錯誤代碼",
     "ERROR_MESSAGE": "錯誤訊息",
 
-    "COMPANY_ADDRESS": "公司地址",
     "CHOOSE_CITY": "選擇縣市",
     "CHOOSE_DISTRICT": "選擇行政區",
     "RESPONSIBLE_PERSON": "負責人",
@@ -182,5 +181,40 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "請輸入稅籍編號",
     "PLEASE_SELECT_A_WORK_TAG": "請選擇工作標籤",
     "PLEASE_SELECT_A_TEAM": "請選擇團隊"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "DECLARATION_SETTING": "申報設定",
+    "DECLARANT": "申報人 (代理人)"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "申報頻率",
+    "SELECT_FILING_FREQUENCY": "選擇申報頻率",
+    "BIMONTHLY_FILING": "雙月申報",
+    "MONTHLY_FILING": "每月申報",
+    "EVERY_TWO_MONTHS": "每兩個月",
+    "EVERY_MONTH": "每個月",
+    "FILING_FREQUENCY_REQUIRED": "請選擇申報頻率"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "總繳種類",
+    "SELECT_FILING_METHOD": "選擇總繳種類",
+    "SINGLE_ENTITY_FILING": "單一法人申報",
+    "CONSOLIDATED_FILING": "合併申報",
+    "INDIVIDUAL_FILING": "個人申報",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "單一總公司無分支機構",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "總公司為所有分支機構檔案",
+    "EACH_UNIT_FILES_SEPARATELY": "每個單位單獨歸檔",
+    "FILING_METHOD_REQUIRED": "請選擇總繳種類"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "申報方式",
+    "SELECT_DECLARANT_FILING_METHOD": "選擇申報方式",
+    "SELF_FILING": "自行申報",
+    "AGENT_FILING": "委託申報",
+    "DECLARANT_FILING_METHOD_REQUIRED": "請選擇申報方式"
   }
 }

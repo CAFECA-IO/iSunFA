@@ -60,16 +60,16 @@ const AccountBooksPageBody = () => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.id);
+      const success = await deleteAccountBook(accountBookToDelete.id);
 
-      if (!data) {
+      if (!success) {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
         console.log('刪除帳本失敗');
         return;
       }
 
-      setRefreshKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1); // Info: (20250418 - Liz) 更新帳本清單
     } catch (error) {
       // Deprecated: (20241115 - Liz)
       // eslint-disable-next-line no-console
