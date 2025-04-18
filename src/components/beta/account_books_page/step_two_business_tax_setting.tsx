@@ -98,6 +98,7 @@ const StepTwoBusinessTaxSetting = ({
 
   // ToDo: (20250418 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async () => {
+    // Deprecated: (20250418 - Liz) remove eslint-disable
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const success = validateForm(); // Info: (20250418 - Liz) 驗證必填
     if (!success) return;
