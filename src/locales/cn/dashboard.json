@@ -165,7 +165,6 @@
     "ERROR_CODE": "错误代码",
     "ERROR_MESSAGE": "错误讯息",
 
-    "COMPANY_ADDRESS": "公司地址",
     "CHOOSE_CITY": "选择县市",
     "CHOOSE_DISTRICT": "选择行政区",
     "RESPONSIBLE_PERSON": "负责人",
@@ -182,5 +181,40 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "请输入税籍编号",
     "PLEASE_SELECT_A_WORK_TAG": "请选择工作标签",
     "PLEASE_SELECT_A_TEAM": "请选择团队"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "DECLARATION_SETTING": "申报设置",
+    "DECLARANT": "申报人 (代理人)"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "申报频率",
+    "SELECT_FILING_FREQUENCY": "选择申报频率",
+    "BIMONTHLY_FILING": "双月申报",
+    "MONTHLY_FILING": "每月申报",
+    "EVERY_TWO_MONTHS": "每两个月",
+    "EVERY_MONTH": "每个月",
+    "FILING_FREQUENCY_REQUIRED": "请选择申报频率"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "总缴种类",
+    "SELECT_FILING_METHOD": "选择总缴种类",
+    "SINGLE_ENTITY_FILING": "单一法人申报",
+    "CONSOLIDATED_FILING": "合并申报",
+    "INDIVIDUAL_FILING": "个人申报",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "单一总公司无分支机构",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "总公司为所有分支机构档案",
+    "EACH_UNIT_FILES_SEPARATELY": "每个单位单独归档",
+    "FILING_METHOD_REQUIRED": "请选择总缴种类"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "申报方式",
+    "SELECT_DECLARANT_FILING_METHOD": "选择申报方式",
+    "SELF_FILING": "自行申报",
+    "AGENT_FILING": "委托申报",
+    "DECLARANT_FILING_METHOD_REQUIRED": "请选择申报方式"
   }
 }
