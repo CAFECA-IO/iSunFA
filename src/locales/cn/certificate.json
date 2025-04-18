@@ -185,5 +185,8 @@
     "MARK_RETURN_OR_ALLOWANCE": "标记为退回或折让",
     "PREVIOUS": "上一笔",
     "NEXT": "下一笔"
+  },
+  "INPUT_CERTIFICATE": {
+    "INPUT_CERTIFICATE": "进项凭证"
   }
 }

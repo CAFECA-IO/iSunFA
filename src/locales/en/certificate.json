@@ -185,5 +185,8 @@
     "MARK_RETURN_OR_ALLOWANCE": "Mark as return or allowance",
     "PREVIOUS": "Previous",
     "NEXT": "Next"
+  },
+  "INPUT_CERTIFICATE": {
+    "INPUT_CERTIFICATE": "Input Invoice"
   }
 }
