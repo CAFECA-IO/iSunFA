@@ -103,6 +103,14 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   ],
 
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  // Info: (20250416 - Tzuhan) 傳票相關
+  [TeamPermissionAction.CREATE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.RESTORE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 
 // Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理

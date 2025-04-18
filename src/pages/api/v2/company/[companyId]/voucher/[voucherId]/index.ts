@@ -1,38 +1,42 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-
-import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IResponseData } from '@/interfaces/response_data';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-import { APIName } from '@/constants/api_connection';
-import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
-import { IEventEntity } from '@/interfaces/event';
-import { ILineItemEntity } from '@/interfaces/line_item';
-import { IAccountEntity } from '@/interfaces/accounting_account';
+import { getSession } from '@/lib/utils/session';
 import {
-  IGetOneVoucherResponse,
-  IVoucherDetailForFrontend,
-  IVoucherEntity,
-} from '@/interfaces/voucher';
-import { IAssetEntity } from '@/interfaces/asset';
-import { IInvoiceEntity } from '@/interfaces/invoice';
-import { IFileEntity } from '@/interfaces/file';
-import { ICertificateEntity } from '@/interfaces/certificate';
+  checkSessionUser,
+  checkRequestData,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import { HTTP_STATUS } from '@/constants/http';
 import {
   voucherAPIGetOneUtils as getUtils,
   voucherAPIPutUtils as putUtils,
   voucherAPIDeleteUtils as deleteUtils,
 } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
-import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import {
   deleteVoucherByCreateReverseVoucher,
   putVoucherWithoutCreateNew,
 } from '@/lib/utils/repo/voucher.repo';
+import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { validateOutputData } from '@/lib/utils/validator';
+import loggerBack from '@/lib/utils/logger_back';
+import { IGetOneVoucherResponse, IVoucherEntity } from '@/interfaces/voucher';
+import { IUserEntity } from '@/interfaces/user';
+import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
+import { IEventEntity } from '@/interfaces/event';
+import { IAssetEntity } from '@/interfaces/asset';
+import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
+import { ICertificateEntity } from '@/interfaces/certificate';
+import { IInvoiceEntity } from '@/interfaces/invoice';
+import { IFileEntity } from '@/interfaces/file';
+import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+import { ILineItemEntity } from '@/interfaces/line_item';
+import { IAccountEntity } from '@/interfaces/accounting_account';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -59,26 +63,35 @@ type GetOneVoucherResponse = IVoucherEntity & {
   };
 };
 
-export const handleGetRequest: IHandleRequest<
-  APIName.VOUCHER_GET_BY_ID_V2,
-  GetOneVoucherResponse
-> = async ({ query, session }) => {
-  /**
-   * Info: (20241112 - Murky)
-   * @todo
-   * - Get voucher with all needed in GetOneVoucherResponse
-   * - Init every part of GetOneVoucherResponse
-   * - Calculate payableInfo and receivingInfo
-   * @note line items 裡面也要提供Reverse lineItem, 需要什麼資料要看 src/components/voucher/reverse_item.tsx
-   * -  voucherNo, account, description, reverseAmount
-   */
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: GetOneVoucherResponse | null = null;
+const handleGetRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.VOUCHER_GET_BY_ID_V2;
+  const session = await getSession(req);
+  await checkSessionUser(session, apiName, req);
+  await checkUserAuthorization(apiName, req, session);
+
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const { userId, companyId } = session;
-  const accountSettingCompanyId = companyId;
+
+  const { can } = await assertUserCanByCompany({
+    userId,
+    companyId,
+    action: TeamPermissionAction.VIEW_VOUCHER,
+  });
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  const { voucherId, isVoucherNo } = query;
+
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+
   try {
-    const { voucherId, isVoucherNo } = query;
     const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
       voucherId,
       {
@@ -90,7 +103,7 @@ export const handleGetRequest: IHandleRequest<
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
     const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
     const accountSetting: PrismaAccountingSetting =
-      await getUtils.getAccountingSettingFromPrisma(accountSettingCompanyId);
+      await getUtils.getAccountingSettingFromPrisma(companyId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
     const counterParty: ICounterPartyEntityPartial =
       getUtils.initCounterPartyEntity(voucherFromPrisma);
@@ -115,208 +128,119 @@ export const handleGetRequest: IHandleRequest<
       payableInfo,
       receivingInfo,
     };
-    payload = mockVoucher;
+
+    loggerBack.info(`handleGetRequest voucherFromPrisma: ${JSON.stringify(voucherFromPrisma)}`);
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.VOUCHER_GET_BY_ID_V2,
+      mockVoucher
+    );
+    loggerBack.info(`handleGetRequest outputData: ${JSON.stringify(outputData)}`);
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    } else {
+      payload = outputData;
+    }
+
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-  } catch (_error) {
-    const error = _error as Error;
-    loggerError({
-      userId,
-      errorType: 'Voucher Get One handleGetRequest',
-      errorMessage: error.message,
-    });
+  } catch (error) {
+    statusMessage = (error as Error).message;
   }
 
-  return {
-    statusMessage,
-    payload,
-    userId,
-  };
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = async ({
-  query,
-  body,
-  session,
-}) => {
-  /**
-   * Info: (20240927 - Murky)
-   * Put is not actually put, but add an reverse voucher and link to current voucher
-   * maybe non lineItem put can just put original voucher?? => flow chart is needed
-   */
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: number | null = null;
-  const { userId, companyId } = session;
+const handlePutRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.VOUCHER_PUT_V2;
+  const session = await getSession(req);
+  await checkSessionUser(session, apiName, req);
+  await checkUserAuthorization(apiName, req, session);
+
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const { voucherId, isVoucherNo } = query;
-  const {
-    actions,
-    certificateIds,
-    lineItems,
-    recurringInfo,
-    assetIds,
-    reverseVouchers: reverseVouchersInfo,
-    counterPartyId,
-    ...voucherInfo
-  } = body;
+  const { userId, companyId } = session;
+
+  const { can } = await assertUserCanByCompany({
+    userId,
+    companyId,
+    action: TeamPermissionAction.MODIFY_VOUCHER,
+  });
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
 
   try {
-    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
-      voucherId,
-      {
-        isVoucherNo,
-        companyId,
-      }
-    );
+    const origin = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const originLineItems = getUtils.initLineItemEntities(origin);
+    const certificates = getUtils.initCertificateEntities(origin);
+    const asset = getUtils.initAssetEntities(origin);
 
-    // Info: (20241113 - Murky) 變了不用新增reverse voucher，只要更新原本的voucher
-    // const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
-    // const originIssuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
-    // const originCounterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
-    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
+    const { certificateIds, lineItems, assetIds, reverseVouchers, counterPartyId, ...voucherInfo } =
+      body;
 
-    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
-    // Info: (20241113 - Murky)
-    const originLineItems: (ILineItemEntity & { account: IAccountEntity })[] =
-      getUtils.initLineItemEntities(voucherFromPrisma);
-
-    // Info: (20241113 - Murky) 不知道怎麼處理
-    // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
-    // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
-
-    // Info: (20241114 - Murky) 下面是新來的voucher
-
-    const isCertificateIdsHasItems = postUtils.isArrayHasItems(certificateIds);
-    const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
-    const isCounterPartyIdExist = postUtils.isItemExist(counterPartyId);
-    const isAssetIdsHasItems = postUtils.isArrayHasItems(assetIds);
-    // const isReverseVouchersInfoHasItems = postUtils.isArrayHasItems(reverseVouchersInfo);
-    const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
-    // const isVoucherEditable = true;
-
-    // Info: (20241025 - Murky) Early throw error if lineItems is empty and voucherInfo is empty
-    if (!isLineItemsHasItems) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'lineItems is required when post voucher',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
+    // 驗證輸入資料完整性與一致性
+    if (!postUtils.isArrayHasItems(lineItems)) {
+      const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
+      error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+      throw error;
+    }
+    if (!postUtils.isItemExist(voucherInfo)) {
+      const error = new Error(STATUS_MESSAGE.MISSING_VOUCHER_INFO);
+      error.name = STATUS_CODE.MISSING_VOUCHER_INFO;
+      throw error;
+    }
+    if (!postUtils.isLineItemsBalanced(lineItems)) {
+      throw new Error(STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT);
     }
 
-    // Info: (20241226 - Murky) Check if lineItems credit and debit are equal
-    const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
-    if (!isLineItemsBalanced) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'lineItems credit and debit should be equal',
-        statusMessage: STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT,
-      });
+    if (counterPartyId && !postUtils.isCounterPartyExistById(counterPartyId)) {
+      const error = new Error(STATUS_MESSAGE.COUNTERPARTY_NOT_EXIST);
+      error.name = STATUS_CODE.COUNTERPARTY_NOT_EXIST;
+      throw error;
     }
 
-    if (!isVoucherInfoExist) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'voucherInfo is required when post voucher',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
+    if (
+      postUtils.isArrayHasItems(certificateIds) &&
+      !postUtils.areAllCertificatesExistById(certificateIds)
+    ) {
+      const error = new Error(STATUS_MESSAGE.CERTIFICATE_IDS_NOT_EXIST);
+      error.name = STATUS_CODE.CERTIFICATE_IDS_NOT_EXIST;
+      throw error;
     }
 
-    if (isCounterPartyIdExist) {
-      const isCounterPartyExist = postUtils.isCounterPartyExistById(counterPartyId);
-      if (!isCounterPartyExist) {
-        putUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with counterPartyId, counterParty need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
-    }
-
-    // Info: (20241114 - Murky) 檢查是不是所有的asset都存在, 不存在就throw error
-    if (isAssetIdsHasItems) {
-      const isAllAssetExist = postUtils.areAllAssetsExistById(assetIds);
-
-      if (!isAllAssetExist) {
-        putUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with assetIds, all asset need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
-    }
-
-    // Info: (20241025 - Murky) 檢查是不是所有的revertVoucher都存在, 不存在就throw error
-    const revertVoucherIds = reverseVouchersInfo.map((reverseVoucher) => reverseVoucher.voucherId);
-    const isAllRevertVoucherExist = postUtils.areAllVouchersExistById(revertVoucherIds);
-    if (!isAllRevertVoucherExist) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: `when post voucher with reverseVouchersInfo, all reverseVoucher need to exist in database`,
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
-    }
-
-    // Info: (20241111 - Murky) 只要檢查被Reverse 的lineItems, Reverse 別人的lineItems還沒有被建立起來
-    const revertLineItemIds = reverseVouchersInfo.map(
-      (reverseVoucher) => reverseVoucher.lineItemIdBeReversed
-    );
-    const isAllRevertLineItemExist = postUtils.areAllLineItemsExistById(revertLineItemIds);
-    if (!isAllRevertLineItemExist) {
-      postUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: `when post voucher with reverseVouchersInfo, all reverseLineItem need to exist in database`,
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
-    }
-
-    // Info: (20241114 - Murky) 檢查 certificateIds 是否都存在
-    if (isCertificateIdsHasItems) {
-      // Info: (20241111 - Murky) 檢查是不是所有的certificate都存在, 不存在就throw error
-      const isAllCertificateExist = postUtils.areAllCertificatesExistById(certificateIds);
-      if (!isAllCertificateExist) {
-        postUtils.throwErrorAndLog(loggerBack, {
-          errorMessage: `when post voucher with certificateIds, all certificate need to exist in database`,
-          statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-        });
-      }
-    }
-
-    // Info: (20241111 - Murky) Init Company and Issuer Entity, For Voucher Meta Data and check if they exist in database
     const issuer = await postUtils.initIssuerFromPrisma(userId);
+    const newLineItems = postUtils.initLineItemEntities(lineItems);
 
-    const newLineItemEntities: ILineItemEntity[] = postUtils.initLineItemEntities(lineItems);
-
-    /**
-     * Info: (20241113 - Murky)
-     * @description 決定是不是要新增一張新的voucher, 只有在line items有動到amount, accountId, debit的時候才需要新增
-     */
-    const isNewVoucherNeeded = !putUtils.isLineItemEntitiesSame(
-      originLineItems,
-      newLineItemEntities
-    );
-
-    // Info: (20241113 - Murky) 如果同時修改藍色與非藍色區域
-    // 要同時除存在原本的voucher與新增一張reverse voucher, 新增voucher有會有新的 非藍色區域
-    if (isNewVoucherNeeded) {
-      putUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'Please use post + delete to update lineItem',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
+    if (!putUtils.isLineItemEntitiesSame(originLineItems, newLineItems)) {
+      const error = new Error(STATUS_MESSAGE.MODIFY_LINE_ITEMS_USE_POST_DELETE);
+      error.name = STATUS_CODE.MODIFY_LINE_ITEMS_USE_POST_DELETE;
+      throw error;
     }
-
-    // ToDo: (20241114 - Murky) delete asset voucher associate if asset is different
 
     const { assetIdsNeedToBeRemoved, assetIdsNeedToBeAdded } = putUtils.getDifferentAssetId({
       originalAssetIds: asset.map((a) => a.id),
       newAssetIds: assetIds,
     });
 
-    // ToDo: (20241114 - Murky) delete associate lineItem if revert lineItem is different
-
-    const newLineItemReverseRelations = putUtils.constructNewLineItemReverseRelationship(
-      newLineItemEntities,
-      reverseVouchersInfo,
+    const newReverseRelations = putUtils.constructNewLineItemReverseRelationship(
+      newLineItems,
+      reverseVouchers,
       originLineItems
     );
-
-    const oldLineItemReverseRelations =
-      putUtils.constructOldLineItemReverseRelationship(voucherFromPrisma);
+    const oldReverseRelations = putUtils.constructOldLineItemReverseRelationship(origin);
 
     const reverseRelationNeedToBeReplace = putUtils.getDifferentReverseRelationship(
-      oldLineItemReverseRelations,
-      newLineItemReverseRelations
+      oldReverseRelations,
+      newReverseRelations
     );
 
     const { certificateIdsNeedToBeRemoved, certificateIdsNeedToBeAdded } =
@@ -325,7 +249,7 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
         newCertificateIds: certificateIds,
       });
 
-    const updatedVoucher = await putVoucherWithoutCreateNew(voucherId, {
+    const updated = await putVoucherWithoutCreateNew(voucherId, {
       issuerId: issuer.id,
       counterPartyId,
       voucherInfo,
@@ -340,173 +264,128 @@ export const handlePutRequest: IHandleRequest<APIName.VOUCHER_PUT_V2, number> = 
       reverseRelationNeedToBeReplace,
     });
 
+    payload = updated?.id || null;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = updatedVoucher?.id || null;
-  } catch (_error) {
-    const error = _error as Error;
-    loggerError({
-      userId,
-      errorType: 'Voucher Put handlePutRequest',
-      errorMessage: error.message,
-    });
+  } catch (error) {
+    statusMessage = (error as Error).message;
   }
 
-  return {
-    statusMessage,
-    payload,
-    userId,
-  };
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-/**
- * Info: (20241118 - Murky)
- * @todo
- * - Copy 一模一樣的 lineItem然後反過來
- * - 前一筆的asset 也要加上去 assetVoucher
- * - revert事件除了delete 這張的關係， 這張reverse 以前的voucher也要多加上這層關係
- */
-export const handleDeleteRequest: IHandleRequest<APIName.VOUCHER_DELETE_V2, number> = async ({
-  query,
-  session,
-}) => {
-  /**
-   * Info: (20240927 - Murky)
-   * Delete is not actually put, but add an reverse voucher and link to current voucher
-   */
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: number | null = null;
+const handleDeleteRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.VOUCHER_DELETE_V2;
+  const session = await getSession(req);
+  await checkSessionUser(session, apiName, req);
+  await checkUserAuthorization(apiName, req, session);
+
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+
+  const { voucherId, isVoucherNo } = query;
   const { userId, companyId } = session;
+  const { can } = await assertUserCanByCompany({
+    userId,
+    companyId,
+    action: TeamPermissionAction.DELETE_VOUCHER,
+  });
+
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+
   try {
     const nowInSecond = getTimestampNow();
-    const { voucherId, isVoucherNo } = query;
-    const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
-      voucherId,
-      {
-        isVoucherNo,
-        companyId,
-      }
-    );
-
-    const originVoucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
-
-    if (originVoucher.deletedAt) {
-      deleteUtils.throwErrorAndLog(loggerBack, {
-        errorMessage: 'Voucher already deleted',
-        statusMessage: STATUS_MESSAGE.BAD_REQUEST,
-      });
+    const voucher = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const origin = parsePrismaVoucherToVoucherEntity(voucher);
+    if (origin.deletedAt) {
+      const error = new Error(STATUS_MESSAGE.VOUCHER_ALREADY_DELETED);
+      error.name = STATUS_CODE.VOUCHER_ALREADY_DELETED;
+      throw error;
     }
 
-    const originLineItems = deleteUtils.initOriginalLineItemEntities(voucherFromPrisma);
-
-    // const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
-    // const counterParty: ICounterPartyEntity = getUtils.initCounterPartyEntity(voucherFromPrisma);
-    // const originalEvents: IEventEntity[] = getUtils.initOriginalEventEntities(voucherFromPrisma);
-    // const resultEvents: IEventEntity[] = getUtils.initResultEventEntities(voucherFromPrisma);
-    const asset: IAssetEntity[] = getUtils.initAssetEntities(voucherFromPrisma);
-    const certificates = getUtils.initCertificateEntities(voucherFromPrisma);
-
-    // Info: (20241119 - Murky) 需要多加reverse voucher嗎？
-    // const isReverseEventNeeded = deleteUtils.isReverseEventNeeded(voucherFromPrisma);
-
-    // Info: (20241119 - Murky) 需要多加asset voucher嗎？
-    const isAssetVoucherNeeded = deleteUtils.isAssetEventNeeded(voucherFromPrisma);
-
+    const lineItems = deleteUtils.initOriginalLineItemEntities(voucher);
+    const asset = getUtils.initAssetEntities(voucher);
+    const certificates = getUtils.initCertificateEntities(voucher);
     // TODO: (20250213 - Shirley) 實作資產折舊後，需檢查「已經折舊的資產，對應的 voucher 無法被刪除」
-
-    // ToDo: (20241118 - Murky) 先組合出要刪除的voucherEntity
-    const deleteVersionReverseLineItemPairs =
-      deleteUtils.getDeleteVersionReverseLineItemPairs(originLineItems);
-
-    const voucherDeleteOtherEntity = deleteUtils.initDeleteVoucherEntity({
+    const reverseLineItemPairs = deleteUtils.getDeleteVersionReverseLineItemPairs(lineItems);
+    const deleteEntity = deleteUtils.initDeleteVoucherEntity({
       nowInSecond,
-      voucherBeenDeleted: originVoucher,
-      deleteVersionLineItems: deleteVersionReverseLineItemPairs.map(
-        (pair) => pair.newDeleteReverseLineItem
-      ),
+      voucherBeenDeleted: origin,
+      deleteVersionLineItems: reverseLineItemPairs.map((pair) => pair.newDeleteReverseLineItem),
     });
 
-    if (isAssetVoucherNeeded) {
-      voucherDeleteOtherEntity.asset = asset;
-    }
+    deleteEntity.asset = asset;
+    deleteEntity.certificates = certificates;
 
-    if (certificates.length > 0) {
-      voucherDeleteOtherEntity.certificates = certificates;
-    }
-
-    const deleteVersionOriginVoucher = deleteUtils.deepCopyVoucherEntity(originVoucher);
-
-    // Info: (20241119 - Murky) 這邊lineIt{em不用塞在voucher裡面
-    const deleteEvent: IEventEntity = deleteUtils.initDeleteEventEntity({
+    const deleteEvent = deleteUtils.initDeleteEventEntity({
       nowInSecond,
-      voucherBeenDeleted: deleteVersionOriginVoucher,
-      voucherDeleteOther: voucherDeleteOtherEntity,
+      voucherBeenDeleted: deleteUtils.deepCopyVoucherEntity(origin),
+      voucherDeleteOther: deleteEntity,
     });
 
-    const { voucherId: newVoucherId } = await deleteVoucherByCreateReverseVoucher({
+    const result = await deleteVoucherByCreateReverseVoucher({
       nowInSecond,
       companyId,
       issuerId: userId,
-      voucherDeleteOtherEntity,
-      deleteVersionOriginVoucher,
+      voucherDeleteOtherEntity: deleteEntity,
+      deleteVersionOriginVoucher: origin,
       deleteEvent,
-      deleteVersionReverseLineItemPairs,
+      deleteVersionReverseLineItemPairs: reverseLineItemPairs,
     });
-    payload = newVoucherId;
+
+    payload = result.voucherId;
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-  } catch (_error) {
-    const error = _error as Error;
-    loggerError({
-      userId,
-      errorType: 'Voucher Delete handleDeleteRequest',
-      errorMessage: error.message,
-    });
+  } catch (error) {
+    statusMessage = (error as Error).message;
   }
-  return {
-    statusMessage,
-    payload,
-  };
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-type APIResponse = IVoucherDetailForFrontend | number | null;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const method = req.method || HttpMethod.GET;
+  const session = await getSession(req);
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{
-    statusMessage: string;
-    payload: APIResponse;
-  }>;
-} = {
-  GET: (req) => withRequestValidation(APIName.VOUCHER_GET_BY_ID_V2, req, handleGetRequest),
-  PUT: (req) => withRequestValidation(APIName.VOUCHER_PUT_V2, req, handlePutRequest),
-  DELETE: (req) => withRequestValidation(APIName.VOUCHER_DELETE_V2, req, handleDeleteRequest),
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<APIResponse>>
-) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = null;
-  const userId: number = -1;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let result;
+  let apiName: APIName = APIName.VOUCHER_GET_BY_ID_V2;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    let response;
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.VOUCHER_GET_BY_ID_V2;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        break;
+      case HttpMethod.PUT:
+        apiName = APIName.VOUCHER_PUT_V2;
+        ({ response, statusMessage } = await handlePutRequest(req));
+        break;
+      case HttpMethod.DELETE:
+        apiName = APIName.VOUCHER_DELETE_V2;
+        ({ response, statusMessage } = await handleDeleteRequest(req));
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        response = formatApiResponse(statusMessage, null);
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    loggerError({
-      userId,
-      errorType: error.name,
-      errorMessage: error.message,
-    });
-    statusMessage = error.message;
+    ({ httpCode, result } = response);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
+
+  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }

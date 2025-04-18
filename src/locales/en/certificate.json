@@ -172,7 +172,8 @@
     "UPLOADED": "Uploaded",
     "TOTAL": "Total",
     "CERTIFICATES": "Certificates",
-    "EMPTY": "Empty"
+    "EMPTY": "Empty",
+    "EXPORT_INVOICES": "Export Invoices"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "Upload file: ({{name}}) error",
@@ -185,5 +186,8 @@
     "MARK_RETURN_OR_ALLOWANCE": "Mark as return or allowance",
     "PREVIOUS": "Previous",
     "NEXT": "Next"
+  },
+  "INPUT_CERTIFICATE": {
+    "INPUT_CERTIFICATE": "Input Invoice"
   }
 }
