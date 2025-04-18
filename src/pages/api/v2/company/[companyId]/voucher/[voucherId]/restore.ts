@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
@@ -7,6 +7,8 @@ import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { loggerError } from '@/lib/utils/logger_back';
 import { voucherAPIRestoreUtils as restoreUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
 
 interface IHandlerResult {
   statusMessage: string;
@@ -34,6 +36,17 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
 
   try {
     const now = getTimestampNow();
+    const { can } = await assertUserCanByCompany({
+      userId,
+      companyId,
+      action: TeamPermissionAction.RESTORE_VOUCHER,
+    });
+
+    if (!can) {
+      const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+      error.name = STATUS_CODE.PERMISSION_DENIED;
+      throw error;
+    }
     const restoredVoucher = await restoreUtils.restoreVoucherAndRelations({
       voucherId,
       companyId,

@@ -494,6 +494,8 @@ export const listAccountBooksByTeamId = async (
       // ✅ (20250324 - Tzuhan) 修正 teamRole 取得方式
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
+      const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
       return {
         id: book.id,
@@ -525,7 +527,9 @@ export const listAccountBooksByTeamId = async (
                   : '',
                 editable: false,
               },
-              expiredAt: book.team.subscriptions[0]?.expiredDate ?? 0,
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
             }
           : null,
         isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
@@ -1103,7 +1107,7 @@ export const updateAccountBook = async (
       where: { id: accountBookId },
       data: {
         name,
-        tag, // Info: (20250701 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
+        tag, // Info: (20250418 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
         taxId,
         teamId,
         updatedAt: getTimestampNow(),

@@ -90,6 +90,21 @@ enum ErrorCode {
   ADMIN_CANNOT_PROMOTE_TO_ADMIN = '403ISF0020',
   CANNOT_DELETE_OWNER = '403ISF0021',
   ADMIN_CANNOT_DELETE_ADMIN = '403ISF0022',
+  TEAM_NOT_FOUND_FROM_COMPANY = '404ISF0023',
+  MISSING_LINE_ITEMS = '422ISF0020',
+  MISSING_VOUCHER_INFO = '422ISF0021',
+  CERTIFICATE_IDS_NOT_EXIST = '422ISF0022',
+  MISSING_REVERSE_VOUCHERS = '422ISF0023',
+  REVERSE_VOUCHERS_NOT_EXIST = '422ISF0024',
+  REVERSE_LINE_ITEMS_NOT_EXIST = '422ISF0025',
+  MISSING_ASSET_IDS = '422ISF0026',
+  ASSET_IDS_NOT_EXIST = '422ISF0027',
+  RESULT_LINE_ITEM_NOT_FOUND = '404ISF0028',
+  COUNTERPARTY_NOT_EXIST = '404ISF0029',
+  CERTIFICATES_NOT_EXIST = '404ISF0030',
+  MODIFY_LINE_ITEMS_USE_POST_DELETE = '405ISF0031',
+  VOUCHER_ALREADY_DELETED = '409ISF0032',
+  NOT_YET_IMPLEMENTED = '501ISF0000',
 }
 
 enum SuccessMessage {
@@ -184,6 +199,21 @@ enum ErrorMessage {
   ADMIN_CANNOT_PROMOTE_TO_ADMIN = 'Admin cannot promote to admin',
   CANNOT_DELETE_OWNER = 'Cannot delete owner',
   ADMIN_CANNOT_DELETE_ADMIN = 'Admin cannot delete admin',
+  TEAM_NOT_FOUND_FROM_COMPANY = 'Team not found from company',
+  MISSING_LINE_ITEMS = 'LineItems is required when posting voucher',
+  MISSING_VOUCHER_INFO = 'VoucherInfo is required when posting voucher',
+  CERTIFICATE_IDS_NOT_EXIST = 'All certificateIds must exist in database',
+  MISSING_REVERSE_VOUCHERS = 'ReverseVouchers is required when posting revert voucher',
+  REVERSE_VOUCHERS_NOT_EXIST = 'All reverse vouchers must exist',
+  REVERSE_LINE_ITEMS_NOT_EXIST = 'All reverse line items must exist',
+  MISSING_ASSET_IDS = 'AssetIds is required when posting asset voucher',
+  ASSET_IDS_NOT_EXIST = 'All assetIds must exist in database',
+  RESULT_LINE_ITEM_NOT_FOUND = 'Result line item not found in postVoucherV2',
+  COUNTERPARTY_NOT_EXIST = 'CounterParty does not exist',
+  CERTIFICATES_NOT_EXIST = 'Certificates do not all exist',
+  MODIFY_LINE_ITEMS_USE_POST_DELETE = 'Use POST + DELETE instead to modify lineItems',
+  VOUCHER_ALREADY_DELETED = 'Voucher already deleted',
+  NOT_YET_IMPLEMENTED = 'Not yet implemented',
 }
 
 export const STATUS_MESSAGE = {
