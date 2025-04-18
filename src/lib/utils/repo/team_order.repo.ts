@@ -1,11 +1,12 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamOrder, ITeamOrderDetail } from '@/interfaces/order';
 
 const createTeamOrderDetail = async (
   orderId: number,
   options: ITeamOrderDetail[],
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamOrderDetail[]> => {
   const data = options.map((item) => ({
     orderId,
@@ -26,7 +27,10 @@ const createTeamOrderDetail = async (
   return options;
 };
 
-export const createTeamOrder = async (options: ITeamOrder, tx = prisma): Promise<ITeamOrder> => {
+export const createTeamOrder = async (
+  options: ITeamOrder,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<ITeamOrder> => {
   const data = {
     userId: options.userId,
     teamId: options.teamId,
@@ -43,7 +47,7 @@ export const createTeamOrder = async (options: ITeamOrder, tx = prisma): Promise
   if (!teamOrder.id) {
     throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
   }
-  await createTeamOrderDetail(teamOrder.id, options.details);
+  await createTeamOrderDetail(teamOrder.id, options.details, tx);
 
   const result = { ...options, id: teamOrder.id };
   return result;
@@ -52,7 +56,7 @@ export const createTeamOrder = async (options: ITeamOrder, tx = prisma): Promise
 // Info: (20250418 - Luphia) 更新訂單只允許更改狀態
 export const updateTeamOrderStatus = async (
   options: ITeamOrder,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamOrder> => {
   const { id, status } = options;
   const data = {

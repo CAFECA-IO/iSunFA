@@ -30,6 +30,7 @@ import {
 } from '@/lib/utils/repo/team_subscription.repo';
 import { TRANSACTION_STATUS } from '@/constants/transaction';
 import { updateTeamPayment } from '@/lib/utils/repo/team_payment.repo';
+import { transaction } from '@/lib/utils/repo/transaction';
 
 /** Info: (20250326 - Luphia) 訂閱支付細節
     team_plan 團隊方案
@@ -67,81 +68,88 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
     // ToDo: (20250331 - Luphia) 檢驗用戶是否屬於該團隊，避免替不相干團隊付費訂閱
 
-    const order: ITeamOrder = await generateTeamOrder({
-      userId,
-      teamId,
-      teamPlanType,
-      quantity: 1,
-    });
-    // Info: (20250411 - Luphia) 根據訂單建立 team_order 並儲存
-    // ToDo: (20250411 - Luphia) 使用 DB Transaction
-    const teamOrder = await createTeamOrder(order);
-    const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
-    const user = (await getUserById(userId)) as unknown as IUser;
-    if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) {
-      throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
-    }
-    const paymentGateway = createPaymentGateway();
-    const chargeOption: IChargeWithTokenOptions = {
-      order: teamOrder,
-      user,
-      token: userPaymentInfo.token,
-    };
+    result = await transaction(
+      async (tx) => {
+        const order: ITeamOrder = await generateTeamOrder({
+          userId,
+          teamId,
+          teamPlanType,
+          quantity: 1,
+        });
+        // Info: (20250411 - Luphia) 根據訂單建立 team_order 並儲存
+        const teamOrder = await createTeamOrder(order, tx);
+        const userPaymentInfo: IPaymentInfo | null = await getUserPaymentInfoById(paymentMethodId);
+        const user = (await getUserById(userId)) as unknown as IUser;
+        if (!userPaymentInfo || !user || userPaymentInfo.userId !== userId) {
+          throw new Error(STATUS_MESSAGE.INVALID_PAYMENT_METHOD);
+        }
 
-    const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
-    // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
-    // ToDo: (20250330 - Luphia) 使用 DB Transaction
-    const paymentGatewayName = paymentGateway.getPlatform();
-    const teamPaymentTransactionData = await generateTeamPaymentTransaction(
-      teamOrder,
-      userPaymentInfo,
-      paymentGatewayName,
-      paymentGetwayRecordId
+        // Info: (20250328 - Luphia) 建立付款通道並根據訂單內容與用戶資訊扣款
+        const paymentGateway = createPaymentGateway();
+        const chargeOption: IChargeWithTokenOptions = {
+          order: teamOrder,
+          user,
+          token: userPaymentInfo.token,
+        };
+        // Info: (20250328 - Luphia) 扣款成功會回傳 paymentGetwayRecordId，失敗則回傳 undefined
+        const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
+
+        // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
+        const paymentGatewayName = paymentGateway.getPlatform();
+        const teamPaymentTransactionData = await generateTeamPaymentTransaction(
+          teamOrder,
+          userPaymentInfo,
+          paymentGatewayName,
+          paymentGetwayRecordId
+        );
+        const teamPaymentTransaction = await createTeamPaymentTransaction(
+          teamPaymentTransactionData,
+          tx
+        );
+        const resultData: { teamInvoice?: ITeamInvoice; teamSubscription?: ITeamSubscription } = {};
+
+        if (teamPaymentTransaction.status === TRANSACTION_STATUS.SUCCESS) {
+          // Info: (20250418 - Luphia) 根據扣款的結果更新訂單狀態
+          teamOrder.status = TRANSACTION_STATUS.SUCCESS;
+          await updateTeamOrderStatus(teamOrder, tx);
+
+          // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
+          const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
+            teamOrder,
+            teamPaymentTransaction,
+            user
+          );
+          const teamInvoice = await createTeamInvoice(teamInvoiceData, tx);
+          resultData.teamInvoice = teamInvoice;
+
+          // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
+          const teamSubscriptionData = await generateTeamSubscription(userId, teamId, teamPlanType);
+          let teamSubscription: ITeamSubscription;
+          if (teamSubscriptionData.id) {
+            teamSubscription = await updateTeamSubscription(teamSubscriptionData, tx);
+          } else {
+            teamSubscription = await createTeamSubscription(teamSubscriptionData, tx);
+          }
+
+          // Info: (20250417 - Luphia) 根據訂單更新 team_payment 並儲存，作為團隊自動續訂配置
+          // ToDo: (20250417 - Luphia) 使用 DB Transaction
+          const teamPaymentData = await generateTeamPayment(
+            teamOrder,
+            userPaymentInfo,
+            teamSubscription
+          );
+          await updateTeamPayment(teamPaymentData, tx);
+
+          resultData.teamSubscription = teamSubscription;
+          result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
+        } else {
+          // Info: (20250328 - Luphia) 付款失敗，回傳錯誤訊息
+          result = formatApiResponse(STATUS_MESSAGE.PAYMENT_FAILED_TO_COMPLETE, {});
+        }
+        return result;
+      },
+      { timeout: 20_000 }
     );
-    const teamPaymentTransaction = await createTeamPaymentTransaction(teamPaymentTransactionData);
-    const resultData: { teamInvoice?: ITeamInvoice; teamSubscription?: ITeamSubscription } = {};
-
-    if (teamPaymentTransaction.status === TRANSACTION_STATUS.SUCCESS) {
-      // Info: (20250418 - Luphia) 根據扣款的結果更新訂單狀態
-      // ToDo: (20250418 - Luphia) 使用 DB Transaction
-      teamOrder.status = TRANSACTION_STATUS.SUCCESS;
-      await updateTeamOrderStatus(teamOrder);
-
-      // Info: (20250328 - Luphia) 根據扣款的結果建立 team_invoice 並儲存
-      // ToDo: (20250330 - Luphia) 使用 DB Transaction
-      const teamInvoiceData: ITeamInvoice = await generateTeamInvoice(
-        teamOrder,
-        teamPaymentTransaction,
-        user
-      );
-      const teamInvoice = await createTeamInvoice(teamInvoiceData);
-      resultData.teamInvoice = teamInvoice;
-
-      // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
-      // ToDo: (20250330 - Luphia) 使用 DB Transaction
-      const teamSubscriptionData = await generateTeamSubscription(userId, teamId, teamPlanType);
-      let teamSubscription: ITeamSubscription;
-      if (teamSubscriptionData.id) {
-        teamSubscription = await updateTeamSubscription(teamSubscriptionData);
-      } else {
-        teamSubscription = await createTeamSubscription(teamSubscriptionData);
-      }
-
-      // Info: (20250417 - Luphia) 根據訂單更新 team_payment 並儲存，作為團隊自動續訂配置
-      // ToDo: (20250417 - Luphia) 使用 DB Transaction
-      const teamPaymentData = await generateTeamPayment(
-        teamOrder,
-        userPaymentInfo,
-        teamSubscription
-      );
-      await updateTeamPayment(teamPaymentData);
-
-      resultData.teamSubscription = teamSubscription;
-      result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
-    } else {
-      // Info: (20250328 - Luphia) 付款失敗，回傳錯誤訊息
-      result = formatApiResponse(STATUS_MESSAGE.PAYMENT_FAILED_TO_COMPLETE, {});
-    }
   } catch (error) {
     loggerBack.error(error);
     result = formatApiResponse((error as Error).message, {});

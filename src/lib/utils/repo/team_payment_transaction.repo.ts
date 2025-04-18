@@ -1,10 +1,11 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamPaymentTransaction } from '@/interfaces/payment';
 
 export const createTeamPaymentTransaction = async (
   options: ITeamPaymentTransaction,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamPaymentTransaction> => {
   const data = {
     teamOrderId: options.teamOrderId,

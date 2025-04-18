@@ -1,9 +1,9 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient, TeamPlanType } from '@prisma/client';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamSubscription } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ITeamInvoice, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
-import { TeamPlanType } from '@prisma/client';
 import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedOptions } from '@/interfaces/pagination';
@@ -21,7 +21,7 @@ import loggerBack from '@/lib/utils/logger_back';
 
 export const createTeamSubscription = async (
   options: ITeamSubscription,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamSubscription> => {
   const permission = await assertUserCan({
     userId: options.userId,
@@ -56,7 +56,7 @@ export const createTeamSubscription = async (
 
 export const updateTeamSubscription = async (
   options: ITeamSubscription,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamSubscription> => {
   const data = {
     planType: options.planType as TeamPlanType,
@@ -76,7 +76,7 @@ export const updateTeamSubscription = async (
 
 export const listValidTeamSubscription = async (
   teamId: number,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamSubscription[]> => {
   const nowInSecond = getTimestampNow();
   const teamSubscriptions: ITeamSubscription[] = (
@@ -112,7 +112,7 @@ export async function listTeamSubscription(
   userId: number,
   page = 1,
   pageSize = 20,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<IUserOwnedTeam[]>> {
   // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為團隊成員成員，無需額外 assertUserCan。
   const ownerTeams = await tx.teamMember.findMany({
@@ -203,7 +203,7 @@ export async function listTeamTransaction(
   teamId: number,
   page: number = 1,
   pageSize: number = 10,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<ITeamInvoice[]>> {
   loggerBack.warn('listTeamTransaction');
   loggerBack.warn({ teamId, page, pageSize });
@@ -299,7 +299,7 @@ export async function listTeamTransaction(
 
 export async function getTeamInvoiceById(
   invoiceId: number,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamInvoice | null> {
   const invoice = await tx.teamInvoice.findUnique({
     where: { id: invoiceId },
@@ -361,7 +361,7 @@ export async function getTeamInvoiceById(
 export async function getSubscriptionByTeamId(
   userId: number,
   teamId: number,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
   const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
@@ -436,7 +436,7 @@ export const updateSubscription = async (
   userId: number,
   teamId: number,
   input: { plan?: TPlanType; autoRenew?: boolean },
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam> => {
   const { plan, autoRenew } = input;
 

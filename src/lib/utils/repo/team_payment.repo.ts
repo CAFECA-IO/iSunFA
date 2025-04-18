@@ -1,11 +1,12 @@
 import prisma from '@/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamPayment } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 
 export const createTeamPayment = async (
   options: ITeamPayment,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamPayment> => {
   const nowInSecond = getTimestampNow();
   const data = {
@@ -32,7 +33,7 @@ export const createTeamPayment = async (
 
 export const getTeamPaymentByTeamId = async (
   teamId: number,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamPayment | null> => {
   const teamPayment = await tx.teamPayment.findUnique({
     where: {
@@ -50,7 +51,7 @@ export const getTeamPaymentByTeamId = async (
 
 export const updateTeamPayment = async (
   options: ITeamPayment,
-  tx = prisma
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamPayment> => {
   const nowInSecond = getTimestampNow();
   const { teamId } = options;
