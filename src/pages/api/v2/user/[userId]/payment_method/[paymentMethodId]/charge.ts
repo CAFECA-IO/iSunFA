@@ -17,6 +17,7 @@ import { IChargeWithTokenOptions } from '@/interfaces/payment_gateway';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { IUser } from '@/interfaces/user';
 import { ITeamOrder } from '@/interfaces/order';
+import { generateTeamPayment } from '@/lib/utils/generator/team_payment.generator';
 import { generateTeamPaymentTransaction } from '@/lib/utils/generator/team_payment_transaction.generator';
 import { createTeamOrder } from '@/lib/utils/repo/team_order.repo';
 import { createTeamPaymentTransaction } from '@/lib/utils/repo/team_payment_transaction.repo';
@@ -28,6 +29,7 @@ import {
   updateTeamSubscription,
 } from '@/lib/utils/repo/team_subscription.repo';
 import { TRANSACTION_STATUS } from '@/constants/transaction';
+import { updateTeamPayment } from '@/lib/utils/repo/team_payment.repo';
 
 /** Info: (20250326 - Luphia) 訂閱支付細節
     team_plan 團隊方案
@@ -85,6 +87,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       user,
       token: userPaymentInfo.token,
     };
+
     const paymentGetwayRecordId = await paymentGateway.chargeWithToken(chargeOption);
     // Info: (20250328 - Luphia) 根據扣款的結果建立 team_payment_transaction 並儲存
     // ToDo: (20250330 - Luphia) 使用 DB Transaction
@@ -118,6 +121,16 @@ export const handlePostRequest = async (req: NextApiRequest) => {
       } else {
         teamSubscription = await createTeamSubscription(teamSubscriptionData);
       }
+
+      // Info: (20250417 - Luphia) 根據訂單更新 team_payment 並儲存，作為團隊自動續訂配置
+      // ToDo: (20250417 - Luphia) 使用 DB Transaction
+      const teamPaymentData = await generateTeamPayment(
+        teamOrder,
+        userPaymentInfo,
+        teamSubscription
+      );
+      await updateTeamPayment(teamPaymentData);
+
       resultData.teamSubscription = teamSubscription;
       result = formatApiResponse(STATUS_MESSAGE.SUCCESS, resultData);
     } else {

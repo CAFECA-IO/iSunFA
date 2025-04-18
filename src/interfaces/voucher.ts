@@ -510,7 +510,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
     certificate: PrismaCertificate & {
       invoices: PrismaInvoice[];
       file: PrismaFile;
-      UserCertificate: PrismaUserCertificate[];
+      userCertificate: PrismaUserCertificate[];
     };
   })[];
   counterparty: PartialPrismaCounterparty;
@@ -605,7 +605,7 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
       };
     })[];
   })[];
-  UserVoucher: PrismaUserVoucher[];
+  userVoucher: PrismaUserVoucher[];
 };
 
 export interface IAIResultVoucher {

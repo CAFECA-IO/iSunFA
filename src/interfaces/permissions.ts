@@ -48,8 +48,14 @@ export enum TeamPermissionAction {
   DELETE_ASSET = 'DELETE_ASSET',
   EXPORT_ASSET = 'EXPORT_ASSET',
 
-  VIEW_COUNTERPARTY = 'VIEW_COUNTERPARTY',
-  CREATE_COUNTERPARTY = 'CREATE_COUNTERPARTY',
+  // Info: (20250721 - Shirley) 憑證相關
+  VIEW_CERTIFICATE = 'VIEW_CERTIFICATE', // Info: (20250721 - Shirley) 查看憑證
+  CREATE_CERTIFICATE = 'CREATE_CERTIFICATE', // Info: (20250721 - Shirley) 創建憑證
+  DELETE_CERTIFICATE = 'DELETE_CERTIFICATE', // Info: (20250721 - Shirley) 刪除憑證
+
+  // Info: (20250417 - Shirley) 交易對象相關
+  VIEW_COUNTERPARTY = 'VIEW_COUNTERPARTY', // Info: (20250417 - Shirley) 查看交易對象
+  CREATE_COUNTERPARTY = 'CREATE_COUNTERPARTY', // Info: (20250417 - Shirley) 創建交易對象
 
   // Info: (20250313 - Tzuhan) 變更角色
   CHANGE_TEAM_ROLE = 'CHANGE_TEAM_ROLE', // Info: (20250320 - Liz) 編輯成員權限

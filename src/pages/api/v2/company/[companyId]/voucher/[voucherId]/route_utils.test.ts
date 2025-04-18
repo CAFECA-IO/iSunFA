@@ -109,7 +109,7 @@ describe('voucher/:voucherId', () => {
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
-            UserCertificate: [
+            userCertificate: [
               {
                 id: 1,
                 userId: 1,

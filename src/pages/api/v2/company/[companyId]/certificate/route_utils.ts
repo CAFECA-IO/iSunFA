@@ -105,10 +105,8 @@ export const certificateAPIPostUtils = {
   },
 
   initUserCertificateEntities: (certificateFromPrisma: PostCertificateResponse) => {
-    const { UserCertificate } = certificateFromPrisma;
-    return UserCertificate.map((userCertificate) =>
-      parsePrismaUserCertificateToUserCertificateEntity(userCertificate)
-    );
+    const { userCertificate } = certificateFromPrisma;
+    return userCertificate.map((data) => parsePrismaUserCertificateToUserCertificateEntity(data));
   },
 
   initVoucherEntity: (voucherFromPrisma: PrismaVoucher) => {

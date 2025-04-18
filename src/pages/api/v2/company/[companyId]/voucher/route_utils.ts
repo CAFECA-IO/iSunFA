@@ -196,7 +196,7 @@ export const voucherAPIGetUtils = {
   },
 
   initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
-    const userVoucherEntities = voucher.UserVoucher.map(initUserVoucherEntity);
+    const userVoucherEntities = voucher.userVoucher.map(initUserVoucherEntity);
     return userVoucherEntities;
   },
 
