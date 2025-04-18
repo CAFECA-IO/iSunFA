@@ -31,7 +31,7 @@ interface SelectionToolbarProps {
   // Deprecated: (20250116 - Julian) remove eslint-disable
   // eslint-disable-next-line react/no-unused-prop-types
   exportOperations?: ISelectionToolBarOperation[];
-  onDownload?: () => void; // Info: (20250418 - Anna)
+  onDownload?: () => void;
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
