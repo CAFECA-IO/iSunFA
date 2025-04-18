@@ -346,7 +346,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
     const {
       type,
-      //  Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
+      // Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
       date: certificateDate,
       no,
       taxRatio,
