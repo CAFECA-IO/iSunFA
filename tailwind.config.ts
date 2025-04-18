@@ -769,6 +769,7 @@ module.exports = {
         90: '90',
         100: '100',
         120: '120',
+        130: '130',
         10000: '10000',
       },
       fontSize: {
@@ -1597,7 +1598,25 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function addUtilitiesFunction({
+      addUtilities,
+    }: {
+      addUtilities: (utilities: Record<string, unknown>) => void;
+    }) {
+      addUtilities({
+        '.wrap-break-word': {
+          'overflow-wrap': 'break-word',
+        },
+        '.wrap-anywhere': {
+          'overflow-wrap': 'anywhere',
+        },
+        '.wrap-normal': {
+          'overflow-wrap': 'normal',
+        },
+      });
+    },
+  ],
   safelist: [
     // Info: (20240726 - Liz) 在這裡添加自定義類別名稱
     'toast-container',

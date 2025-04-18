@@ -185,6 +185,14 @@
     "PLEASE_ENTER_THE_FULL_ADDRESS": "Please enter the full address",
     "REMOVE_ACCOUNT_BOOK": "Remove Account Book",
     "CANCEL": "Cancel",
-    "SAVE": "Save"
+    "SAVE": "Save",
+    "REMOVE": "Remove",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "Are you sure you want to remove account book?",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "Failed to remove account book.",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "Account book removed successfully.",
+    "GET_ACCOUNT_BOOK_FAIL": "Failed to get account book information.",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "Failed to update account book information.",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "Account book information updated successfully."
   }
 }

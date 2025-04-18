@@ -10,7 +10,7 @@ datasource db {
 model Account {
   id         Int     @id @default(autoincrement())
   companyId  Int     @default(0) @map("company_id")
-  system     String // Info: (20240625 - Murky) ex "IFRS" 
+  system     String // Info: (20240625 - Murky) ex "IFRS"
   type       String // Info: (20240625 - Murky) ex "Asset"
   debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
   liquidity  Boolean
@@ -220,7 +220,7 @@ model Country {
   updatedAt    Int    @map("updated_at")
   deletedAt    Int?   @map("deleted_at")
 
-  UserSetting UserSetting[]
+  userSetting UserSetting[]
 
   @@map("country")
 }
@@ -377,7 +377,7 @@ model Certificate {
 
   invoices            Invoice[]
   voucherCertificates VoucherCertificate[]
-  UserCertificate     UserCertificate[]
+  userCertificate     UserCertificate[]
 
   company  Company @relation(fields: [companyId], references: [id])
   file     File    @relation(fields: [fileId], references: [id])
@@ -956,12 +956,12 @@ model User {
   userVouchers        UserVoucher[]
   Voucher             Voucher[]
   Asset               Asset[]
-  UserSetting         UserSetting[]
+  userSetting         UserSetting[]
   ownedTeams          Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
   memberships         TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
-  AccountBookTransfer AccountBookTransfer[]
+  accountBookTransfer AccountBookTransfer[]
   accountBook         Company[]
-  TeamOrder           TeamOrder[]
+  teamOrder           TeamOrder[]
 
   @@map("user")
 }
@@ -1016,7 +1016,8 @@ model UserPaymentInfo {
 
   user User @relation(fields: [userId], references: [id])
 
-  TeamPaymentTransaction TeamPaymentTransaction[]
+  teamPayment            TeamPayment[]
+  teamPaymentTransaction TeamPaymentTransaction[]
 
   @@map("user_payment_info")
 }
@@ -1148,7 +1149,7 @@ model Voucher {
 
   assetVouchers          AssetVoucher[]
   lineItems              LineItem[]
-  UserVoucher            UserVoucher[]
+  userVoucher            UserVoucher[]
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
@@ -1245,7 +1246,9 @@ model TeamPlan {
   features         TeamPlanFeature[]
   createdAt        Int                @map("created_at")
   updatedAt        Int                @map("updated_at")
-  TeamSubscription TeamSubscription[]
+
+  teamPayment      TeamPayment[]
+  teamSubscription TeamSubscription[]
 
   @@map("team_plan")
 }
@@ -1281,8 +1284,9 @@ model Team {
   updatedAt   Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
   members        TeamMember[]
-  TeamOrder      TeamOrder[]
+  teamOrder      TeamOrder[]
   accountBook    Company[]
+  teamPayment    TeamPayment[]
   subscriptions  TeamSubscription[]
   imageFile      File?                 @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers InviteTeamMember[]
@@ -1375,8 +1379,8 @@ model TeamOrder {
   team Team @relation(fields: [teamId], references: [id])
 
   orderDetails           TeamOrderDetail[]
-  TeamPaymentTransaction TeamPaymentTransaction[]
-  TeamInvoice            TeamInvoice[]
+  teamPaymentTransaction TeamPaymentTransaction[]
+  teamInvoice            TeamInvoice[]
 
   @@map("team_order")
 }
@@ -1392,9 +1396,28 @@ model TeamOrderDetail {
   currency    String
   amount      Int
 
-  TeamOrder TeamOrder @relation(fields: [orderId], references: [id])
+  teamOrder TeamOrder @relation(fields: [orderId], references: [id])
 
   @@map("team_order_detail")
+}
+
+model TeamPayment {
+  id                Int               @id @default(autoincrement())
+  teamId            Int               @unique @map("team_id")
+  teamPlanType      TeamPlanType      @map("team_plan_type")
+  userPaymentInfoId Int?              @map("user_payment_info_id")
+  autoRenewal       Boolean           @map("auto_renewal")
+  startDate         Int               @map("start_date")
+  expiredDate       Int               @map("expired_date")
+  nextChargetDate   Int               @map("next_charge_date")
+  createdAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+
+  team            Team             @relation(fields: [teamId], references: [id])
+  teamPlan        TeamPlan         @relation(fields: [teamPlanType], references: [type], onDelete: Cascade)
+  userPaymentInfo UserPaymentInfo? @relation(fields: [userPaymentInfoId], references: [id])
+
+  @@map("team_payment")
 }
 
 model TeamPaymentTransaction {
@@ -1412,7 +1435,7 @@ model TeamPaymentTransaction {
   teamOrder       TeamOrder       @relation(fields: [teamOrderId], references: [id])
   userPaymentInfo UserPaymentInfo @relation(fields: [userPaymentInfoId], references: [id])
 
-  TeamInvoice TeamInvoice[]
+  teamInvoice TeamInvoice[]
 
   @@map("team_payment_transaction")
 }

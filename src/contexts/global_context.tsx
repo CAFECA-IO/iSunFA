@@ -27,8 +27,8 @@ import AssetStatusSettingModal from '@/components/asset_status_setting_modal/ass
 import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
-import AccountingTitleSettingModal from '@/components/account_settings/accounting_title_setting_modal';
-import ManualAccountOpeningModal from '@/components/account_settings/manual_account_opening_modal';
+import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
+import ManualAccountOpeningModal from '@/components/general/account_settings/manual_account_opening_modal';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 
 interface IGlobalContext {

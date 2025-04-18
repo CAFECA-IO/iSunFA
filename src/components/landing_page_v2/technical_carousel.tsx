@@ -16,7 +16,7 @@ const TechnicalCarousel: React.FC = () => {
 
   const carouselData = [
     {
-      title: t('landing_page_v2:TECHNICAL_FEATURES.TECHNICAL_PATENTS'),
+      title: t('landing_page_v2:TECHNICAL_FEATURES.EFFICIENT_TITLE'),
       content: t('landing_page_v2:TECHNICAL_FEATURES.EFFICIENT_DESCRIPTION'),
     },
     {

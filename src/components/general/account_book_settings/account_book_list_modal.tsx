@@ -9,17 +9,17 @@ import FilterSection from '@/components/filter_section/filter_section';
 import Image from 'next/image';
 import { IoCloseOutline } from 'react-icons/io5';
 import SortingButton from '@/components/voucher/sorting_button';
-import WorkTag from '@/components/account_book_settings/work_tag';
-import AccountBookInfoModal from '@/components/account_book_settings/account_book_info_modal';
+import WorkTag from '@/components/general/account_book_settings/work_tag';
+import AccountBookInfoModal from '@/components/general/account_book_settings/account_book_info_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 interface AccountBookListModalProps {
-  toggleModal: () => void;
+  closeToggleAccountBookListModal: () => void;
 }
 
-const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal }) => {
-  const { t } = useTranslation(['settings', 'common', 'account_book']);
+const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookListModalProps) => {
+  const { t } = useTranslation(['settings', 'account_book']);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -63,7 +63,7 @@ const AccountBookListModal: React.FC<AccountBookListModalProps> = ({ toggleModal
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
-          <button type="button" onClick={toggleModal}>
+          <button type="button" onClick={closeToggleAccountBookListModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>

@@ -136,7 +136,7 @@ export interface ICertificateEntity {
 
 export type PostCertificateResponse = PrismaCertificate & {
   file: PrismaFile;
-  UserCertificate: PrismaUserCertificate[];
+  userCertificate: PrismaUserCertificate[];
   voucherCertificates: (PrismaVoucherCertificate & {
     voucher: PrismaVoucher;
   })[];

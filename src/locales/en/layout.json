@@ -2,6 +2,11 @@
   "SIDE_MENU": {
     "TERMS_OF_SERVICE": "Terms of Service",
     "PRIVACY_POLICY": "Privacy Policy",
+    "INVOICE_MANAGEMENT": "Invoice Management",
+    "INVOICE": "Invoice",
+    "INPUT_INVOICE": "Input Invoice",
+    "OUTPUT_INVOICE": "Output Invoice",
+
     "ACCOUNTING": "Accounting",
     "ADDING_VOUCHER": "Adding Voucher",
     "VOUCHER_LIST": "Voucher List",
@@ -11,7 +16,6 @@
     "ASSET_MANAGEMENT": "Asset Management",
     "ASSET": "Asset",
     "ASSET_LIST": "Asset List",
-    "PERSONNEL_MANAGEMENT": "Personnel Management",
     "REPORTS": "Reports",
     "FINANCIAL_REPORT": "Financial Report",
     "BALANCE_SHEET": "Balance Sheet",

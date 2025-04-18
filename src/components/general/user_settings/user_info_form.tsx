@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
@@ -9,9 +10,9 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
 import { Button } from '@/components/button/button';
-import SelectCountryDropdown from '@/components/user_settings/select_country_dropdown';
-import SelectLanguageDropdown from '@/components/user_settings/select_language_dropdown';
-import PhoneNumberInput from '@/components/user_settings/phone_number_input';
+import SelectCountryDropdown from '@/components/general/user_settings/select_country_dropdown';
+import SelectLanguageDropdown from '@/components/general/user_settings/select_language_dropdown';
+import PhoneNumberInput from '@/components/general/user_settings/phone_number_input';
 import { toConstantCase } from '@/lib/utils/common';
 
 interface UserInfoFormProps {
@@ -162,11 +163,12 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
 
       {/* Info: (20241218 - tzuhan) Buttons */}
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="secondaryBorderless" onClick={handleCancel}>
+        <Button type="button" variant="secondaryBorderless" size="small" onClick={handleCancel}>
           {t('common:COMMON.CANCEL')}
         </Button>
-        <Button type="submit" variant="default" disabled={isSaveDisabled}>
+        <Button type="submit" variant="default" size="small" disabled={isSaveDisabled}>
           {t('common:COMMON.SAVE')}
+          <IoSaveOutline size={16} />
         </Button>
       </div>
     </form>
