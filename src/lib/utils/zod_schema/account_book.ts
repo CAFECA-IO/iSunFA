@@ -218,3 +218,16 @@ export const updateAccountBookInfoSchema = {
 
 // Info: (20250410 - Shirley) 定義更新帳本信息的輸入類型
 export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;
+
+export const disconnectAccountBookSchema = {
+  input: {
+    querySchema: accountBookIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z
+    .object({
+      success: z.boolean(),
+    })
+    .nullable(),
+  frontend: nullSchema,
+};
