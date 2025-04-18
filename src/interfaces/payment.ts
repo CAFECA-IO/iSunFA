@@ -66,6 +66,20 @@ export interface IPaymentInfo {
   deletedAt?: number;
 }
 
+// Info: (20250417 - Luphia) 用戶目前方案資訊
+export interface ITeamPayment {
+  id?: number;
+  teamId: number;
+  teamPlanType: TPlanType;
+  userPaymentInfoId?: number;
+  autoRenewal: boolean;
+  startDate: number;
+  expiredDate: number;
+  nextChargetDate: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Info: (20250330 - Luphia) 用戶信用卡扣款紀錄
 export interface ITeamPaymentTransaction {
   id?: number;
