@@ -292,7 +292,7 @@ export enum APIPath {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
   ACCOUNT_BOOK_CREATE = `${apiPrefixV2}/account_book`,
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
-  DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`, // FIXME: Shirley
+  DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`, // ToDo: (20250418 - Shirley) FIXME: Shirley
 }
 
 const createConfig = ({
