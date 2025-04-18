@@ -96,7 +96,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         taxPrice: certificate.invoice.taxPrice,
         totalPrice: certificate.invoice.totalPrice,
         counterParty: certificate.invoice.counterParty,
-        type: certificate.invoice.type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
+        type: certificate.invoice.type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
         deductible: certificate.invoice.deductible,
       }) as IInvoiceBetaOptional
   );
@@ -363,7 +363,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       taxPrice,
       totalPrice,
       counterParty,
-      type: type ?? InvoiceType.SALES_NON_UNIFORM_INVOICE,
+      type: type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
     };
 
     // Info: (20250415 - Anna) 更新 state 與 Ref

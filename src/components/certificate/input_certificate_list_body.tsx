@@ -544,12 +544,15 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           tab={activeTab}
           types={[
             InvoiceType.ALL,
-            InvoiceType.SALES_TRIPLICATE_INVOICE,
-            InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-            InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
-            InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
-            InvoiceType.SALES_NON_UNIFORM_INVOICE,
+            InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+            InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+            InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
+            InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
+            InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
+            InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
+            InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
+            InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
+            InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
           ]}
           sort={selectedSort}
           labelClassName="text-neutral-300"
