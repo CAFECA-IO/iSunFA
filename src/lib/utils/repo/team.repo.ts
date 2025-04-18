@@ -528,7 +528,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
 export async function createDefaultTeamForUser(userId: number, userName: string) {
   const teamName = `${userName}'s Team`;
 
-  const team = await createTeam(userId, {
+  const team = await createTeamWithTrial(userId, {
     name: teamName,
   });
 
