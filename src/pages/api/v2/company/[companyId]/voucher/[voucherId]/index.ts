@@ -188,28 +188,42 @@ const handlePutRequest = async (req: NextApiRequest) => {
       body;
 
     // 驗證輸入資料完整性與一致性
-    if (!postUtils.isArrayHasItems(lineItems)) throw new Error('lineItems is required');
-    if (!postUtils.isItemExist(voucherInfo)) throw new Error('voucherInfo is required');
+    if (!postUtils.isArrayHasItems(lineItems)) {
+      const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
+      error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+      throw error;
+    }
+    if (!postUtils.isItemExist(voucherInfo)) {
+      const error = new Error(STATUS_MESSAGE.MISSING_VOUCHER_INFO);
+      error.name = STATUS_CODE.MISSING_VOUCHER_INFO;
+      throw error;
+    }
     if (!postUtils.isLineItemsBalanced(lineItems)) {
       throw new Error(STATUS_MESSAGE.UNBALANCED_DEBIT_CREDIT);
     }
 
     if (counterPartyId && !postUtils.isCounterPartyExistById(counterPartyId)) {
-      throw new Error('CounterParty does not exist');
+      const error = new Error(STATUS_MESSAGE.COUNTERPARTY_NOT_EXIST);
+      error.name = STATUS_CODE.COUNTERPARTY_NOT_EXIST;
+      throw error;
     }
 
     if (
       postUtils.isArrayHasItems(certificateIds) &&
       !postUtils.areAllCertificatesExistById(certificateIds)
     ) {
-      throw new Error('Certificates do not all exist');
+      const error = new Error(STATUS_MESSAGE.CERTIFICATE_IDS_NOT_EXIST);
+      error.name = STATUS_CODE.CERTIFICATE_IDS_NOT_EXIST;
+      throw error;
     }
 
     const issuer = await postUtils.initIssuerFromPrisma(userId);
     const newLineItems = postUtils.initLineItemEntities(lineItems);
 
     if (!putUtils.isLineItemEntitiesSame(originLineItems, newLineItems)) {
-      throw new Error('Use POST + DELETE instead to modify lineItems');
+      const error = new Error(STATUS_MESSAGE.MODIFY_LINE_ITEMS_USE_POST_DELETE);
+      error.name = STATUS_CODE.MODIFY_LINE_ITEMS_USE_POST_DELETE;
+      throw error;
     }
 
     const { assetIdsNeedToBeRemoved, assetIdsNeedToBeAdded } = putUtils.getDifferentAssetId({
@@ -290,7 +304,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     const nowInSecond = getTimestampNow();
     const voucher = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
     const origin = parsePrismaVoucherToVoucherEntity(voucher);
-    if (origin.deletedAt) throw new Error('Voucher already deleted');
+    if (origin.deletedAt) {
+      const error = new Error(STATUS_MESSAGE.VOUCHER_ALREADY_DELETED);
+      error.name = STATUS_CODE.VOUCHER_ALREADY_DELETED;
+      throw error;
+    }
 
     const lineItems = deleteUtils.initOriginalLineItemEntities(voucher);
     const asset = getUtils.initAssetEntities(voucher);

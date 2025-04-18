@@ -259,10 +259,14 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const isVoucherInfoExist = postUtils.isItemExist(voucherInfo);
 
     if (!isLineItemsHasItems) {
-      throw new Error('lineItems is required when post voucher');
+      const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
+      error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+      throw error;
     }
     if (!isVoucherInfoExist) {
-      throw new Error('voucherInfo is required when post voucher');
+      const error = new Error(STATUS_MESSAGE.MISSING_VOUCHER_INFO);
+      error.name = STATUS_CODE.MISSING_VOUCHER_INFO;
+      throw error;
     }
 
     const isLineItemsBalanced = postUtils.isLineItemsBalanced(lineItems);
@@ -273,7 +277,9 @@ const handlePostRequest = async (req: NextApiRequest) => {
     if (postUtils.isArrayHasItems(certificateIds)) {
       const isAllCertificateExist = postUtils.areAllCertificatesExistById(certificateIds);
       if (!isAllCertificateExist) {
-        throw new Error('All certificateIds must exist in DB');
+        const error = new Error(STATUS_MESSAGE.CERTIFICATE_IDS_NOT_EXIST);
+        error.name = STATUS_CODE.CERTIFICATE_IDS_NOT_EXIST;
+        throw error;
       }
     }
 
@@ -301,17 +307,23 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
     if (doRevert) {
       if (!postUtils.isArrayHasItems(reverseVouchersInfo)) {
-        throw new Error('reverseVouchers is required when post revert voucher');
+        const error = new Error(STATUS_MESSAGE.REVERSE_VOUCHERS_NOT_EXIST);
+        error.name = STATUS_CODE.REVERSE_VOUCHERS_NOT_EXIST;
+        throw error;
       }
 
       const revertVoucherIds = reverseVouchersInfo.map((v) => v.voucherId);
       if (!postUtils.areAllVouchersExistById(revertVoucherIds)) {
-        throw new Error('All reverse vouchers must exist');
+        const error = new Error(STATUS_MESSAGE.REVERSE_VOUCHERS_NOT_EXIST);
+        error.name = STATUS_CODE.REVERSE_VOUCHERS_NOT_EXIST;
+        throw error;
       }
 
       const revertLineItemIds = reverseVouchersInfo.map((v) => v.lineItemIdBeReversed);
       if (!postUtils.areAllLineItemsExistById(revertLineItemIds)) {
-        throw new Error('All reverse line items must exist');
+        const error = new Error(STATUS_MESSAGE.REVERSE_LINE_ITEMS_NOT_EXIST);
+        error.name = STATUS_CODE.REVERSE_LINE_ITEMS_NOT_EXIST;
+        throw error;
       }
 
       const associateVouchers = await postUtils.initRevertAssociateVouchers({
@@ -328,10 +340,14 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
     if (doAddAsset) {
       if (!postUtils.isArrayHasItems(assetIds)) {
-        throw new Error('assetIds is required when post asset voucher');
+        const error = new Error(STATUS_MESSAGE.ASSET_IDS_NOT_EXIST);
+        error.name = STATUS_CODE.ASSET_IDS_NOT_EXIST;
+        throw error;
       }
       if (!postUtils.areAllAssetsExistById(assetIds)) {
-        throw new Error('All assetIds must exist');
+        const error = new Error(STATUS_MESSAGE.ASSET_IDS_NOT_EXIST);
+        error.name = STATUS_CODE.ASSET_IDS_NOT_EXIST;
+        throw error;
       }
 
       voucher.asset = await Promise.all(assetIds.map(postUtils.initAssetFromPrisma));

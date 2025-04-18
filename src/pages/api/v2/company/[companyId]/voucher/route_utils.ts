@@ -787,7 +787,7 @@ export const voucherAPIPostUtils = {
         break;
       }
       default:
-        throw new Error('Not yet implement');
+        throw new Error(STATUS_MESSAGE.NOT_YET_IMPLEMENTED);
     }
     return recurringVoucher;
   },
