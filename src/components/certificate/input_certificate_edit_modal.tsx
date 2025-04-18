@@ -28,7 +28,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 
-interface OutputCertificateEditModalProps {
+interface InputCertificateEditModalProps {
   isOpen: boolean;
   companyId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
@@ -42,7 +42,7 @@ interface OutputCertificateEditModalProps {
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
 
-const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
+const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   isOpen,
   companyId,
   toggleModel,
@@ -56,12 +56,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   setEditingId,
 }) => {
   const selectableInvoiceType: InvoiceType[] = [
-    InvoiceType.SALES_TRIPLICATE_INVOICE,
-    InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-    InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-    InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
-    InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
-    InvoiceType.SALES_NON_UNIFORM_INVOICE,
+    InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+    InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+    InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
+    InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
+    InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
+    InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
+    InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
+    InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
+    InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
@@ -87,8 +90,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   const [formState, setFormState] = useState(
     () =>
       ({
-        // Info: (20250414 - Anna) 這個組件改為全為銷項
-        inputOrOutput: InvoiceTransactionDirection.OUTPUT,
+        // Info: (20250414 - Anna) 這個組件改為全為進項
+        inputOrOutput: InvoiceTransactionDirection.INPUT,
         date: certificate.invoice.date,
         no: certificate.invoice.no,
         priceBeforeTax: certificate.invoice.priceBeforeTax,
@@ -96,7 +99,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         taxPrice: certificate.invoice.taxPrice,
         totalPrice: certificate.invoice.totalPrice,
         counterParty: certificate.invoice.counterParty,
-        type: certificate.invoice.type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
+        type: certificate.invoice.type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
         deductible: certificate.invoice.deductible,
       }) as IInvoiceBetaOptional
   );
@@ -363,7 +366,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       taxPrice,
       totalPrice,
       counterParty,
-      type: type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
+      type: type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
     };
 
     // Info: (20250415 - Anna) 更新 state 與 Ref
@@ -810,4 +813,4 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   );
 };
 
-export default OutputCertificateEditModal;
+export default InputCertificateEditModal;

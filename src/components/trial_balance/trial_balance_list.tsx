@@ -218,8 +218,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     endingCreditSort,
   ]);
 
-  // Info: (20241028 - Anna) 處理 toggle 開關
-
   const handlePrint = useReactToPrint({
     contentRef: printRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
     documentTitle: `試算表`,
@@ -230,6 +228,8 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
   });
+
+  // Info: (20241028 - Anna) 處理 toggle 開關
   const subAccountsToggleHandler: () => void = () => {
     setSubAccountsToggle((prevState) => !prevState);
   };
