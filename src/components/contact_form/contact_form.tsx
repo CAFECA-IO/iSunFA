@@ -73,7 +73,7 @@ function ContactForm() {
 
     const emailData = {
       title: 'iSunFA Contact Form',
-      content: `<h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p>`,
+      content: `<div><h3>姓名：${inputName}</h3><h3>手機：${inputPhone}</h3><h3>Email：${inputEmail}</h3><h3>意見：${inputMessage}</h3><p>${now}<p></div>`,
     };
 
     // Info: (20230731 - Shirley) 3 秒顯示動畫

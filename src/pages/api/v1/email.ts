@@ -12,7 +12,7 @@ export async function handlePostRequest(
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: boolean | null = null;
 
-  const { title, content, attach } = req.body;
+  const { title, content, attachments } = req.body;
 
   try {
     // Info: (20240823 - Julian) 設置郵件內容
@@ -23,15 +23,7 @@ export async function handlePostRequest(
       subject: title,
       text: content, // Info: (20240823 - Julian) 純文字
       html: content, // Info: (20240823 - Julian) HTML
-      attachments: attach
-        ? [
-            {
-              filename: attach.name,
-              content: attach.content,
-              encoding: 'base64',
-            },
-          ]
-        : [],
+      attachments: attachments ?? [], // Info: (20250418 - Julian) 附件
     };
 
     // Info: (20240823 - Julian) 發送郵件

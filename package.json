@@ -36,7 +36,6 @@
     "dotenv": "^16.4.5",
     "formidable": "^3.5.1",
     "html2canvas": "^1.4.1",
-    "html2pdf-ts": "^1.2.23",
     "html2pdf.js": "^0.10.3",
     "i18next": "^23.11.5",
     "jest-mock-extended": "^3.0.7",
