@@ -1,5 +1,7 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
+import puppeteer from 'puppeteer';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
 import { useReactToPrint } from 'react-to-print';
@@ -14,14 +16,51 @@ interface InvoicePageBodyProps {
 const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const { t } = useTranslation(['subscriptions', 'common']);
   const printRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { id: invoiceId } = invoice;
 
-  // ToDo: (20250115 - Julian) 下載發票
-  const downloadClickHandler = () => {
-    // Deprecated: (20250116 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Download invoice ', invoiceId);
+  // Info: (20250418 - Julian) 下載發票
+  const downloadClickHandler = async () => {
+    if (!invoiceId || !printRef.current) return;
+
+    // Info: (20250418 - Julian) invoice print page URL
+    const targetUrl = `${router.asPath}/print`;
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    const page = await browser.newPage();
+
+    await page.goto(targetUrl, { waitUntil: 'networkidle0' });
+
+    // Info: (20250418 - Julian) 設定 viewport 大小
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      // margin: {
+      //   top: '20px',
+      //   bottom: '20px',
+      //   left: '10px',
+      //   right: '10px',
+      // },
+    });
+
+    // Info: (20250418 - Julian) 下載 PDF
+    const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'voucher.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Info: (20250418 - Julian) 釋放 URL 物件
+    URL.revokeObjectURL(url);
+    await browser.close();
   };
 
   // Info: (20250115 - Julian) 列印發票
