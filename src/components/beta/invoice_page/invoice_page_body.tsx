@@ -1,13 +1,14 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'next-i18next';
-import { useRouter } from 'next/router';
-import puppeteer from 'puppeteer';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
 import { useReactToPrint } from 'react-to-print';
+// import { jsPDF } from 'jspdf';
 import { Button } from '@/components/button/button';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { ITeamInvoice } from '@/interfaces/subscription';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface InvoicePageBodyProps {
   invoice: ITeamInvoice;
@@ -16,51 +17,45 @@ interface InvoicePageBodyProps {
 const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const { t } = useTranslation(['subscriptions', 'common']);
   const printRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   const { id: invoiceId } = invoice;
+
+  const { trigger: sendEmail } = APIHandler<void>(APIName.EMAIL);
 
   // Info: (20250418 - Julian) 下載發票
   const downloadClickHandler = async () => {
     if (!invoiceId || !printRef.current) return;
 
-    // Info: (20250418 - Julian) invoice print page URL
-    const targetUrl = `${router.asPath}/print`;
+    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    // Info: (20250418 - Julian) 下載內容
+    // eslint-disable-next-line new-cap
+    // const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+
+    // pdf.save(`${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`);
+
+    sendEmail({
+      header: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: {
+        title: 'iSunFA Invoice',
+        content: `<div><h3>發票編號: ${invoiceId}，請參考附件</h3><p>${now}<p></div>`,
+        attachments: [
+          {
+            filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
+            path: '/files/invoice_19.pdf',
+          },
+        ],
+      },
     });
-    const page = await browser.newPage();
 
-    await page.goto(targetUrl, { waitUntil: 'networkidle0' });
+    // const html2pdf = await require('html2pdf.js');
 
-    // Info: (20250418 - Julian) 設定 viewport 大小
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      // margin: {
-      //   top: '20px',
-      //   bottom: '20px',
-      //   left: '10px',
-      //   right: '10px',
-      // },
-    });
-
-    // Info: (20250418 - Julian) 下載 PDF
-    const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'voucher.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Info: (20250418 - Julian) 釋放 URL 物件
-    URL.revokeObjectURL(url);
-    await browser.close();
+    // // Info: (20250418 - Julian) 下載內容
+    // html2pdf(printRef.current, {
+    //   filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
+    //   jsPDF: { format: 'a4', orientation: 'portrait' },
+    //   margin: 20,
+    // });
   };
 
   // Info: (20250115 - Julian) 列印發票
