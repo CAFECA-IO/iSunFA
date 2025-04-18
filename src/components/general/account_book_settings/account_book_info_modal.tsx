@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
+import { useUserCtx } from '@/contexts/user_context';
 import Image from 'next/image';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -27,6 +28,7 @@ const AccountBookInfoModal = ({
 }: IAccountBookInfoModalProps) => {
   const { t } = useTranslation(['settings', 'dashboard']);
   const { toastHandler } = useModalContext();
+  const { deleteAccountBook } = useUserCtx();
 
   const [name, setName] = useState<IAccountBookDetails['name']>('');
   const [taxId, setTaxId] = useState<IAccountBookDetails['taxId']>('');
@@ -58,15 +60,7 @@ const AccountBookInfoModal = ({
   );
 
   // Info: (20250416 - Liz) 刪除帳本 API
-  const { trigger: deleteAccountBookAPI } = APIHandler<{
-    id: number;
-    imageId: string;
-    name: string;
-    taxId: string;
-    startDate: number;
-    createdAt: number;
-    updatedAt: number;
-  }>(APIName.DELETE_ACCOUNT_BOOK);
+  // const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
 
   const closeAccountBookInfoModal = () => {
     setIsAccountBookListModalOpen(false);
@@ -141,18 +135,14 @@ const AccountBookInfoModal = ({
   };
 
   // Info: (20250416 - Liz) 打 API 刪除帳本
-  const deleteAccountBook = async () => {
+  const handleDelete = async () => {
     // Info: (20250416 - Liz) 防止重複點擊
     if (isDeleteAccountBookLoading) return;
 
     // Info: (20250416 - Liz) 開始 API 請求時設為 loading 狀態
     setIsDeleteAccountBookLoading(true);
     try {
-      const { success } = await deleteAccountBookAPI({
-        params: {
-          companyId: accountBook.id,
-        },
-      });
+      const success = await deleteAccountBook(accountBook.id);
       if (!success) {
         toastHandler({
           id: ToastId.ACCOUNT_BOOK_DELETE_ERROR,
@@ -193,7 +183,7 @@ const AccountBookInfoModal = ({
     title: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK'),
     content: t('settings:ACCOUNT_BOOK_INFO.REMOVE_ACCOUNT_BOOK_CONFIRM'),
     submitBtnStr: t('settings:ACCOUNT_BOOK_INFO.REMOVE'),
-    submitBtnFunction: deleteAccountBook,
+    submitBtnFunction: handleDelete,
     messageType: MessageType.WARNING,
     backBtnFunction: closeDeleteModal,
     backBtnStr: t('settings:ACCOUNT_BOOK_INFO.CANCEL'),

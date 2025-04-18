@@ -62,7 +62,7 @@ interface UserContextType {
     tag: WORK_TAG;
   }) => Promise<{ success: boolean }>;
 
-  deleteAccountBook: (companyId: number) => Promise<IAccountBook | null>;
+  deleteAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
 
   errorCode: string | null;
   toggleIsSignInError: () => void;
@@ -100,7 +100,7 @@ export const UserContext = createContext<UserContextType>({
   teamRole: null,
   connectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => ({ success: false }),
-  deleteAccountBook: async () => null,
+  deleteAccountBook: async () => ({ success: false }),
 
   errorCode: null,
   toggleIsSignInError: () => {},
@@ -669,19 +669,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Info: (20241115 - Liz) 刪除帳本的功能(原為公司)
-  const deleteAccountBook = async (companyId: number) => {
+  const deleteAccountBook = async (accountBookId: number) => {
     try {
-      const { success, data: company } = await deleteAccountBookAPI({
-        params: { companyId },
+      const { success, data: accountBook } = await deleteAccountBookAPI({
+        params: { accountBookId },
       });
 
-      if (success && company) {
+      if (!success || !accountBook) return { success: false };
+
+      // Info: (20250418 - Liz) 如果刪除的帳本是目前已連結的帳本，清除已連結帳本的狀態
+      if (connectedAccountBookRef.current?.id === accountBook.id) {
         setConnectedAccountBook(null);
-        return company;
+        setTeam(null);
       }
-      return null;
+      return { success: true };
     } catch (error) {
-      return null;
+      return { success: false };
     }
   };
 
