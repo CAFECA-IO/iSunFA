@@ -19,5 +19,6 @@ export const PRODUCT_ID = {
   [TPlanType.BEGINNER]: 1,
   [TPlanType.PROFESSIONAL]: 2,
   [TPlanType.ENTERPRISE]: 3,
+  [TPlanType.TRIAL]: 4,
   EXTRA_MEMBER: 9,
 };

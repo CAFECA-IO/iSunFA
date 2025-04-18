@@ -168,7 +168,7 @@ export const createTeamWithTrial = async (
     const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     const plan = await tx.teamPlan.findFirst({
       where: {
-        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
+        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.TRIAL : teamData.planType,
       },
       select: { type: true },
     });
@@ -528,7 +528,7 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
 export async function createDefaultTeamForUser(userId: number, userName: string) {
   const teamName = `${userName}'s Team`;
 
-  const team = await createTeam(userId, {
+  const team = await createTeamWithTrial(userId, {
     name: teamName,
   });
 

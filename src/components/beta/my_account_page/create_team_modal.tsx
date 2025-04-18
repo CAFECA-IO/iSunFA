@@ -369,7 +369,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         () => setCurrentStep(2)
       : currentStep === 2
         ? () => setCurrentStep(3) // Info: (20250225 - Julian) 第二步到第三步
-        : printResult; // createTeamHandler Info: (20250326 - Julian) 完成所有步驟 -> 建立團隊
+        : createTeamHandler; // printResult Info: (20250326 - Julian) 完成所有步驟 -> 建立團隊
 
   const cancelOrSkip =
     currentStep === 1
