@@ -1503,3 +1503,18 @@ model AccountBookTransfer {
 
   @@map("accountBook_transfer")
 }
+
+model emailJob {
+  id        Int    @id @default(autoincrement())
+  title     String
+  receiver  String
+  template  String
+  data      Json
+  retry     Int    @default(0)
+  maxRetry  Int    @default(3) @map("max_retry")
+  status    String @default("PENDING") // PENDING、SUCCESS、FAILED
+  createdAt Int    @map("created_at")
+  updatedAt Int    @map("updated_at")
+
+  @@map("email_job")
+}
