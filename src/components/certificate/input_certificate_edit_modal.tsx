@@ -26,7 +26,7 @@ import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
-import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
+// import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
@@ -185,20 +185,20 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250415 - Anna) 建立發票前綴選單的狀態和 Ref
-  const {
-    targetRef: invoicePrefixMenuRef,
-    componentVisible: isInvoicePrefixMenuOpen,
-    setComponentVisible: setIsInvoicePrefixMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  // const {
+  //   targetRef: invoicePrefixMenuRef,
+  //   componentVisible: isInvoicePrefixMenuOpen,
+  //   setComponentVisible: setIsInvoicePrefixMenuOpen,
+  // } = useOuterClick<HTMLDivElement>(false);
 
   const invoiceTypeMenuClickHandler = () => {
     setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
   };
 
   // Info: (20250415 - Anna) 點擊切換發票前綴下拉狀態;
-  const invoicePrefixMenuClickHandler = () => {
-    setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
-  };
+  // const invoicePrefixMenuClickHandler = () => {
+  //   setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
+  // };
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
     setIsInvoiceTypeMenuOpen(false);
@@ -208,12 +208,12 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   };
 
   // Info: (20250415 - Anna) 點選發票前綴的選項
-  const invoicePrefixOptionClickHandler = (prefix: string) => {
-    const latestNo = formStateRef.current.no ?? '';
-    const suffix = latestNo.substring(2);
-    handleInputChange('no', `${prefix}${suffix}`);
-    setIsInvoicePrefixMenuOpen(false);
-  };
+  // const invoicePrefixOptionClickHandler = (prefix: string) => {
+  //   const latestNo = formStateRef.current.no ?? '';
+  //   const suffix = latestNo.substring(2);
+  //   handleInputChange('no', `${prefix}${suffix}`);
+  //   setIsInvoicePrefixMenuOpen(false);
+  // };
 
   const priceBeforeTaxChangeHandler = (value: number) => {
     handleInputChange('priceBeforeTax', value);
@@ -246,14 +246,14 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   );
 
   // Info: (20250416 - Anna) 發票字軌選單
-  const invoiceDate = formState.date ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
-  const invoiceTracks = getInvoiceTracksByDate(new Date(invoiceDate * 1000)); // Info: (20250416 - Anna) 秒轉毫秒
-  const InvoiceNumberPrefix = [
-    ...invoiceTracks.A,
-    ...invoiceTracks.B,
-    ...invoiceTracks.C,
-    ...invoiceTracks.D,
-  ];
+  // const invoiceDate = formState.date ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
+  // const invoiceTracks = getInvoiceTracksByDate(new Date(invoiceDate * 1000)); // Info: (20250416 - Anna) 秒轉毫秒
+  // const InvoiceNumberPrefix = [
+  //   ...invoiceTracks.A,
+  //   ...invoiceTracks.B,
+  //   ...invoiceTracks.C,
+  //   ...invoiceTracks.D,
+  // ];
 
   // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
@@ -516,8 +516,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
               ) : (
                 // Info: (20250415 - Anna) 其他憑證類型的UI
                 <div className="flex w-full items-center">
-                  {/* Info: (20250415 - Anna) 輸入發票前綴，如果改為不用下拉選單，可以解開這個 */}
-                  {/* <input
+                  {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
+                  <input
                     id="invoice-prefix"
                     type="text"
                     maxLength={2}
@@ -529,10 +529,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     }}
                     className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                     placeholder="AB"
-                  /> */}
+                  />
 
                   {/* Info: (20250415 - Anna) 「選擇」發票前綴 */}
-                  <div
+                  {/* <div
                     ref={invoicePrefixMenuRef}
                     onClick={invoicePrefixMenuClickHandler}
                     className={`relative h-44px min-w-75px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
@@ -561,7 +561,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                         ))}
                       </ul>
                     </div>
-                  </div>
+                  </div> */}
 
                   <input
                     id="invoice-number"
