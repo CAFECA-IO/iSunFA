@@ -5,6 +5,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { CompanySetting, Company } from '@prisma/client';
 import { LeaveStatus } from '@/interfaces/team';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -373,11 +374,9 @@ export async function getEnhancedCompanySettingsByUserId(
 
 /**
  * Info: (20250421 - Shirley) Optimized version of getCompanySettingsByUserId
- * This function eliminates nested awaits and uses a cleaner approach
- * for querying company settings by user ID with proper relationship handling
- *
+ * Reduces multiple DB queries to a single nested query with proper filtering
  * @param userId User ID
- * @param options Optional parameters: searchQuery, startDate, endDate
+ * @param options Optional parameters: searchQuery, startDate, endDate, sortOption
  * @returns Company settings with enhanced relationship data
  */
 export async function getOptimizedCompanySettingsByUserId(
@@ -387,6 +386,7 @@ export async function getOptimizedCompanySettingsByUserId(
     startDate?: number;
     endDate?: number;
     includedImageFile?: boolean;
+    sortOption?: Array<{ sortBy: SortBy; sortOrder: SortOrder }>;
   }
 ) {
   const {
@@ -394,6 +394,7 @@ export async function getOptimizedCompanySettingsByUserId(
     startDate = 0,
     endDate = Math.floor(Date.now() / 1000),
     includedImageFile = false,
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = options || {};
 
   let companySettings: ICompanySettingWithRelations[] = [];
@@ -416,6 +417,34 @@ export async function getOptimizedCompanySettingsByUserId(
       return { companySettings, companySettingsMap };
     }
 
+    // Convert sortOption to Prisma's orderBy format
+    const orderBy = sortOption.map((option) => {
+      // Map SortBy enum to actual DB field paths
+      const fieldMapping: Record<string, string> = {
+        [SortBy.CREATED_AT]: 'createdAt',
+        [SortBy.UPDATED_AT]: 'updatedAt',
+        [SortBy.DATE_CREATED]: 'createdAt',
+        [SortBy.DATE_UPDATED]: 'updatedAt',
+      };
+
+      // Default to createdAt if the sortBy value is not in our mapping
+      const field = fieldMapping[option.sortBy] || 'createdAt';
+
+      // For company fields, we need to use nested ordering
+      if (['createdAt', 'updatedAt', 'name', 'startDate'].includes(field)) {
+        return {
+          company: {
+            [field]: option.sortOrder.toLowerCase(),
+          },
+        };
+      }
+
+      // For company setting fields
+      return {
+        [field]: option.sortOrder.toLowerCase(),
+      };
+    });
+
     // Step 2: Get company settings with proper filter conditions in a single query
     const results = await prisma.companySetting.findMany({
       where: {
@@ -426,6 +455,7 @@ export async function getOptimizedCompanySettingsByUserId(
           AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         },
       },
+      orderBy: orderBy.length > 0 ? orderBy[0] : { company: { createdAt: 'desc' } },
       include: {
         company: {
           include: {

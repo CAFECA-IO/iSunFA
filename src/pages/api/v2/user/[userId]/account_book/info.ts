@@ -8,25 +8,25 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { APIName, HttpMethod } from '@/constants/api_connection';
-import { IPaginatedData } from '@/interfaces/pagination';
+import { IPaginatedData, IPaginatedOptions } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
-import { getCountryByCode, getCountryByLocaleKey } from '@/lib/utils/repo/country.repo';
 import { getOptimizedCompanySettingsByUserId } from '@/lib/utils/repo/company_setting.repo';
 import { IGetAccountBookResponse, ICountry } from '@/lib/utils/zod_schema/account_book';
 import { DefaultValue } from '@/constants/default_value';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { validateOutputData } from '@/lib/utils/validator';
+import { listCountries } from '@/lib/utils/repo/country.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
-  const statusMessage: string = STATUS_MESSAGE.SUCCESS;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<IGetAccountBookResponse[]> | null = null;
 
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID, req);
@@ -71,7 +71,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   try {
-    // Info: (20250421 - Shirley) 準備查詢參數，使用和 index.ts 一致的參數處理方式
+    statusMessage = STATUS_MESSAGE.SUCCESS;
     const {
       page = 1,
       pageSize = 10,
@@ -87,26 +87,42 @@ const handleGetRequest = async (req: NextApiRequest) => {
       startDate,
       endDate,
       includedImageFile: true,
+      sortOption,
+    });
+
+    loggerBack.info(
+      `Retrieved ${companySettings.length} company settings for user ${userId} with search query: "${searchQuery}"`
+    );
+
+    // Info: (20250421 - Shirley) 使用 repo 函數獲取國家資料
+    const countries = await listCountries();
+
+    loggerBack.info(`Retrieved ${countries.length} countries from database`);
+
+    // Info: (20250421 - Shirley) workaround: 在 companySettings 中的 countryCode 和 country 沒有與 countries 建立關聯，因此需要建立快取映射，提高查詢效率
+    const countryByCode = new Map();
+    const countryByLocaleKey = new Map();
+
+    countries.forEach((country) => {
+      countryByCode.set(country.code, country);
+      countryByLocaleKey.set(country.localeKey, country);
     });
 
     // Info: (20250421 - Shirley) 處理取得的公司設置資料
-    const accountBookInfoPromises = companySettings.map(async (setting) => {
+    const accountBookInfos = companySettings.map((setting) => {
       try {
         const { company } = setting;
         const companyId = company.id;
 
-        // Info: (20250421 - Shirley) Get country information
+        // Info: (20250421 - Shirley) 從快取映射中獲取國家資訊，不再需要額外的數據庫查詢
         const countryCode = setting.countryCode || 'tw';
         const countryLocaleKey = setting.country || 'tw';
 
-        // Info: (20250421 - Shirley) Try to get country by localeKey first, then by code if not found
-        let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
+        // Info: (20250421 - Shirley) 先從 localeKey 嘗試獲取國家資訊，若找不到則使用 code
+        const dbCountry =
+          countryByLocaleKey.get(countryLocaleKey) || countryByCode.get(countryCode);
 
-        if (!dbCountry) {
-          dbCountry = await getCountryByCode(countryCode);
-        }
-
-        // Info: (20250421 - Shirley) Build country information
+        // Info: (20250421 - Shirley) 建立國家資訊物件
         const country: ICountry = dbCountry
           ? {
               id: String(dbCountry.id),
@@ -153,85 +169,45 @@ const handleGetRequest = async (req: NextApiRequest) => {
       }
     });
 
-    // Info: (20250421 - Shirley) Wait for all account book information processing to complete
-    const accountBookInfoResults = await Promise.all(accountBookInfoPromises);
-
     // Info: (20250421 - Shirley) Filter out successfully retrieved account book information
-    const filteredResults = accountBookInfoResults.filter(
+    const filteredResults = accountBookInfos.filter(
       (info): info is IGetAccountBookResponse => info !== null
-    );
-
-    loggerBack.info(
-      `Successfully retrieved info for ${filteredResults.length} account books for user ${userId}`
     );
 
     // Info: (20250421 - Shirley) 確保分頁參數類型正確
     const parsedPage = typeof page === 'string' ? parseInt(page, 10) : page;
     const parsedPageSize = typeof pageSize === 'string' ? parseInt(pageSize, 10) : pageSize;
 
-    // Info: (20250421 - Shirley) 對資料進行排序
-    const sortedResults = [...filteredResults];
-
-    if (Array.isArray(sortOption)) {
-      sortOption.forEach((option) => {
-        const { sortBy, sortOrder } = option;
-
-        // Info: (20250421 - Shirley) 添加映射函數，將 SortBy 枚舉值映射到 IGetAccountBookResponse 的鍵
-        const mapSortByToResponseKey = (sort: SortBy): keyof IGetAccountBookResponse => {
-          switch (sort) {
-            case SortBy.CREATED_AT:
-              return 'createdAt';
-            case SortBy.UPDATED_AT:
-              return 'updatedAt';
-            // 添加其他需要的鍵映射
-            default:
-              return 'createdAt';
-          }
-        };
-
-        sortedResults.sort((a, b) => {
-          const key = mapSortByToResponseKey(sortBy);
-          const aValue = a[key];
-          const bValue = b[key];
-
-          if (aValue < bValue) return sortOrder === SortOrder.ASC ? -1 : 1;
-          if (aValue > bValue) return sortOrder === SortOrder.ASC ? 1 : -1;
-          return 0;
-        });
-      });
-    }
-
-    // Info: (20250421 - Shirley) 實現分頁
-    const totalCount = sortedResults.length;
-    const totalPages = Math.ceil(totalCount / parsedPageSize);
-    const startIdx = (parsedPage - 1) * parsedPageSize;
-    const endIdx = startIdx + parsedPageSize;
-    const pagedResults = sortedResults.slice(startIdx, endIdx);
-
-    // Info: (20250421 - Shirley) 使用 toPaginatedData 函數處理分頁邏輯
-    const paginatedResult = toPaginatedData({
-      data: pagedResults,
+    // Info: (20250421 - Shirley) 使用與 index.ts 一致的方式處理分頁和排序
+    const paginationOptions: IPaginatedOptions<IGetAccountBookResponse[]> = {
+      data: filteredResults,
       page: parsedPage,
       pageSize: parsedPageSize,
-      totalCount,
-      totalPages,
+      totalCount: filteredResults.length,
+      totalPages: Math.ceil(filteredResults.length / parsedPageSize),
       sort:
         typeof sortOption === 'string'
           ? [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }]
           : sortOption,
-    });
+    };
 
-    // Info: (20250421 - Shirley) 使用 validateOutputData 驗證輸出資料
-    const isOutputDataValid = validateOutputData(
+    // Info: (20250421 - Shirley) 使用 toPaginatedData 函數同時處理分頁和排序邏輯
+    const paginatedResult = toPaginatedData(paginationOptions);
+
+    // Info: (20250421 - Shirley) 使用 validateOutputData 驗證輸出資料，與 index.ts 保持一致的寫法
+    const { isOutputDataValid, outputData } = validateOutputData(
       APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
       paginatedResult
     );
 
     if (!isOutputDataValid) {
-      throw new Error(STATUS_MESSAGE.INVALID_OUTPUT_DATA);
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    } else {
+      payload = outputData;
+      loggerBack.info(
+        `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId}`
+      );
     }
-
-    payload = paginatedResult;
 
     // Info: (20250421 - Shirley) Format API response
     const response = formatApiResponse(statusMessage, payload);
