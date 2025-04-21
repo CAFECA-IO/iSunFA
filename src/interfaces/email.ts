@@ -28,3 +28,7 @@ export interface IPayErrorTemplate {
   payStatus: string;
   payLink: string;
 }
+
+export interface ISubscribeTemplate {
+  userName: string;
+}
