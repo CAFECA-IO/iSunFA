@@ -78,6 +78,7 @@ const OwnedTeam = ({
 
         {isPlanBeginner && <section className="flex-auto"></section>}
 
+        {/* Info: (20250421 - Julian) 下次續訂/到期日 */}
         {!isPlanBeginner && (
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
@@ -126,26 +127,15 @@ const OwnedTeam = ({
               )}
             </div>
 
+            {/* Info: (20250421 - Julian) 「取消訂閱」按鈕 */}
             <div className="flex flex-col items-start gap-20px">
-              {!isPlanBeginner && (
-                <>
-                  <p>
-                    <span className="text-2xl font-semibold leading-8 text-neutral-300">
-                      {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
-                    </span>{' '}
-                    <span className="text-2xl font-semibold leading-8 text-neutral-600">
-                      {timestampToString(team.expiredTimestamp).dateWithSlash}
-                    </span>
-                  </p>
-                  {setTeamForCancelSubscription && (
-                    <p
-                      className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
-                      onClick={() => setTeamForCancelSubscription(team)}
-                    >
-                      {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
-                    </p>
-                  )}
-                </>
+              {!isPlanBeginner && setTeamForCancelSubscription && (
+                <p
+                  className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
+                  onClick={() => setTeamForCancelSubscription(team)}
+                >
+                  {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
+                </p>
               )}
 
               {/* Info: (20250410 - Anna) 設計稿有改，「開啟自動續訂Toggle」先隱藏 */}
