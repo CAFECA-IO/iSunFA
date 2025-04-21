@@ -155,20 +155,26 @@
     "TEAM": "Team",
     "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
+    "RESPONSIBLE_PERSON": "Responsible Person",
+    "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
     "ENTER_TAX_ID": "Enter Tax ID",
-    "ENTER_FULL_ADDRESS": "Please enter the full address",
     "CANCEL": "Cancel",
     "ADD": "Add",
+    "NEXT": "Next",
     "CHOOSE_WORK_TAG": "Choose Work Tag",
     "CHOOSE_TEAM": "Choose Team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
 
+    "CONTACT_INFO": "Contact Info",
+    "CONTACT_PERSON": "Contact Person",
+    "ENTER_CONTACT_PERSON": "Enter Name",
+    "SAME_AS_RESPONSIBLE_PERSON": "Same as Responsible Person",
+    "BUSINESS_ADDRESS": "Business Address",
     "CHOOSE_CITY": "Choose City",
     "CHOOSE_DISTRICT": "Choose District",
-    "RESPONSIBLE_PERSON": "Responsible Person",
-    "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
+    "ENTER_FULL_ADDRESS": "Please enter the full address",
 
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
     "ENTER_TAX_SERIAL_NUMBER": "Enter Tax Serial Number",
@@ -184,8 +190,19 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "Back",
+    "BUSINESS_TAX_SETTING": "Business Tax Setting",
     "DECLARATION_SETTING": "Declaration Setting",
-    "DECLARANT": "Declarant"
+    "DECLARANT": "Declarant",
+    "DECLARANT_NAME": "Name",
+    "ENTER_DECLARANT_NAME": "Enter Name",
+    "DECLARANT_PERSONAL_ID": "Personal ID",
+    "ENTER_DECLARANT_PERSONAL_ID": "Enter Personal ID",
+    "PHONE_NUMBER": "Phone Number",
+    "ENTER_PHONE_NUMBER": "Enter Phone Number",
+    "DECLARANT_NAME_REQUIRED": "Please enter the name",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "Please enter personal ID",
+    "PHONE_NUMBER_REQUIRED": "Please enter phone number"
   },
 
   "FILING_FREQUENCY": {
