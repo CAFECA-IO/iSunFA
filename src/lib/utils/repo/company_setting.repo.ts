@@ -1,10 +1,10 @@
 import prisma from '@/client';
-import { ICompanySetting } from '@/interfaces/company_setting';
+import { ICompanySetting, ICompanySettingWithRelations } from '@/interfaces/company_setting';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
-import { CompanySetting, Company, File } from '@prisma/client';
-import { LeaveStatus, TeamRole } from '@/interfaces/team';
+import { CompanySetting, Company } from '@prisma/client';
+import { LeaveStatus } from '@/interfaces/team';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -300,26 +300,6 @@ export async function getEnhancedCompanySettingsByUserId(
     includedImageFile = false,
   } = options || {};
 
-  interface ITeamMemberRole {
-    role: TeamRole;
-  }
-
-  interface ITeamInfo {
-    id: number;
-    name: string;
-    ownerId: number;
-    members: ITeamMemberRole[];
-  }
-
-  interface ICompanyWithRelations extends Company {
-    imageFile?: File;
-    team?: ITeamInfo;
-  }
-
-  interface ICompanySettingWithRelations extends CompanySetting {
-    company: ICompanyWithRelations;
-  }
-
   let companySettings: ICompanySettingWithRelations[] = [];
   const companySettingsMap = new Map<number, ICompanySettingWithRelations>();
 
@@ -384,6 +364,108 @@ export async function getEnhancedCompanySettingsByUserId(
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'get enhanced company settings in getEnhancedCompanySettingsByUserId failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return { companySettings, companySettingsMap };
+}
+
+/**
+ * Info: (20250421 - Shirley) Optimized version of getCompanySettingsByUserId
+ * This function eliminates nested awaits and uses a cleaner approach
+ * for querying company settings by user ID with proper relationship handling
+ *
+ * @param userId User ID
+ * @param options Optional parameters: searchQuery, startDate, endDate
+ * @returns Company settings with enhanced relationship data
+ */
+export async function getOptimizedCompanySettingsByUserId(
+  userId: number,
+  options?: {
+    searchQuery?: string;
+    startDate?: number;
+    endDate?: number;
+    includedImageFile?: boolean;
+  }
+) {
+  const {
+    searchQuery = '',
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    includedImageFile = false,
+  } = options || {};
+
+  let companySettings: ICompanySettingWithRelations[] = [];
+  const companySettingsMap = new Map<number, ICompanySettingWithRelations>();
+
+  try {
+    // Step 1: First get user's team IDs without nesting await
+    const userTeams = await prisma.teamMember.findMany({
+      where: {
+        userId,
+        status: LeaveStatus.IN_TEAM,
+      },
+      select: { teamId: true },
+    });
+
+    const teamIds = userTeams.map((team) => team.teamId);
+
+    if (teamIds.length === 0) {
+      loggerBack.info(`No teams found for user ${userId}`);
+      return { companySettings, companySettingsMap };
+    }
+
+    // Step 2: Get company settings with proper filter conditions in a single query
+    const results = await prisma.companySetting.findMany({
+      where: {
+        company: {
+          teamId: { in: teamIds },
+          name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+          createdAt: { gte: startDate, lte: endDate },
+          AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+        },
+      },
+      include: {
+        company: {
+          include: {
+            imageFile: includedImageFile,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                ownerId: true,
+                members: {
+                  where: {
+                    userId,
+                    status: LeaveStatus.IN_TEAM,
+                  },
+                  select: {
+                    role: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Type cast the results to our interface
+    companySettings = results as ICompanySettingWithRelations[];
+
+    // Build a map for quick access to settings by company ID
+    companySettings.forEach((setting) => {
+      if (setting.companyId && setting.company) {
+        companySettingsMap.set(setting.companyId, setting);
+      }
+    });
+
+    loggerBack.info(`Retrieved ${companySettings.length} company settings for user ${userId}`);
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get optimized company settings failed',
       errorMessage: (error as Error).message,
     });
   }

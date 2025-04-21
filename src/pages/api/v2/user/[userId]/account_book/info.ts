@@ -16,7 +16,7 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 import { getCountryByCode, getCountryByLocaleKey } from '@/lib/utils/repo/country.repo';
-import { getEnhancedCompanySettingsByUserId } from '@/lib/utils/repo/company_setting.repo';
+import { getOptimizedCompanySettingsByUserId } from '@/lib/utils/repo/company_setting.repo';
 import { IGetAccountBookResponse, ICountry } from '@/lib/utils/zod_schema/account_book';
 import { DefaultValue } from '@/constants/default_value';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -82,7 +82,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     } = query;
 
     // Info: (20250421 - Shirley) 使用優化後的函數直接獲取公司設置及關聯資料
-    const { companySettings } = await getEnhancedCompanySettingsByUserId(userId, {
+    const { companySettings } = await getOptimizedCompanySettingsByUserId(userId, {
       searchQuery,
       startDate,
       endDate,
