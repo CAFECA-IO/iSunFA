@@ -17,7 +17,8 @@
     "AMOUNT": "金額",
     "DEDUCTABLE": "可扣抵稅額",
     "UPLOADER": "上傳者",
-    "VOUCHER_NUMBER": "傳票編號"
+    "VOUCHER_NUMBER": "傳票編號",
+    "DEDUCTION_TYPE": "扣抵類型"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
@@ -86,7 +87,11 @@
     "TAX_FREE": "免稅",
     "NONE": "無",
     "THROUGH_CUSTOMS": "通過海關",
-    "NOT_THROUGH_CUSTOMS": "未通過海關"
+    "NOT_THROUGH_CUSTOMS": "未通過海關",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "可扣抵之進貨及費用",
+    "DEDUCTIBLE_FIXED_ASSETS": "可扣抵之固定資產",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "不可扣抵之進貨及費用",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定資產"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",

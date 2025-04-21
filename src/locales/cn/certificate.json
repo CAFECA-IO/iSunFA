@@ -17,7 +17,8 @@
     "AMOUNT": "金额",
     "DEDUCTABLE": "可抵扣税额",
     "UPLOADER": "上传者",
-    "VOUCHER_NUMBER": "传票编号"
+    "VOUCHER_NUMBER": "传票编号",
+    "DEDUCTION_TYPE": "扣抵类型"
   },
   "PAUSE": {
     "TITLE": "您确定要取消上传吗？",
@@ -86,7 +87,11 @@
     "TAX_FREE": "免税",
     "NONE": "无",
     "THROUGH_CUSTOMS": "通过海关",
-    "NOT_THROUGH_CUSTOMS": "未通过海关"
+    "NOT_THROUGH_CUSTOMS": "未通过海关",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "可扣抵之进货及费用",
+    "DEDUCTIBLE_FIXED_ASSETS": "可扣抵之固定资产",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "不可扣抵之进货及费用",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定资产"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

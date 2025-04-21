@@ -7,6 +7,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
+import { FaCheck } from 'react-icons/fa6';
+import { RxCross2 } from 'react-icons/rx';
 
 interface InputCertificateListIrops {
   activeSelection: boolean;
@@ -40,6 +42,14 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
   onEdit,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
+
+  // Todo: (20250421 - Anna) 後端還沒實作 deductionType 這個欄位，暫時用字串常數比對，實作好就不需要這個假資料了
+  const DEDUCTIBLE_PURCHASE_AND_EXPENSE = 'DEDUCTIBLE_PURCHASE_AND_EXPENSE';
+  const DEDUCTIBLE_FIXED_ASSETS = 'DEDUCTIBLE_FIXED_ASSETS';
+
+  const isDeductible =
+    certificate.invoice?.deductionType === DEDUCTIBLE_PURCHASE_AND_EXPENSE ||
+    certificate.invoice?.deductionType === DEDUCTIBLE_FIXED_ASSETS;
 
   return (
     <div
@@ -89,6 +99,30 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
             : ''}
         </div>
       </BorderCell>
+      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
+        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+          {isDeductible ? (
+            // className="flex"
+            <div>
+              <FaCheck className="h-6 w-6 text-green-500" />
+              <span className="text-sm text-neutral-300">
+                {certificate.invoice?.deductionType === 'DEDUCTIBLE_FIXED_ASSETS'
+                  ? t(`certificate:EDIT.DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:EDIT.DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+              </span>
+            </div>
+          ) : (
+            <div>
+              <RxCross2 className="h-6 w-6 text-navy-blue-400" />
+              <span className="text-sm text-neutral-300">
+                {certificate.invoice?.deductionType === 'NON_DEDUCTIBLE_FIXED_ASSETS'
+                  ? t(`certificate:EDIT.NON_DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:EDIT.NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+              </span>
+            </div>
+          )}
+        </div>
+      </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
           className={`download-pb-4 w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
@@ -118,7 +152,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
               ></div>
               <div className="download-pb-3">Pre-Tax</div>
             </div>
-            <div className=" text-text-neutral-primary">
+            <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.invoice?.priceBeforeTax ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? currencyAlias}

@@ -17,7 +17,8 @@
     "AMOUNT": "Amount",
     "DEDUCTABLE": "Deductable",
     "UPLOADER": "Uploader",
-    "VOUCHER_NUMBER": "Voucher NO."
+    "VOUCHER_NUMBER": "Voucher NO.",
+    "DEDUCTION_TYPE": "Deduction Type"
   },
   "PAUSE": {
     "TITLE": "Do you want to cancel uploading?",
@@ -86,7 +87,11 @@
     "TAX_FREE": "Tax Free",
     "NONE": "None",
     "THROUGH_CUSTOMS": "Through Customs",
-    "NOT_THROUGH_CUSTOMS": "Not Through Customs"
+    "NOT_THROUGH_CUSTOMS": "Not Through Customs",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Deductible purchase and expense",
+    "DEDUCTIBLE_FIXED_ASSETS": "Deductible Fixed assets",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Non - Deductible purchase and expense",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "Non - Deductible Fixed assets"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",

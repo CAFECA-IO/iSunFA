@@ -137,7 +137,9 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
             <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {displayedInvoiceType}
             </div>
-
+            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {t('certificate:TABLE.DEDUCTION_TYPE')}
+            </div>
             <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.TAX')}
             </div>

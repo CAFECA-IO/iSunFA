@@ -24,6 +24,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
+import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 
@@ -207,6 +208,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     handleInputChange('taxPrice', updateTaxPrice);
     handleInputChange('totalPrice', (formState.priceBeforeTax ?? 0) + updateTaxPrice);
   };
+    const selectDeductionTypeHandler = (value: string) => {
+      handleInputChange('deductionType', value);
+    };
 
   const totalPriceChangeHandler = (value: number) => {
     handleInputChange('totalPrice', value);
@@ -531,6 +535,17 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                   {errors.taxPrice}
                 </p>
               )}
+            </div>
+
+            {/* Info: (20250421 - Anna) Deduction Type */}
+            <div className="flex w-full flex-col items-start gap-2">
+              <p className="text-sm font-semibold text-input-text-primary">
+                {t('certificate:TABLE.DEDUCTION_TYPE')}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <div className="flex w-full items-center gap-2">
+                <DeductionTypeMenu selectDeductionTypeHandler={selectDeductionTypeHandler} />
+              </div>
             </div>
 
             {/* Info: (20240924 - Anna) CounterParty */}
