@@ -190,6 +190,7 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "返回",
     "BUSINESS_TAX_SETTING": "營業稅設定",
     "DECLARATION_SETTING": "申報設定",
     "DECLARANT": "申報人 (代理人)",

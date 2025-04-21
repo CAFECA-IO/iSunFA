@@ -190,6 +190,7 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "Back",
     "BUSINESS_TAX_SETTING": "Business Tax Setting",
     "DECLARATION_SETTING": "Declaration Setting",
     "DECLARANT": "Declarant",

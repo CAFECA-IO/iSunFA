@@ -354,7 +354,9 @@ const StepOneForm = ({
           </section>
 
           <section className="flex flex-col gap-8px">
-            <h4 className="font-semibold text-input-text-primary">Business address</h4>
+            <h4 className="font-semibold text-input-text-primary">
+              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BUSINESS_ADDRESS')}
+            </h4>
 
             <main className="flex gap-14px">
               {/* Info: (20250409 - Liz) 縣市 City */}

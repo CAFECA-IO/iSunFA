@@ -1,5 +1,6 @@
 import { Dispatch } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
+import { TiArrowBack } from 'react-icons/ti';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import {
@@ -122,10 +123,8 @@ const StepTwoForm = ({
     return true;
   };
 
-  // ToDo: (20250418 - Liz) 打 API 建立帳本(原為公司)
+  // Info: (20250421 - Liz) 打 API 建立帳本(原為公司)
   const onClickSubmit = async () => {
-    // Deprecated: (20250418 - Liz) remove eslint-disable
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const success = validateRequiredFields(); // Info: (20250418 - Liz) 驗證必填
     if (!success) return;
 
@@ -136,8 +135,15 @@ const StepTwoForm = ({
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="min-w-800px overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
         <header className="flex items-center justify-between px-40px pb-24px pt-40px">
-          <button type="button" onClick={handleBack}>
-            Back
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-10px text-button-text-secondary"
+          >
+            <TiArrowBack size={24} />
+            <span className="text-base font-medium">
+              {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.BACK')}
+            </span>
           </button>
           <h1 className="grow text-center text-xl font-bold leading-8 text-text-neutral-secondary">
             {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.BUSINESS_TAX_SETTING')}

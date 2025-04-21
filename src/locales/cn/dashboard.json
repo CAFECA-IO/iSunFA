@@ -190,6 +190,7 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "返回",
     "BUSINESS_TAX_SETTING": "营业税设置",
     "DECLARATION_SETTING": "申报设置",
     "DECLARANT": "申报人 (代理人)",
