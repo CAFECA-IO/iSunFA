@@ -60,7 +60,7 @@
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">Joyce Wu</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText"
@@ -69,16 +69,16 @@
         <mj-text mj-class="mainText"
           >
           訂閱方案：<span style="font-size: 14px; line-height: 20px; color: #cc8401">
-           陽光智能會計 企業版</span
+           陽光智能會計 {{planName}}</span
           ><br />
           訂閱期間：<span style="font-size: 14px; line-height: 20px; color: #cc8401">
-          2025-04-15 至 2025-05-14 </span
+          {{startTime}} 至 {{endTime}} </span
           ><br />
           應付款金額：<span style="font-size: 14px; line-height: 20px; color: #cc8401">
-          新臺幣 2,399 元 整 </span
-          ><br />
+          新臺幣 {{price}} 元  </span
+          >整<br />
           付款狀態：<span style="font-size: 14px; line-height: 20px; color: #C84949">
-           扣款失敗</span>
+           {{payStatus}}</span>
         </mj-text>
         <mj-text mj-class="mainText">
         請您盡快確認信用卡餘額是否充足，或登入系統更新付款方式，<br />
@@ -86,11 +86,11 @@
         </mj-text>
         <mj-text mj-class="mainText"
           >更新付款方式:           <a
-            href="https://isunfa.tw/users/login"
+            href={{payLink}}
             target="_blank"
             style="color: #1570ef; text-decoration: underline"
           >
-            https://isunfa.tw/users/login</a
+            {{payLink}}</a
           >
         </mj-text>
         <mj-text mj-class="mainText"
@@ -145,7 +145,7 @@
           <mj-text style="margin-right: 24px">
             <a href="https://isunfa.tw/" target="_blank"
               ><img
-                src="https://isunfa.tw/logo/isunfa_logo_new.svg?w=384&q=75"
+                src="https://isunfa.tw/logo/isunfa_logo_new.svg"
                 alt="isunfa_logo"
                 width="80px"
             /></a>
@@ -153,24 +153,23 @@
           <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
             <img
               width="20px"
-              src="https://cdn.creazilla.com/icons/7911986/facebook-icon-lg.png"
+              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
               alt="facebook_link"
-              style="margin-right: 12px; filter: brightness(100)"
+              style="margin-right: 12px"
             />
           </a>
           <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
             <img
               width="20px"
-              src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
               alt="github_link"
-              style="margin-right: 12px; filter: brightness(100)"
+              style="margin-right: 12px"
           /></a>
           <a href="https://www.youtube.com/@isunfa" target="_blank"
             ><img
               width="20px"
-              src="https://cdn.iconscout.com/icon/free/png-256/free-youtube-logo-icon-download-in-svg-png-gif-file-formats--social-media-70-flat-icons-color-pack-logos-432560.png"
+              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
               alt="youtube_link"
-              style="filter: brightness(100)"
           /></a>
         </mj-text>
         <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px"

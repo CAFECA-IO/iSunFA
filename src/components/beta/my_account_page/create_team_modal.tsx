@@ -114,8 +114,8 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [teamInvoice, setTeamInvoice] = useState<ITeamInvoice | null>(null);
 
-  // Info: (20250224 - Julian) 訂閱方案
-  const [listPaymentPlan, setListPaymentPlan] = useState<IPlan[]>([]);
+  // Info: (20250421 - Anna) 訂閱方案由 @/constants/subscription 而來
+  const listPaymentPlan = PLANS;
 
   // Info: (20250224 - Julian) 團隊資訊
   const [selectedPlan, setSelectedPlan] = useState<IPlan>(PLANS[0]);
@@ -125,10 +125,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
   const isBeginnerPlan = selectedPlan.id === TPlanType.BEGINNER;
-
-  // Info: (20250303 - Julian) 取得訂閱方案清單
-  // ToDo: (20250303 - Julian) 等 API 調整完就可以刪掉
-  const { trigger: getPaymentPlan } = APIHandler<IPlan[]>(APIName.LIST_PAYMENT_PLAN);
 
   // Info: (20250303 - Julian) 建立 Team API
   const { trigger: createTeam } = APIHandler<ITeam>(APIName.CREATE_TEAM);
@@ -164,18 +160,6 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     expiredTimestamp: 0,
     paymentStatus: TPaymentStatus.FREE,
   };
-
-  // Info: (20250325 - Julian) 從 API 取得訂閱方案
-  const fetchPaymentPlan = async () => {
-    const { data: plans } = await getPaymentPlan();
-    if (plans) {
-      setListPaymentPlan(plans);
-    }
-  };
-
-  useEffect(() => {
-    fetchPaymentPlan();
-  }, []);
 
   // Info: (20250218 - Julian) 檢查 Email 格式
   useEffect(() => {
