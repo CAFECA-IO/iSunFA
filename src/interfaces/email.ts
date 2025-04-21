@@ -18,3 +18,13 @@ export interface IPayTemplate {
   endTime: string;
   price: string;
 }
+
+export interface IPayErrorTemplate {
+  userName: string;
+  planName: string;
+  startTime: string;
+  endTime: string;
+  price: string;
+  payStatus: string;
+  payLink: string;
+}
