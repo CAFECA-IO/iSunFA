@@ -155,20 +155,26 @@
     "TEAM": "團隊",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帳本",
     "ENTER_NAME": "輸入名稱",
+    "RESPONSIBLE_PERSON": "負責人",
+    "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
     "ENTER_TAX_ID": "輸入統一編號",
-    "ENTER_FULL_ADDRESS": "輸入完整地址",
     "CANCEL": "取消",
     "ADD": "新增",
+    "NEXT": "下一步",
     "CHOOSE_WORK_TAG": "選擇工作標籤",
     "CHOOSE_TEAM": "選擇團隊",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帳本失敗",
     "ERROR_CODE": "錯誤代碼",
     "ERROR_MESSAGE": "錯誤訊息",
 
+    "CONTACT_INFO": "聯絡資訊",
+    "CONTACT_PERSON": "聯絡人",
+    "ENTER_CONTACT_PERSON": "輸入姓名",
+    "SAME_AS_RESPONSIBLE_PERSON": "與負責人相同",
+    "BUSINESS_ADDRESS": "營業地址",
     "CHOOSE_CITY": "選擇縣市",
     "CHOOSE_DISTRICT": "選擇行政區",
-    "RESPONSIBLE_PERSON": "負責人",
-    "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
+    "ENTER_FULL_ADDRESS": "輸入完整地址",
 
     "TAX_SERIAL_NUMBER": "稅籍編號",
     "ENTER_TAX_SERIAL_NUMBER": "輸入稅籍編號",
@@ -184,8 +190,18 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BUSINESS_TAX_SETTING": "營業稅設定",
     "DECLARATION_SETTING": "申報設定",
-    "DECLARANT": "申報人 (代理人)"
+    "DECLARANT": "申報人 (代理人)",
+    "DECLARANT_NAME": "姓名",
+    "ENTER_DECLARANT_NAME": "輸入姓名",
+    "DECLARANT_PERSONAL_ID": "申報人身分證字號",
+    "ENTER_DECLARANT_PERSONAL_ID": "輸入身分證字號",
+    "PHONE_NUMBER": "電話號碼",
+    "ENTER_PHONE_NUMBER": "輸入電話號碼",
+    "DECLARANT_NAME_REQUIRED": "請輸入姓名",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "請輸入身分證字號",
+    "PHONE_NUMBER_REQUIRED": "請輸入電話號碼"
   },
 
   "FILING_FREQUENCY": {

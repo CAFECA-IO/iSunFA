@@ -81,15 +81,19 @@ const StepTwoBusinessTaxSetting = ({
       return false;
     }
     if (!declarantName) {
-      setDeclarantNameError('請輸入姓名');
+      setDeclarantNameError(t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME_REQUIRED'));
       return false;
     }
     if (!declarantPersonalId) {
-      setDeclarantPersonalIdError('請輸入身分證字號');
+      setDeclarantPersonalIdError(
+        t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID_REQUIRED')
+      );
       return false;
     }
     if (!declarantPhoneNumber) {
-      setDeclarantPhoneNumberError('請輸入電話號碼');
+      setDeclarantPhoneNumberError(
+        t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER_REQUIRED')
+      );
       return false;
     }
 
@@ -112,7 +116,7 @@ const StepTwoBusinessTaxSetting = ({
       <div className="min-w-800px overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
         <header className="flex items-center justify-between px-40px pb-24px pt-40px">
           <h1 className="grow text-center text-xl font-bold leading-8 text-text-neutral-secondary">
-            Business Tax Setting
+            {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.BUSINESS_TAX_SETTING')}
           </h1>
           <button type="button" onClick={closeAccountBookInfoModal}>
             <IoCloseOutline size={24} />
@@ -337,12 +341,12 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250418 - Liz) 申報人姓名 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Name
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="text"
-                placeholder="輸入姓名"
+                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_NAME')}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantName}
                 onChange={(e) => setDeclarantName(e.target.value)}
@@ -357,12 +361,14 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250410 - Liz) 負責人身分證字號 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Personal ID
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="number"
-                placeholder="輸入身分證字號"
+                placeholder={t(
+                  'dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_PERSONAL_ID'
+                )}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantPersonalId}
                 onChange={(e) => setDeclarantPersonalId(e.target.value)}
@@ -377,12 +383,12 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250410 - Liz) 負責人電話號碼 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Phone Number
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="number"
-                placeholder="輸入電話號碼"
+                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_PHONE_NUMBER')}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantPhoneNumber}
                 onChange={(e) => setDeclarantPhoneNumber(e.target.value)}

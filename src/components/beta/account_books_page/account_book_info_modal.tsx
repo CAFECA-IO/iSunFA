@@ -31,9 +31,9 @@ const AccountBookInfoModal = ({
   getAccountBookList,
 }: AccountBookInfoModalProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
-  // const { createAccountBook, userAuth } = useUserCtx();
+  // const { createAccountBook, userAuth } = useUserCtx(); // ToDo: (20250421 - Liz)
   const { userAuth } = useUserCtx();
-  // const { toastHandler } = useModalContext();
+  // const { toastHandler } = useModalContext(); // ToDo: (20250421 - Liz)
 
   const [companyName, setCompanyName] = useState<string>('');
   const [responsiblePerson, setResponsiblePerson] = useState<string>('');
@@ -414,7 +414,7 @@ const AccountBookInfoModal = ({
           <section className="flex items-center gap-16px">
             <div className="flex items-center gap-8px">
               <Image src="/icons/phone_icon.svg" width={16} height={16} alt="phone_icon" />
-              <span>Contact info</span>
+              <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CONTACT_INFO')}</span>
             </div>
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
@@ -422,13 +422,15 @@ const AccountBookInfoModal = ({
           <section className="flex items-start gap-14px">
             {/* Info: (20250410 - Liz) 聯絡人 */}
             <div className="flex flex-col gap-8px">
-              <h4 className="font-semibold text-input-text-primary">Contact Person</h4>
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CONTACT_PERSON')}
+              </h4>
 
-              <div className="flex overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_SM">
+              <div className="flex flex-auto overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_SM">
                 <input
                   type="text"
-                  placeholder="Enter name"
-                  className="bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
+                  placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_CONTACT_PERSON')}
+                  className="min-w-0 flex-auto bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
                   value={isSameAsResponsiblePerson ? responsiblePerson : contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
                 />
@@ -458,7 +460,7 @@ const AccountBookInfoModal = ({
                     )}
                   </div>
                   <span className="text-base font-medium text-input-text-input-placeholder">
-                    Same as responsible person
+                    {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.SAME_AS_RESPONSIBLE_PERSON')}
                   </span>
                 </button>
               </div>
@@ -584,7 +586,7 @@ const AccountBookInfoModal = ({
               <input
                 type="text"
                 placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_FULL_ADDRESS')}
-                className="flex-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none"
+                className="flex-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={enteredAddress}
                 onChange={(e) => setEnteredAddress(e.target.value)}
               />
@@ -731,7 +733,7 @@ const AccountBookInfoModal = ({
               onClick={goToStepTwoBusinessTaxSetting}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
-              <p>Next</p>
+              <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.NEXT')}</span>
               <FaArrowRightLong size={16} />
             </button>
           </section>
