@@ -187,6 +187,7 @@ export async function getOptimizedCompanySettingsByUserId(
   } = options || {};
 
   let companySettings: ICompanySettingWithRelations[] = [];
+
   const companySettingsMap = new Map<number, ICompanySettingWithRelations>();
   let totalCount = 0;
 
@@ -291,7 +292,7 @@ export async function getOptimizedCompanySettingsByUserId(
       },
     });
 
-    companySettings = results as ICompanySettingWithRelations[];
+    companySettings = results;
 
     companySettings.forEach((setting) => {
       if (setting.companyId && setting.company) {
