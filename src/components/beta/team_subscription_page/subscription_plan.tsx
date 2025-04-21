@@ -28,8 +28,12 @@ const SubscriptionPlan = ({
 }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
-  const isSelected = team.plan === plan.id;
-  const isBeginner = plan.id === TPlanType.BEGINNER;
+
+  // Info: (20250421 - Julian) 試用期間的 selected plan 為免費版
+  const isSelected =
+    team.plan === TPlanType.TRIAL && plan.id === TPlanType.BEGINNER ? true : team.plan === plan.id;
+
+  const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL; // Info: (20250421 - Julian) 試用版 UI 同免費方案
   const isProfessional = plan.id === TPlanType.PROFESSIONAL;
   const isEnterprise = plan.id === TPlanType.ENTERPRISE;
 

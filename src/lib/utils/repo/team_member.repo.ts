@@ -13,9 +13,10 @@ import {
   assertUserCan,
   assertUserIsTeamMember,
 } from '@/lib/utils/permission/assert_user_team_permission';
-import { getTimestampNow } from '@/lib/utils/common';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
-import { sendInviteEmail } from '@/lib/email/send_invite_email';
+import { getTimestampNow } from '@/lib/utils/common';
+import { EmailTemplateName } from '@/constants/email_template';
+import { transaction } from '@/lib/utils/repo/transaction';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -35,109 +36,114 @@ export const addMembersToTeam = async (
 
   const now = getTimestampNow();
 
-  // Info: (20250410 - tzuhan) Step 1: 查詢已註冊用戶
   const existingUsers = await prisma.user.findMany({
     where: { email: { in: emails } },
     select: { id: true, email: true },
   });
 
-  const existingUserEmails = new Set(existingUsers.map((u) => u.email));
+  const existingUserEmails = new Set(
+    existingUsers.map((u) => u.email).filter((email): email is string => !!email)
+  );
   const existingUserIds = new Set(existingUsers.map((u) => u.id));
   const unregisteredEmails = emails.filter((email) => !existingUserEmails.has(email));
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Info: (20250410 - tzuhan) Step 2: 找出 status = NOT_IN_TEAM 的成員
-      const inactiveMembers = await tx.teamMember.findMany({
-        where: {
-          teamId,
-          userId: { in: [...existingUserIds] },
-          status: LeaveStatus.NOT_IN_TEAM,
-        },
-        select: { userId: true },
-      });
+  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  const inviter = await prisma.user.findUnique({ where: { id: userId } });
 
-      const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
-
-      if (rejoinUserIds.size > 0) {
-        await tx.teamMember.updateMany({
-          where: {
-            teamId,
-            userId: { in: [...rejoinUserIds] },
-          },
-          data: {
-            status: LeaveStatus.IN_TEAM,
-            leftAt: null,
-          },
-        });
-      }
-
-      // Info: (20250410 - tzuhan) Step 3: 建立新的 teamMember 與 invite 記錄
-      const usersToAdd = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
-
-      if (usersToAdd.length > 0) {
-        await tx.teamMember.createMany({
-          data: usersToAdd.map((user) => ({
-            teamId,
-            userId: user.id,
-            role: TeamRole.EDITOR,
-            joinedAt: now,
-          })),
-          skipDuplicates: true,
-        });
-
-        await tx.inviteTeamMember.createMany({
-          data: usersToAdd.map((user) => ({
-            teamId,
-            email: user.email!,
-            status: InviteStatus.COMPLETED,
-            createdAt: now,
-            completedAt: now,
-            note: JSON.stringify({
-              reason: 'User already exists, added to team without asking',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      // Info: (20250410 - tzuhan) Step 4: 處理尚未註冊的 email
-      if (unregisteredEmails.length > 0) {
-        await tx.inviteTeamMember.createMany({
-          data: unregisteredEmails.map((email) => ({
-            teamId,
-            email,
-            status: InviteStatus.PENDING,
-            createdAt: now,
-            note: JSON.stringify({
-              reason:
-                'User not exists, pending for join, when user register, will be added to team',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
+  await transaction(async (tx) => {
+    const inactiveMembers = await tx.teamMember.findMany({
+      where: {
+        teamId,
+        userId: { in: [...existingUserIds] },
+        status: LeaveStatus.NOT_IN_TEAM,
+      },
+      select: { userId: true },
     });
 
-    await Promise.all(
-      emails.map((email) => {
-        const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
-        return sendInviteEmail({
-          to: email,
-          inviterName: userId.toString(), // TODO: (20250418 - tzuhan) 之後要改成邀請者的名字
-          teamName: teamId.toString(), // TODO: (20250418 - tzuhan) 之後要改成團隊名稱
-          inviteLink,
-        });
-      })
-    );
+    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
 
-    return { invitedCount: emails.length, unregisteredEmails: [] };
-  } catch (error) {
-    return {
-      invitedCount: existingUsers.length,
-      unregisteredEmails,
-    };
-  }
+    if (rejoinUserIds.size > 0) {
+      await tx.teamMember.updateMany({
+        where: {
+          teamId,
+          userId: { in: [...rejoinUserIds] },
+        },
+        data: {
+          status: LeaveStatus.IN_TEAM,
+          leftAt: null,
+        },
+      });
+    }
+
+    const usersToAdd = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
+
+    if (usersToAdd.length > 0) {
+      await tx.teamMember.createMany({
+        data: usersToAdd.map((user) => ({
+          teamId,
+          userId: user.id,
+          role: TeamRole.EDITOR,
+          joinedAt: now,
+        })),
+        skipDuplicates: true,
+      });
+
+      await tx.inviteTeamMember.createMany({
+        data: usersToAdd.map((user) => ({
+          teamId,
+          email: user.email!,
+          status: InviteStatus.COMPLETED,
+          createdAt: now,
+          completedAt: now,
+          note: JSON.stringify({
+            reason: 'User already exists, added to team without asking',
+          }),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    if (unregisteredEmails.length > 0) {
+      await tx.inviteTeamMember.createMany({
+        data: unregisteredEmails.map((email) => ({
+          teamId,
+          email,
+          status: InviteStatus.PENDING,
+          createdAt: now,
+          note: JSON.stringify({
+            reason: 'User not exists, pending for join, when user register, will be added to team',
+          }),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // Info: (20250421 - tzuhan) 寫入 emailJob
+    const inviteLinkBase = `${process.env.NEXT_PUBLIC_APP_URL}login`;
+    const allRecipients = [...existingUserEmails, ...unregisteredEmails];
+    await tx.emailJob.createMany({
+      data: allRecipients.map((email) => ({
+        title: `${inviter?.name || '有人'} 邀請您加入 ${team?.name || '某團隊'}`,
+        receiver: email,
+        template: EmailTemplateName.INVITE,
+        data: {
+          inviterName: inviter?.name || '有人',
+          teamName: team?.name || '某團隊',
+          inviteLink: `${inviteLinkBase}`,
+        },
+        status: 'PENDING',
+        retry: 0,
+        maxRetry: 3,
+        createdAt: now,
+        updatedAt: now,
+      })),
+    });
+  });
+
+  return {
+    invitedCount: emails.length,
+    unregisteredEmails,
+  };
 };
 
 export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
