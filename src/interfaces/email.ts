@@ -4,6 +4,13 @@ export interface IInviteTemplate {
   inviteLink: string;
 }
 
+export interface IFreeTemplate {
+  userName: string;
+  currentPlanName: string;
+  currentDataStatus: string;
+  subscribeLink: string;
+}
+
 export interface IPayTemplate {
   planName: string;
   userName: string;

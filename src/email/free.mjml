@@ -60,7 +60,7 @@
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">Joyce Wu</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText">
@@ -69,10 +69,10 @@
           無需擔心遺失或損毀。
         </mj-text>
         <mj-text mj-class="mainText"
-          >目前方案： <span style="font-size: 14px; line-height: 20px; color: #cc8401">免費版</span
+          >目前方案： <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{currentPlanName}}</span
           ><br />
           帳戶資料狀態：<span style="font-size: 14px; line-height: 20px; color: #2d7e58"
-            >完整保存</span
+            >{{currentDataStatus}}</span
           ><br />
           恢復訂閱：您可隨時升級回原專業版或企業版，恢復所有功能與使用權限，
           過程不會影響任何歷史資料。</mj-text
@@ -80,11 +80,11 @@
         <mj-text mj-class="mainText">
           若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱： <br />
           <a
-            href="https://isunfa.tw/users/login"
+            href={{subscribeLink}}
             target="_blank"
             style="color: #1570ef; text-decoration: underline"
           >
-            https://isunfa.tw/users/login</a
+            {{subscribeLink}}</a
           >
         </mj-text>
         <mj-text mj-class="mainText"
