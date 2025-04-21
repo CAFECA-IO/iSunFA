@@ -81,13 +81,15 @@ const handleGetRequest = async (req: NextApiRequest) => {
       sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
     } = query;
 
-    // Info: (20250421 - Shirley) 使用優化後的函數直接獲取公司設置及關聯資料
-    const { companySettings } = await getOptimizedCompanySettingsByUserId(userId, {
+    // Info: (20250421 - Shirley) 使用優化後的函數直接獲取公司設置及關聯資料，並應用分頁和排序
+    const { companySettings, pagination } = await getOptimizedCompanySettingsByUserId(userId, {
       searchQuery,
       startDate,
       endDate,
       includedImageFile: true,
       sortOption,
+      page,
+      pageSize,
     });
 
     loggerBack.info(
@@ -99,7 +101,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     loggerBack.info(`Retrieved ${countries.length} countries from database`);
 
-    // Info: (20250421 - Shirley) workaround: 在 companySettings 中的 countryCode 和 country 沒有與 countries 建立關聯，因此需要建立快取映射，提高查詢效率
+    // TODO: (20250421 - Shirley) workaround: 在 companySettings 中的 countryCode 和 country 沒有與 countries 建立關聯，因此需要建立快取映射，提高查詢效率
     const countryByCode = new Map();
     const countryByLocaleKey = new Map();
 
@@ -174,24 +176,17 @@ const handleGetRequest = async (req: NextApiRequest) => {
       (info): info is IGetAccountBookResponse => info !== null
     );
 
-    // Info: (20250421 - Shirley) 確保分頁參數類型正確
-    const parsedPage = typeof page === 'string' ? parseInt(page, 10) : page;
-    const parsedPageSize = typeof pageSize === 'string' ? parseInt(pageSize, 10) : pageSize;
-
-    // Info: (20250421 - Shirley) 使用與 index.ts 一致的方式處理分頁和排序
+    // Info: (20250421 - Shirley) 直接使用 pagination 資訊構建分頁數據結構，避免重複計算
     const paginationOptions: IPaginatedOptions<IGetAccountBookResponse[]> = {
       data: filteredResults,
-      page: parsedPage,
-      pageSize: parsedPageSize,
-      totalCount: filteredResults.length,
-      totalPages: Math.ceil(filteredResults.length / parsedPageSize),
-      sort:
-        typeof sortOption === 'string'
-          ? [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }]
-          : sortOption,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      totalCount: pagination.totalCount,
+      totalPages: pagination.totalPages,
+      sort: sortOption,
     };
 
-    // Info: (20250421 - Shirley) 使用 toPaginatedData 函數同時處理分頁和排序邏輯
+    // Info: (20250421 - Shirley) 使用 toPaginatedData 函數處理分頁邏輯
     const paginatedResult = toPaginatedData(paginationOptions);
 
     // Info: (20250421 - Shirley) 使用 validateOutputData 驗證輸出資料，與 index.ts 保持一致的寫法
