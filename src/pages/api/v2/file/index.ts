@@ -168,7 +168,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, APIName.FILE_UPLOAD, req);
   await checkUserAuthorization(APIName.FILE_UPLOAD, req, session);
 
-  // 解析表單數據
   if (!req.query || !req.query.type || !req.query.targetId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
