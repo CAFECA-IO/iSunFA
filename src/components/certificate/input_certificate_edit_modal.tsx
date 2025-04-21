@@ -26,7 +26,6 @@ import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
-// import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
@@ -184,21 +183,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     setComponentVisible: setIsInvoiceTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20250415 - Anna) 建立發票前綴選單的狀態和 Ref
-  // const {
-  //   targetRef: invoicePrefixMenuRef,
-  //   componentVisible: isInvoicePrefixMenuOpen,
-  //   setComponentVisible: setIsInvoicePrefixMenuOpen,
-  // } = useOuterClick<HTMLDivElement>(false);
-
   const invoiceTypeMenuClickHandler = () => {
     setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
   };
-
-  // Info: (20250415 - Anna) 點擊切換發票前綴下拉狀態;
-  // const invoicePrefixMenuClickHandler = () => {
-  //   setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
-  // };
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
     setIsInvoiceTypeMenuOpen(false);
@@ -206,14 +193,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
     setIsReturnOrAllowance(false);
   };
-
-  // Info: (20250415 - Anna) 點選發票前綴的選項
-  // const invoicePrefixOptionClickHandler = (prefix: string) => {
-  //   const latestNo = formStateRef.current.no ?? '';
-  //   const suffix = latestNo.substring(2);
-  //   handleInputChange('no', `${prefix}${suffix}`);
-  //   setIsInvoicePrefixMenuOpen(false);
-  // };
 
   const priceBeforeTaxChangeHandler = (value: number) => {
     handleInputChange('priceBeforeTax', value);
@@ -244,16 +223,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const currencyAliasStr = t(
     `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
   );
-
-  // Info: (20250416 - Anna) 發票字軌選單
-  // const invoiceDate = formState.date ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
-  // const invoiceTracks = getInvoiceTracksByDate(new Date(invoiceDate * 1000)); // Info: (20250416 - Anna) 秒轉毫秒
-  // const InvoiceNumberPrefix = [
-  //   ...invoiceTracks.A,
-  //   ...invoiceTracks.B,
-  //   ...invoiceTracks.C,
-  //   ...invoiceTracks.D,
-  // ];
 
   // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
@@ -530,38 +499,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                     placeholder="AB"
                   />
-
-                  {/* Info: (20250415 - Anna) 「選擇」發票前綴 */}
-                  {/* <div
-                    ref={invoicePrefixMenuRef}
-                    onClick={invoicePrefixMenuClickHandler}
-                    className={`relative h-44px min-w-75px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
-                  >
-                    <p className="flex h-44px w-full items-center justify-between gap-x-2">
-                      <span className="overflow-hidden">{formState.no?.substring(0, 2) ?? ''}</span>
-                      <div className="flex h-6px w-12px items-center justify-center">
-                        <FaChevronDown
-                          className={isInvoicePrefixMenuOpen ? 'rotate-180' : 'rotate-0'}
-                        />
-                      </div>
-                    </p>
-
-                    <div
-                      className={`absolute left-0 top-44px grid w-full grid-cols-1 shadow-dropmenu ${isInvoicePrefixMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
-                    >
-                      <ul className="z-130 flex max-h-130px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px">
-                        {InvoiceNumberPrefix.map((prefix) => (
-                          <li
-                            key={prefix}
-                            className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                            onClick={() => invoicePrefixOptionClickHandler(prefix)}
-                          >
-                            {prefix}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div> */}
 
                   <input
                     id="invoice-number"
