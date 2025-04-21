@@ -55,17 +55,17 @@
     <mj-section background-color="#F4F5F7" padding="40px">
       <mj-column background-color="#FFFFFF" padding="20px 40px">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
-          >您已被邀請加入 AAA 企業的帳戶管理團隊</mj-text
+          >您已被邀請加入 {{teamName}} 企業的帳戶管理團隊</mj-text
         >
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">Joyce Wu</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{inviterName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText"
           >我們誠摯地邀請您加入
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">AAA</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{teamName}}</span>
           的財務管理團隊，協助共同管理企業財務及相關營運資源。<br />
           作為我們信任的合作夥伴，您的參與對於強化團隊協作與提升管理效率至關重要。透過系統平台，您將能即時掌握財務概況、共同參與報表審閱、審核交易
           活動，並協助企業穩健運作。</mj-text
@@ -74,17 +74,17 @@
         <mj-text mj-class="mainText">
           邀請連結:
           <a
-            href="https://isunfa.tw/users/login"
+            href={{inviteLink}}
             target="_blank"
             style="color: #1570ef; text-decoration: underline"
           >
-            https://isunfa.tw/users/login</a
+            {{inviteLink}}</a
           >
         </mj-text>
-        <mj-text mj-class="mainText">AAA 團隊誠摯邀請</mj-text>
+        <mj-text mj-class="mainText">{{teamName}} 團隊誠摯邀請</mj-text>
 
         <mj-text mj-class="footnoteText"
-          >如您尚未擁有帳戶，系統將引導您先行註冊。完成後，即可正式加入 AAA 的管理後台。
+          >如您尚未擁有帳戶，系統將引導您先行註冊。完成後，即可正式加入 {{teamName}} 的管理後台。
           若您對本邀請或使用系統有任何疑問，歡迎隨時與我們聯繫，我們將竭誠為您提供協助。 </mj-text
         ><mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
       </mj-column>
@@ -133,7 +133,7 @@
           <mj-text style="margin-right: 24px">
             <a href="https://isunfa.tw/" target="_blank"
               ><img
-                src="https://isunfa.tw/logo/isunfa_logo_new.svg?w=384&q=75"
+                src="https://isunfa.tw/logo/isunfa_logo_new.svg"
                 alt="isunfa_logo"
                 width="80px"
             /></a>
@@ -141,24 +141,23 @@
           <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
             <img
               width="20px"
-              src="https://cdn.creazilla.com/icons/7911986/facebook-icon-lg.png"
+              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
               alt="facebook_link"
-              style="margin-right: 12px; filter: brightness(100)"
+              style="margin-right: 12px"
             />
           </a>
           <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
             <img
               width="20px"
-              src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
               alt="github_link"
-              style="margin-right: 12px; filter: brightness(100)"
+              style="margin-right: 12px"
           /></a>
           <a href="https://www.youtube.com/@isunfa" target="_blank"
             ><img
               width="20px"
-              src="https://cdn.iconscout.com/icon/free/png-256/free-youtube-logo-icon-download-in-svg-png-gif-file-formats--social-media-70-flat-icons-color-pack-logos-432560.png"
+              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
               alt="youtube_link"
-              style="filter: brightness(100)"
           /></a>
         </mj-text>
         <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px"
