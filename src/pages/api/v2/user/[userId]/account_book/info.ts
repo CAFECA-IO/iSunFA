@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { formatApiResponse } from '@/lib/utils/common';
+import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import {
   checkRequestData,
   checkSessionUser,
@@ -16,23 +16,12 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 import { getCountryByCode, getCountryByLocaleKey } from '@/lib/utils/repo/country.repo';
-import {
-  getCompanySettingByCompanyId,
-  createCompanySetting,
-} from '@/lib/utils/repo/company_setting.repo';
-import { listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
+import { getEnhancedCompanySettingsByUserId } from '@/lib/utils/repo/company_setting.repo';
 import { IGetAccountBookResponse, ICountry } from '@/lib/utils/zod_schema/account_book';
 import { DefaultValue } from '@/constants/default_value';
-import { IAccountBook } from '@/interfaces/account_book';
-
-// Info: (20250421 - Shirley) Define interface for account book with team information
-interface IExtendedAccountBook extends IAccountBook {
-  company?: {
-    id: number;
-    taxId?: string;
-  };
-  companyId?: number;
-}
+import { SortBy, SortOrder } from '@/constants/sort';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -82,39 +71,33 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   try {
-    // Info: (20250421 - Shirley) Get all account books for the user
-    // This already filters out soft-deleted books by default
-    const accountBooksOptions = await listAccountBookByUserId(userId, query);
-    const accountBooks = (accountBooksOptions.data || []) as IExtendedAccountBook[];
+    // Info: (20250421 - Shirley) 準備查詢參數，使用和 index.ts 一致的參數處理方式
+    const {
+      page = 1,
+      pageSize = 10,
+      startDate = 0,
+      endDate = getTimestampNow(),
+      searchQuery = '',
+      sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+    } = query;
 
-    // Info: (20250421 - Shirley) Use totalCount from the query result to get the real total of non-deleted books
-    const totalCountFromQuery = accountBooksOptions.totalCount || accountBooks.length;
+    // Info: (20250421 - Shirley) 使用優化後的函數直接獲取公司設置及關聯資料
+    const { companySettings } = await getEnhancedCompanySettingsByUserId(userId, {
+      searchQuery,
+      startDate,
+      endDate,
+      includedImageFile: true,
+    });
 
-    // Info: (20250421 - Shirley) Process each account book to get detailed information
-    const accountBookInfoPromises = accountBooks.map(async (accountBook) => {
+    // Info: (20250421 - Shirley) 處理取得的公司設置資料
+    const accountBookInfoPromises = companySettings.map(async (setting) => {
       try {
-        // Info: (20250421 - Shirley) Get company ID based on available data structure
-        const companyId = accountBook.company?.id ?? accountBook.companyId ?? accountBook.id;
-
-        // Info: (20250421 - Shirley) Get company settings
-        let companySetting = await getCompanySettingByCompanyId(companyId);
-
-        // Info: (20250421 - Shirley) Create empty settings if none exist
-        if (!companySetting) {
-          companySetting = await createCompanySetting(companyId);
-          if (!companySetting) {
-            loggerBack.error({
-              userId,
-              errorType: 'create empty company setting failed',
-              errorMessage: `Cannot create company setting for accountBookId: ${accountBook.id}`,
-            });
-            return null;
-          }
-        }
+        const { company } = setting;
+        const companyId = company.id;
 
         // Info: (20250421 - Shirley) Get country information
-        const countryCode = companySetting.countryCode || 'tw';
-        const countryLocaleKey = companySetting.country || 'tw';
+        const countryCode = setting.countryCode || 'tw';
+        const countryLocaleKey = setting.country || 'tw';
 
         // Info: (20250421 - Shirley) Try to get country by localeKey first, then by code if not found
         let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
@@ -135,7 +118,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
               phoneExample: dbCountry.phoneExample,
             }
           : {
-              id: String(companySetting.id),
+              id: String(setting.id),
               code: countryCode,
               name: 'Taiwan', // Info: (20250421 - Shirley) Default to Taiwan
               localeKey: countryLocaleKey,
@@ -144,22 +127,19 @@ const handleGetRequest = async (req: NextApiRequest) => {
               phoneExample: '0902345678', // Info: (20250421 - Shirley) Default phone example
             };
 
-        // Info: (20250421 - Shirley) Get tax ID from available sources
-        const taxId = accountBook.company?.taxId ?? accountBook.taxId ?? '';
-
         // Info: (20250421 - Shirley) Build account book detailed information
         const accountBookInfo: IGetAccountBookResponse = {
-          id: `${accountBook.id}`, // Convert to string using template literal
-          name: accountBook.name,
-          taxId,
-          taxSerialNumber: companySetting.taxSerialNumber || '',
-          representativeName: companySetting.representativeName || '',
+          id: `${companyId}`, // Convert to string using template literal
+          name: company.name,
+          taxId: company.taxId || '',
+          taxSerialNumber: setting.taxSerialNumber || '',
+          representativeName: setting.representativeName || '',
           country,
-          phoneNumber: companySetting.phone || '',
-          address: companySetting.address || '',
-          startDate: accountBook.startDate,
-          createdAt: accountBook.createdAt,
-          updatedAt: accountBook.updatedAt,
+          phoneNumber: setting.phone || '',
+          address: setting.address || '',
+          startDate: company.startDate,
+          createdAt: company.createdAt,
+          updatedAt: company.updatedAt,
         };
 
         return accountBookInfo;
@@ -167,7 +147,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
         loggerBack.error({
           userId,
           errorType: 'get account book info failed',
-          errorMessage: `Failed to get info for account book ${accountBook.id}: ${(error as Error).message}`,
+          errorMessage: `Failed to get info for account book ${setting.companyId}: ${(error as Error).message}`,
         });
         return null;
       }
@@ -182,40 +162,78 @@ const handleGetRequest = async (req: NextApiRequest) => {
     );
 
     loggerBack.info(
-      `Successfully retrieved info for ${filteredResults.length} account books for user ${userId} (total count: ${totalCountFromQuery})`
+      `Successfully retrieved info for ${filteredResults.length} account books for user ${userId}`
     );
 
-    // Info: (20250421 - Shirley) Get pagination parameters
-    const pageSize =
-      typeof query.pageSize === 'string' ? parseInt(query.pageSize, 10) : query.pageSize || 10;
-    const page = typeof query.page === 'string' ? parseInt(query.page, 10) : query.page || 1;
+    // Info: (20250421 - Shirley) 確保分頁參數類型正確
+    const parsedPage = typeof page === 'string' ? parseInt(page, 10) : page;
+    const parsedPageSize = typeof pageSize === 'string' ? parseInt(pageSize, 10) : pageSize;
 
-    // Info: (20250421 - Shirley) Use the total count of non-deleted books from the query
-    const totalCount = totalCountFromQuery;
-    const totalPages = Math.ceil(totalCount / pageSize);
-    const startIdx = (page - 1) * pageSize;
-    const endIdx = Math.min(startIdx + pageSize, filteredResults.length);
+    // Info: (20250421 - Shirley) 對資料進行排序
+    const sortedResults = [...filteredResults];
 
-    // Info: (20250421 - Shirley) Apply pagination only if both page and pageSize parameters are provided
-    const pageData =
-      query.pageSize && query.page ? filteredResults.slice(startIdx, endIdx) : filteredResults;
+    if (Array.isArray(sortOption)) {
+      sortOption.forEach((option) => {
+        const { sortBy, sortOrder } = option;
 
-    // Info: (20250421 - Shirley) Prepare paginated result format
-    const paginatedResult: IPaginatedData<IGetAccountBookResponse[]> = {
-      data: pageData,
-      page: query.pageSize && query.page ? page : 1,
-      pageSize: query.pageSize && query.page ? pageSize : totalCount,
+        // Info: (20250421 - Shirley) 添加映射函數，將 SortBy 枚舉值映射到 IGetAccountBookResponse 的鍵
+        const mapSortByToResponseKey = (sort: SortBy): keyof IGetAccountBookResponse => {
+          switch (sort) {
+            case SortBy.CREATED_AT:
+              return 'createdAt';
+            case SortBy.UPDATED_AT:
+              return 'updatedAt';
+            // 添加其他需要的鍵映射
+            default:
+              return 'createdAt';
+          }
+        };
+
+        sortedResults.sort((a, b) => {
+          const key = mapSortByToResponseKey(sortBy);
+          const aValue = a[key];
+          const bValue = b[key];
+
+          if (aValue < bValue) return sortOrder === SortOrder.ASC ? -1 : 1;
+          if (aValue > bValue) return sortOrder === SortOrder.ASC ? 1 : -1;
+          return 0;
+        });
+      });
+    }
+
+    // Info: (20250421 - Shirley) 實現分頁
+    const totalCount = sortedResults.length;
+    const totalPages = Math.ceil(totalCount / parsedPageSize);
+    const startIdx = (parsedPage - 1) * parsedPageSize;
+    const endIdx = startIdx + parsedPageSize;
+    const pagedResults = sortedResults.slice(startIdx, endIdx);
+
+    // Info: (20250421 - Shirley) 使用 toPaginatedData 函數處理分頁邏輯
+    const paginatedResult = toPaginatedData({
+      data: pagedResults,
+      page: parsedPage,
+      pageSize: parsedPageSize,
       totalCount,
-      totalPages: query.pageSize && query.page ? totalPages : 1,
-      hasNextPage: query.pageSize && query.page ? page < totalPages : false,
-      hasPreviousPage: query.pageSize && query.page ? page > 1 : false,
-      sort: [{ sortBy: 'createdAt', sortOrder: 'desc' }], // Default sort by createdAt
-    };
+      totalPages,
+      sort:
+        typeof sortOption === 'string'
+          ? [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }]
+          : sortOption,
+    });
 
-    // Info: (20250421 - Shirley) 直接使用處理好的分頁資料，而不透過 validateOutputData
+    // Info: (20250421 - Shirley) 使用 validateOutputData 驗證輸出資料
+    const isOutputDataValid = validateOutputData(
+      APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
+      paginatedResult
+    );
+
+    if (!isOutputDataValid) {
+      throw new Error(STATUS_MESSAGE.INVALID_OUTPUT_DATA);
+    }
+
     payload = paginatedResult;
 
-    // Info: (20250421 - Shirley) Always return paginated format
+    // Info: (20250421 - Shirley) Format API response
     const response = formatApiResponse(statusMessage, payload);
     return { response, statusMessage };
   } catch (error) {

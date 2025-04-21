@@ -1,8 +1,10 @@
 import prisma from '@/client';
 import { ICompanySetting } from '@/interfaces/company_setting';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
+import { CompanySetting, Company, File } from '@prisma/client';
+import { LeaveStatus, TeamRole } from '@/interfaces/team';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -153,4 +155,238 @@ export async function deleteCompanySettingByIdForTesting(id: number) {
   }
 
   return companySetting;
+}
+
+/**
+ * Info: (20250421 - Shirley) 批量獲取多個公司的設置信息
+ * @param companyIds 公司ID數組
+ * @returns 包含公司設置信息的數組
+ */
+export async function getCompanySettingsByCompanyIds(companyIds: number[]) {
+  let companySettings: Array<CompanySetting & { company: Company | null }> = [];
+
+  if (!companyIds || companyIds.length === 0) {
+    return [];
+  }
+
+  try {
+    companySettings = await prisma.companySetting.findMany({
+      where: {
+        companyId: { in: companyIds },
+      },
+      include: {
+        company: true,
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get company settings in getCompanySettingsByCompanyIds failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return companySettings;
+}
+
+/**
+ * Info: (20250421 - Shirley) 根據用戶ID獲取所有相關公司的設置信息
+ *
+ * 此函數直接查詢用戶有權訪問的所有帳本的公司設置，無需先獲取帳本再查詢設置
+ *
+ * @param userId 用戶ID
+ * @param options 可選參數，如搜索關鍵詞等
+ * @returns 包含公司設置信息的數組，並以公司ID為鍵的映射
+ */
+export async function getCompanySettingsByUserId(
+  userId: number,
+  options?: {
+    searchQuery?: string;
+    startDate?: number;
+    endDate?: number;
+  }
+) {
+  const {
+    searchQuery = '',
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+  } = options || {};
+
+  let companySettings: Array<CompanySetting & { company: Company }> = [];
+  const companySettingsMap = new Map<number, CompanySetting & { company: Company }>();
+
+  try {
+    // 查詢用戶所屬的所有團隊
+    const userTeams = await prisma.teamMember.findMany({
+      where: {
+        userId,
+        status: LeaveStatus.IN_TEAM,
+      },
+      select: { teamId: true },
+    });
+
+    const teamIds = userTeams.map((team) => team.teamId);
+
+    if (teamIds.length === 0) {
+      return { companySettings, companySettingsMap };
+    }
+
+    // 查詢團隊內的所有公司(帳本)，並加上搜索條件
+    const companies = await prisma.company.findMany({
+      where: {
+        teamId: { in: teamIds },
+        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+        createdAt: { gte: startDate, lte: endDate },
+        AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+      },
+      select: { id: true },
+    });
+
+    const companyIds = companies.map((company) => company.id);
+
+    if (companyIds.length === 0) {
+      return { companySettings, companySettingsMap };
+    }
+
+    // 獲取所有公司的設置
+    companySettings = (await prisma.companySetting.findMany({
+      where: {
+        companyId: { in: companyIds },
+      },
+      include: {
+        company: true,
+      },
+    })) as Array<CompanySetting & { company: Company }>;
+
+    // 創建映射，方便快速查找
+    companySettings.forEach((setting) => {
+      if (setting.companyId && setting.company) {
+        companySettingsMap.set(setting.companyId, setting);
+      }
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get company settings in getCompanySettingsByUserId failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return { companySettings, companySettingsMap };
+}
+
+/**
+ * Info: (20250421 - Shirley) Enhanced version of getCompanySettingsByUserId
+ * This function optimizes database queries by using Prisma's relations
+ * and includes more company and team data needed for account book listings
+ *
+ * @param userId User ID
+ * @param options Optional parameters: searchQuery, startDate, endDate
+ * @returns Company settings with enhanced relationship data
+ */
+export async function getEnhancedCompanySettingsByUserId(
+  userId: number,
+  options?: {
+    searchQuery?: string;
+    startDate?: number;
+    endDate?: number;
+    includedImageFile?: boolean;
+  }
+) {
+  const {
+    searchQuery = '',
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    includedImageFile = false,
+  } = options || {};
+
+  interface ITeamMemberRole {
+    role: TeamRole;
+  }
+
+  interface ITeamInfo {
+    id: number;
+    name: string;
+    ownerId: number;
+    members: ITeamMemberRole[];
+  }
+
+  interface ICompanyWithRelations extends Company {
+    imageFile?: File;
+    team?: ITeamInfo;
+  }
+
+  interface ICompanySettingWithRelations extends CompanySetting {
+    company: ICompanyWithRelations;
+  }
+
+  let companySettings: ICompanySettingWithRelations[] = [];
+  const companySettingsMap = new Map<number, ICompanySettingWithRelations>();
+
+  try {
+    // Use a single query to get all company settings for the user's teams
+    const results = await prisma.companySetting.findMany({
+      where: {
+        company: {
+          teamId: {
+            in: await prisma.teamMember
+              .findMany({
+                where: {
+                  userId,
+                  status: LeaveStatus.IN_TEAM,
+                },
+                select: { teamId: true },
+              })
+              .then((teams) => teams.map((team) => team.teamId)),
+          },
+          name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+          createdAt: { gte: startDate, lte: endDate },
+          AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+        },
+      },
+      include: {
+        company: {
+          include: {
+            imageFile: includedImageFile,
+            team: {
+              select: {
+                id: true,
+                name: true,
+                ownerId: true,
+                members: {
+                  where: {
+                    userId,
+                    status: LeaveStatus.IN_TEAM,
+                  },
+                  select: {
+                    role: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Type cast the results to our interface
+    companySettings = results as ICompanySettingWithRelations[];
+
+    // Build a map for quick access to settings by company ID
+    companySettings.forEach((setting) => {
+      if (setting.companyId && setting.company) {
+        companySettingsMap.set(setting.companyId, setting);
+      }
+    });
+
+    loggerBack.info(`Retrieved ${companySettings.length} company settings for user ${userId}`);
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get enhanced company settings in getEnhancedCompanySettingsByUserId failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return { companySettings, companySettingsMap };
 }
