@@ -4,6 +4,23 @@ import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 
 /**
+ * Info: (20250420 - Luphia)
+ * @description Schema to validate team payment info (ITeamPayment)
+ */
+export const ITeamPaymentValidator = z.object({
+  id: z.number(),
+  teamId: z.number(),
+  teamPlanType: z.nativeEnum(TPlanType),
+  userPaymentInfoId: z.number().optional(),
+  autoRenew: z.boolean(),
+  startDate: z.number(),
+  expiredDate: z.number(),
+  nextChargetDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+/**
  * Info: (20250114 - Tzuhan)
  * @description Schema to validate individual team subscription
  */
@@ -94,7 +111,7 @@ export const subscriptionSchemas = {
       querySchema: ISubscriptionPutQueryValidator,
       bodySchema: ISubscriptionPutBodyValidator,
     },
-    outputSchema: ISubscriptionItemValidator,
+    outputSchema: ITeamPaymentValidator,
     frontend: nullSchema,
   },
   listInvoiceList: {
