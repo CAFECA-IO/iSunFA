@@ -1,9 +1,10 @@
 import { getUnixTime } from 'date-fns';
 import nodemailer from 'nodemailer';
-import prisma from '@/client';
 import { compileTemplate } from '@/lib/email/template';
 import { EmailTemplateName, EmailTemplateData } from '@/constants/email_template';
 import loggerBack from '@/lib/utils/logger_back';
+import { emailJob } from '@prisma/client';
+import prisma from '@/client';
 
 export async function sendEmailJobs() {
   const jobs = await prisma.emailJob.findMany({
@@ -14,7 +15,7 @@ export async function sendEmailJobs() {
   const now = getUnixTime(new Date());
 
   await Promise.allSettled(
-    jobs.map(async (job) => {
+    jobs.map(async (job: emailJob) => {
       try {
         const html = compileTemplate({
           templateName: job.template as EmailTemplateName,
@@ -62,10 +63,18 @@ export async function sendEmailJobs() {
 }
 
 if (require.main === module) {
-  sendEmailJobs()
-    .then(() => process.exit(0))
-    .catch((e) => {
-      loggerBack.error('Email job failed', e);
-      process.exit(1);
-    });
+  // Info: (20250421 - Tzuhan) 每小時執行一次
+  setInterval(
+    () => {
+      sendEmailJobs().catch((err) => {
+        loggerBack.error('Email job failed', err);
+      });
+    },
+    1000 * 60 * 60
+  ); // Info: (20250421 - Tzuhan)  1 小時 = 3600000 ms
+
+  // Info: (20250421 - Tzuhan)  預先跑一次
+  sendEmailJobs().catch((err) => {
+    loggerBack.error('Initial email job failed', err);
+  });
 }

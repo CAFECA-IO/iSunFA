@@ -119,7 +119,7 @@ export const addMembersToTeam = async (
     }
 
     // Info: (20250421 - tzuhan) 寫入 emailJob
-    const inviteLinkBase = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+    const inviteLinkBase = `${process.env.NEXT_PUBLIC_APP_URL}login`;
     const allRecipients = [...existingUserEmails, ...unregisteredEmails];
     await tx.emailJob.createMany({
       data: allRecipients.map((email) => ({

@@ -17,7 +17,7 @@
     "prepare": "husky",
     "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
     "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
-    "email:send": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
+    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
