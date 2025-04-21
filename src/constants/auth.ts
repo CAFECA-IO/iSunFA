@@ -157,4 +157,5 @@ export const AUTH_CHECK = {
   [APIName.ACCOUNT_BOOK_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
 };
