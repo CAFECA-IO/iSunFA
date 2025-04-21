@@ -4,42 +4,59 @@ import { SendMailOptions } from 'nodemailer';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
+import fs from 'fs';
+import path from 'path';
+import mjml2html from 'mjml';
+import Mustache from 'mustache';
+import { MJML_FILE } from '@/constants/email';
 
-// Info: (20240823 - Julian) Handle POST request for sending email
 export async function handlePostRequest(
   req: NextApiRequest
 ): Promise<{ statusMessage: string; payload: boolean | null }> {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: boolean | null = null;
 
-  const { title, content, attachments } = req.body;
+  const { templateData } = req.body;
 
   try {
-    // Info: (20240823 - Julian) 設置郵件內容
+    // Info: (20250421 - Julian) 1. 讀取 MJML 檔案
+    const rawMjml = fs.readFileSync(path.resolve(process.cwd(), MJML_FILE.FREE), 'utf8');
+
+    // Info: (20250421 - Julian) 2. 使用 Mustache 注入變數
+    const renderedMjml = Mustache.render(rawMjml, templateData);
+
+    // Info: (20250421 - Julian) 3. 轉成 HTML
+    const { html, errors } = mjml2html(renderedMjml);
+    if (errors.length) {
+      statusMessage = STATUS_MESSAGE.API_NOT_DEFINED;
+      payload = null;
+      return { statusMessage, payload };
+    }
+
+    // Info: (20250421 - Julian) 設置郵件內容
     const mailOptions: SendMailOptions = {
       from: process.env.MAIL_CLIENT_ID,
-      to: process.env.REACT_APP_RECEPIENT_EMAIL,
-      subject: title,
-      text: content, // Info: (20240823 - Julian) 純文字
-      html: content, // Info: (20240823 - Julian) HTML
-      attachments: attachments ?? [], // Info: (20250418 - Julian) 附件
+      to: 'julian.hsu@mermer.cc',
+      subject: '測試郵件',
+      text: JSON.stringify({ html }), // Info: (20250421 - Julian) 文字內容
+      html, // Info: (20250421 - Julian) HTML
     };
 
-    // Info: (20240823 - Julian) 發送郵件
+    // Info: (20250421 - Julian) 發送郵件
     const mailServiceInstance = MailService.getInstance();
     const success = await mailServiceInstance.sendMail(mailOptions);
 
     if (success) {
-      // Info: (20240823 - Julian) 回應成功
+      // Info: (20250421 - Julian) 回應成功
       statusMessage = STATUS_MESSAGE.SUCCESS;
       payload = true;
     } else {
-      // Info: (20240823 - Julian) 回應失敗
+      // Info: (20250421 - Julian) 回應失敗
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       payload = false;
     }
   } catch (error) {
-    // Info: (20240823 - Julian) 回應失敗
+    // Info: (20250421 - Julian) 回應失敗
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     payload = false;
   }
@@ -47,7 +64,7 @@ export async function handlePostRequest(
   return { statusMessage, payload };
 }
 
-// Info: (20240823 - Julian) Define method handlers
+// Info: (20250421 - Julian) Define method handlers
 const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
@@ -57,7 +74,7 @@ const methodHandlers: {
   POST: handlePostRequest,
 };
 
-// Info: (20240823 - Julian) Main handler function
+// Info: (20250421 - Julian) Main handler function
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<boolean | null>>
