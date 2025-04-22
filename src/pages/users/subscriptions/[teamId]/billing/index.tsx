@@ -12,10 +12,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
-import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
+import { THREE_DAYS_IN_MS } from '@/constants/time';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { getRemainingDays } from '@/lib/utils/common';
 
 const BillingPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -62,13 +63,6 @@ const BillingPage = () => {
     if (!team) return;
 
     const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
-
-    // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
-    const getRemainingDays = (timestamp: number) => {
-      const now = Date.now();
-      const diff = timestamp - now;
-      return Math.ceil(diff / ONE_DAY_IN_MS);
-    };
 
     // Info: (20250110 - Liz) 距離付款失敗三天後的剩餘天數
     const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);

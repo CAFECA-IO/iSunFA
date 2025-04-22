@@ -1,7 +1,7 @@
 import Image from 'next/image';
-import { IPlan, IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
+import { IPlan, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 import { FiArrowRight } from 'react-icons/fi';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useState } from 'react';
@@ -10,6 +10,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { getRemainingDays } from '@/lib/utils/common';
 
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
@@ -30,10 +31,11 @@ const SubscriptionPlan = ({
   const { toastHandler } = useModalContext();
 
   // Info: (20250421 - Julian) 試用期間的 selected plan 為免費版
-  const isSelected =
-    team.plan === TPlanType.TRIAL && plan.id === TPlanType.BEGINNER ? true : team.plan === plan.id;
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+  const isSelected = isTrial ? plan.id === TPlanType.TRIAL : team.plan === plan.id;
 
-  const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL; // Info: (20250421 - Julian) 試用版 UI 同免費方案
+  // Info: (20250421 - Julian) 試用版 UI 同免費方案
+  const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL;
   const isProfessional = plan.id === TPlanType.PROFESSIONAL;
   const isEnterprise = plan.id === TPlanType.ENTERPRISE;
 
@@ -96,6 +98,30 @@ const SubscriptionPlan = ({
     }
   };
 
+  const btnContent =
+    isTrial && isSelected ? (
+      <button
+        type="button"
+        className="flex items-center justify-center gap-8px rounded-xs border px-32px py-14px font-medium disabled:border-button-stroke-disable disabled:text-button-text-disable"
+        disabled
+      >
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
+      </button>
+    ) : (
+      <button
+        type="button"
+        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
+        onClick={selectSubscriptionPlan}
+      >
+        <span className="text-lg font-medium">
+          {isSelected
+            ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')
+            : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+        </span>
+        {!isSelected && <FiArrowRight size={24} />}
+      </button>
+    );
+
   const downgradeMessageModal: IMessageModal = {
     title: t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_TITLE'),
     content: (
@@ -127,8 +153,8 @@ const SubscriptionPlan = ({
           alt="star_badge"
           width={64}
           height={64}
-          className="absolute -right-21px -top-16px z-1"
-        ></Image>
+          className="absolute -right-21px -top-16px z-10"
+        />
       )}
 
       <div className="flex flex-col gap-24px text-center">
@@ -142,6 +168,7 @@ const SubscriptionPlan = ({
                 $ {plan.price.toLocaleString('zh-TW')}
               </span>
               <span className="text-base font-semibold text-text-neutral-tertiary">
+                {' '}
                 {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NTD_SLASH_MONTH')}
               </span>
             </p>
@@ -156,25 +183,28 @@ const SubscriptionPlan = ({
           <div>
             <p className="text-44px font-bold text-text-brand-secondary-lv2">
               {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')}
+              {isTrial && (
+                <span className="text-base font-semibold text-text-neutral-tertiary">
+                  {' '}
+                  <Trans
+                    i18nKey="subscriptions:SUBSCRIPTION_PLAN_CONTENT.TRAIL_REMAINING_DAYS"
+                    values={{
+                      days: getRemainingDays(team.nextRenewalTimestamp * 1000),
+                    }}
+                  />
+                </span>
+              )}
             </p>
             <div className="invisible h-30px"></div>
           </div>
         )}
       </div>
-      <button
-        type="button"
-        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
-        onClick={selectSubscriptionPlan}
-      >
-        <span className="text-lg font-medium">
-          {isSelected
-            ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')
-            : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
-        </span>
-        {!isSelected && <FiArrowRight size={24} />}
-      </button>
+
+      {/* Info: (20250421 - Julian) 這裡的按鈕是用來選擇方案的，當前選擇的方案會 disable */}
+      {btnContent}
+
       <ul className="flex min-h-350px flex-col gap-4px text-xs">
-        {plan.id === TPlanType.PROFESSIONAL && (
+        {(isProfessional || isTrial) && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
             <p className="font-semibold">
@@ -183,7 +213,7 @@ const SubscriptionPlan = ({
           </li>
         )}
 
-        {plan.id === TPlanType.ENTERPRISE && (
+        {isEnterprise && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
             <p className="font-semibold">
