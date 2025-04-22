@@ -32,7 +32,8 @@
   "PLAN_NAME": {
     "BEGINNER": "基礎版",
     "PROFESSIONAL": "專業版",
-    "ENTERPRISE": "企業版"
+    "ENTERPRISE": "企業版",
+    "TRIAL": "專業版（免費試用）"
   },
 
   "SUBSCRIPTION_FAQ": {
@@ -62,7 +63,8 @@
     "EVERYTHING_IN_PROFESSIONAL_PLUS": "包含專業版的所有功能，外加：",
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "您可以隨時取消訂閱",
     "NOTE": "您的目前方案將持續有效至下一次續訂日期，本次計費週期不會提供退款。",
-    "FREE": "免費"
+    "FREE": "免費",
+    "TRAIL_REMAINING_DAYS": "僅限 {{days}} 天"
   },
 
   "PLANS_FEATURES_NAME": {

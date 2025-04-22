@@ -167,7 +167,7 @@ const OwnedTeam = ({
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          {!isTrial ? (
+          {isTrial ? (
             <Button type="button" className="w-full" disabled>
               <Trans
                 i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
