@@ -153,7 +153,10 @@ const StepTwoForm = ({
       handleChange('declarantPhoneNumberError')(null);
     }
 
-    if (!agentFilingRoleIdText || !agentFilingRoleIdNumber) {
+    if (
+      declarantFilingMethod === DECLARANT_FILING_METHOD.AGENT_FILING &&
+      (!agentFilingRoleIdText || !agentFilingRoleIdNumber)
+    ) {
       handleChange('agentFilingRoleError')(
         t('dashboard:AGENT_FILING_ROLE.AGENT_FILING_ROLE_REQUIRED')
       );
