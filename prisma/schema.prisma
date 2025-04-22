@@ -377,7 +377,7 @@ model Certificate {
 
   invoices            Invoice[]
   voucherCertificates VoucherCertificate[]
-  userCertificate     UserCertificate[]
+  // userCertificate     UserCertificate[]
 
   company  Company @relation(fields: [companyId], references: [id])
   file     File    @relation(fields: [fileId], references: [id])
@@ -949,11 +949,11 @@ model User {
   kycRoles            KYCRole[]
   userAgreements      UserAgreement[]
   userActionLogs      UserActionLog[]
-  userCertificates    UserCertificate[]
+  // userCertificates    UserCertificate[]
   userPaymentInfo     UserPaymentInfo[]
   userRoles           UserRole[]
   userTodoCompanies   UserTodoCompany[]
-  userVouchers        UserVoucher[]
+  // userVouchers        UserVoucher[]
   Voucher             Voucher[]
   Asset               Asset[]
   userSetting         UserSetting[]
@@ -1049,6 +1049,8 @@ enum RoleName {
   EDUCATIONAL_TRIAL_VERSION
   ENTERPRISE
   TEST
+  INDIVIDUAL
+  ACCOUNTING_FIRMS
 }
 
 // Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號
@@ -1085,35 +1087,35 @@ model RoleFeature {
   @@map("role_feature")
 }
 
-model UserCertificate {
-  id            Int     @id @default(autoincrement())
-  userId        Int     @map("user_id")
-  certificateId Int     @map("certificate_id")
-  isRead        Boolean @map("is_read")
-  createdAt     Int     @map("created_at")
-  updatedAt     Int     @map("updated_at")
-  deletedAt     Int?    @map("deleted_at")
+// model UserCertificate {
+//   id            Int     @id @default(autoincrement())
+//   userId        Int     @map("user_id")
+//   certificateId Int     @map("certificate_id")
+//   isRead        Boolean @map("is_read")
+//   createdAt     Int     @map("created_at")
+//   updatedAt     Int     @map("updated_at")
+//   deletedAt     Int?    @map("deleted_at")
 
-  user        User        @relation(fields: [userId], references: [id])
-  certificate Certificate @relation(fields: [certificateId], references: [id])
+//   user        User        @relation(fields: [userId], references: [id])
+//   certificate Certificate @relation(fields: [certificateId], references: [id])
 
-  @@map("user_certificate")
-}
+//   @@map("user_certificate")
+// }
 
-model UserVoucher {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @map("user_id")
-  voucherId Int     @map("voucher_id")
-  isRead    Boolean @map("is_read")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int?    @map("deleted_at")
+// model UserVoucher {
+//   id        Int     @id @default(autoincrement())
+//   userId    Int     @map("user_id")
+//   voucherId Int     @map("voucher_id")
+//   isRead    Boolean @map("is_read")
+//   createdAt Int     @map("created_at")
+//   updatedAt Int     @map("updated_at")
+//   deletedAt Int?    @map("deleted_at")
 
-  user    User    @relation(fields: [userId], references: [id])
-  voucher Voucher @relation(fields: [voucherId], references: [id])
+//   user    User    @relation(fields: [userId], references: [id])
+//   voucher Voucher @relation(fields: [voucherId], references: [id])
 
-  @@map("user_voucher")
-}
+//   @@map("user_voucher")
+// }
 
 model UserTodoCompany {
   id        Int  @id @default(autoincrement())
@@ -1149,7 +1151,7 @@ model Voucher {
 
   assetVouchers          AssetVoucher[]
   lineItems              LineItem[]
-  userVoucher            UserVoucher[]
+  // userVoucher            UserVoucher[]
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]

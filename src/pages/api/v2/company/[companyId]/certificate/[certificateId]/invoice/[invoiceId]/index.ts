@@ -17,7 +17,7 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+// import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { Invoice as PrismaInvoice } from '@prisma/client';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
@@ -119,8 +119,8 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
     });
 
     const fileEntity = certificateAPIPostUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities =
-      certificateAPIPostUtils.initUserCertificateEntities(certificateFromPrisma);
+    // const userCertificateEntities =
+    //   certificateAPIPostUtils.initUserCertificateEntities(certificateFromPrisma);
     const uploaderEntity = certificateAPIPostUtils.initUploaderEntity(certificateFromPrisma);
     const voucherCertificateEntity =
       certificateAPIPostUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -133,7 +133,7 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
+      // userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {
       ...certificateEntity,
@@ -141,7 +141,7 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       file: fileEntity,
       uploader: uploaderEntity,
       vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
+      // userCertificates: userCertificateEntities,
     };
 
     const certificateResponse: ICertificate =

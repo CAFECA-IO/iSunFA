@@ -4,13 +4,13 @@ import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/account_book';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import type { IUserEntity } from '@/interfaces/user';
-import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
+// import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 import {
   Certificate as PrismaCertificate,
   VoucherCertificate as PrismaVoucherCertificate,
   Voucher as PrismaVoucher,
-  UserCertificate as PrismaUserCertificate,
+  // UserCertificate as PrismaUserCertificate,
   File as PrismaFile,
   Invoice as PrismaInvoice,
   User as PrismaUser,
@@ -136,12 +136,12 @@ export interface ICertificateEntity {
 
   uploader?: IUserEntity;
 
-  userCertificates: IUserCertificateEntity[];
+  // userCertificates: IUserCertificateEntity[];
 }
 
 export type PostCertificateResponse = PrismaCertificate & {
   file: PrismaFile;
-  userCertificate: PrismaUserCertificate[];
+  // userCertificate: PrismaUserCertificate[];
   voucherCertificates: (PrismaVoucherCertificate & {
     voucher: PrismaVoucher;
   })[];

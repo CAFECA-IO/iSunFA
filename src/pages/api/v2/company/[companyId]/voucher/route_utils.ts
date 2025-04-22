@@ -49,12 +49,12 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@prisma/client';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
+// import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
-import { IUserVoucherEntity } from '@/interfaces/user_voucher';
+// import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
@@ -66,7 +66,7 @@ import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 export type IGetManyVoucherBetaEntity = IVoucherEntity & {
   counterParty: ICounterPartyEntityPartial;
   issuer: IUserEntity & { imageFile: IFileEntity };
-  readByUsers: IUserVoucherEntity[];
+  // readByUsers: IUserVoucherEntity[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   sum: {
     debit: boolean;
@@ -199,10 +199,10 @@ export const voucherAPIGetUtils = {
     };
   },
 
-  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
-    const userVoucherEntities = voucher.userVoucher.map(initUserVoucherEntity);
-    return userVoucherEntities;
-  },
+  // initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
+  //   const userVoucherEntities = voucher.userVoucher.map(initUserVoucherEntity);
+  //   return userVoucherEntities;
+  // },
 
   getLineItemAmountSum(lineItems: ILineItemEntity[]) {
     const sum = lineItems.reduce((acc, lineItem) => {

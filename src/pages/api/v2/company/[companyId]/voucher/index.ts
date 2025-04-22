@@ -55,7 +55,7 @@ export const buildVoucherBeta = (
     ...entity,
     counterParty: getUtils.initCounterPartyEntity(voucher),
     issuer: getUtils.initIssuerAndFileEntity(voucher),
-    readByUsers: getUtils.initUserVoucherEntities(voucher),
+    // readByUsers: getUtils.initUserVoucherEntities(voucher),
     lineItems,
     sum: {
       debit: false,

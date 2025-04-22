@@ -147,7 +147,7 @@ export async function createCertificateWithEmptyInvoice(options: {
           },
         },
         file: true,
-        userCertificate: true,
+        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -189,7 +189,7 @@ export async function getOneCertificateById(
           },
         },
         file: true,
-        userCertificate: true,
+        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -408,7 +408,7 @@ export async function getCertificatesV2(options: {
           },
         },
         file: true,
-        userCertificate: true,
+        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -507,7 +507,6 @@ export async function getUnreadCertificateCount(options: {
 
   return unreadCertificateCount;
 }
-  */
 
 export async function upsertUserReadCertificates(options: {
   certificateIds: number[];
@@ -559,6 +558,7 @@ export async function upsertUserReadCertificates(options: {
 
   await Promise.all([updateJob, createJob]);
 }
+*/
 
 export async function listCertificateWithoutInvoice() {
   const certificates = await prisma.certificate.findMany({
@@ -627,13 +627,13 @@ export async function deleteMultipleCertificates(options: {
         id: true,
       },
     }),
-    prisma.userCertificate.deleteMany({
-      where: {
-        certificateId: {
-          in: certificateIds,
-        },
-      },
-    }),
+    // prisma.userCertificate.deleteMany({
+    //   where: {
+    //     certificateId: {
+    //       in: certificateIds,
+    //     },
+    //   },
+    // }),
     prisma.voucherCertificate.deleteMany({
       where: {
         certificateId: {

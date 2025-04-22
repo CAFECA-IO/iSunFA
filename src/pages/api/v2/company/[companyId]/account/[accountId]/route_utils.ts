@@ -26,7 +26,7 @@ import { getManyVoucherByAccountV2 } from '@/lib/utils/repo/voucher.repo';
 import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
+// import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { parsePrismaAssociateLineItemToEntity } from '@/lib/utils/formatter/associate_line_item.formatter';
 import { parsePrismaAssociateVoucherToEntity } from '@/lib/utils/formatter/associate_voucher.formatter';
@@ -422,8 +422,8 @@ export const voucherGetByAccountAPIUtils = {
     };
   },
 
-  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
-    const userVoucherEntities = voucher.userVoucher.map(initUserVoucherEntity);
-    return userVoucherEntities;
-  },
+  // initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
+  //   const userVoucherEntities = voucher.userVoucher.map(initUserVoucherEntity);
+  //   return userVoucherEntities;
+  // },
 };

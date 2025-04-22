@@ -20,7 +20,7 @@ import { IFileEntity } from '@/interfaces/file';
 import { IUserEntity } from '@/interfaces/user';
 import { IPaginatedData } from '@/interfaces/pagination';
 
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
+// import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 import {
   certificateAPIPostUtils as postUtils,
@@ -106,7 +106,7 @@ export const handleGetRequest: IHandleRequest<
 
     const certificatesWithoutIncomplete = certificatesFromPrisma.map((certificateFromPrisma) => {
       const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-      const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
+      // const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
       const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
       const voucherCertificateEntity =
         postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -119,7 +119,7 @@ export const handleGetRequest: IHandleRequest<
         invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
         file: IFileEntity;
         uploader: IUserEntity & { imageFile: IFileEntity };
-        userCertificates: IUserCertificateEntity[];
+        // userCertificates: IUserCertificateEntity[];
         vouchers: IVoucherEntity[];
       } = {
         ...certificateEntity,
@@ -127,7 +127,7 @@ export const handleGetRequest: IHandleRequest<
         file: fileEntity,
         uploader: uploaderEntity,
         vouchers: voucherCertificateEntity.map((v) => v.voucher),
-        userCertificates: userCertificateEntities,
+        // userCertificates: userCertificateEntities,
       };
 
       return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
@@ -250,8 +250,8 @@ export const handlePostRequest: IHandleRequest<
         });
 
         const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-        const userCertificateEntities =
-          postUtils.initUserCertificateEntities(certificateFromPrisma);
+        // const userCertificateEntities =
+        //   postUtils.initUserCertificateEntities(certificateFromPrisma);
         const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
         const voucherCertificateEntity =
           postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -264,7 +264,7 @@ export const handlePostRequest: IHandleRequest<
           invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
           file: IFileEntity;
           uploader: IUserEntity & { imageFile: IFileEntity };
-          userCertificates: IUserCertificateEntity[];
+          // userCertificates: IUserCertificateEntity[];
           vouchers: IVoucherEntity[];
         } = {
           ...certificateEntity,
@@ -274,7 +274,7 @@ export const handlePostRequest: IHandleRequest<
           vouchers: voucherCertificateEntity.map(
             (voucherCertificate) => voucherCertificate.voucher
           ),
-          userCertificates: userCertificateEntities,
+          // userCertificates: userCertificateEntities,
         };
 
         const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
