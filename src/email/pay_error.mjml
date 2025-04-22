@@ -41,7 +41,7 @@
     <mj-section background-color="#304872" padding="10px 20px">
       <mj-column>
         <mj-image
-          src="https://isunfa.tw/logo/isunfa_logo_new.svg?w=384&q=75"
+          src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
           alt="isunfa_logo"
           width="80px"
           align="left"
@@ -117,7 +117,7 @@
           >Contact Us</mj-text
         >
         <mj-text mj-class="text10" align="left" vertical-align="middle">
-          <img width="10px" src="https://isunfa.tw/icons/phone.svg" />
+          <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
           <a
             href="mailto:isunfahelp@isunfa.com.tw"
             style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
@@ -125,7 +125,7 @@
           ></mj-text
         >
         <mj-text mj-class="text10" align="left" vertical-align="middle">
-          <img width="10px" src="https://isunfa.tw/icons/phone.svg" />
+          <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
           <a
             href="tel:+886-2-2700-1979"
             style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
@@ -133,7 +133,7 @@
           ></mj-text
         >
         <mj-text mj-class="text10" align="left" vertical-align="middle">
-          <span><img width="10px" src="https://isunfa.tw/icons/alarm.svg" /> Service Hours : </span>
+          <span><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service Hours : </span>
           <br />
           <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
         </mj-text>
@@ -141,11 +141,11 @@
 
       <!-- 右邊區塊：icon + text -->
       <mj-column padding-top="50px">
-        <mj-text align="left" padding="0">
+        <mj-text align="center" padding="0">
           <mj-text style="margin-right: 24px">
             <a href="https://isunfa.tw/" target="_blank"
               ><img
-                src="https://isunfa.tw/logo/isunfa_logo_new.svg"
+                src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
                 alt="isunfa_logo"
                 width="80px"
             /></a>

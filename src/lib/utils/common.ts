@@ -19,6 +19,7 @@ import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType, VoucherType } from '@/consta
 import { FileFolder } from '@/constants/file';
 import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
+import { ONE_DAY_IN_MS } from '@/constants/time';
 
 export function isFloatsEqual(a: number, b: number, tolerance = Number.EPSILON): boolean {
   return Math.abs(a - b) < tolerance;
@@ -45,6 +46,13 @@ export const timestampToYMD = (timestamp: number) => {
     months: months < 0 ? 0 : months,
     days: days < 0 ? 0 : days,
   };
+};
+
+// Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
+export const getRemainingDays = (timestamp: number) => {
+  const now = Date.now();
+  const diff = timestamp - now;
+  return Math.ceil(diff / ONE_DAY_IN_MS);
 };
 
 // Info: (20241101 - Anna) 千分位符號、括號
