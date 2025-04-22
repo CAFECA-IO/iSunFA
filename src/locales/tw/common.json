@@ -57,9 +57,9 @@
     "LOADING": "正在載入中，請稍等..."
   },
   "UPLOAD_AREA": {
-    "DROP_YOUR_FILES_HERE_OR": "將發票、電子發票媒體文件拖放到此處或",
+    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
     "BROWSE": "瀏覽",
-    "MAXIMUM_SIZE": "jpeg、gif、png、tiff、bmp、pdf、txt（檔案大小：< 4 MB）"
+    "MAXIMUM_SIZE": "最大檔案大小：4MB"
   },
   "CURRENCY_ALIAS": {
     "TWD": "新臺幣",

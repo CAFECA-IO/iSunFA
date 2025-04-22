@@ -39,7 +39,7 @@ const DeductionTypeMenu: React.FC<IDeductionTypeMenuProps> = ({
   const handleOptionClick = (option: DeductionTypeOptions, event?: React.MouseEvent) => {
     event?.stopPropagation(); // Info: (20250422 - Anna) 停止事件冒泡，避免點選選項後選單意外關閉或傳遞到其他層
     selectDeductionTypeHandler(option); // Info: (20250422 - Anna) 把選到的項目回傳給父層
-    setSelectedDeductionType(option); // Info: (20250422 - Anna) 更新本地 state，讓目前選到的項目顯示在畫面上
+    setSelectedDeductionType(option); // Info: (20250422 - Anna) 更新本地 state，讓目前選到的項目顯示
     closeAllMenus();
   };
 

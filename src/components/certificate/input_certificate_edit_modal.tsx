@@ -262,14 +262,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
     if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
 
-    // eslint-disable-next-line no-console
-    console.log('📦 API 請求內容（來自 handleSave）：', updatedInvoice);
-
     const updatedData: ICertificate = {
       ...certificate,
       invoice: updatedInvoice,
     };
-
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
