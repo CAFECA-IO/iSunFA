@@ -52,6 +52,8 @@ export interface IInvoiceBeta {
   deductible: boolean;
   createdAt: number;
   updatedAt: number;
+  // Info: (20250421 - Anna) 扣抵類型
+  deductionType?: string;
 }
 
 export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;
