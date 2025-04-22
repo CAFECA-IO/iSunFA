@@ -4,10 +4,11 @@ import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
-import { useTranslation } from 'next-i18next';
-import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
-import { timestampToString } from '@/lib/utils/common';
+import { useTranslation, Trans } from 'next-i18next';
+import { THREE_DAYS_IN_MS } from '@/constants/time';
+import { timestampToString, getRemainingDays } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { Button } from '@/components/button/button';
 
 interface OwnedTeamProps {
   team: IUserOwnedTeam;
@@ -33,11 +34,19 @@ const OwnedTeam = ({
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
 
+  // Info: (20250422 - Julian) 是否為試用期
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+
   const formatPrice = teamUsingPlan
     ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
     : null;
-  const price = isPlanBeginner ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE') : formatPrice;
+  const price = isPlanBeginner
+    ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')
+    : isTrial
+      ? `(${t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')})`
+      : formatPrice;
 
+  // Info: (20250422 - Julian) 是否開啟自動續訂
   const isAutoRenewalEnabled = team.enableAutoRenewal;
 
   const openTurnOnAutoRenewalModal = () => {
@@ -48,18 +57,18 @@ const OwnedTeam = ({
     setTeamForAutoRenewalOff(team);
   };
 
-  // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
-  const getRemainingDays = (timestamp: number) => {
-    const now = Date.now();
-    const diff = timestamp - now;
-    return Math.ceil(diff / ONE_DAY_IN_MS);
-  };
-
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(team.expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
+  // Info: (20250422 - Julian) 計算試用期剩餘天數
+  const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
+
+  // Info: (20250422 - Julian) 檢查是否顯示到期日等資訊
+  const isShowExpiredDate = !isPlanBeginner && !isTrial;
+  // Info: (20250422 - Julian) 檢查是否顯示「帳單」按鈕
+  const isShowBillingButton = !isPlanBeginner && !isBillingButtonHidden && !isTrial;
 
   return (
     <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
@@ -76,11 +85,11 @@ const OwnedTeam = ({
 
         <div className="w-1px bg-surface-neutral-depth"></div>
 
-        {isPlanBeginner && <section className="flex-auto"></section>}
-
-        {!isPlanBeginner && (
+        {/* Info: (20250421 - Julian) 下次續訂/到期日 */}
+        {isShowExpiredDate ? (
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
+              {/* Info: (20250421 - Julian) 已付款 */}
               {team.paymentStatus === TPaymentStatus.PAID &&
                 (team.enableAutoRenewal ? (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
@@ -102,6 +111,7 @@ const OwnedTeam = ({
                   </div>
                 ))}
 
+              {/* Info: (20250421 - Julian) 付款失敗 */}
               {team.paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
                 <div>
                   <div className="flex items-center gap-8px">
@@ -126,26 +136,15 @@ const OwnedTeam = ({
               )}
             </div>
 
+            {/* Info: (20250421 - Julian) 「取消訂閱」按鈕 */}
             <div className="flex flex-col items-start gap-20px">
-              {!isPlanBeginner && (
-                <>
-                  <p>
-                    <span className="text-2xl font-semibold leading-8 text-neutral-300">
-                      {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:
-                    </span>{' '}
-                    <span className="text-2xl font-semibold leading-8 text-neutral-600">
-                      {timestampToString(team.expiredTimestamp).dateWithSlash}
-                    </span>
-                  </p>
-                  {setTeamForCancelSubscription && (
-                    <p
-                      className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
-                      onClick={() => setTeamForCancelSubscription(team)}
-                    >
-                      {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
-                    </p>
-                  )}
-                </>
+              {!isPlanBeginner && setTeamForCancelSubscription && (
+                <p
+                  className="cursor-pointer text-base font-semibold leading-6 tracking-wide text-red-600"
+                  onClick={() => setTeamForCancelSubscription(team)}
+                >
+                  {t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL_SUBSCRIPTION_TITLE')}
+                </p>
               )}
 
               {/* Info: (20250410 - Anna) 設計稿有改，「開啟自動續訂Toggle」先隱藏 */}
@@ -163,27 +162,31 @@ const OwnedTeam = ({
               </div>
             </div>
           </section>
+        ) : (
+          <section className="flex-auto"></section>
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          <Link
-            href={TEAM_SUBSCRIPTION_PAGE}
-            className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          >
-            <span className="text-base font-medium">
-              {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')}
-            </span>
-            <IoArrowForward size={20} />
-          </Link>
+          {isTrial ? (
+            <Button type="button" className="w-full" disabled>
+              <Trans
+                i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
+                values={{ days: trialRemainingDays }}
+              />
+            </Button>
+          ) : (
+            <Link href={TEAM_SUBSCRIPTION_PAGE}>
+              <Button type="button" className="w-full">
+                {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')} <IoArrowForward size={20} />
+              </Button>
+            </Link>
+          )}
 
-          {!isPlanBeginner && !isBillingButtonHidden && (
-            <Link
-              href={BILLING_PAGE}
-              className="flex items-center justify-center gap-8px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-24px py-10px text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-            >
-              <span className="text-base font-medium">
+          {isShowBillingButton && (
+            <Link href={BILLING_PAGE}>
+              <Button type="button" className="w-full">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
-              </span>
+              </Button>
             </Link>
           )}
         </section>

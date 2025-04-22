@@ -16,7 +16,8 @@
     "update-version": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/update_version.ts && git add package.json",
     "prepare": "husky",
     "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
-    "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts"
+    "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
+    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
@@ -75,7 +76,6 @@
     "rotating-file-stream": "^3.2.3",
     "sharp": "^0.33.3",
     "tailwind-merge": "^2.2.2",
-    "ts-node": "^10.9.2",
     "uuid": "^10.0.0",
     "winston": "^3.14.2",
     "zod": "^3.23.8"
@@ -104,7 +104,7 @@
     "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-config-next": "^14.2.5",
     "eslint-import-resolver-typescript": "^3.6.1",
-    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsx-a11y": "^6.9.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-react": "^7.35.0",
@@ -119,6 +119,8 @@
     "prisma": "^5.14.0",
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.1.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.3.3"
   },
   "husky": {

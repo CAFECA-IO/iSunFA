@@ -155,20 +155,26 @@
     "TEAM": "团队",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帐本",
     "ENTER_NAME": "输入名称",
+    "RESPONSIBLE_PERSON": "负责人",
+    "ENTER_RESPONSIBLE_PERSON": "输入负责人",
     "ENTER_TAX_ID": "输入统一编号",
-    "ENTER_FULL_ADDRESS": "输入完整地址",
     "CANCEL": "取消",
-    "ADD": "新增",
+    "ADD": "添加",
+    "NEXT": "下一步",
     "CHOOSE_WORK_TAG": "选择工作标签",
     "CHOOSE_TEAM": "选择团队",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帐本失败",
     "ERROR_CODE": "错误代码",
     "ERROR_MESSAGE": "错误讯息",
 
+    "CONTACT_INFO": "联络信息",
+    "CONTACT_PERSON": "联络人",
+    "ENTER_CONTACT_PERSON": "输入姓名",
+    "SAME_AS_RESPONSIBLE_PERSON": "与负责人相同",
+    "BUSINESS_ADDRESS": "营业地址",
     "CHOOSE_CITY": "选择县市",
     "CHOOSE_DISTRICT": "选择行政区",
-    "RESPONSIBLE_PERSON": "负责人",
-    "ENTER_RESPONSIBLE_PERSON": "输入负责人",
+    "ENTER_FULL_ADDRESS": "输入完整地址",
 
     "TAX_SERIAL_NUMBER": "税籍编号",
     "ENTER_TAX_SERIAL_NUMBER": "输入税籍编号",
@@ -184,8 +190,19 @@
   },
 
   "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "返回",
+    "BUSINESS_TAX_SETTING": "营业税设置",
     "DECLARATION_SETTING": "申报设置",
-    "DECLARANT": "申报人 (代理人)"
+    "DECLARANT": "申报人 (代理人)",
+    "DECLARANT_NAME": "姓名",
+    "ENTER_DECLARANT_NAME": "输入姓名",
+    "DECLARANT_PERSONAL_ID": "身份证字号",
+    "ENTER_DECLARANT_PERSONAL_ID": "输入身份证字号",
+    "PHONE_NUMBER": "电话号码",
+    "ENTER_PHONE_NUMBER": "输入电话号码",
+    "DECLARANT_NAME_REQUIRED": "请输入姓名",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "请输入身份证字号",
+    "PHONE_NUMBER_REQUIRED": "请输入电话号码"
   },
 
   "FILING_FREQUENCY": {
@@ -216,5 +233,13 @@
     "SELF_FILING": "自行申报",
     "AGENT_FILING": "委托申报",
     "DECLARANT_FILING_METHOD_REQUIRED": "请选择申报方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "会计师",
+    "BOOKKEEPER": "记帐士",
+    "BOOKKEEPER_AND_FILING_AGENT": "记帐士及申报代理人",
+    "I_AM": "我是...",
+    "AGENT_FILING_ROLE_REQUIRED": "请填写申报人资料"
   }
 }

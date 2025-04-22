@@ -153,10 +153,10 @@ export enum APIName {
   USER_PAYMENT_METHOD_LIST = 'USER_PAYMENT_METHOD_LIST',
   USER_PAYMENT_METHOD_CHARGE = 'USER_PAYMENT_METHOD_CHARGE',
   PAYMENT_METHOD_REGISTER_REDIRECT = 'PAYMENT_METHOD_REGISTER_REDIRECT',
-  PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK',
-  ACCOUNT_BOOK_CREATE = 'ACCOUNT_BOOK_CREATE',
+  PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK_OEN',
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
+  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
 }
 
 export enum APIPath {
@@ -291,9 +291,9 @@ export enum APIPath {
   USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
   PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
-  ACCOUNT_BOOK_CREATE = `${apiPrefixV2}/account_book`,
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
-  DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`, // ToDo: (20250418 - Shirley) FIXME: Shirley
+  DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
+  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
 }
 
 const createConfig = ({
@@ -952,11 +952,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.POST,
     path: APIPath.USER_PAYMENT_METHOD_CHARGE,
   }),
-  [APIName.ACCOUNT_BOOK_CREATE]: createConfig({
-    name: APIName.ACCOUNT_BOOK_CREATE,
-    method: HttpMethod.POST,
-    path: APIPath.ACCOUNT_BOOK_CREATE,
-  }),
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: createConfig({
     name: APIName.UPDATE_ACCOUNT_BOOK_INFO,
     method: HttpMethod.PUT,
@@ -966,5 +961,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DISCONNECT_ACCOUNT_BOOK,
     method: HttpMethod.GET,
     path: APIPath.DISCONNECT_ACCOUNT_BOOK,
+  }),
+  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: createConfig({
+    name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
   }),
 };

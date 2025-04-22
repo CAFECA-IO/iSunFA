@@ -18,8 +18,7 @@ export async function handlePostRequest(
     // Info: (20240823 - Julian) 設置郵件內容
     const mailOptions: SendMailOptions = {
       from: process.env.MAIL_CLIENT_ID,
-      // to: process.env.REACT_APP_RECEPIENT_EMAIL,
-      to: 'julian.hsu@mermer.cc',
+      to: process.env.REACT_APP_RECEPIENT_EMAIL,
       subject: title,
       text: content, // Info: (20240823 - Julian) 純文字
       html: content, // Info: (20240823 - Julian) HTML

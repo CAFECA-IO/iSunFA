@@ -52,6 +52,8 @@ interface UserContextType {
   teamRole: TeamRole | null;
   connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
 
+  disconnectAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
+
   updateAccountBook: ({
     accountBookId,
     action,
@@ -99,6 +101,7 @@ export const UserContext = createContext<UserContextType>({
   team: null,
   teamRole: null,
   connectAccountBook: async () => ({ success: false }),
+  disconnectAccountBook: async () => ({ success: false }),
   updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => ({ success: false }),
 
@@ -159,17 +162,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
-  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
+  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250422 - Liz) 此 api 會再改版
   const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_ACCOUNT_BOOK);
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
+  // Info: (20250422 - Liz) 取消連結帳本 API
+  const { trigger: disconnectAccountBookAPI } = APIHandler<{
+    success: boolean;
+  }>(APIName.DISCONNECT_ACCOUNT_BOOK);
+
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
   const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
 
-  // Info: (20241115 - Liz) 刪除帳本 API(原為公司) // ToDo: (20250321 - Liz) 等後端實作完成後要改串新的 API
+  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
@@ -645,6 +653,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Info: (20250422 - Liz) 取消連結帳本的功能
+  const disconnectAccountBook = async (accountBookId: number) => {
+    try {
+      const { success } = await disconnectAccountBookAPI({
+        params: { accountBookId },
+      });
+
+      if (!success) return { success: false };
+      setConnectedAccountBook(null);
+      setTeam(null);
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  };
+
   // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更工作標籤
   const updateAccountBook = async ({
     accountBookId,
@@ -790,6 +814,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       switchRole,
       createAccountBook,
       connectAccountBook,
+      disconnectAccountBook,
       updateAccountBook,
       deleteAccountBook,
       connectedAccountBook: connectedAccountBookRef.current,

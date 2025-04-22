@@ -145,10 +145,6 @@ const LandingFooter: React.FC = () => {
         {/* Info: (20241204 - Julian) Contact Us */}
         <div className="flex flex-col gap-24px text-landing-page-white lg:w-300px">
           {displayContactUs}
-          {/* Deprecated: (20250416 - Julian) Will be removed later */}
-          <div className="opacity-0">
-            <Image src={'/icons/email.svg'} alt="email" width={16} height={16} />
-          </div>
         </div>
 
         {/* Info: (20241204 - Julian) Social Media */}

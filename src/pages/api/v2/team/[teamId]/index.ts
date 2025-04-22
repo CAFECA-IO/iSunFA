@@ -1,5 +1,4 @@
 import { APIName, HttpMethod } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IUpdateTeamBody, IUpdateTeamResponse } from '@/lib/utils/zod_schema/team';
 import { ITeam, TeamRole } from '@/interfaces/team';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -10,7 +9,6 @@ import {
   checkSessionUser,
   checkUserAuthorization,
   logUserAction,
-  withRequestValidation,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import loggerBack from '@/lib/utils/logger_back';
@@ -60,12 +58,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
  * 1. 只有 team 的 owner 和 admin 可以執行 updateTeamByTeamId API
  * 2. 只有 owner 可以編輯銀行帳號
  */
-const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamResponse> = async ({
-  query,
-  body,
-  session,
-}) => {
+const handlePutRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
   const { userId, teams } = session;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IUpdateTeamResponse | null = null;
+
+  await checkSessionUser(session, APIName.UPDATE_TEAM_BY_ID, req);
+  await checkUserAuthorization(APIName.UPDATE_TEAM_BY_ID, req, session);
+
+  const { query, body } = checkRequestData(APIName.UPDATE_TEAM_BY_ID, req, session);
+  if (query === null || body === null || query.teamId === undefined) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   const teamIdNumber = Number(query.teamId);
   const updateData = body as IUpdateTeamBody;
 
@@ -76,7 +82,8 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
     // Info: (20250328 - Shirley) 檢查用戶是否在團隊中
     if (!teamInfo) {
       loggerBack.warn(`User ${userId} is not in team ${teamIdNumber}`);
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     const userRole = teamInfo.role as TeamRole;
@@ -143,14 +150,16 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
     }
 
     if (permissionDenied) {
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250325 - Shirley) 更新團隊資訊
     const updatedTeam = await updateTeamById(teamIdNumber, updateData);
 
     if (!updatedTeam) {
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     loggerBack.info(
@@ -158,7 +167,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
     );
 
     // Info: (20250325 - Shirley) 確保 bankInfo 不為 null，符合 IUpdateTeamResponse 類型
-    const response: IUpdateTeamResponse = {
+    const responseData: IUpdateTeamResponse = {
       id: updatedTeam.id,
       name: updatedTeam.name,
       about: updatedTeam.about,
@@ -166,53 +175,64 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_TEAM_BY_ID, IUpdateTeamRes
       bankInfo: updatedTeam.bankInfo || { code: '', account: '' },
     };
 
-    return {
-      statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE,
-      payload: response,
-    };
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = responseData;
+
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.UPDATE_TEAM_BY_ID,
+      payload
+    );
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      payload = null;
+    } else {
+      payload = outputData;
+    }
   } catch (error) {
     const err = error as Error;
     if (err.message === 'TEAM_NOT_FOUND') {
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    } else {
+      loggerBack.error(`Error updating team ${query.teamId} by user ${userId}: ${err.message}`);
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
-    loggerBack.error(`Error updating team ${teamIdNumber} by user ${userId}: ${err.message}`);
-    return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
   }
+
+  return { response: formatApiResponse(statusMessage, payload), statusMessage };
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.GET_TEAM_BY_ID;
+  const session = await getSession(req);
 
   try {
     switch (method) {
       case HttpMethod.GET:
+        apiName = APIName.GET_TEAM_BY_ID;
         ({ httpCode, result } = await handleGetRequest(req));
         break;
-      case HttpMethod.PUT: {
-        const { statusMessage, payload } = await withRequestValidation(
-          APIName.UPDATE_TEAM_BY_ID,
-          req,
-          handlePutRequest
-        );
-        ({ httpCode, result } = formatApiResponse<IUpdateTeamResponse | null>(
+      case HttpMethod.PUT:
+        apiName = APIName.UPDATE_TEAM_BY_ID;
+        ({
+          response: { httpCode, result },
           statusMessage,
-          payload
-        ));
+        } = await handlePutRequest(req));
         break;
-      }
       default:
-        ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse(statusMessage, null));
         break;
     }
   } catch (error) {
     const err = error as Error;
-    ({ httpCode, result } = formatApiResponse<null>(
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
-      null
-    ));
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-
+  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }
