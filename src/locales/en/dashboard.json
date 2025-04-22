@@ -232,7 +232,6 @@
     "SELECT_DECLARANT_FILING_METHOD": "Select Declarant Filing Method",
     "SELF_FILING": "Self Filing",
     "AGENT_FILING": "Agent Filing",
-    "SELECT_AGENT_FILING_ROLE": "Select Agent Filing Role",
     "DECLARANT_FILING_METHOD_REQUIRED": "Please select a declarant filing method"
   },
 
@@ -241,7 +240,6 @@
     "BOOKKEEPER": "Bookkeeper",
     "BOOKKEEPER_AND_FILING_AGENT": "Bookkeeper and Filing Agent",
     "I_AM": "I am...",
-    "SELECT_AGENT_FILING_ROLE": "Select Agent Filing Role",
-    "SELECT_AGENT_FILING_ROLE_REQUIRED": "Please select an agent filing role"
+    "AGENT_FILING_ROLE_REQUIRED": "Please fill in the agent filing information"
   }
 }

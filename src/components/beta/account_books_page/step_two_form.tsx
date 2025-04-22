@@ -40,6 +40,8 @@ const StepTwoForm = ({
     declarantPersonalId,
     declarantPhoneNumber,
     agentFilingRole,
+    agentFilingRoleIdText,
+    agentFilingRoleIdNumber,
 
     filingFrequencyError,
     filingMethodError,
@@ -151,7 +153,7 @@ const StepTwoForm = ({
       handleChange('declarantPhoneNumberError')(null);
     }
 
-    if (!agentFilingRole) {
+    if (!agentFilingRoleIdText || !agentFilingRoleIdNumber) {
       handleChange('agentFilingRoleError')(
         t('dashboard:AGENT_FILING_ROLE.AGENT_FILING_ROLE_REQUIRED')
       );
@@ -480,7 +482,7 @@ const StepTwoForm = ({
               </h4>
 
               <section className="flex items-start gap-40px">
-                {/* Info: (20250422 - Liz) 申報代理人 - 角色 */}
+                {/* Info: (20250422 - Liz) 申報代理人 - 角色下拉選單 */}
                 <div className="relative flex flex-1 flex-col">
                   <button
                     type="button"
@@ -488,13 +490,7 @@ const StepTwoForm = ({
                     onClick={toggleAgentFilingRolesDropdown}
                   >
                     <p className="px-12px py-10px text-base font-medium">
-                      {agentFilingRole ? (
-                        t(`dashboard:AGENT_FILING_ROLE.${agentFilingRole}`)
-                      ) : (
-                        <span className="text-text-neutral-secondary">
-                          {t('dashboard:AGENT_FILING_ROLE.SELECT_AGENT_FILING_ROLE')}
-                        </span>
-                      )}
+                      {t(`dashboard:AGENT_FILING_ROLE.${agentFilingRole}`)}
                     </p>
 
                     <div className="px-12px py-10px">
@@ -505,12 +501,6 @@ const StepTwoForm = ({
                       )}
                     </div>
                   </button>
-
-                  {agentFilingRoleError && !isAgentFilingRolesDropdownOpen && (
-                    <p className="text-right text-sm font-medium text-text-state-error">
-                      {agentFilingRoleError}
-                    </p>
-                  )}
 
                   {isAgentFilingRolesDropdownOpen && (
                     <div className="absolute inset-x-0 top-full z-10 mt-8px">
@@ -534,29 +524,60 @@ const StepTwoForm = ({
                   )}
                 </div>
 
-                <div className="flex flex-1.5 justify-between">
-                  <span className="self-center text-base font-normal text-text-neutral-secondary">{`(`}</span>
+                <div className="flex flex-1.5 flex-col">
+                  <section className="flex justify-between">
+                    {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && (
+                      <span className="self-center text-base font-normal text-text-neutral-secondary">
+                        台財
+                      </span>
+                    )}
 
-                  {/* Info: (20250422 - Liz) 申報代理人 - 證號 */}
-                  <input
-                    type="text"
-                    className="w-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                  />
+                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`(`}</span>
 
-                  <span className="self-center text-base font-normal text-text-neutral-secondary">{`)`}</span>
+                    {/* Info: (20250422 - Liz) 申報代理人資料 */}
+                    <input
+                      type="text"
+                      className="w-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={agentFilingRoleIdText}
+                      onChange={(e) => handleChange('agentFilingRoleIdText')(e.target.value)}
+                    />
 
-                  <p className="self-center text-base font-normal text-text-neutral-secondary">
-                    台財稅登字第
-                  </p>
+                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`)`}</span>
 
-                  <input
-                    type="text"
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                  />
+                    {(agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER ||
+                      AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT) && (
+                      <span className="self-center text-base font-normal text-text-neutral-secondary">
+                        {`(區)`}
+                      </span>
+                    )}
 
-                  <p className="self-center text-base font-normal text-text-neutral-secondary">
-                    號
-                  </p>
+                    <div className="self-center text-base font-normal text-text-neutral-secondary">
+                      {agentFilingRole === AGENT_FILING_ROLE.ACCOUNTANT && (
+                        <span>台財稅登字第</span>
+                      )}
+                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && <span>國稅字第</span>}
+                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT && (
+                        <span>國稅登字第</span>
+                      )}
+                    </div>
+
+                    <input
+                      type="number"
+                      className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={agentFilingRoleIdNumber}
+                      onChange={(e) => handleChange('agentFilingRoleIdNumber')(e.target.value)}
+                    />
+
+                    <p className="self-center text-base font-normal text-text-neutral-secondary">
+                      號
+                    </p>
+                  </section>
+
+                  {agentFilingRoleError && !isAgentFilingRolesDropdownOpen && (
+                    <p className="text-right text-sm font-medium text-text-state-error">
+                      {agentFilingRoleError}
+                    </p>
+                  )}
                 </div>
               </section>
             </div>

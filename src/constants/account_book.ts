@@ -142,6 +142,8 @@ export type Step2FormState = {
   declarantPersonalId: string;
   declarantPhoneNumber: string;
   agentFilingRole: AGENT_FILING_ROLE | null;
+  agentFilingRoleIdText: string;
+  agentFilingRoleIdNumber: string;
 
   filingFrequencyError: string | null;
   filingMethodError: string | null;
@@ -176,7 +178,9 @@ export const initialStep2FormState: Step2FormState = {
   declarantName: '',
   declarantPersonalId: '',
   declarantPhoneNumber: '',
-  agentFilingRole: null,
+  agentFilingRole: AGENT_FILING_ROLE.ACCOUNTANT,
+  agentFilingRoleIdText: '',
+  agentFilingRoleIdNumber: '',
 
   filingFrequencyError: null,
   filingMethodError: null,

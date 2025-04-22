@@ -232,7 +232,6 @@
     "SELECT_DECLARANT_FILING_METHOD": "选择申报方式",
     "SELF_FILING": "自行申报",
     "AGENT_FILING": "委托申报",
-    "SELECT_AGENT_FILING_ROLE": "选择申报人角色",
     "DECLARANT_FILING_METHOD_REQUIRED": "请选择申报方式"
   },
 
@@ -241,7 +240,6 @@
     "BOOKKEEPER": "记帐士",
     "BOOKKEEPER_AND_FILING_AGENT": "记帐士及申报代理人",
     "I_AM": "我是...",
-    "SELECT_AGENT_FILING_ROLE": "选择代理人角色",
-    "AGENT_FILING_ROLE_REQUIRED": "请选择代理人角色"
+    "AGENT_FILING_ROLE_REQUIRED": "请填写申报人资料"
   }
 }
