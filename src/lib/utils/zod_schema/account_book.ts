@@ -136,6 +136,16 @@ export const getAccountBookInfoSchema = {
   frontend: accountBookNullSchema,
 };
 
+// Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
+export const listAccountBookInfoSchema = {
+  input: {
+    querySchema: accountBookListQuerySchema,
+    bodySchema: accountBookNullSchema,
+  },
+  outputSchema: paginatedDataSchema(accountBookInfoSchema),
+  frontend: accountBookNullSchema,
+};
+
 export const listAccountBooksByTeamIdSchema = {
   input: {
     querySchema: listByTeamIdQuerySchema,
