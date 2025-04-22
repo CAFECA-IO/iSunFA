@@ -232,6 +232,16 @@
     "SELECT_DECLARANT_FILING_METHOD": "選擇申報方式",
     "SELF_FILING": "自行申報",
     "AGENT_FILING": "委託申報",
+    "SELECT_AGENT_FILING_ROLE": "選擇申報人角色",
     "DECLARANT_FILING_METHOD_REQUIRED": "請選擇申報方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "會計師",
+    "BOOKKEEPER": "記帳士",
+    "BOOKKEEPER_AND_FILING_AGENT": "記帳士及申報代理人",
+    "I_AM": "我是...",
+    "SELECT_AGENT_FILING_ROLE": "選擇申報人角色",
+    "AGENT_FILING_ROLE_REQUIRED": "請選擇申報人角色"
   }
 }

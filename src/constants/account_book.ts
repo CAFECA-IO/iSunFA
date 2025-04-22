@@ -37,6 +37,12 @@ export enum DECLARANT_FILING_METHOD {
   AGENT_FILING = 'AGENT_FILING',
 }
 
+export enum AGENT_FILING_ROLE {
+  ACCOUNTANT = 'ACCOUNTANT',
+  BOOKKEEPER = 'BOOKKEEPER',
+  BOOKKEEPER_AND_FILING_AGENT = 'BOOKKEEPER_AND_FILING_AGENT',
+}
+
 // Info: (20250421 - Liz) 第一步驟表單狀態
 export interface Step1FormState {
   companyName: string;
@@ -135,6 +141,7 @@ export type Step2FormState = {
   declarantName: string;
   declarantPersonalId: string;
   declarantPhoneNumber: string;
+  agentFilingRole: AGENT_FILING_ROLE | null;
 
   filingFrequencyError: string | null;
   filingMethodError: string | null;
@@ -143,10 +150,12 @@ export type Step2FormState = {
   declarantNameError: string | null;
   declarantPersonalIdError: string | null;
   declarantPhoneNumberError: string | null;
+  agentFilingRoleError: string | null;
 
   isFilingFrequencyDropdownOpen: boolean;
   isFilingMethodDropdownOpen: boolean;
   isDeclarantFilingMethodDropdownOpen: boolean;
+  isAgentFilingRolesDropdownOpen: boolean;
 };
 
 export type Step2FormAction =
@@ -167,6 +176,7 @@ export const initialStep2FormState: Step2FormState = {
   declarantName: '',
   declarantPersonalId: '',
   declarantPhoneNumber: '',
+  agentFilingRole: null,
 
   filingFrequencyError: null,
   filingMethodError: null,
@@ -175,10 +185,12 @@ export const initialStep2FormState: Step2FormState = {
   declarantNameError: null,
   declarantPersonalIdError: null,
   declarantPhoneNumberError: null,
+  agentFilingRoleError: null,
 
   isFilingFrequencyDropdownOpen: false,
   isFilingMethodDropdownOpen: false,
   isDeclarantFilingMethodDropdownOpen: false,
+  isAgentFilingRolesDropdownOpen: false,
 };
 
 export const step2FormReducer = (
