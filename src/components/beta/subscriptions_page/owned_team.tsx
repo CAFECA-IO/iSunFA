@@ -5,8 +5,8 @@ import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscrip
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { useTranslation, Trans } from 'next-i18next';
-import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
-import { timestampToString } from '@/lib/utils/common';
+import { THREE_DAYS_IN_MS } from '@/constants/time';
+import { timestampToString, getRemainingDays } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { Button } from '@/components/button/button';
 
@@ -55,13 +55,6 @@ const OwnedTeam = ({
 
   const openTurnOffAutoRenewalModal = () => {
     setTeamForAutoRenewalOff(team);
-  };
-
-  // Info: (20250110 - Liz) 計算一個 timestamp 距離現在的剩餘天數
-  const getRemainingDays = (timestamp: number) => {
-    const now = Date.now();
-    const diff = timestamp - now;
-    return Math.ceil(diff / ONE_DAY_IN_MS);
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
@@ -174,7 +167,7 @@ const OwnedTeam = ({
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          {isTrial ? (
+          {!isTrial ? (
             <Button type="button" className="w-full" disabled>
               <Trans
                 i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
