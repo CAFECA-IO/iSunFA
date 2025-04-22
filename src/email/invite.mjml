@@ -13,7 +13,7 @@
     <mj-section background-color="#304872" padding="10px 20px">
       <mj-column>
         <mj-image
-          src="https://isunfa.tw/logo/isunfa_logo_new.svg?w=384&q=75"
+          src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
           alt="isunfa_logo"
           width="80px"
           align="left"
@@ -64,51 +64,73 @@
     <mj-section background-color="#304872" padding="40px">
       <!-- 左邊區塊 -->
       <mj-column>
-        <mj-text color="#FFFFFF" font-weight="700" font-size="12px" line-height="28px" padding-top="0">
-          Contact Us
-        </mj-text>
-        <mj-text mj-class="text10" align="left">
-          <img width="10px" src="https://isunfa.tw/icons/phone.svg" />
-          <a href="mailto:isunfahelp@isunfa.com.tw" style="color: white; font-weight: 500; font-size: 10px; text-decoration: none">
-            isunfahelp@isunfa.com.tw
-          </a>
-        </mj-text>
-        <mj-text mj-class="text10" align="left">
-          <img width="10px" src="https://isunfa.tw/icons/phone.svg" />
-          <a href="tel:+886-2-2700-1979" style="color: white; font-weight: 500; font-size: 10px; text-decoration: none">
-            +886-2-2700-1979
-          </a>
-        </mj-text>
-        <mj-text mj-class="text10" align="left">
-          <span><img width="10px" src="https://isunfa.tw/icons/alarm.svg" /> Service Hours :</span><br />
-          <span style="margin-left: 12px">Mon to Fri, 09:00 AM - 06:00 PM.</span>
+        <mj-text
+          color="#FFFFFF"
+          font-weight="700"
+          font-size="12px"
+          line-height="28px"
+          padding-top="0"
+          >Contact Us</mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
+          <a
+            href="mailto:isunfahelp@isunfa.com.tw"
+            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            >isunfahelp@isunfa.com.tw</a
+          ></mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
+          <a
+            href="tel:+886-2-2700-1979"
+            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            >+886-2-2700-1979</a
+          ></mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <span><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service Hours : </span>
+          <br />
+          <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
         </mj-text>
       </mj-column>
+
       <!-- 右邊區塊：icon + text -->
       <mj-column padding-top="50px">
-        <mj-text align="left" padding="0">
+        <mj-text align="center" padding="0">
           <mj-text style="margin-right: 24px">
-            <a href="https://isunfa.tw/" target="_blank">
-              <img
-                src="https://isunfa.tw/logo/isunfa_logo_new.svg?w=384&q=75"
+            <a href="https://isunfa.tw/" target="_blank"
+              ><img
+                src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
                 alt="isunfa_logo"
                 width="80px"
-              />
-            </a>
+            /></a>
           </mj-text>
           <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
-            <img width="20px" src="https://cdn.creazilla.com/icons/7911986/facebook-icon-lg.png" alt="facebook_link" style="margin-right: 12px; filter: brightness(100)" />
+            <img
+              width="20px"
+              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
+              alt="facebook_link"
+              style="margin-right: 12px"
+            />
           </a>
           <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
-            <img width="20px" src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" alt="github_link" style="margin-right: 12px; filter: brightness(100)" />
-          </a>
-          <a href="https://www.youtube.com/@isunfa" target="_blank">
-            <img width="20px" src="https://cdn.iconscout.com/icon/free/png-256/free-youtube-logo-icon-download-in-svg-png-gif-file-formats--social-media-70-flat-icons-color-pack-logos-432560.png" alt="youtube_link" style="filter: brightness(100)" />
-          </a>
+            <img
+              width="20px"
+              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
+              alt="github_link"
+              style="margin-right: 12px"
+          /></a>
+          <a href="https://www.youtube.com/@isunfa" target="_blank"
+            ><img
+              width="20px"
+              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
+              alt="youtube_link"
+          /></a>
         </mj-text>
-        <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px">
-          iSunFA @ 2024. All rights reserved.
-        </mj-text>
+        <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px"
+          >iSunFA @ 2024. All rights reserved.</mj-text
+        >
       </mj-column>
     </mj-section>
   </mj-body>
