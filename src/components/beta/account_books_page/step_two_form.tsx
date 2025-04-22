@@ -7,6 +7,7 @@ import {
   FILING_FREQUENCY_OPTIONS,
   FILING_METHOD_OPTIONS,
   DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
   Step2FormState,
   Step2FormAction,
 } from '@/constants/account_book';
@@ -38,6 +39,9 @@ const StepTwoForm = ({
     declarantName,
     declarantPersonalId,
     declarantPhoneNumber,
+    agentFilingRole,
+    agentFilingRoleIdText,
+    agentFilingRoleIdNumber,
 
     filingFrequencyError,
     filingMethodError,
@@ -46,10 +50,12 @@ const StepTwoForm = ({
     declarantNameError,
     declarantPersonalIdError,
     declarantPhoneNumberError,
+    agentFilingRoleError,
 
     isFilingFrequencyDropdownOpen,
     isFilingMethodDropdownOpen,
     isDeclarantFilingMethodDropdownOpen,
+    isAgentFilingRolesDropdownOpen,
   } = step2FormState;
 
   const handleChange =
@@ -83,49 +89,88 @@ const StepTwoForm = ({
     handleChange('isFilingMethodDropdownOpen')(false);
   };
 
-  // ToDo: (20250418 - Liz) 驗證必填
+  const toggleAgentFilingRolesDropdown = () => {
+    handleChange('isAgentFilingRolesDropdownOpen')((prev) => !prev);
+    // Info: (20250418 - Liz) 關閉其他下拉選單
+    handleChange('isFilingFrequencyDropdownOpen')(false);
+    handleChange('isFilingMethodDropdownOpen')(false);
+    handleChange('isDeclarantFilingMethodDropdownOpen')(false);
+  };
+
+  // Info: (20250422 - Liz) 驗證必填欄位
   const validateRequiredFields = () => {
+    let isValid = true;
+
     if (!filingFrequency) {
       handleChange('filingFrequencyError')(
         t('dashboard:FILING_FREQUENCY.FILING_FREQUENCY_REQUIRED')
       );
-      return false;
+      isValid = false;
+    } else {
+      handleChange('filingFrequencyError')(null);
     }
+
     if (!filingMethod) {
       handleChange('filingMethodError')(t('dashboard:FILING_METHOD.FILING_METHOD_REQUIRED'));
-      return false;
+      isValid = false;
+    } else {
+      handleChange('filingMethodError')(null);
     }
+
     if (!declarantFilingMethod) {
       handleChange('declarantFilingMethodError')(
         t('dashboard:DECLARANT_FILING_METHOD.DECLARANT_FILING_METHOD_REQUIRED')
       );
-      return false;
+      isValid = false;
+    } else {
+      handleChange('declarantFilingMethodError')(null);
     }
+
     if (!declarantName) {
       handleChange('declarantNameError')(
         t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME_REQUIRED')
       );
-      return false;
+      isValid = false;
+    } else {
+      handleChange('declarantNameError')(null);
     }
+
     if (!declarantPersonalId) {
       handleChange('declarantPersonalIdError')(
         t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID_REQUIRED')
       );
-      return false;
+      isValid = false;
+    } else {
+      handleChange('declarantPersonalIdError')(null);
     }
+
     if (!declarantPhoneNumber) {
       handleChange('declarantPhoneNumberError')(
         t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER_REQUIRED')
       );
-      return false;
+      isValid = false;
+    } else {
+      handleChange('declarantPhoneNumberError')(null);
     }
 
-    return true;
+    if (
+      declarantFilingMethod === DECLARANT_FILING_METHOD.AGENT_FILING &&
+      (!agentFilingRoleIdText || !agentFilingRoleIdNumber)
+    ) {
+      handleChange('agentFilingRoleError')(
+        t('dashboard:AGENT_FILING_ROLE.AGENT_FILING_ROLE_REQUIRED')
+      );
+      isValid = false;
+    } else {
+      handleChange('agentFilingRoleError')(null);
+    }
+
+    return isValid;
   };
 
   // Info: (20250421 - Liz) 打 API 建立帳本(原為公司)
   const onClickSubmit = async () => {
-    const success = validateRequiredFields(); // Info: (20250418 - Liz) 驗證必填
+    const success = validateRequiredFields(); // Info: (20250422 - Liz) 驗證必填欄位
     if (!success) return;
 
     handleSubmit();
@@ -367,7 +412,7 @@ const StepTwoForm = ({
           </section>
 
           {/* Info: (20250418 - Liz) 申報人資料 */}
-          <div className="flex items-start gap-40px">
+          <section className="flex items-start gap-40px">
             {/* Info: (20250418 - Liz) 申報人姓名 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
@@ -429,7 +474,117 @@ const StepTwoForm = ({
                 </p>
               )}
             </div>
-          </div>
+          </section>
+
+          {/* Info: (20250422 - Liz) 委託申報延伸欄位 */}
+          {declarantFilingMethod === DECLARANT_FILING_METHOD.AGENT_FILING && (
+            <div className="flex flex-col gap-8px">
+              <h4 className="font-semibold text-input-text-primary">
+                {t('dashboard:AGENT_FILING_ROLE.I_AM')}
+                <span className="text-text-state-error"> *</span>
+              </h4>
+
+              <section className="flex items-start gap-40px">
+                {/* Info: (20250422 - Liz) 申報代理人 - 角色下拉選單 */}
+                <div className="relative flex flex-1 flex-col">
+                  <button
+                    type="button"
+                    className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
+                    onClick={toggleAgentFilingRolesDropdown}
+                  >
+                    <p className="px-12px py-10px text-base font-medium">
+                      {t(`dashboard:AGENT_FILING_ROLE.${agentFilingRole}`)}
+                    </p>
+
+                    <div className="px-12px py-10px">
+                      {isAgentFilingRolesDropdownOpen ? (
+                        <IoChevronUp size={20} />
+                      ) : (
+                        <IoChevronDown size={20} />
+                      )}
+                    </div>
+                  </button>
+
+                  {isAgentFilingRolesDropdownOpen && (
+                    <div className="absolute inset-x-0 top-full z-10 mt-8px">
+                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
+                        {Object.values(AGENT_FILING_ROLE).map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => {
+                              handleChange('agentFilingRole')(option);
+                              toggleAgentFilingRolesDropdown();
+                              handleChange('agentFilingRoleError')(null);
+                            }}
+                            className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
+                          >
+                            <span>{t(`dashboard:AGENT_FILING_ROLE.${option}`)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-1.5 flex-col">
+                  <section className="flex justify-between">
+                    {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && (
+                      <span className="self-center text-base font-normal text-text-neutral-secondary">
+                        台財
+                      </span>
+                    )}
+
+                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`(`}</span>
+
+                    {/* Info: (20250422 - Liz) 申報代理人資料 */}
+                    <input
+                      type="text"
+                      className="w-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={agentFilingRoleIdText}
+                      onChange={(e) => handleChange('agentFilingRoleIdText')(e.target.value)}
+                    />
+
+                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`)`}</span>
+
+                    {(agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER ||
+                      AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT) && (
+                      <span className="self-center text-base font-normal text-text-neutral-secondary">
+                        {`(區)`}
+                      </span>
+                    )}
+
+                    <div className="self-center text-base font-normal text-text-neutral-secondary">
+                      {agentFilingRole === AGENT_FILING_ROLE.ACCOUNTANT && (
+                        <span>台財稅登字第</span>
+                      )}
+                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && <span>國稅字第</span>}
+                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT && (
+                        <span>國稅登字第</span>
+                      )}
+                    </div>
+
+                    <input
+                      type="number"
+                      className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={agentFilingRoleIdNumber}
+                      onChange={(e) => handleChange('agentFilingRoleIdNumber')(e.target.value)}
+                    />
+
+                    <p className="self-center text-base font-normal text-text-neutral-secondary">
+                      號
+                    </p>
+                  </section>
+
+                  {agentFilingRoleError && !isAgentFilingRolesDropdownOpen && (
+                    <p className="text-right text-sm font-medium text-text-state-error">
+                      {agentFilingRoleError}
+                    </p>
+                  )}
+                </div>
+              </section>
+            </div>
+          )}
 
           <section className="flex justify-end gap-12px">
             <button

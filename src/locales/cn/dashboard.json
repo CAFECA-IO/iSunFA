@@ -233,5 +233,13 @@
     "SELF_FILING": "自行申报",
     "AGENT_FILING": "委托申报",
     "DECLARANT_FILING_METHOD_REQUIRED": "请选择申报方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "会计师",
+    "BOOKKEEPER": "记帐士",
+    "BOOKKEEPER_AND_FILING_AGENT": "记帐士及申报代理人",
+    "I_AM": "我是...",
+    "AGENT_FILING_ROLE_REQUIRED": "请填写申报人资料"
   }
 }
