@@ -18,7 +18,11 @@
     "DEDUCTABLE": "可抵扣税额",
     "UPLOADER": "上传者",
     "VOUCHER_NUMBER": "传票编号",
-    "DEDUCTION_TYPE": "扣抵类型"
+    "DEDUCTION_TYPE": "扣抵类型",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "进货及费用",
+    "DEDUCTIBLE_FIXED_ASSETS": "固定资产",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "进货及费用",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定资产"
   },
   "PAUSE": {
     "TITLE": "您确定要取消上传吗？",
@@ -75,6 +79,7 @@
     "PRICE_BEFORE_TAX": "税前价格",
     "TAX": "税额",
     "TAXABLE": "应税金额",
+    "TAX_TYPE": "税种",
     "TOTAL_PRICE": "总价（含税）",
     "COUNTERPARTY": "交易对象（客户/供应商）",
     "ID_NUMBER": "统一编号",
@@ -82,8 +87,8 @@
     "INVOICE_TYPE": "凭证类型",
     "DEDUCTIBLE": "可抵扣税额",
     "SUCCESS": "您的发票信息已更新。",
-    "TAXABLE_5": "应税金额（5%）",
-    "ZERO_TAX_RATE": "零税率（0%）",
+    "TAXABLE_5": "应税",
+    "ZERO_TAX_RATE": "零税率",
     "TAX_FREE": "免税",
     "NONE": "无",
     "THROUGH_CUSTOMS": "通过海关",
@@ -91,7 +96,11 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "可扣抵之进货及费用",
     "DEDUCTIBLE_FIXED_ASSETS": "可扣抵之固定资产",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "不可扣抵之进货及费用",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定资产"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定资产",
+    "CERTIFICATE_BY_CUSTOMS": "海关代征营业税缴纳证明书号码",
+    "CHARACTERS": "14 个字符",
+    "ENTER_ONE_INVOICE": "输入一个发票号码作为代表",
+    "REPRESENTATIVE_INVOICE": "代表发票号码"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

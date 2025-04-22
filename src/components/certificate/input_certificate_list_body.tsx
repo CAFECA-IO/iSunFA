@@ -423,9 +423,20 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               body: invoice,
             });
 
+            // eslint-disable-next-line no-console
+            console.log('📦 API 請求內容：', {
+              params: invoice.id
+                ? { companyId, certificateId: certificate.id, invoiceId: invoice.id }
+                : { companyId, certificateId: certificate.id },
+              body: invoice,
+            });
+
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
+          // Deprecate: (20250422 - Anna) Debugging purpose
+          // eslint-disable-next-line no-console
+          console.log('updatedCertificate', updatedCertificate);
           let updatedData: ICertificateUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
@@ -438,6 +449,12 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
               ],
             };
+            // Deprecate: (20250422 - Anna) Debugging purpose
+            // eslint-disable-next-line no-console
+            console.log(
+              `updatedData[certificate.id:${certificate.id}]`,
+              updatedData[certificate.id]
+            );
             return updatedData;
           });
         } else {

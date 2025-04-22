@@ -23,7 +23,7 @@ import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
-import TaxMenu from '@/components/certificate/certificate_tax_menu';
+import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
@@ -101,6 +101,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         counterParty: certificate.invoice.counterParty,
         type: certificate.invoice.type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
         deductible: certificate.invoice.deductible,
+        // Info: (20250422 - Anna) 多存「扣抵類型」
+        deductionType: certificate.invoice.deductionType ?? 'DEDUCTIBLE_PURCHASE_AND_EXPENSE',
       }) as IInvoiceBetaOptional
   );
   const [errors] = useState<Record<string, string>>({});
@@ -260,10 +262,14 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
     if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
 
+    // eslint-disable-next-line no-console
+    console.log('📦 API 請求內容（來自 handleSave）：', updatedInvoice);
+
     const updatedData: ICertificate = {
       ...certificate,
       invoice: updatedInvoice,
     };
+
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
@@ -331,7 +337,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
     // Info: (20250415 - Anna) 初始化 formState
     const newFormState: IInvoiceBetaOptional = {
-      inputOrOutput: InvoiceTransactionDirection.OUTPUT,
+      inputOrOutput: InvoiceTransactionDirection.INPUT,
       date: certificateDate,
       no,
       priceBeforeTax,
@@ -403,8 +409,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - Anna) Invoice Type */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.INVOICE_TYPE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center gap-4">
@@ -448,8 +455,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
             {/* Info: (20240924 - Anna) Invoice Date */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.DATE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
               <DatePicker
@@ -469,65 +477,115 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             {/* Info: (20240924 - Anna) Invoice Number */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
-              <p className="text-sm font-semibold text-input-text-primary">
-                {t('certificate:EDIT.INVOICE_NUMBER')}
-                <span className="text-text-state-error">*</span>
-              </p>
+              {/* Info: (20250422 - Anna) 28 - 進項海關代徵營業稅繳納證 or 29 - 進項海關退還溢繳營業稅申報單 */}
+              {formState.type === InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT ||
+              formState.type === InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND ? (
+                <>
+                  <p className="text-sm font-semibold text-neutral-300">
+                    {t('certificate:EDIT.CERTIFICATE_BY_CUSTOMS')}
+                    <span> </span>
+                    <span className="text-text-state-error">*</span>
+                  </p>
 
-              {formState.type === InvoiceType.SALES_NON_UNIFORM_INVOICE ? (
-                // Info: (20250415 - Anna) 免用統一發票的UI
-                <div className="flex w-full items-center">
-                  <input
-                    id="invoiceno"
-                    type="text"
-                    value={formState.no}
-                    onChange={(e) => handleInputChange('no', e.target.value)}
-                    className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
-                    placeholder="AB-12345678"
-                  />
-                </div>
+                  <div className="flex w-full items-center">
+                    <input
+                      id="invoiceno"
+                      type="text"
+                      value={formState.no}
+                      onChange={(e) => handleInputChange('no', e.target.value)}
+                      className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                      placeholder={t('certificate:EDIT.CHARACTERS')}
+                    />
+                  </div>
+                </>
+              ) : formState.type === InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC ? (
+                <>
+                  <p className="text-sm font-semibold text-neutral-300">
+                    {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
+                    <span> </span>
+                    <span className="text-text-state-error">*</span>
+                  </p>
+
+                  <div className="flex w-full items-center">
+                    {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
+                    <input
+                      id="invoice-prefix"
+                      type="text"
+                      maxLength={2}
+                      value={formState.no?.substring(0, 2) ?? ''}
+                      onChange={(e) => {
+                        const latestNo = formStateRef.current.no ?? '';
+                        const suffix = latestNo.substring(2);
+                        handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
+                      }}
+                      className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                      placeholder="AB"
+                    />
+
+                    <input
+                      id="invoice-number"
+                      type="text"
+                      maxLength={8}
+                      value={formState.no?.substring(2) ?? ''}
+                      onChange={(e) => {
+                        const latestNo = formStateRef.current.no ?? '';
+                        const prefix = latestNo.substring(0, 2);
+                        handleInputChange('no', `${prefix}${e.target.value}`);
+                      }}
+                      className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                      placeholder={t('certificate:EDIT.ENTER_ONE_INVOICE')}
+                    />
+                  </div>
+                </>
               ) : (
-                // Info: (20250415 - Anna) 其他憑證類型的UI
-                <div className="flex w-full items-center">
-                  {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
-                  <input
-                    id="invoice-prefix"
-                    type="text"
-                    maxLength={2}
-                    value={formState.no?.substring(0, 2) ?? ''}
-                    onChange={(e) => {
-                      const latestNo = formStateRef.current.no ?? '';
-                      const suffix = latestNo.substring(2);
-                      handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
-                    }}
-                    className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
-                    placeholder="AB"
-                  />
+                <>
+                  <p className="text-sm font-semibold text-input-text-primary">
+                    {t('certificate:EDIT.INVOICE_NUMBER')}
+                    <span className="text-text-state-error">*</span>
+                  </p>
+                  {/* Info: (20250415 - Anna) 其他憑證類型的UI */}
+                  <div className="flex w-full items-center">
+                    {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
+                    <input
+                      id="invoice-prefix"
+                      type="text"
+                      maxLength={2}
+                      value={formState.no?.substring(0, 2) ?? ''}
+                      onChange={(e) => {
+                        const latestNo = formStateRef.current.no ?? '';
+                        const suffix = latestNo.substring(2);
+                        handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
+                      }}
+                      className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                      placeholder="AB"
+                    />
 
-                  <input
-                    id="invoice-number"
-                    type="text"
-                    maxLength={8}
-                    value={formState.no?.substring(2) ?? ''}
-                    onChange={(e) => {
-                      const latestNo = formStateRef.current.no ?? '';
-                      const prefix = latestNo.substring(0, 2);
-                      handleInputChange('no', `${prefix}${e.target.value}`);
-                    }}
-                    className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
-                    placeholder="12345678"
-                  />
-                </div>
+                    <input
+                      id="invoice-number"
+                      type="text"
+                      maxLength={8}
+                      value={formState.no?.substring(2) ?? ''}
+                      onChange={(e) => {
+                        const latestNo = formStateRef.current.no ?? '';
+                        const prefix = latestNo.substring(0, 2);
+                        handleInputChange('no', `${prefix}${e.target.value}`);
+                      }}
+                      className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                      placeholder="12345678"
+                    />
+                  </div>
+                </>
               )}
             </div>
 
             {/* Info: (20250414 - Anna) Tax Type */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
-                {t('certificate:EDIT.TAX')}
+              <p className="text-sm font-semibold text-neutral-300">
+                {t('certificate:EDIT.TAX_TYPE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
-              <div className="flex w-full items-center gap-2">
+              <div className="relative z-120 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
               {errors.taxPrice && (

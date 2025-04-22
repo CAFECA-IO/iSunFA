@@ -43,13 +43,9 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
 
-  // Todo: (20250421 - Anna) 後端還沒實作 deductionType 這個欄位，暫時用字串常數比對，實作好就不需要這個假資料了
-  const DEDUCTIBLE_PURCHASE_AND_EXPENSE = 'DEDUCTIBLE_PURCHASE_AND_EXPENSE';
-  const DEDUCTIBLE_FIXED_ASSETS = 'DEDUCTIBLE_FIXED_ASSETS';
-
   const isDeductible =
-    certificate.invoice?.deductionType === DEDUCTIBLE_PURCHASE_AND_EXPENSE ||
-    certificate.invoice?.deductionType === DEDUCTIBLE_FIXED_ASSETS;
+    certificate.invoice?.deductionType === 'DEDUCTIBLE_PURCHASE_AND_EXPENSE' ||
+    certificate.invoice?.deductionType === 'DEDUCTIBLE_FIXED_ASSETS';
 
   return (
     <div
@@ -101,23 +97,23 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+          {/* Info: (20250421 - Anna) deductionType */}
           {isDeductible ? (
-            // className="flex"
-            <div>
+            <div className="flex items-center gap-2">
               <FaCheck className="h-6 w-6 text-green-500" />
               <span className="text-sm text-neutral-300">
                 {certificate.invoice?.deductionType === 'DEDUCTIBLE_FIXED_ASSETS'
-                  ? t(`certificate:EDIT.DEDUCTIBLE_FIXED_ASSETS`)
-                  : t(`certificate:EDIT.DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+                  ? t(`certificate:TABLE.DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:TABLE.DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
               </span>
             </div>
           ) : (
-            <div>
+            <div className="flex items-center gap-2">
               <RxCross2 className="h-6 w-6 text-navy-blue-400" />
               <span className="text-sm text-neutral-300">
                 {certificate.invoice?.deductionType === 'NON_DEDUCTIBLE_FIXED_ASSETS'
-                  ? t(`certificate:EDIT.NON_DEDUCTIBLE_FIXED_ASSETS`)
-                  : t(`certificate:EDIT.NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+                  ? t(`certificate:TABLE.NON_DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:TABLE.NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
               </span>
             </div>
           )}

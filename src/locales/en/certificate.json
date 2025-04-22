@@ -18,7 +18,11 @@
     "DEDUCTABLE": "Deductable",
     "UPLOADER": "Uploader",
     "VOUCHER_NUMBER": "Voucher NO.",
-    "DEDUCTION_TYPE": "Deduction Type"
+    "DEDUCTION_TYPE": "Deduction Type",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
+    "DEDUCTIBLE_FIXED_ASSETS": "Fixed assets",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "Fixed assets"
   },
   "PAUSE": {
     "TITLE": "Do you want to cancel uploading?",
@@ -75,6 +79,7 @@
     "PRICE_BEFORE_TAX": "Price Before Tax",
     "TAX": "Tax",
     "TAXABLE": "Taxable",
+    "TAX_TYPE": "Tax Type",
     "TOTAL_PRICE": "Total Price (Including Tax)",
     "COUNTERPARTY": "Counterparty (Client/Supplier)",
     "ID_NUMBER": "ID Number",
@@ -82,8 +87,8 @@
     "INVOICE_TYPE": "Invoice Type",
     "DEDUCTIBLE": "Deductible",
     "SUCCESS": "Your certificate information has been updated.",
-    "TAXABLE_5": "Taxable 5%",
-    "ZERO_TAX_RATE": "Zero Tax Rate 0%",
+    "TAXABLE_5": "Taxable",
+    "ZERO_TAX_RATE": "Zero Tax Rate",
     "TAX_FREE": "Tax Free",
     "NONE": "None",
     "THROUGH_CUSTOMS": "Through Customs",
@@ -91,7 +96,11 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Deductible purchase and expense",
     "DEDUCTIBLE_FIXED_ASSETS": "Deductible Fixed assets",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Non - Deductible purchase and expense",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "Non - Deductible Fixed assets"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "Non - Deductible Fixed assets",
+    "CERTIFICATE_BY_CUSTOMS": "Certificate of payment for business tax collected by Customs No.",
+    "CHARACTERS": "14 characters",
+    "ENTER_ONE_INVOICE": "Enter one invoice No as a reference",
+    "REPRESENTATIVE_INVOICE": "Representative Invoice No."
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",

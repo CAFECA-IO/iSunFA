@@ -23,46 +23,33 @@ const DeductionTypeMenu: React.FC<IDeductionTypeMenuProps> = ({
   );
 
   const {
-    targetRef: taxRatioMenuRef,
-    componentVisible: isTaxRatioMenuOpen,
-    setComponentVisible: setIsTaxRatioMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
-  const {
-    componentVisible: isTaxRatioSubMenuOpen,
-    setComponentVisible: setIsTaxRatioSubMenuOpen,
+    targetRef: deductionTypeMenuRef,
+    componentVisible: isDeductionTypeMenuOpen,
+    setComponentVisible: setIsDeductionTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const closeAllMenus = () => {
-    setIsTaxRatioMenuOpen(false);
-    setIsTaxRatioSubMenuOpen(false);
+    setIsDeductionTypeMenuOpen(false);
   };
 
-  const handleMainMenuClick = () => {
-    setIsTaxRatioMenuOpen(!isTaxRatioMenuOpen);
-    if (!isTaxRatioMenuOpen) {
-      setIsTaxRatioSubMenuOpen(false);
-    }
+  const handleDeductionTypeMenuClick = () => {
+    setIsDeductionTypeMenuOpen(!isDeductionTypeMenuOpen);
   };
 
   const handleOptionClick = (option: DeductionTypeOptions, event?: React.MouseEvent) => {
-    event?.stopPropagation();
-    selectDeductionTypeHandler(option);
-    if (option === DeductionTypeOptions.DEDUCTIBLE_FIXED_ASSETS) {
-      setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
-    } else {
-      setSelectedDeductionType(option);
-      closeAllMenus();
-    }
+    event?.stopPropagation(); // Info: (20250422 - Anna) 停止事件冒泡，避免點選選項後選單意外關閉或傳遞到其他層
+    selectDeductionTypeHandler(option); // Info: (20250422 - Anna) 把選到的項目回傳給父層
+    setSelectedDeductionType(option); // Info: (20250422 - Anna) 更新本地 state，讓目前選到的項目顯示在畫面上
+    closeAllMenus();
   };
 
   return (
     <div
-      id="tax-rate-menu"
-      ref={taxRatioMenuRef}
-      onClick={handleMainMenuClick}
+      id="deduction-type-menu"
+      ref={deductionTypeMenuRef}
+      onClick={handleDeductionTypeMenuClick}
       className={`group relative z-100 flex h-46px w-full cursor-pointer ${
-        isTaxRatioMenuOpen
+        isDeductionTypeMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
           : 'border-input-stroke-input text-input-text-input-filled'
       } items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
@@ -71,13 +58,13 @@ const DeductionTypeMenu: React.FC<IDeductionTypeMenuProps> = ({
         {t(`certificate:EDIT.${selectedDeductionType}`)}
       </p>
       <div className="flex h-20px w-20px items-center justify-center">
-        <FaChevronDown className={isTaxRatioMenuOpen ? 'rotate-180' : 'rotate-0'} />
+        <FaChevronDown className={isDeductionTypeMenuOpen ? 'rotate-180' : 'rotate-0'} />
       </div>
 
-      {/* Info: (20250103 - Tzuhan) 主選單 */}
+      {/* Info: (20250103 - Anna) 主選單 */}
       <div
         className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${
-          isTaxRatioMenuOpen
+          isDeductionTypeMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu'
             : 'grid-rows-0 border-transparent'
         } overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
