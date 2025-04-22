@@ -84,3 +84,19 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
 
   return isDebitCreditEqual && isDebitCreditGreaterOrEqualPaymentAmount;
 }
+
+export function isCompleteVoucher(voucher: {
+  lineItems: { account?: { id?: number }; amount: number; description: string }[];
+}): boolean {
+  return (
+    voucher.lineItems.length > 0 &&
+    voucher.lineItems.every(
+      (li) =>
+        li.account?.id &&
+        typeof li.amount === 'number' &&
+        li.amount > 0 &&
+        typeof li.description === 'string' &&
+        li.description.trim() !== ''
+    )
+  );
+}

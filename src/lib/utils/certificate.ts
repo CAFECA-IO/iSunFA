@@ -44,3 +44,28 @@ export function initCertificateEntity(
 
   return certificateEntity;
 }
+
+export function isCertificateIncomplete(certificate: {
+  invoice?: {
+    date?: number | null;
+    priceBeforeTax?: number | null;
+    totalPrice?: number | null;
+    counterParty?: { name?: string | null } | null;
+  } | null;
+}): boolean {
+  const { invoice } = certificate;
+
+  if (!invoice) return true;
+
+  const { date, priceBeforeTax, totalPrice, counterParty } = invoice;
+
+  return (
+    !date ||
+    date <= 0 ||
+    !priceBeforeTax ||
+    priceBeforeTax <= 0 ||
+    !totalPrice ||
+    totalPrice <= 0 ||
+    !counterParty?.name
+  );
+}

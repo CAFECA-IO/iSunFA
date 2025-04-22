@@ -28,11 +28,14 @@ import {
   certificateAPIDeleteMultipleUtils as deleteUtils,
 } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
-import { InvoiceTabs } from '@/constants/certificate';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import {
+  transformWithIncomplete,
+  summarizeIncompleteCertificates,
+} from '@/lib/utils/repo/certificate.repo';
 
 type APIResponse = ICertificate[] | IPaginatedData<ICertificate[]> | number[] | null;
 
@@ -101,13 +104,12 @@ export const handleGetRequest: IHandleRequest<
 
     const currency = await getListUtils.getCurrencyFromSetting(companyId);
 
-    const certificates = certificatesFromPrisma.map((certificateFromPrisma) => {
+    const certificatesWithoutIncomplete = certificatesFromPrisma.map((certificateFromPrisma) => {
       const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
       const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
       const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
       const voucherCertificateEntity =
         postUtils.initVoucherCertificateEntities(certificateFromPrisma);
-      // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
       const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
         nowInSecond,
       });
@@ -124,15 +126,16 @@ export const handleGetRequest: IHandleRequest<
         invoice: invoiceEntity,
         file: fileEntity,
         uploader: uploaderEntity,
-        vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
+        vouchers: voucherCertificateEntity.map((v) => v.voucher),
         userCertificates: userCertificateEntities,
       };
 
-      const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
-        certificateReadyForTransfer
-      );
-      return certificate;
+      return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
     });
+
+    const certificates = transformWithIncomplete(certificatesWithoutIncomplete);
+
+    const incompleteSummary = summarizeIncompleteCertificates(certificates);
 
     const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
       companyId,
@@ -144,31 +147,20 @@ export const handleGetRequest: IHandleRequest<
       isDeleted: false,
     });
 
-    const withVoucher = await getListUtils.getUnreadCertificateCount({
-      userId,
-      tab: InvoiceTabs.WITH_VOUCHER,
-      where,
-    });
-
-    const withoutVoucher = await getListUtils.getUnreadCertificateCount({
-      userId,
-      tab: InvoiceTabs.WITHOUT_VOUCHER,
-      where,
-    });
-
     // Info: (20241126 - Murky) Record already read certificate
-    await getListUtils.upsertUserReadCertificates({
-      userId,
-      certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
-      nowInSecond,
-    });
+    // await getListUtils.upsertUserReadCertificates({
+    //   userId,
+    //   certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
+    //   nowInSecond,
+    // });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     const summary: ICertificateListSummary = {
       totalInvoicePrice,
+      incomplete: incompleteSummary,
       unRead: {
-        withVoucher,
-        withoutVoucher,
+        withVoucher: 0,
+        withoutVoucher: 0,
       },
       currency,
     };

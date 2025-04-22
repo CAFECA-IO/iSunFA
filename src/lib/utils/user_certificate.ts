@@ -36,6 +36,8 @@ export function initUserCertificateEntity(
   return userCertificateEntity;
 }
 
+/** deprecated: (20250422 - tzuhan) deprecated unRead property
 export function isUserReadCertificate(userCertificates: IUserCertificateEntity[]): boolean {
   return userCertificates.some((userCertificate) => userCertificate.isRead);
 }
+*/

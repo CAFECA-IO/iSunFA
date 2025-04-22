@@ -2,7 +2,7 @@ import {
   createCertificateWithEmptyInvoice,
   deleteMultipleCertificates,
   getCertificatesV2,
-  getUnreadCertificateCount,
+  // getUnreadCertificateCount,
   upsertUserReadCertificates,
   getAllFilteredInvoice,
 } from '@/lib/utils/repo/certificate.repo';
@@ -54,6 +54,7 @@ import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { ProgressStatus } from '@/constants/account';
 import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
+import { isCertificateIncomplete } from '@/lib/utils/certificate';
 
 export const certificateAPIPostUtils = {
   /**
@@ -269,10 +270,10 @@ export const certificateAPIPostUtils = {
       // createdAt: certificateEntity.invoice.createdAt,
       // updatedAt: certificateEntity.invoice.updatedAt,
     };
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
+    // const isRead =
+    //   certificateEntity.userCertificates.length > 0
+    //     ? certificateEntity.userCertificates.some((data) => data.isRead)
+    //     : false;
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
@@ -282,7 +283,8 @@ export const certificateAPIPostUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: !isCertificateIncomplete(certificateEntity),
+      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -414,6 +416,7 @@ export const certificateAPIGetListUtils = {
     return getCertificatesV2(options);
   },
 
+  /** deprecated: (20250422 - tzuhan) deprecated unRead property
   getUnreadCertificateCount: (options: {
     userId: number;
     tab: InvoiceTabs;
@@ -421,6 +424,7 @@ export const certificateAPIGetListUtils = {
   }): Promise<number> => {
     return getUnreadCertificateCount(options);
   },
+  */
 
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
@@ -524,10 +528,10 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.updatedAt,
       };
     }
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
+    // const isRead =
+    //   certificateEntity.userCertificates.length > 0
+    //     ? certificateEntity.userCertificates.some((data) => data.isRead)
+    //     : false;
 
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
@@ -538,7 +542,8 @@ export const certificateAPIGetListUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: !isCertificateIncomplete(certificateEntity),
+      unRead: false,
       file,
       invoice,
       voucherNo,

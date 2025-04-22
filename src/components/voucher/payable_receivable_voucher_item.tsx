@@ -52,7 +52,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
     reverseVouchers,
     // Deprecated: (20250206 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line react/prop-types
-    unRead,
+    incomplete,
   } = voucherData;
 
   const {
@@ -63,7 +63,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedDate = (
     <div className="relative mx-auto px-18px pt-12px text-center">
-      <CalendarIcon timestamp={voucherDate} unRead={unRead} />
+      <CalendarIcon timestamp={voucherDate} incomplete={incomplete} />
     </div>
   );
 

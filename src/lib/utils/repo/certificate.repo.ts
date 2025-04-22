@@ -2,14 +2,60 @@ import prisma from '@/client';
 
 import { InvoiceType } from '@/constants/invoice';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { PostCertificateResponse } from '@/interfaces/certificate';
+import { ICertificate, PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { Prisma } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DefaultValue } from '@/constants/default_value';
+import { isCertificateIncomplete } from '@/lib/utils/certificate';
+import { Prisma } from '@prisma/client';
+
+/**
+ * Info: (20250422 - Tzuhan) 補上每一筆 Certificate 的 `incomplete` 屬性（從原本的 DB 回傳中推導）
+ */
+export function mapCertificateWithIncomplete(certificate: ICertificate): ICertificate {
+  const { invoice } = certificate;
+  const incomplete = isCertificateIncomplete({ invoice });
+  return {
+    ...certificate,
+    incomplete,
+  };
+}
+
+export function mapCertificatesWithIncomplete(certificates: ICertificate[]): ICertificate[] {
+  return certificates.map(mapCertificateWithIncomplete);
+}
+
+/**
+ * Info: (20250422 - Tzuhan) 套用至實際 API 回傳格式轉換
+ */
+export function transformWithIncomplete(certificates: ICertificate[]): ICertificate[] {
+  return mapCertificatesWithIncomplete(certificates);
+}
+
+/**
+ * Info: (20250422 - Tzuhan) 回傳 incomplete summary 統計數量（依據 tab）
+ */
+export function summarizeIncompleteCertificates(certificates: ICertificate[]): {
+  withVoucher: number;
+  withoutVoucher: number;
+} {
+  return certificates.reduce(
+    (acc, cert) => {
+      if (!cert.incomplete) return acc;
+      const hasVoucher = !!cert.voucherId;
+      if (hasVoucher) {
+        acc.withVoucher += 1;
+      } else {
+        acc.withoutVoucher += 1;
+      }
+      return acc;
+    },
+    { withVoucher: 0, withoutVoucher: 0 }
+  );
+}
 
 export async function countMissingCertificate(companyId: number) {
   const missingCertificatesCount = await prisma.voucher.count({
@@ -406,6 +452,7 @@ export async function getCertificatesV2(options: {
   return returnValue;
 }
 
+/** deprecated: (20250422 - tzuhan) deprecated unRead property
 export async function getUnreadCertificateCount(options: {
   userId: number;
   tab: InvoiceTabs;
@@ -460,6 +507,7 @@ export async function getUnreadCertificateCount(options: {
 
   return unreadCertificateCount;
 }
+  */
 
 export async function upsertUserReadCertificates(options: {
   certificateIds: number[];

@@ -34,9 +34,9 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import {
   getManyVoucherV2,
   getOneVoucherByIdWithoutInclude,
-  getUnreadVoucherCount,
+  // getUnreadVoucherCount,
   postVoucherV2,
-  upsertUserReadVoucher,
+  // upsertUserReadVoucher,
 } from '@/lib/utils/repo/voucher.repo';
 import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
@@ -136,6 +136,7 @@ export const voucherAPIGetUtils = {
     return getManyVoucherV2(options);
   },
 
+  /** deprecated: (20250422 - tzuhan) deprecated unRead property
   getUnreadVoucherCount: (options: {
     userId: number;
     tab: VoucherListTabV2;
@@ -143,7 +144,9 @@ export const voucherAPIGetUtils = {
   }): Promise<number> => {
     return getUnreadVoucherCount(options);
   },
+  */
 
+  /** deprecated: (20250422 - tzuhan) deprecated unRead property
   upsertUserReadVoucher: (options: {
     voucherIdsBeenRead: number[];
     userId: number;
@@ -156,6 +159,7 @@ export const voucherAPIGetUtils = {
       nowInSecond,
     });
   },
+  */
 
   initVoucherEntity: (voucher: IGetManyVoucherResponseButOne) => {
     const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);

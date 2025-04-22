@@ -65,7 +65,10 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
       )}
       <BorderCell isSelected={certificate.isSelected} className="w-100px text-center">
         <div className="inline-block">
-          <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
+          <CalendarIcon
+            timestamp={certificate.invoice?.date ?? 0}
+            incomplete={!!certificate.incomplete}
+          />
         </div>
       </BorderCell>
 

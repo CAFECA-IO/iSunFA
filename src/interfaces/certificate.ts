@@ -19,6 +19,10 @@ import {
 
 export interface ICertificateListSummary {
   totalInvoicePrice: number;
+  incomplete: {
+    withVoucher: number;
+    withoutVoucher: number;
+  };
   unRead: {
     withVoucher: number;
     withoutVoucher: number;
@@ -30,6 +34,7 @@ export interface ICertificate {
   id: number;
   name: string;
   companyId: number;
+  incomplete: boolean;
   unRead: boolean; // Info: (20241108 - tzuhan) !!! not provided by backend yet @Murky
   file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;

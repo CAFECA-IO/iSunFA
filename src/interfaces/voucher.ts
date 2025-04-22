@@ -194,6 +194,12 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
 };
 
 export interface IVoucherListSummary {
+  incomplete: {
+    uploadedVoucher: number;
+    upcomingEvents: number;
+    receivingVoucher: number;
+    paymentVoucher: number;
+  };
   unRead: {
     uploadedVoucher: number;
     upcomingEvents: number;
@@ -213,6 +219,7 @@ export interface IVoucherBeta {
     avatar: string;
     name: string;
   };
+  incomplete: boolean;
   unRead: boolean;
 
   lineItemsInfo: {

@@ -65,7 +65,10 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
       )}
       <BorderCell isSelected={certificate.isSelected} className="w-100px text-center">
         <div className="inline-block">
-          <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
+          <CalendarIcon
+            timestamp={certificate.invoice?.date ?? 0}
+            incomplete={!!certificate.incomplete}
+          />
         </div>
       </BorderCell>
 
@@ -118,7 +121,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
               ></div>
               <div className="download-pb-3">Pre-Tax</div>
             </div>
-            <div className=" text-text-neutral-primary">
+            <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.invoice?.priceBeforeTax ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
                 {certificate.invoice?.currencyAlias ?? currencyAlias}

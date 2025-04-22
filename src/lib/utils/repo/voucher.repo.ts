@@ -40,9 +40,9 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 
 import {
-  AccountCodesOfAP,
+  // AccountCodesOfAP,
   AccountCodesOfAPRegex,
-  AccountCodesOfAR,
+  // AccountCodesOfAR,
   AccountCodesOfARRegex,
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
@@ -1832,6 +1832,7 @@ export async function getManyVoucherByAccountV2(options: {
   return returnValue;
 }
 
+/** deprecated: (20250422 - tzuhan) deprecated unRead property
 export async function getUnreadVoucherCount(options: {
   userId: number;
   tab: VoucherListTabV2;
@@ -1923,7 +1924,9 @@ export async function getUnreadVoucherCount(options: {
 
   return unreadVoucherCount;
 }
+*/
 
+/** deprecated: (20250422 - tzuhan) deprecated unRead property
 export async function upsertUserReadVoucher(options: {
   voucherIds: number[];
   userId: number;
@@ -1974,6 +1977,7 @@ export async function upsertUserReadVoucher(options: {
 
   await Promise.all([updateJob, createJob]);
 }
+*/
 
 export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
   try {
