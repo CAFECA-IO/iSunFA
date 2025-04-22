@@ -8,6 +8,7 @@ import { useTranslation } from 'next-i18next';
 import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { Button } from '@/components/button/button';
 
 interface OwnedTeamProps {
   team: IUserOwnedTeam;
@@ -38,7 +39,10 @@ const OwnedTeam = ({
     : null;
   const price = isPlanBeginner ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE') : formatPrice;
 
+  // Info: (20250422 - Julian) 是否開啟自動續訂
   const isAutoRenewalEnabled = team.enableAutoRenewal;
+  // Info: (20250422 - Julian) 是否為試用期
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
 
   const openTurnOnAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(team);
@@ -56,10 +60,17 @@ const OwnedTeam = ({
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = getRemainingDays(team.expiredTimestamp + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(team.expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
+  // Info: (20250422 - Julian) 計算試用期剩餘天數
+  const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
+
+  // Info: (20250422 - Julian) 檢查是否顯示到期日等資訊
+  const isShowExpiredDate = !isPlanBeginner && !isTrial;
+  // Info: (20250422 - Julian) 檢查是否顯示「帳單」按鈕
+  const isShowBillingButton = !isPlanBeginner && !isBillingButtonHidden && !isTrial;
 
   return (
     <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
@@ -71,17 +82,18 @@ const OwnedTeam = ({
           <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
             {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
           </h1>
-          <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
+          <p className="text-lg font-medium text-text-neutral-tertiary">
+            {isTrial ? ' (Free Trial)' : price}
+          </p>
         </div>
 
         <div className="w-1px bg-surface-neutral-depth"></div>
 
-        {isPlanBeginner && <section className="flex-auto"></section>}
-
         {/* Info: (20250421 - Julian) 下次續訂/到期日 */}
-        {!isPlanBeginner && (
+        {isShowExpiredDate ? (
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
+              {/* Info: (20250421 - Julian) 已付款 */}
               {team.paymentStatus === TPaymentStatus.PAID &&
                 (team.enableAutoRenewal ? (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
@@ -103,6 +115,7 @@ const OwnedTeam = ({
                   </div>
                 ))}
 
+              {/* Info: (20250421 - Julian) 付款失敗 */}
               {team.paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
                 <div>
                   <div className="flex items-center gap-8px">
@@ -153,27 +166,28 @@ const OwnedTeam = ({
               </div>
             </div>
           </section>
+        ) : (
+          <section className="flex-auto"></section>
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          <Link
-            href={TEAM_SUBSCRIPTION_PAGE}
-            className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          >
-            <span className="text-base font-medium">
-              {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')}
-            </span>
-            <IoArrowForward size={20} />
-          </Link>
+          {isTrial ? (
+            <Button type="button" className="w-full" disabled>
+              {trialRemainingDays} days left
+            </Button>
+          ) : (
+            <Link href={TEAM_SUBSCRIPTION_PAGE}>
+              <Button type="button" className="w-full">
+                {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')} <IoArrowForward size={20} />
+              </Button>
+            </Link>
+          )}
 
-          {!isPlanBeginner && !isBillingButtonHidden && (
-            <Link
-              href={BILLING_PAGE}
-              className="flex items-center justify-center gap-8px rounded-xs border border-button-stroke-primary bg-button-surface-soft-primary px-24px py-10px text-button-text-primary-solid hover:border-button-stroke-primary-hover hover:bg-button-surface-soft-primary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-            >
-              <span className="text-base font-medium">
+          {isShowBillingButton && (
+            <Link href={BILLING_PAGE}>
+              <Button type="button" className="w-full">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
-              </span>
+              </Button>
             </Link>
           )}
         </section>
