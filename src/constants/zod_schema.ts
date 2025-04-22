@@ -123,6 +123,7 @@ import {
   createAccountBookSchema,
   deleteAccountBookSchema,
   disconnectAccountBookSchema,
+  listAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -293,6 +294,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.ACCOUNT_BOOK_CREATE]: createAccountBookSchema,
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,
   [APIName.DISCONNECT_ACCOUNT_BOOK]: disconnectAccountBookSchema,
+  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: listAccountBookInfoSchema,
 
   [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
   [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,
