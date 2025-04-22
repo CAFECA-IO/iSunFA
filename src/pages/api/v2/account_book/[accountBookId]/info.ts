@@ -2,9 +2,13 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
-import { IHandleRequest } from '@/interfaces/handleRequest';
+import {
+  checkSessionUser,
+  checkUserAuthorization,
+  checkRequestData,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   IGetAccountBookQueryParams,
   IGetAccountBookResponse,
@@ -23,6 +27,9 @@ import { DefaultValue } from '@/constants/default_value';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import { validateOutputData } from '@/lib/utils/validator';
 
 interface IResponse {
   statusMessage: string;
@@ -33,18 +40,29 @@ interface IResponse {
  * Info: (20250524 - Shirley) 處理 GET 請求，獲取帳本詳細資訊
  * 如果沒有 company_setting 記錄，則創建一個空白記錄
  */
-const handleGetRequest: IHandleRequest<
-  APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
-  IResponse['payload']
-> = async ({ query, session }) => {
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
   const { userId } = session;
-  const { accountBookId } = query as IGetAccountBookQueryParams;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IGetAccountBookResponse | null = null;
 
   try {
+    await checkSessionUser(session, APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req);
+    await checkUserAuthorization(APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req, session);
+
+    // Info: (20250421 - Shirley) Validate request data
+    const { query } = checkRequestData(APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req, session);
+    if (query === null) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
+
+    const { accountBookId } = query as IGetAccountBookQueryParams;
+
     // Info: (20250326 - Shirley) 根據 accountBookId 獲取公司資訊
     const company = await getCompanyById(+accountBookId);
     if (!company) {
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250326 - Shirley) 獲取帳本所屬的團隊
@@ -55,7 +73,8 @@ const handleGetRequest: IHandleRequest<
         errorType: 'get account book info failed',
         errorMessage: `Account book ${accountBookId} does not belong to any team`,
       });
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250326 - Shirley) 檢查用戶是否有權限查看此帳本
@@ -69,7 +88,8 @@ const handleGetRequest: IHandleRequest<
         errorType: 'permission denied',
         errorMessage: `User ${userId} is not a member of team ${teamId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250326 - Shirley) 根據帳本是否為私有來檢查不同的權限
@@ -87,7 +107,8 @@ const handleGetRequest: IHandleRequest<
         errorType: 'permission denied',
         errorMessage: `User ${userId} with role ${userRole} does not have permission to view account book ${accountBookId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     let companySetting = await getCompanySettingByCompanyId(+accountBookId);
@@ -101,7 +122,8 @@ const handleGetRequest: IHandleRequest<
           errorType: 'create empty company setting failed',
           errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
         });
-        return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
       }
     }
 
@@ -138,7 +160,7 @@ const handleGetRequest: IHandleRequest<
         };
 
     // Info: (20250326 - Shirley) 構建回應資料
-    const payload: IGetAccountBookResponse = {
+    const accountBookData: IGetAccountBookResponse = {
       id: String(accountBookId),
       name: company.name,
       taxId: company.taxId,
@@ -152,29 +174,54 @@ const handleGetRequest: IHandleRequest<
       updatedAt: company.updatedAt,
     };
 
-    return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload };
+    // Info: (20250421 - Shirley) Validate output data
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.GET_ACCOUNT_BOOK_INFO_BY_ID,
+      accountBookData
+    );
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = outputData;
+
+    return { response: formatApiResponse(statusMessage, payload), statusMessage };
   } catch (error) {
     loggerError({
       userId: session.userId || DefaultValue.USER_ID.SYSTEM,
       errorType: 'get account book info failed',
       errorMessage: (error as Error).message,
     });
-    return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    return { response: formatApiResponse(statusMessage, null), statusMessage };
   }
 };
 
 /**
  * Info: (20250410 - Shirley) 處理 PUT 請求，更新帳本詳細資訊
  */
-const handlePutRequest: IHandleRequest<
-  APIName.UPDATE_ACCOUNT_BOOK_INFO,
-  IResponse['payload']
-> = async ({ query, body, session }) => {
+const handlePutRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
   const { userId } = session;
-  const { accountBookId } = query as IGetAccountBookQueryParams;
-  const updateData = body as IUpdateAccountBookInfoBody;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IGetAccountBookResponse | null = null;
 
   try {
+    await checkSessionUser(session, APIName.UPDATE_ACCOUNT_BOOK_INFO, req);
+    await checkUserAuthorization(APIName.UPDATE_ACCOUNT_BOOK_INFO, req, session);
+
+    // Info: (20250421 - Shirley) Validate request data
+    const { query, body } = checkRequestData(APIName.UPDATE_ACCOUNT_BOOK_INFO, req, session);
+    if (query === null || body === null) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
+
+    const { accountBookId } = query as IGetAccountBookQueryParams;
+    const updateData = body as IUpdateAccountBookInfoBody;
+
     // Info: (20250410 - Shirley) 獲取帳本信息
     const company = await getCompanyById(+accountBookId);
     if (!company) {
@@ -183,7 +230,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'update account book info failed',
         errorMessage: `Account book ${accountBookId} not found`,
       });
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250410 - Shirley) 獲取帳本所屬的團隊
@@ -194,7 +242,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'update account book info failed',
         errorMessage: `Account book ${accountBookId} does not belong to any team`,
       });
-      return { statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND, payload: null };
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250410 - Shirley) 從 session 中獲取用戶在團隊中的角色
@@ -205,7 +254,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'permission denied',
         errorMessage: `User ${userId} is not a member of team ${teamId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     const userRole = teamInfo.role as TeamRole;
@@ -222,7 +272,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'permission denied',
         errorMessage: `User ${userId} with role ${userRole} does not have permission to modify account book ${accountBookId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250410 - Shirley) 獲取公司設定
@@ -236,7 +287,8 @@ const handlePutRequest: IHandleRequest<
           errorType: 'update account book info failed',
           errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
         });
-        return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
       }
     }
 
@@ -268,7 +320,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'update account book info failed',
         errorMessage: `Failed to update company setting for accountBookId: ${accountBookId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250410 - Shirley) 記錄更新後的狀態
@@ -286,7 +339,8 @@ const handlePutRequest: IHandleRequest<
         errorType: 'update account book info failed',
         errorMessage: `Failed to get updated company for accountBookId: ${accountBookId}`,
       });
-      return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+      statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250410 - Shirley) 獲取國家資訊
@@ -320,7 +374,7 @@ const handlePutRequest: IHandleRequest<
         };
 
     // Info: (20250410 - Shirley) 構建回應資料
-    const payload: IGetAccountBookResponse = {
+    const accountBookData: IGetAccountBookResponse = {
       id: String(accountBookId),
       name: updatedCompany.name,
       taxId: updatedCompany.taxId,
@@ -334,43 +388,69 @@ const handlePutRequest: IHandleRequest<
       updatedAt: updatedCompany.updatedAt,
     };
 
-    return { statusMessage: STATUS_MESSAGE.SUCCESS_UPDATE, payload };
+    // Info: (20250421 - Shirley) Validate output data
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.UPDATE_ACCOUNT_BOOK_INFO,
+      accountBookData
+    );
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    payload = outputData;
+
+    return { response: formatApiResponse(statusMessage, payload), statusMessage };
   } catch (error) {
     loggerError({
       userId: session.userId || DefaultValue.USER_ID.SYSTEM,
       errorType: 'update account book info failed',
       errorMessage: (error as Error).message,
     });
-    return { statusMessage: STATUS_MESSAGE.INTERNAL_SERVICE_ERROR, payload: null };
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    return { response: formatApiResponse(statusMessage, null), statusMessage };
   }
-};
-
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IResponse>;
-} = {
-  GET: (req) => withRequestValidation(APIName.GET_ACCOUNT_BOOK_INFO_BY_ID, req, handleGetRequest),
-  PUT: (req) => withRequestValidation(APIName.UPDATE_ACCOUNT_BOOK_INFO, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IResponse['payload']>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IResponse['payload'] = null;
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.GET_ACCOUNT_BOOK_INFO_BY_ID;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.GET_ACCOUNT_BOOK_INFO_BY_ID;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.PUT:
+        apiName = APIName.UPDATE_ACCOUNT_BOOK_INFO;
+        ({ response, statusMessage } = await handlePutRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IResponse['payload']>(statusMessage, payload);
-    res.status(httpCode).json(result);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+
+  // Info: (20250421 - Shirley) Log user action after API execution
+  const session = await getSession(req);
+  await logUserAction(session, apiName, req, statusMessage);
+
+  res.status(httpCode).json(result);
 }
