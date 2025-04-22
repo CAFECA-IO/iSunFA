@@ -23,7 +23,7 @@ import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
-import TaxMenu from '@/components/certificate/certificate_tax_menu';
+import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
@@ -579,11 +579,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
             {/* Info: (20250414 - Anna) Tax Type */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
-                {t('certificate:EDIT.TAX')}
+              <p className="text-sm font-semibold text-neutral-300">
+                {t('certificate:EDIT.TAX_TYPE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
-              <div className="flex w-full items-center gap-2">
+              <div className="relative z-120 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
               {errors.taxPrice && (

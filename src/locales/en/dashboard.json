@@ -66,6 +66,9 @@
     "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
     "EDUCATIONAL": "Educational",
     "TRIAL_VERSION": "Trial Version",
+
+    "INDIVIDUAL": "Individual",
+    "ACCOUNTING_FIRMS": "Accounting Firms",
     "ENTERPRISE": "Enterprise"
   },
 
@@ -233,5 +236,13 @@
     "SELF_FILING": "Self Filing",
     "AGENT_FILING": "Agent Filing",
     "DECLARANT_FILING_METHOD_REQUIRED": "Please select a declarant filing method"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "Accountant",
+    "BOOKKEEPER": "Bookkeeper",
+    "BOOKKEEPER_AND_FILING_AGENT": "Bookkeeper and Filing Agent",
+    "I_AM": "I am...",
+    "AGENT_FILING_ROLE_REQUIRED": "Please fill in the agent filing information"
   }
 }

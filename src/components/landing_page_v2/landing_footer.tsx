@@ -145,13 +145,6 @@ const LandingFooter: React.FC = () => {
         {/* Info: (20241204 - Julian) Contact Us */}
         <div className="flex flex-col gap-24px text-landing-page-white lg:w-300px">
           {displayContactUs}
-          {/* Deprecated: (20250421 - Julian) Will be removed later */}
-          <div className="flex gap-10px opacity-0">
-            <Image src={'/email/alarm_clock.png'} alt="email" width={16} height={16} />
-            <Image src={'/email/isunfa_logo.png'} alt="email" width={16} height={16} />
-            <Image src={'/email/mail_inbox.png'} alt="email" width={16} height={16} />
-            <Image src={'/email/phone_ringing.png'} alt="email" width={16} height={16} />
-          </div>
         </div>
 
         {/* Info: (20241204 - Julian) Social Media */}

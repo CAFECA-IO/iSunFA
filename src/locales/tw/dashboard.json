@@ -66,6 +66,9 @@
     "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
     "EDUCATIONAL": "教育",
     "TRIAL_VERSION": "試用版",
+
+    "INDIVIDUAL": "個人版",
+    "ACCOUNTING_FIRMS": "會計師事務所",
     "ENTERPRISE": "企業版"
   },
 
@@ -233,5 +236,13 @@
     "SELF_FILING": "自行申報",
     "AGENT_FILING": "委託申報",
     "DECLARANT_FILING_METHOD_REQUIRED": "請選擇申報方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "會計師",
+    "BOOKKEEPER": "記帳士",
+    "BOOKKEEPER_AND_FILING_AGENT": "記帳士及申報代理人",
+    "I_AM": "我是...",
+    "AGENT_FILING_ROLE_REQUIRED": "請填寫申報人資料"
   }
 }

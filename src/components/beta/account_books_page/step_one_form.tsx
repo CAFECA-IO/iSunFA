@@ -93,7 +93,7 @@ const StepOneForm = ({
     handleChange('isCityDropdownOpen')(false);
   };
 
-  // ToDo: (20250418 - Liz) 驗證必填欄位後才可以進入第二步驟
+  // Info: (20250422 - Liz) 驗證必填欄位後才可以進入第二步驟
   const validateRequiredFields = () => {
     let isValid = true;
 
