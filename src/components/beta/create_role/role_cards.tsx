@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { RoleName } from '@/constants/role';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import RoleCard from '@/components/beta/create_role/role_card';
@@ -6,12 +6,12 @@ import RoleCard from '@/components/beta/create_role/role_card';
 // Info: (20241007 - Liz) 每個角色對應的圖片
 const ROLES_IMAGE = [
   {
-    roleName: RoleName.BOOKKEEPER,
-    imageSrc: '/images/bookkeeper_image.svg',
+    roleName: RoleName.INDIVIDUAL,
+    imageSrc: '/images/individual_image.svg',
   },
   {
-    roleName: RoleName.EDUCATIONAL_TRIAL_VERSION,
-    imageSrc: '/images/educational_trial_version_image.svg',
+    roleName: RoleName.ACCOUNTING_FIRMS,
+    imageSrc: '/images/accounting_firms_image.svg',
   },
   {
     roleName: RoleName.ENTERPRISE,
@@ -22,7 +22,7 @@ const ROLES_IMAGE = [
 interface RoleCardsProps {
   uncreatedRoles: RoleName[];
   displayedRole: RoleName | undefined;
-  setDisplayedRole: React.Dispatch<React.SetStateAction<RoleName | undefined>>;
+  setDisplayedRole: Dispatch<SetStateAction<RoleName | undefined>>;
 }
 
 const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCardsProps) => {
@@ -36,16 +36,23 @@ const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCard
     const container = containerRef.current;
     if (!container) return undefined;
 
+    const visualMargin = 60; // Info: (20250422 - Liz) mx-60px 帶來的左右邊距
+
     const updateScrollState = () => {
       if (!container) return;
       const { scrollLeft, clientWidth, scrollWidth, children } = container;
       const newDisabledCards: number[] = [];
 
       Array.from(children).forEach((child, index) => {
-        const cardLeft = (child as HTMLElement).offsetLeft;
-        const cardRight = cardLeft + (child as HTMLElement).offsetWidth;
+        const element = child as HTMLElement;
+        const cardLeft = element.offsetLeft;
+        const cardRight = cardLeft + element.offsetWidth;
 
-        if (cardLeft < scrollLeft || cardRight > scrollLeft + clientWidth) {
+        const isPartiallyHidden =
+          cardLeft < scrollLeft - visualMargin ||
+          cardRight > scrollLeft + clientWidth + visualMargin;
+
+        if (isPartiallyHidden) {
           newDisabledCards.push(index);
         }
       });

@@ -116,20 +116,20 @@ const CreateRolePage = () => {
             ></Image>
           )}
 
-          {displayedRole === RoleName.BOOKKEEPER && (
+          {displayedRole === RoleName.INDIVIDUAL && (
             <Image
               src="/images/bookkeeper_bg.svg"
-              alt="bookkeeper_introduction"
+              alt="individual"
               width={566}
               height={671}
               className="absolute right-74px top-30px z-0"
             ></Image>
           )}
 
-          {displayedRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+          {displayedRole === RoleName.ACCOUNTING_FIRMS && (
             <Image
               src="/images/educational_bg.svg"
-              alt="educational_trial_version"
+              alt="accounting_firms"
               width={446}
               height={545}
               className="absolute right-110px top-30px z-0"
@@ -140,7 +140,7 @@ const CreateRolePage = () => {
             // ToDo: (20250206 - Liz) 企業角色的背景圖片尚未設計，有之後再替換
             <Image
               src="/images/educational_bg.svg"
-              alt="educational_trial_version"
+              alt="enterprise"
               width={446}
               height={545}
               className="absolute right-110px top-30px z-0"
