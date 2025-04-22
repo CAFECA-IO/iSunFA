@@ -24,7 +24,9 @@
     "DAYS": " Days",
     "CANCEL_SUBSCRIPTION_TITLE": "Cancel Subscription",
     "CANCEL_SUBSCRIPTION_MESSAGE": "Are you sure you want to cancel <bold>{{planName}}</bold>? <br/><red>* Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.</red>",
-    "YES_CANCEL_SUBSCRIPTION": "Yes. Cancel my plan"
+    "YES_CANCEL_SUBSCRIPTION": "Yes. Cancel my plan",
+    "FREE_TRIAL": "Free Trial",
+    "LEFT_DAYS": "{{days}} days left"
   },
 
   "PLAN_NAME": {

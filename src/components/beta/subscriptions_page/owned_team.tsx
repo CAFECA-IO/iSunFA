@@ -4,7 +4,7 @@ import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import { ONE_DAY_IN_MS, THREE_DAYS_IN_MS } from '@/constants/time';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -34,15 +34,20 @@ const OwnedTeam = ({
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
   const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
 
+  // Info: (20250422 - Julian) 是否為試用期
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+
   const formatPrice = teamUsingPlan
     ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
     : null;
-  const price = isPlanBeginner ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE') : formatPrice;
+  const price = isPlanBeginner
+    ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')
+    : isTrial
+      ? `(${t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')})`
+      : formatPrice;
 
   // Info: (20250422 - Julian) 是否開啟自動續訂
   const isAutoRenewalEnabled = team.enableAutoRenewal;
-  // Info: (20250422 - Julian) 是否為試用期
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
 
   const openTurnOnAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(team);
@@ -82,9 +87,7 @@ const OwnedTeam = ({
           <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
             {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
           </h1>
-          <p className="text-lg font-medium text-text-neutral-tertiary">
-            {isTrial ? ' (Free Trial)' : price}
-          </p>
+          <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
         </div>
 
         <div className="w-1px bg-surface-neutral-depth"></div>
@@ -173,7 +176,10 @@ const OwnedTeam = ({
         <section className="flex flex-none flex-col justify-center gap-16px">
           {isTrial ? (
             <Button type="button" className="w-full" disabled>
-              {trialRemainingDays} days left
+              <Trans
+                i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
+                values={{ days: trialRemainingDays }}
+              />
             </Button>
           ) : (
             <Link href={TEAM_SUBSCRIPTION_PAGE}>
