@@ -66,6 +66,9 @@
     "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
     "EDUCATIONAL": "Educational",
     "TRIAL_VERSION": "Trial Version",
+
+    "INDIVIDUAL": "Individual",
+    "ACCOUNTING_FIRMS": "Accounting Firms",
     "ENTERPRISE": "Enterprise"
   },
 

@@ -110,7 +110,7 @@ const BookkeeperIntro = ({ children }: BookkeeperIntroProps) => {
           {t('dashboard:ROLE.BOOKKEEPER')}
         </h1>
         <Image
-          src={'/icons/information_desk.svg'}
+          src="/icons/information_desk.svg"
           alt="information_desk"
           width={30}
           height={30}
@@ -148,8 +148,8 @@ const EducationalTrialVersionIntro = ({ children }: EducationalTrialVersionIntro
           </span>
         </h1>
         <Image
-          src={'/icons/graduation_cap.svg'}
-          alt="graduation_cap"
+          src="/icons/accounting_firms_icon.svg"
+          alt="accounting_firms_icon"
           width={30}
           height={30}
         ></Image>
@@ -177,12 +177,12 @@ const Introduction = ({ displayedRole, togglePreviewModal }: IntroductionProps) 
   return (
     <main className="flex flex-auto">
       {!displayedRole && <DefaultIntro />}
-      {displayedRole === RoleName.BOOKKEEPER && (
+      {displayedRole === RoleName.INDIVIDUAL && (
         <BookkeeperIntro>
           <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
         </BookkeeperIntro>
       )}
-      {displayedRole === RoleName.EDUCATIONAL_TRIAL_VERSION && (
+      {displayedRole === RoleName.ACCOUNTING_FIRMS && (
         <EducationalTrialVersionIntro>
           <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
         </EducationalTrialVersionIntro>

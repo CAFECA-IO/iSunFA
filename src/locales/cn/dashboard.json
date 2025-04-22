@@ -66,6 +66,9 @@
     "EDUCATIONAL_TRIAL_VERSION": "教育试用版",
     "EDUCATIONAL": "教育",
     "TRIAL_VERSION": "试用版",
+
+    "INDIVIDUAL": "个人版",
+    "ACCOUNTING_FIRMS": "会计师事务所",
     "ENTERPRISE": "企业版"
   },
 
