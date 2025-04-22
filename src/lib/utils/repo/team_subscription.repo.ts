@@ -17,7 +17,6 @@ import { addMonths, getUnixTime } from 'date-fns';
 import { ORDER_STATUS } from '@/constants/order';
 import { TRANSACTION_STATUS } from '@/constants/transaction';
 import { PAYEE } from '@/constants/payment';
-import loggerBack from '@/lib/utils/logger_back';
 
 export const createTeamSubscription = async (
   options: ITeamSubscription,
@@ -205,8 +204,6 @@ export async function listTeamTransaction(
   pageSize: number = 10,
   tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<ITeamInvoice[]>> {
-  loggerBack.warn('listTeamTransaction');
-  loggerBack.warn({ teamId, page, pageSize });
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 

@@ -1,118 +1,152 @@
-import { useState } from 'react';
+import { Dispatch } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
+import { TiArrowBack } from 'react-icons/ti';
 import Image from 'next/image';
-// import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import {
   FILING_FREQUENCY_OPTIONS,
   FILING_METHOD_OPTIONS,
   DECLARANT_FILING_METHOD,
+  Step2FormState,
+  Step2FormAction,
 } from '@/constants/account_book';
 
 interface StepTwoBusinessTaxSettingProps {
   closeAccountBookInfoModal: () => void;
+  step2FormState: Step2FormState;
+  step2FormDispatch: Dispatch<Step2FormAction>;
+  handleBack: () => void;
+  handleSubmit: () => Promise<void>;
+  isLoading: boolean;
 }
 
-const StepTwoBusinessTaxSetting = ({
+const StepTwoForm = ({
   closeAccountBookInfoModal,
+  step2FormState,
+  step2FormDispatch,
+  handleBack,
+  handleSubmit,
+  isLoading,
 }: StepTwoBusinessTaxSettingProps) => {
   const { t } = useTranslation(['dashboard']);
-  // const { createAccountBook, userAuth } = useUserCtx();
 
-  const [filingFrequency, setFilingFrequency] = useState<string | null>(null);
-  const [filingMethod, setFilingMethod] = useState<string | null>(null);
-  const [declarantFilingMethod, setDeclarantFilingMethod] = useState<string | null>(null);
+  const {
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
 
-  const [declarantName, setDeclarantName] = useState<string>('');
-  const [declarantPersonalId, setDeclarantPersonalId] = useState<string>('');
-  const [declarantPhoneNumber, setDeclarantPhoneNumber] = useState<string>('');
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
 
-  const [fillingFrequencyError, setFilingFrequencyError] = useState<string | null>(null);
-  const [fillingMethodError, setFilingMethodError] = useState<string | null>(null);
-  const [declarantFilingMethodError, setDeclarantFilingMethodError] = useState<string | null>(null);
+    filingFrequencyError,
+    filingMethodError,
+    declarantFilingMethodError,
 
-  const [declarantNameError, setDeclarantNameError] = useState<string | null>(null);
-  const [declarantPersonalIdError, setDeclarantPersonalIdError] = useState<string | null>(null);
-  const [declarantPhoneNumberError, setDeclarantPhoneNumberError] = useState<string | null>(null);
+    declarantNameError,
+    declarantPersonalIdError,
+    declarantPhoneNumberError,
 
-  const [isFilingFrequencyDropdownOpen, setIsFilingFrequencyDropdownOpen] =
-    useState<boolean>(false);
-  const [isFilingMethodDropdownOpen, setIsFilingMethodDropdownOpen] = useState<boolean>(false);
-  const [isDeclarantFilingMethodDropdownOpen, setIsDeclarantFilingMethodDropdownOpen] =
-    useState<boolean>(false);
+    isFilingFrequencyDropdownOpen,
+    isFilingMethodDropdownOpen,
+    isDeclarantFilingMethodDropdownOpen,
+  } = step2FormState;
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const handleChange =
+    (field: keyof Step2FormState) =>
+    (
+      value:
+        | Step2FormState[keyof Step2FormState]
+        | ((prev: Step2FormState[keyof Step2FormState]) => Step2FormState[keyof Step2FormState])
+    ) => {
+      step2FormDispatch({ type: 'UPDATE_FIELD', field, value });
+    };
 
   const toggleFilingFrequencyDropdown = () => {
-    setIsFilingFrequencyDropdownOpen((prev) => !prev);
+    handleChange('isFilingFrequencyDropdownOpen')((prev) => !prev);
     // Info: (20250418 - Liz) 關閉其他下拉選單
-    setIsFilingMethodDropdownOpen(false);
-    setIsDeclarantFilingMethodDropdownOpen(false);
+    handleChange('isFilingMethodDropdownOpen')(false);
+    handleChange('isDeclarantFilingMethodDropdownOpen')(false);
   };
 
   const toggleFilingMethodDropdown = () => {
-    setIsFilingMethodDropdownOpen((prev) => !prev);
-    // Info: (20250418 - Liz) 關閉其他下拉選單
-    setIsFilingFrequencyDropdownOpen(false);
-    setIsDeclarantFilingMethodDropdownOpen(false);
+    handleChange('isFilingMethodDropdownOpen')((prev) => !prev);
+    // Info: (20250421 - Liz) 關閉其他下拉選單
+    handleChange('isFilingFrequencyDropdownOpen')(false);
+    handleChange('isDeclarantFilingMethodDropdownOpen')(false);
   };
 
   const toggleDeclarantFilingMethodDropdown = () => {
-    setIsDeclarantFilingMethodDropdownOpen((prev) => !prev);
+    handleChange('isDeclarantFilingMethodDropdownOpen')((prev) => !prev);
     // Info: (20250418 - Liz) 關閉其他下拉選單
-    setIsFilingFrequencyDropdownOpen(false);
-    setIsFilingMethodDropdownOpen(false);
+    handleChange('isFilingFrequencyDropdownOpen')(false);
+    handleChange('isFilingMethodDropdownOpen')(false);
   };
 
   // ToDo: (20250418 - Liz) 驗證必填
-  const validateForm = () => {
+  const validateRequiredFields = () => {
     if (!filingFrequency) {
-      setFilingFrequencyError(t('dashboard:FILING_FREQUENCY.FILING_FREQUENCY_REQUIRED'));
+      handleChange('filingFrequencyError')(
+        t('dashboard:FILING_FREQUENCY.FILING_FREQUENCY_REQUIRED')
+      );
       return false;
     }
     if (!filingMethod) {
-      setFilingMethodError(t('dashboard:FILING_METHOD.FILING_METHOD_REQUIRED'));
+      handleChange('filingMethodError')(t('dashboard:FILING_METHOD.FILING_METHOD_REQUIRED'));
       return false;
     }
     if (!declarantFilingMethod) {
-      setDeclarantFilingMethodError(
+      handleChange('declarantFilingMethodError')(
         t('dashboard:DECLARANT_FILING_METHOD.DECLARANT_FILING_METHOD_REQUIRED')
       );
       return false;
     }
     if (!declarantName) {
-      setDeclarantNameError('請輸入姓名');
+      handleChange('declarantNameError')(
+        t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME_REQUIRED')
+      );
       return false;
     }
     if (!declarantPersonalId) {
-      setDeclarantPersonalIdError('請輸入身分證字號');
+      handleChange('declarantPersonalIdError')(
+        t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID_REQUIRED')
+      );
       return false;
     }
     if (!declarantPhoneNumber) {
-      setDeclarantPhoneNumberError('請輸入電話號碼');
+      handleChange('declarantPhoneNumberError')(
+        t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER_REQUIRED')
+      );
       return false;
     }
 
     return true;
   };
 
-  // ToDo: (20250418 - Liz) 打 API 建立帳本(原為公司)
-  const handleSubmit = async () => {
-    // Deprecated: (20250418 - Liz) remove eslint-disable
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const success = validateForm(); // Info: (20250418 - Liz) 驗證必填
+  // Info: (20250421 - Liz) 打 API 建立帳本(原為公司)
+  const onClickSubmit = async () => {
+    const success = validateRequiredFields(); // Info: (20250418 - Liz) 驗證必填
     if (!success) return;
 
-    setIsLoading(true);
-    // ToDo: (20250418 - Liz) API 呼叫
+    handleSubmit();
   };
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="min-w-800px overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
         <header className="flex items-center justify-between px-40px pb-24px pt-40px">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="flex items-center gap-10px text-button-text-secondary"
+          >
+            <TiArrowBack size={24} />
+            <span className="text-base font-medium">
+              {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.BACK')}
+            </span>
+          </button>
           <h1 className="grow text-center text-xl font-bold leading-8 text-text-neutral-secondary">
-            Business Tax Setting
+            {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.BUSINESS_TAX_SETTING')}
           </h1>
           <button type="button" onClick={closeAccountBookInfoModal}>
             <IoCloseOutline size={24} />
@@ -164,9 +198,9 @@ const StepTwoBusinessTaxSetting = ({
                 </div>
               </button>
 
-              {fillingFrequencyError && !isFilingFrequencyDropdownOpen && (
+              {filingFrequencyError && !isFilingFrequencyDropdownOpen && (
                 <p className="text-right text-sm font-medium text-text-state-error">
-                  {fillingFrequencyError}
+                  {filingFrequencyError}
                 </p>
               )}
 
@@ -178,9 +212,9 @@ const StepTwoBusinessTaxSetting = ({
                         key={option.label}
                         type="button"
                         onClick={() => {
-                          setFilingFrequency(option.label);
+                          handleChange('filingFrequency')(option.label);
                           toggleFilingFrequencyDropdown();
-                          setFilingFrequencyError(null);
+                          handleChange('filingFrequencyError')(null);
                         }}
                         className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                       >
@@ -228,9 +262,9 @@ const StepTwoBusinessTaxSetting = ({
                 </div>
               </button>
 
-              {fillingMethodError && !isFilingMethodDropdownOpen && (
+              {filingMethodError && !isFilingMethodDropdownOpen && (
                 <p className="text-right text-sm font-medium text-text-state-error">
-                  {fillingMethodError}
+                  {filingMethodError}
                 </p>
               )}
 
@@ -242,9 +276,9 @@ const StepTwoBusinessTaxSetting = ({
                         key={option.label}
                         type="button"
                         onClick={() => {
-                          setFilingMethod(option.label);
+                          handleChange('filingMethod')(option.label);
                           toggleFilingMethodDropdown();
-                          setFilingMethodError(null);
+                          handleChange('filingMethodError')(null);
                         }}
                         className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                       >
@@ -317,9 +351,9 @@ const StepTwoBusinessTaxSetting = ({
                         key={option}
                         type="button"
                         onClick={() => {
-                          setDeclarantFilingMethod(option);
+                          handleChange('declarantFilingMethod')(option);
                           toggleDeclarantFilingMethodDropdown();
-                          setDeclarantFilingMethodError(null);
+                          handleChange('declarantFilingMethodError')(null);
                         }}
                         className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"
                       >
@@ -337,15 +371,15 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250418 - Liz) 申報人姓名 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Name
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="text"
-                placeholder="輸入姓名"
+                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_NAME')}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantName}
-                onChange={(e) => setDeclarantName(e.target.value)}
+                onChange={(e) => handleChange('declarantName')(e.target.value)}
               />
               {declarantNameError && !declarantName && (
                 <p className="text-right text-sm font-medium text-text-state-error">
@@ -357,15 +391,17 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250410 - Liz) 負責人身分證字號 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Personal ID
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="number"
-                placeholder="輸入身分證字號"
+                placeholder={t(
+                  'dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_PERSONAL_ID'
+                )}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantPersonalId}
-                onChange={(e) => setDeclarantPersonalId(e.target.value)}
+                onChange={(e) => handleChange('declarantPersonalId')(e.target.value)}
               />
               {declarantPersonalIdError && !declarantPersonalId && (
                 <p className="text-right text-sm font-medium text-text-state-error">
@@ -377,15 +413,15 @@ const StepTwoBusinessTaxSetting = ({
             {/* Info: (20250410 - Liz) 負責人電話號碼 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
-                Phone Number
+                {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER')}
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
                 type="number"
-                placeholder="輸入電話號碼"
+                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_PHONE_NUMBER')}
                 className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                 value={declarantPhoneNumber}
-                onChange={(e) => setDeclarantPhoneNumber(e.target.value)}
+                onChange={(e) => handleChange('declarantPhoneNumber')(e.target.value)}
               />
               {declarantPhoneNumberError && !declarantPhoneNumber && (
                 <p className="text-right text-sm font-medium text-text-state-error">
@@ -406,7 +442,7 @@ const StepTwoBusinessTaxSetting = ({
 
             <button
               type="button"
-              onClick={handleSubmit}
+              onClick={onClickSubmit}
               disabled={isLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
@@ -420,4 +456,4 @@ const StepTwoBusinessTaxSetting = ({
   );
 };
 
-export default StepTwoBusinessTaxSetting;
+export default StepTwoForm;

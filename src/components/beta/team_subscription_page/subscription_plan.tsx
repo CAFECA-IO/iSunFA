@@ -8,6 +8,8 @@ import { useState } from 'react';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
 
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
@@ -26,16 +28,31 @@ const SubscriptionPlan = ({
 }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
-  const isSelected = team.plan === plan.id;
-  const isBeginner = plan.id === TPlanType.BEGINNER;
+
+  // Info: (20250421 - Julian) 試用期間的 selected plan 為免費版
+  const isSelected =
+    team.plan === TPlanType.TRIAL && plan.id === TPlanType.BEGINNER ? true : team.plan === plan.id;
+
+  const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL; // Info: (20250421 - Julian) 試用版 UI 同免費方案
   const isProfessional = plan.id === TPlanType.PROFESSIONAL;
   const isEnterprise = plan.id === TPlanType.ENTERPRISE;
+
+  /* Info: (20250421 - Julian) 降級方案：
+  /* 1. 原為企業版，選擇專業版
+  /* 2. 原為企業版，選擇免費版
+  /* 3. 原為專業版，選擇免費版 */
+  const isDowngrade =
+    (team.plan === TPlanType.ENTERPRISE && (isBeginner || isProfessional)) ||
+    (team.plan === TPlanType.PROFESSIONAL && isBeginner);
+
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
   const borderedStyle = bordered ? 'border border-stroke-neutral-quaternary' : '';
 
+  const { trigger: downgrade } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
+
   const selectSubscriptionPlan = () => {
-    if (isBeginner) {
+    if (isDowngrade) {
       setIsDowngradeMessageModalOpen(true);
     } else {
       goToPaymentHandler();
@@ -46,34 +63,33 @@ const SubscriptionPlan = ({
     setIsDowngradeMessageModalOpen(false);
   };
 
-  // Info: (20250121 - Liz) 打 API 來變更使用者的訂閱方案為 Beginner (基礎版 Free)
+  // Info: (20250421 - Julian) 降級方案
   const downgradeSubscription = async () => {
-    if (!isBeginner) return;
-
-    const url = `/api/v2/team/${team.id}/checkout`;
+    if (!isDowngrade) return;
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(plan),
+      const { success } = await downgrade({
+        params: { teamId: team.id },
+        body: { plan: plan.id },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to subscribe');
+      if (success) {
+        // Info: (20250421 - Julian) 顯示成功訊息
+        toastHandler({
+          id: ToastId.DOWNGRADE_TO_BEGINNER_PLAN,
+          type: ToastType.SUCCESS,
+          content: t('subscriptions:PAYMENT_PAGE.DOWNGRADED_TO_BEGINNER_PLAN'),
+          closeable: true,
+        });
       }
-
-      // Info: (20250120 - Julian) 顯示成功訊息
+    } catch (error) {
+      // Info: (20250421 - Julian) 顯示錯誤訊息
       toastHandler({
         id: ToastId.DOWNGRADE_TO_BEGINNER_PLAN,
-        type: ToastType.SUCCESS,
-        content: t('subscriptions:PAYMENT_PAGE.DOWNGRADED_TO_BEGINNER_PLAN'),
+        type: ToastType.ERROR,
+        content: 'Failed to downgrade, error: ' + error,
         closeable: true,
       });
-    } catch (error) {
-      // console.log('Failed to downgrade, error:', error);
     } finally {
       closeDowngradeMessageModal();
       getOwnedTeam(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
@@ -126,7 +142,6 @@ const SubscriptionPlan = ({
                 $ {plan.price.toLocaleString('zh-TW')}
               </span>
               <span className="text-base font-semibold text-text-neutral-tertiary">
-                {' '}
                 {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.NTD_SLASH_MONTH')}
               </span>
             </p>
@@ -240,7 +255,7 @@ const SubscriptionPlan = ({
           </span>
         </p>
       )}
-      {isDowngradeMessageModalOpen && (
+      {isDowngradeMessageModalOpen && isDowngrade && (
         <MessageModal
           messageModalData={downgradeMessageModal}
           isModalVisible={isDowngradeMessageModalOpen}
