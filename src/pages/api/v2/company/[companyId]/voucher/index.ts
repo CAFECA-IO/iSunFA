@@ -33,6 +33,7 @@ import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { validateOutputData } from '@/lib/utils/validator';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
+import { countIncompleteVouchersByTab } from '@/lib/utils/voucher_common';
 
 type IVoucherGetOutput = IPaginatedData<IGetManyVoucherBetaEntity[]>;
 
@@ -179,6 +180,10 @@ const handleGetRequest = async (req: NextApiRequest) => {
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
     } else {
+      if (outputData) {
+        note.incomplete = countIncompleteVouchersByTab(outputData.data);
+        outputData.note = JSON.stringify(note);
+      }
       payload = outputData;
     }
   } catch (error) {

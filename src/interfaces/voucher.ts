@@ -207,6 +207,7 @@ export interface IVoucherListSummary {
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
+  status: JOURNAL_EVENT;
   voucherDate: number;
   voucherNo: string;
   voucherType: VoucherType;

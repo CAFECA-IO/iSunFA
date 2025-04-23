@@ -41,7 +41,7 @@ import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCertificateIncomplete } from '@/lib/utils/certificate';
-import { isCompleteVoucher } from '@/lib/utils/voucher';
+import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -246,8 +246,9 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
         }))
     );
 
-    return {
+    const parsedVoucher = {
       id: voucher.id,
+      status: voucher.status,
       voucherDate: voucher.date,
       voucherNo: voucher.no,
       voucherType: eventTypeToVoucherType(voucher.type),
@@ -261,7 +262,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
         avatar: voucher.issuer.imageFile.url,
         name: voucher.issuer.name,
       },
-      incomplete: !isCompleteVoucher(voucher),
+      incomplete: false,
       unRead: false,
       lineItemsInfo: {
         lineItems: voucher.lineItems.map((lineItem) => ({
@@ -283,6 +284,9 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       isReverseRelated: !!voucher.isReverseRelated,
       deletedAt: voucher.deletedAt,
     };
+
+    parsedVoucher.incomplete = isCompleteVoucherBeta(parsedVoucher);
+    return parsedVoucher;
   });
 
   return {
@@ -553,12 +557,12 @@ const voucherGetOneOutputValidatorV2 = z
           voucherNo: data.no,
           voucherId: data.id ?? null,
           uploaderUrl: data.issuer.imageFile?.url || '',
-          incomplete: isCertificateIncomplete(certificate),
+          incomplete: false,
           unRead: false,
           uploader: data.issuer.name,
           invoice: {
             id: certificate.invoice.id,
-            isComplete: true,
+            isComplete: false,
             inputOrOutput: certificate.invoice.inputOrOutput,
             date: certificate.invoice.date,
             no: certificate.invoice.no,
@@ -594,6 +598,8 @@ const voucherGetOneOutputValidatorV2 = z
           createdAt: certificate.createdAt,
           updatedAt: certificate.updatedAt,
         };
+        certificateInstance.incomplete = isCertificateIncomplete(certificateInstance);
+        certificateInstance.invoice.isComplete = isCertificateIncomplete(certificateInstance);
         return certificateInstance;
       }),
       lineItems: data.lineItems.map((lineItem) => ({

@@ -1,5 +1,5 @@
 import { Certificate as PrismaCertificate } from '@prisma/client';
-import { ICertificateEntity } from '@/interfaces/certificate';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICompanyEntity } from '@/interfaces/account_book';
@@ -42,14 +42,9 @@ export function initCertificateEntity(
   return certificateEntity;
 }
 
-export function isCertificateIncomplete(certificate: {
-  invoice?: {
-    date?: number | null;
-    priceBeforeTax?: number | null;
-    totalPrice?: number | null;
-    counterParty?: { name?: string | null } | null;
-  } | null;
-}): boolean {
+export function isCertificateIncomplete(certificate: ICertificate | null): boolean {
+  if (!certificate) return true;
+
   const { invoice } = certificate;
 
   if (!invoice) return true;

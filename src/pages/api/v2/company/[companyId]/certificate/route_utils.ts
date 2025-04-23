@@ -269,7 +269,7 @@ export const certificateAPIPostUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      incomplete: !isCertificateIncomplete(certificateEntity),
+      incomplete: false,
       unRead: false,
       file,
       invoice,
@@ -281,6 +281,8 @@ export const certificateAPIPostUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },
@@ -500,7 +502,7 @@ export const certificateAPIGetListUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      incomplete: !isCertificateIncomplete(certificateEntity),
+      incomplete: false,
       unRead: false,
       file,
       invoice,
@@ -512,6 +514,8 @@ export const certificateAPIGetListUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },

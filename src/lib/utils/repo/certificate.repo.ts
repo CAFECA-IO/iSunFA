@@ -16,8 +16,7 @@ import { Prisma } from '@prisma/client';
  * Info: (20250422 - Tzuhan) 補上每一筆 Certificate 的 `incomplete` 屬性（從原本的 DB 回傳中推導）
  */
 export function mapCertificateWithIncomplete(certificate: ICertificate): ICertificate {
-  const { invoice } = certificate;
-  const incomplete = isCertificateIncomplete({ invoice });
+  const incomplete = isCertificateIncomplete(certificate);
   return {
     ...certificate,
     incomplete,
