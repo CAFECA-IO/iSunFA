@@ -96,7 +96,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
 
       {/* Info: (20250103 - Anna) 主選單 */}
       <div
-        className={`absolute left-0 top-50px grid grid-cols-1 shadow-dropmenu w-full ${
+        className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${
           isTaxRatioMenuOpen
             ? 'grid-rows-1 border-dropdown-stroke-menu'
             : 'grid-rows-0 border-transparent'

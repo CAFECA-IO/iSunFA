@@ -7,7 +7,6 @@ import type { IEventEntity } from '@/interfaces/event';
 import type { ILineItemEntity } from '@/interfaces/line_item';
 import type { ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserEntity } from '@/interfaces/user';
-import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAssetEntity } from '@/interfaces/asset';
 
 /**
@@ -32,7 +31,6 @@ export function initVoucherEntity(
     aiStatus?: string;
     certificates?: ICertificateEntity[];
     issuer?: IUserEntity;
-    readByUsers?: IUserVoucherEntity[];
     asset?: IAssetEntity[];
   }
 ): IVoucherEntity {
@@ -58,7 +56,7 @@ export function initVoucherEntity(
     lineItems: dto.lineItems || [],
     certificates: dto.certificates || [],
     issuer: dto.issuer,
-    readByUsers: dto.readByUsers || [],
+
     asset: dto.asset || [],
   };
   return voucherEntity;

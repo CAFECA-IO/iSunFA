@@ -19,7 +19,6 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     resultEvents: [],
     lineItems: [],
     certificates: [],
-    readByUsers: [],
     asset: [],
     ...dto,
   };
@@ -41,7 +40,6 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     resultEvents: data.resultEvents || [],
     lineItems: data.lineItems || [],
     certificates: data.certificates || [],
-    readByUsers: data.readByUsers || [],
     asset: data.asset || [],
   };
 

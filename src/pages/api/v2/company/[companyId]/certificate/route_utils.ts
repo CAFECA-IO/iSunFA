@@ -2,8 +2,6 @@ import {
   createCertificateWithEmptyInvoice,
   deleteMultipleCertificates,
   getCertificatesV2,
-  getUnreadCertificateCount,
-  upsertUserReadCertificates,
   getAllFilteredInvoice,
 } from '@/lib/utils/repo/certificate.repo';
 import {
@@ -21,7 +19,6 @@ import {
   parseFilePathWithBaseUrlPlaceholder,
 } from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
   Prisma,
   Voucher as PrismaVoucher,
@@ -40,7 +37,6 @@ import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatte
 import { IFileBeta, IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -54,6 +50,7 @@ import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { ProgressStatus } from '@/constants/account';
 import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
+import { isCertificateIncomplete } from '@/lib/utils/certificate';
 
 export const certificateAPIPostUtils = {
   /**
@@ -102,11 +99,6 @@ export const certificateAPIPostUtils = {
     const fileDto = certificateFromPrisma.file;
     const fileEntity = parsePrismaFileToFileEntity(fileDto);
     return initFileEntity(fileEntity);
-  },
-
-  initUserCertificateEntities: (certificateFromPrisma: PostCertificateResponse) => {
-    const { userCertificate } = certificateFromPrisma;
-    return userCertificate.map((data) => parsePrismaUserCertificateToUserCertificateEntity(data));
   },
 
   initVoucherEntity: (voucherFromPrisma: PrismaVoucher) => {
@@ -227,7 +219,6 @@ export const certificateAPIPostUtils = {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -269,10 +260,6 @@ export const certificateAPIPostUtils = {
       // createdAt: certificateEntity.invoice.createdAt,
       // updatedAt: certificateEntity.invoice.updatedAt,
     };
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
@@ -282,7 +269,8 @@ export const certificateAPIPostUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: false,
+      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -293,6 +281,8 @@ export const certificateAPIPostUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },
@@ -414,14 +404,6 @@ export const certificateAPIGetListUtils = {
     return getCertificatesV2(options);
   },
 
-  getUnreadCertificateCount: (options: {
-    userId: number;
-    tab: InvoiceTabs;
-    where: Prisma.CertificateWhereInput;
-  }): Promise<number> => {
-    return getUnreadCertificateCount(options);
-  },
-
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const currencyKey =
@@ -447,19 +429,6 @@ export const certificateAPIGetListUtils = {
     return totalPrice;
   },
 
-  upsertUserReadCertificates: (options: {
-    certificateIdsBeenRead: number[];
-    userId: number;
-    nowInSecond: number;
-  }) => {
-    const { certificateIdsBeenRead, userId, nowInSecond } = options;
-    return upsertUserReadCertificates({
-      userId,
-      certificateIds: certificateIdsBeenRead,
-      nowInSecond,
-    });
-  },
-
   isInvoiceComplete: (invoice: IInvoiceEntity) => {
     const isComplete = !!(
       invoice.date &&
@@ -475,7 +444,6 @@ export const certificateAPIGetListUtils = {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -524,10 +492,6 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.updatedAt,
       };
     }
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
 
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
@@ -538,7 +502,8 @@ export const certificateAPIGetListUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: false,
+      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -549,6 +514,8 @@ export const certificateAPIGetListUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },

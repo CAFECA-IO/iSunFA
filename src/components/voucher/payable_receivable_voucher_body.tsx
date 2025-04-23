@@ -22,7 +22,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [unRead, setUnRead] = useState<{
+  const [incomplete, setIncomplete] = useState<{
     receivingVoucher: number;
     paymentVoucher: number;
   }>({ receivingVoucher: 0, paymentVoucher: 0 });
@@ -81,7 +81,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
     const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
     setPage(data.page);
-    setUnRead(note.unRead);
+    setIncomplete(note.incomplete);
     setTotalPages(Math.max(1, Math.ceil(data.data.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
     setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
     setVoucherList(data.data);
@@ -121,7 +121,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           tabsString={voucherTabs}
           activeTab={activeTab}
           onTabClick={tabsClick}
-          counts={[unRead.receivingVoucher, unRead.paymentVoucher]}
+          counts={[incomplete.receivingVoucher, incomplete.paymentVoucher]}
         />
         {/* Info: (20241122 - Julian) Filter Section */}
         <FilterSection<IVoucherBeta[]>
