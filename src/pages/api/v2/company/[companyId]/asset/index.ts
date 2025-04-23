@@ -8,10 +8,8 @@ import {
 } from '@/interfaces/asset';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { createAssetWithVouchers, listAssetsByCompanyId } from '@/lib/utils/repo/asset.repo';
-import { IHandleRequest } from '@/interfaces/handleRequest';
 import {
   formatPaginatedAsset,
   parsePrismaAssetToAssetEntity,
@@ -27,6 +25,15 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import {
+  checkSessionUser,
+  checkUserAuthorization,
+  checkRequestData,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { validateOutputData } from '@/lib/utils/validator';
+import loggerBack from '@/lib/utils/logger_back';
+import { HTTP_STATUS } from '@/constants/http';
 
 /* Info: (20241204 - Luphia) API develop SOP 以 POST ASSET API 為例
  * 1. 前置作業
@@ -65,28 +72,39 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
  * o ps5. create repo for asset database operation, repo will throw error directly
  */
 
-interface IHandlerResult {
-  statusMessage: string;
-}
+/**
+ * Info: (20250424 - Shirley) Handle GET request for asset list
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Get and process asset list data
+ * 7. Validate output data
+ * 8. Log user action and return response
+ */
+export const handleGetRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.ASSET_LIST_V2;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IPaginatedAsset | null = null;
 
-interface IPostResult extends IHandlerResult {
-  payload: IAssetPostOutput;
-}
+  // Info: (20250424 - Shirley) Get user session
+  const session = await getSession(req);
+  const { userId, teams } = session;
 
-interface IGetResult extends IHandlerResult {
-  payload: IPaginatedAsset;
-}
+  // Info: (20250424 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
 
-type IHandlerResultPayload = IGetResult['payload'] | IPostResult['payload'] | null;
+  // Info: (20250424 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
 
-interface IHandlerResponse extends IHandlerResult {
-  payload: IHandlerResultPayload;
-}
+  // Info: (20250424 - Shirley) Validate request data
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query || !query.companyId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
-export const handleGetRequest: IHandleRequest<
-  APIName.ASSET_LIST_V2,
-  IGetResult['payload']
-> = async ({ query, req }) => {
   const {
     companyId,
     page = 1,
@@ -98,10 +116,8 @@ export const handleGetRequest: IHandleRequest<
     endDate,
     searchQuery,
   } = query;
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedAsset | null = null;
 
-  const { teams } = await getSession(req);
+  loggerBack.info(`User ${userId} requesting asset list for companyId: ${companyId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -125,6 +141,9 @@ export const handleGetRequest: IHandleRequest<
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to view assets for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -215,21 +234,63 @@ export const handleGetRequest: IHandleRequest<
     payload = paginatedAssets;
   }
 
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  // Info: (20250424 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, payload);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+    loggerBack.info(
+      `Successfully retrieved ${payload?.data.length || 0} assets for company ${companyId}`
+    );
+  }
 
-  return { statusMessage, payload };
+  // Info: (20250424 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
+
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-export const handlePostRequest: IHandleRequest<
-  APIName.CREATE_ASSET_V2,
-  IPostResult['payload']
-> = async ({ query, body, session }) => {
-  const { companyId } = query;
+/**
+ * Info: (20250424 - Shirley) Handle POST request for creating asset
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Process and validate input data
+ * 7. Create asset with vouchers
+ * 8. Validate output data
+ * 9. Log user action and return response
+ */
+export const handlePostRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.CREATE_ASSET_V2;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAssetPostOutput | null = null;
+
+  // Info: (20250424 - Shirley) Get user session
+  const session = await getSession(req);
   const { userId, teams } = session;
+
+  // Info: (20250424 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
+
+  // Info: (20250424 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
+
+  // Info: (20250424 - Shirley) Validate request data
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !query.companyId || !body) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { companyId } = query;
   const {
     assetName,
     assetType,
-    assetNumber, // Info: (20241204 - Luphia) assetNumber is the unique identifier for the asset
+    assetNumber,
     acquisitionDate,
     purchasePrice,
     depreciationStart,
@@ -238,6 +299,8 @@ export const handlePostRequest: IHandleRequest<
     usefulLife,
     note = '',
   } = body as ICreateAssetInput;
+
+  loggerBack.info(`User ${userId} creating asset for companyId: ${companyId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -261,6 +324,9 @@ export const handlePostRequest: IHandleRequest<
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to create asset for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -293,43 +359,58 @@ export const handlePostRequest: IHandleRequest<
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
   const rs = await createAssetWithVouchers(newAsset, userId);
 
-  const statusMessage = STATUS_MESSAGE.CREATED;
+  // Info: (20250424 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, rs);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = rs;
+    loggerBack.info(`Successfully created asset ${rs.id} for company ${companyId}`);
+  }
 
-  // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const result: IPostResult = { statusMessage, payload: rs };
+  // Info: (20250424 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
 
-  return result;
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
-} = {
-  GET: (req) => withRequestValidation(APIName.ASSET_LIST_V2, req, handleGetRequest),
-  POST: (req) => withRequestValidation(APIName.CREATE_ASSET_V2, req, handlePostRequest),
-};
-
-// Info: (20241204 - Luphia) API main handler, will call the middleware to handle the request
+/**
+ * Info: (20250424 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern:
+ * 1. Define a switch-case for different HTTP methods
+ * 2. Call the appropriate handler based on method
+ * 3. Handle errors and return consistent response format
+ */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IHandlerResultPayload>>
+  res: NextApiResponse<IResponseData<IPaginatedAsset | IAssetPostOutput | null>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IHandlerResultPayload = null;
+  let httpCode: number = HTTP_STATUS.BAD_REQUEST;
+  let result: IResponseData<IPaginatedAsset | IAssetPostOutput | null>;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    // Info: (20250424 - Shirley) Handle different HTTP methods
+    const method = req.method || '';
+    switch (method) {
+      case HttpMethod.GET:
+        ({ httpCode, result } = await handleGetRequest(req));
+        break;
+      case HttpMethod.POST:
+        ({ httpCode, result } = await handlePostRequest(req));
+        break;
+      default:
+        // Info: (20250424 - Shirley) Method not allowed
+        ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
     }
   } catch (_error) {
+    // Info: (20250424 - Shirley) Error handling
     const error = _error as Error;
-    // ToDo: (20241204 - Shirley) Use logger to log the error
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(statusMessage, payload);
-    res.status(httpCode).json(result);
+    const statusMessage = error.message;
+    ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
+
+  // Info: (20250424 - Shirley) Send response
+  res.status(httpCode).json(result);
 }
