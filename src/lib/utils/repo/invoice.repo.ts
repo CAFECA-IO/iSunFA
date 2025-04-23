@@ -81,7 +81,6 @@ export async function postInvoiceV2(options: {
               },
             },
             file: true,
-            userCertificate: true,
             uploader: {
               include: {
                 imageFile: true,
@@ -178,7 +177,6 @@ export async function putInvoiceV2(options: {
               },
             },
             file: true,
-            userCertificate: true,
             uploader: {
               include: {
                 imageFile: true,

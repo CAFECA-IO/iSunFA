@@ -41,7 +41,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
     voucherType,
     note,
     issuer,
-    unRead,
+    incomplete,
     lineItemsInfo,
     isSelected,
     deletedReverseVouchers,
@@ -56,7 +56,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
 
   const displayedDate = (
     <div className="relative mx-auto px-18px pt-12px text-center">
-      <CalendarIcon timestamp={voucherDate} unRead={unRead} />
+      <CalendarIcon timestamp={voucherDate} incomplete={incomplete} />
     </div>
   );
 

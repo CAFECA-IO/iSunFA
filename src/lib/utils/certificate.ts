@@ -1,11 +1,10 @@
 import { Certificate as PrismaCertificate } from '@prisma/client';
-import { ICertificateEntity } from '@/interfaces/certificate';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { ICompanyEntity } from '@/interfaces/account_book';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getTimestampNow } from '@/lib/utils/common';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 /**
  * Info: (20241024 - Murky)
@@ -21,7 +20,6 @@ export function initCertificateEntity(
     invoice?: IInvoiceEntity;
     company?: ICompanyEntity;
     vouchers?: IVoucherEntity[];
-    userCertificates?: IUserCertificateEntity[];
   }
 ): ICertificateEntity {
   const nowInSecond = getTimestampNow();
@@ -39,8 +37,27 @@ export function initCertificateEntity(
     invoice: dto.invoice,
     company: dto.company,
     vouchers: dto.vouchers || [],
-    userCertificates: dto.userCertificates || [],
   };
 
   return certificateEntity;
+}
+
+export function isCertificateIncomplete(certificate: ICertificate | null): boolean {
+  if (!certificate) return true;
+
+  const { invoice } = certificate;
+
+  if (!invoice) return true;
+
+  const { date, priceBeforeTax, totalPrice, counterParty } = invoice;
+
+  return (
+    !date ||
+    date <= 0 ||
+    !priceBeforeTax ||
+    priceBeforeTax <= 0 ||
+    !totalPrice ||
+    totalPrice <= 0 ||
+    !counterParty?.name
+  );
 }

@@ -18,7 +18,6 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
@@ -69,7 +68,6 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
 
     // Info: (20250417 - Shirley) 權限檢查通過後繼續處理資料
     const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
     const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
     const voucherCertificateEntity =
       postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -83,7 +81,6 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {
       ...certificateEntity,
@@ -91,7 +88,6 @@ export const handleGetRequest: IHandleRequest<APIName.CERTIFICATE_GET_V2, ICerti
       file: fileEntity,
       uploader: uploaderEntity,
       vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
     };
 
     const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(

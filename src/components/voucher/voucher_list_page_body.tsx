@@ -35,7 +35,7 @@ const VoucherListPageBody: React.FC = () => {
 
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [unRead, setUnRead] = useState<{
+  const [incomplete, setIncomplete] = useState<{
     uploadedVoucher: number;
     upcomingEvents: number;
   }>({
@@ -137,7 +137,7 @@ const VoucherListPageBody: React.FC = () => {
       try {
         const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
         setPage(data.page);
-        setUnRead(note.unRead);
+        setIncomplete(note.incomplete);
         setTotalPages(data.totalPages);
         setTotalCount(data.totalCount);
 
@@ -208,7 +208,7 @@ const VoucherListPageBody: React.FC = () => {
           tabsString={voucherTabs}
           activeTab={activeTab}
           onTabClick={tabClick}
-          counts={[unRead.uploadedVoucher, unRead.upcomingEvents]}
+          counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
         {/* Info: (20241022 - Julian) Filter Section */}
         <FilterSection<IVoucherBeta[]>

@@ -20,16 +20,16 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
     useState<ICertificateUI[]>(certificates);
 
   useEffect(() => {
-    const unReadCertificates: ICertificateUI[] = [];
+    const incompleteCertificates: ICertificateUI[] = [];
     const readCertificates: ICertificateUI[] = [];
     certificates.forEach((certificate) => {
-      if (certificate.unRead) {
-        unReadCertificates.push(certificate);
+      if (certificate.incomplete) {
+        incompleteCertificates.push(certificate);
       } else {
         readCertificates.push(certificate);
       }
     });
-    setCertificatesReOrdered([...unReadCertificates, ...readCertificates]);
+    setCertificatesReOrdered([...incompleteCertificates, ...readCertificates]);
   }, [certificates]);
 
   return (
