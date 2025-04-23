@@ -147,7 +147,6 @@ export async function createCertificateWithEmptyInvoice(options: {
           },
         },
         file: true,
-        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -189,7 +188,6 @@ export async function getOneCertificateById(
           },
         },
         file: true,
-        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -408,7 +406,6 @@ export async function getCertificatesV2(options: {
           },
         },
         file: true,
-        // userCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -451,114 +448,6 @@ export async function getCertificatesV2(options: {
 
   return returnValue;
 }
-
-/** deprecated: (20250422 - tzuhan) deprecated unRead property
-export async function getUnreadCertificateCount(options: {
-  userId: number;
-  tab: InvoiceTabs;
-  where: Prisma.CertificateWhereInput;
-}) {
-  const { userId, where, tab } = options;
-  let unreadCertificateCount = 0;
-
-  function getVoucherCertificateRelation(invoiceTab: InvoiceTabs) {
-    switch (invoiceTab) {
-      case InvoiceTabs.WITH_VOUCHER:
-        return {
-          some: {},
-        };
-      case InvoiceTabs.WITHOUT_VOUCHER:
-        return {
-          none: {},
-        };
-      default:
-        return undefined;
-    }
-  }
-
-  try {
-    const readCertificateCount = await prisma.certificate.count({
-      where: {
-        ...where,
-        voucherCertificates: getVoucherCertificateRelation(tab),
-        userCertificate: {
-          some: {
-            userId,
-            isRead: true,
-          },
-        },
-      },
-    });
-
-    const totalCertificateCount = await prisma.certificate.count({
-      where: {
-        ...where,
-        voucherCertificates: getVoucherCertificateRelation(tab),
-      },
-    });
-    unreadCertificateCount = totalCertificateCount - readCertificateCount;
-  } catch (error) {
-    loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
-      errorMessage: error as Error,
-    });
-  }
-
-  return unreadCertificateCount;
-}
-
-export async function upsertUserReadCertificates(options: {
-  certificateIds: number[];
-  userId: number;
-  nowInSecond: number;
-}): Promise<void> {
-  const alreadyInDBCertificateIds = await prisma.userCertificate.findMany({
-    where: {
-      userId: options.userId,
-      certificateId: {
-        in: options.certificateIds,
-      },
-    },
-    select: {
-      certificateId: true,
-    },
-  });
-  const alreadyInDBCertificateIdsSet = new Set(
-    alreadyInDBCertificateIds.map((certificate) => certificate.certificateId)
-  );
-
-  const notInDBCertificateIds = options.certificateIds.filter((certificateId) => {
-    return !alreadyInDBCertificateIdsSet.has(certificateId);
-  });
-
-  const updateJob = prisma.userCertificate.updateMany({
-    where: {
-      userId: options.userId,
-      certificateId: {
-        in: Array.from(alreadyInDBCertificateIdsSet),
-      },
-      isRead: false,
-    },
-    data: {
-      isRead: true,
-      updatedAt: options.nowInSecond,
-    },
-  });
-
-  const createJob = prisma.userCertificate.createMany({
-    data: notInDBCertificateIds.map((certificateId) => ({
-      userId: options.userId,
-      certificateId,
-      isRead: true,
-      createdAt: options.nowInSecond,
-      updatedAt: options.nowInSecond,
-    })),
-  });
-
-  await Promise.all([updateJob, createJob]);
-}
-*/
 
 export async function listCertificateWithoutInvoice() {
   const certificates = await prisma.certificate.findMany({
@@ -627,13 +516,7 @@ export async function deleteMultipleCertificates(options: {
         id: true,
       },
     }),
-    // prisma.userCertificate.deleteMany({
-    //   where: {
-    //     certificateId: {
-    //       in: certificateIds,
-    //     },
-    //   },
-    // }),
+
     prisma.voucherCertificate.deleteMany({
       where: {
         certificateId: {

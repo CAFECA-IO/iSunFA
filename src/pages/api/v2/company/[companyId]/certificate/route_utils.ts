@@ -2,8 +2,6 @@ import {
   createCertificateWithEmptyInvoice,
   deleteMultipleCertificates,
   getCertificatesV2,
-  // getUnreadCertificateCount,
-  // upsertUserReadCertificates,
   getAllFilteredInvoice,
 } from '@/lib/utils/repo/certificate.repo';
 import {
@@ -21,7 +19,6 @@ import {
   parseFilePathWithBaseUrlPlaceholder,
 } from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-// import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
   Prisma,
   Voucher as PrismaVoucher,
@@ -40,7 +37,6 @@ import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatte
 import { IFileBeta, IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-// import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -104,11 +100,6 @@ export const certificateAPIPostUtils = {
     const fileEntity = parsePrismaFileToFileEntity(fileDto);
     return initFileEntity(fileEntity);
   },
-
-  // initUserCertificateEntities: (certificateFromPrisma: PostCertificateResponse) => {
-  //   const { userCertificate } = certificateFromPrisma;
-  //   return userCertificate.map((data) => parsePrismaUserCertificateToUserCertificateEntity(data));
-  // },
 
   initVoucherEntity: (voucherFromPrisma: PrismaVoucher) => {
     return parsePrismaVoucherToVoucherEntity(voucherFromPrisma);
@@ -228,7 +219,6 @@ export const certificateAPIPostUtils = {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      // userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -270,10 +260,6 @@ export const certificateAPIPostUtils = {
       // createdAt: certificateEntity.invoice.createdAt,
       // updatedAt: certificateEntity.invoice.updatedAt,
     };
-    // const isRead =
-    //   certificateEntity.userCertificates.length > 0
-    //     ? certificateEntity.userCertificates.some((data) => data.isRead)
-    //     : false;
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
@@ -416,16 +402,6 @@ export const certificateAPIGetListUtils = {
     return getCertificatesV2(options);
   },
 
-  /** deprecated: (20250422 - tzuhan) deprecated unRead property
-  getUnreadCertificateCount: (options: {
-    userId: number;
-    tab: InvoiceTabs;
-    where: Prisma.CertificateWhereInput;
-  }): Promise<number> => {
-    return getUnreadCertificateCount(options);
-  },
-  */
-
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const currencyKey =
@@ -451,19 +427,6 @@ export const certificateAPIGetListUtils = {
     return totalPrice;
   },
 
-  // upsertUserReadCertificates: (options: {
-  //   certificateIdsBeenRead: number[];
-  //   userId: number;
-  //   nowInSecond: number;
-  // }) => {
-  //   const { certificateIdsBeenRead, userId, nowInSecond } = options;
-  //   return upsertUserReadCertificates({
-  //     userId,
-  //     certificateIds: certificateIdsBeenRead,
-  //     nowInSecond,
-  //   });
-  // },
-
   isInvoiceComplete: (invoice: IInvoiceEntity) => {
     const isComplete = !!(
       invoice.date &&
@@ -479,7 +442,6 @@ export const certificateAPIGetListUtils = {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      // userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -528,10 +490,6 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.updatedAt,
       };
     }
-    // const isRead =
-    //   certificateEntity.userCertificates.length > 0
-    //     ? certificateEntity.userCertificates.some((data) => data.isRead)
-    //     : false;
 
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;

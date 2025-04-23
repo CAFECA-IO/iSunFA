@@ -4,17 +4,14 @@ import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/account_book';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import type { IUserEntity } from '@/interfaces/user';
-// import type { IUserCertificateEntity } from '@/interfaces/user_certificate';
 
 import {
   Certificate as PrismaCertificate,
   VoucherCertificate as PrismaVoucherCertificate,
   Voucher as PrismaVoucher,
-  // UserCertificate as PrismaUserCertificate,
   File as PrismaFile,
   Invoice as PrismaInvoice,
   User as PrismaUser,
-  // Counterparty as PrismaCounterparty,
 } from '@prisma/client';
 
 export interface ICertificateListSummary {
@@ -35,7 +32,7 @@ export interface ICertificate {
   name: string;
   companyId: number;
   incomplete: boolean;
-  unRead: boolean; // Info: (20241108 - tzuhan) !!! not provided by backend yet @Murky
+  unRead: boolean; // Deprecated: (20250423 - tzuhan) remove in the future
   file: IFileBeta; // Info: (20241108 - Tzuhan) !!! removed IFileBeta and update IFile
   invoice: IInvoiceBetaOptional;
   voucherNo: string | null;
@@ -135,13 +132,10 @@ export interface ICertificateEntity {
   vouchers: IVoucherEntity[];
 
   uploader?: IUserEntity;
-
-  // userCertificates: IUserCertificateEntity[];
 }
 
 export type PostCertificateResponse = PrismaCertificate & {
   file: PrismaFile;
-  // userCertificate: PrismaUserCertificate[];
   voucherCertificates: (PrismaVoucherCertificate & {
     voucher: PrismaVoucher;
   })[];

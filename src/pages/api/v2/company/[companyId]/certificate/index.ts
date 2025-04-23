@@ -19,9 +19,6 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserEntity } from '@/interfaces/user';
 import { IPaginatedData } from '@/interfaces/pagination';
-
-// import { IUserCertificateEntity } from '@/interfaces/user_certificate';
-
 import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
@@ -106,7 +103,6 @@ export const handleGetRequest: IHandleRequest<
 
     const certificatesWithoutIncomplete = certificatesFromPrisma.map((certificateFromPrisma) => {
       const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-      // const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
       const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
       const voucherCertificateEntity =
         postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -119,7 +115,6 @@ export const handleGetRequest: IHandleRequest<
         invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
         file: IFileEntity;
         uploader: IUserEntity & { imageFile: IFileEntity };
-        // userCertificates: IUserCertificateEntity[];
         vouchers: IVoucherEntity[];
       } = {
         ...certificateEntity,
@@ -127,7 +122,6 @@ export const handleGetRequest: IHandleRequest<
         file: fileEntity,
         uploader: uploaderEntity,
         vouchers: voucherCertificateEntity.map((v) => v.voucher),
-        // userCertificates: userCertificateEntities,
       };
 
       return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
@@ -146,13 +140,6 @@ export const handleGetRequest: IHandleRequest<
       tab,
       isDeleted: false,
     });
-
-    // Info: (20241126 - Murky) Record already read certificate
-    // await getListUtils.upsertUserReadCertificates({
-    //   userId,
-    //   certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
-    //   nowInSecond,
-    // });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     const summary: ICertificateListSummary = {
@@ -250,8 +237,6 @@ export const handlePostRequest: IHandleRequest<
         });
 
         const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-        // const userCertificateEntities =
-        //   postUtils.initUserCertificateEntities(certificateFromPrisma);
         const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
         const voucherCertificateEntity =
           postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -264,7 +249,7 @@ export const handlePostRequest: IHandleRequest<
           invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
           file: IFileEntity;
           uploader: IUserEntity & { imageFile: IFileEntity };
-          // userCertificates: IUserCertificateEntity[];
+
           vouchers: IVoucherEntity[];
         } = {
           ...certificateEntity,
@@ -274,7 +259,6 @@ export const handlePostRequest: IHandleRequest<
           vouchers: voucherCertificateEntity.map(
             (voucherCertificate) => voucherCertificate.voucher
           ),
-          // userCertificates: userCertificateEntities,
         };
 
         const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(

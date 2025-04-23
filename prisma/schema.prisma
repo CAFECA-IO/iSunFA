@@ -377,7 +377,7 @@ model Certificate {
 
   invoices            Invoice[]
   voucherCertificates VoucherCertificate[]
-  // userCertificate     UserCertificate[]
+  // userCertificate     UserCertificate[] // deprecated: (20250423 - tzuhan) deprecated unRead property
 
   company  Company @relation(fields: [companyId], references: [id])
   file     File    @relation(fields: [fileId], references: [id])
@@ -1151,7 +1151,7 @@ model Voucher {
 
   assetVouchers          AssetVoucher[]
   lineItems              LineItem[]
-  // userVoucher            UserVoucher[]
+  // userVoucher            UserVoucher[] // deprecated: (20250423 - tzuhan) deprecated unRead property
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]

@@ -34,7 +34,6 @@ import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/clien
 import { ICertificateEntity } from '@/interfaces/certificate';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileEntity } from '@/interfaces/file';
-// import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 
@@ -48,7 +47,6 @@ type GetOneVoucherResponse = IVoucherEntity & {
   certificates: (ICertificateEntity & {
     invoice: IInvoiceEntity;
     file: IFileEntity;
-    // userCertificates: IUserCertificateEntity[];
   })[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   payableInfo?: {

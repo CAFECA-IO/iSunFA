@@ -25,7 +25,6 @@ import { JOURNAL_EVENT } from '@/constants/journal';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { partialCounterPartyEntityValidator } from '@/constants/counterparty';
 import { userEntityValidator } from '@/lib/utils/zod_schema/user';
-// import { userVoucherEntityValidator } from '@/lib/utils/zod_schema/user_voucher';
 import { eventTypeToVoucherType } from '@/lib/utils/common';
 import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
 import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
@@ -39,7 +38,6 @@ import {
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
 import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
-import { userCertificateEntityValidator } from '@/lib/utils/zod_schema/user_certificate';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCertificateIncomplete } from '@/lib/utils/certificate';
@@ -76,7 +74,7 @@ export const voucherUpdateValidator: IZodValidator<
 /**
  * Info: (20241025 - Murky)
  * @description schema for init voucher entity or parsed prisma voucher
- * @todo originalEvents, resultEvents, lineItems, certificates, issuer, readByUsers need to be implement
+ * @todo originalEvents, resultEvents, lineItems, certificates, issuer, need to be implement
  */
 export const voucherEntityValidator = z.object({
   id: z.number(),
@@ -99,7 +97,6 @@ export const voucherEntityValidator = z.object({
   aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
   certificates: z.array(z.any()),
   issuer: z.any().optional(),
-  // readByUsers: z.array(z.any()),
   asset: z.array(z.any()),
   isReverseRelated: z.boolean().optional(),
 });
@@ -206,7 +203,6 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       ...userEntityValidator.shape,
       imageFile: fileEntityValidator,
     }),
-    // readByUsers: z.array(userVoucherEntityValidator),
     lineItems: z.array(
       z.object({
         ...iLineItemBodyValidatorV2.shape,
@@ -294,14 +290,6 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
     data: parsedVouchers,
   };
 });
-
-// const voucherGetAllFrontendDataValidatorV2 = z.object({
-//   vouchers: z.array(IVoucherBetaValidator),
-//   unRead: z.object({
-//     uploadedVoucher: z.number(),
-//     upcomingEvents: z.number(),
-//   }),
-// });
 
 const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
 
@@ -418,7 +406,6 @@ const voucherGetOneOutputValidatorV2 = z
         ...certificateEntityValidator.shape,
         invoice: invoiceEntityValidator,
         file: fileEntityValidator,
-        userCertificates: z.array(userCertificateEntityValidator),
       })
     ),
     lineItems: z.array(
@@ -559,7 +546,6 @@ const voucherGetOneOutputValidatorV2 = z
         note: asset.note,
       })),
       certificates: data.certificates.map((certificate) => {
-        // const isRead = isUserReadCertificate(certificate.userCertificates);
         const certificateInstance = {
           id: certificate.id,
           name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),

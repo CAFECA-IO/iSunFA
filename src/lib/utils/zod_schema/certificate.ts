@@ -65,7 +65,6 @@ export const certificateEntityValidator = z.object({
   vouchers: z.array(z.any()).optional(),
   uploader: z.any().optional(),
   uploaderUrl: z.any().optional(),
-  userCertificates: z.array(z.any()).optional(),
 });
 
 const certificateListQueryValidator = z.object({
