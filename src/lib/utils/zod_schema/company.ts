@@ -105,7 +105,7 @@ export const IAccountBookValidator = z.object({
 
 /**
  * Info: (20241211 - Murky)
- * @note used in APIName.COMPANY_PUT_ICON
+ * @note used in APIName.ACCOUNT_BOOK_PUT_ICON
  */
 
 const accountBookPutIconQuerySchema = z.object({

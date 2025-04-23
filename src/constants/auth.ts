@@ -22,8 +22,7 @@ export const AUTH_WHITELIST = {
 export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_GET_BY_ID]: [AuthFunctionsKeysNew.user],

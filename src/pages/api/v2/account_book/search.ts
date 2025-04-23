@@ -10,7 +10,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 
 const handleGetRequest: IHandleRequest<
-  APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
+  APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID,
   ICompanyTaxIdAndName
 > = async ({ query, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -76,7 +76,7 @@ const methodHandlers: {
   ) => Promise<{ statusMessage: string; payload: ICompanyTaxIdAndName | null }>;
 } = {
   GET: (req) =>
-    withRequestValidation(APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID, req, handleGetRequest),
+    withRequestValidation(APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID, req, handleGetRequest),
 };
 
 export default async function handler(

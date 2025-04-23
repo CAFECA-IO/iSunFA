@@ -154,9 +154,8 @@ export const API_ZOD_SCHEMA = {
 export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: accountBookSearchSchema,
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: accountBookSearchSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.COMPANY_PUT_ICON]: accountBookPutIconSchema,
   [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
   [APIName.COUNTERPARTY_ADD]: counterpartyPostSchema,
   [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdSchema,

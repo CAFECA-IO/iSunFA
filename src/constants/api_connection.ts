@@ -34,8 +34,7 @@ export enum APIName {
   USER_UPDATE = 'USER_UPDATE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID = 'COMPANY_SEARCH_BY_NAME_OR_TAX_ID',
-  COMPANY_PUT_ICON = 'COMPANY_PUT_ICON',
+  ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
@@ -154,7 +153,7 @@ export enum APIName {
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
-  ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON', // Info: (20250423 - Shirley) Added to replace COMPANY_PUT_ICON
+  ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
 }
 
 export enum APIPath {
@@ -167,8 +166,7 @@ export enum APIPath {
   USER_UPDATE = `${apiPrefixV2}/user/:userId`,
   USER_PENDING_TASK_GET = `${apiPrefixV2}/user/:userId/pending_task`,
   COMPANY_PENDING_TASK_GET = `${apiPrefixV2}/company/:companyId/pending_task`,
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/company/search`,
-  COMPANY_PUT_ICON = `${apiPrefixV2}/company/:companyId/icon`,
+  ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -289,7 +287,7 @@ export enum APIPath {
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
-  ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`, // Info: (20250423 - Shirley) Added to replace COMPANY_PUT_ICON
+  ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
 }
 
 const createConfig = ({
@@ -386,15 +384,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.JOURNAL_LIST,
   }),
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID: createConfig({
-    name: APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: createConfig({
+    name: APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID,
     method: HttpMethod.GET,
-    path: APIPath.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
-  }),
-  COMPANY_PUT_ICON: createConfig({
-    name: APIName.COMPANY_PUT_ICON,
-    method: HttpMethod.PUT,
-    path: APIPath.COMPANY_PUT_ICON,
+    path: APIPath.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID,
   }),
   [APIName.REPORT_LIST]: createConfig({
     name: APIName.REPORT_LIST,

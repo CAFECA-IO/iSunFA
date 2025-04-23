@@ -52,7 +52,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   // Info: (20241212 - Anna) 透過公司名稱或統一編號查詢公司資料
   const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
-    APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
+    APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID
   );
 
   // Info: (20241212 - Anna) 透過統一編號查詢公司名稱
