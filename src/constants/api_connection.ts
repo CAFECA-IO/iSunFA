@@ -33,7 +33,7 @@ export enum APIName {
   USER_GET_BY_ID = 'USER_GET_BY_ID',
   USER_UPDATE = 'USER_UPDATE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
-  COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
+  ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
@@ -165,7 +165,7 @@ export enum APIPath {
   USER_GET_BY_ID = `${apiPrefixV2}/user/:userId`,
   USER_UPDATE = `${apiPrefixV2}/user/:userId`,
   USER_PENDING_TASK_GET = `${apiPrefixV2}/user/:userId/pending_task`,
-  COMPANY_PENDING_TASK_GET = `${apiPrefixV2}/company/:companyId/pending_task`,
+  ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
@@ -359,10 +359,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.USER_PENDING_TASK_GET,
   }),
-  [APIName.COMPANY_PENDING_TASK_GET]: createConfig({
-    name: APIName.COMPANY_PENDING_TASK_GET,
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: createConfig({
+    name: APIName.ACCOUNT_BOOK_PENDING_TASK_GET,
     method: HttpMethod.GET,
-    path: APIPath.COMPANY_PENDING_TASK_GET,
+    path: APIPath.ACCOUNT_BOOK_PENDING_TASK_GET,
   }),
   [APIName.IMAGE_GET_BY_ID]: createConfig({
     name: APIName.IMAGE_GET_BY_ID,

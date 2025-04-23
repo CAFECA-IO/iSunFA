@@ -22,7 +22,7 @@ import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
 import {
-  companyPendingTaskSchema,
+  accountBookPendingTaskSchema,
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
 import {
@@ -155,7 +155,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
   [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
   [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: accountBookSearchSchema,
-  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: accountBookPendingTaskSchema,
   [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
   [APIName.COUNTERPARTY_ADD]: counterpartyPostSchema,
   [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdSchema,

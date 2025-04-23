@@ -29,7 +29,7 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.COUNTERPARTY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
   [APIName.USER_ROLE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_SELECT_ROLE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_CREATE_ROLE]: [AuthFunctionsKeysNew.user],
