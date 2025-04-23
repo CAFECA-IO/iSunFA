@@ -30,7 +30,7 @@ const handlePutRequest: IHandleRequest<
   const { userId, teams } = session;
 
   try {
-    // Get account book details
+    // Info: (20250423 - Shirley) Get account book details
     const accountBook = await getCompanyById(+accountBookId);
     if (!accountBook) {
       loggerError({
@@ -41,7 +41,7 @@ const handlePutRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    // Check if account book belongs to a team
+    // Info: (20250423 - Shirley) Check if account book belongs to a team
     const { teamId } = accountBook;
     if (!teamId) {
       loggerError({
@@ -52,7 +52,7 @@ const handlePutRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    // Check if user is part of the team
+    // Info: (20250423 - Shirley) Check if user is part of the team
     const userTeam = teams?.find((team) => team.id === teamId);
     if (!userTeam) {
       loggerError({
@@ -63,7 +63,7 @@ const handlePutRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    // Check if user has permission to modify account book
+    // Info: (20250423 - Shirley) Check if user has permission to modify account book
     const canModifyResult = convertTeamRoleCanDo({
       teamRole: userTeam.role as TeamRole,
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
@@ -78,7 +78,7 @@ const handlePutRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    // Update account book icon
+    // Info: (20250423 - Shirley) Update account book icon
     const updatedAccountBook = await putCompanyIcon({ companyId: +accountBookId, fileId });
 
     const formattedPayload = {
