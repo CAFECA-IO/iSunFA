@@ -118,32 +118,31 @@ const CreateRolePage = () => {
 
           {displayedRole === RoleName.INDIVIDUAL && (
             <Image
-              src="/images/bookkeeper_bg.svg"
+              src="/images/individual_bg.svg"
               alt="individual"
-              width={566}
-              height={671}
+              width={480.11}
+              height={614.51}
               className="absolute right-74px top-30px z-0"
             ></Image>
           )}
 
           {displayedRole === RoleName.ACCOUNTING_FIRMS && (
             <Image
-              src="/images/educational_bg.svg"
-              alt="accounting_firms"
-              width={446}
-              height={545}
+              src="/images/accounting_firms_bg.svg"
+              alt="accounting_firms_bg"
+              width={470.026}
+              height={617.913}
               className="absolute right-110px top-30px z-0"
             ></Image>
           )}
 
           {displayedRole === RoleName.ENTERPRISE && (
-            // ToDo: (20250206 - Liz) 企業角色的背景圖片尚未設計，有之後再替換
             <Image
-              src="/images/educational_bg.svg"
-              alt="enterprise"
-              width={446}
-              height={545}
-              className="absolute right-110px top-30px z-0"
+              src="/images/enterprise_bg.svg"
+              alt="enterprise_bg"
+              width={660}
+              height={660}
+              className="absolute right-0 top-0 z-0"
             ></Image>
           )}
 

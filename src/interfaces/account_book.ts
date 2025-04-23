@@ -1,3 +1,4 @@
+// import { AGENT_FILING_ROLE } from '@/constants/account_book'; // ToDo: (20250423 - Liz) RC2 use
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
 
@@ -23,7 +24,6 @@ export enum ACCOUNT_BOOK_UPDATE_ACTION {
 }
 
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
-// Info: (20250226 - Liz) 新增一個屬性 isPrivate ，用來判斷是否為私人帳本，這只有 owner 可以設定。如果是公開帳本，帳本才可以被其他使用者看到
 export interface IAccountBook {
   id: number;
   teamId: number;
@@ -35,7 +35,27 @@ export interface IAccountBook {
   startDate: number;
   createdAt: number;
   updatedAt: number;
-  isPrivate?: boolean; // ToDo: (20250224 - Liz) 等後端 API 調整後就改為必填
+  isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
+
+  // Info: (20250423 - Liz) RC2 新增表單欄位
+  // responsiblePerson: string; // Info: (20250423 - Liz) 負責人姓名
+  // taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
+  // contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
+  // phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
+  // city: string | null; // Info: (20250423 - Liz) 縣市
+  // district: string | null; // Info: (20250423 - Liz) 行政區
+  // enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
+
+  // filingFrequency: string | null; // Info: (20250423 - Liz) 申報頻率
+  // filingMethod: string | null; // Info: (20250423 - Liz) 總繳種類
+  // declarantFilingMethod: string | null; // Info: (20250423 - Liz) 申報方式
+
+  // declarantName: string; // Info: (20250423 - Liz) 申報人姓名
+  // declarantPersonalId: string; // Info: (20250423 - Liz) 申報人身分證字號
+  // declarantPhoneNumber: string; // Info: (20250423 - Liz) 申報人電話號碼
+  // agentFilingRole: AGENT_FILING_ROLE | null; // Info: (20250423 - Liz) 申報代理人的角色(記帳士/會計師等)
+  // agentFilingRoleIdText: string; // Info: (20250423 - Liz) 申報代理人的字號
+  // agentFilingRoleIdNumber: string; // Info: (20250423 - Liz) 申報代理人的證號
 }
 
 export interface IAccountBookWithTeam extends IAccountBook {
