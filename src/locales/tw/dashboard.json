@@ -62,14 +62,9 @@
   },
 
   "ROLE": {
-    "BOOKKEEPER": "記帳士",
-    "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
-    "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "試用版",
-
-    "INDIVIDUAL": "個人版",
-    "ACCOUNTING_FIRMS": "會計師事務所",
-    "ENTERPRISE": "企業版"
+    "INDIVIDUAL": "個人用戶",
+    "ACCOUNTING_FIRMS": "事務所團隊",
+    "ENTERPRISE": "企業用戶"
   },
 
   "CREATE_ROLE_PAGE": {
@@ -79,11 +74,14 @@
     "BACK_TO_SELECT_ROLE_PAGE": "回到選擇角色頁面",
 
     "COMMON_FUNCTIONS": "常用功能",
-    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",
-    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理總帳、開立憑證",
-    "DEFAULT_INTRODUCTION": "iSunFA提供了多種角色供使用者選擇，每個角色都有專屬介面和常用功能。您可以選擇最符合您需求的角色，讓 iSunFA 協助您的工作。iSunFA 的關鍵優勢在於角色優化的介面和 AI 整合會計，讓您更有效率地完成工作！",
-    "BOOKKEEPER_INTRODUCTION": "記帳士是專業的財務工作者，負責管理企業或個人的日常財務記錄和會計工作。他們的主要職責包括建立會計憑證、記錄分類帳分錄、對帳和產生財務報表，以確保財務資訊的正確性和完整性。",
-    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA學生版是為會計領域的學生和實習生量身訂製的教育工具。它提供了管理財務工作（例如建立會計憑證、日記帳分錄和對帳）的實用實務經驗。它非常適合在財務管理方面打下堅實的基礎，並為專業簿記或會計職位做好準備。"
+    "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "憑證管理、日記帳管理、應收帳款及應付帳款管理、財務報表、試算表、總帳",
+    "COMMON_FUNCTIONS_FOR_ACCOUNTING_FIRMS": "憑證管理、日記管理、財務報表、總帳、試算表、財務揭露",
+    "COMMON_FUNCTIONS_FOR_ENTERPRISE": "憑證管理、日記帳分錄管理、應收帳款及應付帳款管理、資產管理、財務報表、總帳、試算表、財務揭露、客戶關係管理",
+
+    "DEFAULT_INTRODUCTION": "iSunFA 提供多種角色選擇，從個人用戶、專業事務所到企業團隊，皆有專屬介面與常用功能。您可以選擇最符合需求的角色，結合人工智能精準優化的會計自動化流程，讓您更有效率地完成工作！",
+    "INDIVIDUAL_INTRODUCTION": "個人使用者可以透過陽光智慧會計平台為企業承接兼職財務工作，或建立自己的記帳報稅專業流程。該平台提供自動憑證分類、即時報告產生和簡化的稅務工具，即使沒有會計背景的人也可以輕鬆管理財務。",
+    "ACCOUNTING_FIRMS_INTRODUCTION": "會計師事務所、代理記帳公司等使用者可透過此平台對多家企業的帳目進行一體化管理，提供專業的財務報表、審計、稅務等服務。系統支援日記帳分錄和報表的批次處理、分級權限控制、跨客戶管理等功能，提高服務效率和合規性。",
+    "ENTERPRISE_INTRODUCTION": "企業用戶可以透過陽光智慧會計平台系統地管理公司的財務運作。他們也可以匯出投資者推廣平台或政府補助申請所需的財務報告。該平台支援財務揭露和試算表，幫助企業建立財務透明度和合規性。"
   },
 
   "SELECT_ROLE_PAGE": {

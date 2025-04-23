@@ -2,10 +2,10 @@ import { timestampToString } from '@/lib/utils/common';
 
 interface ICalendarIconProps {
   timestamp: number;
-  unRead?: boolean;
+  incomplete?: boolean;
 }
 
-const CalendarIcon = ({ timestamp, unRead = true }: ICalendarIconProps) => {
+const CalendarIcon = ({ timestamp, incomplete = true }: ICalendarIconProps) => {
   const { year, monthFullName, day } = timestampToString(timestamp);
 
   // Info: (20240418 - Julian) 取得月份的前三個字元
@@ -13,7 +13,7 @@ const CalendarIcon = ({ timestamp, unRead = true }: ICalendarIconProps) => {
   // Info: (20240418 - Julian) 將日期轉換為數字以除去前面的 0，若為'-'則保留'-'
   const displayDay = day === '-' ? '-' : +day;
 
-  const unreadStyle = unRead === false ? 'hidden' : 'block';
+  const incompleteStyle = incomplete === false ? 'hidden' : 'block';
 
   return (
     <div className="relative flex w-fit scale-75 flex-col items-center justify-end font-barlow md:scale-100">
@@ -39,7 +39,7 @@ const CalendarIcon = ({ timestamp, unRead = true }: ICalendarIconProps) => {
 
       {/* Info: (20241004 - Julian) 未讀標記 */}
       <div
-        className={`absolute ${unreadStyle} -bottom-1 -right-1 h-14px w-14px rounded-full border-2 border-avatar-stroke-primary bg-surface-state-error`}
+        className={`absolute ${incompleteStyle} -bottom-1 -right-1 h-14px w-14px rounded-full border-2 border-avatar-stroke-primary bg-surface-state-error`}
       ></div>
     </div>
   );

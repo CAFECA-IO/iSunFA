@@ -210,9 +210,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     handleInputChange('taxPrice', updateTaxPrice);
     handleInputChange('totalPrice', (formState.priceBeforeTax ?? 0) + updateTaxPrice);
   };
-    const selectDeductionTypeHandler = (value: string) => {
-      handleInputChange('deductionType', value);
-    };
+  const selectDeductionTypeHandler = (value: string) => {
+    handleInputChange('deductionType', value);
+  };
 
   const totalPriceChangeHandler = (value: number) => {
     handleInputChange('totalPrice', value);

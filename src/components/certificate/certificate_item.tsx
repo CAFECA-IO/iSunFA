@@ -44,10 +44,11 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
   return (
     <div
       className={`group table-row h-72px w-full max-w-920px overflow-y-hidden text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
-      onClick={() =>
-        (activeSelection
+      onClick={() => {
+        return activeSelection
           ? handleSelect([certificate.id], !certificate.isSelected)
-          : onEdit(certificate.id))}
+          : onEdit(certificate.id);
+      }}
     >
       {/* Info: (20240924 - tzuhan) CheckBox */}
       {activeSelection && (
@@ -62,7 +63,10 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       )}
       <BorderCell isSelected={certificate.isSelected} className="w-100px text-center">
         <div className="inline-block">
-          <CalendarIcon timestamp={certificate.invoice?.date ?? 0} unRead={!!certificate.unRead} />
+          <CalendarIcon
+            timestamp={certificate.invoice?.date ?? 0}
+            incomplete={!!certificate.incomplete}
+          />
         </div>
       </BorderCell>
 

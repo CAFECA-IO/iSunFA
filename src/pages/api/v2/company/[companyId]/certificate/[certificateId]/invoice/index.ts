@@ -17,7 +17,6 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTaxType } from '@/constants/invoice';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
@@ -127,8 +126,6 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
     });
 
     const fileEntity = certificateAPIPostUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities =
-      certificateAPIPostUtils.initUserCertificateEntities(certificateFromPrisma);
     const uploaderEntity = certificateAPIPostUtils.initUploaderEntity(certificateFromPrisma);
     const voucherCertificateEntity =
       certificateAPIPostUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -147,7 +144,6 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {
       ...certificateEntity,
@@ -155,7 +151,6 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       file: fileEntity,
       uploader: uploaderEntity,
       vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
     };
 
     const certificateResponse: ICertificate =
