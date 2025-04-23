@@ -210,7 +210,6 @@ export enum APIPath {
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/user/:userId/account_book`,
-  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`, // Info: (20250418 - Liz) 新版刪除帳本 api
   ROLE_LIST = `${apiPrefixV2}/role`,
   NEWS_LIST = `${apiPrefixV2}/news`,
   CREATE_NEWS = `${apiPrefixV2}/news`,
@@ -280,6 +279,7 @@ export enum APIPath {
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
+  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`, // Info: (20250418 - Liz) 新版刪除帳本 api
   USER_PAYMENT_METHOD_LIST = `${apiPrefixV2}/user/:userId/payment_method`,
   USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
   PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
@@ -316,13 +316,8 @@ const createConfig = ({
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.AGREE_TO_TERMS]: createConfig({
     name: APIName.AGREE_TO_TERMS,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.AGREE_TO_TERMS,
-    input: {
-      header: {
-        'Content-Type': 'application/json',
-      },
-    },
   }),
   [APIName.SIGN_IN]: createConfig({
     name: APIName.SIGN_IN,
