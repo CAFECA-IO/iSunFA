@@ -10,6 +10,8 @@ export enum RoleName {
   INDIVIDUAL = 'INDIVIDUAL',
   ACCOUNTING_FIRMS = 'ACCOUNTING_FIRMS',
   ENTERPRISE = 'ENTERPRISE',
+  BOOKKEEPER = 'BOOKKEEPER', // Deprecated: (20250423 - Liz) 等後端修改相關 API 以及 DB 資料後，將會移除
+  EDUCATIONAL_TRIAL_VERSION = 'EDUCATIONAL_TRIAL_VERSION', // Deprecated: (20250423 - Liz) 等後端修改相關 API 以及 DB 資料後，將會移除
 }
 
 export enum CompanyRoleName {
