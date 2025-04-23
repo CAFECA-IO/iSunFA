@@ -19,9 +19,8 @@ export const AUTH_WHITELIST = {
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
-export const AUTH_CHECK = {
+export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
@@ -157,4 +156,5 @@ export const AUTH_CHECK = {
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
 };

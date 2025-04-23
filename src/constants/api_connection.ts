@@ -84,7 +84,6 @@ export enum APIName {
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK',
-  COMPANY_UPDATE = 'COMPANY_UPDATE',
   DELETE_ACCOUNT_BOOK = 'DELETE_ACCOUNT_BOOK',
   ROLE_LIST = 'ROLE_LIST',
   NEWS_LIST = 'NEWS_LIST',
@@ -157,6 +156,7 @@ export enum APIName {
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
+  ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON', // Info: (20250423 - Shirley) Added to replace COMPANY_PUT_ICON
 }
 
 export enum APIPath {
@@ -216,8 +216,7 @@ export enum APIPath {
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/user/:userId/account_book`,
-  COMPANY_UPDATE = `${apiPrefixV2}/company/:companyId`,
-  // DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/company/:companyId`, // Deprecated: (20250418 - Liz) 舊版刪除帳本 api
+  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`, // Info: (20250418 - Liz) 新版刪除帳本 api
   ROLE_LIST = `${apiPrefixV2}/role`,
   NEWS_LIST = `${apiPrefixV2}/news`,
   CREATE_NEWS = `${apiPrefixV2}/news`,
@@ -276,6 +275,7 @@ export enum APIPath {
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
+
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
@@ -286,7 +286,6 @@ export enum APIPath {
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/lineitem`,
   VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/company/:companyId/account/:accountId/voucher`,
   UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
-  DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`, // Info: (20250418 - Liz) 新版刪除帳本 api
   USER_PAYMENT_METHOD_LIST = `${apiPrefixV2}/user/:userId/payment_method`,
   USER_PAYMENT_METHOD_CHARGE = `${apiPrefixV2}/user/:userId/payment_method/:paymentMethodId/charge`,
   PAYMENT_METHOD_REGISTER_REDIRECT = `${apiPayment}/`,
@@ -294,6 +293,7 @@ export enum APIPath {
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
+  ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`, // Info: (20250423 - Shirley) Added to replace COMPANY_PUT_ICON
 }
 
 const createConfig = ({
@@ -322,8 +322,13 @@ const createConfig = ({
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.AGREE_TO_TERMS]: createConfig({
     name: APIName.AGREE_TO_TERMS,
-    method: HttpMethod.POST,
+    method: HttpMethod.PUT,
     path: APIPath.AGREE_TO_TERMS,
+    input: {
+      header: {
+        'Content-Type': 'application/json',
+      },
+    },
   }),
   [APIName.SIGN_IN]: createConfig({
     name: APIName.SIGN_IN,
@@ -465,11 +470,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.FILE_PUT_V2,
   }),
-  [APIName.COMPANY_UPDATE]: createConfig({
-    name: APIName.COMPANY_UPDATE,
-    method: HttpMethod.PUT,
-    path: APIPath.COMPANY_UPDATE,
-  }),
   [APIName.DELETE_ACCOUNT_BOOK]: createConfig({
     name: APIName.DELETE_ACCOUNT_BOOK,
     method: HttpMethod.DELETE,
@@ -507,8 +507,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.CREATE_ACCOUNT_BOOK]: createConfig({
     name: APIName.CREATE_ACCOUNT_BOOK,
-    method: HttpMethod.POST,
+    method: HttpMethod.PUT,
     path: APIPath.CREATE_ACCOUNT_BOOK,
+    useWorker: true,
   }),
   [APIName.NEWS_LIST]: createConfig({
     name: APIName.NEWS_LIST,
@@ -966,5 +967,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
+  }),
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: createConfig({
+    name: APIName.ACCOUNT_BOOK_PUT_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.ACCOUNT_BOOK_PUT_ICON,
   }),
 };

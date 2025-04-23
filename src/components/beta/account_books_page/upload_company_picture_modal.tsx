@@ -27,7 +27,7 @@ const UploadCompanyPictureModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
-    APIName.COMPANY_PUT_ICON
+    APIName.ACCOUNT_BOOK_PUT_ICON
   );
 
   const closeUploadAccountBookCompanyPictureModal = useCallback(() => {
@@ -60,7 +60,7 @@ const UploadCompanyPictureModal = ({
 
         // Info: (20241212 - Liz) 打 API 更新帳本的公司圖片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
-          params: { companyId: accountBookToUploadPicture.id },
+          params: { accountBookId: accountBookToUploadPicture.id },
           body: { fileId: fileMeta.id },
         });
 

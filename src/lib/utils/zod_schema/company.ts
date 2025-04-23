@@ -5,17 +5,17 @@ import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import { accountBookSchema } from './account_book';
 
 // Info: (20241016 - Jacky) Company put schema
-const companyPutQuerySchema = z.object({
-  companyId: zodStringToNumber,
+const accountBookPutQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
 });
-const companyPutBodySchema = z.object({
+const accountBookPutBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
 });
 
 // Info: (20241016 - Jacky) Company delete schema
-const companyDeleteQuerySchema = z.object({
-  companyId: zodStringToNumber,
+const accountBookDeleteQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
 });
 
 /**
@@ -36,32 +36,32 @@ export const companyOutputSchema = z.object({
 });
  */
 
-export const companyPutSchema = {
+export const accountBookPutSchema = {
   input: {
-    querySchema: companyPutQuerySchema,
-    bodySchema: companyPutBodySchema,
+    querySchema: accountBookPutQuerySchema,
+    bodySchema: accountBookPutBodySchema,
   },
   outputSchema: accountBookSchema,
   frontend: nullSchema,
 };
 
-export const companyDeleteSchema = {
+export const accountBookDeleteSchema = {
   input: {
-    querySchema: companyDeleteQuerySchema,
+    querySchema: accountBookDeleteQuerySchema,
     bodySchema: nullSchema,
   },
   outputSchema: accountBookSchema.nullable(),
   frontend: nullSchema,
 };
 
-const companySearchQuerySchema = z.object({
+const accountBookSearchQuerySchema = z.object({
   taxId: z.string().optional(),
   name: z.string().optional(),
 });
 
-export const companySearchSchema = {
+export const accountBookSearchSchema = {
   input: {
-    querySchema: companySearchQuerySchema,
+    querySchema: accountBookSearchQuerySchema,
     bodySchema: nullSchema,
   },
   outputSchema: z
@@ -80,7 +80,7 @@ export const companySearchSchema = {
  * Info: (20241025 - Murky)
  * @description schema for init company entity or parsed prisma company
  */
-export const companyEntityValidator = z.object({
+export const accountBookEntityValidator = z.object({
   id: z.number(),
   name: z.string(),
   taxId: z.string(),
@@ -92,7 +92,7 @@ export const companyEntityValidator = z.object({
   deletedAt: z.number().nullable(),
 });
 
-export const ICompanyValidator = z.object({
+export const IAccountBookValidator = z.object({
   id: z.number().int(),
   imageId: z.string(),
   name: z.string(),
@@ -108,18 +108,18 @@ export const ICompanyValidator = z.object({
  * @note used in APIName.COMPANY_PUT_ICON
  */
 
-const companyPutIconQuerySchema = z.object({
-  companyId: zodStringToNumber,
+const accountBookPutIconQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
 });
 
-const companyPutIconBodySchema = z.object({
+const accountBookPutIconBodySchema = z.object({
   fileId: z.number().int(),
 });
 
-export const companyPutIconSchema = {
+export const accountBookPutIconSchema = {
   input: {
-    querySchema: companyPutIconQuerySchema,
-    bodySchema: companyPutIconBodySchema,
+    querySchema: accountBookPutIconQuerySchema,
+    bodySchema: accountBookPutIconBodySchema,
   },
   outputSchema: accountBookSchema.nullable(),
   frontend: accountBookSchema.nullable(),
