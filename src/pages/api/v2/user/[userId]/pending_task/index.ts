@@ -26,16 +26,16 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
 
       return {
         missingCertificate: {
-          companyId: company.id,
-          companyName: company.name,
+          accountBookId: company.id,
+          accountBookName: company.name,
           count: voucherWithNoCertificateCount,
-          companyLogoSrc: imageUrl,
+          accountBookLogoSrc: imageUrl,
         },
         unpostedVoucher: {
-          companyId: company.id,
-          companyName: company.name,
+          accountBookId: company.id,
+          accountBookName: company.name,
           count: certificateWithoutVoucherCount,
-          companyLogoSrc: imageUrl,
+          accountBookLogoSrc: imageUrl,
         },
       };
     })

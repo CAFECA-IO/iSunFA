@@ -21,14 +21,14 @@ import { HTTP_STATUS } from '@/constants/http';
 /**
  * Info: (20241105 - Jacky) Get pending task by company id
  */
-export async function getPendingTaskByCompanyId(
+export async function getPendingTaskByAccountBookId(
   userId: number,
   accountBookId: number
 ): Promise<IPendingTask | null> {
   let pendingTask: IPendingTask | null = null;
 
-  const company = await getAccountBookById(accountBookId);
-  if (company) {
+  const accountBook = await getAccountBookById(accountBookId);
+  if (accountBook) {
     const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
       countMissingCertificate(accountBookId),
       countUnpostedVoucher(accountBookId),
@@ -50,19 +50,19 @@ export async function getPendingTaskByCompanyId(
       missingCertificatePercentage = 1 - unpostedVoucherPercentage;
     }
 
-    const imageUrl = company.imageId;
+    const imageUrl = accountBook.imageId;
     pendingTask = {
       accountBookId,
       missingCertificate: {
-        accountBookId: company.id,
-        accountBookName: company.name,
+        accountBookId: accountBook.id,
+        accountBookName: accountBook.name,
         count: missingCertificateCount,
         accountBookLogoSrc: imageUrl,
       },
       missingCertificatePercentage,
       unpostedVoucher: {
-        accountBookId: company.id,
-        accountBookName: company.name,
+        accountBookId: accountBook.id,
+        accountBookName: accountBook.name,
         count: unpostedVoucherCount,
         accountBookLogoSrc: imageUrl,
       },
@@ -109,7 +109,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { accountBookId } = query;
   loggerBack.info(`User ${userId} get pending task for accountBookId: ${accountBookId}`);
 
-  const pendingTask = await getPendingTaskByCompanyId(userId, accountBookId);
+  const pendingTask = await getPendingTaskByAccountBookId(userId, accountBookId);
 
   if (pendingTask) {
     // Info: (20250423 - Shirley) Validate output data
