@@ -3,15 +3,13 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { IAssetDetails, IAssetPutInputBody } from '@/interfaces/asset';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   deleteAsset,
   getLegitAssetById,
   getVouchersByAssetId,
   updateAsset,
 } from '@/lib/utils/repo/asset.repo';
-import { withRequestValidation } from '@/lib/utils/middleware';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { AssetDepreciationMethod } from '@/constants/asset';
 import { calculateRemainingLife } from '@/lib/utils/asset';
@@ -21,42 +19,54 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import {
+  checkSessionUser,
+  checkUserAuthorization,
+  checkRequestData,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { validateOutputData } from '@/lib/utils/validator';
+import loggerBack from '@/lib/utils/logger_back';
+import { HTTP_STATUS } from '@/constants/http';
 
-interface IHandlerResult {
-  statusMessage: string;
-}
-
-interface IGetResult extends IHandlerResult {
-  payload: IAssetDetails;
-}
-
-interface IDeleteResult extends IHandlerResult {
-  payload: IAssetDetails;
-}
-
-interface IPutResult extends IHandlerResult {
-  payload: IAssetDetails;
-}
-
-type IHandlerResultPayload =
-  | IGetResult['payload']
-  | IDeleteResult['payload']
-  | IPutResult['payload']
-  | null;
-
-interface IHandlerResponse extends IHandlerResult {
-  payload: IHandlerResultPayload;
-}
-
-const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['payload']> = async ({
-  query,
-  req,
-}) => {
-  const { assetId, companyId } = query;
+/**
+ * Info: (20250423 - Shirley) Handle GET request for asset details
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Get asset details
+ * 7. Validate output data
+ * 8. Log user action and return response
+ */
+const handleGetRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.ASSET_GET_BY_ID_V2;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  const { teams } = await getSession(req);
+  // Info: (20250423 - Shirley) Get user session
+  const session = await getSession(req);
+  const { userId, teams } = session;
+
+  // Info: (20250423 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
+
+  // Info: (20250423 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
+
+  // Info: (20250423 - Shirley) Validate request data
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query || !query.assetId || !query.companyId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { assetId, companyId } = query;
+
+  loggerBack.info(
+    `User ${userId} requesting asset details for assetId: ${assetId}, companyId: ${companyId}`
+  );
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -80,6 +90,9 @@ const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['p
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to view asset ${assetId} for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -125,17 +138,55 @@ const handleGetRequest: IHandleRequest<APIName.ASSET_GET_BY_ID_V2, IGetResult['p
 
     payload = sortedAsset;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    loggerBack.info(`Successfully retrieved asset ${assetId} for company ${companyId}`);
   }
 
-  return { statusMessage, payload };
+  // Info: (20250423 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, payload);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  }
+
+  // Info: (20250423 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
+
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-// TODO: (20241211 - Shirley) 使用 body.updateDate 更新資產相關的 voucher
-const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payload']> = async ({
-  query,
-  body,
-  req,
-}) => {
+/**
+ * Info: (20250423 - Shirley) Handle PUT request for updating asset
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Update asset
+ * 7. Validate output data
+ * 8. Log user action and return response
+ */
+const handlePutRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.UPDATE_ASSET_V2;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAssetDetails | null = null;
+
+  // Info: (20250423 - Shirley) Get user session
+  const session = await getSession(req);
+  const { userId, teams } = session;
+
+  // Info: (20250423 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
+
+  // Info: (20250423 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
+
+  // Info: (20250423 - Shirley) Validate request data
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !query.assetId || !query.companyId || !body) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   const { assetId, companyId } = query;
   const {
     assetName,
@@ -148,10 +199,7 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
     note,
   } = body as IAssetPutInputBody;
 
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAssetDetails | null = null;
-
-  const { teams } = await getSession(req);
+  loggerBack.info(`User ${userId} updating asset ${assetId} for company ${companyId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -175,6 +223,9 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to update asset ${assetId} for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -229,21 +280,58 @@ const handlePutRequest: IHandleRequest<APIName.UPDATE_ASSET_V2, IPutResult['payl
 
     payload = sortedAsset;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    loggerBack.info(`Successfully updated asset ${assetId} for company ${companyId}`);
   }
 
-  return { statusMessage, payload };
+  // Info: (20250423 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, payload);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  }
+
+  // Info: (20250423 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
+
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-const handleDeleteRequest: IHandleRequest<
-  APIName.DELETE_ASSET_V2,
-  IDeleteResult['payload']
-> = async ({ query, req }) => {
-  const { assetId, companyId } = query;
-
+/**
+ * Info: (20250423 - Shirley) Handle DELETE request for asset
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Delete asset
+ * 7. Validate output data
+ * 8. Log user action and return response
+ */
+const handleDeleteRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.DELETE_ASSET_V2;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAssetDetails | null = null;
 
-  const { teams } = await getSession(req);
+  // Info: (20250423 - Shirley) Get user session
+  const session = await getSession(req);
+  const { userId, teams } = session;
+
+  // Info: (20250423 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
+
+  // Info: (20250423 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
+
+  // Info: (20250423 - Shirley) Validate request data
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query || !query.assetId || !query.companyId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { assetId, companyId } = query;
+
+  loggerBack.info(`User ${userId} deleting asset ${assetId} for company ${companyId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -267,6 +355,9 @@ const handleDeleteRequest: IHandleRequest<
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to delete asset ${assetId} for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -307,40 +398,62 @@ const handleDeleteRequest: IHandleRequest<
     } else {
       payload = sortedAsset;
       statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
+      loggerBack.info(`Successfully deleted asset ${assetId} for company ${companyId}`);
     }
   }
 
-  return { statusMessage, payload };
+  // Info: (20250423 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, payload);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  }
+
+  // Info: (20250423 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
+
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
-} = {
-  GET: (req) => withRequestValidation(APIName.ASSET_GET_BY_ID_V2, req, handleGetRequest),
-  PUT: (req) => withRequestValidation(APIName.UPDATE_ASSET_V2, req, handlePutRequest),
-  DELETE: (req) => withRequestValidation(APIName.DELETE_ASSET_V2, req, handleDeleteRequest),
-};
-
+/**
+ * Info: (20250423 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern:
+ * 1. Define a switch-case for different HTTP methods
+ * 2. Call the appropriate handler based on method
+ * 3. Handle errors and return consistent response format
+ */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IHandlerResultPayload>>
+  res: NextApiResponse<IResponseData<IAssetDetails | null>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IHandlerResultPayload = null;
+  let httpCode: number = HTTP_STATUS.BAD_REQUEST;
+  let result: IResponseData<IAssetDetails | null>;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    // Info: (20250423 - Shirley) Handle different HTTP methods
+    const method = req.method || '';
+    switch (method) {
+      case HttpMethod.GET:
+        ({ httpCode, result } = await handleGetRequest(req));
+        break;
+      case HttpMethod.PUT:
+        ({ httpCode, result } = await handlePutRequest(req));
+        break;
+      case HttpMethod.DELETE:
+        ({ httpCode, result } = await handleDeleteRequest(req));
+        break;
+      default:
+        // Info: (20250423 - Shirley) Method not allowed
+        ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
     }
   } catch (_error) {
+    // Info: (20250423 - Shirley) Error handling
     const error = _error as Error;
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(statusMessage, payload);
-    res.status(httpCode).json(result);
+    const statusMessage = error.message;
+    loggerBack.error(`Error handling asset operation: ${statusMessage}`);
+    ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
+
+  // Info: (20250423 - Shirley) Send response
+  res.status(httpCode).json(result);
 }
