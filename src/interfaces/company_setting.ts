@@ -1,7 +1,7 @@
 import { LocaleKey } from '@/constants/normal_setting';
 import { Prisma } from '@prisma/client';
 
-export interface ICompanySetting {
+export interface IAccountBookInfo {
   id: number;
   companyId: number;
   companyName: string;
@@ -17,7 +17,7 @@ export interface ICompanySetting {
   updatedAt: number;
 }
 
-export type ICompanySettingWithRelations = Prisma.CompanySettingGetPayload<{
+export type IAccountBookWithRelations = Prisma.CompanySettingGetPayload<{
   include: {
     company: {
       include: {

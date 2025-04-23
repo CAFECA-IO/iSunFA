@@ -13,52 +13,87 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 
+/**
+ * Info: (20250423 - Shirley) Handle PUT request for account book icon
+ * This API replaces the COMPANY_PUT_ICON API
+ */
 const handlePutRequest: IHandleRequest<
-  APIName.COMPANY_PUT_ICON,
+  APIName.ACCOUNT_BOOK_PUT_ICON,
   Company & { imageFile: File }
 > = async ({ query, body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: (Company & { imageFile: File }) | null = null;
 
-  const { companyId } = query;
+  const { accountBookId } = query;
+  // const { companyId: accountBookId } = query;
   const { fileId } = body;
   const { userId, teams } = session;
 
   try {
-    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-    const company = await getCompanyById(companyId);
-    if (!company) {
+    // Info: (20250423 - Shirley) Get account book details
+    const accountBook = await getCompanyById(+accountBookId);
+    if (!accountBook) {
+      loggerError({
+        userId,
+        errorType: 'resource_not_found',
+        errorMessage: `Account book ${accountBookId} not found`,
+      });
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const { teamId: companyTeamId } = company;
-    if (!companyTeamId) {
+    // Info: (20250423 - Shirley) Check if account book belongs to a team
+    const { teamId } = accountBook;
+    if (!teamId) {
+      loggerError({
+        userId,
+        errorType: 'resource_not_found',
+        errorMessage: `Account book ${accountBookId} does not belong to any team`,
+      });
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    // Info: (20250423 - Shirley) Check if user is part of the team
+    const userTeam = teams?.find((team) => team.id === teamId);
     if (!userTeam) {
+      loggerError({
+        userId,
+        errorType: 'permission_denied',
+        errorMessage: `User ${userId} is not a member of team ${teamId}`,
+      });
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam?.role as TeamRole,
+    // Info: (20250423 - Shirley) Check if user has permission to modify account book
+    const canModifyResult = convertTeamRoleCanDo({
+      teamRole: userTeam.role as TeamRole,
       canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
     });
 
-    if (!assertResult.can) {
+    if (!canModifyResult.can) {
+      loggerError({
+        userId,
+        errorType: 'permission_denied',
+        errorMessage: `User ${userId} with role ${userTeam.role} does not have permission to update account book icon`,
+      });
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    const updatedCompany = await putCompanyIcon({ companyId, fileId });
+    // Info: (20250423 - Shirley) Update account book icon
+    const updatedAccountBook = await putCompanyIcon({ companyId: +accountBookId, fileId });
 
     const formattedPayload = {
-      ...updatedCompany,
-      imageId: updatedCompany.imageFile?.id.toString() || '',
+      ...updatedAccountBook,
+      imageId: updatedAccountBook.imageFile?.id.toString() || '',
     };
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     payload = formattedPayload as Company & { imageFile: File };
+
+    loggerError({
+      userId,
+      errorType: 'info',
+      errorMessage: `Successfully updated icon for account book ${accountBookId}`,
+    });
   } catch (_error) {
     const error = _error as Error;
     loggerError({
@@ -77,7 +112,7 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{ statusMessage: string; payload: IAccountBook | null }>;
 } = {
-  PUT: (req) => withRequestValidation(APIName.COMPANY_PUT_ICON, req, handlePutRequest),
+  PUT: (req) => withRequestValidation(APIName.ACCOUNT_BOOK_PUT_ICON, req, handlePutRequest),
 };
 
 export default async function handler(

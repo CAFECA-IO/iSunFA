@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { ICompanySetting, ICompanySettingWithRelations } from '@/interfaces/company_setting';
+import { IAccountBookInfo, IAccountBookWithRelations } from '@/interfaces/company_setting';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
@@ -60,7 +60,7 @@ export async function getCompanySettingByCompanyId(companyId: number) {
 
 export async function updateCompanySettingByCompanyId(options: {
   companyId: number;
-  data: Partial<ICompanySetting>;
+  data: Partial<IAccountBookInfo>;
 }) {
   const { companyId, data } = options;
   let companySetting = null;
@@ -102,7 +102,7 @@ export async function updateCompanySettingByCompanyId(options: {
   return companySetting;
 }
 
-export async function updateCompanySettingById(id: number, data: ICompanySetting) {
+export async function updateCompanySettingById(id: number, data: IAccountBookInfo) {
   let companySetting = null;
   const nowInSecond = getTimestampNow();
 
@@ -186,9 +186,9 @@ export async function getOptimizedCompanySettingsByUserId(
     pageSize = 10,
   } = options || {};
 
-  let companySettings: ICompanySettingWithRelations[] = [];
+  let companySettings: IAccountBookWithRelations[] = [];
 
-  const companySettingsMap = new Map<number, ICompanySettingWithRelations>();
+  const companySettingsMap = new Map<number, IAccountBookWithRelations>();
   let totalCount = 0;
 
   try {
