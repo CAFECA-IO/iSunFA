@@ -78,6 +78,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     // Deprecated: (20250120 - Anna) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('API Response resData:', resData);
+
     // Info: (20241107 - Anna) 處理 API 回應
     setDisplayedVoucherList(resData.data);
     // Info: (20241107 - Anna) 請求完成後關閉 shouldFetch

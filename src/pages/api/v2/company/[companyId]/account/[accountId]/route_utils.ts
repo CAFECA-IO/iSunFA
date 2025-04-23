@@ -245,16 +245,18 @@ export const voucherGetByAccountAPIUtils = {
 
   isARorAPBeenWriteOff: (lineItemWithAssociate: ILineItemEntityWithAssociate): boolean => {
     const targetAccountId = lineItemWithAssociate.account.id;
-    let writeOffAmount = lineItemWithAssociate.amount;
+    let remainingAmount = lineItemWithAssociate.amount;
     lineItemWithAssociate.lineItemsAssociateThatWriteOffMe.forEach((associate) => {
       const isSameAccount = associate.resultLineItem.account.id === targetAccountId;
-
+      const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
+      // Info: (20250423 - Anna) associate.amount 替換為 associate.resultLineItem.amount
+      const adjustedAmount = associate.resultLineItem.amount * (isSameDirection ? 1 : -1);
       if (isSameAccount) {
-        const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
-        writeOffAmount += associate.amount * (isSameDirection ? 1 : -1);
+        remainingAmount += adjustedAmount;
       }
     });
-    return writeOffAmount === 0;
+    // Info: (20250423 - Anna) 是否剩餘金額為0
+    return remainingAmount === 0;
   },
 
   isARorAPWriteOffOriginalVoucher: (

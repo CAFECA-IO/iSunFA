@@ -173,6 +173,8 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   };
 
   const confirmHandler = () => {
+    // eslint-disable-next-line no-console
+    console.log('[✅ 傳給後端的 reverseItems]', selectedReverseItems);
     addReverseListHandler(lineItemIndex, selectedReverseItems);
     modalVisibilityHandler();
   };
