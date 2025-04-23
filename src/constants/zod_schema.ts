@@ -68,10 +68,7 @@ import {
   counterpartyDeleteSchema,
 } from '@/lib/utils/zod_schema/counterparty';
 import { userSettingGetSchema, userSettingPutSchema } from '@/lib/utils/zod_schema/user_setting';
-import {
-  companySettingGetSchema,
-  companySettingPutSchema,
-} from '@/lib/utils/zod_schema/company_setting';
+
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
 import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
@@ -160,8 +157,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: accountBookSearchSchema,
   [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
   [APIName.COMPANY_PUT_ICON]: accountBookPutIconSchema,
-  [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
-  [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
   [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
   [APIName.COUNTERPARTY_ADD]: counterpartyPostSchema,
   [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdSchema,
