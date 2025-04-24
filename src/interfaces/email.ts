@@ -32,3 +32,14 @@ export interface IPayErrorTemplate {
 export interface ISubscribeTemplate {
   userName: string;
 }
+
+export interface IEmailLogin {
+  id?: number;
+  email: string;
+  code: string;
+  hash: string;
+  used: boolean;
+  expiredAt: number;
+  createdAt: number;
+  updatedAt: number;
+}
