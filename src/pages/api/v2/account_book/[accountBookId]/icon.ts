@@ -25,7 +25,6 @@ const handlePutRequest: IHandleRequest<
   let payload: (Company & { imageFile: File }) | null = null;
 
   const { accountBookId } = query;
-  // const { companyId: accountBookId } = query;
   const { fileId } = body;
   const { userId, teams } = session;
 

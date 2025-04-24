@@ -109,7 +109,6 @@ export enum APIName {
   CREATE_ASSET_V2 = 'CREATE_ASSET_V2',
   DELETE_ASSET_V2 = 'DELETE_ASSET_V2',
   UPDATE_ASSET_V2 = 'UPDATE_ASSET_V2',
-  ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = 'ASSET_SUGGESTED_NUMBER_GET_BY_TYPE',
   TRIAL_BALANCE_LIST = 'TRIAL_BALANCE_LIST',
   ASSET_LIST_EXPORT = 'ASSET_LIST_EXPORT',
   FILE_EXPORT = 'FILE_EXPORT',
@@ -237,7 +236,6 @@ export enum APIPath {
   CREATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset`,
   DELETE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
   UPDATE_ASSET_V2 = `${apiPrefixV2}/company/:companyId/asset/:assetId`,
-  ASSET_SUGGESTED_NUMBER_GET_BY_TYPE = `${apiPrefixV2}/company/:companyId/asset/suggested_number`,
   TRIAL_BALANCE_LIST = `${apiPrefixV2}/company/:companyId/trial_balance`,
   ASSET_LIST_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
   FILE_EXPORT = `${apiPrefixV2}/company/:companyId/asset/export`,
@@ -720,11 +718,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_DELETE_V2,
     method: HttpMethod.DELETE,
     path: APIPath.VOUCHER_DELETE_V2,
-  }),
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: createConfig({
-    name: APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE,
-    method: HttpMethod.GET,
-    path: APIPath.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE,
   }),
   [APIName.TRIAL_BALANCE_LIST]: createConfig({
     name: APIName.TRIAL_BALANCE_LIST,
