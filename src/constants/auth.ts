@@ -107,7 +107,6 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.CREATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
