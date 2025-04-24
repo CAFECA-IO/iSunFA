@@ -245,7 +245,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: assetDeleteSchema,
   [APIName.UPDATE_ASSET_V2]: assetPutSchema,
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
