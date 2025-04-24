@@ -7,41 +7,62 @@ import {
 } from '@/interfaces/asset';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { createManyAssets } from '@/lib/utils/repo/asset.repo';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { z } from 'zod';
-import { IAssetBulkPostOutputValidator } from '@/lib/utils/zod_schema/asset';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import { getSession } from '@/lib/utils/session';
+import {
+  checkSessionUser,
+  checkUserAuthorization,
+  checkRequestData,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { validateOutputData } from '@/lib/utils/validator';
+import loggerBack from '@/lib/utils/logger_back';
+import { HTTP_STATUS } from '@/constants/http';
 
-interface IHandlerResult {
-  statusMessage: string;
-}
+/**
+ * Info: (20250423 - Shirley) Handle POST request for bulk creating assets
+ * This function follows the flat coding style, with clear steps:
+ * 1. Get session
+ * 2. Check if user is logged in
+ * 3. Check user authorization
+ * 4. Validate request data
+ * 5. Verify team permission
+ * 6. Process and validate input data
+ * 7. Create assets in bulk
+ * 8. Validate output data
+ * 9. Log user action and return response
+ */
+export const handlePostRequest = async (req: NextApiRequest) => {
+  const apiName = APIName.CREATE_ASSET_BULK;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAssetBulkPostRepoOutput | null = null;
 
-interface IHandlePostRequestResult extends IHandlerResult {
-  payload: z.infer<typeof IAssetBulkPostOutputValidator>;
-}
-
-type IHandlerResultPayload = IHandlePostRequestResult['payload'] | null;
-
-interface IHandlerResponse extends IHandlerResult {
-  payload: IHandlerResultPayload;
-}
-
-export const handlePostRequest: IHandleRequest<
-  APIName.CREATE_ASSET_BULK,
-  IAssetBulkPostRepoOutput
-> = async ({ query, body, session }) => {
-  const { companyId } = query;
+  // Info: (20250423 - Shirley) Get user session
+  const session = await getSession(req);
   const { userId, teams } = session;
+
+  // Info: (20250423 - Shirley) Check if user is logged in
+  await checkSessionUser(session, apiName, req);
+
+  // Info: (20250423 - Shirley) Check user authorization
+  await checkUserAuthorization(apiName, req, session);
+
+  // Info: (20250423 - Shirley) Validate request data
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !query.companyId || !body) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { companyId } = query;
   const {
     assetName,
     assetType,
-    assetNumber, // Info: (20241204 - Luphia) assetNumber is the unique identifier for the asset
+    assetNumber,
     acquisitionDate,
     purchasePrice,
     depreciationStart,
@@ -51,6 +72,8 @@ export const handlePostRequest: IHandleRequest<
     amount,
     note = '',
   } = body as ICreateAssetInput;
+
+  loggerBack.info(`User ${userId} creating ${amount} assets in bulk for companyId: ${companyId}`);
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
@@ -90,47 +113,65 @@ export const handlePostRequest: IHandleRequest<
   });
 
   if (!assertResult.can) {
+    loggerBack.info(
+      `User ${userId} does not have permission to create assets in bulk for company ${companyId}`
+    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   // Info: (20241204 - Luphia) Insert the new asset and vouchers to the database and get the new asset id
   const rs = await createManyAssets(newAsset, amount, userId);
 
-  const statusMessage = STATUS_MESSAGE.CREATED;
+  // Info: (20250423 - Shirley) Validate output data
+  const { isOutputDataValid } = validateOutputData(apiName, rs);
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    statusMessage = STATUS_MESSAGE.CREATED;
+    payload = rs;
+    loggerBack.info(`Successfully created ${amount} assets in bulk for company ${companyId}`);
+  }
 
-  // // Info: (20240927 - Shirley) 獲取並格式化創建後的資產數據
-  const result: IHandlePostRequestResult = { statusMessage, payload: rs };
+  // Info: (20250423 - Shirley) Format response and log user action
+  const result = formatApiResponse(statusMessage, payload);
+  await logUserAction(session, apiName, req, statusMessage);
 
-  return result;
+  return { httpCode: result.httpCode, result: result.result };
 };
 
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<IHandlerResponse>;
-} = {
-  POST: (req) => withRequestValidation(APIName.CREATE_ASSET_BULK, req, handlePostRequest),
-};
-
+/**
+ * Info: (20250423 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern:
+ * 1. Define a switch-case for different HTTP methods
+ * 2. Call the appropriate handler based on method
+ * 3. Handle errors and return consistent response format
+ */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IHandlerResultPayload>>
+  res: NextApiResponse<IResponseData<IAssetBulkPostRepoOutput | null>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IHandlerResultPayload = null;
+  let httpCode: number = HTTP_STATUS.BAD_REQUEST;
+  let result: IResponseData<IAssetBulkPostRepoOutput | null>;
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    // Info: (20250423 - Shirley) Handle different HTTP methods
+    const method = req.method || '';
+    switch (method) {
+      case HttpMethod.POST:
+        ({ httpCode, result } = await handlePostRequest(req));
+        break;
+      default:
+        // Info: (20250423 - Shirley) Method not allowed
+        ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
     }
   } catch (_error) {
+    // Info: (20250423 - Shirley) Error handling
     const error = _error as Error;
-    // ToDo: (20241204 - Shirley) Use logger to log the error
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<IHandlerResultPayload>(statusMessage, payload);
-    res.status(httpCode).json(result);
+    const statusMessage = error.message;
+    loggerBack.error(`Error processing asset bulk creation: ${statusMessage}`);
+    ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
+
+  // Info: (20250423 - Shirley) Send response
+  res.status(httpCode).json(result);
 }

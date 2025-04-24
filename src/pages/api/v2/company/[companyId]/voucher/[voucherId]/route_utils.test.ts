@@ -738,8 +738,6 @@ describe('voucher/:voucherId', () => {
         expect(certificateEntities.length).toBeGreaterThan(0);
         expect(certificateEntities[0].file).toBeDefined();
         expect(certificateEntities[0].invoice).toBeDefined();
-        expect(certificateEntities[0].userCertificates).toBeDefined();
-        expect(certificateEntities[0].userCertificates.length).toBeGreaterThan(0);
       });
     });
 

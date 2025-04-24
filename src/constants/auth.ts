@@ -19,21 +19,17 @@ export const AUTH_WHITELIST = {
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
-export const AUTH_CHECK = {
+export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SETTING_UPDATE]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
   [APIName.USER_ROLE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_SELECT_ROLE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_CREATE_ROLE]: [AuthFunctionsKeysNew.user],
@@ -157,4 +153,5 @@ export const AUTH_CHECK = {
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
 };

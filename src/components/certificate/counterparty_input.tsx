@@ -44,7 +44,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const companyId = connectedAccountBook?.id;
 
     const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
-      APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
+      APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID
     );
 
     const [isLoadingCounterparty, setIsLoadingCounterparty] = useState(false);

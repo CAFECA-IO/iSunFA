@@ -34,8 +34,9 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
     >
       <div
         className="my-3 flex flex-col items-center"
-        onClick={() =>
-          (activeSelection ? handleSelect([data.id], !data.isSelected) : onEdit(data.id))}
+        onClick={() => {
+          return activeSelection ? handleSelect([data.id], !data.isSelected) : onEdit(data.id);
+        }}
       >
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
@@ -57,8 +58,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         </div>
       </div>
 
-      {/* Info: (20241030 - Tzuhan) unRead */}
-      {data.unRead && !activeSelection && (
+      {/* Info: (20241030 - Tzuhan) incomplete */}
+      {data.incomplete && !activeSelection && (
         <div className="absolute left-1.5 top-1.5 z-10 flex items-center justify-center rounded-xs bg-badge-surface-soft-primary px-2.5 py-1 text-xs text-badge-text-primary-solid">
           {t('certificate:LABEL.NEW')}
         </div>

@@ -24,40 +24,27 @@ const nullSchema = z.union([z.object({}), z.string()]);
  * Info: (20241105 - Murky)
  * @description 這個是給前端用的 ICertificate
  */
-export const ICertificateValidator = z.object({
-  id: z.number(),
-  name: z.string().describe('Name of certificate, but get it from Invoice'),
-  companyId: z.number(),
-  unRead: z.boolean(),
-  file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
-  invoice: IInvoiceBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
-  voucherNo: z.string().nullable(),
-  voucherId: z.number().nullable(),
-  aiResultId: z.string().optional(),
-  aiStatus: z.string().optional(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  uploader: z.string(),
-  uploaderUrl: z.string(),
-});
+export const createCertificateValidator = (isInvoiceOptional = false) =>
+  z.object({
+    id: z.number(),
+    name: z.string().describe('Name of certificate, but get it from Invoice'),
+    companyId: z.number(),
+    incomplete: z.boolean(),
+    unRead: z.boolean().default(false),
+    file: IFileBetaValidator,
+    invoice: isInvoiceOptional ? IInvoiceBetaValidatorOptional : IInvoiceBetaValidator,
+    voucherNo: z.string().nullable(),
+    voucherId: z.number().nullable(),
+    aiResultId: z.string().optional(),
+    aiStatus: z.string().optional(),
+    createdAt: z.number(),
+    updatedAt: z.number(),
+    uploader: z.string(),
+    uploaderUrl: z.string(),
+  });
 
-export const ICertificatePartialInvoiceValidator = z.object({
-  id: z.number(),
-  name: z.string().describe('Name of certificate, but get it from Invoice'),
-  companyId: z.number(),
-  unRead: z.boolean(),
-  file: IFileBetaValidator, // Info: (20241105 - Murky) 使用已定義的 IFileUIBetaValidator
-  invoice: IInvoiceBetaValidatorOptional, // Info: (20241105 - Murky) 使用已定義的 IInvoiceBetaValidator
-  voucherNo: z.string().nullable(),
-  voucherId: z.number().nullable(),
-  aiResultId: z.string().optional(),
-  aiStatus: z.string().optional(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  uploader: z.string(),
-  uploaderUrl: z.string(),
-});
-
+export const ICertificateValidator = createCertificateValidator(false);
+export const ICertificatePartialInvoiceValidator = createCertificateValidator(true);
 /**
  * Info: (20241025 - Murky)
  * @description schema for init certificate entity or parsed prisma certificate
@@ -78,7 +65,6 @@ export const certificateEntityValidator = z.object({
   vouchers: z.array(z.any()).optional(),
   uploader: z.any().optional(),
   uploaderUrl: z.any().optional(),
-  userCertificates: z.array(z.any()).optional(),
 });
 
 const certificateListQueryValidator = z.object({

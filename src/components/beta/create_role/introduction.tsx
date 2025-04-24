@@ -95,19 +95,19 @@ const DefaultIntro = () => {
   );
 };
 
-interface BookkeeperIntroProps {
+interface IndividualIntroProps {
   children: React.ReactNode;
 }
 
-// Info: (20250329 - Liz) 記帳士角色介紹
-const BookkeeperIntro = ({ children }: BookkeeperIntroProps) => {
+// Info: (20250423 - Liz) 「個人」角色介紹
+const IndividualIntro = ({ children }: IndividualIntroProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-40px pl-60px pt-70px">
       <div className="flex items-center gap-24px">
         <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-          {t('dashboard:ROLE.BOOKKEEPER')}
+          {t('dashboard:ROLE.INDIVIDUAL')}
         </h1>
         <Image
           src="/icons/information_desk.svg"
@@ -118,11 +118,11 @@ const BookkeeperIntro = ({ children }: BookkeeperIntroProps) => {
       </div>
 
       <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-        <p>{t('dashboard:CREATE_ROLE_PAGE.BOOKKEEPER_INTRODUCTION')}</p>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.INDIVIDUAL_INTRODUCTION')}</p>
         <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
           {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
         </h3>
-        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_BOOKKEEPER')}</p>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_INDIVIDUAL')}</p>
       </div>
 
       {children}
@@ -130,22 +130,19 @@ const BookkeeperIntro = ({ children }: BookkeeperIntroProps) => {
   );
 };
 
-interface EducationalTrialVersionIntroProps {
+interface AccountingFirmsIntroProps {
   children: React.ReactNode;
 }
 
-// Info: (20250329 - Liz) 教育試用版角色介紹
-const EducationalTrialVersionIntro = ({ children }: EducationalTrialVersionIntroProps) => {
+// Info: (20250423 - Liz) 「事務所團隊」角色介紹
+const AccountingFirmsIntro = ({ children }: AccountingFirmsIntroProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
     <section className="flex flex-col gap-40px pl-60px pt-70px">
       <div className="flex items-center gap-24px">
         <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
-          {t('dashboard:ROLE.EDUCATIONAL')}
-          <span className="ml-8px text-28px text-text-neutral-tertiary">
-            {'(' + t('dashboard:ROLE.TRIAL_VERSION') + ')'}
-          </span>
+          {t('dashboard:ROLE.ACCOUNTING_FIRMS')}
         </h1>
         <Image
           src="/icons/accounting_firms_icon.svg"
@@ -156,11 +153,46 @@ const EducationalTrialVersionIntro = ({ children }: EducationalTrialVersionIntro
       </div>
 
       <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
-        <p>{t('dashboard:CREATE_ROLE_PAGE.EDUCATIONAL_TRIAL_VERSION_INTRODUCTION')}</p>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.ACCOUNTING_FIRMS_INTRODUCTION')}</p>
         <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
           {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
         </h3>
-        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION')}</p>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_ACCOUNTING_FIRMS')}</p>
+      </div>
+
+      {children}
+    </section>
+  );
+};
+
+interface EnterpriseIntroProps {
+  children: React.ReactNode;
+}
+
+// Info: (20250423 - Liz) 「企業」角色介紹
+const EnterpriseIntro = ({ children }: EnterpriseIntroProps) => {
+  const { t } = useTranslation('dashboard');
+
+  return (
+    <section className="flex flex-col gap-40px pl-60px pt-70px">
+      <div className="flex items-center gap-24px">
+        <h1 className="text-nowrap text-64px font-bold text-text-neutral-primary">
+          {t('dashboard:ROLE.ENTERPRISE')}
+        </h1>
+        <Image
+          src="/icons/information_desk.svg"
+          alt="information_desk"
+          width={30}
+          height={30}
+        ></Image>
+      </div>
+
+      <div className="w-2/5 text-sm font-semibold text-text-neutral-secondary">
+        <p>{t('dashboard:CREATE_ROLE_PAGE.ENTERPRISE_INTRODUCTION')}</p>
+        <h3 className="pt-24px text-xl font-bold text-text-neutral-primary">
+          {t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS')}
+        </h3>
+        <p>{t('dashboard:CREATE_ROLE_PAGE.COMMON_FUNCTIONS_FOR_ENTERPRISE')}</p>
       </div>
 
       {children}
@@ -178,14 +210,20 @@ const Introduction = ({ displayedRole, togglePreviewModal }: IntroductionProps) 
     <main className="flex flex-auto">
       {!displayedRole && <DefaultIntro />}
       {displayedRole === RoleName.INDIVIDUAL && (
-        <BookkeeperIntro>
+        <IndividualIntro>
           <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
-        </BookkeeperIntro>
+        </IndividualIntro>
       )}
       {displayedRole === RoleName.ACCOUNTING_FIRMS && (
-        <EducationalTrialVersionIntro>
+        <AccountingFirmsIntro>
           <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
-        </EducationalTrialVersionIntro>
+        </AccountingFirmsIntro>
+      )}
+
+      {displayedRole === RoleName.ENTERPRISE && (
+        <EnterpriseIntro>
+          <SetupButtons togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
+        </EnterpriseIntro>
       )}
     </main>
   );

@@ -9,27 +9,27 @@ const userPendingTaskQuerySchema = z.object({
   userId: zodStringToNumber,
 });
 
-// Info: (20241015 - Jacky) Company pending task schema
-const companyPendingTaskQuerySchema = z.object({
-  companyId: zodStringToNumber,
+// Info: (20241015 - Jacky) accountBook pending task schema
+const accountBookPendingTaskQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
 });
 
 const missingCertificateSchema = z.object({
-  companyId: z.number().int(),
-  companyName: z.string(),
+  accountBookId: z.number().int(),
+  accountBookName: z.string(),
   count: z.number().int(),
-  companyLogoSrc: z.string(),
+  accountBookLogoSrc: z.string(),
 });
 
 const unpostedVoucherSchema = z.object({
-  companyId: z.number().int(),
-  companyName: z.string(),
+  accountBookId: z.number().int(),
+  accountBookName: z.string(),
   count: z.number().int(),
-  companyLogoSrc: z.string(),
+  accountBookLogoSrc: z.string(),
 });
 
 const pendingTaskSchema = z.object({
-  companyId: z.number().int(),
+  accountBookId: z.number().int(),
   missingCertificate: missingCertificateSchema,
   missingCertificatePercentage: z.number(),
   unpostedVoucher: unpostedVoucherSchema,
@@ -55,9 +55,9 @@ export const userPendingTaskSchema = {
   frontend: pendingTaskNullSchema,
 };
 
-export const companyPendingTaskSchema = {
+export const accountBookPendingTaskSchema = {
   input: {
-    querySchema: companyPendingTaskQuerySchema,
+    querySchema: accountBookPendingTaskQuerySchema,
     bodySchema: pendingTaskNullSchema,
   },
   outputSchema: pendingTaskSchema,

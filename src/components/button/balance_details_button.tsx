@@ -238,7 +238,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                               {/* Info: (20241203 - Anna) 在列印模式下使用 print-center */}
                               <div className="mb-2 mr-6 mt-4">
                                 {/* Info: (20241003 - Anna) 使用 CalendarIcon 組件顯示日期 */}
-                                <CalendarIcon timestamp={voucher.date} unRead={false} />
+                                <CalendarIcon timestamp={voucher.date} incomplete={false} />
                               </div>
                             </div>
                           </div>

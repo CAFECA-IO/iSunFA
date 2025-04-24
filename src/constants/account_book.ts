@@ -68,7 +68,6 @@ export interface Step1FormState {
   taxSerialNumberError: string | null;
   teamError: string | null;
   tagError: string | null;
-  isStepTwoBusinessTaxSettingOpen: boolean;
 }
 
 export const initialStep1FormState: Step1FormState = {
@@ -95,7 +94,6 @@ export const initialStep1FormState: Step1FormState = {
   taxSerialNumberError: null,
   teamError: null,
   tagError: null,
-  isStepTwoBusinessTaxSettingOpen: false,
 };
 
 export type Step1FormAction =

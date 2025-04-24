@@ -18,16 +18,13 @@ import {
   Account as PrismaAccount,
   Invoice as PrismaInvoice,
   File as PrismaFile,
-  UserCertificate as PrismaUserCertificate,
   AssociateLineItem as PrismaAssociateLineItem,
-  UserVoucher as PrismaUserVoucher,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/account_book';
 import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
-import type { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import type { IUserEntity } from '@/interfaces/user';
 import { AI_TYPE } from '@/constants/aich';
 import { CounterpartyType } from '@/constants/counterparty';
@@ -194,6 +191,12 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
 };
 
 export interface IVoucherListSummary {
+  incomplete: {
+    uploadedVoucher: number;
+    upcomingEvents: number;
+    receivingVoucher: number;
+    paymentVoucher: number;
+  };
   unRead: {
     uploadedVoucher: number;
     upcomingEvents: number;
@@ -204,6 +207,7 @@ export interface IVoucherListSummary {
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
+  status: JOURNAL_EVENT;
   voucherDate: number;
   voucherNo: string;
   voucherType: VoucherType;
@@ -213,6 +217,7 @@ export interface IVoucherBeta {
     avatar: string;
     name: string;
   };
+  incomplete: boolean;
   unRead: boolean;
 
   lineItemsInfo: {
@@ -490,12 +495,6 @@ export interface IVoucherEntity {
   issuer?: IUserEntity;
 
   /**
-   * Info: (20241024 - Murky)
-   * @description Who read this voucher
-   */
-  readByUsers: IUserVoucherEntity[];
-
-  /**
    * Info: (20250117 - Shirley)
    * @description is this voucher deleted or reverse voucher
    */
@@ -510,7 +509,6 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
     certificate: PrismaCertificate & {
       invoices: PrismaInvoice[];
       file: PrismaFile;
-      userCertificate: PrismaUserCertificate[];
     };
   })[];
   counterparty: PartialPrismaCounterparty;
@@ -605,7 +603,6 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
       };
     })[];
   })[];
-  userVoucher: PrismaUserVoucher[];
 };
 
 export interface IAIResultVoucher {

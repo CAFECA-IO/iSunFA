@@ -33,11 +33,8 @@ export enum APIName {
   USER_GET_BY_ID = 'USER_GET_BY_ID',
   USER_UPDATE = 'USER_UPDATE',
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
-  COMPANY_PENDING_TASK_GET = 'COMPANY_PENDING_TASK_GET',
-  COMPANY_SETTING_GET = 'COMPANY_SETTING_GET',
-  COMPANY_SETTING_UPDATE = 'COMPANY_SETTING_UPDATE',
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID = 'COMPANY_SEARCH_BY_NAME_OR_TAX_ID',
-  COMPANY_PUT_ICON = 'COMPANY_PUT_ICON',
+  ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
+  ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
@@ -84,7 +81,6 @@ export enum APIName {
   USER_CREATE_ROLE = 'USER_CREATE_ROLE',
   USER_SELECT_ROLE = 'USER_SELECT_ROLE',
   CREATE_ACCOUNT_BOOK = 'CREATE_ACCOUNT_BOOK',
-  COMPANY_UPDATE = 'COMPANY_UPDATE',
   DELETE_ACCOUNT_BOOK = 'DELETE_ACCOUNT_BOOK',
   ROLE_LIST = 'ROLE_LIST',
   NEWS_LIST = 'NEWS_LIST',
@@ -157,6 +153,7 @@ export enum APIName {
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
+  ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
 }
 
 export enum APIPath {
@@ -168,11 +165,8 @@ export enum APIPath {
   USER_GET_BY_ID = `${apiPrefixV2}/user/:userId`,
   USER_UPDATE = `${apiPrefixV2}/user/:userId`,
   USER_PENDING_TASK_GET = `${apiPrefixV2}/user/:userId/pending_task`,
-  COMPANY_PENDING_TASK_GET = `${apiPrefixV2}/company/:companyId/pending_task`,
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/company/search`,
-  COMPANY_SETTING_GET = `${apiPrefixV2}/company/:companyId/setting`,
-  COMPANY_SETTING_UPDATE = `${apiPrefixV2}/company/:companyId/setting`,
-  COMPANY_PUT_ICON = `${apiPrefixV2}/company/:companyId/icon`,
+  ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
+  ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
@@ -216,8 +210,6 @@ export enum APIPath {
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
   USER_SELECT_ROLE = `${apiPrefixV2}/user/:userId/selected_role`,
   CREATE_ACCOUNT_BOOK = `${apiPrefixV2}/user/:userId/account_book`,
-  COMPANY_UPDATE = `${apiPrefixV2}/company/:companyId`,
-  // DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/company/:companyId`, // Deprecated: (20250418 - Liz) 舊版刪除帳本 api
   ROLE_LIST = `${apiPrefixV2}/role`,
   NEWS_LIST = `${apiPrefixV2}/news`,
   CREATE_NEWS = `${apiPrefixV2}/news`,
@@ -276,6 +268,7 @@ export enum APIPath {
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
+
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   UPDATE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   DELETE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
@@ -294,6 +287,7 @@ export enum APIPath {
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
+  ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
 }
 
 const createConfig = ({
@@ -360,10 +354,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.USER_PENDING_TASK_GET,
   }),
-  [APIName.COMPANY_PENDING_TASK_GET]: createConfig({
-    name: APIName.COMPANY_PENDING_TASK_GET,
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: createConfig({
+    name: APIName.ACCOUNT_BOOK_PENDING_TASK_GET,
     method: HttpMethod.GET,
-    path: APIPath.COMPANY_PENDING_TASK_GET,
+    path: APIPath.ACCOUNT_BOOK_PENDING_TASK_GET,
   }),
   [APIName.IMAGE_GET_BY_ID]: createConfig({
     name: APIName.IMAGE_GET_BY_ID,
@@ -385,15 +379,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.JOURNAL_LIST,
   }),
-  COMPANY_SEARCH_BY_NAME_OR_TAX_ID: createConfig({
-    name: APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: createConfig({
+    name: APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID,
     method: HttpMethod.GET,
-    path: APIPath.COMPANY_SEARCH_BY_NAME_OR_TAX_ID,
-  }),
-  COMPANY_PUT_ICON: createConfig({
-    name: APIName.COMPANY_PUT_ICON,
-    method: HttpMethod.PUT,
-    path: APIPath.COMPANY_PUT_ICON,
+    path: APIPath.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID,
   }),
   [APIName.REPORT_LIST]: createConfig({
     name: APIName.REPORT_LIST,
@@ -465,25 +454,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.PUT,
     path: APIPath.FILE_PUT_V2,
   }),
-  [APIName.COMPANY_UPDATE]: createConfig({
-    name: APIName.COMPANY_UPDATE,
-    method: HttpMethod.PUT,
-    path: APIPath.COMPANY_UPDATE,
-  }),
   [APIName.DELETE_ACCOUNT_BOOK]: createConfig({
     name: APIName.DELETE_ACCOUNT_BOOK,
     method: HttpMethod.DELETE,
     path: APIPath.DELETE_ACCOUNT_BOOK,
-  }),
-  [APIName.COMPANY_SETTING_GET]: createConfig({
-    name: APIName.COMPANY_SETTING_GET,
-    method: HttpMethod.GET,
-    path: APIPath.COMPANY_SETTING_GET,
-  }),
-  [APIName.COMPANY_SETTING_UPDATE]: createConfig({
-    name: APIName.COMPANY_SETTING_UPDATE,
-    method: HttpMethod.PUT,
-    path: APIPath.COMPANY_SETTING_UPDATE,
   }),
   [APIName.ROLE_LIST]: createConfig({
     name: APIName.ROLE_LIST,
@@ -507,8 +481,9 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.CREATE_ACCOUNT_BOOK]: createConfig({
     name: APIName.CREATE_ACCOUNT_BOOK,
-    method: HttpMethod.POST,
+    method: HttpMethod.PUT,
     path: APIPath.CREATE_ACCOUNT_BOOK,
+    useWorker: true,
   }),
   [APIName.NEWS_LIST]: createConfig({
     name: APIName.NEWS_LIST,
@@ -966,5 +941,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
+  }),
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: createConfig({
+    name: APIName.ACCOUNT_BOOK_PUT_ICON,
+    method: HttpMethod.PUT,
+    path: APIPath.ACCOUNT_BOOK_PUT_ICON,
   }),
 };

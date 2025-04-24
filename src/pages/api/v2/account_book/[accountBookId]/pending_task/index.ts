@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
-import { IPendingTaskTotal } from '@/interfaces/pending_task';
+import { IPendingTask } from '@/interfaces/pending_task';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { countMissingCertificate } from '@/lib/utils/repo/certificate.repo';
 import { countUnpostedVoucher } from '@/lib/utils/repo/voucher.repo';
-import { listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
+import { getAccountBookById } from '@/lib/utils/repo/account_book.repo';
 import { getSession } from '@/lib/utils/session';
 import {
   checkSessionUser,
@@ -19,77 +19,62 @@ import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
 
 /**
- * Info: (20241018 - Jacky) Get total pending tasks for a user
+ * Info: (20241105 - Jacky) Get pending task by company id
  */
-export async function getTotalPendingTaskForUser(userId: number): Promise<IPendingTaskTotal> {
-  // Info: (20241018 - Jacky) 獲取用戶擁有的所有公司
-  const listedAccountBook = await listAccountBookByUserId(userId, {});
+export async function getPendingTaskByAccountBookId(
+  userId: number,
+  accountBookId: number
+): Promise<IPendingTask | null> {
+  let pendingTask: IPendingTask | null = null;
 
-  // Info: (20241018 - Jacky) 使用 Promise.all 同時計算每個公司的數據
-  const results = await Promise.all(
-    listedAccountBook.data.map(async (accountBook) => {
-      const [certificateWithoutVoucherCount, voucherWithNoCertificateCount] = await Promise.all([
-        countUnpostedVoucher(accountBook.id),
-        countMissingCertificate(accountBook.id),
-      ]);
+  const accountBook = await getAccountBookById(accountBookId);
+  if (accountBook) {
+    const [missingCertificateCount, unpostedVoucherCount] = await Promise.all([
+      countMissingCertificate(accountBookId),
+      countUnpostedVoucher(accountBookId),
+    ]);
 
-      const imageUrl = accountBook.imageId;
+    const totalPendingTask = missingCertificateCount + unpostedVoucherCount;
 
-      return {
-        missingCertificate: {
-          accountBookId: accountBook.id,
-          accountBookName: accountBook.name,
-          count: voucherWithNoCertificateCount,
-          accountBookLogoSrc: imageUrl,
-        },
-        unpostedVoucher: {
-          accountBookId: accountBook.id,
-          accountBookName: accountBook.name,
-          count: certificateWithoutVoucherCount,
-          accountBookLogoSrc: imageUrl,
-        },
-      };
-    })
-  );
+    let missingCertificatePercentage = 0;
+    let unpostedVoucherPercentage = 0;
 
-  // Info: (20241018 - Jacky) 計算總數和列表
-  const missingCertificateList = results.map((result) => result.missingCertificate);
-  const unpostedVoucherList = results.map((result) => result.unpostedVoucher);
+    if (totalPendingTask > 0) {
+      missingCertificatePercentage = parseFloat(
+        (missingCertificateCount / totalPendingTask).toFixed(2)
+      );
+      unpostedVoucherPercentage = parseFloat((unpostedVoucherCount / totalPendingTask).toFixed(2));
+    }
 
-  const totalMissingCertificate = missingCertificateList.reduce((sum, cert) => sum + cert.count, 0);
-  const totalUnpostedVoucher = unpostedVoucherList.reduce((sum, voucher) => sum + voucher.count, 0);
+    if (missingCertificatePercentage + unpostedVoucherPercentage > 1) {
+      missingCertificatePercentage = 1 - unpostedVoucherPercentage;
+    }
 
-  const totalPendingTask = totalMissingCertificate + totalUnpostedVoucher;
-
-  let totalMissingCertificatePercentage = 0;
-  let totalUnpostedVoucherPercentage = 0;
-
-  if (totalPendingTask > 0) {
-    totalMissingCertificatePercentage = parseFloat(
-      (totalMissingCertificate / totalPendingTask).toFixed(2)
-    );
-    totalUnpostedVoucherPercentage = parseFloat(
-      (totalUnpostedVoucher / totalPendingTask).toFixed(2)
-    );
+    const imageUrl = accountBook.imageId;
+    pendingTask = {
+      accountBookId,
+      missingCertificate: {
+        accountBookId: accountBook.id,
+        accountBookName: accountBook.name,
+        count: missingCertificateCount,
+        accountBookLogoSrc: imageUrl,
+      },
+      missingCertificatePercentage,
+      unpostedVoucher: {
+        accountBookId: accountBook.id,
+        accountBookName: accountBook.name,
+        count: unpostedVoucherCount,
+        accountBookLogoSrc: imageUrl,
+      },
+      unpostedVoucherPercentage,
+    };
   }
 
-  // Info: (20241018 - Jacky) 確保百分比不會大於 1
-  if (totalMissingCertificatePercentage + totalUnpostedVoucherPercentage > 1) {
-    totalMissingCertificatePercentage = 1 - totalUnpostedVoucherPercentage;
-  }
-  return {
-    userId,
-    totalMissingCertificate,
-    totalMissingCertificatePercentage,
-    missingCertificateList,
-    totalUnpostedVoucher,
-    totalUnpostedVoucherPercentage,
-    unpostedVoucherList,
-  };
+  return pendingTask;
 }
 
 /**
- * Info: (20250423 - Shirley) Handle GET request for user pending tasks
+ * Info: (20250423 - Shirley) Handle GET request for pending tasks
  * This function follows the flat coding style, with clear steps:
  * 1. Get session
  * 2. Check if user is logged in
@@ -100,9 +85,9 @@ export async function getTotalPendingTaskForUser(userId: number): Promise<IPendi
  * 7. Log user action and return response
  */
 const handleGetRequest = async (req: NextApiRequest) => {
-  const apiName = APIName.USER_PENDING_TASK_GET;
+  const apiName = APIName.ACCOUNT_BOOK_PENDING_TASK_GET;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPendingTaskTotal | null = null;
+  let payload: IPendingTask | null = null;
 
   // Info: (20250423 - Shirley) Get user session
   const session = await getSession(req);
@@ -115,21 +100,25 @@ const handleGetRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(apiName, req, session);
 
   // Info: (20250423 - Shirley) Validate request data
-  checkRequestData(apiName, req, session);
+  const { query } = checkRequestData(apiName, req, session);
+  if (query === null || query.accountBookId === undefined) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
   // Info: (20250423 - Shirley) Get pending tasks data
-  loggerBack.info(`User ${userId} getting total pending tasks`);
+  const { accountBookId } = query;
+  loggerBack.info(`User ${userId} get pending task for accountBookId: ${accountBookId}`);
 
-  const totalPendingTask = await getTotalPendingTaskForUser(userId);
+  const pendingTask = await getPendingTaskByAccountBookId(userId, accountBookId);
 
-  if (totalPendingTask) {
+  if (pendingTask) {
     // Info: (20250423 - Shirley) Validate output data
-    const { isOutputDataValid } = validateOutputData(apiName, totalPendingTask);
+    const { isOutputDataValid, outputData } = validateOutputData(apiName, pendingTask);
 
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
     } else {
-      payload = totalPendingTask;
+      payload = outputData;
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     }
   }
@@ -150,10 +139,10 @@ const handleGetRequest = async (req: NextApiRequest) => {
  */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPendingTaskTotal | null>>
+  res: NextApiResponse<IResponseData<IPendingTask | null>>
 ) {
   let httpCode: number = HTTP_STATUS.BAD_REQUEST;
-  let result: IResponseData<IPendingTaskTotal | null>;
+  let result: IResponseData<IPendingTask | null>;
 
   try {
     // Info: (20250423 - Shirley) Handle different HTTP methods
