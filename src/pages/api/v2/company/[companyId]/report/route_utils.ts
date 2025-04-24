@@ -58,14 +58,33 @@ export function getReportFilterByReportType(reportType: ReportSheetType): {
  *   - {Key}: The `code` of the account, which serves as the unique identifier for each entry.
  *   - {Value}: The corresponding account object of type `IAccountReadyForFrontend`.
  */
+// Anna
+// export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
+//   const accountsMap = new Map<string, IAccountReadyForFrontend>();
+
+//   accounts.forEach((account) => {
+//     if (account.code.length > 0) {
+//       accountsMap.set(account.code, account);
+//     }
+//   });
+
+//   return accountsMap;
+// }
 export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
   const accountsMap = new Map<string, IAccountReadyForFrontend>();
 
-  accounts.forEach((account) => {
-    if (account.code.length > 0) {
-      accountsMap.set(account.code, account);
-    }
-  });
+  const traverse = (list: IAccountReadyForFrontend[]) => {
+    list.forEach((account) => {
+      if (account.code?.length > 0) {
+        accountsMap.set(account.code, account);
+      }
+      if (account.children?.length) {
+        traverse(account.children);
+      }
+    });
+  };
+
+  traverse(accounts);
 
   return accountsMap;
 }

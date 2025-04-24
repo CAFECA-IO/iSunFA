@@ -306,34 +306,52 @@ export function calculateMaxHeighOfNode(node: IAccountNode): number {
   return maxChildDepth + 1;
 }
 
+// export function addAccountNodeToMapRecursively(
+//   accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
+//   account: IAccountNode,
+//   rootAmount: number,
+//   currentDepth: number,
+//   // Info: (20241014 - Murky) 暫時不用
+//   /* eslint-disable @typescript-eslint/no-unused-vars */
+//   maxHeight: number
+//   /* eslint-enable @typescript-eslint/no-unused-vars */
+// ) {
+//   // Info: (20241011 - Murky) 第二層可以保有自己的child
+//   const isThirdLayer = currentDepth >= maxHeight;
+//   const newAccountNode = isThirdLayer ? account : { ...account, children: [] };
+//   const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
+//   accountMap.set(account.code, { accountNode: newAccountNode, percentage });
+
+//   account.children.forEach((child) => {
+//     const maxHeightOfChild = calculateMaxHeighOfNode(child);
+//     addAccountNodeToMapRecursively(
+//       accountMap,
+//       child,
+//       rootAmount,
+//       currentDepth + 1,
+//       maxHeightOfChild
+//     );
+//   });
+
+//   return false;
+// }
 export function addAccountNodeToMapRecursively(
   accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   account: IAccountNode,
   rootAmount: number,
   currentDepth: number,
-  // Info: (20241014 - Murky) 暫時不用
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   maxHeight: number
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 ) {
-  // Info: (20241011 - Murky) 第二層可以保有自己的child
-  const isThirdLayer = currentDepth >= maxHeight;
-  const newAccountNode = isThirdLayer ? account : { ...account, children: [] };
-  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
-  accountMap.set(account.code, { accountNode: newAccountNode, percentage });
+  const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount;
 
-  account.children.forEach((child) => {
-    const maxHeightOfChild = calculateMaxHeighOfNode(child);
-    addAccountNodeToMapRecursively(
-      accountMap,
-      child,
-      rootAmount,
-      currentDepth + 1,
-      maxHeightOfChild
-    );
+  accountMap.set(account.code, {
+    accountNode: account,
+    percentage,
   });
 
-  return false;
+  account.children.forEach((child) => {
+    addAccountNodeToMapRecursively(accountMap, child, rootAmount, currentDepth + 1, maxHeight);
+  });
 }
 
 export function transformForestToMap(
@@ -367,6 +385,64 @@ export function iAccountNode2IAccountForSheetDisplay(
   return iAccountForSheetDisplay;
 }
 
+// export function mappingAccountToSheetDisplay(
+//   accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
+//   sheetMappingRow: {
+//     code: string;
+//     name: string;
+//     indent: number;
+//   }[]
+// ): IAccountForSheetDisplay[] {
+//   const sheetDisplay: IAccountForSheetDisplay[] = [];
+//   const alreadyUsedAccountName = new Set<string>();
+
+//   sheetMappingRow.forEach((row) => {
+//     // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
+//     if (alreadyUsedAccountName.has(row.name)) {
+//       return;
+//     }
+
+//     alreadyUsedAccountName.add(row.name);
+//     const account = accountMap.get(row.code);
+//     if (!account) {
+//       sheetDisplay.push({
+//         accountId: -1,
+//         code: row.code,
+//         name: row.name,
+//         amount: 0,
+//         indent: row.indent,
+//         debit: undefined,
+//         percentage: 0,
+//         children: [],
+//       });
+//     } else {
+//       const hasChildren = account.accountNode.children.length > 0;
+//       const children = hasChildren
+//         ? account.accountNode.children.map((child) => {
+//             const childAccount = accountMap.get(child.code)!;
+//             // Info: (20241011 - Murky) 最多只有兩層，所以最底不會再有children
+//             return iAccountNode2IAccountForSheetDisplay(
+//               childAccount.accountNode,
+//               childAccount.percentage
+//             );
+//           })
+//         : [];
+//       sheetDisplay.push({
+//         accountId: -1,
+//         code: row.code,
+//         name: row.name,
+//         amount: account.accountNode.amount,
+//         indent: row.indent,
+//         debit: account.accountNode.debit,
+//         percentage: account.percentage,
+//         children,
+//       });
+//     }
+//   });
+
+//   return sheetDisplay;
+// }
+
 export function mappingAccountToSheetDisplay(
   accountMap: Map<string, { accountNode: IAccountNode; percentage: number }>,
   sheetMappingRow: {
@@ -379,12 +455,9 @@ export function mappingAccountToSheetDisplay(
   const alreadyUsedAccountName = new Set<string>();
 
   sheetMappingRow.forEach((row) => {
-    // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
-    if (alreadyUsedAccountName.has(row.name)) {
-      return;
-    }
-
+    if (alreadyUsedAccountName.has(row.name)) return;
     alreadyUsedAccountName.add(row.name);
+
     const account = accountMap.get(row.code);
     if (!account) {
       sheetDisplay.push({
@@ -398,26 +471,27 @@ export function mappingAccountToSheetDisplay(
         children: [],
       });
     } else {
-      const hasChildren = account.accountNode.children.length > 0;
-      const children = hasChildren
-        ? account.accountNode.children.map((child) => {
-            const childAccount = accountMap.get(child.code)!;
-            // Info: (20241011 - Murky) 最多只有兩層，所以最底不會再有children
-            return iAccountNode2IAccountForSheetDisplay(
-              childAccount.accountNode,
-              childAccount.percentage
-            );
-          })
-        : [];
+      const getChildren = (parent: IAccountNode): IAccountForSheetDisplay[] =>
+        parent.children.map((child) => ({
+          accountId: child.id,
+          code: child.code,
+          name: child.name,
+          amount: child.amount,
+          indent: child.level,
+          debit: child.debit,
+          percentage: accountMap.get(child.code)?.percentage ?? 0,
+          children: getChildren(child), // 遞迴進所有 children
+        }));
+
       sheetDisplay.push({
-        accountId: -1,
+        accountId: account.accountNode.id,
         code: row.code,
         name: row.name,
         amount: account.accountNode.amount,
         indent: row.indent,
         debit: account.accountNode.debit,
         percentage: account.percentage,
-        children,
+        children: getChildren(account.accountNode),
       });
     }
   });

@@ -104,10 +104,17 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     curPeriod: boolean
   ): Promise<IAccountForSheetDisplay[]> {
     const accountMap = await this.generateFinancialReportMap(curPeriod);
+    // eslint-disable-next-line no-console
+    console.log('🔍 has 4611 in map:', accountMap.has('4611'));
 
     // Info: (20240726 - Murky) Calculate revenue and expense ratio
     const accountList = mappingAccountToSheetDisplay(accountMap, incomeStatementMapping);
 
+    // eslint-disable-next-line no-console
+    console.log(
+      '[IncomeStatementGenerator] codes in array:',
+      accountList.map((a) => a.code)
+    );
     return accountList;
   }
 

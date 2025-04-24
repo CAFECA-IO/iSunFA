@@ -91,6 +91,13 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
     const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `🔍 Accounts of type ${accountType}:`,
+      accounts.map((a) => ({ id: a.id, code: a.code, forUser: a.forUser }))
+    );
+
     const forest = buildAccountForest(accounts);
 
     return forest;
@@ -193,13 +200,56 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     return curPeriodAccountReadyForFrontendArray;
   }
 
+  // Anna
+  private combineTwoFSReportArrayByCode(
+    curArray: IAccountForSheetDisplay[],
+    preArray: IAccountForSheetDisplay[]
+  ): IAccountReadyForFrontend[] {
+    const preMap = new Map(preArray.map((item) => [item.code, item]));
+
+    return curArray.map((cur) => {
+      const pre = preMap.get(cur.code);
+
+      const curAmount = cur.amount || 0;
+      const preAmount = pre?.amount || 0;
+
+      const curPercentage = cur.percentage ? Math.round(cur.percentage * 100) : 0;
+      const prePercentage = pre && pre.percentage ? Math.round(pre.percentage * 100) : 0;
+
+      const children = this.combineTwoFSReportArrayByCode(cur.children || [], pre?.children || []);
+      if (cur.code === '4611') {
+        // eslint-disable-next-line no-console
+        console.log('✅ 4611 的 children:', children);
+      }
+
+      return {
+        accountId: cur.accountId,
+        code: cur.code,
+        name: cur.name,
+        indent: cur.indent,
+        curPeriodAmount: curAmount,
+        prePeriodAmount: preAmount,
+        curPeriodPercentage: curPercentage,
+        prePeriodPercentage: prePercentage,
+        curPeriodAmountString: numberBeDashIfFalsy(curAmount),
+        prePeriodAmountString: numberBeDashIfFalsy(preAmount),
+        curPeriodPercentageString: numberBeDashIfFalsy(curPercentage),
+        prePeriodPercentageString: numberBeDashIfFalsy(prePercentage),
+        children,
+      };
+    });
+  }
+
   public async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
     this.curPeriodContent = await this.generateFinancialReportArray(true);
 
     this.prePeriodContent = await this.generateFinancialReportArray(false);
 
+    // const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] =
+    //   this.combineTwoFSReportArray(this.curPeriodContent, this.prePeriodContent);
+    // Anna
     const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] =
-      this.combineTwoFSReportArray(this.curPeriodContent, this.prePeriodContent);
+      this.combineTwoFSReportArrayByCode(this.curPeriodContent, this.prePeriodContent);
     return curPeriodAccountReadyForFrontendArray;
   }
 

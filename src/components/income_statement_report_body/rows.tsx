@@ -20,6 +20,13 @@ const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
     ).values()
   );
 
+  // 🔍 Debug: 印出所有渲染前的 account code
+  // eslint-disable-next-line no-console
+  console.log(
+    '[Rows] 渲染用的 accounts:',
+    uniqueAccounts.map((a) => a.code)
+  );
+
   return (
     <>
       {/* Info: (20250113 - Anna) 渲染唯一的會計科目行，過濾掉重複的 */}
