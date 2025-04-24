@@ -251,6 +251,14 @@ export const voucherGetByAccountAPIUtils = {
       const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
       // Info: (20250423 - Anna) associate.amount 替換為 associate.resultLineItem.amount
       const adjustedAmount = associate.resultLineItem.amount * (isSameDirection ? 1 : -1);
+
+      // eslint-disable-next-line no-console
+      console.log('📦 lineItemWithAssociate:', JSON.stringify(lineItemWithAssociate, null, 2));
+
+      // Info: (20250423 - Anna) 印出完整 associate 結構
+      // eslint-disable-next-line no-console
+      console.log('📦 associate:', JSON.stringify(associate, null, 2));
+
       if (isSameAccount) {
         remainingAmount += adjustedAmount;
       }
