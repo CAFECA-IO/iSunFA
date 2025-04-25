@@ -13,7 +13,6 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { APIName } from '@/constants/api_connection';
-import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
@@ -28,9 +27,17 @@ type ITaxTypeForFrontend =
 
 type ITaxPeriod = 'Monthly' | 'Weekly';
 
+enum TaxTypeForFrontend {
+  ZERO_TAX = 'zeroTax',
+  ZERO_TAX_THROUGH_CUSTOMS = 'zeroTaxThroughCustoms',
+  ZERO_TAX_NOT_THROUGH_CUSTOMS = 'zeroTaxNotThroughCustoms',
+  TAX_FREE = 'taxFree',
+  TAXABLE = 'taxable',
+}
+
 enum TaxPeriod {
-  MONTHLY = 'Monthly',
-  WEEKLY = 'Weekly',
+  MONTH = 'Monthly',
+  WEEK = 'Weekly',
 }
 
 const AccountingSettingPageBody: React.FC = () => {
@@ -43,79 +50,35 @@ const AccountingSettingPageBody: React.FC = () => {
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
 
-  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id;
   const currencyList = ['TWD', 'USD'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
-  const { trigger: getAccountSetting, data: accountingSetting } = APIHandler<IAccountingSetting>(
-    APIName.ACCOUNTING_SETTING_GET,
-    { params: { companyId: accountBookId } }
+  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET
   );
-  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const {
     trigger: updateSetting,
     isLoading: isUpdating,
     success: updatedSuccess,
     error: updatedError,
-  } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE, {
-    params: { companyId: accountBookId },
-  });
-  // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+  } = APIHandler<IAccountingSetting>(APIName.ACCOUNTING_SETTING_UPDATE);
 
-  const initialAccountingSetting: IAccountingSetting = {
-    id: 0,
-    companyId: 0,
-    currency: currencyList[0],
-    taxSettings: {
-      salesTax: {
-        taxable: true,
-        rate: 5,
-      },
-      purchaseTax: {
-        taxable: true,
-        rate: 5,
-      },
-      returnPeriodicity: TaxPeriod.MONTHLY,
-    },
-    shortcutList: [],
-  };
-
-  const {
-    taxSettings: {
-      salesTax: initialSalesTax,
-      purchaseTax: initialPurchaseTax,
-      returnPeriodicity: initialTaxPeriod,
-    },
-    currency: initialCurrency,
-  } = accountingSetting ?? initialAccountingSetting;
-
-  // Info: (20241113 - Julian) Transfer API data to frontend data
-  const defaultSalesTax = initialSalesTax.taxable
-    ? initialSalesTax.rate !== 0
-      ? initialSalesTax.rate
-      : 'zeroTax'
-    : 'taxFree';
-
-  const defaultPurchaseTax = initialPurchaseTax.taxable
-    ? initialPurchaseTax.rate !== 0
-      ? initialPurchaseTax.rate
-      : 'zeroTax'
-    : 'taxFree';
-
-  const defaultCurrency =
-    currencyList.find((currency) => currency === initialCurrency) ?? currencyList[0];
-
+  const [accountSettingId, setAccountSettingId] = useState<number>(0);
   // Info: (20241113 - Julian) Form State
-  const [currentSalesTax, setCurrentSalesTax] = useState<ITaxTypeForFrontend>(defaultSalesTax);
-  const [currentPurchaseTax, setCurrentPurchaseTax] =
-    useState<ITaxTypeForFrontend>(defaultPurchaseTax);
-  const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(
-    initialTaxPeriod as ITaxPeriod
-  );
-  const [currentCurrency, setCurrentCurrency] = useState<string>(defaultCurrency);
+  const [currentSalesTax, setCurrentSalesTax] = useState<ITaxTypeForFrontend>(0);
+  const [currentPurchaseTax, setCurrentPurchaseTax] = useState<ITaxTypeForFrontend>(0);
+  const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(TaxPeriod.MONTH);
+  const [currentCurrency, setCurrentCurrency] = useState<string>('');
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
+
+  // Info: (20250425 - Julian) 儲存變數的當前狀態，以判斷保存按鈕是否禁用
+  const [defaultSalesTax, setDefaultSalesTax] = useState<ITaxTypeForFrontend>(0);
+  const [defaultPurchaseTax, setDefaultPurchaseTax] = useState<ITaxTypeForFrontend>(0);
+  const [defaultTaxPeriod, setDefaultTaxPeriod] = useState<ITaxPeriod>(TaxPeriod.MONTH);
+  const [defaultCurrency, setDefaultCurrency] = useState<string>('');
 
   const {
     targetRef: salesTaxRef,
@@ -141,18 +104,46 @@ const AccountingSettingPageBody: React.FC = () => {
     setComponentVisible: setCurrencyMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20250109 - Julian) 判斷保存紐是否禁用: 1. 更新中 2. 用戶沒有修改項目
+  // Info: (20250425 - Julian) 判斷保存紐是否禁用: 1. 更新中 2. 用戶沒有修改項目
   const saveDisabled =
     isUpdating ||
     (currentSalesTax === defaultSalesTax &&
       currentPurchaseTax === defaultPurchaseTax &&
-      currentTaxPeriod === initialTaxPeriod &&
-      currentCurrency === initialCurrency);
+      currentTaxPeriod === defaultTaxPeriod &&
+      currentCurrency === defaultCurrency);
 
   const toggleSalesTaxMenu = () => setSalesTaxVisible(!salesTaxVisible);
   const togglePurchaseTaxMenu = () => setPurchaseTaxVisible(!purchaseTaxVisible);
   const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
   const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
+
+  const getAccountData = async () => {
+    // Info: (20250425 - Julian) GET API
+    const { data, success } = await getAccountSetting({ params: { companyId: accountBookId } });
+
+    // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
+    if (success && data) {
+      const { salesTax, purchaseTax, returnPeriodicity } = data.taxSettings;
+
+      const salesTaxRate = salesTax.taxable
+        ? salesTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+          ? TaxTypeForFrontend.ZERO_TAX
+          : salesTax.rate
+        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+
+      const purchaseTaxRate = purchaseTax.taxable
+        ? purchaseTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+          ? TaxTypeForFrontend.ZERO_TAX
+          : purchaseTax.rate
+        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+
+      setAccountSettingId(data.id); // Info: (20250425 - Julian) 取得會計 ID
+      setCurrentSalesTax(salesTaxRate);
+      setCurrentPurchaseTax(purchaseTaxRate);
+      setCurrentTaxPeriod(returnPeriodicity as ITaxPeriod);
+      setCurrentCurrency(data.currency);
+    }
+  };
 
   const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -177,8 +168,14 @@ const AccountingSettingPageBody: React.FC = () => {
     const salesTaxRate = typeof currentSalesTax === 'number' ? currentSalesTax : 0;
     const purchaseTaxRate = typeof currentPurchaseTax === 'number' ? currentPurchaseTax : 0;
 
+    // Info: (20250425 - Julian) 儲存變數的當前狀態
+    setDefaultSalesTax(currentSalesTax);
+    setDefaultPurchaseTax(currentPurchaseTax);
+    setDefaultTaxPeriod(currentTaxPeriod);
+    setDefaultCurrency(currentCurrency);
+
     const body = {
-      id: accountingSetting?.id ?? 0,
+      id: accountSettingId,
       companyId: accountBookId,
       currency: currentCurrency,
       taxSettings: {
@@ -199,6 +196,12 @@ const AccountingSettingPageBody: React.FC = () => {
     // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
+  // Info: (20250425 - Julian) 取得會計設定資料
+  useEffect(() => {
+    getAccountData();
+  }, []);
+
+  // Info: (20250425 - Julian) 更新資料
   useEffect(() => {
     if (!isUpdating) {
       // Info: (20241114 - Julian) 更新成功顯示 Toast，並重新取得 Accounting setting 資料
@@ -210,7 +213,7 @@ const AccountingSettingPageBody: React.FC = () => {
           closeable: true,
         });
 
-        getAccountSetting({ params: { companyId: accountBookId } });
+        getAccountData();
         // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
@@ -227,7 +230,7 @@ const AccountingSettingPageBody: React.FC = () => {
   // Info: (20241113 - Julian) 文字顯示設定
   const showTaxStr = (taxRate: ITaxTypeForFrontend) => {
     switch (taxRate) {
-      case 'zeroTax':
+      case TaxTypeForFrontend.ZERO_TAX:
         return (
           <div className="flex flex-1 items-center justify-between">
             <p className="text-input-text-input-filled">
@@ -251,7 +254,7 @@ const AccountingSettingPageBody: React.FC = () => {
       //       <p className="text-input-text-input-placeholder">0%</p>
       //     </div>
       //   );
-      case 'taxFree':
+      case TaxTypeForFrontend.TAX_FREE:
         return (
           <p className="flex-1 text-input-text-input-filled">
             {t('settings:ACCOUNTING.TAX_OPTION_TAX_FREE')}
