@@ -61,7 +61,7 @@ export function getReportFilterByReportType(reportType: ReportSheetType): {
 export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
   const accountsMap = new Map<string, IAccountReadyForFrontend>();
 
-  // Info: (20250425 - Anna) 舊版本只處理最外層帳戶，改為遞迴遍歷所有 children，確保所有層級的科目皆納入 accountsMap 中，將巢狀帳戶陣列展平
+  // Info: (20250425 - Anna) 舊版本只處理最外層帳戶，改為遞迴遍歷所有 children，確保所有層級的科目皆納入 accountsMap 中，將巢狀會計科目陣列攤平
   const traverse = (accountListWithChildren: IAccountReadyForFrontend[]) => {
     accountListWithChildren.forEach((account) => {
       if (account.code?.length > 0) {
@@ -73,7 +73,7 @@ export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
     });
   };
 
-  traverse(accounts); // Info: (20250425 - Anna) 對整棵帳戶樹執行攤平（扁平化）
+  traverse(accounts); // Info: (20250425 - Anna) 對整棵會計科目樹執行攤平（扁平化）
 
   return accountsMap;
 }
