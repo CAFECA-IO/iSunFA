@@ -113,6 +113,7 @@ async function getCertificateSummaryByType(companyId: number, type: InvoiceTrans
   });
 
   return {
+    // Deprecated: (20250425 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-underscore-dangle
     totalInvoicePrice: totalInvoicePrice._sum.totalPrice || 0,
     incomplete: { count: incompleteCount },
