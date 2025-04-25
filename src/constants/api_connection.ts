@@ -479,9 +479,8 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.CREATE_ACCOUNT_BOOK]: createConfig({
     name: APIName.CREATE_ACCOUNT_BOOK,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.CREATE_ACCOUNT_BOOK,
-    useWorker: true,
   }),
   [APIName.NEWS_LIST]: createConfig({
     name: APIName.NEWS_LIST,

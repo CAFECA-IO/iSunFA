@@ -15,14 +15,14 @@ interface CreateTodoModalProps {
   toggleModal: () => void;
   getTodoList?: () => Promise<void>;
   defaultTodoName?: string;
-  defaultCompany?: IAccountBook;
+  defaultAccountBook?: IAccountBook;
 }
 
 const CreateTodoModal = ({
   toggleModal,
   getTodoList,
   defaultTodoName,
-  defaultCompany,
+  defaultAccountBook,
 }: CreateTodoModalProps) => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
@@ -34,7 +34,10 @@ const CreateTodoModal = ({
   const [endTimeStamp, setEndTimeStamp] = useState<number>();
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [company, setCompany] = useState<IAccountBook | undefined>(defaultCompany || undefined);
+  const [accountBook, setAccountBook] = useState<IAccountBook | undefined>(
+    defaultAccountBook || undefined
+  );
+
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
@@ -82,7 +85,7 @@ const CreateTodoModal = ({
           deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
           startDate: startTimeStamp,
           endDate: endTimeStamp,
-          accountBookId: company?.id,
+          accountBookId: accountBook?.id,
           note,
         },
       });
@@ -115,9 +118,9 @@ const CreateTodoModal = ({
   };
 
   useEffect(() => {
-    const getAccountBookList = async () => {
-      if (!userAuth) return;
+    if (!userAuth) return;
 
+    const getAccountBookList = async () => {
       try {
         const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
@@ -126,7 +129,7 @@ const CreateTodoModal = ({
 
         const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
 
-        if (success && accountBookListData && accountBookListData.length > 0) {
+        if (success && accountBookListData.length > 0) {
           // Info: (20241120 - Liz) 取得使用者擁有的帳本清單成功時更新帳本清單
           setAccountBookList(accountBookListData);
         } else {
@@ -200,13 +203,13 @@ const CreateTodoModal = ({
                     type="button"
                     className="flex flex-auto items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM outline-none hover:border-input-stroke-input-hover focus:border-input-stroke-selected disabled:cursor-not-allowed disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
                     onClick={toggleDropdown}
-                    disabled={defaultCompany !== undefined}
+                    disabled={defaultAccountBook !== undefined}
                   >
                     <p className="px-12px py-10px text-base font-medium">
-                      {company?.name || t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')}
+                      {accountBook?.name || t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')}
                     </p>
 
-                    {defaultCompany === undefined && (
+                    {defaultAccountBook === undefined && (
                       <div className="px-12px py-10px">
                         {isDropdownOpen ? <IoChevronUp size={20} /> : <IoChevronDown size={20} />}
                       </div>
@@ -221,7 +224,7 @@ const CreateTodoModal = ({
                             key={item.id}
                             type="button"
                             onClick={() => {
-                              setCompany(item);
+                              setAccountBook(item);
                               toggleDropdown();
                             }}
                             className="rounded-xs px-12px py-8px text-left text-sm font-medium text-dropdown-text-input-filled hover:bg-dropdown-surface-item-hover"

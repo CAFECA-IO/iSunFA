@@ -46,7 +46,7 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
     const getAccountBookPendingTask = async () => {
       try {
         const { data, success, code } = await getAccountBookPendingTaskAPI({
-          params: { companyId: connectedAccountBook.id },
+          params: { accountBookId: connectedAccountBook.id },
         });
 
         if (success) {
@@ -156,7 +156,7 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
           toggleModal={toggleCreateTodoModal}
           getTodoList={getTodoList}
           defaultTodoName={defaultTodoName}
-          defaultCompany={connectedAccountBook ?? undefined}
+          defaultAccountBook={connectedAccountBook ?? undefined}
         />
       )}
     </section>

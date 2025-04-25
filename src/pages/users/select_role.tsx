@@ -29,8 +29,13 @@ const USER_ROLES_ICON = [
   },
   {
     id: RoleName.ACCOUNTING_FIRMS,
-    roleIconSrc: '/icons/graduation_cap.svg',
+    roleIconSrc: '/icons/accounting_firms_icon.svg',
     roleIconAlt: 'graduation_cap',
+  },
+  {
+    id: RoleName.ENTERPRISE,
+    roleIconSrc: '/icons/enterprise_icon.svg',
+    roleIconAlt: 'enterprise',
   },
 ];
 
