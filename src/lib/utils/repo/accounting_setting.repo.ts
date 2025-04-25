@@ -51,14 +51,30 @@ export async function getAccountingSettingByCompanyId(companyId: number) {
   return accountingSetting;
 }
 
-export async function updateAccountingSettingById(id: number, data: IAccountingSetting) {
+export async function updateAccountingSettingById(
+  companyId: number | string,
+  data: IAccountingSetting
+) {
   const { taxSettings, currency, shortcutList } = data;
   let accountingSetting = null;
   const nowInSecond = getTimestampNow();
 
+  const numericCompanyId = typeof companyId === 'string' ? parseInt(companyId, 10) : companyId;
+
   try {
+    const existingAccountingSetting = await prisma.accountingSetting.findFirst({
+      where: {
+        companyId: numericCompanyId,
+        deletedAt: null,
+      },
+    });
+
+    if (!existingAccountingSetting) {
+      throw new Error(`Accounting setting not found for company ${companyId}`);
+    }
+
     await prisma.accountingSetting.update({
-      where: { id },
+      where: { id: existingAccountingSetting.id },
       data: {
         salesTaxTaxable: taxSettings.salesTax.taxable,
         salesTaxRate: taxSettings.salesTax.rate,
@@ -66,16 +82,17 @@ export async function updateAccountingSettingById(id: number, data: IAccountingS
         purchaseTaxRate: taxSettings.purchaseTax.rate,
         returnPeriodicity: taxSettings.returnPeriodicity,
         currency,
+        updatedAt: nowInSecond,
       },
     });
 
     if (shortcutList) {
       await prisma.shortcut.deleteMany({
-        where: { accountingSettingId: id },
+        where: { accountingSettingId: existingAccountingSetting.id },
       });
       await prisma.shortcut.createMany({
         data: shortcutList.map((shortcut) => ({
-          accountingSettingId: id,
+          accountingSettingId: existingAccountingSetting.id,
           actionName: shortcut.action.name,
           description: shortcut.action.description,
           fieldList: JSON.stringify(shortcut.action.fieldList),
@@ -84,13 +101,14 @@ export async function updateAccountingSettingById(id: number, data: IAccountingS
           updatedAt: nowInSecond,
         })),
       });
-      accountingSetting = await getAccountingSettingByCompanyId(data.companyId);
     }
+
+    accountingSetting = await getAccountingSettingByCompanyId(numericCompanyId);
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'update accounting setting in updateAccountingSetting failed',
-      errorMessage: (error as Error).message,
+      errorMessage: `${(error as Error).message} (companyId: ${companyId}, dataId: ${data.id})`,
     });
   }
 

@@ -92,7 +92,13 @@ import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
-import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
+import {
+  accountGetV2Schema,
+  accountPostV2Schema,
+  accountGetByIdSchema,
+  accountUpdateSchema,
+  accountDeleteSchema,
+} from '@/lib/utils/zod_schema/account';
 import {
   assetBulkPostSchema,
   assetDeleteSchema,
@@ -226,10 +232,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
-  [APIName.ACCOUNT_GET_BY_ID]: nullAPISchema,
+  [APIName.ACCOUNT_GET_BY_ID]: accountGetByIdSchema,
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
-  [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: nullAPISchema,
-  [APIName.DELETE_ACCOUNT_BY_ID]: nullAPISchema,
+  [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: accountUpdateSchema,
+  [APIName.DELETE_ACCOUNT_BY_ID]: accountDeleteSchema,
   [APIName.PUBLIC_KEY_GET]: nullAPISchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
@@ -239,7 +245,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: assetDeleteSchema,
   [APIName.UPDATE_ASSET_V2]: assetPutSchema,
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
