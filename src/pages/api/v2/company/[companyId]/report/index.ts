@@ -21,7 +21,6 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { FinancialReport } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';
-import { flattenAccounts } from '@/lib/utils/account/flatten';
 
 type APIResponse = object | null;
 
@@ -165,10 +164,8 @@ export async function incomeStatementHandler({
      * @property otherInfo - Additional information for graph display in report
      */
     const { content: accounts, otherInfo } = content;
-    const flatAccounts = flattenAccounts(accounts); // 攤平
-    const accountsMap = transformAccountsToMap(flatAccounts); // 用攤平後的版本建構 Map
 
-    // const accountsMap = transformAccountsToMap(accounts);
+    const accountsMap = transformAccountsToMap(accounts);
 
     const generalFilteredAccounts = transformAccountsMapToFilterSequence({
       filter: reportFilter.general,
