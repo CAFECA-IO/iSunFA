@@ -16,7 +16,7 @@ import loggerBack from '@/lib/utils/logger_back';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { ICertificateOutput } from '@/interfaces/certificate';
 import { validateOutputData } from '@/lib/utils/validator';
-import { getPaginatedCertificateListByType } from '@/lib/utils/repo/certificate_list.repo'; // 後續實作
+import { getPaginatedCertificateListByType } from '@/lib/utils/repo/certificate_list.repo'; // ToDo: (20250425 - tzuhan) 後續實作
 import { InvoiceTransactionDirection } from '@/constants/invoice';
 
 const handleGetRequest = async (req: NextApiRequest) => {
