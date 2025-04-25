@@ -101,12 +101,12 @@ export const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId) {
+  if (!query || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
   const {
-    companyId,
+    accountBookId,
     page = 1,
     pageSize,
     sortOption,
@@ -117,10 +117,10 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     searchQuery,
   } = query;
 
-  loggerBack.info(`User ${userId} requesting asset list for companyId: ${companyId}`);
+  loggerBack.info(`User ${userId} requesting asset list for accountBookId: ${accountBookId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -142,7 +142,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to view assets for company ${companyId}`
+      `User ${userId} does not have permission to view assets for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -163,7 +163,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   // Info: (20241211 - Shirley) 將 sortOption 轉換成 prisma 的 orderBy 條件，如果 sortOption 不符合預設的格式，則使用預設的排序條件 `DEFAULT_SORT_OPTIONS`
   const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption);
 
-  const assets = await listAssetsByCompanyId(companyId, {
+  const assets = await listAssetsByCompanyId(accountBookId, {
     sortOption: parsedSortOption,
     filterCondition,
     searchQuery,
@@ -172,7 +172,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   if (!assets) {
     payload = null;
   } else {
-    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
     // Info: (20241210 - Shirley) sort assets into fit the `IAssetItem`
     const sortedAssets = assets.map((item) => {
       const initAsset = parsePrismaAssetToAssetEntity(item);
@@ -241,7 +241,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   } else {
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     loggerBack.info(
-      `Successfully retrieved ${payload?.data.length || 0} assets for company ${companyId}`
+      `Successfully retrieved ${payload?.data.length || 0} assets for company ${accountBookId}`
     );
   }
 
@@ -282,11 +282,11 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query, body } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId || !body) {
+  if (!query || !query.accountBookId || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId } = query;
+  const { accountBookId } = query;
   const {
     assetName,
     assetType,
@@ -300,10 +300,10 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     note = '',
   } = body as ICreateAssetInput;
 
-  loggerBack.info(`User ${userId} creating asset for companyId: ${companyId}`);
+  loggerBack.info(`User ${userId} creating asset for accountBookId: ${accountBookId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -325,7 +325,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to create asset for company ${companyId}`
+      `User ${userId} does not have permission to create asset for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -342,7 +342,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
-    companyId,
+    accountBookId,
     name: assetName,
     type: assetType,
     number: assetNumber,
@@ -366,7 +366,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   } else {
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = rs;
-    loggerBack.info(`Successfully created asset ${rs.id} for company ${companyId}`);
+    loggerBack.info(`Successfully created asset ${rs.id} for company ${accountBookId}`);
   }
 
   // Info: (20250423 - Shirley) Format response and log user action

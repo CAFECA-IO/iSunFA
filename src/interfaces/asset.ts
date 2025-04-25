@@ -131,7 +131,7 @@ export const mockUpdateAssetInput: IUpdateAssetInput = {
  * Info: (20241024 - Murky)
  * @description Asset Entity Interface specify  for backend
  * @property id - number Asset ID, 0 if not yet saved in database
- * @property companyId - number company id of company that own the asset
+ * @property accountBookId - number company id of company that own the asset
  * @property name - string
  * @property type - AssetEntityType Asset type that is based on property, plant, equipment
  * @property number - string Property Serial number
@@ -162,7 +162,7 @@ export interface IAssetEntity {
    * Info: (20241024 - Murky)
    * @description company id of company that own the asset
    */
-  companyId: number;
+  accountBookId: number;
 
   name: string;
 
@@ -343,7 +343,7 @@ export interface AssetHeaderWithStringDate extends Omit<AssetHeader, 'acquisitio
 
 // ToDo: (20241204 - Luphia) move to interface folder
 export interface ICreateAssetWithVouchersRepoInput {
-  companyId: number;
+  accountBookId: number;
   name: string;
   type: string;
   number: string;

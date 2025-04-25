@@ -10,7 +10,9 @@ const assetExportNullSchema = z.union([z.object({}), z.string()]);
 /**
  * Info: (20241108 - Shirley) Query schema for Export API
  */
-const assetExportQuerySchema = assetExportNullSchema; // Info: (20241108 - Shirley) No need for query parameters
+const assetExportQuerySchema = z.object({
+  accountBookId: z.string(),
+});
 
 const assetExportBodySchema = z.object({
   fileType: z.enum([ExportAssetFileType.CSV]),

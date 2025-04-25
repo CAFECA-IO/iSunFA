@@ -316,9 +316,8 @@ export function addAccountNodeToMapRecursively(
   maxHeight: number
   /* eslint-enable @typescript-eslint/no-unused-vars */
 ) {
-  // Info: (20241011 - Murky) 第二層可以保有自己的child
-  const isThirdLayer = currentDepth >= maxHeight;
-  const newAccountNode = isThirdLayer ? account : { ...account, children: [] };
+  // Info: (20250425 - Anna) 不限層級的會計科目都保留 children，不清空
+  const newAccountNode = account;
   const percentage = rootAmount === 0 ? 0 : account.amount / rootAmount; // Info: (20240702 - Murky) Calculate percentage
   accountMap.set(account.code, { accountNode: newAccountNode, percentage });
 
@@ -378,6 +377,16 @@ export function mappingAccountToSheetDisplay(
   const sheetDisplay: IAccountForSheetDisplay[] = [];
   const alreadyUsedAccountName = new Set<string>();
 
+  const getChildren = (parent: IAccountNode): IAccountForSheetDisplay[] =>
+    parent.children.map((child) => {
+      const childAccount = accountMap.get(child.code)!;
+      return iAccountNode2IAccountForSheetDisplay(
+        childAccount.accountNode,
+        childAccount.percentage,
+        getChildren(childAccount.accountNode) // Info: (20250425 - Anna) 遞迴
+      );
+    });
+
   sheetMappingRow.forEach((row) => {
     // Info: (20240702 - Murky) 如果已經有相同的code，則不再加入
     if (alreadyUsedAccountName.has(row.name)) {
@@ -398,19 +407,11 @@ export function mappingAccountToSheetDisplay(
         children: [],
       });
     } else {
-      const hasChildren = account.accountNode.children.length > 0;
-      const children = hasChildren
-        ? account.accountNode.children.map((child) => {
-            const childAccount = accountMap.get(child.code)!;
-            // Info: (20241011 - Murky) 最多只有兩層，所以最底不會再有children
-            return iAccountNode2IAccountForSheetDisplay(
-              childAccount.accountNode,
-              childAccount.percentage
-            );
-          })
-        : [];
+      const children = getChildren(account.accountNode);
+
       sheetDisplay.push({
-        accountId: -1,
+        // Info: (20250425 - Anna) 如果 account 存在，使用實際的 accountId；找不到 account 時才設為 -1
+        accountId: account.accountNode.id,
         code: row.code,
         name: row.name,
         amount: account.accountNode.amount,

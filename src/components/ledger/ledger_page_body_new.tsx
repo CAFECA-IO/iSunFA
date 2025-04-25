@@ -89,7 +89,7 @@ const LedgerPageBody = () => {
         labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
       };
 
-      const params = { companyId: connectedAccountBook.id };
+      const params = { accountBookId: connectedAccountBook.id };
 
       // Deprecate: (20241118 - Anna) debug
       // eslint-disable-next-line no-console
@@ -103,7 +103,7 @@ const LedgerPageBody = () => {
         const endAccountNo = selectedEndAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
 
         const { data } = await fetchLedgerDataAPI({
-          params: { companyId: connectedAccountBook.id },
+          params: { accountBookId: connectedAccountBook.id },
           query: {
             startDate: selectedDateRange.startTimeStamp,
             endDate: selectedDateRange.endTimeStamp,
