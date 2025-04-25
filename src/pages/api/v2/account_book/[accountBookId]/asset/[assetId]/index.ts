@@ -58,18 +58,18 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.assetId || !query.companyId) {
+  if (!query || !query.assetId || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { assetId, companyId } = query;
+  const { assetId, accountBookId } = query;
 
   loggerBack.info(
-    `User ${userId} requesting asset details for assetId: ${assetId}, companyId: ${companyId}`
+    `User ${userId} requesting asset details for assetId: ${assetId}, accountBookId: ${accountBookId}`
   );
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -91,17 +91,17 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to view asset ${assetId} for company ${companyId}`
+      `User ${userId} does not have permission to view asset ${assetId} for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  const asset = await getLegitAssetById(assetId, companyId);
+  const asset = await getLegitAssetById(assetId, accountBookId);
   if (!asset) {
     payload = null;
   } else {
     const vouchers = await getVouchersByAssetId(assetId);
-    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
     const { usefulLife, depreciationMethod } = asset;
     const initAsset = parsePrismaAssetToAssetEntity(asset);
     const convertedUsefulLife =
@@ -138,7 +138,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     payload = sortedAsset;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    loggerBack.info(`Successfully retrieved asset ${assetId} for company ${companyId}`);
+    loggerBack.info(`Successfully retrieved asset ${assetId} for company ${accountBookId}`);
   }
 
   // Info: (20250423 - Shirley) Validate output data
@@ -183,11 +183,11 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query, body } = checkRequestData(apiName, req, session);
-  if (!query || !query.assetId || !query.companyId || !body) {
+  if (!query || !query.assetId || !query.accountBookId || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { assetId, companyId } = query;
+  const { assetId, accountBookId } = query;
   const {
     assetName,
     acquisitionDate,
@@ -199,10 +199,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
     note,
   } = body as IAssetPutInputBody;
 
-  loggerBack.info(`User ${userId} updating asset ${assetId} for company ${companyId}`);
+  loggerBack.info(`User ${userId} updating asset ${assetId} for company ${accountBookId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -224,19 +224,19 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to update asset ${assetId} for company ${companyId}`
+      `User ${userId} does not have permission to update asset ${assetId} for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  const asset = await getLegitAssetById(assetId, companyId);
+  const asset = await getLegitAssetById(assetId, accountBookId);
   if (!asset) {
     payload = null;
   } else {
     const vouchers = await getVouchersByAssetId(assetId);
-    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
 
-    const updatedAsset = await updateAsset(companyId, assetId, {
+    const updatedAsset = await updateAsset(accountBookId, assetId, {
       assetName,
       acquisitionDate,
       purchasePrice,
@@ -280,7 +280,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
     payload = sortedAsset;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    loggerBack.info(`Successfully updated asset ${assetId} for company ${companyId}`);
+    loggerBack.info(`Successfully updated asset ${assetId} for company ${accountBookId}`);
   }
 
   // Info: (20250423 - Shirley) Validate output data
@@ -325,16 +325,16 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.assetId || !query.companyId) {
+  if (!query || !query.assetId || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { assetId, companyId } = query;
+  const { assetId, accountBookId } = query;
 
-  loggerBack.info(`User ${userId} deleting asset ${assetId} for company ${companyId}`);
+  loggerBack.info(`User ${userId} deleting asset ${assetId} for company ${accountBookId}`);
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -356,18 +356,18 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to delete asset ${assetId} for company ${companyId}`
+      `User ${userId} does not have permission to delete asset ${assetId} for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  const asset = await getLegitAssetById(assetId, companyId);
+  const asset = await getLegitAssetById(assetId, accountBookId);
 
   if (!asset) {
     payload = null;
   } else {
     // TODO: (20241209 - Shirley) 確認 delete asset API 回傳資料是否需要 vouchers 跟 currencyAlias，若不需要就改 API 文件然後刪除getAccountingSettingByCompanyId, getVouchersByAssetId
-    const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
     const vouchers = await getVouchersByAssetId(assetId);
     const deletedAsset = await deleteAsset(assetId);
 
@@ -398,7 +398,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     } else {
       payload = sortedAsset;
       statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-      loggerBack.info(`Successfully deleted asset ${assetId} for company ${companyId}`);
+      loggerBack.info(`Successfully deleted asset ${assetId} for company ${accountBookId}`);
     }
   }
 

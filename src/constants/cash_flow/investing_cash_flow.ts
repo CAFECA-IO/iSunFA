@@ -77,13 +77,20 @@ export const INVESTING_CASH_FLOW_DIRECT_MAPPING: Map<string, IDirectCashFlowMapp
       name: '透過其他綜合損益按公允價值衡量之金融資產減資退回股款',
       cashInflow: true,
       voucherPattern: {
+        // Info: (20250425 - Anna) 減資退回股款，借方科目是現金
         debit: {
           type: 'CODE',
           codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
         },
         credit: {
           type: 'CODE',
-          codes: new Set(CASH_AND_CASH_EQUIVALENTS_REGEX),
+          codes: new Set([
+            // Info: (20250425 - Anna) 減資退回股款，貸方科目是：
+            /^1121/, // Info: (20250425 - Anna) 權益工具－流動
+            /^1123/, // Info: (20250425 - Anna) 債務工具－流動
+            /^1518/, // Info: (20250425 - Anna) 權益工具－非流動
+            /^1521/, // Info: (20250425 - Anna) 債務工具－非流動
+          ]),
         },
       },
     },

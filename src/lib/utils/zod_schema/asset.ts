@@ -53,7 +53,7 @@ export const IAssetDetailsValidator = IAssetItemValidator.extend({
  */
 export const assetEntityValidator = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   name: z.string(),
   type: z.nativeEnum(AssetEntityType),
   number: z.string(),
@@ -86,7 +86,7 @@ export type IAssetListSortOptions = z.infer<typeof assetListSortOptions>;
 
 // Info: (20241206 - Shirley) query for create single or bulk assets
 const IAssetPostInputQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 // Info: (20241206 - Shirley) query for get asset by id
@@ -134,7 +134,7 @@ const IAssetPostRepoOutputValidator = z.object({
   id: z.number(),
   name: z.string(),
   number: z.string(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   status: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
