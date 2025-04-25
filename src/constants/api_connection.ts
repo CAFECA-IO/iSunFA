@@ -35,7 +35,9 @@ export enum APIName {
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
-  CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2',
+  INPUT_CERTIFICATE_LIST = 'INPUT_CERTIFICATE_LIST',
+  OUTPUT_CERTIFICATE_LIST = 'OUTPUT_CERTIFICATE_LIST',
+  CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2', // Deprecated: (20250424 - Tzuhan) remove in the future
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
   CERTIFICATE_PUT_V2 = 'CERTIFICATE_PUT_V2',
@@ -166,7 +168,9 @@ export enum APIPath {
   USER_PENDING_TASK_GET = `${apiPrefixV2}/user/:userId/pending_task`,
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
-  CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
+  CERTIFICATE_LIST_V2 = `${apiPrefixV2}/company/:companyId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
+  INPUT_CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate/input`,
+  OUTPUT_CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate/output`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/company/:companyId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/company/:companyId/certificate/:certificateId`,
@@ -616,6 +620,16 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.INPUT_CERTIFICATE_LIST]: createConfig({
+    name: APIName.INPUT_CERTIFICATE_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.INPUT_CERTIFICATE_LIST,
+  }),
+  [APIName.OUTPUT_CERTIFICATE_LIST]: createConfig({
+    name: APIName.OUTPUT_CERTIFICATE_LIST,
+    method: HttpMethod.GET,
+    path: APIPath.OUTPUT_CERTIFICATE_LIST,
   }),
   [APIName.CERTIFICATE_GET_V2]: createConfig({
     name: APIName.CERTIFICATE_GET_V2,

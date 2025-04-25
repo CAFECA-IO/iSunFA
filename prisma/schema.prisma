@@ -276,6 +276,7 @@ model Company {
   transfers                  AccountBookTransfer[]
 
   @@map("company")
+  CertificateRC2 CertificateRC2[]
 }
 
 model CompanyKYC {
@@ -386,6 +387,71 @@ model Certificate {
   @@map("certificate")
 }
 
+model InvoiceRC2 {
+  id                Int     @id @default(autoincrement())
+  certificateId     Int     @unique @map("certificate_id")
+  inputOrOutput     String  @map("input_or_output") // INPUT or OUTPUT
+  type              String  // 對應新版 enum InputInvoiceType / OutputInvoiceType
+  date              Int
+  no                String
+  currencyAlias     String  @map("currency_alias")
+  priceBeforeTax    Int     @map("price_before_tax")
+  taxType           String  @map("tax_type")
+  taxRatio          Int     @map("tax_ratio")
+  taxPrice          Int     @map("tax_price")
+  totalPrice        Int     @map("total_price")
+  deductionType     String? @map("deduction_type") // INPUT 專用
+  salesName         String? @map("sales_name")     // INPUT 專用
+  salesIdNumber     String? @map("sales_id_number")
+  buyerName         String? @map("buyer_name")     // OUTPUT 專用
+  buyerIdNumber     String? @map("buyer_id_number")
+  returnOrAllowance Boolean? @default(false) @map("return_or_allowance") // OUTPUT 專用
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+  deletedAt         Int?    @map("deleted_at")
+
+  certificate CertificateRC2 @relation(fields: [certificateId], references: [id])
+  invoiceVoucherJournals InvoiceVoucherJournal[]
+
+  @@map("invoice_rc2")
+}
+
+model VoucherCertificateRC2 {
+  id            Int  @id @default(autoincrement())
+  voucherId     Int  @map("voucher_id")
+  certificateId Int  @map("certificate_id")
+  createdAt     Int  @map("created_at")
+  updatedAt     Int  @map("updated_at")
+  deletedAt     Int? @map("deleted_at")
+
+  voucher     Voucher       @relation(fields: [voucherId], references: [id])
+  certificate CertificateRC2 @relation(fields: [certificateId], references: [id])
+
+  @@map("voucher_certificate_rc2")
+}
+
+model CertificateRC2 {
+  id           Int      @id @default(autoincrement())
+  accountbookId  Int      @map("accountbook_id")
+  fileId       Int      @map("file_id")
+  uploaderId   Int      @map("uploader_id")
+  inputOrOutput String   @map("input_or_output") // INPUT or OUTPUT
+  aiResultId   String    @default("0") @map("ai_result_id")
+  aiStatus     String    @default("READY") // Optional: AI處理狀態
+  createdAt    Int       @map("created_at")
+  updatedAt    Int       @map("updated_at")
+  deletedAt    Int?      @map("deleted_at")
+
+  accountbook  Company   @relation(fields: [accountbookId], references: [id])
+  file      File      @relation(fields: [fileId], references: [id])
+  uploader  User      @relation(fields: [uploaderId], references: [id])
+  voucherCertificates VoucherCertificateRC2[] 
+  invoice   InvoiceRC2[]
+
+  @@map("certificate_rc2")
+}
+
+
 model Department {
   id        Int        @id @default(autoincrement())
   companyId Int        @map("company_id")
@@ -484,6 +550,14 @@ model File {
   teamFile                    Team?        @relation("team_image_file")
 
   @@map("file")
+  CertificateRC2 CertificateRC2[]
+}
+
+enum DeductionType {
+  DEDUCTIBLE_PURCHASE_AND_EXPENSE
+  DEDUCTIBLE_FIXED_ASSETS
+  NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE
+  NON_DEDUCTIBLE_FIXED_ASSETS
 }
 
 model Invoice {
@@ -531,6 +605,7 @@ model InvoiceVoucherJournal {
   journal Journal  @relation(fields: [journalId], references: [id])
 
   @@map("invoice_voucher_journal")
+  InvoiceRC2 InvoiceRC2[]
 }
 
 // Deprecated: (20250324 - Tzuhan) `Invitation` 移除，已由 `InviteTeamMember` 取代
@@ -964,6 +1039,7 @@ model User {
   teamOrder           TeamOrder[]
 
   @@map("user")
+  CertificateRC2 CertificateRC2[]
 }
 
 model UserAgreement {
@@ -1044,10 +1120,6 @@ model UserSetting {
 }
 
 enum RoleName {
-  ACCOUNTANT
-  BOOKKEEPER
-  EDUCATIONAL_TRIAL_VERSION
-  TEST
   INDIVIDUAL
   ACCOUNTING_FIRMS
   ENTERPRISE
@@ -1164,6 +1236,7 @@ model Voucher {
   counterparty Counterparty @relation(fields: [counterPartyId], references: [id])
 
   @@map("voucher")
+  VoucherCertificateRC2 VoucherCertificateRC2[]
 }
 
 model VoucherCertificate {

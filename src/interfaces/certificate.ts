@@ -1,4 +1,9 @@
-import { type IInvoiceBetaOptional, type IInvoiceEntity } from '@/interfaces/invoice';
+import {
+  IInvoiceInput,
+  IInvoiceOutput,
+  type IInvoiceBetaOptional,
+  type IInvoiceEntity,
+} from '@/interfaces/invoice';
 import { IFileBeta, type IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/account_book';
@@ -13,6 +18,7 @@ import {
   Invoice as PrismaInvoice,
   User as PrismaUser,
 } from '@prisma/client';
+import { InvoiceTransactionDirection } from '@/constants/invoice';
 
 export interface ICertificateListSummary {
   totalInvoicePrice: number;
@@ -26,6 +32,34 @@ export interface ICertificateListSummary {
   };
   currency: string;
 }
+
+export interface ICertificateBase {
+  id: number;
+  name: string;
+  accountbookId: number;
+  incomplete: boolean;
+  file: IFileBeta;
+  voucherNo: string | null;
+  voucherId: number | null;
+  aiResultId?: string;
+  aiStatus?: string;
+  createdAt: number;
+  updatedAt: number;
+  uploader: string;
+  uploaderUrl: string;
+}
+
+export interface ICertificateInput extends ICertificateBase {
+  invoice: Partial<IInvoiceInput>;
+  inputOrOutput: InvoiceTransactionDirection.INPUT;
+}
+
+export interface ICertificateOutput extends ICertificateBase {
+  invoice: Partial<IInvoiceOutput>;
+  inputOrOutput: InvoiceTransactionDirection.OUTPUT;
+}
+
+export type ICertificateUnified = ICertificateInput | ICertificateOutput;
 
 export interface ICertificate {
   id: number;
