@@ -21,8 +21,6 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { FinancialReport } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';
-// Info: (20250425 - Anna)
-import { flattenAccounts } from '@/lib/utils/account/flatten';
 
 type APIResponse = object | null;
 
@@ -74,10 +72,7 @@ export async function balanceSheetHandler({
      */
     const { content: accounts, otherInfo } = content;
 
-    const flatAccounts = flattenAccounts(accounts); // Info: (20250425 - Anna) 攤平
-
-    // const accountsMap = transformAccountsToMap(accounts);
-    const accountsMap = transformAccountsToMap(flatAccounts); // Info: (20250425 - Anna) 用攤平後的版本建構 Map
+    const accountsMap = transformAccountsToMap(accounts);
 
     const generalFilteredAccounts = transformAccountsMapToFilterSequence({
       filter: reportFilter.general,
