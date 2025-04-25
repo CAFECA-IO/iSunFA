@@ -31,8 +31,6 @@ const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCard
   const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
   const [canScrollRight, setCanScrollRight] = useState<boolean>(false);
 
-  const hiddenRoles = [RoleName.BOOKKEEPER, RoleName.EDUCATIONAL_TRIAL_VERSION]; // Deprecated: (20250423 - Liz) 即將被棄用的角色，等後端處理完後即可刪除這行程式碼
-
   // Info: (20250207 - Liz) 監聽滾動事件，計算元素是否部分超出容器的左右邊界，得到左右滾動和部分遮蔽的效果，並且加上左右滾動按鈕可以控制滾動
   useEffect(() => {
     const container = containerRef.current;
@@ -110,7 +108,7 @@ const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCard
         className="hide-scrollbar mx-60px flex max-w-fit gap-20px overflow-x-auto"
       >
         {uncreatedRoles
-          .filter((role) => !hiddenRoles.includes(role)) // Deprecated: (20250423 - Liz) 即將被棄用的角色，等後端處理完後即可刪除這行程式碼
+          // .filter((role) => !hiddenRoles.includes(role)) // Deprecated: (20250423 - Liz) 即將被棄用的角色，等後端處理完後即可刪除這行程式碼
           .map((uncreatedRole, index) => {
             const imageSrc =
               ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === uncreatedRole)?.imageSrc ??
