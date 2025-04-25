@@ -163,22 +163,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Info: (20250425 - Shirley) Validate company ID
-    const { companyId } = query;
+    const { accountBookId } = query;
 
     // Info: (20250425 - Shirley) Check team permissions
-    const company = await getCompanyById(+companyId);
-    if (!company) {
+    const accountBook = await getCompanyById(+accountBookId);
+    if (!accountBook) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       throw new Error(statusMessage);
     }
 
-    const { teamId: companyTeamId } = company;
-    if (!companyTeamId) {
+    const { teamId: accountBookTeamId } = accountBook;
+    if (!accountBookTeamId) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       throw new Error(statusMessage);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    const userTeam = teams?.find((team) => team.id === accountBookTeamId);
     if (!userTeam) {
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
@@ -191,7 +191,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!assertResult.can) {
       loggerBack.info(
-        `User ${userId} does not have permission to export trial balance for company ${companyId}`
+        `User ${userId} does not have permission to export trial balance for company ${accountBookId}`
       );
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
@@ -203,7 +203,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     switch (method) {
       case HttpMethod.POST:
-        result = await handlePostRequest(req, res, companyId);
+        result = await handlePostRequest(req, res, accountBookId);
         if (!result.success) {
           statusMessage = result.statusMessage;
           throw new Error(statusMessage);
