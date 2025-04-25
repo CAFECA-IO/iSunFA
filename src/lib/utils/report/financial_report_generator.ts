@@ -193,13 +193,51 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     return curPeriodAccountReadyForFrontendArray;
   }
 
+  // Info: (20250425 - Anna) Anna
+  private combineTwoFSReportArrayByCode(
+    curArray: IAccountForSheetDisplay[],
+    preArray: IAccountForSheetDisplay[]
+  ): IAccountReadyForFrontend[] {
+    const preMap = new Map(preArray.map((item) => [item.code, item]));
+
+    return curArray.map((cur) => {
+      const pre = preMap.get(cur.code);
+
+      const curAmount = cur.amount || 0;
+      const preAmount = pre?.amount || 0;
+
+      const curPercentage = cur.percentage ? Math.round(cur.percentage * 100) : 0;
+      const prePercentage = pre && pre.percentage ? Math.round(pre.percentage * 100) : 0;
+
+      const children = this.combineTwoFSReportArrayByCode(cur.children || [], pre?.children || []);
+
+      return {
+        accountId: cur.accountId,
+        code: cur.code,
+        name: cur.name,
+        indent: cur.indent,
+        curPeriodAmount: curAmount,
+        prePeriodAmount: preAmount,
+        curPeriodPercentage: curPercentage,
+        prePeriodPercentage: prePercentage,
+        curPeriodAmountString: numberBeDashIfFalsy(curAmount),
+        prePeriodAmountString: numberBeDashIfFalsy(preAmount),
+        curPeriodPercentageString: numberBeDashIfFalsy(curPercentage),
+        prePeriodPercentageString: numberBeDashIfFalsy(prePercentage),
+        children,
+      };
+    });
+  }
+
   public async generateIAccountReadyForFrontendArray(): Promise<IAccountReadyForFrontend[]> {
     this.curPeriodContent = await this.generateFinancialReportArray(true);
 
     this.prePeriodContent = await this.generateFinancialReportArray(false);
 
     const curPeriodAccountReadyForFrontendArray: IAccountReadyForFrontend[] =
-      this.combineTwoFSReportArray(this.curPeriodContent, this.prePeriodContent);
+      // Info: (20250425 - Anna) Anna
+      // this.combineTwoFSReportArray(this.curPeriodContent, this.prePeriodContent);
+      this.combineTwoFSReportArrayByCode(this.curPeriodContent, this.prePeriodContent);
     return curPeriodAccountReadyForFrontendArray;
   }
 

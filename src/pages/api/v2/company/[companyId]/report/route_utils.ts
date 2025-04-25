@@ -61,11 +61,24 @@ export function getReportFilterByReportType(reportType: ReportSheetType): {
 export function transformAccountsToMap(accounts: IAccountReadyForFrontend[]) {
   const accountsMap = new Map<string, IAccountReadyForFrontend>();
 
-  accounts.forEach((account) => {
-    if (account.code.length > 0) {
-      accountsMap.set(account.code, account);
-    }
-  });
+  // Info: (20250425 - Anna)
+  // accounts.forEach((account) => {
+  //   if (account.code.length > 0) {
+  //     accountsMap.set(account.code, account);
+  //   }
+  // });
+  const traverse = (list: IAccountReadyForFrontend[]) => {
+    list.forEach((account) => {
+      if (account.code?.length > 0) {
+        accountsMap.set(account.code, account);
+      }
+      if (account.children?.length) {
+        traverse(account.children);
+      }
+    });
+  };
+
+  traverse(accounts);
 
   return accountsMap;
 }
