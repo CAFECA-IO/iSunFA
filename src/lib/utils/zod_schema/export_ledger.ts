@@ -20,6 +20,7 @@ const exportLedgerFiltersSchema = z.object({
 });
 
 export const exportLedgerFieldsSchema = z.enum([
+  'accountId',
   'no',
   'accountingTitle',
   'voucherNumber',
