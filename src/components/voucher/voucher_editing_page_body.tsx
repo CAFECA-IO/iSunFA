@@ -148,7 +148,7 @@ const VoucherEditingPageBody: React.FC<{
     number: asset.assetNumber,
     note: asset.note ?? '',
     status: 'normal',
-    companyId: accountBookId ?? 0,
+    accountBookId: accountBookId ?? 0,
   }));
 
   // Info: (20250116 - Julian) 不顯示 Opening

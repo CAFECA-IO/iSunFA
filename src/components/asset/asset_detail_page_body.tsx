@@ -34,9 +34,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   } = useGlobalCtx();
   const { connectedAccountBook } = useUserCtx();
 
-  const companyId = connectedAccountBook?.id;
+  const accountBookId = connectedAccountBook?.id;
 
-  const params = { companyId, assetId };
+  const params = { accountBookId, assetId };
 
   // Info: (20241028 - Julian) Get asset details from API
   const {
@@ -150,10 +150,10 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
 
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail & account list when companyId & assetId are ready
-    if (companyId && assetId) {
+    if (accountBookId && assetId) {
       getAssetDetail();
     }
-  }, [companyId, assetId]);
+  }, [accountBookId, assetId]);
 
   useEffect(() => {
     // Info: (20241210 - Julian) Redirect to 404 page if the asset is not connected to any voucher

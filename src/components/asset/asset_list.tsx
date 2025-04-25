@@ -147,7 +147,7 @@ const AssetList: React.FC<IAssetListProps> = ({
 
       // Info: (20241127 - Julian) 呼叫 API
       exportAsset({
-        params: { companyId: connectedAccountBook?.id },
+        params: { accountBookId: connectedAccountBook?.id },
         body: {
           fileType: 'csv',
           filters: {
