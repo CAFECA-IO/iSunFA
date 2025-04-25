@@ -30,9 +30,11 @@ const SubscriptionPlan = ({
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
 
-  // Info: (20250421 - Julian) 試用期間的 selected plan 為免費版
   const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
-  const isSelected = isTrial ? plan.id === TPlanType.TRIAL : team.plan === plan.id;
+  const isSelected = team.plan === plan.id;
+
+  // Info: (20250425 - Julian) 試用期方案取代免費版的位置
+  const isShowSelected = isTrial ? plan.id === TPlanType.TRIAL : isSelected;
 
   // Info: (20250421 - Julian) 試用版 UI 同免費方案
   const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL;
@@ -49,6 +51,8 @@ const SubscriptionPlan = ({
 
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
+  const btnCommonStyle =
+    'flex items-center justify-center gap-8px rounded-xs px-32px py-14px text-lg font-medium whitespace-nowrap border';
   const borderedStyle = bordered ? 'border border-stroke-neutral-quaternary' : '';
 
   const { trigger: downgrade } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
@@ -98,27 +102,77 @@ const SubscriptionPlan = ({
     }
   };
 
+  // ToDo: (20250425 - Julian) 暫時不會用到
+  // const selectedBtn = isTrial ? (
+  //   // Info: (20250425 - Julian) 「將在試用期結束後開始」
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-button-surface-strong-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable`}
+  //     disabled
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.AFTER_TRIAL')}
+  //   </button>
+  // ) : (
+  //   // Info: (20250425 - Julian) 已選擇的按鈕
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+  //   </button>
+  // );
+
+  // const btnContent =
+  //   plan.id === TPlanType.TRIAL ? (
+  //     // Info: (20250425 - Julian) 「免費試用」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} disabled:border-button-stroke-disable disabled:text-button-text-disable`}
+  //       disabled
+  //     >
+  //       {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
+  //     </button>
+  //   ) : isSelected ? (
+  //     selectedBtn
+  //   ) : (
+  //     // Info: (20250425 - Julian) 「選擇此方案」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} border-button-surface-strong-primary bg-button-surface-strong-primary text-button-text-primary-solid hover:border-button-surface-strong-primary-hover`}
+  //       onClick={selectSubscriptionPlan}
+  //     >
+  //       {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+  //       <FiArrowRight size={24} />
+  //     </button>
+  //   );
+
   const btnContent =
-    isTrial && isSelected ? (
+    plan.id === TPlanType.TRIAL && isTrial ? (
+      // Info: (20250425 - Julian) 「免費試用」
       <button
         type="button"
-        className="flex items-center justify-center gap-8px rounded-xs border px-32px py-14px font-medium disabled:border-button-stroke-disable disabled:text-button-text-disable"
+        className={`${btnCommonStyle} disabled:border-button-stroke-disable disabled:text-button-text-disable`}
         disabled
       >
         {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
       </button>
-    ) : (
+    ) : isSelected && !isTrial ? (
+      // Info: (20250425 - Julian) 已選擇的按鈕
       <button
         type="button"
-        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
+        className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+      >
+        {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+      </button>
+    ) : (
+      // Info: (20250425 - Julian) 「選擇此方案」
+      <button
+        type="button"
+        className={`${btnCommonStyle} border-button-surface-strong-primary bg-button-surface-strong-primary text-button-text-primary-solid hover:border-button-surface-strong-primary-hover`}
         onClick={selectSubscriptionPlan}
       >
-        <span className="text-lg font-medium">
-          {isSelected
-            ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')
-            : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
-        </span>
-        {!isSelected && <FiArrowRight size={24} />}
+        {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+        <FiArrowRight size={24} />
       </button>
     );
 
@@ -145,9 +199,9 @@ const SubscriptionPlan = ({
 
   return (
     <section
-      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
+      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
     >
-      {isSelected && (
+      {isShowSelected && (
         <Image
           src="/icons/star_badge.svg"
           alt="star_badge"

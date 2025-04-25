@@ -4,7 +4,7 @@ import { IoArrowForward } from 'react-icons/io5';
 import { IUserOwnedTeam, TPlanType, TPaymentStatus } from '@/interfaces/subscription';
 import { PLANS } from '@/constants/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
-import { useTranslation, Trans } from 'next-i18next';
+import { useTranslation /* Trans */ } from 'next-i18next';
 import { THREE_DAYS_IN_MS } from '@/constants/time';
 import { timestampToString, getRemainingDays } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -60,7 +60,7 @@ const OwnedTeam = ({
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
   const remainingDays = getRemainingDays(team.expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
   // Info: (20250422 - Julian) 計算試用期剩餘天數
-  const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
+  // const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
@@ -69,6 +69,23 @@ const OwnedTeam = ({
   const isShowExpiredDate = !isPlanBeginner && !isTrial;
   // Info: (20250422 - Julian) 檢查是否顯示「帳單」按鈕
   const isShowBillingButton = !isPlanBeginner && !isBillingButtonHidden && !isTrial;
+
+  const changePlanBtn = (
+    // ToDo: (20250425 - Julian) 暫時不會用到
+    // isTrial ? (
+    // <Button type="button" className="w-full" disabled>
+    //   <Trans
+    //     i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
+    //     values={{ days: trialRemainingDays }}
+    //   />
+    // </Button>
+    // ) :
+    <Link href={TEAM_SUBSCRIPTION_PAGE}>
+      <Button type="button" className="w-full">
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')} <IoArrowForward size={20} />
+      </Button>
+    </Link>
+  );
 
   return (
     <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
@@ -167,20 +184,7 @@ const OwnedTeam = ({
         )}
 
         <section className="flex flex-none flex-col justify-center gap-16px">
-          {isTrial ? (
-            <Button type="button" className="w-full" disabled>
-              <Trans
-                i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
-                values={{ days: trialRemainingDays }}
-              />
-            </Button>
-          ) : (
-            <Link href={TEAM_SUBSCRIPTION_PAGE}>
-              <Button type="button" className="w-full">
-                {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_PLAN')} <IoArrowForward size={20} />
-              </Button>
-            </Link>
-          )}
+          {changePlanBtn}
 
           {isShowBillingButton && (
             <Link href={BILLING_PAGE}>
