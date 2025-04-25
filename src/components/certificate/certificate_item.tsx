@@ -73,7 +73,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
       {/* Info: (20240924 - tzuhan) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
-          {!certificate.invoice?.isComplete && (
+          {certificate.incomplete && (
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">

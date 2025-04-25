@@ -1,5 +1,21 @@
+/*
+  Warnings:
+
+  - The values [ACCOUNTANT,BOOKKEEPER,EDUCATIONAL_TRIAL_VERSION,TEST] on the enum `RoleName` will be removed. If these variants are still used in the database, this will fail.
+
+*/
 -- CreateEnum
 CREATE TYPE "DeductionType" AS ENUM ('DEDUCTIBLE_PURCHASE_AND_EXPENSE', 'DEDUCTIBLE_FIXED_ASSETS', 'NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE', 'NON_DEDUCTIBLE_FIXED_ASSETS');
+
+-- AlterEnum
+BEGIN;
+CREATE TYPE "RoleName_new" AS ENUM ('INDIVIDUAL', 'ACCOUNTING_FIRMS', 'ENTERPRISE');
+ALTER TABLE "user_role" ALTER COLUMN "role_name" TYPE "RoleName_new" USING ("role_name"::text::"RoleName_new");
+ALTER TABLE "role_feature" ALTER COLUMN "role_name" TYPE "RoleName_new" USING ("role_name"::text::"RoleName_new");
+ALTER TYPE "RoleName" RENAME TO "RoleName_old";
+ALTER TYPE "RoleName_new" RENAME TO "RoleName";
+DROP TYPE "RoleName_old";
+COMMIT;
 
 -- CreateTable
 CREATE TABLE "invoice_rc2" (
