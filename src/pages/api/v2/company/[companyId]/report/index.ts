@@ -287,7 +287,7 @@ export async function cashFlowHandler({
         code: company.taxId,
         name: company.name,
       },
-      reportType: ReportSheetType.INCOME_STATEMENT,
+      reportType: ReportSheetType.CASH_FLOW_STATEMENT,
       preDate: {
         from: preFrom,
         to: preTo,
