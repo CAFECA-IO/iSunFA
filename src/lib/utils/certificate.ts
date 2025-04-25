@@ -1,10 +1,16 @@
 import { Certificate as PrismaCertificate } from '@prisma/client';
-import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
+import {
+  ICertificate,
+  ICertificateEntity,
+  ICertificateInput,
+  ICertificateOutput,
+} from '@/interfaces/certificate';
 import { IFileEntity } from '@/interfaces/file';
-import { IInvoiceEntity } from '@/interfaces/invoice';
+import { IInvoiceEntity, IInvoiceInput, IInvoiceOutput } from '@/interfaces/invoice';
 import { ICompanyEntity } from '@/interfaces/account_book';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getTimestampNow } from '@/lib/utils/common';
+import { InvoiceTransactionDirection } from '@/constants/invoice';
 
 /**
  * Info: (20241024 - Murky)
@@ -60,4 +66,35 @@ export function isCertificateIncomplete(certificate: ICertificate | null): boole
     totalPrice <= 0 ||
     !counterParty?.name
   );
+}
+
+export function isCertificateIncompleteByType(
+  certificate: ICertificateInput | ICertificateOutput | null,
+  type: InvoiceTransactionDirection
+): boolean {
+  if (!certificate || !certificate.invoice) return true;
+
+  const { invoice } = certificate;
+
+  const basicInvalid =
+    !invoice.date ||
+    invoice.date <= 0 ||
+    !invoice.priceBeforeTax ||
+    invoice.priceBeforeTax <= 0 ||
+    !invoice.totalPrice ||
+    invoice.totalPrice <= 0;
+
+  if (basicInvalid) return true;
+
+  if (type === InvoiceTransactionDirection.INPUT) {
+    const input = invoice as IInvoiceInput;
+    return !input.sales?.name || !input.deductionType;
+  }
+
+  if (type === InvoiceTransactionDirection.OUTPUT) {
+    const output = invoice as IInvoiceOutput;
+    return !output.buyer?.name;
+  }
+
+  return false;
 }

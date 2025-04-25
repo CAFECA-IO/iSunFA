@@ -64,7 +64,8 @@
     "YOU_CAN_CANCEL_YOUR_SUBSCRIPTION_ANYTIME": "You can cancel your subscription anytime",
     "NOTE": "Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period.",
     "FREE": "Free",
-    "TRAIL_REMAINING_DAYS": "only {{days}} days"
+    "TRAIL_REMAINING_DAYS": "only {{days}} days",
+    "AFTER_TRIAL": "Start After Trial Ends"
   },
 
   "PLANS_FEATURES_NAME": {

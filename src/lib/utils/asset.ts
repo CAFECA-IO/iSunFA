@@ -41,7 +41,7 @@ export function initAssetEntity(
 
   const assetEntity: IAssetEntity = {
     id: dto.id ?? 0,
-    companyId: dto.companyId,
+    accountBookId: dto.companyId,
     name: dto.name,
     type: dto.type,
     number: dto.number,

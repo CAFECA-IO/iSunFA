@@ -64,26 +64,26 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId) {
+  if (!query || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId } = query;
+  const { accountBookId } = query;
 
-  loggerBack.info(`User ${userId} requesting trial balance for companyId: ${companyId}`);
+  loggerBack.info(`User ${userId} requesting trial balance for companyId: ${accountBookId}`);
 
   // Info: (20250424 - Shirley) Check company and team permissions
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const { teamId: companyTeamId } = company;
-  if (!companyTeamId) {
+  const { teamId: accountBookTeamId } = company;
+  if (!accountBookTeamId) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  const userTeam = teams?.find((team) => team.id === accountBookTeamId);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -95,7 +95,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to view trial balance for company ${companyId}`
+      `User ${userId} does not have permission to view trial balance for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -149,17 +149,17 @@ async function handleGetRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Step 2
     let currencyAlias = CurrencyType.TWD;
-    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
+    const accountingSettingData = await getAccountingSettingByCompanyId(accountBookId);
     if (accountingSettingData?.currency) {
       currencyAlias = accountingSettingData.currency as CurrencyType;
     }
 
     // Info: (20250424 - Shirley) Step 3 撈出在 endDate 之前的所有 line items
-    const lineItems = await getAllLineItemsInPrisma(companyId, 0, updatedQuery.endDate);
+    const lineItems = await getAllLineItemsInPrisma(accountBookId, 0, updatedQuery.endDate);
 
     // Info: (20250424 - Shirley) Step 3 撈出所有會計科目
     const accounts = await findManyAccountsInPrisma({
-      companyId,
+      companyId: accountBookId,
       includeDefaultAccount: true,
       page: 1,
       limit: 9999999,
@@ -209,13 +209,13 @@ async function handleGetRequest(req: NextApiRequest) {
 
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
       loggerBack.info(
-        `Successfully retrieved trial balance for company ${companyId}, found ${APIData.items.length} items`
+        `Successfully retrieved trial balance for company ${accountBookId}, found ${APIData.items.length} items`
       );
     }
   } catch (error) {
     // Info: (20250424 - Shirley) Step 13
     const err = error as Error;
-    loggerBack.error(`Failed to retrieve trial balance for company ${companyId}`, {
+    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`, {
       error: err,
       errorMessage: err.message,
     });
@@ -226,7 +226,7 @@ async function handleGetRequest(req: NextApiRequest) {
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    loggerBack.error(`Invalid output data format for trial balance of company ${companyId}`);
+    loggerBack.error(`Invalid output data format for trial balance of company ${accountBookId}`);
   }
 
   // Info: (20250424 - Shirley) Format response and log user action

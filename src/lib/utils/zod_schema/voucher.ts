@@ -562,7 +562,6 @@ const voucherGetOneOutputValidatorV2 = z
           uploader: data.issuer.name,
           invoice: {
             id: certificate.invoice.id,
-            isComplete: false,
             inputOrOutput: certificate.invoice.inputOrOutput,
             date: certificate.invoice.date,
             no: certificate.invoice.no,
@@ -599,7 +598,6 @@ const voucherGetOneOutputValidatorV2 = z
           updatedAt: certificate.updatedAt,
         };
         certificateInstance.incomplete = isCertificateIncomplete(certificateInstance);
-        certificateInstance.invoice.isComplete = isCertificateIncomplete(certificateInstance);
         return certificateInstance;
       }),
       lineItems: data.lineItems.map((lineItem) => ({

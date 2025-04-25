@@ -231,35 +231,7 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
-    // Deprecated: (20241127 - Murky) 目前CreateCertificate不會創造invoice, 如果需要假的invoice再把這邊打開
-    // const counterParty: ICounterparty = {
-    //   id: certificateEntity.invoice.counterParty.id,
-    //   companyId: certificateEntity.invoice.counterParty.companyId,
-    //   name: certificateEntity.invoice.counterParty.name,
-    //   taxId: certificateEntity.invoice.counterParty.taxId,
-    //   type: certificateEntity.invoice.counterParty.type,
-    //   note: certificateEntity.invoice.counterParty.note,
-    //   createdAt: certificateEntity.invoice.counterParty.createdAt,
-    //   updatedAt: certificateEntity.invoice.counterParty.updatedAt,
-    // };
-    const invoice: IInvoiceBetaOptional = {
-      // id: certificateEntity.invoice.id,
-      // isComplete: false,
-      // counterParty,
-      // inputOrOutput: certificateEntity.invoice.inputOrOutput,
-      // date: certificateEntity.invoice.date,
-      // no: certificateEntity.invoice.no,
-      // currencyAlias: certificateEntity.invoice.currencyAlias,
-      // priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
-      // taxType: certificateEntity.invoice.taxType,
-      // taxRatio: certificateEntity.invoice.taxRatio,
-      // taxPrice: certificateEntity.invoice.taxPrice,
-      // totalPrice: certificateEntity.invoice.totalPrice,
-      // type: certificateEntity.invoice.type,
-      // deductible: certificateEntity.invoice.deductible,
-      // createdAt: certificateEntity.invoice.createdAt,
-      // updatedAt: certificateEntity.invoice.updatedAt,
-    };
+    const invoice: IInvoiceBetaOptional = {};
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
@@ -429,16 +401,6 @@ export const certificateAPIGetListUtils = {
     return totalPrice;
   },
 
-  isInvoiceComplete: (invoice: IInvoiceEntity) => {
-    const isComplete = !!(
-      invoice.date &&
-      invoice.priceBeforeTax &&
-      invoice.totalPrice &&
-      invoice.counterPartyId
-    );
-    return isComplete;
-  },
-
   transformCertificateEntityToResponse: (
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
@@ -470,12 +432,8 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.counterParty.updatedAt,
       };
 
-      const isInvoiceComplete = certificateAPIGetListUtils.isInvoiceComplete(
-        certificateEntity.invoice
-      );
       invoice = {
         id: certificateEntity.invoice.id,
-        isComplete: isInvoiceComplete,
         counterParty,
         inputOrOutput: certificateEntity.invoice.inputOrOutput,
         date: certificateEntity.invoice.date,
