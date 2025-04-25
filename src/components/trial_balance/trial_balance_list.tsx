@@ -32,7 +32,7 @@ interface TrialBalanceListProps {
 
 const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }) => {
   const { connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id; // Info: (20241204 - Anna) 提取 companyId
+  const accountBookId = connectedAccountBook?.id; // Info: (20241204 - Anna) 提取 companyId
   const { t } = useTranslation(['reports', 'date_picker', 'common']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
@@ -109,7 +109,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       try {
         // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
         const response = await fetchTrialBalance({
-          params: { companyId },
+          params: { accountBookId },
           query: {
             startDate: selectedDateRange.startTimeStamp,
             endDate: selectedDateRange.endTimeStamp,
@@ -429,7 +429,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     const sortString =
       sort.length > 0 ? sort.map((s) => `${s.sortBy}:${s.sortOrder}`).join('-') : undefined;
 
-    const url = `/api/v2/company/${companyId}/trial_balance/export?sortOption=${sortString}`; // Info: (20241218 - Anna) API 路徑
+    const url = `/api/v2/account_book/${accountBookId}/trial_balance/export?sortOption=${sortString}`; // Info: (20241218 - Anna) API 路徑
     const body = {
       fileType: 'csv',
       filters: {

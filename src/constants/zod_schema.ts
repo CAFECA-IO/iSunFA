@@ -70,7 +70,10 @@ import {
 import { userSettingGetSchema, userSettingPutSchema } from '@/lib/utils/zod_schema/user_setting';
 
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
-import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
+import {
+  trialBalanceListSchema,
+  trialBalanceExportSchema,
+} from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
 import { roleListSchema } from '@/lib/utils/zod_schema/role';
 import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
@@ -248,7 +251,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
-  [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
+  [APIName.TRIAL_BALANCE_EXPORT]: trialBalanceExportSchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
   [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,

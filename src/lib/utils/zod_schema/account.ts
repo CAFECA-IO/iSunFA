@@ -113,7 +113,7 @@ export const accountPostV2Schema = {
  * Info: (20250424 - Shirley) GET account by ID schema
  */
 const accountGetByIdQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   accountId: zodStringToNumber,
 });
 
