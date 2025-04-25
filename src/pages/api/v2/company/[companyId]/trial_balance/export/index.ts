@@ -8,8 +8,8 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
-import { APIName } from '@/constants/api_connection';
-import { loggerError } from '@/lib/utils/logger_back';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 import {
   processLineItems,
@@ -32,106 +32,140 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 
-export async function handlePostRequest(req: NextApiRequest, res: NextApiResponse) {
-  const { fileType, filters, options } = req.body;
-  const { companyId, sortOption } = req.query;
-  const { startDate, endDate } = filters;
+/**
+ * Info: (20250425 - Shirley) Handle POST request for exporting trial balance to CSV
+ * This function follows the flat coding style, with clear steps:
+ * 1. Validates the request parameters
+ * 2. Retrieves line items and accounts data
+ * 3. Processes the data into trial balance format
+ * 4. Converts the data to CSV format
+ * 5. Sets appropriate headers and returns the CSV data
+ */
+async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, companyId: string) {
+  const apiName = APIName.TRIAL_BALANCE_EXPORT;
+  let statusMessage: string = STATUS_MESSAGE.SUCCESS;
 
-  if (!companyId) {
-    throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
-  }
-
-  if ((!startDate && startDate !== 0) || (!endDate && endDate !== 0)) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  if (fileType !== 'csv') {
-    throw new Error(STATUS_MESSAGE.INVALID_FILE_TYPE);
-  }
-
-  const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption as string);
-
-  const lineItems = await getAllLineItemsInPrisma(+companyId, 0, +endDate);
-
-  const accounts = await findManyAccountsInPrisma({
-    companyId: +companyId,
-    includeDefaultAccount: true,
-    page: 1,
-    limit: 9999999,
-    sortBy: 'code',
-    sortOrder: SortOrder.ASC,
-    forUser: true,
-  });
-
-  const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => ({
-    ...item,
-    debitAmount: item.debit ? item.amount : 0,
-    creditAmount: !item.debit ? item.amount : 0,
-  }));
-
-  const threeStagesOfLineItems = convertToTrialBalanceItem(
-    lineItemsWithDebitCredit,
-    +startDate,
-    +endDate
-  );
-
-  const threeStagesOfTrialBalance = {
-    beginning: processLineItems(threeStagesOfLineItems.beginning, accounts.data).arrWithCopySelf,
-    midterm: processLineItems(threeStagesOfLineItems.midterm, accounts.data).arrWithCopySelf,
-    ending: processLineItems(threeStagesOfLineItems.ending, accounts.data).arrWithCopySelf,
-  };
-
-  const trialBalance = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
-  const trialBalanceData = transformTrialBalanceData(trialBalance.items);
-
-  const data = trialBalanceData;
-
-  const fields = options?.fields || trialBalanceAvailableFields;
-
-  const csv = convertToCSV(fields, data, TrialBalanceFieldsMap);
-
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename=trial_balance_${Date.now()}.csv`);
-  res.send(csv);
-}
-
-const methodHandlers: {
-  [key: string]: (req: NextApiRequest, res: NextApiResponse) => Promise<void>;
-} = {
-  POST: handlePostRequest,
-};
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  let statusMessage = STATUS_MESSAGE.BAD_REQUEST;
-
-  const session = await getSession(req);
   try {
-    const isLogin = await checkSessionUser(session, APIName.TRIAL_BALANCE_EXPORT, req);
-    if (!isLogin) {
-      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-      throw new Error(statusMessage);
-    }
+    // Info: (20250425 - Shirley) Extract and validate request data
+    const { fileType, filters, options } = req.body;
+    const { sortOption } = req.query;
+    const { startDate, endDate } = filters;
 
-    const isAuth = await checkUserAuthorization(APIName.TRIAL_BALANCE_EXPORT, req, session);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      throw new Error(statusMessage);
-    }
-
-    const { query, body } = checkRequestData(APIName.TRIAL_BALANCE_EXPORT, req, session);
-    if (query === null || body === null) {
+    if ((!startDate && startDate !== 0) || (!endDate && endDate !== 0)) {
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       throw new Error(statusMessage);
     }
 
-    const { companyId } = req.query;
-    if (!companyId || typeof companyId !== 'string') {
-      statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
+    if (fileType !== 'csv') {
+      statusMessage = STATUS_MESSAGE.INVALID_FILE_TYPE;
       throw new Error(statusMessage);
     }
 
-    const { teams } = session;
+    loggerBack.info(
+      `Processing trial balance export for company ${companyId}, period: ${startDate} to ${endDate}`
+    );
 
+    // Info: (20250425 - Shirley) Process the data
+    const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption as string);
+
+    // Info: (20250425 - Shirley) Retrieve line items
+    const lineItems = await getAllLineItemsInPrisma(+companyId, 0, +endDate);
+    loggerBack.info(`Retrieved ${lineItems.length} line items for trial balance export`);
+
+    // Info: (20250425 - Shirley) Retrieve accounts
+    const accounts = await findManyAccountsInPrisma({
+      companyId: +companyId,
+      includeDefaultAccount: true,
+      page: 1,
+      limit: 9999999,
+      sortBy: 'code',
+      sortOrder: SortOrder.ASC,
+      forUser: true,
+    });
+    loggerBack.info(`Retrieved ${accounts.data.length} accounts for trial balance export`);
+
+    // Info: (20250425 - Shirley) Transform line items with debit and credit amounts
+    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => ({
+      ...item,
+      debitAmount: item.debit ? item.amount : 0,
+      creditAmount: !item.debit ? item.amount : 0,
+    }));
+
+    // Info: (20250425 - Shirley) Convert line items to trial balance format
+    const threeStagesOfLineItems = convertToTrialBalanceItem(
+      lineItemsWithDebitCredit,
+      +startDate,
+      +endDate
+    );
+
+    // Info: (20250425 - Shirley) Process line items into trial balance structure
+    const threeStagesOfTrialBalance = {
+      beginning: processLineItems(threeStagesOfLineItems.beginning, accounts.data).arrWithCopySelf,
+      midterm: processLineItems(threeStagesOfLineItems.midterm, accounts.data).arrWithCopySelf,
+      ending: processLineItems(threeStagesOfLineItems.ending, accounts.data).arrWithCopySelf,
+    };
+
+    // Info: (20250425 - Shirley) Convert to API format and transform for export
+    const trialBalance = convertToAPIFormat(threeStagesOfTrialBalance, parsedSortOption);
+    const trialBalanceData = transformTrialBalanceData(trialBalance.items);
+    loggerBack.info(`Transformed ${trialBalanceData.length} items for CSV export`);
+
+    // Info: (20250425 - Shirley) Prepare CSV data
+    const data = trialBalanceData;
+    const fields = options?.fields || trialBalanceAvailableFields;
+    const csv = convertToCSV(fields, data, TrialBalanceFieldsMap);
+
+    // Info: (20250425 - Shirley) Set response headers and send CSV
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename=trial_balance_${Date.now()}.csv`);
+    loggerBack.info(`Successfully generated CSV with ${data.length} rows for ${apiName}`);
+    res.send(csv);
+    return { success: true, statusMessage };
+  } catch (error) {
+    const err = error as Error;
+    loggerBack.error(`Error generating trial balance CSV export`, {
+      error: err,
+      errorMessage: err.message,
+    });
+    return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
+  }
+}
+
+/**
+ * Info: (20250425 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern for file exports:
+ * 1. Get and validate user session
+ * 2. Check user authorization
+ * 3. Validate team permissions
+ * 4. Handle the export request based on HTTP method
+ * 5. Handle errors consistently
+ */
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const apiName = APIName.TRIAL_BALANCE_EXPORT;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+
+  // Info: (20250425 - Shirley) Get user session
+  const session = await getSession(req);
+  const { userId, teams } = session;
+
+  try {
+    // Info: (20250425 - Shirley) Check if user is logged in
+    await checkSessionUser(session, apiName, req);
+
+    // Info: (20250425 - Shirley) Check user authorization
+    await checkUserAuthorization(apiName, req, session);
+
+    // Info: (20250425 - Shirley) Validate request data
+    const { query, body } = checkRequestData(apiName, req, session);
+    if (!query || !body) {
+      statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
+      throw new Error(statusMessage);
+    }
+
+    // Info: (20250425 - Shirley) Validate company ID
+    const { companyId } = query;
+
+    // Info: (20250425 - Shirley) Check team permissions
     const company = await getCompanyById(+companyId);
     if (!company) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -151,47 +185,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam?.role as TeamRole,
+      teamRole: userTeam.role as TeamRole,
       canDo: TeamPermissionAction.EXPORT_TRIAL_BALANCE,
     });
 
     if (!assertResult.can) {
+      loggerBack.info(
+        `User ${userId} does not have permission to export trial balance for company ${companyId}`
+      );
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
     }
 
-    res.setHeader('Content-Type', 'text/csv');
-    if (!res.getHeader('Content-Type') || res.getHeader('Content-Type') !== 'text/csv') {
-      statusMessage = STATUS_MESSAGE.INVALID_CONTENT_TYPE;
-      throw new Error(statusMessage);
-    }
+    // Info: (20250425 - Shirley) Handle different HTTP methods
+    const method = req.method || '';
+    let result;
 
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      await handleRequest(req, res);
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-      throw new Error(statusMessage);
-    }
-
-    const responseBody = res.getHeader('Content-Disposition');
-    if (!responseBody || typeof responseBody !== 'string' || !responseBody.endsWith('.csv"')) {
-      statusMessage = STATUS_MESSAGE.INVALID_FILE_FORMAT;
-      throw new Error(statusMessage);
+    switch (method) {
+      case HttpMethod.POST:
+        result = await handlePostRequest(req, res, companyId);
+        if (!result.success) {
+          statusMessage = result.statusMessage;
+          throw new Error(statusMessage);
+        }
+        statusMessage = STATUS_MESSAGE.SUCCESS;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        throw new Error(statusMessage);
     }
   } catch (error) {
+    // Info: (20250425 - Shirley) Handle errors
     const err = error as Error;
+    loggerError({
+      userId: session.userId,
+      errorType: `Handler Request Error for ${apiName}`,
+      errorMessage: err.message,
+    });
+
     const { httpCode, result } = formatApiResponse<null>(
       statusMessage || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
       null
     );
-    loggerError({
-      userId: session.userId,
-      errorType: `Handler Request Error for ${APIName.TRIAL_BALANCE_EXPORT} in middleware.ts`,
-      errorMessage: err.message,
-    });
     res.status(httpCode).json(result);
   } finally {
-    await logUserAction(session, APIName.TRIAL_BALANCE_EXPORT, req, statusMessage);
+    // Info: (20250425 - Shirley) Log user action
+    await logUserAction(session, apiName, req, statusMessage);
   }
 }

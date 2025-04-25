@@ -64,3 +64,30 @@ export const trialBalanceListSchema = {
   outputSchema: trialBalanceListResponseValidator,
   frontend: trialBalanceNullSchema,
 };
+
+const trialBalanceExportQueryValidator = z.object({
+  companyId: z.string().regex(/^\d+$/),
+  sortOption: z.string().optional(),
+});
+
+const trialBalanceExportBodyValidator = z.object({
+  fileType: z.literal('csv'),
+  filters: z.object({
+    startDate: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]),
+    endDate: z.union([z.number(), z.string().regex(/^\d+$/).transform(Number)]),
+  }),
+  options: z
+    .object({
+      fields: z.array(z.string()).optional(),
+    })
+    .optional(),
+});
+
+export const trialBalanceExportSchema = {
+  input: {
+    querySchema: trialBalanceExportQueryValidator,
+    bodySchema: trialBalanceExportBodyValidator,
+  },
+  outputSchema: trialBalanceNullSchema,
+  frontend: trialBalanceNullSchema,
+};
