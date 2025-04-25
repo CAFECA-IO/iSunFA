@@ -33,7 +33,7 @@ import { HTTP_STATUS } from '@/constants/http';
 interface IPayload extends ILedgerPayload {}
 
 /**
- * Info: (20250424 - Shirley) Handle GET request for ledger data
+ * Info: (20250425 - Shirley) Handle GET request for ledger data
  * This function follows the flat coding style, with clear steps:
  * 1. Get session
  * 2. Check if user is logged in
@@ -49,17 +49,17 @@ async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPayload | null = null;
 
-  // Info: (20250424 - Shirley) Get user session
+  // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
   const { userId, teams } = session;
 
-  // Info: (20250424 - Shirley) Check if user is logged in
+  // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
 
-  // Info: (20250424 - Shirley) Check user authorization
+  // Info: (20250425 - Shirley) Check user authorization
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250424 - Shirley) Validate request data
+  // Info: (20250425 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
   if (!query || !query.companyId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -72,7 +72,7 @@ async function handleGetRequest(req: NextApiRequest) {
     `User ${userId} requesting ledger for companyId: ${companyId}, period: ${startDate} to ${endDate}`
   );
 
-  // Info: (20250424 - Shirley) Check company and team permissions
+  // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -171,14 +171,14 @@ async function handleGetRequest(req: NextApiRequest) {
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
-  // Info: (20250424 - Shirley) Validate output data
+  // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
     loggerBack.error(`Invalid output data format for ledger of company ${companyId}`);
   }
 
-  // Info: (20250424 - Shirley) Format response and log user action
+  // Info: (20250425 - Shirley) Format response and log user action
   const result = formatApiResponse(statusMessage, payload);
   await logUserAction(session, apiName, req, statusMessage);
 
@@ -186,7 +186,7 @@ async function handleGetRequest(req: NextApiRequest) {
 }
 
 /**
- * Info: (20250424 - Shirley) Export default handler function
+ * Info: (20250425 - Shirley) Export default handler function
  * This follows the flat coding style API pattern:
  * 1. Define a switch-case for different HTTP methods
  * 2. Call the appropriate handler based on method
@@ -200,24 +200,24 @@ export default async function handler(
   let result: IResponseData<IPayload | null>;
 
   try {
-    // Info: (20250424 - Shirley) Handle different HTTP methods
+    // Info: (20250425 - Shirley) Handle different HTTP methods
     const method = req.method || '';
     switch (method) {
       case HttpMethod.GET:
         ({ httpCode, result } = await handleGetRequest(req));
         break;
       default:
-        // Info: (20250424 - Shirley) Method not allowed
+        // Info: (20250425 - Shirley) Method not allowed
         ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
     }
   } catch (_error) {
-    // Info: (20250424 - Shirley) Error handling
+    // Info: (20250425 - Shirley) Error handling
     const error = _error as Error;
     const statusMessage = error.message;
     loggerBack.error(`Error handling ledger operation: ${statusMessage}`);
     ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
 
-  // Info: (20250424 - Shirley) Send response
+  // Info: (20250425 - Shirley) Send response
   res.status(httpCode).json(result);
 }
