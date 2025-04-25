@@ -13,123 +13,146 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
-import { APIName } from '@/constants/api_connection';
-import { loggerError } from '@/lib/utils/logger_back';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 
-async function handleAssetExport(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  body: IAssetExportRequestBody
-): Promise<void> {
-  const { fileType, filters, sort, options } = body;
+/**
+ * Info: (20250425 - Shirley) Handle POST request for exporting assets to CSV
+ * This function follows the flat coding style, with clear steps:
+ * 1. Validates the request parameters
+ * 2. Retrieves asset data with appropriate filters
+ * 3. Processes the data including field selection
+ * 4. Formats dates according to timezone
+ * 5. Converts the data to CSV format
+ * 6. Sets appropriate headers and returns the CSV data
+ */
+async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, companyId: string) {
+  const apiName = APIName.ASSET_LIST_EXPORT;
+  const statusMessage = STATUS_MESSAGE.SUCCESS;
 
-  const { companyId } = req.query;
-  if (!companyId || typeof companyId !== 'string') {
-    throw new Error(STATUS_MESSAGE.INVALID_COMPANY_ID);
-  }
+  try {
+    // Info: (20250425 - Shirley) Extract and validate request data
+    const { fileType, filters, sort, options } = req.body as IAssetExportRequestBody;
 
-  const parsedCompanyId = parseInt(companyId, 10);
-
-  const assets = await exportAssets(
-    {
-      filters,
-      sort,
-      options,
-      fileType,
-    },
-    parsedCompanyId
-  );
-
-  let processedAssets = assets;
-  const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
-
-  if (options?.fields) {
-    processedAssets = selectFields(
-      processedAssets,
-      options.fields as (keyof AssetHeader)[]
-    ) as typeof assets;
-  }
-
-  const newData = processedAssets.map((asset) => {
-    const formattedDate = formatTimestampByTZ(
-      asset.acquisitionDate,
-      options?.timezone || DEFAULT_TIMEZONE,
-      'YYYY-MM-DD'
+    loggerBack.info(
+      `Processing asset export for company ${companyId} with ${filters ? Object.keys(filters).length : 0} filters`
     );
 
-    return {
-      ...asset,
-      acquisitionDate: formattedDate,
-      number: asset.number,
-    };
-  });
+    const parsedCompanyId = parseInt(companyId, 10);
 
-  const fields: (keyof AssetHeader)[] = (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;
+    // Info: (20250425 - Shirley) Retrieve asset data
+    const assets = await exportAssets(
+      {
+        filters,
+        sort,
+        options,
+        fileType,
+      },
+      parsedCompanyId
+    );
+    loggerBack.info(`Retrieved ${assets.length} assets for export`);
 
-  const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
-    fields,
-    newData as AssetHeaderWithStringDate[],
-    AssetFieldsMap
-  );
+    // Info: (20250425 - Shirley) Process and select fields
+    let processedAssets = assets;
+    const ASSET_FIELDS = Object.keys(AssetFieldsMap) as (keyof AssetHeader)[];
 
-  const fileName = `assets_${getTimestampNow()}.csv`;
+    if (options?.fields) {
+      processedAssets = selectFields(
+        processedAssets,
+        options.fields as (keyof AssetHeader)[]
+      ) as typeof assets;
+      loggerBack.info(`Selected fields: ${options.fields.join(', ')}`);
+    }
 
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-  res.status(200).send(csv);
+    // Info: (20250425 - Shirley) Format dates according to timezone
+    const newData = processedAssets.map((asset) => {
+      const formattedDate = formatTimestampByTZ(
+        asset.acquisitionDate,
+        options?.timezone || DEFAULT_TIMEZONE,
+        'YYYY-MM-DD'
+      );
+
+      return {
+        ...asset,
+        acquisitionDate: formattedDate,
+        number: asset.number,
+      };
+    });
+
+    const fields: (keyof AssetHeader)[] =
+      (options?.fields as (keyof AssetHeader)[]) || ASSET_FIELDS;
+
+    // Info: (20250425 - Shirley) Convert to CSV format
+    const csv = convertToCSV<Record<keyof AssetHeader, AssetHeader[keyof AssetHeader]>>(
+      fields,
+      newData as AssetHeaderWithStringDate[],
+      AssetFieldsMap
+    );
+    loggerBack.info(`Generated CSV with ${newData.length} rows for asset export`);
+
+    // Info: (20250425 - Shirley) Set response headers and send CSV
+    const fileName = `assets_${getTimestampNow()}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    loggerBack.info(`Successfully generated CSV for ${apiName}`);
+    res.status(200).send(csv);
+    return { success: true, statusMessage };
+  } catch (error) {
+    const err = error as Error;
+    loggerBack.error(`Error generating asset CSV export`, {
+      error: err,
+      errorMessage: err.message,
+    });
+    return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
+  }
 }
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse,
-    body: IAssetExportRequestBody
-  ) => Promise<void>;
-} = {
-  POST: handleAssetExport,
-};
-
-// TODO: (20241111 - Shirley) refactor and adopt middleware for validation and format response
-// TODO: (20241111 - Shirley) refactor the user validation to restrict the user to only export their own company's assets
+/**
+ * Info: (20250425 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern for file exports:
+ * 1. Get and validate user session
+ * 2. Check user authorization
+ * 3. Validate team permissions
+ * 4. Handle the export request based on HTTP method
+ * 5. Handle errors consistently
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  let statusMessage = STATUS_MESSAGE.BAD_REQUEST;
+  const apiName = APIName.ASSET_LIST_EXPORT;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
+  // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
+  const { userId, teams } = session;
+
   try {
-    const isLogin = await checkSessionUser(session, APIName.ASSET_LIST_EXPORT, req);
-    if (!isLogin) {
-      statusMessage = STATUS_MESSAGE.UNAUTHORIZED_ACCESS;
-      throw new Error(statusMessage);
-    }
+    // Info: (20250425 - Shirley) Check if user is logged in
+    await checkSessionUser(session, apiName, req);
 
-    const isAuth = await checkUserAuthorization(APIName.ASSET_LIST_EXPORT, req, session);
-    if (!isAuth) {
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      throw new Error(statusMessage);
-    }
+    // Info: (20250425 - Shirley) Check user authorization
+    await checkUserAuthorization(apiName, req, session);
 
-    const { query, body } = checkRequestData(APIName.ASSET_LIST_EXPORT, req, session);
-
-    if (query === null || body === null) {
+    // Info: (20250425 - Shirley) Validate request data
+    const { query, body } = checkRequestData(apiName, req, session);
+    if (!query || !body) {
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_PARAMETER;
       throw new Error(statusMessage);
     }
 
-    const { companyId } = req.query;
-    if (!companyId || typeof companyId !== 'string') {
+    // Info: (20250425 - Shirley) Validate company ID
+    const { companyId } = query;
+    if (!companyId || (Array.isArray(companyId) && companyId.length === 0)) {
       statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
       throw new Error(statusMessage);
     }
+    const companyIdStr = Array.isArray(companyId) ? companyId[0] : companyId;
 
-    const { teams } = await getSession(req);
-
-    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-    const company = await getCompanyById(+companyId);
+    // Info: (20250425 - Shirley) Check team permissions
+    const company = await getCompanyById(+companyIdStr);
     if (!company) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
       throw new Error(statusMessage);
@@ -143,52 +166,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const userTeam = teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
+      loggerBack.info(
+        `User ${userId} is not a member of team ${companyTeamId} for company ${companyIdStr}`
+      );
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
     }
 
     const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam?.role as TeamRole,
+      teamRole: userTeam.role as TeamRole,
       canDo: TeamPermissionAction.EXPORT_ASSET,
     });
 
     if (!assertResult.can) {
+      loggerBack.info(
+        `User ${userId} does not have permission to export assets for company ${companyIdStr}`
+      );
       statusMessage = STATUS_MESSAGE.FORBIDDEN;
       throw new Error(statusMessage);
     }
 
-    res.setHeader('Content-Type', 'text/csv');
-    if (!res.getHeader('Content-Type') || res.getHeader('Content-Type') !== 'text/csv') {
-      statusMessage = STATUS_MESSAGE.INVALID_CONTENT_TYPE;
-      throw new Error(statusMessage);
-    }
+    // Info: (20250425 - Shirley) Handle different HTTP methods
+    const method = req.method || '';
+    let result;
 
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      await handleRequest(req, res, body as IAssetExportRequestBody);
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-      throw new Error(statusMessage);
-    }
-
-    const responseBody = res.getHeader('Content-Disposition');
-    if (!responseBody || typeof responseBody !== 'string' || !responseBody.endsWith('.csv"')) {
-      statusMessage = STATUS_MESSAGE.INVALID_FILE_FORMAT;
-      throw new Error(statusMessage);
+    switch (method) {
+      case HttpMethod.POST:
+        result = await handleAssetExport(req, res, companyIdStr);
+        if (!result.success) {
+          statusMessage = result.statusMessage;
+          throw new Error(statusMessage);
+        }
+        statusMessage = STATUS_MESSAGE.SUCCESS;
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        throw new Error(statusMessage);
     }
   } catch (error) {
+    // Info: (20250425 - Shirley) Handle errors
     const err = error as Error;
+    loggerError({
+      userId: session.userId,
+      errorType: `Handler Request Error for ${apiName}`,
+      errorMessage: err.message,
+    });
+
     const { httpCode, result } = formatApiResponse<null>(
       statusMessage || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
       null
     );
-    loggerError({
-      userId: session.userId,
-      errorType: `Handler Request Error for ${APIName.ASSET_LIST_EXPORT} in middleware.ts`,
-      errorMessage: err.message,
-    });
     res.status(httpCode).json(result);
   } finally {
-    await logUserAction(session, APIName.ASSET_LIST_EXPORT, req, statusMessage);
+    // Info: (20250425 - Shirley) Log user action
+    await logUserAction(session, apiName, req, statusMessage);
   }
 }
