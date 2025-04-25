@@ -26,11 +26,11 @@ type ITaxTypeForFrontend =
   //  | 'zeroTaxNotThroughCustoms'
   | 'taxFree';
 
-type ITaxPeriod = 'Month' | 'Week';
+type ITaxPeriod = 'Monthly' | 'Weekly';
 
 enum TaxPeriod {
-  Month = 'Month',
-  Week = 'Week',
+  MONTHLY = 'Monthly',
+  WEEKLY = 'Weekly',
 }
 
 const AccountingSettingPageBody: React.FC = () => {
@@ -76,7 +76,7 @@ const AccountingSettingPageBody: React.FC = () => {
         taxable: true,
         rate: 5,
       },
-      returnPeriodicity: TaxPeriod.Month,
+      returnPeriodicity: TaxPeriod.MONTHLY,
     },
     shortcutList: [],
   };
