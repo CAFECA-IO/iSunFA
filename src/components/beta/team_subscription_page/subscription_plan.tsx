@@ -102,27 +102,52 @@ const SubscriptionPlan = ({
     }
   };
 
-  const selectedBtn = isTrial ? (
-    // Info: (20250425 - Julian) 「將在試用期結束後開始」
-    <button
-      type="button"
-      className={`${btnCommonStyle} border-button-surface-strong-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable`}
-      disabled
-    >
-      {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.AFTER_TRIAL')}
-    </button>
-  ) : (
-    // Info: (20250425 - Julian) 已選擇的按鈕
-    <button
-      type="button"
-      className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
-    >
-      {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
-    </button>
-  );
+  // ToDo: (20250425 - Julian) 暫時不會用到
+  // const selectedBtn = isTrial ? (
+  //   // Info: (20250425 - Julian) 「將在試用期結束後開始」
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-button-surface-strong-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable`}
+  //     disabled
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.AFTER_TRIAL')}
+  //   </button>
+  // ) : (
+  //   // Info: (20250425 - Julian) 已選擇的按鈕
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+  //   </button>
+  // );
+
+  // const btnContent =
+  //   plan.id === TPlanType.TRIAL ? (
+  //     // Info: (20250425 - Julian) 「免費試用」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} disabled:border-button-stroke-disable disabled:text-button-text-disable`}
+  //       disabled
+  //     >
+  //       {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
+  //     </button>
+  //   ) : isSelected ? (
+  //     selectedBtn
+  //   ) : (
+  //     // Info: (20250425 - Julian) 「選擇此方案」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} border-button-surface-strong-primary bg-button-surface-strong-primary text-button-text-primary-solid hover:border-button-surface-strong-primary-hover`}
+  //       onClick={selectSubscriptionPlan}
+  //     >
+  //       {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+  //       <FiArrowRight size={24} />
+  //     </button>
+  //   );
 
   const btnContent =
-    plan.id === TPlanType.TRIAL ? (
+    plan.id === TPlanType.TRIAL && isTrial ? (
       // Info: (20250425 - Julian) 「免費試用」
       <button
         type="button"
@@ -131,8 +156,14 @@ const SubscriptionPlan = ({
       >
         {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
       </button>
-    ) : isSelected ? (
-      selectedBtn
+    ) : isSelected && !isTrial ? (
+      // Info: (20250425 - Julian) 已選擇的按鈕
+      <button
+        type="button"
+        className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+      >
+        {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+      </button>
     ) : (
       // Info: (20250425 - Julian) 「選擇此方案」
       <button
