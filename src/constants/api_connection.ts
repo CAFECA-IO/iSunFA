@@ -221,8 +221,8 @@ export enum APIPath {
   UPDATE_TODO = `${apiPrefixV2}/todo/:todoId`,
   DELETE_TODO = `${apiPrefixV2}/todo/:todoId`,
   ZOD_EXAMPLE = `${apiPrefix}/company/zod`, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
-  UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
-  DELETE_ACCOUNT_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
+  UPDATE_ACCOUNT_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/account/:accountId`,
+  DELETE_ACCOUNT_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/account/:accountId`,
   CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate`,
   PUBLIC_KEY_GET = `${apiPrefix}/company/:companyId/public_key`,
   ACCOUNT_GET_BY_ID = `${apiPrefix}/company/:companyId/account/:accountId`,
