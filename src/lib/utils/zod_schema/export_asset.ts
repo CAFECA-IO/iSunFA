@@ -11,7 +11,7 @@ const assetExportNullSchema = z.union([z.object({}), z.string()]);
  * Info: (20241108 - Shirley) Query schema for Export API
  */
 const assetExportQuerySchema = z.object({
-  companyId: z.string(),
+  accountBookId: z.string(),
 });
 
 const assetExportBodySchema = z.object({

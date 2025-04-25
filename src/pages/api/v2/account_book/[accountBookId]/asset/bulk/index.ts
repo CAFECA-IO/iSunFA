@@ -54,11 +54,11 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
   // Info: (20250423 - Shirley) Validate request data
   const { query, body } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId || !body) {
+  if (!query || !query.accountBookId || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId } = query;
+  const { accountBookId } = query;
   const {
     assetName,
     assetType,
@@ -73,11 +73,13 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     note = '',
   } = body as ICreateAssetInput;
 
-  loggerBack.info(`User ${userId} creating ${amount} assets in bulk for companyId: ${companyId}`);
+  loggerBack.info(
+    `User ${userId} creating ${amount} assets in bulk for accountBookId: ${accountBookId}`
+  );
 
   // Info: (20241204 - Luphia) collect the new asset data with db schema
   const newAsset: ICreateAssetWithVouchersRepoInput = {
-    companyId,
+    accountBookId,
     name: assetName,
     type: assetType,
     number: assetNumber,
@@ -92,7 +94,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   };
 
   // Info: (20250411 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -114,7 +116,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to create assets in bulk for company ${companyId}`
+      `User ${userId} does not have permission to create assets in bulk for accountBookId ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -129,7 +131,9 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   } else {
     statusMessage = STATUS_MESSAGE.CREATED;
     payload = rs;
-    loggerBack.info(`Successfully created ${amount} assets in bulk for company ${companyId}`);
+    loggerBack.info(
+      `Successfully created ${amount} assets in bulk for accountBookId ${accountBookId}`
+    );
   }
 
   // Info: (20250423 - Shirley) Format response and log user action

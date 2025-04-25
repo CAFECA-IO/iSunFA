@@ -31,7 +31,7 @@ import { TeamRole } from '@/interfaces/team';
  * 5. Converts the data to CSV format
  * 6. Sets appropriate headers and returns the CSV data
  */
-async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, companyId: string) {
+async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, accountBookId: string) {
   const apiName = APIName.ASSET_LIST_EXPORT;
   const statusMessage = STATUS_MESSAGE.SUCCESS;
 
@@ -40,10 +40,10 @@ async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, comp
     const { fileType, filters, sort, options } = req.body as IAssetExportRequestBody;
 
     loggerBack.info(
-      `Processing asset export for company ${companyId} with ${filters ? Object.keys(filters).length : 0} filters`
+      `Processing asset export for company ${accountBookId} with ${filters ? Object.keys(filters).length : 0} filters`
     );
 
-    const parsedCompanyId = parseInt(companyId, 10);
+    const parsedCompanyId = parseInt(accountBookId, 10);
 
     // Info: (20250425 - Shirley) Retrieve asset data
     const assets = await exportAssets(
@@ -144,12 +144,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Info: (20250425 - Shirley) Validate company ID
-    const { companyId } = query;
-    if (!companyId || (Array.isArray(companyId) && companyId.length === 0)) {
+    const { accountBookId } = query;
+    if (!accountBookId || (Array.isArray(accountBookId) && accountBookId.length === 0)) {
       statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
       throw new Error(statusMessage);
     }
-    const companyIdStr = Array.isArray(companyId) ? companyId[0] : companyId;
+    const companyIdStr = Array.isArray(accountBookId) ? accountBookId[0] : accountBookId;
 
     // Info: (20250425 - Shirley) Check team permissions
     const company = await getCompanyById(+companyIdStr);
