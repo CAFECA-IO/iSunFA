@@ -4,7 +4,7 @@ import { LabelType } from '@/constants/ledger';
 
 // Info: (20241212 - Shirley) 查詢參數驗證器
 const IExportLedgerPostQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 // Info: (20241212 - Shirley) 過濾條件驗證器

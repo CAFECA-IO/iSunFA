@@ -139,8 +139,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Info: (20250425 - Shirley) Validate company ID
-    const { companyId } = query;
-    const companyIdStr = typeof companyId === 'string' ? companyId : String(companyId);
+    const { accountBookId } = query;
+    const companyIdStr = typeof accountBookId === 'string' ? accountBookId : String(accountBookId);
     if (!companyIdStr) {
       statusMessage = STATUS_MESSAGE.INVALID_COMPANY_ID;
       throw new Error(statusMessage);

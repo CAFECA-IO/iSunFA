@@ -61,19 +61,27 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250425 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId) {
+  if (!query || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId, startDate, endDate, page, pageSize, labelType, startAccountNo, endAccountNo } =
-    query;
+  const {
+    accountBookId,
+    startDate,
+    endDate,
+    page,
+    pageSize,
+    labelType,
+    startAccountNo,
+    endAccountNo,
+  } = query;
 
   loggerBack.info(
-    `User ${userId} requesting ledger for companyId: ${companyId}, period: ${startDate} to ${endDate}`
+    `User ${userId} requesting ledger for companyId: ${accountBookId}, period: ${startDate} to ${endDate}`
   );
 
   // Info: (20250425 - Shirley) Check company and team permissions
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -95,7 +103,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   if (!assertResult.can) {
     loggerBack.info(
-      `User ${userId} does not have permission to view ledger for company ${companyId}`
+      `User ${userId} does not have permission to view ledger for company ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -128,12 +136,12 @@ async function handleGetRequest(req: NextApiRequest) {
     }
 
     let currencyAlias = CurrencyType.TWD;
-    const accountingSettingData = await getAccountingSettingByCompanyId(companyId);
+    const accountingSettingData = await getAccountingSettingByCompanyId(accountBookId);
     if (accountingSettingData?.currency) {
       currencyAlias = accountingSettingData.currency as CurrencyType;
     }
 
-    let lineItems = await fetchLineItems(companyId, startDate, endDate);
+    let lineItems = await fetchLineItems(accountBookId, startDate, endDate);
     lineItems = filterByAccountRange(lineItems, startAccountNo, endAccountNo);
     lineItems = filterByLabelType(lineItems, labelType as LabelType);
     const processedLineItems = sortAndCalculateBalances(lineItems);
@@ -160,11 +168,11 @@ async function handleGetRequest(req: NextApiRequest) {
 
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     loggerBack.info(
-      `Successfully retrieved ledger for company ${companyId}, found ${paginatedLedger.totalCount} items`
+      `Successfully retrieved ledger for company ${accountBookId}, found ${paginatedLedger.totalCount} items`
     );
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Failed to retrieve ledger for company ${companyId}`, {
+    loggerBack.error(`Failed to retrieve ledger for company ${accountBookId}`, {
       error: err,
       errorMessage: err.message,
     });
@@ -175,7 +183,7 @@ async function handleGetRequest(req: NextApiRequest) {
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    loggerBack.error(`Invalid output data format for ledger of company ${companyId}`);
+    loggerBack.error(`Invalid output data format for ledger of company ${accountBookId}`);
   }
 
   // Info: (20250425 - Shirley) Format response and log user action
