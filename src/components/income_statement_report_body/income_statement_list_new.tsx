@@ -141,17 +141,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           // Deprecated: (20241204 - Liz)
           // eslint-disable-next-line no-console
           console.log('IncomeStatementList received data:', data);
-
-          // eslint-disable-next-line no-console
-          console.log(
-            '是否有 4611？',
-            data.details.some((item) => item.code === '4611')
-          );
-          // eslint-disable-next-line no-console
-          console.log(
-            '4611 的資料：',
-            data.details.find((item) => item.code === '4611')
-          );
         }
       } catch (error) {
         // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing

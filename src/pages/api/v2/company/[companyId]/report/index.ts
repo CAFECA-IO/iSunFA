@@ -158,12 +158,6 @@ export async function incomeStatementHandler({
 
     const { content } = await incomeStatementGenerator.generateReport();
 
-    const targetGroup = content.content.filter(
-      (c) => typeof c.code === 'string' && c.code.startsWith('461')
-    );
-    // eslint-disable-next-line no-console
-    console.log('All 461x entries:', targetGroup);
-
     /**
      * Info: (20241016 - Murky)
      * @description Extracted content from the generated income statement report.
@@ -175,20 +169,6 @@ export async function incomeStatementHandler({
     const accountsMap = transformAccountsToMap(flatAccounts); // 用攤平後的版本建構 Map
 
     // const accountsMap = transformAccountsToMap(accounts);
-    // eslint-disable-next-line no-console
-    console.log(
-      'filter.detail:',
-      reportFilter.detail.map((f) => f.code)
-    );
-    // eslint-disable-next-line no-console
-    console.log(
-      '是否有 4611 in filter.detail？',
-      reportFilter.detail.some((f) => f.code === '4611')
-    );
-    // eslint-disable-next-line no-console
-    console.log('✅ accountsMap 中是否有 4611？', accountsMap.has('4611'));
-    // eslint-disable-next-line no-console
-    console.log('目前 Map 中有哪些 keys：', Array.from(accountsMap.keys()));
 
     const generalFilteredAccounts = transformAccountsMapToFilterSequence({
       filter: reportFilter.general,

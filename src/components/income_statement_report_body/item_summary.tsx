@@ -36,8 +36,7 @@ const ItemSummary = ({
     });
     return result;
   };
-  // eslint-disable-next-line no-console
-  console.log('[ItemSummary] financialReport.general:', financialReport?.general);
+
   const flattenGeneralAccounts = financialReport?.general
     ? flattenAccounts(financialReport.general)
     : [];

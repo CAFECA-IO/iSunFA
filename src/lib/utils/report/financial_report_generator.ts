@@ -91,13 +91,6 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
     const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
-
-    // eslint-disable-next-line no-console
-    console.log(
-      `🔍 Accounts of type ${accountType}:`,
-      accounts.map((a) => ({ id: a.id, code: a.code, forUser: a.forUser }))
-    );
-
     const forest = buildAccountForest(accounts);
 
     return forest;
