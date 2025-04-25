@@ -56,6 +56,8 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.INPUT_CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
+  [APIName.OUTPUT_CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],

@@ -176,3 +176,24 @@ export enum InvoiceTaxType {
    */
   TAX_FREE = 'tax free',
 }
+
+export enum InputInvoiceType {
+  TYPE_21 = '21 - Input triplicate uniform invoice、Computer uniform invoice',
+  TYPE_22 = '22 - Input Duplicate uniform invoice、Cash register uniform invoice',
+  TYPE_23 = '23 - Proof of Return or Discount for Purchases Using Triplicate Input Unified Invoices, Computerized Accounting Machines, Triplicate Cash Register Unified Invoices, and General Tax Calculation Electronic Invoices',
+  TYPE_24 = '24 - Proof of Return or Discount for Purchases Using Duplicate Cash Register Unified Invoices and Other Invoices Containing Tax Amounts',
+  TYPE_25 = '25 - Input Triplicate Input Cash Register Unified Invoices and General Tax Calculation Electronic Invoices',
+  TYPE_26 = '26 - Summary Registration of Each Triplicate Input, Unified Invoices of Computerized Accounting Machines with a Tax Amount Below NT$500',
+  TYPE_27 = '27 - Summary Registration of Each Duplicate Input Cash Register Unified Invoice and Other Invoices Containing Tax Amounts with a Tax Amount Below NT$500',
+  TYPE_28 = '28 - Invoice of Payment for Business Tax Levied by Customs',
+  TYPE_29 = '29 - Declaration Form for Customs Refund of Overpaid Business Tax',
+}
+
+export enum OutputInvoiceType {
+  TYPE_31 = '31 -  Output triplicate uniform invoice',
+  TYPE_32 = '32 - Output Duplicate uniform invoice',
+  TYPE_35 = '35 - Output Triplicate Input Cash Register Unified Invoices and General Tax Calculation Electronic Invoices',
+  TYPE_36 = '36 - Output Exemption of uniform invoice',
+}
+
+export type AllInvoiceType = InputInvoiceType | OutputInvoiceType;

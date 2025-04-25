@@ -74,7 +74,9 @@ export type IAPIName =
   | 'VOUCHER_LIST_V2'
   | 'VOUCHER_DELETE_V2'
   | 'VOUCHER_RESTORE_V2'
-  | 'CERTIFICATE_LIST_V2'
+  | 'INPUT_CERTIFICATE_LIST' // Info: (20250424 - Tzuhan) RC2 更新 certificate apis
+  | 'OUTPUT_CERTIFICATE_LIST' // Info: (20250424 - Tzuhan) RC2 更新 certificate apis
+  | 'CERTIFICATE_LIST_V2' // Deprecated: (20250424 - Tzuhan) remove in the future
   | 'CERTIFICATE_GET_V2'
   | 'CERTIFICATE_POST_V2'
   | 'CERTIFICATE_PUT_V2'

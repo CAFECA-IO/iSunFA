@@ -16,6 +16,8 @@ import {
   invoicePutV2Schema,
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
+  inputCertificateListSchema,
+  outputCertificateListSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
@@ -141,6 +143,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
+  [APIName.INPUT_CERTIFICATE_LIST]: certificateListValidator,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
@@ -194,6 +198,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.INPUT_CERTIFICATE_LIST]: inputCertificateListSchema,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: outputCertificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: certificateMultiDeleteSchema,
