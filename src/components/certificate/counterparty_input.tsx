@@ -44,7 +44,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const companyId = connectedAccountBook?.id;
 
     const { trigger: fetchCompanyDataAPI } = APIHandler<ICompanyTaxIdAndName>(
-      APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID
+      APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID
     );
 
     const [isLoadingCounterparty, setIsLoadingCounterparty] = useState(false);
@@ -226,6 +226,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
       setFilteredCounterpartyList(mergedList);
     }, [searchTaxId, searchName, counterpartyList, searchedCompanies]);
+
+    // Info: (20250415 - Anna) 只要 counterparty?.name 或 counterparty?.taxId 有變動（包含切換到不同的傳票筆數），就會執行
+    useEffect(() => {
+      setSearchName(counterparty?.name || '');
+      setSearchTaxId(counterparty?.taxId || '');
+    }, [counterparty?.name, counterparty?.taxId]);
 
     const counterpartyInput = (
       // isCounterpartyEditing || (!counterparty?.taxId && !counterparty?.name) ?

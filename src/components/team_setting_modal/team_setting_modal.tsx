@@ -28,18 +28,16 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     error: updateTeamError,
     code: updateTeamCode,
     success: updateTeamSuccess,
-  } = APIHandler<IAccountBook>(APIName.COMPANY_UPDATE);
+  } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK); // Info: (20250423 - Shirley) rename company to account book✅ @Julian
 
   const saveClickHandler = async () => {
     if (companyName && connectedAccountBook && companyName !== connectedAccountBook.name) {
       updateTeam({
         params: {
-          companyId: connectedAccountBook.id,
+          accountBookId: connectedAccountBook.id,
         },
         body: {
           name: companyName,
-          code: connectedAccountBook.taxId,
-          regional: 'Taiwan', // Deprecated: (20240930 - Jacky) Mock data for beta change
         },
       });
 

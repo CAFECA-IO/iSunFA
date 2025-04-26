@@ -62,11 +62,9 @@
   },
 
   "ROLE": {
-    "BOOKKEEPER": "記帳士",
-    "EDUCATIONAL_TRIAL_VERSION": "教育試用版",
-    "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "試用版",
-    "ENTERPRISE": "企業版"
+    "INDIVIDUAL": "個人用戶",
+    "ACCOUNTING_FIRMS": "事務所團隊",
+    "ENTERPRISE": "企業用戶"
   },
 
   "CREATE_ROLE_PAGE": {
@@ -76,11 +74,14 @@
     "BACK_TO_SELECT_ROLE_PAGE": "回到選擇角色頁面",
 
     "COMMON_FUNCTIONS": "常用功能",
-    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理總帳、開立憑證、製作財務及稅務報表",
-    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理總帳、開立憑證",
-    "DEFAULT_INTRODUCTION": "iSunFA提供了多種角色供使用者選擇，每個角色都有專屬介面和常用功能。您可以選擇最符合您需求的角色，讓 iSunFA 協助您的工作。iSunFA 的關鍵優勢在於角色優化的介面和 AI 整合會計，讓您更有效率地完成工作！",
-    "BOOKKEEPER_INTRODUCTION": "記帳士是專業的財務工作者，負責管理企業或個人的日常財務記錄和會計工作。他們的主要職責包括建立會計憑證、記錄分類帳分錄、對帳和產生財務報表，以確保財務資訊的正確性和完整性。",
-    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA學生版是為會計領域的學生和實習生量身訂製的教育工具。它提供了管理財務工作（例如建立會計憑證、日記帳分錄和對帳）的實用實務經驗。它非常適合在財務管理方面打下堅實的基礎，並為專業簿記或會計職位做好準備。"
+    "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "憑證管理、日記帳管理、應收帳款及應付帳款管理、財務報表、試算表、總帳",
+    "COMMON_FUNCTIONS_FOR_ACCOUNTING_FIRMS": "憑證管理、日記管理、財務報表、總帳、試算表、財務揭露",
+    "COMMON_FUNCTIONS_FOR_ENTERPRISE": "憑證管理、日記帳分錄管理、應收帳款及應付帳款管理、資產管理、財務報表、總帳、試算表、財務揭露、客戶關係管理",
+
+    "DEFAULT_INTRODUCTION": "iSunFA 提供多種角色選擇，從個人用戶、專業事務所到企業團隊，皆有專屬介面與常用功能。您可以選擇最符合需求的角色，結合人工智能精準優化的會計自動化流程，讓您更有效率地完成工作！",
+    "INDIVIDUAL_INTRODUCTION": "個人使用者可以透過陽光智慧會計平台為企業承接兼職財務工作，或建立自己的記帳報稅專業流程。該平台提供自動憑證分類、即時報告產生和簡化的稅務工具，即使沒有會計背景的人也可以輕鬆管理財務。",
+    "ACCOUNTING_FIRMS_INTRODUCTION": "會計師事務所、代理記帳公司等使用者可透過此平台對多家企業的帳目進行一體化管理，提供專業的財務報表、審計、稅務等服務。系統支援日記帳分錄和報表的批次處理、分級權限控制、跨客戶管理等功能，提高服務效率和合規性。",
+    "ENTERPRISE_INTRODUCTION": "企業用戶可以透過陽光智慧會計平台系統地管理公司的財務運作。他們也可以匯出投資者推廣平台或政府補助申請所需的財務報告。該平台支援財務揭露和試算表，幫助企業建立財務透明度和合規性。"
   },
 
   "SELECT_ROLE_PAGE": {
@@ -155,21 +156,26 @@
     "TEAM": "團隊",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帳本",
     "ENTER_NAME": "輸入名稱",
+    "RESPONSIBLE_PERSON": "負責人",
+    "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
     "ENTER_TAX_ID": "輸入統一編號",
-    "ENTER_FULL_ADDRESS": "輸入完整地址",
     "CANCEL": "取消",
     "ADD": "新增",
+    "NEXT": "下一步",
     "CHOOSE_WORK_TAG": "選擇工作標籤",
     "CHOOSE_TEAM": "選擇團隊",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帳本失敗",
     "ERROR_CODE": "錯誤代碼",
     "ERROR_MESSAGE": "錯誤訊息",
 
-    "COMPANY_ADDRESS": "公司地址",
+    "CONTACT_INFO": "聯絡資訊",
+    "CONTACT_PERSON": "聯絡人",
+    "ENTER_CONTACT_PERSON": "輸入姓名",
+    "SAME_AS_RESPONSIBLE_PERSON": "與負責人相同",
+    "BUSINESS_ADDRESS": "營業地址",
     "CHOOSE_CITY": "選擇縣市",
     "CHOOSE_DISTRICT": "選擇行政區",
-    "RESPONSIBLE_PERSON": "負責人",
-    "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
+    "ENTER_FULL_ADDRESS": "輸入完整地址",
 
     "TAX_SERIAL_NUMBER": "稅籍編號",
     "ENTER_TAX_SERIAL_NUMBER": "輸入稅籍編號",
@@ -182,5 +188,59 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "請輸入稅籍編號",
     "PLEASE_SELECT_A_WORK_TAG": "請選擇工作標籤",
     "PLEASE_SELECT_A_TEAM": "請選擇團隊"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "返回",
+    "BUSINESS_TAX_SETTING": "營業稅設定",
+    "DECLARATION_SETTING": "申報設定",
+    "DECLARANT": "申報人 (代理人)",
+    "DECLARANT_NAME": "姓名",
+    "ENTER_DECLARANT_NAME": "輸入姓名",
+    "DECLARANT_PERSONAL_ID": "申報人身分證字號",
+    "ENTER_DECLARANT_PERSONAL_ID": "輸入身分證字號",
+    "PHONE_NUMBER": "電話號碼",
+    "ENTER_PHONE_NUMBER": "輸入電話號碼",
+    "DECLARANT_NAME_REQUIRED": "請輸入姓名",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "請輸入身分證字號",
+    "PHONE_NUMBER_REQUIRED": "請輸入電話號碼"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "申報頻率",
+    "SELECT_FILING_FREQUENCY": "選擇申報頻率",
+    "BIMONTHLY_FILING": "雙月申報",
+    "MONTHLY_FILING": "每月申報",
+    "EVERY_TWO_MONTHS": "每兩個月",
+    "EVERY_MONTH": "每個月",
+    "FILING_FREQUENCY_REQUIRED": "請選擇申報頻率"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "總繳種類",
+    "SELECT_FILING_METHOD": "選擇總繳種類",
+    "SINGLE_ENTITY_FILING": "單一法人申報",
+    "CONSOLIDATED_FILING": "合併申報",
+    "INDIVIDUAL_FILING": "個人申報",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "單一總公司無分支機構",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "總公司為所有分支機構檔案",
+    "EACH_UNIT_FILES_SEPARATELY": "每個單位單獨歸檔",
+    "FILING_METHOD_REQUIRED": "請選擇總繳種類"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "申報方式",
+    "SELECT_DECLARANT_FILING_METHOD": "選擇申報方式",
+    "SELF_FILING": "自行申報",
+    "AGENT_FILING": "委託申報",
+    "DECLARANT_FILING_METHOD_REQUIRED": "請選擇申報方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "會計師",
+    "BOOKKEEPER": "記帳士",
+    "BOOKKEEPER_AND_FILING_AGENT": "記帳士及申報代理人",
+    "I_AM": "我是...",
+    "AGENT_FILING_ROLE_REQUIRED": "請填寫申報人資料"
   }
 }

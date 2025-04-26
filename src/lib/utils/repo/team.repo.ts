@@ -11,10 +11,14 @@ import { createOrderByList } from '@/lib/utils/sort';
 import { MAX_TEAM_LIMIT, TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { listTeamQuerySchema } from '@/lib/utils/zod_schema/team';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import loggerBack from '@/lib/utils/logger_back';
 import { updateTeamMemberSession } from '@/lib/utils/session';
-import { assertUserIsTeamMember } from '@/lib/utils/permission/assert_user_team_permission';
+import {
+  assertUserCan,
+  assertUserIsTeamMember,
+} from '@/lib/utils/permission/assert_user_team_permission';
+import { getGracePeriodInfo } from '@/lib/shared/permission';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export const getTeamList = async (
   userId: number,
@@ -32,6 +36,7 @@ export const getTeamList = async (
   } = queryParams;
 
   const nowInSecond = getTimestampNow();
+  const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
 
   const [totalCount, teams] = await prisma.$transaction([
     prisma.team.count({
@@ -53,8 +58,10 @@ export const getTeamList = async (
         subscriptions: {
           where: {
             startDate: { lte: nowInSecond },
-            expiredDate: { gt: nowInSecond },
+            expiredDate: { gt: nowInSecond - THREE_DAYS_IN_SECONDS },
           },
+          orderBy: { expiredDate: SortOrder.DESC },
+          take: 1,
           include: { plan: true },
         },
         imageFile: { select: { id: true, url: true } },
@@ -70,24 +77,23 @@ export const getTeamList = async (
   const teamData = await Promise.all(
     teams.map(async (team) => {
       // Info: (20250411 - Tzuhan) actualRole 是用來判斷用戶的實際角色
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { actualRole, effectiveRole, expiredAt } = await assertUserIsTeamMember(
-        userId,
-        team.id
-      );
+      const { effectiveRole } = await assertUserIsTeamMember(userId, team.id);
 
       if (syncSession) {
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
+      const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+      if (syncSession) {
+        updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
+      }
 
-      const permissionCheck = convertTeamRoleCanDo({
-        teamRole: effectiveRole,
-        canDo: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
+      const { can } = await assertUserCan({
+        userId,
+        teamId: team.id,
+        action: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
       });
-
-      const hasPermission = permissionCheck.can === true;
-
-      if (canCreateAccountBookOnly && !hasPermission) return null;
+      if (canCreateAccountBookOnly && !can) return null;
 
       return {
         id: team.id,
@@ -108,8 +114,9 @@ export const getTeamList = async (
             : '',
           editable: effectiveRole !== TeamRole.VIEWER,
         },
-        paymentStatus: TPlanType.BEGINNER,
-        expiredAt: expiredAt ?? 0,
+        expiredAt,
+        inGracePeriod,
+        gracePeriodEndAt,
       };
     })
   );
@@ -146,7 +153,9 @@ export const createTeamWithTrial = async (
       where: { ownerId: userId },
     });
     if (teamCount >= MAX_TEAM_LIMIT) {
-      throw new Error('USER_TEAM_LIMIT_REACHED');
+      const error = new Error(STATUS_MESSAGE.USER_TEAM_LIMIT_REACHED);
+      error.name = STATUS_CODE.USER_TEAM_LIMIT_REACHED;
+      throw error;
     }
 
     loggerBack.info(
@@ -155,14 +164,19 @@ export const createTeamWithTrial = async (
 
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
-
+    const expired = getUnixTime(addMonths(now, 1));
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     const plan = await tx.teamPlan.findFirst({
       where: {
-        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.PROFESSIONAL : teamData.planType,
+        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.TRIAL : teamData.planType,
       },
       select: { type: true },
     });
-    if (!plan) throw new Error('PLAN_NOT_FOUND');
+    if (!plan) {
+      const error = new Error(STATUS_MESSAGE.PLAN_NOT_FOUND);
+      error.name = STATUS_CODE.PLAN_NOT_FOUND;
+      throw error;
+    }
 
     // Info: (20250409 - Tzuhan) 2. 建立團隊
     const newTeam = await tx.team.create({
@@ -242,13 +256,12 @@ export const createTeamWithTrial = async (
       }
     }
 
-    // Info: (20250409 - Tzuhan) 5. 建立試用 TeamSubscription（預設為 PROFESSIONAL 方案）
     await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
         planType: plan.type,
         startDate: nowInSeconds,
-        expiredDate: getUnixTime(addMonths(now, 1)),
+        expiredDate: expired,
       },
     });
 
@@ -269,7 +282,9 @@ export const createTeamWithTrial = async (
           : '',
         editable: true,
       },
-      expiredAt: getUnixTime(addMonths(now, 1)),
+      expiredAt: expired,
+      inGracePeriod,
+      gracePeriodEndAt,
     };
   });
 };
@@ -288,25 +303,28 @@ export const createTeam = async (
 ): Promise<ITeam> => {
   // Info: (20250321 - Tzuhan) 1️. 檢查該用戶已擁有的團隊數量
   return prisma.$transaction(async (tx) => {
-    const teamCount = await tx.team.count({
-      where: { ownerId: userId },
-    });
-
+    const teamCount = await tx.team.count({ where: { ownerId: userId } });
     if (teamCount >= MAX_TEAM_LIMIT) {
-      throw new Error('USER_TEAM_LIMIT_REACHED'); // Info: (20250321 - Tzuhan) 超過 3 個團隊，阻止創建
+      const error = new Error(STATUS_MESSAGE.USER_TEAM_LIMIT_REACHED);
+      error.name = STATUS_CODE.USER_TEAM_LIMIT_REACHED;
+      throw error;
     }
+
+    const now = new Date();
+    const nowInSecond = getUnixTime(now);
+    const expired = getUnixTime(addMonths(now, 1));
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
 
     // Info: (20250304 - Tzuhan) 2. 取得 `planId`
     const plan = await tx.teamPlan.findFirst({
       where: { type: teamData.planType ?? TPlanType.BEGINNER },
-      select: { id: true },
+      select: { id: true, type: true },
     });
-
     if (!plan) {
-      throw new Error('Plan type not found');
+      const error = new Error(STATUS_MESSAGE.PLAN_NOT_FOUND);
+      error.name = STATUS_CODE.PLAN_NOT_FOUND;
+      throw error;
     }
-
-    const now = Math.floor(Date.now() / 1000);
 
     // Info: (20250304 - Tzuhan) 3. 創建團隊
     const newTeam = await tx.team.create({
@@ -325,18 +343,17 @@ export const createTeam = async (
       },
     });
 
-    // Info: (20250305 - Tzuhan) 4. 將創建者加入 `teamMember`
     await tx.teamMember.create({
       data: {
         teamId: newTeam.id,
         userId,
         role: TeamRole.OWNER,
-        joinedAt: now,
+        joinedAt: nowInSecond,
       },
     });
 
     // Info: (20250304 - Tzuhan) 5. 遍歷 `members`，判斷 Email 是否存在於 `User`
-    if (teamData.members && teamData.members.length > 0) {
+    if (teamData.members?.length) {
       const existingUsers = await tx.user.findMany({
         where: { email: { in: teamData.members } },
         select: { id: true, email: true },
@@ -352,7 +369,7 @@ export const createTeam = async (
             teamId: newTeam.id,
             userId: user.id,
             role: TeamRole.EDITOR,
-            joinedAt: now,
+            joinedAt: nowInSecond,
           })),
           skipDuplicates: true,
         });
@@ -363,11 +380,9 @@ export const createTeam = async (
             teamId: newTeam.id,
             email: user.email!,
             status: InviteStatus.COMPLETED,
-            createdAt: now,
-            completedAt: now,
-            note: JSON.stringify({
-              reason: 'User already exists, added to team without asking',
-            }),
+            createdAt: nowInSecond,
+            completedAt: nowInSecond,
+            note: JSON.stringify({ reason: 'User already exists, added to team without asking' }),
           })),
           skipDuplicates: true,
         });
@@ -380,7 +395,7 @@ export const createTeam = async (
             teamId: newTeam.id,
             email,
             status: InviteStatus.PENDING,
-            createdAt: now,
+            createdAt: nowInSecond,
             note: JSON.stringify({
               reason:
                 'User not exists, pending for join, when user register, will be added to team',
@@ -391,7 +406,16 @@ export const createTeam = async (
       }
     }
 
-    // ToDo: (20250304 - Tzuhan) 6. 創建試用期 `TeamSubscription`
+    await tx.teamSubscription.create({
+      data: {
+        teamId: newTeam.id,
+        planType: plan.type,
+        startDate: nowInSecond,
+        expiredDate: expired,
+        createdAt: nowInSecond,
+        updatedAt: nowInSecond,
+      },
+    });
 
     return {
       id: newTeam.id,
@@ -400,7 +424,7 @@ export const createTeam = async (
       name: { value: newTeam.name, editable: true },
       about: { value: newTeam.about ?? '', editable: true },
       profile: { value: newTeam.profile ?? '', editable: true },
-      planType: { value: teamData.planType ?? TPlanType.BEGINNER, editable: false },
+      planType: { value: plan.type as TPlanType, editable: false },
       totalMembers: newTeam.members.length + 1,
       totalAccountBooks: newTeam.accountBook.length,
       bankAccount: {
@@ -409,19 +433,23 @@ export const createTeam = async (
           : '',
         editable: true,
       },
-      expiredAt: 0,
+      expiredAt: expired,
+      inGracePeriod,
+      gracePeriodEndAt,
     };
   });
 };
 
 export const getTeamByTeamId = async (teamId: number, userId: number): Promise<ITeam | null> => {
-  // Info: (20250410 - tzuhan) Step 1. 驗證是否為團隊成員並取得角色
-  const { effectiveRole, expiredAt } = await assertUserIsTeamMember(userId, teamId);
-  // Info: (20250410 - tzuhan) Step 2. 確保 session 中有正確的 teamRole
-  await updateTeamMemberSession(userId, teamId, effectiveRole);
-  // Info: (20250410 - tzuhan) Step 3. 查詢團隊資訊
-  const nowInSecond = getTimestampNow();
+  // Info: (20250410 - tzuhan) Step 1: 驗證是否為團隊成員並取得角色、訂閱資訊
+  const { effectiveRole, expiredAt, inGracePeriod, gracePeriodEndAt } =
+    await assertUserIsTeamMember(userId, teamId);
 
+  // Info: (20250410 - tzuhan) Step 2: 同步 session 中的 teamRole
+  await updateTeamMemberSession(userId, teamId, effectiveRole);
+
+  // Info: (20250410 - tzuhan) Step 3: 查詢團隊資訊
+  const nowInSecond = getTimestampNow();
   const team = await prisma.team.findUnique({
     where: { id: teamId },
     include: {
@@ -456,10 +484,12 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
   });
 
   if (!team) {
-    throw new Error('TEAM_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND;
+    throw error;
   }
 
-  const planType = team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER;
+  const planType = team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
 
   return {
     id: team.id,
@@ -490,13 +520,15 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
       editable: effectiveRole !== TeamRole.VIEWER,
     },
     expiredAt: expiredAt ?? 0,
+    inGracePeriod,
+    gracePeriodEndAt,
   };
 };
 
 export async function createDefaultTeamForUser(userId: number, userName: string) {
   const teamName = `${userName}'s Team`;
 
-  const team = await createTeam(userId, {
+  const team = await createTeamWithTrial(userId, {
     name: teamName,
   });
 
@@ -568,6 +600,7 @@ export const getTeamsByUserIdAndTeamIds = async (
   if (!teamIds.length) return [];
 
   const nowInSecond = getTimestampNow();
+  const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
 
   // Info: (20250410 - tzuhan) 查詢使用者在這些團隊的有效成員角色與訂閱狀態
   const teamMembers = await prisma.teamMember.findMany({
@@ -584,9 +617,17 @@ export const getTeamsByUserIdAndTeamIds = async (
           subscriptions: {
             where: {
               startDate: { lte: nowInSecond },
-              expiredDate: { gt: nowInSecond },
+              expiredDate: { gt: nowInSecond - THREE_DAYS_IN_SECONDS },
             },
-            select: { expiredDate: true, plan: { select: { type: true } } },
+            select: {
+              expiredDate: true,
+              startDate: true,
+              plan: {
+                select: { type: true },
+              },
+            },
+            orderBy: { expiredDate: SortOrder.DESC },
+            take: 1,
           },
         },
       },
@@ -597,21 +638,33 @@ export const getTeamsByUserIdAndTeamIds = async (
 
   const roleMap = new Map<
     number,
-    { actualRole: TeamRole; effectiveRole: TeamRole; expiredAt: number; planType: TPlanType }
+    {
+      actualRole: TeamRole;
+      effectiveRole: TeamRole;
+      expiredAt: number;
+      inGracePeriod: boolean;
+      gracePeriodEndAt: number;
+      planType: TPlanType;
+    }
   >();
 
   teamMembers.forEach((member) => {
     const actualRole = member.role as TeamRole;
-    const expiredAt = member.team.subscriptions[0]?.expiredDate ?? 0;
-    const planType = member.team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
-    const isExpired = expiredAt === 0;
+    const subscription = member.team.subscriptions[0];
+    const expiredAt = subscription?.expiredDate ?? 0;
+    const planType = (member.team.subscriptions[0]?.plan?.type as TPlanType) ?? TPlanType.BEGINNER;
+
+    const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+    const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
     const effectiveRole = isExpired ? TeamRole.VIEWER : actualRole;
 
     roleMap.set(member.teamId, {
       actualRole,
       effectiveRole,
       expiredAt,
-      planType: planType as TPlanType,
+      inGracePeriod,
+      gracePeriodEndAt,
+      planType,
     });
   });
 
@@ -636,17 +689,17 @@ export const getTeamsByUserIdAndTeamIds = async (
   });
 
   return teams.map((team) => {
-    const roleMeta = roleMap.get(team.id)!;
+    const meta = roleMap.get(team.id)!;
 
     return {
       id: team.id,
       imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-      role: roleMeta.effectiveRole,
-      name: { value: team.name, editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
-      about: { value: team.about || '', editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
-      profile: { value: team.profile || '', editable: roleMeta.effectiveRole !== TeamRole.VIEWER },
+      role: meta.effectiveRole,
+      name: { value: team.name, editable: meta.effectiveRole !== TeamRole.VIEWER },
+      about: { value: team.about || '', editable: meta.effectiveRole !== TeamRole.VIEWER },
+      profile: { value: team.profile || '', editable: meta.effectiveRole !== TeamRole.VIEWER },
       planType: {
-        value: roleMeta.planType,
+        value: meta.planType,
         editable: false,
       },
       totalMembers: team.members.length,
@@ -655,10 +708,11 @@ export const getTeamsByUserIdAndTeamIds = async (
         value: team.bankInfo
           ? `${(team.bankInfo as { code: string }).code}-${(team.bankInfo as { number: string }).number}`
           : '',
-        editable: roleMeta.effectiveRole !== TeamRole.VIEWER,
+        editable: meta.effectiveRole !== TeamRole.VIEWER,
       },
-      paymentStatus: TPlanType.BEGINNER, // Info: (20250411 - tzuhan) 可視需要再處理實際狀態
-      expiredAt: roleMeta.expiredAt,
+      expiredAt: meta.expiredAt,
+      inGracePeriod: meta.inGracePeriod,
+      gracePeriodEndAt: meta.gracePeriodEndAt,
     };
   });
 };
@@ -689,7 +743,9 @@ export const updateTeamById = async (
   });
 
   if (!team) {
-    throw new Error('TEAM_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
+    error.name = STATUS_CODE.TEAM_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250325 - Shirley) 將 bankInfo 轉換為資料庫格式

@@ -26,14 +26,16 @@ const AccountBookListForPendingTask = ({ list }: AccountBookListProps) => {
     <section className="flex flex-col gap-8px">
       {list.map((item) => (
         <div
-          key={item.companyId}
+          key={item.accountBookId}
           className="flex items-center justify-between gap-8px bg-surface-brand-primary-10 px-8px py-4px"
         >
           <div className="flex items-center gap-8px">
             <div className="h-24px w-24px overflow-hidden rounded-xxs border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
-              <Image src={item.companyLogoSrc} alt="company_logo" width={24} height={24} />
+              <Image src={item.accountBookLogoSrc} alt="accountBook_logo" width={24} height={24} />
             </div>
-            <p className="text-xs font-semibold text-text-neutral-primary">{item.companyName}</p>
+            <p className="text-xs font-semibold text-text-neutral-primary">
+              {item.accountBookName}
+            </p>
           </div>
 
           <p className="text-sm font-semibold text-text-neutral-primary">{item.count}</p>

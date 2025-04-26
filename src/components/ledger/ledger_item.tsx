@@ -41,7 +41,7 @@ const LedgerItem = React.memo(
 
     const displayedDate = (
       <div className="flex h-full items-center justify-center py-4">
-        <CalendarIcon timestamp={voucherDate} unRead={false} />
+        <CalendarIcon timestamp={voucherDate} incomplete={false} />
       </div>
     );
 

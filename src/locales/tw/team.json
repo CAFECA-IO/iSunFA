@@ -37,6 +37,7 @@
     "PLAN_BEGINNER": "免費版",
     "PLAN_PROFESSIONAL": "專業版",
     "PLAN_ENTERPRISE": "企業版",
+    "PLAN_TRIAL": "專業版（免費試用）",
     "ROLE_OWNER": "擁有者",
     "ROLE_ADMIN": "管理者",
     "ROLE_EDITOR": "編輯者",

@@ -23,14 +23,19 @@ import Loader from '@/components/loader/loader';
 // Info: (20241029 - Liz) 用來對照 Role 的 Icon
 const USER_ROLES_ICON = [
   {
-    id: RoleName.BOOKKEEPER,
+    id: RoleName.INDIVIDUAL,
     roleIconSrc: '/icons/information_desk.svg',
     roleIconAlt: 'information_desk',
   },
   {
-    id: RoleName.EDUCATIONAL_TRIAL_VERSION,
-    roleIconSrc: '/icons/graduation_cap.svg',
+    id: RoleName.ACCOUNTING_FIRMS,
+    roleIconSrc: '/icons/accounting_firms_icon.svg',
     roleIconAlt: 'graduation_cap',
+  },
+  {
+    id: RoleName.ENTERPRISE,
+    roleIconSrc: '/icons/enterprise_icon.svg',
+    roleIconAlt: 'enterprise',
   },
 ];
 

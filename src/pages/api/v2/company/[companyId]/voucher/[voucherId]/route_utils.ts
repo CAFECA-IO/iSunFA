@@ -14,7 +14,6 @@ import {
   Certificate as PrismaCertificate,
   Invoice as PrismaInvoice,
   File as PrismaFile,
-  UserCertificate as PrismaUserCertificate,
   PrismaClient,
 } from '@prisma/client';
 import { IAssetEntity } from '@/interfaces/asset';
@@ -28,7 +27,6 @@ import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.forma
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaInvoiceToInvoiceEntity } from '@/lib/utils/formatter/invoice.formatter';
-import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaCertificateToCertificateEntity } from '@/lib/utils/formatter/certificate.formatter';
 import { initEventEntity } from '@/lib/utils/event';
@@ -366,12 +364,10 @@ export const voucherAPIGetOneUtils = {
     certificate: PrismaCertificate & {
       invoices: PrismaInvoice[];
       file: PrismaFile;
-      UserCertificate: PrismaUserCertificate[];
     }
   ) => {
     const invoiceDto = certificate.invoices[0];
     const fileDto = certificate.file;
-    const userCertificatesDto = certificate.UserCertificate;
 
     // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
     const invoice = invoiceDto
@@ -393,15 +389,11 @@ export const voucherAPIGetOneUtils = {
           deductible: false,
         });
     const file = parsePrismaFileToFileEntity(fileDto);
-    const userCertificates = userCertificatesDto.map(
-      parsePrismaUserCertificateToUserCertificateEntity
-    );
     const certificateEntity = parsePrismaCertificateToCertificateEntity(certificate);
 
     const newCertificate = Object.assign(certificateEntity, {
       invoice,
       file,
-      userCertificates,
     });
     return newCertificate;
   },

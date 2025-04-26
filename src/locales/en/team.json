@@ -37,6 +37,7 @@
     "PLAN_BEGINNER": "Free",
     "PLAN_PROFESSIONAL": "Professional",
     "PLAN_ENTERPRISE": "Enterprise",
+    "PLAN_TRIAL": "Professional (Free Trial)",
     "ROLE_OWNER": "Owner",
     "ROLE_ADMIN": "Admin",
     "ROLE_EDITOR": "Editor",

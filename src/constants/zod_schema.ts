@@ -16,17 +16,15 @@ import {
   invoicePutV2Schema,
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
+  inputCertificateListSchema,
+  outputCertificateListSchema,
 } from '@/lib/utils/zod_schema/certificate';
-import {
-  companyPutIconSchema,
-  companyPutSchema,
-  companySearchSchema,
-} from '@/lib/utils/zod_schema/company';
+import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
 import {
-  companyPendingTaskSchema,
+  accountBookPendingTaskSchema,
   userPendingTaskSchema,
 } from '@/lib/utils/zod_schema/pending_task';
 import {
@@ -72,12 +70,12 @@ import {
   counterpartyDeleteSchema,
 } from '@/lib/utils/zod_schema/counterparty';
 import { userSettingGetSchema, userSettingPutSchema } from '@/lib/utils/zod_schema/user_setting';
-import {
-  companySettingGetSchema,
-  companySettingPutSchema,
-} from '@/lib/utils/zod_schema/company_setting';
+
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
-import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
+import {
+  trialBalanceListSchema,
+  trialBalanceExportSchema,
+} from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
 import { roleListSchema } from '@/lib/utils/zod_schema/role';
 import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
@@ -99,7 +97,13 @@ import { imageGetSchema } from '@/lib/utils/zod_schema/image';
 import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
-import { accountGetV2Schema, accountPostV2Schema } from '@/lib/utils/zod_schema/account';
+import {
+  accountGetV2Schema,
+  accountPostV2Schema,
+  accountGetByIdSchema,
+  accountUpdateSchema,
+  accountDeleteSchema,
+} from '@/lib/utils/zod_schema/account';
 import {
   assetBulkPostSchema,
   assetDeleteSchema,
@@ -120,8 +124,9 @@ import {
   updateAccountBookSchema,
   updateAccountBookInfoSchema,
   listAccountBooksByTeamIdSchema,
-  createAccountBookSchema,
   deleteAccountBookSchema,
+  disconnectAccountBookSchema,
+  listAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
 
 /*
@@ -147,6 +152,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
+  [APIName.INPUT_CERTIFICATE_LIST]: certificateListValidator,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
@@ -159,13 +166,9 @@ export const API_ZOD_SCHEMA = {
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
 export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ACCOUNT_BOOK]: accountBookCreateSchema,
-  [APIName.COMPANY_UPDATE]: companyPutSchema,
   [APIName.DELETE_ACCOUNT_BOOK]: deleteAccountBookSchema,
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: companySearchSchema,
-  [APIName.COMPANY_PENDING_TASK_GET]: companyPendingTaskSchema,
-  [APIName.COMPANY_PUT_ICON]: companyPutIconSchema,
-  [APIName.COMPANY_SETTING_GET]: companySettingGetSchema,
-  [APIName.COMPANY_SETTING_UPDATE]: companySettingPutSchema,
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: accountBookSearchSchema,
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: accountBookPendingTaskSchema,
   [APIName.COUNTERPARTY_LIST]: counterpartyListSchema,
   [APIName.COUNTERPARTY_ADD]: counterpartyPostSchema,
   [APIName.COUNTERPARTY_GET_BY_ID]: counterpartyGetByIdSchema,
@@ -204,6 +207,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.INPUT_CERTIFICATE_LIST]: inputCertificateListSchema,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: outputCertificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: certificateMultiDeleteSchema,
@@ -236,10 +241,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
   [APIName.KYC_UPLOAD]: nullAPISchema,
-  [APIName.ACCOUNT_GET_BY_ID]: nullAPISchema,
+  [APIName.ACCOUNT_GET_BY_ID]: accountGetByIdSchema,
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
-  [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: nullAPISchema,
-  [APIName.DELETE_ACCOUNT_BY_ID]: nullAPISchema,
+  [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: accountUpdateSchema,
+  [APIName.DELETE_ACCOUNT_BY_ID]: accountDeleteSchema,
   [APIName.PUBLIC_KEY_GET]: nullAPISchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
@@ -249,11 +254,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.CREATE_ASSET_V2]: assetPostSchema,
   [APIName.DELETE_ASSET_V2]: assetDeleteSchema,
   [APIName.UPDATE_ASSET_V2]: assetPutSchema,
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: nullAPISchema,
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
-  [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
+  [APIName.TRIAL_BALANCE_EXPORT]: trialBalanceExportSchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
   [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
@@ -289,8 +293,10 @@ export const ZOD_SCHEMA_API = {
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
   [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
-  [APIName.ACCOUNT_BOOK_CREATE]: createAccountBookSchema,
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,
+  [APIName.DISCONNECT_ACCOUNT_BOOK]: disconnectAccountBookSchema,
+  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: listAccountBookInfoSchema,
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: accountBookPutIconSchema,
 
   [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
   [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,

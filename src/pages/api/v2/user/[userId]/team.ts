@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     const err = error as Error;
-    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
   await logUserAction(session, APIName.LIST_TEAM, req, statusMessage);

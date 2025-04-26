@@ -57,7 +57,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const accountBookId = Number(req.query.accountBookId);
   const { action, tag } = body;
 
-  // Info: (20250718 - Shirley) 獲取帳本所屬的團隊ID
+  // Info: (20250418 - Shirley) 獲取帳本所屬的團隊ID
   const teamId = await getAccountBookTeamId(accountBookId);
 
   if (!teamId) {
@@ -65,7 +65,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  // Info: (20250718 - Shirley) 從 session 中獲取用戶在團隊中的角色
+  // Info: (20250418 - Shirley) 從 session 中獲取用戶在團隊中的角色
   const teamInfo = teams?.find((team) => team.id === teamId);
 
   if (!teamInfo) {
@@ -208,7 +208,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     loggerBack.info(`error: ${JSON.stringify(error)}`);
     const err = error as Error;
-    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
   await logUserAction(session, name, req, statusMessage);

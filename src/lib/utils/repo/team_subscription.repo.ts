@@ -1,9 +1,9 @@
 import prisma from '@/client';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { Prisma, PrismaClient, TeamPlanType } from '@prisma/client';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamSubscription } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ITeamInvoice, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
-import { TeamPlanType } from '@prisma/client';
 import { LeaveStatus, TeamRole } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedOptions } from '@/interfaces/pagination';
@@ -14,9 +14,13 @@ import {
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { addMonths, getUnixTime } from 'date-fns';
+import { ORDER_STATUS } from '@/constants/order';
+import { TRANSACTION_STATUS } from '@/constants/transaction';
+import { PAYEE } from '@/constants/payment';
 
 export const createTeamSubscription = async (
-  options: ITeamSubscription
+  options: ITeamSubscription,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamSubscription> => {
   const permission = await assertUserCan({
     userId: options.userId,
@@ -24,7 +28,11 @@ export const createTeamSubscription = async (
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const data = {
     teamId: options.teamId,
@@ -34,7 +42,7 @@ export const createTeamSubscription = async (
     createdAt: options.createdAt,
     updatedAt: options.updatedAt,
   };
-  const teamSubscription: ITeamSubscription = (await prisma.teamSubscription.create({
+  const teamSubscription: ITeamSubscription = (await tx.teamSubscription.create({
     data,
   })) as ITeamSubscription;
 
@@ -46,7 +54,8 @@ export const createTeamSubscription = async (
 };
 
 export const updateTeamSubscription = async (
-  options: ITeamSubscription
+  options: ITeamSubscription,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<ITeamSubscription> => {
   const data = {
     planType: options.planType as TeamPlanType,
@@ -54,7 +63,7 @@ export const updateTeamSubscription = async (
     expiredDate: options.expiredDate,
     updatedAt: options.updatedAt,
   };
-  const teamSubscription: ITeamSubscription = (await prisma.teamSubscription.update({
+  const teamSubscription: ITeamSubscription = (await tx.teamSubscription.update({
     where: { id: options.id },
     data,
   })) as ITeamSubscription;
@@ -64,10 +73,13 @@ export const updateTeamSubscription = async (
   return teamSubscription;
 };
 
-export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSubscription[]> => {
+export const listValidTeamSubscription = async (
+  teamId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<ITeamSubscription[]> => {
   const nowInSecond = getTimestampNow();
   const teamSubscriptions: ITeamSubscription[] = (
-    await prisma.teamSubscription.findMany({
+    await tx.teamSubscription.findMany({
       where: {
         teamId,
         startDate: {
@@ -98,10 +110,11 @@ export const listValidTeamSubscription = async (teamId: number): Promise<ITeamSu
 export async function listTeamSubscription(
   userId: number,
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<IUserOwnedTeam[]>> {
   // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為團隊成員成員，無需額外 assertUserCan。
-  const ownerTeams = await prisma.teamMember.findMany({
+  const ownerTeams = await tx.teamMember.findMany({
     where: {
       userId,
       // role: TeamRole.OWNER, // Info: (20250411 - Tzuhan) 這邊不需要限制角色，因為團隊擁有者均可查看訂閱資料
@@ -120,13 +133,13 @@ export async function listTeamSubscription(
               plan: true,
             },
           },
-          TeamOrder: {
+          teamOrder: {
             orderBy: { createdAt: SortOrder.DESC },
             take: 1,
             include: {
-              TeamPaymentTransaction: {
+              teamPaymentTransaction: {
                 include: {
-                  TeamInvoice: true,
+                  teamInvoice: true,
                 },
               },
             },
@@ -138,7 +151,7 @@ export async function listTeamSubscription(
     take: pageSize,
   });
 
-  const totalCount = await prisma.teamMember.count({
+  const totalCount = await tx.teamMember.count({
     where: {
       userId,
       role: TeamRole.OWNER,
@@ -148,9 +161,9 @@ export async function listTeamSubscription(
 
   const data: IUserOwnedTeam[] = ownerTeams.map(({ team }) => {
     const latestSub = team.subscriptions[0];
-    const latestOrder = team.TeamOrder[0];
-    const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-    const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
+    const latestOrder = team.teamOrder[0];
+    const latestTxn = latestOrder?.teamPaymentTransaction[0];
+    const hasInvoice = (latestTxn?.teamInvoice?.length ?? 0) > 0;
 
     let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
     if (latestSub) {
@@ -186,45 +199,30 @@ export async function listTeamSubscription(
 }
 
 export async function listTeamTransaction(
-  userId: number,
+  teamId: number,
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<ITeamInvoice[]>> {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
+  const subscriptions = await listValidTeamSubscription(teamId);
   // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為 `role: OWNER` 成員，無需額外 assertUserCan。
-  const teamMembers = await prisma.teamMember.findMany({
+  const teamOrders = await tx.teamOrder.findMany({
     where: {
-      userId,
-      role: TeamRole.OWNER,
-      status: LeaveStatus.IN_TEAM,
+      teamId,
     },
     select: {
-      teamId: true,
-      team: {
-        select: {
-          subscriptions: {
-            orderBy: { expiredDate: SortOrder.DESC },
-            take: 1,
-          },
-          TeamOrder: {
+      orderDetails: true,
+      teamPaymentTransaction: {
+        include: {
+          teamInvoice: true,
+          userPaymentInfo: {
             select: {
-              id: true,
-              teamId: true,
-              orderDetails: true,
-              TeamPaymentTransaction: {
-                include: {
-                  TeamInvoice: true,
-                  userPaymentInfo: {
-                    select: {
-                      user: {
-                        select: {
-                          name: true,
-                        },
-                      },
-                    },
-                  },
+              user: {
+                select: {
+                  name: true,
                 },
               },
             },
@@ -237,56 +235,51 @@ export async function listTeamTransaction(
   });
 
   const invoices: ITeamInvoice[] = [];
+  const subscription = subscriptions[0];
+  const planStartTimestamp = subscription?.startDate ?? 0;
+  const planEndTimestamp = subscription?.expiredDate ?? 0;
 
-  teamMembers.forEach(({ teamId, team }) => {
-    const subscription = team.subscriptions?.[0];
-    const planStartTimestamp = subscription?.startDate ?? 0;
-    const planEndTimestamp = subscription?.expiredDate ?? 0;
+  teamOrders.forEach((order) => {
+    const transaction = order.teamPaymentTransaction?.[0];
+    const invoice = transaction?.teamInvoice?.[0];
+    const detail = order.orderDetails?.[0];
 
-    team.TeamOrder.forEach((order) => {
-      const transaction = order.TeamPaymentTransaction?.[0];
-      const invoice = transaction?.TeamInvoice?.[0];
-      const detail = order.orderDetails?.[0];
+    if (!transaction || !detail) return;
 
-      if (!transaction || !detail) return;
-
-      invoices.push({
-        id: invoice?.id ?? transaction.id,
-        teamId,
-        status: invoice?.status === 'SUCCESS', // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
-        issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
-        dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
-        planId: detail.productName as TPlanType,
-        planStartTimestamp,
-        planEndTimestamp,
-        planQuantity: detail.quantity ?? 1,
-        planUnitPrice: detail.unitPrice ?? 0,
-        planAmount: detail.amount ?? 0,
-        payer: {
-          name: invoice?.payerName ?? transaction.userPaymentInfo?.user?.name ?? '—',
-          address: invoice?.payerAddress ?? '—',
-          phone: invoice?.payerPhone ?? '—',
-          taxId: invoice?.payerId ?? '—',
-        },
-        payee: {
-          name: 'iSunFa Inc.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
-          address: 'Taipei, Taiwan',
-          phone: '+886-2-12345678',
-          taxId: '12345678',
-        },
-        subtotal: invoice?.price ?? detail.amount ?? 0,
-        tax: invoice?.tax ?? 0,
-        total: invoice?.total ?? detail.amount ?? 0,
-        amountDue: invoice?.total ?? detail.amount ?? 0,
-      });
+    invoices.push({
+      id: invoice?.id ?? transaction.id,
+      teamId,
+      status: invoice?.status === TRANSACTION_STATUS.SUCCESS, // Info: (20250401 - Tzuhan) 目前不確定 DB 發票狀態的定義（schema 上是 string），這邊假設是 'SUCCESS' 代表付款成功
+      issuedTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+      dueTimestamp: invoice?.issuedAt ?? transaction.createdAt,
+      planId: detail.productName as TPlanType,
+      planStartTimestamp,
+      planEndTimestamp,
+      planQuantity: detail.quantity ?? 1,
+      planUnitPrice: detail.unitPrice ?? 0,
+      planAmount: detail.amount ?? 0,
+      payer: {
+        name: invoice?.payerName ?? transaction.userPaymentInfo?.user?.name ?? '—',
+        address: invoice?.payerAddress ?? '—',
+        phone: invoice?.payerPhone ?? '—',
+        taxId: invoice?.payerId ?? '—',
+      },
+      payee: {
+        name: PAYEE.NAME,
+        address: PAYEE.ADDRESS,
+        phone: PAYEE.PHONE,
+        taxId: PAYEE.TAX_ID,
+      },
+      subtotal: invoice?.price ?? detail.amount ?? 0,
+      tax: invoice?.tax ?? 0,
+      total: invoice?.total ?? detail.amount ?? 0,
+      amountDue: invoice?.total ?? detail.amount ?? 0,
     });
   });
 
-  const totalCount = await prisma.teamMember.count({
+  const totalCount = await tx.teamOrder.count({
     where: {
-      userId,
-      role: 'OWNER',
-      status: 'IN_TEAM',
+      teamId,
     },
   });
 
@@ -301,8 +294,11 @@ export async function listTeamTransaction(
   };
 }
 
-export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoice | null> {
-  const invoice = await prisma.teamInvoice.findUnique({
+export async function getTeamInvoiceById(
+  invoiceId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<ITeamInvoice | null> {
+  const invoice = await tx.teamInvoice.findUnique({
     where: { id: invoiceId },
     include: {
       teamPaymentTransaction: {
@@ -331,7 +327,7 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
   return {
     id: invoice.id,
     teamId: invoice.teamPaymentTransaction.teamOrder.teamId,
-    status: invoice.status === 'SUCCESS',
+    status: invoice.status === ORDER_STATUS.PAID,
     issuedTimestamp: invoice.issuedAt,
     dueTimestamp: invoice?.issuedAt,
     planId: invoice.teamPaymentTransaction.teamOrder.orderDetails[0].productName as TPlanType,
@@ -347,10 +343,10 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
       taxId: invoice.payerId ?? '—',
     },
     payee: {
-      name: 'iSunFa Inc.', // Info: (20250401 - Tzuhan) 這個要在跟 Luphia 確認
-      address: 'Taipei, Taiwan',
-      phone: '+886-2-12345678',
-      taxId: '12345678',
+      name: PAYEE.NAME,
+      address: PAYEE.ADDRESS,
+      phone: PAYEE.PHONE,
+      taxId: PAYEE.TAX_ID,
     },
     subtotal: invoice.price ?? 0,
     tax: invoice.tax ?? 0,
@@ -361,7 +357,8 @@ export async function getTeamInvoiceById(invoiceId: number): Promise<ITeamInvoic
 
 export async function getSubscriptionByTeamId(
   userId: number,
-  teamId: number
+  teamId: number,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
   const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
@@ -374,9 +371,13 @@ export async function getSubscriptionByTeamId(
     action: TeamPermissionAction.VIEW_SUBSCRIPTION,
   });
 
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
-  const team = await prisma.team.findUnique({
+  const team = await tx.team.findUnique({
     where: { id: teamId },
     select: {
       id: true,
@@ -386,12 +387,12 @@ export async function getSubscriptionByTeamId(
         take: 1,
         include: { plan: true },
       },
-      TeamOrder: {
+      teamOrder: {
         orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: {
-          TeamPaymentTransaction: {
-            include: { TeamInvoice: true },
+          teamPaymentTransaction: {
+            include: { teamInvoice: true },
           },
         },
       },
@@ -401,9 +402,9 @@ export async function getSubscriptionByTeamId(
   if (!team) return null;
 
   const latestSub = team.subscriptions[0];
-  const latestOrder = team.TeamOrder[0];
-  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-  const hasInvoice = latestTxn?.TeamInvoice?.length > 0;
+  const latestOrder = team.teamOrder[0];
+  const latestTxn = latestOrder?.teamPaymentTransaction[0];
+  const hasInvoice = latestTxn?.teamInvoice?.length > 0;
 
   let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
   if (latestSub) {
@@ -413,7 +414,7 @@ export async function getSubscriptionByTeamId(
       paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
     }
   }
-  if (latestOrder?.status === 'CANCELED') {
+  if (latestOrder?.status === ORDER_STATUS.CANCELLED) {
     paymentStatus = TPaymentStatus.PAYMENT_FAILED;
   }
 
@@ -431,7 +432,8 @@ export async function getSubscriptionByTeamId(
 export const updateSubscription = async (
   userId: number,
   teamId: number,
-  input: { plan?: TPlanType; autoRenew?: boolean }
+  input: { plan?: TPlanType; autoRenew?: boolean },
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam> => {
   const { plan, autoRenew } = input;
 
@@ -440,13 +442,17 @@ export const updateSubscription = async (
     teamId,
     action: TeamPermissionAction.MODIFY_SUBSCRIPTION,
   });
-  if (!permission.can) throw new Error('PERMISSION_DENIED');
+  if (!permission.can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
 
   const now = Math.floor(Date.now() / 1000);
 
   if (plan) {
     const expired = getUnixTime(addMonths(new Date(), 1));
-    await prisma.teamSubscription.create({
+    await tx.teamSubscription.create({
       data: {
         teamId,
         planType: plan,
@@ -459,42 +465,42 @@ export const updateSubscription = async (
   }
 
   if (autoRenew === false) {
-    const latestOrder = await prisma.teamOrder.findFirst({
-      where: { teamId, status: { not: 'CANCELED' } },
-      orderBy: { createdAt: 'desc' },
+    const latestOrder = await tx.teamOrder.findFirst({
+      where: { teamId, status: { not: ORDER_STATUS.CANCELLED } },
+      orderBy: { createdAt: SortOrder.DESC },
     });
     if (latestOrder) {
-      await prisma.teamOrder.update({
+      await tx.teamOrder.update({
         where: { id: latestOrder.id },
-        data: { status: 'CANCELED' },
+        data: { status: ORDER_STATUS.CANCELLED },
       });
     }
   }
 
-  const team = await prisma.team.findUnique({
+  const team = await tx.team.findUnique({
     where: { id: teamId },
     select: {
       id: true,
       name: true,
       subscriptions: {
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: { plan: true },
       },
-      TeamOrder: {
-        orderBy: { createdAt: 'desc' },
+      teamOrder: {
+        orderBy: { createdAt: SortOrder.DESC },
         take: 1,
         include: {
-          TeamPaymentTransaction: { include: { TeamInvoice: true } },
+          teamPaymentTransaction: { include: { teamInvoice: true } },
         },
       },
     },
   });
 
   const latestSub = team?.subscriptions[0];
-  const latestOrder = team?.TeamOrder[0];
-  const latestTxn = latestOrder?.TeamPaymentTransaction[0];
-  const hasInvoice = (latestTxn?.TeamInvoice?.length ?? 0) > 0;
+  const latestOrder = team?.teamOrder[0];
+  const latestTxn = latestOrder?.teamPaymentTransaction[0];
+  const hasInvoice = (latestTxn?.teamInvoice?.length ?? 0) > 0;
 
   let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
   if (latestSub) {

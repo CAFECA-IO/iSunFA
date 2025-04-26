@@ -5,6 +5,7 @@ import {
   nullSchema,
   zodStringToBooleanOptional,
   zodStringToNumberOptional,
+  zodStringToNumber,
 } from '@/lib/utils/zod_schema/common';
 import { SortOrder } from '@/constants/sort';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
@@ -104,4 +105,52 @@ export const accountPostV2Schema = {
   },
   outputSchema: IAccountValidator.strip(), // Info: (20241203 - Murky)  多的部分會被刪掉要用stript 不是strict
   frontend: IAccountValidator,
+};
+
+// Info: (20250424 - Shirley) 以下為帳戶模塊的 API schema
+
+/**
+ * Info: (20250424 - Shirley) GET account by ID schema
+ */
+const accountGetByIdQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+  accountId: zodStringToNumber,
+});
+
+export const accountGetByIdSchema = {
+  input: {
+    querySchema: accountGetByIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: IAccountValidator,
+  frontend: nullSchema,
+};
+
+/**
+ * Info: (20250424 - Shirley) UPDATE account info by ID schema
+ */
+const accountUpdateBodySchema = z.object({
+  name: z.string().optional(),
+  note: z.string().optional(),
+});
+
+export const accountUpdateSchema = {
+  input: {
+    querySchema: accountGetByIdQuerySchema,
+    bodySchema: accountUpdateBodySchema,
+  },
+  outputSchema: IAccountValidator,
+  frontend: nullSchema,
+};
+
+/**
+ * Info: (20250424 - Shirley) DELETE account by ID schema
+ */
+export const accountDeleteSchema = {
+  input: {
+    querySchema: accountGetByIdQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: IAccountValidator,
+  frontend: nullSchema,
 };

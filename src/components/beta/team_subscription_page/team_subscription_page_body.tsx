@@ -1,6 +1,6 @@
-import { IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
-import { formatTimestamp } from '@/constants/time';
-import { useTranslation } from 'next-i18next';
+import { IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
+import { timestampToString, getRemainingDays } from '@/lib/utils/common';
+import { Trans, useTranslation } from 'next-i18next';
 import SubscriptionFAQ from '@/components/beta/team_subscription_page/subscription_faq';
 import SubscriptionPlans from '@/components/beta/team_subscription_page/subscription_plans';
 
@@ -12,7 +12,47 @@ interface TeamSubscriptionPageBodyProps {
 const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
   const isPlanBeginner = team.plan === TPlanType.BEGINNER;
+
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+
   const isAutoRenewal = team.enableAutoRenewal;
+
+  // Info: (20250425 - Julian) 以（）拆分文字
+  const trialStr = t('subscriptions:PLAN_NAME.TRIAL').split(/[（）]/, 2);
+
+  const planName = isTrial ? (
+    <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
+      {trialStr[0]} <span className="text-text-brand-secondary-lv2">({trialStr[1]})</span>
+    </p>
+  ) : (
+    <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
+      {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
+    </p>
+  );
+
+  const expiredTime = isTrial ? (
+    <p className="text-xs font-semibold text-text-state-error">
+      {trialStr[1]}:{' '}
+      <Trans
+        i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
+        values={{
+          days: getRemainingDays(team.nextRenewalTimestamp * 1000),
+        }}
+      />
+    </p>
+  ) : (
+    !isPlanBeginner &&
+    isAutoRenewal && (
+      <p className="text-xs font-normal">
+        <span className="leading-5 text-text-neutral-tertiary">
+          {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:{' '}
+        </span>
+        <span className="text-text-neutral-primary">
+          {timestampToString(team.expiredTimestamp).dateWithSlash}
+        </span>
+      </p>
+    )
+  );
 
   return (
     <main className="flex flex-col gap-40px">
@@ -30,19 +70,10 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
 
           <div className="flex flex-auto flex-col items-end">
             <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
-              {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
+              {planName}
             </p>
 
-            {!isPlanBeginner && isAutoRenewal && (
-              <p className="text-xs font-normal">
-                <span className="leading-5 text-text-neutral-tertiary">
-                  {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:{' '}
-                </span>
-                <span className="text-text-neutral-primary">
-                  {formatTimestamp(team.expiredTimestamp)}
-                </span>
-              </p>
-            )}
+            {expiredTime}
           </div>
         </section>
       </section>

@@ -20,7 +20,6 @@ interface AccountBookItemProps {
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
-  setAccountBookToEditInfo: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
@@ -30,11 +29,10 @@ const AccountBookItem = ({
   setAccountBookToEdit,
   setAccountBookToDelete,
   setAccountBookToUploadPicture,
-  setAccountBookToEditInfo,
   setRefreshKey,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
-  const { connectAccountBook, connectedAccountBook } = useUserCtx();
+  const { connectAccountBook, connectedAccountBook, disconnectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
   const teamRole = accountBook.team.role;
@@ -111,10 +109,27 @@ const AccountBookItem = ({
     e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
-  const openEditInfoModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAccountBookToEditInfo(accountBook);
-    closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
+  // Info: (20250422 - Liz) 打 API 取消連結帳本
+  const handleDisconnect = async () => {
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const { success } = await disconnectAccountBook(accountBook.id);
+
+      if (!success) {
+        // Deprecated: (20250422 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('取消連結帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
+      }
+    } catch (error) {
+      // Deprecated: (20250422 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('disconnectAccountBook error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Info: (20241113 - Liz) 打 API 連結帳本 (原為公司)
@@ -126,6 +141,12 @@ const AccountBookItem = ({
     const accountBookId = isAccountBookConnected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.id;
 
     try {
+      // Info: (20250422 - Liz) 如果選擇的帳本已經是連結的帳本，則取消連結
+      if (accountBook.id === connectedAccountBook?.id) {
+        await handleDisconnect();
+        return;
+      }
+
       const { success } = await connectAccountBook(accountBookId);
 
       if (!success) {
@@ -208,11 +229,6 @@ const AccountBookItem = ({
             <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
               {accountBook.name}
             </p>
-
-            {/* Info: (20250407 - Liz) Edit account book info */}
-            <button type="button" onClick={openEditInfoModal} className="p-8px">
-              <Image src="/icons/edit_square.svg" alt="edit icon" width={22} height={22} />
-            </button>
           </div>
         </section>
 

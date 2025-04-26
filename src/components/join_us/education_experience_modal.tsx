@@ -8,7 +8,7 @@ import {
   Degree,
   SchoolStatus,
   IEducationExperience,
-  IEducationDate,
+  IExperienceDate,
 } from '@/interfaces/experience';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
@@ -26,11 +26,11 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   const [selectedDegree, setSelectedDegree] = useState<Degree>(Degree.ELEMENTARY);
   const [schoolNameInput, setSchoolNameInput] = useState<string>('');
   const [departmentInput, setDepartmentInput] = useState<string>('');
-  const [startInput, setStartInput] = useState<IEducationDate>({
+  const [startInput, setStartInput] = useState<IExperienceDate>({
     year: 0,
     month: 0,
   });
-  const [endInput, setEndInput] = useState<IEducationDate>({
+  const [endInput, setEndInput] = useState<IExperienceDate>({
     year: 0,
     month: 0,
   });
@@ -72,6 +72,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     e.preventDefault();
 
     const educationExperience: IEducationExperience = {
+      id: 0, // ToDo: (20250411 - Julian) Need to be updated
       degree: selectedDegree,
       schoolName: schoolNameInput,
       department: departmentInput,
@@ -134,7 +135,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <form
         onSubmit={saveHandler}
-        className="relative mx-auto flex w-90vw flex-col items-stretch rounded-lg border border-white bg-landing-nav px-52px pb-69px pt-46px shadow-lg shadow-black/80 backdrop-blur-lg"
+        className="relative mx-auto flex w-90vw flex-col items-stretch rounded-lg border border-white bg-landing-nav px-52px py-40px shadow-lg shadow-black/80 backdrop-blur-lg"
       >
         {/* Info: (20250411 - Julian) Modal Title */}
         <div className="flex items-center justify-between">
@@ -147,7 +148,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
           </button>
         </div>
         {/* Info: (20250411 - Julian) Form Content */}
-        <div className="mt-42px grid grid-cols-2 gap-x-44px gap-y-24px px-150px">
+        <div className="mt-40px grid grid-cols-2 gap-x-44px gap-y-24px px-150px">
           {/* Info: (20250411 - Julian) Degree */}
           <div ref={targetRef} className="relative flex flex-col gap-6px">
             <p className="ml-27px text-base font-normal">
@@ -233,7 +234,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
           </div>
         </div>
         {/* Info: (20250411 - Julian) Buttons */}
-        <div className="ml-auto mt-64px flex items-center gap-lv-6">
+        <div className="ml-auto mt-40px flex items-center gap-lv-6">
           <LandingButton type="button" variant="default" className="font-bold">
             <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
           </LandingButton>

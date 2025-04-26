@@ -19,16 +19,20 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IUserEntity } from '@/interfaces/user';
 import { IPaginatedData } from '@/interfaces/pagination';
-
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
-
 import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
   certificateAPIDeleteMultipleUtils as deleteUtils,
 } from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
-import { InvoiceTabs } from '@/constants/certificate';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import {
+  transformWithIncomplete,
+  summarizeIncompleteCertificates,
+} from '@/lib/utils/repo/certificate.repo';
 
 type APIResponse = ICertificate[] | IPaginatedData<ICertificate[]> | number[] | null;
 
@@ -48,11 +52,38 @@ export const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
-  const { userId, companyId } = session;
-  const { page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } = query;
-  const nowInSecond = getTimestampNow();
+  const { userId, teams } = session;
+  const { companyId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
+    query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.VIEW_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const nowInSecond = getTimestampNow();
+
     const paginationCertificates = await getListUtils.getPaginatedCertificateList({
       tab,
       companyId,
@@ -70,13 +101,11 @@ export const handleGetRequest: IHandleRequest<
 
     const currency = await getListUtils.getCurrencyFromSetting(companyId);
 
-    const certificates = certificatesFromPrisma.map((certificateFromPrisma) => {
+    const certificatesWithoutIncomplete = certificatesFromPrisma.map((certificateFromPrisma) => {
       const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-      const userCertificateEntities = postUtils.initUserCertificateEntities(certificateFromPrisma);
       const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
       const voucherCertificateEntity =
         postUtils.initVoucherCertificateEntities(certificateFromPrisma);
-      // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
       const invoiceEntity = postUtils.initInvoiceEntity(certificateFromPrisma, {
         nowInSecond,
       });
@@ -86,22 +115,21 @@ export const handleGetRequest: IHandleRequest<
         invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
         file: IFileEntity;
         uploader: IUserEntity & { imageFile: IFileEntity };
-        userCertificates: IUserCertificateEntity[];
         vouchers: IVoucherEntity[];
       } = {
         ...certificateEntity,
         invoice: invoiceEntity,
         file: fileEntity,
         uploader: uploaderEntity,
-        vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-        userCertificates: userCertificateEntities,
+        vouchers: voucherCertificateEntity.map((v) => v.voucher),
       };
 
-      const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
-        certificateReadyForTransfer
-      );
-      return certificate;
+      return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
     });
+
+    const certificates = transformWithIncomplete(certificatesWithoutIncomplete);
+
+    const incompleteSummary = summarizeIncompleteCertificates(certificates);
 
     const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
       companyId,
@@ -113,31 +141,13 @@ export const handleGetRequest: IHandleRequest<
       isDeleted: false,
     });
 
-    const withVoucher = await getListUtils.getUnreadCertificateCount({
-      userId,
-      tab: InvoiceTabs.WITH_VOUCHER,
-      where,
-    });
-
-    const withoutVoucher = await getListUtils.getUnreadCertificateCount({
-      userId,
-      tab: InvoiceTabs.WITHOUT_VOUCHER,
-      where,
-    });
-
-    // Info: (20241126 - Murky) Record already read certificate
-    await getListUtils.upsertUserReadCertificates({
-      userId,
-      certificateIdsBeenRead: certificates.map((certificate) => certificate.id),
-      nowInSecond,
-    });
-
     statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
     const summary: ICertificateListSummary = {
       totalInvoicePrice,
+      incomplete: incompleteSummary,
       unRead: {
-        withVoucher,
-        withoutVoucher,
+        withVoucher: 0,
+        withoutVoucher: 0,
       },
       currency,
     };
@@ -181,14 +191,40 @@ export const handleGetRequest: IHandleRequest<
 export const handlePostRequest: IHandleRequest<
   APIName.CERTIFICATE_POST_V2,
   ICertificate[]
-> = async ({ body, session }) => {
+> = async ({ body, session, query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate[] | null = null;
 
   const { fileIds } = body;
-  const { userId, companyId } = session;
+  const { userId, teams } = session;
+  const { companyId } = query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.CREATE_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     const nowInSecond = getTimestampNow();
 
     const certificates: ICertificate[] = await Promise.all(
@@ -201,8 +237,6 @@ export const handlePostRequest: IHandleRequest<
         });
 
         const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
-        const userCertificateEntities =
-          postUtils.initUserCertificateEntities(certificateFromPrisma);
         const uploaderEntity = postUtils.initUploaderEntity(certificateFromPrisma);
         const voucherCertificateEntity =
           postUtils.initVoucherCertificateEntities(certificateFromPrisma);
@@ -215,7 +249,7 @@ export const handlePostRequest: IHandleRequest<
           invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
           file: IFileEntity;
           uploader: IUserEntity & { imageFile: IFileEntity };
-          userCertificates: IUserCertificateEntity[];
+
           vouchers: IVoucherEntity[];
         } = {
           ...certificateEntity,
@@ -225,7 +259,6 @@ export const handlePostRequest: IHandleRequest<
           vouchers: voucherCertificateEntity.map(
             (voucherCertificate) => voucherCertificate.voucher
           ),
-          userCertificates: userCertificateEntities,
         };
 
         const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
@@ -264,14 +297,40 @@ export const handlePostRequest: IHandleRequest<
 export const handleDeleteRequest: IHandleRequest<
   APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
   number[]
-> = async ({ body, session }) => {
+> = async ({ body, session, query }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number[] | null = null;
 
   const { certificateIds } = body;
-  const { userId } = session;
+  const { userId, teams } = session;
+  const { companyId } = query;
 
   try {
+    // Info: (20250417 - Shirley) 添加團隊權限檢查
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.DELETE_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
     const nowInSecond = getTimestampNow();
 
     const deletedCertificateIds = await deleteUtils.deleteCertificates({

@@ -68,8 +68,8 @@
     "ACCOUNTING_SETTING_TITLE": "Accounting Settings",
     "PERIOD_SETTINGS_SUBTITLE": "Period settings",
     "EVERY": "Every",
-    "MONTH": "Month",
-    "WEEK": "Week",
+    "MONTHLY": "Month",
+    "WEEKLY": "Week",
     "FISCAL_YEAR": "Fiscal Year",
     "FISCAL_YEAR_PERIOD": "Fiscal year period",
     "GENERATE_REPORT_1": "The reports are generated",
@@ -168,5 +168,31 @@
   },
   "ERROR": {
     "FETCH_DATA": "There was an error fetching the data, please try again later."
+  },
+  "ACCOUNT_BOOK_INFO": {
+    "ACCOUNT_BOOK_INFORMATION": "Account Book Information",
+    "COMPANY_NAME": "Company Name",
+    "ENTER_NAME": "Enter company name",
+    "BUSINESS_TAX_ID_NUMBER": "Business Tax ID Number",
+    "ENTER_NUMBER": "Enter number",
+    "TAX_SERIAL_NUMBER": "Tax Serial Number",
+    "COMPANY_REPRESENTATIVE_NAME": "Company Representative Name",
+    "ENTER_REPRESENTATIVE_NAME": "Enter representative name",
+    "COUNTRY_OF_INCORPORATION": "Country of Incorporation",
+    "SELECT_COUNTRY": "Select country",
+    "PHONE_NUMBER": "Phone Number",
+    "COMPANY_ADDRESS": "Company Address",
+    "PLEASE_ENTER_THE_FULL_ADDRESS": "Please enter the full address",
+    "REMOVE_ACCOUNT_BOOK": "Remove Account Book",
+    "CANCEL": "Cancel",
+    "SAVE": "Save",
+    "REMOVE": "Remove",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "Are you sure you want to remove account book?",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "Failed to remove account book.",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "Account book removed successfully.",
+    "GET_ACCOUNT_BOOK_FAIL": "Failed to get account book information.",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "Failed to update account book information.",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "Account book information updated successfully."
   }
 }

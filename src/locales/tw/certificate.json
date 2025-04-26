@@ -17,7 +17,12 @@
     "AMOUNT": "金額",
     "DEDUCTABLE": "可扣抵稅額",
     "UPLOADER": "上傳者",
-    "VOUCHER_NUMBER": "傳票編號"
+    "VOUCHER_NUMBER": "傳票編號",
+    "DEDUCTION_TYPE": "扣抵類型",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
+    "DEDUCTIBLE_FIXED_ASSETS": "固定資產",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定資產"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
@@ -74,6 +79,7 @@
     "PRICE_BEFORE_TAX": "稅前價格",
     "TAX": "稅額",
     "TAXABLE": "應稅金額",
+    "TAX_TYPE": "稅種",
     "TOTAL_PRICE": "總價（含稅）",
     "COUNTERPARTY": "交易對象（客戶/供應商）",
     "ID_NUMBER": "統一編號",
@@ -81,12 +87,20 @@
     "INVOICE_TYPE": "憑證類型",
     "DEDUCTIBLE": "可扣抵稅額",
     "SUCCESS": "您的發票資訊已更新。",
-    "TAXABLE_5": "應稅金額（5%）",
-    "ZERO_TAX_RATE": "零稅率（0%）",
+    "TAXABLE_5": "應稅",
+    "ZERO_TAX_RATE": "零稅率",
     "TAX_FREE": "免稅",
     "NONE": "無",
     "THROUGH_CUSTOMS": "通過海關",
-    "NOT_THROUGH_CUSTOMS": "未通過海關"
+    "NOT_THROUGH_CUSTOMS": "未通過海關",
+    "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "可扣抵之進貨及費用",
+    "DEDUCTIBLE_FIXED_ASSETS": "可扣抵之固定資產",
+    "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "不可扣抵之進貨及費用",
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定資產",
+    "CERTIFICATE_BY_CUSTOMS": "海關代徵營業稅繳納證明書號碼",
+    "CHARACTERS": "14 個字符",
+    "ENTER_ONE_INVOICE": "輸入一個發票號碼作為代表",
+    "REPRESENTATIVE_INVOICE": "代表發票號碼"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",
@@ -172,12 +186,22 @@
     "UPLOADED": "已上傳",
     "TOTAL": "總計",
     "CERTIFICATES": "發票",
-    "EMPTY": "無資料"
+    "EMPTY": "無資料",
+    "EXPORT_INVOICES": "匯出憑證"
   },
   "TOAST": {
     "UPLOAD_FILE_ERROR": "上傳文件: <{{name}}> 時發生錯誤",
     "UPLOAD_FILE": "上傳檔案",
     "UPLOADING": "上傳中",
     "COMPLETED": "已完成"
+  },
+  "OUTPUT_CERTIFICATE": {
+    "OUTPUT_CERTIFICATE": "銷項憑證",
+    "MARK_RETURN_OR_ALLOWANCE": "標記為退回或折讓",
+    "PREVIOUS": "上一筆",
+    "NEXT": "下一筆"
+  },
+  "INPUT_CERTIFICATE": {
+    "INPUT_CERTIFICATE": "進項憑證"
   }
 }

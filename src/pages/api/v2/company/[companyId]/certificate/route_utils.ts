@@ -2,8 +2,6 @@ import {
   createCertificateWithEmptyInvoice,
   deleteMultipleCertificates,
   getCertificatesV2,
-  getUnreadCertificateCount,
-  upsertUserReadCertificates,
   getAllFilteredInvoice,
 } from '@/lib/utils/repo/certificate.repo';
 import {
@@ -21,7 +19,6 @@ import {
   parseFilePathWithBaseUrlPlaceholder,
 } from '@/lib/utils/file';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { parsePrismaUserCertificateToUserCertificateEntity } from '@/lib/utils/formatter/user_certificate.formatter';
 import {
   Prisma,
   Voucher as PrismaVoucher,
@@ -40,7 +37,6 @@ import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatte
 import { IFileBeta, IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity, IInvoiceBetaOptional } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
@@ -54,6 +50,7 @@ import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { ProgressStatus } from '@/constants/account';
 import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
+import { isCertificateIncomplete } from '@/lib/utils/certificate';
 
 export const certificateAPIPostUtils = {
   /**
@@ -102,13 +99,6 @@ export const certificateAPIPostUtils = {
     const fileDto = certificateFromPrisma.file;
     const fileEntity = parsePrismaFileToFileEntity(fileDto);
     return initFileEntity(fileEntity);
-  },
-
-  initUserCertificateEntities: (certificateFromPrisma: PostCertificateResponse) => {
-    const { UserCertificate } = certificateFromPrisma;
-    return UserCertificate.map((userCertificate) =>
-      parsePrismaUserCertificateToUserCertificateEntity(userCertificate)
-    );
   },
 
   initVoucherEntity: (voucherFromPrisma: PrismaVoucher) => {
@@ -229,7 +219,6 @@ export const certificateAPIPostUtils = {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -242,39 +231,7 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
-    // Deprecated: (20241127 - Murky) 目前CreateCertificate不會創造invoice, 如果需要假的invoice再把這邊打開
-    // const counterParty: ICounterparty = {
-    //   id: certificateEntity.invoice.counterParty.id,
-    //   companyId: certificateEntity.invoice.counterParty.companyId,
-    //   name: certificateEntity.invoice.counterParty.name,
-    //   taxId: certificateEntity.invoice.counterParty.taxId,
-    //   type: certificateEntity.invoice.counterParty.type,
-    //   note: certificateEntity.invoice.counterParty.note,
-    //   createdAt: certificateEntity.invoice.counterParty.createdAt,
-    //   updatedAt: certificateEntity.invoice.counterParty.updatedAt,
-    // };
-    const invoice: IInvoiceBetaOptional = {
-      // id: certificateEntity.invoice.id,
-      // isComplete: false,
-      // counterParty,
-      // inputOrOutput: certificateEntity.invoice.inputOrOutput,
-      // date: certificateEntity.invoice.date,
-      // no: certificateEntity.invoice.no,
-      // currencyAlias: certificateEntity.invoice.currencyAlias,
-      // priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
-      // taxType: certificateEntity.invoice.taxType,
-      // taxRatio: certificateEntity.invoice.taxRatio,
-      // taxPrice: certificateEntity.invoice.taxPrice,
-      // totalPrice: certificateEntity.invoice.totalPrice,
-      // type: certificateEntity.invoice.type,
-      // deductible: certificateEntity.invoice.deductible,
-      // createdAt: certificateEntity.invoice.createdAt,
-      // updatedAt: certificateEntity.invoice.updatedAt,
-    };
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
+    const invoice: IInvoiceBetaOptional = {};
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
@@ -284,7 +241,8 @@ export const certificateAPIPostUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: false,
+      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -295,6 +253,8 @@ export const certificateAPIPostUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },
@@ -416,14 +376,6 @@ export const certificateAPIGetListUtils = {
     return getCertificatesV2(options);
   },
 
-  getUnreadCertificateCount: (options: {
-    userId: number;
-    tab: InvoiceTabs;
-    where: Prisma.CertificateWhereInput;
-  }): Promise<number> => {
-    return getUnreadCertificateCount(options);
-  },
-
   getCurrencyFromSetting: async (companyId: number) => {
     const accountingSetting = await getAccountingSettingByCompanyId(companyId);
     const currencyKey =
@@ -449,35 +401,11 @@ export const certificateAPIGetListUtils = {
     return totalPrice;
   },
 
-  upsertUserReadCertificates: (options: {
-    certificateIdsBeenRead: number[];
-    userId: number;
-    nowInSecond: number;
-  }) => {
-    const { certificateIdsBeenRead, userId, nowInSecond } = options;
-    return upsertUserReadCertificates({
-      userId,
-      certificateIds: certificateIdsBeenRead,
-      nowInSecond,
-    });
-  },
-
-  isInvoiceComplete: (invoice: IInvoiceEntity) => {
-    const isComplete = !!(
-      invoice.date &&
-      invoice.priceBeforeTax &&
-      invoice.totalPrice &&
-      invoice.counterPartyId
-    );
-    return isComplete;
-  },
-
   transformCertificateEntityToResponse: (
     certificateEntity: ICertificateEntity & {
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     }
   ): ICertificate => {
@@ -504,12 +432,8 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.counterParty.updatedAt,
       };
 
-      const isInvoiceComplete = certificateAPIGetListUtils.isInvoiceComplete(
-        certificateEntity.invoice
-      );
       invoice = {
         id: certificateEntity.invoice.id,
-        isComplete: isInvoiceComplete,
         counterParty,
         inputOrOutput: certificateEntity.invoice.inputOrOutput,
         date: certificateEntity.invoice.date,
@@ -526,10 +450,6 @@ export const certificateAPIGetListUtils = {
         updatedAt: certificateEntity.invoice.updatedAt,
       };
     }
-    const isRead =
-      certificateEntity.userCertificates.length > 0
-        ? certificateEntity.userCertificates.some((data) => data.isRead)
-        : false;
 
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
@@ -540,7 +460,8 @@ export const certificateAPIGetListUtils = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
-      unRead: !isRead,
+      incomplete: false,
+      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -551,6 +472,8 @@ export const certificateAPIGetListUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
+
+    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },

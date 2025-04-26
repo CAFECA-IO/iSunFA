@@ -1,0 +1,162 @@
+<mjml>
+  <mj-raw>
+    <!-- Attributes -->
+  </mj-raw>
+  <mj-head>
+    <mj-attributes>
+      <mj-all font-family="Barlow" />
+      <mj-class
+        name="text10"
+        color="#FFFFFF"
+        font-weight="500"
+        font-size="10px"
+        line-height="20px"
+        padding-top="0"
+        padding-bottom="16px"
+      />
+      <mj-class
+        name="mainText"
+        color="#27354E"
+        font-weight="600"
+        font-size="12px"
+        line-height="20px"
+        letter-spacing="1%"
+      />
+      <mj-class
+        name="footnoteText"
+        color="#7F8A9D"
+        font-weight="300"
+        font-size="10px"
+        line-height="20px"
+        letter-spacing="1%"
+        align="center"
+      />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body>
+    <mj-raw>
+      <!-- Header -->
+    </mj-raw>
+    <mj-section background-color="#304872" padding="10px 20px">
+      <mj-column>
+        <mj-image
+          src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
+          alt="isunfa_logo"
+          width="80px"
+          align="left"
+        ></mj-image>
+      </mj-column>
+    </mj-section>
+
+    <mj-raw>
+      <!-- Main -->
+    </mj-raw>
+    <mj-section background-color="#F4F5F7" padding="40px">
+      <mj-column background-color="#FFFFFF" padding="20px 40px">
+        <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
+          >感謝您的選擇 ─ 陽光智能會計，與您一同邁向卓越</mj-text
+        >
+
+        <mj-text mj-class="mainText">
+          親愛的
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
+          您好,
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >感謝您選擇陽光智能會計，我們由衷感到欣喜與榮幸，能成為您創業旅程中的一部分。</mj-text
+        >
+        <mj-text mj-class="mainText"
+          >在這條充滿挑戰與希望的創業道路上，每一個選擇都至關重要。您對我們的信任，是我們持續精進服務與技術的最大動力。陽光智能會計不僅是一套智能化的財務系統，更是一位值得信賴的夥伴，將以嚴謹的專業、透明的運算與持續的陪伴，協助您穩健啟程、茁壯成長，最終邁向成熟壯大的企業格局。</mj-text
+        >
+        <mj-text mj-class="mainText">
+          我們相信，財務透明與持續審計能力將成為企業競爭力的核心。陽光智能會計以自動化、可追溯、持續稽核為設計核心，協助您有效管理財務風險、強化企業治理，並以即時數據支援您做出關鍵決策。
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >未來的每一個成長里程碑，陽光智能會計都將與您並肩同行。<br />
+          我們期待與您攜手，開創值得信賴、值得驕傲的未來。
+        </mj-text>
+        <mj-text mj-class="mainText"
+          >敬祝<br />創業順利、業務蒸蒸日上 <br />陽光智能會計團隊 敬上</mj-text
+        >
+        <mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-raw>
+      <!-- Footer -->
+    </mj-raw>
+    <mj-section background-color="#304872" padding="40px">
+      <!-- 左邊區塊 -->
+      <mj-column>
+        <mj-text
+          color="#FFFFFF"
+          font-weight="700"
+          font-size="12px"
+          line-height="28px"
+          padding-top="0"
+          >Contact Us</mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
+          <a
+            href="mailto:isunfahelp@isunfa.com.tw"
+            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            >isunfahelp@isunfa.com.tw</a
+          ></mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
+          <a
+            href="tel:+886-2-2700-1979"
+            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            >+886-2-2700-1979</a
+          ></mj-text
+        >
+        <mj-text mj-class="text10" align="left" vertical-align="middle">
+          <span><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service Hours : </span>
+          <br />
+          <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
+        </mj-text>
+      </mj-column>
+
+      <!-- 右邊區塊：icon + text -->
+      <mj-column padding-top="50px">
+        <mj-text align="center" padding="0">
+          <mj-text style="margin-right: 24px">
+            <a href="https://isunfa.tw/" target="_blank"
+              ><img
+                src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
+                alt="isunfa_logo"
+                width="80px"
+            /></a>
+          </mj-text>
+          <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
+            <img
+              width="20px"
+              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
+              alt="facebook_link"
+              style="margin-right: 12px"
+            />
+          </a>
+          <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
+            <img
+              width="20px"
+              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
+              alt="github_link"
+              style="margin-right: 12px"
+          /></a>
+          <a href="https://www.youtube.com/@isunfa" target="_blank"
+            ><img
+              width="20px"
+              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
+              alt="youtube_link"
+          /></a>
+        </mj-text>
+        <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px"
+          >iSunFA @ 2024. All rights reserved.</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

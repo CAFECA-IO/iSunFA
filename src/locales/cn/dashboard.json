@@ -62,11 +62,9 @@
   },
 
   "ROLE": {
-    "BOOKKEEPER": "记帐员",
-    "EDUCATIONAL_TRIAL_VERSION": "教育试用版",
-    "EDUCATIONAL": "教育",
-    "TRIAL_VERSION": "试用版",
-    "ENTERPRISE": "企业版"
+    "INDIVIDUAL": "个人用户",
+    "ACCOUNTING_FIRMS": "事务所团队",
+    "ENTERPRISE": "企业用户"
   },
 
   "CREATE_ROLE_PAGE": {
@@ -76,11 +74,14 @@
     "BACK_TO_SELECT_ROLE_PAGE": "回到选择角色页面",
 
     "COMMON_FUNCTIONS": "常用功能",
-    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "管理总帐、开立凭证、制作财务及税务报表",
-    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "管理总帐、开立凭证",
-    "DEFAULT_INTRODUCTION": "iSunFA提供了多种角色供使用者选择，每个角色都有专属介面和常用功能。您可以选择最符合您需求的角色，让 iSunFA 协助您完成工作。 iSunFA 的关键优势在于角色优化的介面和 AI 整合会计，让您更有效率地完成任务！",
-    "BOOKKEEPER_INTRODUCTION": "记帐士是专业的财务工作者，负责管理企业或个人的日常财务记录和会计工作。他们的主要职责包括建立会计凭证、记录分类帐分录、对帐和产生财务报表，以确保财务资讯的正确性和完整性。",
-    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "iSunFA学生版是为会计领域的学生和实习生量身订制的教育工具。它提供了管理财务工作（例如建立会计凭证、日记帐分录和对帐）的实用实务经验。它非常适合在财务管理方面打下坚实的基础，并为专业簿记或会计职位做好准备。"
+    "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "凭证管理、日记账管理、应收账款和应付账款管理、财务报表、试算表、总账",
+    "COMMON_FUNCTIONS_FOR_ACCOUNTING_FIRMS": "凭证管理、日记账管理、财务报表、总账、试算表、财务披露",
+    "COMMON_FUNCTIONS_FOR_ENTERPRISE": "凭证管理、日记账分录管理、应收账款和应付账款管理、资产管理、财务报表、总账、试算表、财务披露、客户关系管理",
+
+    "DEFAULT_INTRODUCTION": "iSunFA 提供多种角色选择，从个人用户、专业事务所到企业团队，皆有专属介面与常用功能。您可以选择最符合需求的角色，结合人工智能精准优化的会计自动化流程，让您更有效率地完成工作！",
+    "INDIVIDUAL_INTRODUCTION": "个人使用者可以透过阳光智慧会计平台为企业承接兼职财务工作，或建立自己的记帐报税专业流程。该平台提供自动凭证分类、即时报告产生和简化的税务工具，即使没有会计背景的人也可以轻松管理财务。",
+    "ACCOUNTING_FIRMS_INTRODUCTION": "会计师事务所、代理记账公司等用户可以通过该平台整合管理多家企业的账务，提供专业的财务报表、审计及税务服务。系统支持批量分录及报表处理、分级权限控制以及跨客户管理，提升服务效率及合规性。",
+    "ENTERPRISE_INTRODUCTION": "企业用户可以使用阳光智能会计平台系统地管理公司财务运营。他们还可以导出投资者推介会或政府拨款申请所需的财务报告。该平台支持财务披露和试算表，帮助企业建立财务透明度和合规性。"
   },
 
   "SELECT_ROLE_PAGE": {
@@ -155,21 +156,26 @@
     "TEAM": "团队",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帐本",
     "ENTER_NAME": "输入名称",
+    "RESPONSIBLE_PERSON": "负责人",
+    "ENTER_RESPONSIBLE_PERSON": "输入负责人",
     "ENTER_TAX_ID": "输入统一编号",
-    "ENTER_FULL_ADDRESS": "输入完整地址",
     "CANCEL": "取消",
-    "ADD": "新增",
+    "ADD": "添加",
+    "NEXT": "下一步",
     "CHOOSE_WORK_TAG": "选择工作标签",
     "CHOOSE_TEAM": "选择团队",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帐本失败",
     "ERROR_CODE": "错误代码",
     "ERROR_MESSAGE": "错误讯息",
 
-    "COMPANY_ADDRESS": "公司地址",
+    "CONTACT_INFO": "联络信息",
+    "CONTACT_PERSON": "联络人",
+    "ENTER_CONTACT_PERSON": "输入姓名",
+    "SAME_AS_RESPONSIBLE_PERSON": "与负责人相同",
+    "BUSINESS_ADDRESS": "营业地址",
     "CHOOSE_CITY": "选择县市",
     "CHOOSE_DISTRICT": "选择行政区",
-    "RESPONSIBLE_PERSON": "负责人",
-    "ENTER_RESPONSIBLE_PERSON": "输入负责人",
+    "ENTER_FULL_ADDRESS": "输入完整地址",
 
     "TAX_SERIAL_NUMBER": "税籍编号",
     "ENTER_TAX_SERIAL_NUMBER": "输入税籍编号",
@@ -182,5 +188,59 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "请输入税籍编号",
     "PLEASE_SELECT_A_WORK_TAG": "请选择工作标签",
     "PLEASE_SELECT_A_TEAM": "请选择团队"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "返回",
+    "BUSINESS_TAX_SETTING": "营业税设置",
+    "DECLARATION_SETTING": "申报设置",
+    "DECLARANT": "申报人 (代理人)",
+    "DECLARANT_NAME": "姓名",
+    "ENTER_DECLARANT_NAME": "输入姓名",
+    "DECLARANT_PERSONAL_ID": "身份证字号",
+    "ENTER_DECLARANT_PERSONAL_ID": "输入身份证字号",
+    "PHONE_NUMBER": "电话号码",
+    "ENTER_PHONE_NUMBER": "输入电话号码",
+    "DECLARANT_NAME_REQUIRED": "请输入姓名",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "请输入身份证字号",
+    "PHONE_NUMBER_REQUIRED": "请输入电话号码"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "申报频率",
+    "SELECT_FILING_FREQUENCY": "选择申报频率",
+    "BIMONTHLY_FILING": "双月申报",
+    "MONTHLY_FILING": "每月申报",
+    "EVERY_TWO_MONTHS": "每两个月",
+    "EVERY_MONTH": "每个月",
+    "FILING_FREQUENCY_REQUIRED": "请选择申报频率"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "总缴种类",
+    "SELECT_FILING_METHOD": "选择总缴种类",
+    "SINGLE_ENTITY_FILING": "单一法人申报",
+    "CONSOLIDATED_FILING": "合并申报",
+    "INDIVIDUAL_FILING": "个人申报",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "单一总公司无分支机构",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "总公司为所有分支机构档案",
+    "EACH_UNIT_FILES_SEPARATELY": "每个单位单独归档",
+    "FILING_METHOD_REQUIRED": "请选择总缴种类"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "申报方式",
+    "SELECT_DECLARANT_FILING_METHOD": "选择申报方式",
+    "SELF_FILING": "自行申报",
+    "AGENT_FILING": "委托申报",
+    "DECLARANT_FILING_METHOD_REQUIRED": "请选择申报方式"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "会计师",
+    "BOOKKEEPER": "记帐士",
+    "BOOKKEEPER_AND_FILING_AGENT": "记帐士及申报代理人",
+    "I_AM": "我是...",
+    "AGENT_FILING_ROLE_REQUIRED": "请填写申报人资料"
   }
 }

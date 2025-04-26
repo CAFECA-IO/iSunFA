@@ -1,6 +1,11 @@
-import { ALL_PERMISSIONS, TEAM_ROLE_TRANSITIONS } from '@/constants/team/permissions';
+import {
+  ALL_PERMISSIONS,
+  GRACE_PERIOD_SECONDS,
+  TEAM_ROLE_TRANSITIONS,
+} from '@/constants/team/permissions';
 import { TeamRole } from '@/interfaces/team';
 import { IResolvedTeamPermission, TeamPermissionAction } from '@/interfaces/permissions';
+import { getTimestampNow } from '@/lib/utils/common';
 
 export function convertTeamRoleCanDo(input: {
   teamRole: TeamRole;
@@ -28,5 +33,17 @@ export function convertTeamRoleCanDo(input: {
     teamRole,
     canDo,
     can,
+  };
+}
+
+export function getGracePeriodInfo(expiredAt: number): {
+  inGracePeriod: boolean;
+  gracePeriodEndAt: number;
+} {
+  const now = getTimestampNow();
+  const gracePeriodEndAt = expiredAt + GRACE_PERIOD_SECONDS;
+  return {
+    inGracePeriod: now > expiredAt && now <= gracePeriodEndAt,
+    gracePeriodEndAt,
   };
 }

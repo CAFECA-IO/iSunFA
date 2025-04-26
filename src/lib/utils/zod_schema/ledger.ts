@@ -10,7 +10,7 @@ const ledgerNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241112 - Shirley) 定義 Ledger 列表查詢參數的驗證器
 const ledgerListQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   startDate: zodStringToNumber,
   endDate: zodStringToNumber,
   startAccountNo: z.string().optional(),

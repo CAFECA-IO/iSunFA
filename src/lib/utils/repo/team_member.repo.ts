@@ -9,106 +9,141 @@ import { z } from 'zod';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permission';
+import {
+  assertUserCan,
+  assertUserIsTeamMember,
+} from '@/lib/utils/permission/assert_user_team_permission';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow } from '@/lib/utils/common';
+import { EmailTemplateName } from '@/constants/email_template';
+import { transaction } from '@/lib/utils/repo/transaction';
 
 export const addMembersToTeam = async (
+  userId: number,
   teamId: number,
   emails: string[]
 ): Promise<{ invitedCount: number; unregisteredEmails: string[] }> => {
+  const { can } = await assertUserCan({
+    userId,
+    teamId,
+    action: TeamPermissionAction.INVITE_MEMBER,
+  });
+  if (!can) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
   const now = getTimestampNow();
 
-  // Info: (20250410 - tzuhan) Step 1: 查詢已註冊用戶
   const existingUsers = await prisma.user.findMany({
     where: { email: { in: emails } },
     select: { id: true, email: true },
   });
 
-  const existingUserEmails = new Set(existingUsers.map((u) => u.email));
+  const existingUserEmails = new Set(
+    existingUsers.map((u) => u.email).filter((email): email is string => !!email)
+  );
   const existingUserIds = new Set(existingUsers.map((u) => u.id));
   const unregisteredEmails = emails.filter((email) => !existingUserEmails.has(email));
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Info: (20250410 - tzuhan) Step 2: 找出 status = NOT_IN_TEAM 的成員
-      const inactiveMembers = await tx.teamMember.findMany({
-        where: {
-          teamId,
-          userId: { in: [...existingUserIds] },
-          status: LeaveStatus.NOT_IN_TEAM,
-        },
-        select: { userId: true },
-      });
+  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  const inviter = await prisma.user.findUnique({ where: { id: userId } });
 
-      const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
-
-      if (rejoinUserIds.size > 0) {
-        await tx.teamMember.updateMany({
-          where: {
-            teamId,
-            userId: { in: [...rejoinUserIds] },
-          },
-          data: {
-            status: LeaveStatus.IN_TEAM,
-            leftAt: null,
-          },
-        });
-      }
-
-      // Info: (20250410 - tzuhan) Step 3: 建立新的 teamMember 與 invite 記錄
-      const usersToAdd = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
-
-      if (usersToAdd.length > 0) {
-        await tx.teamMember.createMany({
-          data: usersToAdd.map((user) => ({
-            teamId,
-            userId: user.id,
-            role: TeamRole.EDITOR,
-            joinedAt: now,
-          })),
-          skipDuplicates: true,
-        });
-
-        await tx.inviteTeamMember.createMany({
-          data: usersToAdd.map((user) => ({
-            teamId,
-            email: user.email!,
-            status: InviteStatus.COMPLETED,
-            createdAt: now,
-            completedAt: now,
-            note: JSON.stringify({
-              reason: 'User already exists, added to team without asking',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      // Info: (20250410 - tzuhan) Step 4: 處理尚未註冊的 email
-      if (unregisteredEmails.length > 0) {
-        await tx.inviteTeamMember.createMany({
-          data: unregisteredEmails.map((email) => ({
-            teamId,
-            email,
-            status: InviteStatus.PENDING,
-            createdAt: now,
-            note: JSON.stringify({
-              reason:
-                'User not exists, pending for join, when user register, will be added to team',
-            }),
-          })),
-          skipDuplicates: true,
-        });
-      }
+  await transaction(async (tx) => {
+    const inactiveMembers = await tx.teamMember.findMany({
+      where: {
+        teamId,
+        userId: { in: [...existingUserIds] },
+        status: LeaveStatus.NOT_IN_TEAM,
+      },
+      select: { userId: true },
     });
 
-    return { invitedCount: emails.length, unregisteredEmails: [] };
-  } catch (error) {
-    return {
-      invitedCount: existingUsers.length,
-      unregisteredEmails,
-    };
-  }
+    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
+
+    if (rejoinUserIds.size > 0) {
+      await tx.teamMember.updateMany({
+        where: {
+          teamId,
+          userId: { in: [...rejoinUserIds] },
+        },
+        data: {
+          status: LeaveStatus.IN_TEAM,
+          leftAt: null,
+        },
+      });
+    }
+
+    const usersToAdd = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
+
+    if (usersToAdd.length > 0) {
+      await tx.teamMember.createMany({
+        data: usersToAdd.map((user) => ({
+          teamId,
+          userId: user.id,
+          role: TeamRole.EDITOR,
+          joinedAt: now,
+        })),
+        skipDuplicates: true,
+      });
+
+      await tx.inviteTeamMember.createMany({
+        data: usersToAdd.map((user) => ({
+          teamId,
+          email: user.email!,
+          status: InviteStatus.COMPLETED,
+          createdAt: now,
+          completedAt: now,
+          note: JSON.stringify({
+            reason: 'User already exists, added to team without asking',
+          }),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    if (unregisteredEmails.length > 0) {
+      await tx.inviteTeamMember.createMany({
+        data: unregisteredEmails.map((email) => ({
+          teamId,
+          email,
+          status: InviteStatus.PENDING,
+          createdAt: now,
+          note: JSON.stringify({
+            reason: 'User not exists, pending for join, when user register, will be added to team',
+          }),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // Info: (20250421 - tzuhan) 寫入 emailJob
+    const inviteLinkBase = `${process.env.NEXTAUTH_URL}/users/login`;
+    const allRecipients = [...existingUserEmails, ...unregisteredEmails];
+    await tx.emailJob.createMany({
+      data: allRecipients.map((email) => ({
+        title: `${inviter?.name || '有人'} 邀請您加入 ${team?.name || '某團隊'}`,
+        receiver: email,
+        template: EmailTemplateName.INVITE,
+        data: {
+          inviterName: inviter?.name || '有人',
+          teamName: team?.name || '某團隊',
+          inviteLink: `${inviteLinkBase}`,
+        },
+        status: 'PENDING',
+        retry: 0,
+        maxRetry: 3,
+        createdAt: now,
+        updatedAt: now,
+      })),
+    });
+  });
+
+  return {
+    invitedCount: emails.length,
+    unregisteredEmails,
+  };
 };
 
 export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
@@ -121,11 +156,15 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
 
   // Info: (20250410 - tzuhan) Step 2. OWNER 不能離開團隊
   if (actualRole === TeamRole.OWNER) {
-    throw new Error('OWNER_IS_UNABLE_TO_LEAVE');
+    const error = new Error(STATUS_MESSAGE.OWNER_IS_UNABLE_TO_LEAVE);
+    error.name = STATUS_CODE.OWNER_IS_UNABLE_TO_LEAVE;
+    throw error;
   }
 
   if (!can) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250410 - tzuhan) Step 3. 檢查是否有 LEAVE_TEAM 權限
@@ -135,7 +174,9 @@ export const memberLeaveTeam = async (userId: number, teamId: number): Promise<I
   });
 
   if (!canLeave || !canLeave.can) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250410 - tzuhan) Step 4. 更新離開狀態
@@ -191,17 +232,23 @@ export const updateMemberById = async (
   });
 
   if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.MEMBER_NOT_FOUND);
+    error.name = STATUS_CODE.MEMBER_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能更新成員為 OWNER 角色
   if (role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_TO_OWNER');
+    const error = new Error(STATUS_MESSAGE.CANNOT_UPDATE_TO_OWNER);
+    error.name = STATUS_CODE.CANNOT_UPDATE_TO_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能更新 OWNER 角色
   if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_UPDATE_OWNER_ROLE');
+    const error = new Error(STATUS_MESSAGE.CANNOT_UPDATE_OWNER_ROLE);
+    error.name = STATUS_CODE.CANNOT_UPDATE_OWNER_ROLE;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
@@ -211,23 +258,31 @@ export const updateMemberById = async (
   });
 
   if (!canChangeRoleResult.alterableRoles) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否可以設置成員為目標角色
   const canAlterRoles = canChangeRoleResult.alterableRoles;
   if (!canAlterRoles.includes(role)) {
-    throw new Error('CANNOT_ASSIGN_THIS_ROLE');
+    const error = new Error(STATUS_MESSAGE.CANNOT_ASSIGN_THIS_ROLE);
+    error.name = STATUS_CODE.CANNOT_ASSIGN_THIS_ROLE;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) Admin 不能更新 Admin 角色 (特殊情況)
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER);
+    error.name = STATUS_CODE.ADMIN_CANNOT_UPDATE_ADMIN_OR_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) Admin 不能將成員提升為 Admin
   if (sessionUserTeamRole === TeamRole.ADMIN && role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_PROMOTE_TO_ADMIN');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_PROMOTE_TO_ADMIN);
+    error.name = STATUS_CODE.ADMIN_CANNOT_PROMOTE_TO_ADMIN;
+    throw error;
   }
 
   const updatedMember = await prisma.teamMember.update({
@@ -285,12 +340,16 @@ export const deleteMemberById = async (
   });
 
   if (!teamMember) {
-    throw new Error('MEMBER_NOT_FOUND');
+    const error = new Error(STATUS_MESSAGE.MEMBER_NOT_FOUND);
+    error.name = STATUS_CODE.MEMBER_NOT_FOUND;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 不能刪除 OWNER
   if (teamMember.role === TeamRole.OWNER) {
-    throw new Error('CANNOT_DELETE_OWNER');
+    const error = new Error(STATUS_MESSAGE.CANNOT_DELETE_OWNER);
+    error.name = STATUS_CODE.CANNOT_DELETE_OWNER;
+    throw error;
   }
 
   // Info: (20250408 - Shirley) 檢查用戶是否有權限變更角色
@@ -300,11 +359,15 @@ export const deleteMemberById = async (
   });
 
   if (!canChangeRoleResult.alterableRoles) {
-    throw new Error('PERMISSION_DENIED');
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
   }
 
   if (sessionUserTeamRole === TeamRole.ADMIN && teamMember.role === TeamRole.ADMIN) {
-    throw new Error('ADMIN_CANNOT_DELETE_ADMIN');
+    const error = new Error(STATUS_MESSAGE.ADMIN_CANNOT_DELETE_ADMIN);
+    error.name = STATUS_CODE.ADMIN_CANNOT_DELETE_ADMIN;
+    throw error;
   }
 
   // Info: (20250312 - Shirley) 執行軟刪除
@@ -329,9 +392,17 @@ export const deleteMemberById = async (
  * @returns 符合 ITeamMemberSchema 的成員列表（分頁）
  */
 export const listTeamMemberByTeamId = async (
+  userId: number,
   teamId: number,
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
+  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  if (!effectiveRole) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
   const { page, pageSize } = queryParams;
 
   // Info: (20250321 - Tzuhan) Step 1: 取得總成員數
@@ -370,11 +441,10 @@ export const listTeamMemberByTeamId = async (
   // Info: (20250321 - Tzuhan) Step 3: 格式化成符合 ITeamMember 結構的資料
   const formatted: ITeamMember[] = members.map((member) => {
     const { user, role } = member;
-    const isEditable =
-      convertTeamRoleCanDo({
-        teamRole: role as TeamRole,
-        canDo: TeamPermissionAction.LEAVE_TEAM,
-      })?.can ?? false;
+    const isEditable = convertTeamRoleCanDo({
+      teamRole: role as TeamRole,
+      canDo: TeamPermissionAction.CHANGE_TEAM_ROLE,
+    })?.can;
 
     return {
       id: String(member.id),

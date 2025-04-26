@@ -37,7 +37,7 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
 
   // Info: (20241127 - Liz) 打 API 取得使用者的待辦任務(使用者已連結帳本)
   const { trigger: getAccountBookPendingTaskAPI } = APIHandler<IPendingTask>(
-    APIName.COMPANY_PENDING_TASK_GET
+    APIName.ACCOUNT_BOOK_PENDING_TASK_GET
   );
 
   useEffect(() => {
@@ -46,7 +46,7 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
     const getAccountBookPendingTask = async () => {
       try {
         const { data, success, code } = await getAccountBookPendingTaskAPI({
-          params: { companyId: connectedAccountBook.id },
+          params: { accountBookId: connectedAccountBook.id },
         });
 
         if (success) {
@@ -156,7 +156,7 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
           toggleModal={toggleCreateTodoModal}
           getTodoList={getTodoList}
           defaultTodoName={defaultTodoName}
-          defaultCompany={connectedAccountBook ?? undefined}
+          defaultAccountBook={connectedAccountBook ?? undefined}
         />
       )}
     </section>

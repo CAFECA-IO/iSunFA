@@ -43,6 +43,7 @@
     "OCT_ABR": "十月",
     "NOV_ABR": "十一月",
     "DEC_ABR": "十二月",
-    "EVERY": "每"
+    "EVERY": "每",
+    "ISSUE_DATE": "開立日期"
   }
 }

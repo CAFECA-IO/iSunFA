@@ -17,9 +17,13 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
-import { IUserCertificateEntity } from '@/interfaces/user_certificate';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { Invoice as PrismaInvoice } from '@prisma/client';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamRole } from '@/interfaces/team';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
 
 const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
   query,
@@ -30,7 +34,7 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   let payload: ICertificate | null = null;
 
   const { invoiceId, certificateId } = query;
-  const { userId, companyId } = session;
+  const { userId, teams } = session;
   const {
     counterParty,
     inputOrOutput,
@@ -48,14 +52,46 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
   const nowInSecond = getTimestampNow();
 
   try {
-    if (certificateId && !putUtils.isCertificateExistInDB(certificateId)) {
+    // Info: (20250417 - Shirley) 先獲取 invoice 記錄以檢查是否存在
+    const originalInvoice: PrismaInvoice = await putUtils.getInvoiceFromPrisma(invoiceId);
+
+    // Info: (20250417 - Shirley) 從 invoice 獲取 certificate ID
+    if (!certificateId || !putUtils.isCertificateExistInDB(certificateId)) {
       putUtils.throwErrorAndLog(loggerBack, {
         errorMessage: 'Certificate not found',
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     }
 
-    const originalInvoice: PrismaInvoice = await putUtils.getInvoiceFromPrisma(invoiceId);
+    // Info: (20250417 - Shirley) 獲取 certificate ，從中獲取公司ID
+    const certificateData =
+      await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
+    const { companyId } = certificateData;
+
+    // Info: (20250417 - Shirley) 獲取公司以檢查團隊權限
+    const company = await getCompanyById(companyId);
+    if (!company) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const { teamId: companyTeamId } = company;
+    if (!companyTeamId) {
+      throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    }
+
+    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    if (!userTeam) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    const assertResult = convertTeamRoleCanDo({
+      teamRole: userTeam?.role as TeamRole,
+      canDo: TeamPermissionAction.CREATE_CERTIFICATE,
+    });
+
+    if (!assertResult.can) {
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
 
     const counterPartyEmbededNote = putUtils.embedCounterPartyIntoNote({
       originalInvoice,
@@ -82,12 +118,9 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
     });
 
     const fileEntity = certificateAPIPostUtils.initFileEntity(certificateFromPrisma);
-    const userCertificateEntities =
-      certificateAPIPostUtils.initUserCertificateEntities(certificateFromPrisma);
     const uploaderEntity = certificateAPIPostUtils.initUploaderEntity(certificateFromPrisma);
     const voucherCertificateEntity =
       certificateAPIPostUtils.initVoucherCertificateEntities(certificateFromPrisma);
-    // TODO: (20250114 - Shirley) DB migration 為了讓功能可以使用的暫時解法，invoice 功能跟 counterParty 相關的資料之後需要一一檢查或修改
     const invoiceEntity = certificateAPIPostUtils.initInvoiceEntity(certificateFromPrisma, {
       nowInSecond,
     });
@@ -97,7 +130,6 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
       file: IFileEntity;
       uploader: IUserEntity & { imageFile: IFileEntity };
-      userCertificates: IUserCertificateEntity[];
       vouchers: IVoucherEntity[];
     } = {
       ...certificateEntity,
@@ -105,13 +137,12 @@ const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | nu
       file: fileEntity,
       uploader: uploaderEntity,
       vouchers: voucherCertificateEntity.map((voucherCertificate) => voucherCertificate.voucher),
-      userCertificates: userCertificateEntities,
     };
 
-    const certificate: ICertificate =
+    const certificateResponse: ICertificate =
       certificateAPIGetListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
 
-    payload = certificate;
+    payload = certificateResponse;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (_error) {
     const error = _error as Error;

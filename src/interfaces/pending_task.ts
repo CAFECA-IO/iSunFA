@@ -9,21 +9,21 @@ export enum TaskTitle {
 }
 
 export interface IMissingCertificate {
-  companyId: number;
-  companyName: string;
+  accountBookId: number;
+  accountBookName: string;
   count: number;
-  companyLogoSrc: string;
+  accountBookLogoSrc: string;
 }
 
 export interface IUnpostedVoucher {
-  companyId: number;
-  companyName: string;
+  accountBookId: number;
+  accountBookName: string;
   count: number;
-  companyLogoSrc: string;
+  accountBookLogoSrc: string;
 }
 
 export interface IPendingTask {
-  companyId: number;
+  accountBookId: number;
   missingCertificate: IMissingCertificate;
   missingCertificatePercentage: number;
   unpostedVoucher: IUnpostedVoucher;

@@ -34,9 +34,7 @@ import { getUserById } from '@/lib/utils/repo/user.repo';
 import {
   getManyVoucherV2,
   getOneVoucherByIdWithoutInclude,
-  getUnreadVoucherCount,
   postVoucherV2,
-  upsertUserReadVoucher,
 } from '@/lib/utils/repo/voucher.repo';
 import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
@@ -49,12 +47,10 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@prisma/client';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
 import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
-import { IUserVoucherEntity } from '@/interfaces/user_voucher';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
@@ -66,7 +62,6 @@ import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 export type IGetManyVoucherBetaEntity = IVoucherEntity & {
   counterParty: ICounterPartyEntityPartial;
   issuer: IUserEntity & { imageFile: IFileEntity };
-  readByUsers: IUserVoucherEntity[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   sum: {
     debit: boolean;
@@ -136,27 +131,6 @@ export const voucherAPIGetUtils = {
     return getManyVoucherV2(options);
   },
 
-  getUnreadVoucherCount: (options: {
-    userId: number;
-    tab: VoucherListTabV2;
-    where: Prisma.VoucherWhereInput;
-  }): Promise<number> => {
-    return getUnreadVoucherCount(options);
-  },
-
-  upsertUserReadVoucher: (options: {
-    voucherIdsBeenRead: number[];
-    userId: number;
-    nowInSecond: number;
-  }) => {
-    const { voucherIdsBeenRead, userId, nowInSecond } = options;
-    return upsertUserReadVoucher({
-      userId,
-      voucherIds: voucherIdsBeenRead,
-      nowInSecond,
-    });
-  },
-
   initVoucherEntity: (voucher: IGetManyVoucherResponseButOne) => {
     const voucherEntity = parsePrismaVoucherToVoucherEntity(voucher);
     voucherEntity.isReverseRelated = voucherAPIGetUtils.isVoucherReverseRelated(voucher);
@@ -193,11 +167,6 @@ export const voucherAPIGetUtils = {
       ...issuer,
       imageFile,
     };
-  },
-
-  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
-    const userVoucherEntities = voucher.UserVoucher.map(initUserVoucherEntity);
-    return userVoucherEntities;
   },
 
   getLineItemAmountSum(lineItems: ILineItemEntity[]) {
@@ -787,7 +756,7 @@ export const voucherAPIPostUtils = {
         break;
       }
       default:
-        throw new Error('Not yet implement');
+        throw new Error(STATUS_MESSAGE.NOT_YET_IMPLEMENTED);
     }
     return recurringVoucher;
   },

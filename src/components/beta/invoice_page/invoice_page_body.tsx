@@ -3,6 +3,8 @@ import { useTranslation } from 'next-i18next';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
 import { useReactToPrint } from 'react-to-print';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { Button } from '@/components/button/button';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { ITeamInvoice } from '@/interfaces/subscription';
@@ -17,11 +19,52 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
 
   const { id: invoiceId } = invoice;
 
-  // ToDo: (20250115 - Julian) 下載發票
-  const downloadClickHandler = () => {
-    // Deprecated: (20250116 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Download invoice ', invoiceId);
+  // Info: (20250418 - Julian) 下載發票
+  const downloadClickHandler = async () => {
+    if (!invoiceId || !printRef.current) return;
+
+    // Info: (20250418 - Julian) 下載內容： A4 直式
+    // eslint-disable-next-line new-cap
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    // Info: (20250418 - Julian) 設定畫布
+    const canvas = await html2canvas(printRef.current, {
+      scale: 2,
+      useCORS: true,
+      logging: true, // Info: (20250418 - Julian) 「顯示除錯訊息」到 console
+    });
+    const imgData = canvas.toDataURL('image/png');
+
+    // Info: (20250418 - Julian) 隱藏/顯示 element
+    const hiddenElement = printRef.current.querySelector('.hidden-print');
+    if (hiddenElement) {
+      hiddenElement.classList.remove('hidden-print');
+    }
+    const visibleElement = printRef.current.querySelector('.visible-print');
+    if (visibleElement) {
+      visibleElement.classList.add('hidden-print');
+    }
+
+    // Info: (20250418 - Julian) 圖片大小
+    const imgWidth = pdf.internal.pageSize.getWidth();
+    const imgHeight = pdf.internal.pageSize.getHeight();
+
+    // Info: (20250418 - Julian) 紙張大小
+    const pageWidth = canvas.width;
+    const pageHeight = canvas.height;
+
+    // Info: (20250418 - Julian) 計算比例
+    const widthRatio = imgWidth / pageWidth;
+    const heightRatio = imgHeight / pageHeight;
+
+    // Info: (20250418 - Julian) 計算縮放比例
+    const scaleRatio = Math.min(widthRatio, heightRatio);
+    const scaledWidth = pageWidth * scaleRatio;
+    const scaledHeight = pageHeight * scaleRatio;
+
+    // Info: (20250418 - Julian) 將圖片加入 PDF
+    pdf.addImage(imgData, 'PNG', 0, 0, scaledWidth, scaledHeight);
+    pdf.save(`${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`);
   };
 
   // Info: (20250115 - Julian) 列印發票

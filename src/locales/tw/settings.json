@@ -68,8 +68,8 @@
     "ACCOUNTING_SETTING_TITLE": "會計設定",
     "PERIOD_SETTINGS_SUBTITLE": "期間設定",
     "EVERY": "每",
-    "MONTH": "月",
-    "WEEK": "週",
+    "MONTHLY": "月",
+    "WEEKLY": "週",
     "FISCAL_YEAR": "會計年度",
     "FISCAL_YEAR_PERIOD": "會計年度期間",
     "GENERATE_REPORT_1": "報告將在結束日期後",
@@ -168,5 +168,31 @@
   },
   "ERROR": {
     "FETCH_DATA": "取得資料時發生錯誤，請稍後再試。"
+  },
+  "ACCOUNT_BOOK_INFO": {
+    "ACCOUNT_BOOK_INFORMATION": "帳本資訊",
+    "COMPANY_NAME": "公司名稱",
+    "ENTER_NAME": "輸入公司名稱",
+    "BUSINESS_TAX_ID_NUMBER": "統一編號",
+    "ENTER_NUMBER": "輸入號碼",
+    "TAX_SERIAL_NUMBER": "稅籍編號",
+    "COMPANY_REPRESENTATIVE_NAME": "公司負責人姓名",
+    "ENTER_REPRESENTATIVE_NAME": "輸入負責人姓名",
+    "COUNTRY_OF_INCORPORATION": "註冊國家",
+    "SELECT_COUNTRY": "選擇國家",
+    "PHONE_NUMBER": "電話號碼",
+    "COMPANY_ADDRESS": "公司地址",
+    "PLEASE_ENTER_THE_FULL_ADDRESS": "請輸入完整地址",
+    "REMOVE_ACCOUNT_BOOK": "刪除帳本",
+    "CANCEL": "取消",
+    "SAVE": "儲存",
+    "REMOVE": "刪除",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "您確定要刪除這個帳本嗎？",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "刪除帳本失敗",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "刪除帳本成功",
+    "GET_ACCOUNT_BOOK_FAIL": "取得帳本資訊失敗",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "更新帳本資訊失敗",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "更新帳本資訊成功"
   }
 }

@@ -2,14 +2,21 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { APIName } from '@/constants/api_connection';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { loggerError } from '@/lib/utils/logger_back';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { ITeamWithImage, TeamRole } from '@/interfaces/team';
 import { putTeamIcon } from '@/lib/utils/repo/team.repo';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import { validateOutputData } from '@/lib/utils/validator';
 
 /** Info: (20250324 - Shirley)
  * 開發步驟：
@@ -23,30 +30,43 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
  * 8. 實作 handlePutRequest 函數，處理 PUT 請求
  */
 
-const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = async ({
-  query,
-  body,
-  session,
-}) => {
+const handlePutRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ITeamWithImage | null = null;
 
-  const { teamId } = query;
-  const { fileId } = body;
+  const session = await getSession(req);
   const { userId, teams } = session;
 
+  await checkSessionUser(session, APIName.PUT_TEAM_ICON, req);
+  await checkUserAuthorization(APIName.PUT_TEAM_ICON, req, session);
+
+  const { query, body } = checkRequestData(APIName.PUT_TEAM_ICON, req, session);
+  if (query === null || body === null || !query.teamId || !body.fileId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { teamId } = query;
+  const { fileId } = body;
+
   try {
-    const userTeam = teams?.find((team) => team.id === teamId);
+    const userTeam = teams?.find((team) => team.id === Number(teamId));
     if (!userTeam) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      loggerBack.warn(`User ${userId} is not in team ${teamId}`);
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
+
     const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam?.role as TeamRole,
+      teamRole: userTeam.role as TeamRole,
       canDo: TeamPermissionAction.MODIFY_IMAGE,
     });
 
     if (!assertResult.can) {
-      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      loggerBack.warn(
+        `User ${userId} with role ${userTeam.role} doesn't have permission to modify team icon`
+      );
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
     // Info: (20250324 - Shirley) 使用 putTeamIcon 函數更新團隊圖標
@@ -63,47 +83,61 @@ const handlePutRequest: IHandleRequest<APIName.PUT_TEAM_ICON, ITeamWithImage> = 
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
     payload = teamWithImage;
-  } catch (_error) {
-    const error = _error as Error;
+
+    const { isOutputDataValid, outputData } = validateOutputData(APIName.PUT_TEAM_ICON, payload);
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      payload = null;
+    } else {
+      payload = outputData;
+    }
+
+    loggerBack.info(`User ${userId} successfully updated team icon for team ${teamId}`);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     loggerError({
       userId,
-      errorType: error.name,
-      errorMessage: error.message,
+      errorType: err.name,
+      errorMessage: err.message,
     });
   }
 
-  return { statusMessage, payload };
-};
-
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: ITeamWithImage | null }>;
-} = {
-  PUT: (req) => withRequestValidation(APIName.PUT_TEAM_ICON, req, handlePutRequest),
+  return { response: formatApiResponse(statusMessage, payload), statusMessage };
 };
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ITeamWithImage | null>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITeamWithImage | null = null;
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.PUT_TEAM_ICON;
+  const session = await getSession(req);
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    switch (method) {
+      case HttpMethod.PUT:
+        apiName = APIName.PUT_TEAM_ICON;
+        ({
+          response: { httpCode, result },
+          statusMessage,
+        } = await handlePutRequest(req));
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    statusMessage = error.message;
-    payload = null;
-  } finally {
-    const { httpCode, result } = formatApiResponse<ITeamWithImage | null>(statusMessage, payload);
-    res.status(httpCode).json(result);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
+
+  await logUserAction(session, apiName, req, statusMessage);
+  res.status(httpCode).json(result);
 }

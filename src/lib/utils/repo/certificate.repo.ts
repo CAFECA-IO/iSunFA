@@ -2,14 +2,59 @@ import prisma from '@/client';
 
 import { InvoiceType } from '@/constants/invoice';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { PostCertificateResponse } from '@/interfaces/certificate';
+import { ICertificate, PostCertificateResponse } from '@/interfaces/certificate';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { Prisma } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DefaultValue } from '@/constants/default_value';
+import { isCertificateIncomplete } from '@/lib/utils/certificate';
+import { Prisma } from '@prisma/client';
+
+/**
+ * Info: (20250422 - Tzuhan) 補上每一筆 Certificate 的 `incomplete` 屬性（從原本的 DB 回傳中推導）
+ */
+export function mapCertificateWithIncomplete(certificate: ICertificate): ICertificate {
+  const incomplete = isCertificateIncomplete(certificate);
+  return {
+    ...certificate,
+    incomplete,
+  };
+}
+
+export function mapCertificatesWithIncomplete(certificates: ICertificate[]): ICertificate[] {
+  return certificates.map(mapCertificateWithIncomplete);
+}
+
+/**
+ * Info: (20250422 - Tzuhan) 套用至實際 API 回傳格式轉換
+ */
+export function transformWithIncomplete(certificates: ICertificate[]): ICertificate[] {
+  return mapCertificatesWithIncomplete(certificates);
+}
+
+/**
+ * Info: (20250422 - Tzuhan) 回傳 incomplete summary 統計數量（依據 tab）
+ */
+export function summarizeIncompleteCertificates(certificates: ICertificate[]): {
+  withVoucher: number;
+  withoutVoucher: number;
+} {
+  return certificates.reduce(
+    (acc, cert) => {
+      if (!cert.incomplete) return acc;
+      const hasVoucher = !!cert.voucherId;
+      if (hasVoucher) {
+        acc.withVoucher += 1;
+      } else {
+        acc.withoutVoucher += 1;
+      }
+      return acc;
+    },
+    { withVoucher: 0, withoutVoucher: 0 }
+  );
+}
 
 export async function countMissingCertificate(companyId: number) {
   const missingCertificatesCount = await prisma.voucher.count({
@@ -101,7 +146,6 @@ export async function createCertificateWithEmptyInvoice(options: {
           },
         },
         file: true,
-        UserCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -143,7 +187,6 @@ export async function getOneCertificateById(
           },
         },
         file: true,
-        UserCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -362,7 +405,6 @@ export async function getCertificatesV2(options: {
           },
         },
         file: true,
-        UserCertificate: true,
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -404,112 +446,6 @@ export async function getCertificatesV2(options: {
   };
 
   return returnValue;
-}
-
-export async function getUnreadCertificateCount(options: {
-  userId: number;
-  tab: InvoiceTabs;
-  where: Prisma.CertificateWhereInput;
-}) {
-  const { userId, where, tab } = options;
-  let unreadCertificateCount = 0;
-
-  function getVoucherCertificateRelation(invoiceTab: InvoiceTabs) {
-    switch (invoiceTab) {
-      case InvoiceTabs.WITH_VOUCHER:
-        return {
-          some: {},
-        };
-      case InvoiceTabs.WITHOUT_VOUCHER:
-        return {
-          none: {},
-        };
-      default:
-        return undefined;
-    }
-  }
-
-  try {
-    const readCertificateCount = await prisma.certificate.count({
-      where: {
-        ...where,
-        voucherCertificates: getVoucherCertificateRelation(tab),
-        UserCertificate: {
-          some: {
-            userId,
-            isRead: true,
-          },
-        },
-      },
-    });
-
-    const totalCertificateCount = await prisma.certificate.count({
-      where: {
-        ...where,
-        voucherCertificates: getVoucherCertificateRelation(tab),
-      },
-    });
-    unreadCertificateCount = totalCertificateCount - readCertificateCount;
-  } catch (error) {
-    loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
-      errorMessage: error as Error,
-    });
-  }
-
-  return unreadCertificateCount;
-}
-
-export async function upsertUserReadCertificates(options: {
-  certificateIds: number[];
-  userId: number;
-  nowInSecond: number;
-}): Promise<void> {
-  const alreadyInDBCertificateIds = await prisma.userCertificate.findMany({
-    where: {
-      userId: options.userId,
-      certificateId: {
-        in: options.certificateIds,
-      },
-    },
-    select: {
-      certificateId: true,
-    },
-  });
-  const alreadyInDBCertificateIdsSet = new Set(
-    alreadyInDBCertificateIds.map((certificate) => certificate.certificateId)
-  );
-
-  const notInDBCertificateIds = options.certificateIds.filter((certificateId) => {
-    return !alreadyInDBCertificateIdsSet.has(certificateId);
-  });
-
-  const updateJob = prisma.userCertificate.updateMany({
-    where: {
-      userId: options.userId,
-      certificateId: {
-        in: Array.from(alreadyInDBCertificateIdsSet),
-      },
-      isRead: false,
-    },
-    data: {
-      isRead: true,
-      updatedAt: options.nowInSecond,
-    },
-  });
-
-  const createJob = prisma.userCertificate.createMany({
-    data: notInDBCertificateIds.map((certificateId) => ({
-      userId: options.userId,
-      certificateId,
-      isRead: true,
-      createdAt: options.nowInSecond,
-      updatedAt: options.nowInSecond,
-    })),
-  });
-
-  await Promise.all([updateJob, createJob]);
 }
 
 export async function listCertificateWithoutInvoice() {
@@ -579,13 +515,7 @@ export async function deleteMultipleCertificates(options: {
         id: true,
       },
     }),
-    prisma.userCertificate.deleteMany({
-      where: {
-        certificateId: {
-          in: certificateIds,
-        },
-      },
-    }),
+
     prisma.voucherCertificate.deleteMany({
       where: {
         certificateId: {

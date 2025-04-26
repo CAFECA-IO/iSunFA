@@ -1,5 +1,9 @@
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { ONE_DAY_IN_S } from '@/constants/time';
+
+export const GRACE_PERIOD_DAYS = 3; // Info: (20250311 - Tzuhan) 寬限期天數
+export const GRACE_PERIOD_SECONDS = GRACE_PERIOD_DAYS * ONE_DAY_IN_S; // Info: (20250311 - Tzuhan) 寬限期秒數
 
 export const TEAM_ROLE_DESCRIPTIONS = {
   [TeamRole.OWNER]: '最高權限，管理所有團隊與帳本權限',
@@ -65,7 +69,48 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   // Info: (20250313 - Tzuhan) 帳務相關
   [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.UPDATE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.EXPORT_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  [TeamPermissionAction.VIEW_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.CREATE_COUNTERPARTY]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  // Info: (20250417 - Shirley) 憑證相關權限, 所有角色都有權限
+  [TeamPermissionAction.VIEW_CERTIFICATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.CREATE_CERTIFICATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.DELETE_CERTIFICATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+
   [TeamPermissionAction.CHANGE_TEAM_ROLE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+
+  // Info: (20250416 - Tzuhan) 傳票相關
+  [TeamPermissionAction.CREATE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.MODIFY_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.DELETE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.RESTORE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
 };
 
 // Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理
@@ -79,6 +124,7 @@ export const TEAM_ROLE_TRANSITIONS: Record<TeamRole, TeamRole[]> = {
 // Info: (20250311 - Tzuhan) 🌟 訂閱方案限制
 export const SUBSCRIPTION_PLAN_LIMITS = {
   BEGINNER: 1, // Info: (20250311 - Tzuhan) 免費版最多只能有 1 個帳本，但為了方便測試，這裡設定為 100
+  TRIAL: Infinity, // Info: (20250418 - Tzuhan) 試用版無限制
   PROFESSIONAL: Infinity, // Info: (20250311 - Tzuhan) 專業版無限制
   ENTERPRISE: Infinity, // Info: (20250311 - Tzuhan) 企業版無限制
 } as const;

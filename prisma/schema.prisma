@@ -10,7 +10,7 @@ datasource db {
 model Account {
   id         Int     @id @default(autoincrement())
   companyId  Int     @default(0) @map("company_id")
-  system     String // Info: (20240625 - Murky) ex "IFRS" 
+  system     String // Info: (20240625 - Murky) ex "IFRS"
   type       String // Info: (20240625 - Murky) ex "Asset"
   debit      Boolean // Info: (20240625 - Murky) true: debit, false: credit
   liquidity  Boolean
@@ -220,7 +220,7 @@ model Country {
   updatedAt    Int    @map("updated_at")
   deletedAt    Int?   @map("deleted_at")
 
-  UserSetting UserSetting[]
+  userSetting UserSetting[]
 
   @@map("country")
 }
@@ -276,6 +276,7 @@ model Company {
   transfers                  AccountBookTransfer[]
 
   @@map("company")
+  CertificateRC2 CertificateRC2[]
 }
 
 model CompanyKYC {
@@ -377,7 +378,7 @@ model Certificate {
 
   invoices            Invoice[]
   voucherCertificates VoucherCertificate[]
-  UserCertificate     UserCertificate[]
+  // userCertificate     UserCertificate[] // deprecated: (20250423 - tzuhan) deprecated unRead property
 
   company  Company @relation(fields: [companyId], references: [id])
   file     File    @relation(fields: [fileId], references: [id])
@@ -385,6 +386,71 @@ model Certificate {
 
   @@map("certificate")
 }
+
+model InvoiceRC2 {
+  id                Int     @id @default(autoincrement())
+  certificateId     Int     @unique @map("certificate_id")
+  inputOrOutput     String  @map("input_or_output") // INPUT or OUTPUT
+  type              String  // 對應新版 enum InputInvoiceType / OutputInvoiceType
+  date              Int
+  no                String
+  currencyAlias     String  @map("currency_alias")
+  priceBeforeTax    Int     @map("price_before_tax")
+  taxType           String  @map("tax_type")
+  taxRatio          Int     @map("tax_ratio")
+  taxPrice          Int     @map("tax_price")
+  totalPrice        Int     @map("total_price")
+  deductionType     String? @map("deduction_type") // INPUT 專用
+  salesName         String? @map("sales_name")     // INPUT 專用
+  salesIdNumber     String? @map("sales_id_number")
+  buyerName         String? @map("buyer_name")     // OUTPUT 專用
+  buyerIdNumber     String? @map("buyer_id_number")
+  returnOrAllowance Boolean? @default(false) @map("return_or_allowance") // OUTPUT 專用
+  createdAt         Int     @map("created_at")
+  updatedAt         Int     @map("updated_at")
+  deletedAt         Int?    @map("deleted_at")
+
+  certificate CertificateRC2 @relation(fields: [certificateId], references: [id])
+  invoiceVoucherJournals InvoiceVoucherJournal[]
+
+  @@map("invoice_rc2")
+}
+
+model VoucherCertificateRC2 {
+  id            Int  @id @default(autoincrement())
+  voucherId     Int  @map("voucher_id")
+  certificateId Int  @map("certificate_id")
+  createdAt     Int  @map("created_at")
+  updatedAt     Int  @map("updated_at")
+  deletedAt     Int? @map("deleted_at")
+
+  voucher     Voucher       @relation(fields: [voucherId], references: [id])
+  certificate CertificateRC2 @relation(fields: [certificateId], references: [id])
+
+  @@map("voucher_certificate_rc2")
+}
+
+model CertificateRC2 {
+  id           Int      @id @default(autoincrement())
+  accountbookId  Int      @map("accountbook_id")
+  fileId       Int      @map("file_id")
+  uploaderId   Int      @map("uploader_id")
+  inputOrOutput String   @map("input_or_output") // INPUT or OUTPUT
+  aiResultId   String    @default("0") @map("ai_result_id")
+  aiStatus     String    @default("READY") // Optional: AI處理狀態
+  createdAt    Int       @map("created_at")
+  updatedAt    Int       @map("updated_at")
+  deletedAt    Int?      @map("deleted_at")
+
+  accountbook  Company   @relation(fields: [accountbookId], references: [id])
+  file      File      @relation(fields: [fileId], references: [id])
+  uploader  User      @relation(fields: [uploaderId], references: [id])
+  voucherCertificates VoucherCertificateRC2[] 
+  invoice   InvoiceRC2[]
+
+  @@map("certificate_rc2")
+}
+
 
 model Department {
   id        Int        @id @default(autoincrement())
@@ -484,6 +550,14 @@ model File {
   teamFile                    Team?        @relation("team_image_file")
 
   @@map("file")
+  CertificateRC2 CertificateRC2[]
+}
+
+enum DeductionType {
+  DEDUCTIBLE_PURCHASE_AND_EXPENSE
+  DEDUCTIBLE_FIXED_ASSETS
+  NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE
+  NON_DEDUCTIBLE_FIXED_ASSETS
 }
 
 model Invoice {
@@ -531,6 +605,7 @@ model InvoiceVoucherJournal {
   journal Journal  @relation(fields: [journalId], references: [id])
 
   @@map("invoice_voucher_journal")
+  InvoiceRC2 InvoiceRC2[]
 }
 
 // Deprecated: (20250324 - Tzuhan) `Invitation` 移除，已由 `InviteTeamMember` 取代
@@ -949,21 +1024,22 @@ model User {
   kycRoles            KYCRole[]
   userAgreements      UserAgreement[]
   userActionLogs      UserActionLog[]
-  userCertificates    UserCertificate[]
+  // userCertificates    UserCertificate[]
   userPaymentInfo     UserPaymentInfo[]
   userRoles           UserRole[]
   userTodoCompanies   UserTodoCompany[]
-  userVouchers        UserVoucher[]
+  // userVouchers        UserVoucher[]
   Voucher             Voucher[]
   Asset               Asset[]
-  UserSetting         UserSetting[]
+  userSetting         UserSetting[]
   ownedTeams          Team[] // Info: (20250221 - tzuhan) 反向關聯，表示這個 User 可能是多個 Team 的 owner
   memberships         TeamMember[] // Info: (20250221 - tzuhan) 這個 User 可能是多個 Team 的成員
-  AccountBookTransfer AccountBookTransfer[]
+  accountBookTransfer AccountBookTransfer[]
   accountBook         Company[]
-  TeamOrder           TeamOrder[]
+  teamOrder           TeamOrder[]
 
   @@map("user")
+  CertificateRC2 CertificateRC2[]
 }
 
 model UserAgreement {
@@ -1016,7 +1092,8 @@ model UserPaymentInfo {
 
   user User @relation(fields: [userId], references: [id])
 
-  TeamPaymentTransaction TeamPaymentTransaction[]
+  teamPayment            TeamPayment[]
+  teamPaymentTransaction TeamPaymentTransaction[]
 
   @@map("user_payment_info")
 }
@@ -1043,11 +1120,9 @@ model UserSetting {
 }
 
 enum RoleName {
-  ACCOUNTANT
-  BOOKKEEPER
-  EDUCATIONAL_TRIAL_VERSION
+  INDIVIDUAL
+  ACCOUNTING_FIRMS
   ENTERPRISE
-  TEST
 }
 
 // Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號
@@ -1084,35 +1159,35 @@ model RoleFeature {
   @@map("role_feature")
 }
 
-model UserCertificate {
-  id            Int     @id @default(autoincrement())
-  userId        Int     @map("user_id")
-  certificateId Int     @map("certificate_id")
-  isRead        Boolean @map("is_read")
-  createdAt     Int     @map("created_at")
-  updatedAt     Int     @map("updated_at")
-  deletedAt     Int?    @map("deleted_at")
+// model UserCertificate {
+//   id            Int     @id @default(autoincrement())
+//   userId        Int     @map("user_id")
+//   certificateId Int     @map("certificate_id")
+//   isRead        Boolean @map("is_read")
+//   createdAt     Int     @map("created_at")
+//   updatedAt     Int     @map("updated_at")
+//   deletedAt     Int?    @map("deleted_at")
 
-  user        User        @relation(fields: [userId], references: [id])
-  certificate Certificate @relation(fields: [certificateId], references: [id])
+//   user        User        @relation(fields: [userId], references: [id])
+//   certificate Certificate @relation(fields: [certificateId], references: [id])
 
-  @@map("user_certificate")
-}
+//   @@map("user_certificate")
+// }
 
-model UserVoucher {
-  id        Int     @id @default(autoincrement())
-  userId    Int     @map("user_id")
-  voucherId Int     @map("voucher_id")
-  isRead    Boolean @map("is_read")
-  createdAt Int     @map("created_at")
-  updatedAt Int     @map("updated_at")
-  deletedAt Int?    @map("deleted_at")
+// model UserVoucher {
+//   id        Int     @id @default(autoincrement())
+//   userId    Int     @map("user_id")
+//   voucherId Int     @map("voucher_id")
+//   isRead    Boolean @map("is_read")
+//   createdAt Int     @map("created_at")
+//   updatedAt Int     @map("updated_at")
+//   deletedAt Int?    @map("deleted_at")
 
-  user    User    @relation(fields: [userId], references: [id])
-  voucher Voucher @relation(fields: [voucherId], references: [id])
+//   user    User    @relation(fields: [userId], references: [id])
+//   voucher Voucher @relation(fields: [voucherId], references: [id])
 
-  @@map("user_voucher")
-}
+//   @@map("user_voucher")
+// }
 
 model UserTodoCompany {
   id        Int  @id @default(autoincrement())
@@ -1148,7 +1223,7 @@ model Voucher {
 
   assetVouchers          AssetVoucher[]
   lineItems              LineItem[]
-  UserVoucher            UserVoucher[]
+  // userVoucher            UserVoucher[] // deprecated: (20250423 - tzuhan) deprecated unRead property
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
@@ -1161,6 +1236,7 @@ model Voucher {
   counterparty Counterparty @relation(fields: [counterPartyId], references: [id])
 
   @@map("voucher")
+  VoucherCertificateRC2 VoucherCertificateRC2[]
 }
 
 model VoucherCertificate {
@@ -1245,7 +1321,9 @@ model TeamPlan {
   features         TeamPlanFeature[]
   createdAt        Int                @map("created_at")
   updatedAt        Int                @map("updated_at")
-  TeamSubscription TeamSubscription[]
+
+  teamPayment      TeamPayment[]
+  teamSubscription TeamSubscription[]
 
   @@map("team_plan")
 }
@@ -1263,6 +1341,7 @@ model TeamPlanFeature {
 }
 
 enum TeamPlanType {
+  TRIAL
   BEGINNER
   PROFESSIONAL
   ENTERPRISE
@@ -1281,8 +1360,9 @@ model Team {
   updatedAt   Int    @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
   members        TeamMember[]
-  TeamOrder      TeamOrder[]
+  teamOrder      TeamOrder[]
   accountBook    Company[]
+  teamPayment    TeamPayment[]
   subscriptions  TeamSubscription[]
   imageFile      File?                 @relation("team_image_file", fields: [imageFileId], references: [id])
   pendingMembers InviteTeamMember[]
@@ -1348,7 +1428,7 @@ enum TeamRole {
 model TeamSubscription {
   id          Int          @id @default(autoincrement())
   teamId      Int          @map("team_id")
-  planType    TeamPlanType @default(PROFESSIONAL) @map("plan_type")
+  planType    TeamPlanType @default(TRIAL) @map("plan_type")
   startDate   Int          @map("start_date")
   expiredDate Int          @map("expired_date")
   createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
@@ -1375,8 +1455,8 @@ model TeamOrder {
   team Team @relation(fields: [teamId], references: [id])
 
   orderDetails           TeamOrderDetail[]
-  TeamPaymentTransaction TeamPaymentTransaction[]
-  TeamInvoice            TeamInvoice[]
+  teamPaymentTransaction TeamPaymentTransaction[]
+  teamInvoice            TeamInvoice[]
 
   @@map("team_order")
 }
@@ -1392,9 +1472,28 @@ model TeamOrderDetail {
   currency    String
   amount      Int
 
-  TeamOrder TeamOrder @relation(fields: [orderId], references: [id])
+  teamOrder TeamOrder @relation(fields: [orderId], references: [id])
 
   @@map("team_order_detail")
+}
+
+model TeamPayment {
+  id                Int               @id @default(autoincrement())
+  teamId            Int               @unique @map("team_id")
+  teamPlanType      TeamPlanType      @map("team_plan_type")
+  userPaymentInfoId Int?              @map("user_payment_info_id")
+  autoRenewal       Boolean           @map("auto_renewal")
+  startDate         Int               @map("start_date")
+  expiredDate       Int               @map("expired_date")
+  nextChargetDate   Int               @map("next_charge_date")
+  createdAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+
+  team            Team             @relation(fields: [teamId], references: [id])
+  teamPlan        TeamPlan         @relation(fields: [teamPlanType], references: [type], onDelete: Cascade)
+  userPaymentInfo UserPaymentInfo? @relation(fields: [userPaymentInfoId], references: [id])
+
+  @@map("team_payment")
 }
 
 model TeamPaymentTransaction {
@@ -1412,7 +1511,7 @@ model TeamPaymentTransaction {
   teamOrder       TeamOrder       @relation(fields: [teamOrderId], references: [id])
   userPaymentInfo UserPaymentInfo @relation(fields: [userPaymentInfoId], references: [id])
 
-  TeamInvoice TeamInvoice[]
+  teamInvoice TeamInvoice[]
 
   @@map("team_payment_transaction")
 }
@@ -1478,4 +1577,19 @@ model AccountBookTransfer {
   // @@unique([fromTeamId, toTeamId]) // Info: (20250314 - Tzuhan) remove companyId from unique constraint, because it's not necessary
 
   @@map("accountBook_transfer")
+}
+
+model emailJob {
+  id        Int    @id @default(autoincrement())
+  title     String
+  receiver  String
+  template  String
+  data      Json
+  retry     Int    @default(0)
+  maxRetry  Int    @default(3) @map("max_retry")
+  status    String @default("PENDING") // PENDING、SUCCESS、FAILED
+  createdAt Int    @map("created_at")
+  updatedAt Int    @map("updated_at")
+
+  @@map("email_job")
 }

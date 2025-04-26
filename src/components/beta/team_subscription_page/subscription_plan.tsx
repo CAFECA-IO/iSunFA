@@ -1,13 +1,16 @@
 import Image from 'next/image';
-import { IPlan, IUserOwnedTeam, TPlanType } from '@/interfaces/subscription';
+import { IPlan, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
 import { FiArrowRight } from 'react-icons/fi';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useState } from 'react';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { getRemainingDays } from '@/lib/utils/common';
 
 interface SubscriptionPlanProps {
   team: IUserOwnedTeam;
@@ -26,16 +29,36 @@ const SubscriptionPlan = ({
 }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { toastHandler } = useModalContext();
+
+  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
   const isSelected = team.plan === plan.id;
-  const isBeginner = plan.id === TPlanType.BEGINNER;
+
+  // Info: (20250425 - Julian) 試用期方案取代免費版的位置
+  const isShowSelected = isTrial ? plan.id === TPlanType.TRIAL : isSelected;
+
+  // Info: (20250421 - Julian) 試用版 UI 同免費方案
+  const isBeginner = plan.id === TPlanType.BEGINNER || plan.id === TPlanType.TRIAL;
   const isProfessional = plan.id === TPlanType.PROFESSIONAL;
   const isEnterprise = plan.id === TPlanType.ENTERPRISE;
+
+  /* Info: (20250421 - Julian) 降級方案：
+  /* 1. 原為企業版，選擇專業版
+  /* 2. 原為企業版，選擇免費版
+  /* 3. 原為專業版，選擇免費版 */
+  const isDowngrade =
+    (team.plan === TPlanType.ENTERPRISE && (isBeginner || isProfessional)) ||
+    (team.plan === TPlanType.PROFESSIONAL && isBeginner);
+
   const [isDowngradeMessageModalOpen, setIsDowngradeMessageModalOpen] = useState(false);
 
+  const btnCommonStyle =
+    'flex items-center justify-center gap-8px rounded-xs px-32px py-14px text-lg font-medium whitespace-nowrap border';
   const borderedStyle = bordered ? 'border border-stroke-neutral-quaternary' : '';
 
+  const { trigger: downgrade } = APIHandler(APIName.UPDATE_SUBSCRIPTION);
+
   const selectSubscriptionPlan = () => {
-    if (isBeginner) {
+    if (isDowngrade) {
       setIsDowngradeMessageModalOpen(true);
     } else {
       goToPaymentHandler();
@@ -46,39 +69,112 @@ const SubscriptionPlan = ({
     setIsDowngradeMessageModalOpen(false);
   };
 
-  // Info: (20250121 - Liz) 打 API 來變更使用者的訂閱方案為 Beginner (基礎版 Free)
+  // Info: (20250421 - Julian) 降級方案
   const downgradeSubscription = async () => {
-    if (!isBeginner) return;
-
-    const url = `/api/v2/team/${team.id}/checkout`;
+    if (!isDowngrade) return;
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(plan),
+      const { success } = await downgrade({
+        params: { teamId: team.id },
+        body: { plan: plan.id },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to subscribe');
+      if (success) {
+        // Info: (20250421 - Julian) 顯示成功訊息
+        toastHandler({
+          id: ToastId.DOWNGRADE_TO_BEGINNER_PLAN,
+          type: ToastType.SUCCESS,
+          content: t('subscriptions:PAYMENT_PAGE.DOWNGRADED_TO_BEGINNER_PLAN'),
+          closeable: true,
+        });
       }
-
-      // Info: (20250120 - Julian) 顯示成功訊息
+    } catch (error) {
+      // Info: (20250421 - Julian) 顯示錯誤訊息
       toastHandler({
         id: ToastId.DOWNGRADE_TO_BEGINNER_PLAN,
-        type: ToastType.SUCCESS,
-        content: t('subscriptions:PAYMENT_PAGE.DOWNGRADED_TO_BEGINNER_PLAN'),
+        type: ToastType.ERROR,
+        content: 'Failed to downgrade, error: ' + error,
         closeable: true,
       });
-    } catch (error) {
-      // console.log('Failed to downgrade, error:', error);
     } finally {
       closeDowngradeMessageModal();
       getOwnedTeam(); // Info: (20250120 - Liz) 重新打 API 取得最新的 userOwnedTeam
     }
   };
+
+  // ToDo: (20250425 - Julian) 暫時不會用到
+  // const selectedBtn = isTrial ? (
+  //   // Info: (20250425 - Julian) 「將在試用期結束後開始」
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-button-surface-strong-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable`}
+  //     disabled
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.AFTER_TRIAL')}
+  //   </button>
+  // ) : (
+  //   // Info: (20250425 - Julian) 已選擇的按鈕
+  //   <button
+  //     type="button"
+  //     className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+  //   >
+  //     {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+  //   </button>
+  // );
+
+  // const btnContent =
+  //   plan.id === TPlanType.TRIAL ? (
+  //     // Info: (20250425 - Julian) 「免費試用」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} disabled:border-button-stroke-disable disabled:text-button-text-disable`}
+  //       disabled
+  //     >
+  //       {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
+  //     </button>
+  //   ) : isSelected ? (
+  //     selectedBtn
+  //   ) : (
+  //     // Info: (20250425 - Julian) 「選擇此方案」
+  //     <button
+  //       type="button"
+  //       className={`${btnCommonStyle} border-button-surface-strong-primary bg-button-surface-strong-primary text-button-text-primary-solid hover:border-button-surface-strong-primary-hover`}
+  //       onClick={selectSubscriptionPlan}
+  //     >
+  //       {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+  //       <FiArrowRight size={24} />
+  //     </button>
+  //   );
+
+  const btnContent =
+    plan.id === TPlanType.TRIAL && isTrial ? (
+      // Info: (20250425 - Julian) 「免費試用」
+      <button
+        type="button"
+        className={`${btnCommonStyle} disabled:border-button-stroke-disable disabled:text-button-text-disable`}
+        disabled
+      >
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')}
+      </button>
+    ) : isSelected && !isTrial ? (
+      // Info: (20250425 - Julian) 已選擇的按鈕
+      <button
+        type="button"
+        className={`${btnCommonStyle} border-stroke-brand-primary text-button-text-primary`}
+      >
+        {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')}
+      </button>
+    ) : (
+      // Info: (20250425 - Julian) 「選擇此方案」
+      <button
+        type="button"
+        className={`${btnCommonStyle} border-button-surface-strong-primary bg-button-surface-strong-primary text-button-text-primary-solid hover:border-button-surface-strong-primary-hover`}
+        onClick={selectSubscriptionPlan}
+      >
+        {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
+        <FiArrowRight size={24} />
+      </button>
+    );
 
   const downgradeMessageModal: IMessageModal = {
     title: t('subscriptions:MODAL.DOWNGRADE_MESSAGE_MODAL_TITLE'),
@@ -103,16 +199,16 @@ const SubscriptionPlan = ({
 
   return (
     <section
-      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
+      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
     >
-      {isSelected && (
+      {isShowSelected && (
         <Image
           src="/icons/star_badge.svg"
           alt="star_badge"
           width={64}
           height={64}
-          className="absolute -right-21px -top-16px z-1"
-        ></Image>
+          className="absolute -right-21px -top-16px z-10"
+        />
       )}
 
       <div className="flex flex-col gap-24px text-center">
@@ -141,25 +237,28 @@ const SubscriptionPlan = ({
           <div>
             <p className="text-44px font-bold text-text-brand-secondary-lv2">
               {t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.FREE')}
+              {isTrial && (
+                <span className="text-base font-semibold text-text-neutral-tertiary">
+                  {' '}
+                  <Trans
+                    i18nKey="subscriptions:SUBSCRIPTION_PLAN_CONTENT.TRAIL_REMAINING_DAYS"
+                    values={{
+                      days: getRemainingDays(team.nextRenewalTimestamp * 1000),
+                    }}
+                  />
+                </span>
+              )}
             </p>
             <div className="invisible h-30px"></div>
           </div>
         )}
       </div>
-      <button
-        type="button"
-        className={`flex items-center justify-center gap-8px rounded-xs px-32px py-14px ${isSelected ? 'pointer-events-none border border-stroke-brand-primary text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable' : 'bg-button-surface-strong-primary text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable'}`}
-        onClick={selectSubscriptionPlan}
-      >
-        <span className="text-lg font-medium">
-          {isSelected
-            ? t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECTED')
-            : t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.SELECT_THIS_PLAN')}
-        </span>
-        {!isSelected && <FiArrowRight size={24} />}
-      </button>
+
+      {/* Info: (20250421 - Julian) 這裡的按鈕是用來選擇方案的，當前選擇的方案會 disable */}
+      {btnContent}
+
       <ul className="flex min-h-350px flex-col gap-4px text-xs">
-        {plan.id === TPlanType.PROFESSIONAL && (
+        {(isProfessional || isTrial) && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
             <p className="font-semibold">
@@ -168,7 +267,7 @@ const SubscriptionPlan = ({
           </li>
         )}
 
-        {plan.id === TPlanType.ENTERPRISE && (
+        {isEnterprise && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
             <p className="font-semibold">
@@ -240,7 +339,7 @@ const SubscriptionPlan = ({
           </span>
         </p>
       )}
-      {isDowngradeMessageModalOpen && (
+      {isDowngradeMessageModalOpen && isDowngrade && (
         <MessageModal
           messageModalData={downgradeMessageModal}
           isModalVisible={isDowngradeMessageModalOpen}

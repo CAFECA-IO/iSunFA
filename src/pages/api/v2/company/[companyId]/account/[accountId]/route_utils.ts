@@ -26,7 +26,6 @@ import { getManyVoucherByAccountV2 } from '@/lib/utils/repo/voucher.repo';
 import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
-import { initUserVoucherEntity } from '@/lib/utils/user_voucher';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { parsePrismaAssociateLineItemToEntity } from '@/lib/utils/formatter/associate_line_item.formatter';
 import { parsePrismaAssociateVoucherToEntity } from '@/lib/utils/formatter/associate_voucher.formatter';
@@ -245,16 +244,25 @@ export const voucherGetByAccountAPIUtils = {
 
   isARorAPBeenWriteOff: (lineItemWithAssociate: ILineItemEntityWithAssociate): boolean => {
     const targetAccountId = lineItemWithAssociate.account.id;
-    let writeOffAmount = lineItemWithAssociate.amount;
+    let remainingAmount = lineItemWithAssociate.amount;
     lineItemWithAssociate.lineItemsAssociateThatWriteOffMe.forEach((associate) => {
       const isSameAccount = associate.resultLineItem.account.id === targetAccountId;
+      const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
+      // Info: (20250423 - Anna) associate.amount 替換為 associate.resultLineItem.amount
+      const adjustedAmount = associate.resultLineItem.amount * (isSameDirection ? 1 : -1);
+
+      // Info: (20250423 - Anna) Debug
+      // eslint-disable-next-line no-console
+      // console.log('📦 lineItemWithAssociate:', JSON.stringify(lineItemWithAssociate, null, 2));
+      // eslint-disable-next-line no-console
+      // console.log('📦 associate:', JSON.stringify(associate, null, 2));
 
       if (isSameAccount) {
-        const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
-        writeOffAmount += associate.amount * (isSameDirection ? 1 : -1);
+        remainingAmount += adjustedAmount;
       }
     });
-    return writeOffAmount === 0;
+    // Info: (20250423 - Anna) 是否剩餘金額為0
+    return remainingAmount === 0;
   },
 
   isARorAPWriteOffOriginalVoucher: (
@@ -420,10 +428,5 @@ export const voucherGetByAccountAPIUtils = {
       ...issuer,
       imageFile,
     };
-  },
-
-  initUserVoucherEntities: (voucher: IGetManyVoucherResponseButOne) => {
-    const userVoucherEntities = voucher.UserVoucher.map(initUserVoucherEntity);
-    return userVoucherEntities;
   },
 };

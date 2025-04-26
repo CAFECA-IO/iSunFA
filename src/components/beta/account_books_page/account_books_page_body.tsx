@@ -17,7 +17,6 @@ import CreateAccountBookModal from '@/components/beta/account_books_page/create_
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
-import EditInfoModal from '@/components/beta/account_books_page/edit_info_modal';
 import { SortBy, SortOrder } from '@/constants/sort';
 
 const AccountBooksPageBody = () => {
@@ -38,9 +37,7 @@ const AccountBooksPageBody = () => {
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEditInfo, setAccountBookToEditInfo] = useState<
-    IAccountBookWithTeam | undefined
-  >();
+
   const [totalPage, setTotalPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
@@ -63,16 +60,16 @@ const AccountBooksPageBody = () => {
     if (!accountBookToDelete) return;
 
     try {
-      const data = await deleteAccountBook(accountBookToDelete.id);
+      const success = await deleteAccountBook(accountBookToDelete.id);
 
-      if (!data) {
+      if (!success) {
         // Deprecated: (20241115 - Liz)
         // eslint-disable-next-line no-console
         console.log('刪除帳本失敗');
         return;
       }
 
-      setRefreshKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1); // Info: (20250418 - Liz) 更新帳本清單
     } catch (error) {
       // Deprecated: (20241115 - Liz)
       // eslint-disable-next-line no-console
@@ -144,7 +141,6 @@ const AccountBooksPageBody = () => {
             setAccountBookToEdit={setAccountBookToEdit}
             setAccountBookToDelete={setAccountBookToDelete}
             setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-            setAccountBookToEditInfo={setAccountBookToEditInfo}
             setRefreshKey={setRefreshKey}
             shouldGroupByTeam
           />
@@ -184,14 +180,6 @@ const AccountBooksPageBody = () => {
         <UploadCompanyPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-          setRefreshKey={setRefreshKey}
-        />
-      )}
-
-      {accountBookToEditInfo && (
-        <EditInfoModal
-          accountBookToEditInfo={accountBookToEditInfo}
-          setAccountBookToEditInfo={setAccountBookToEditInfo}
           setRefreshKey={setRefreshKey}
         />
       )}

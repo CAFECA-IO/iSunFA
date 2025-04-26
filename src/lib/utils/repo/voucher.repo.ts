@@ -12,7 +12,7 @@ import {
   AssociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import type { ILineItem, ILineItemEntity } from '@/interfaces/line_item';
 import { PUBLIC_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { CASH_AND_CASH_EQUIVALENTS_CODE } from '@/constants/cash_flow/common_cash_flow';
@@ -40,9 +40,9 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { JOURNAL_EVENT } from '@/constants/journal';
 
 import {
-  AccountCodesOfAP,
+  // AccountCodesOfAP,
   AccountCodesOfAPRegex,
-  AccountCodesOfAR,
+  // AccountCodesOfAR,
   AccountCodesOfARRegex,
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
@@ -625,7 +625,9 @@ export async function postVoucherV2({
           );
 
           if (!resultLineItem) {
-            throw new Error('resultLineItem is not found in postVoucherV2 in voucher.repo.ts');
+            const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
+            error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+            throw error;
           }
 
           await tx.event.create({
@@ -958,7 +960,6 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
               include: {
                 invoices: true,
                 file: true,
-                UserCertificate: true,
               },
             },
           },
@@ -1076,7 +1077,6 @@ export async function getOneVoucherByVoucherNoV2(options: {
               include: {
                 invoices: true,
                 file: true,
-                UserCertificate: true,
               },
             },
           },
@@ -1456,7 +1456,6 @@ export async function getManyVoucherV2(options: {
             imageFile: true,
           },
         },
-        UserVoucher: true,
         originalVouchers: {
           include: {
             event: true,
@@ -1769,7 +1768,6 @@ export async function getManyVoucherByAccountV2(options: {
             imageFile: true,
           },
         },
-        UserVoucher: true,
         originalVouchers: {
           include: {
             event: true,
@@ -1828,149 +1826,6 @@ export async function getManyVoucherByAccountV2(options: {
   };
 
   return returnValue;
-}
-
-export async function getUnreadVoucherCount(options: {
-  userId: number;
-  tab: VoucherListTabV2;
-  where: Prisma.VoucherWhereInput;
-}) {
-  const { userId, where, tab } = options;
-  let unreadVoucherCount = 0;
-
-  function getStatusFilter(voucherListTab: VoucherListTabV2) {
-    switch (voucherListTab) {
-      case VoucherListTabV2.UPLOADED:
-      case VoucherListTabV2.PAYMENT:
-      case VoucherListTabV2.RECEIVING:
-        return JOURNAL_EVENT.UPLOADED;
-      case VoucherListTabV2.UPCOMING:
-        return JOURNAL_EVENT.UPCOMING;
-
-      default:
-        return undefined;
-    }
-  }
-
-  function generateOrCode(voucherListTab: VoucherListTabV2) {
-    switch (voucherListTab) {
-      case VoucherListTabV2.PAYMENT:
-        return AccountCodesOfAP.map((code) => ({
-          lineItems: {
-            some: {
-              account: {
-                code: {
-                  startsWith: code,
-                },
-              },
-            },
-          },
-        }));
-      case VoucherListTabV2.RECEIVING:
-        return AccountCodesOfAR.map((code) => ({
-          lineItems: {
-            some: {
-              account: {
-                code: {
-                  startsWith: code,
-                },
-              },
-            },
-          },
-        }));
-      case VoucherListTabV2.UPLOADED:
-      case VoucherListTabV2.UPCOMING:
-      default:
-        return [];
-    }
-  }
-
-  try {
-    const orCondition = generateOrCode(tab);
-    const isOrNeeded = orCondition.length > 0;
-    const status = getStatusFilter(tab);
-    const readVoucherCount = await prisma.voucher.count({
-      where: {
-        ...where,
-        status,
-        UserVoucher: {
-          some: {
-            userId,
-            isRead: true,
-          },
-        },
-        ...(isOrNeeded && { OR: orCondition }),
-      },
-    });
-
-    const totalVoucherCount = await prisma.voucher.count({
-      where: {
-        ...where,
-        status,
-        ...(isOrNeeded && { OR: orCondition }),
-      },
-    });
-    unreadVoucherCount = totalVoucherCount - readVoucherCount;
-  } catch (error) {
-    loggerError({
-      userId: DefaultValue.USER_ID.SYSTEM,
-      errorType: 'Count unread voucher in getUnreadVoucherCount failed',
-      errorMessage: error as Error,
-    });
-  }
-
-  return unreadVoucherCount;
-}
-
-export async function upsertUserReadVoucher(options: {
-  voucherIds: number[];
-  userId: number;
-  nowInSecond: number;
-}): Promise<void> {
-  const alreadyInDBVoucherIds = await prisma.userVoucher.findMany({
-    where: {
-      userId: options.userId,
-      voucherId: {
-        in: options.voucherIds,
-      },
-    },
-    select: {
-      voucherId: true,
-    },
-  });
-  const alreadyInDBVoucherIdsSet = new Set(
-    alreadyInDBVoucherIds.map((voucher) => voucher.voucherId)
-  );
-
-  const notInDBVoucherIds = options.voucherIds.filter((voucherId) => {
-    return !alreadyInDBVoucherIdsSet.has(voucherId);
-  });
-
-  const updateJob = prisma.userVoucher.updateMany({
-    where: {
-      userId: options.userId,
-      voucherId: {
-        in: Array.from(alreadyInDBVoucherIdsSet),
-      },
-      isRead: false,
-    },
-    data: {
-      isRead: true,
-      updatedAt: options.nowInSecond,
-    },
-  });
-
-  const createJob = prisma.userVoucher.createMany({
-    data: notInDBVoucherIds.map((voucherId) => ({
-      userId: options.userId,
-      voucherId,
-      isRead: true,
-      createdAt: options.nowInSecond,
-      updatedAt: options.nowInSecond,
-    })),
-  });
-
-  await Promise.all([updateJob, createJob]);
 }
 
 export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {

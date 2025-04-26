@@ -62,10 +62,8 @@
   },
 
   "ROLE": {
-    "BOOKKEEPER": "Bookkeeper",
-    "EDUCATIONAL_TRIAL_VERSION": "Educational Trial Version",
-    "EDUCATIONAL": "Educational",
-    "TRIAL_VERSION": "Trial Version",
+    "INDIVIDUAL": "Individual",
+    "ACCOUNTING_FIRMS": "Accounting Firms",
     "ENTERPRISE": "Enterprise"
   },
 
@@ -76,11 +74,14 @@
     "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
 
     "COMMON_FUNCTIONS": "Common Functions",
-    "COMMON_FUNCTIONS_FOR_BOOKKEEPER": "General Ledger, Voucher Issuance, Preparation of Financial and Tax Reports",
-    "COMMON_FUNCTIONS_FOR_EDUCATIONAL_TRIAL_VERSION": "General Ledger, Voucher Issuance",
+    "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "Voucher Management, Journal Entry Management, Accounts Receivable & Payable Management, Financial Statements, Trial Balance, General Ledger",
+    "COMMON_FUNCTIONS_FOR_ACCOUNTING_FIRMS": "Voucher Management, Journal Entry Management, Financial Statements, General Ledger, Trial Balance, Financial Disclosure",
+    "COMMON_FUNCTIONS_FOR_ENTERPRISE": "Voucher Management, Journal Entry Management, Accounts Receivable & Payable Management, Asset Management, Financial Statements, General Ledger, Trial Balance, Financial Disclosure, Customer Relationship Management",
+
     "DEFAULT_INTRODUCTION": "iSunFA offers various roles for users to choose from, each with its own dedicated interface and commonly used features. You can select the role that best suits your needs, allowing iSunFA to assist you in your work. The key advantage of iSunFA lies in its role-optimized interface and AI-integrated accounting, enabling you to complete tasks more efficiently!",
-    "BOOKKEEPER_INTRODUCTION": "A bookkeeper is a professional financial worker responsible for managing the daily financial records and accounting tasks of a business or individual. Their primary duties include preparing accounting vouchers, recording entries in ledgers, reconciling accounts, and generating financial statements to ensure the accuracy and completeness of financial information.",
-    "EDUCATIONAL_TRIAL_VERSION_INTRODUCTION": "The iSunFA Student Version is an educational tool tailored for students and interns in the accounting field. It offers practical hands-on experience in managing financial tasks such as creating accounting vouchers, journal entries, and reconciling accounts. It's ideal for building a solid foundation in financial management and preparing for professional bookkeeping or accounting roles."
+    "INDIVIDUAL_INTRODUCTION": "Individual users can use the Sunshine Smart Accounting Platform to take on freelance financial tasks for businesses or to establish a professional process for their own bookkeeping and tax reporting. The platform provides automated voucher sorting, real-time report generation, and simplified tax tools, enabling even those without an accounting background to manage finances with ease.",
+    "ACCOUNTING_FIRMS_INTRODUCTION": "Users from CPA firms and bookkeeping offices can use the platform to manage the accounts of multiple businesses in an integrated way, providing professional financial statements, audit, and tax services. The system supports batch processing of journal entries and reports, hierarchical permission controls, and cross-client management to improve service efficiency and regulatory compliance.",
+    "ENTERPRISE_INTRODUCTION": "Corporate users can systematically manage their company's financial operations using the Sunshine Smart Accounting Platform. They can also export required financial reports for investor pitch decks or government grant applications. The platform supports financial disclosure and trial balances to help companies build financial transparency and compliance."
   },
 
   "SELECT_ROLE_PAGE": {
@@ -155,21 +156,26 @@
     "TEAM": "Team",
     "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
     "ENTER_NAME": "Enter Name",
+    "RESPONSIBLE_PERSON": "Responsible Person",
+    "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
     "ENTER_TAX_ID": "Enter Tax ID",
-    "ENTER_FULL_ADDRESS": "Please enter the full address",
     "CANCEL": "Cancel",
     "ADD": "Add",
+    "NEXT": "Next",
     "CHOOSE_WORK_TAG": "Choose Work Tag",
     "CHOOSE_TEAM": "Choose Team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
 
-    "COMPANY_ADDRESS": "Company Address",
+    "CONTACT_INFO": "Contact Info",
+    "CONTACT_PERSON": "Contact Person",
+    "ENTER_CONTACT_PERSON": "Enter Name",
+    "SAME_AS_RESPONSIBLE_PERSON": "Same as Responsible Person",
+    "BUSINESS_ADDRESS": "Business Address",
     "CHOOSE_CITY": "Choose City",
     "CHOOSE_DISTRICT": "Choose District",
-    "RESPONSIBLE_PERSON": "Responsible Person",
-    "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
+    "ENTER_FULL_ADDRESS": "Please enter the full address",
 
     "TAX_SERIAL_NUMBER": "Tax Serial Number",
     "ENTER_TAX_SERIAL_NUMBER": "Enter Tax Serial Number",
@@ -182,5 +188,59 @@
     "PLEASE_ENTER_TAX_SERIAL_NUMBER": "Please enter tax serial number",
     "PLEASE_SELECT_A_WORK_TAG": "Please select a work tag",
     "PLEASE_SELECT_A_TEAM": "Please select a team"
+  },
+
+  "STEP_TWO_BUSINESS_TAX_SETTING": {
+    "BACK": "Back",
+    "BUSINESS_TAX_SETTING": "Business Tax Setting",
+    "DECLARATION_SETTING": "Declaration Setting",
+    "DECLARANT": "Declarant",
+    "DECLARANT_NAME": "Name",
+    "ENTER_DECLARANT_NAME": "Enter Name",
+    "DECLARANT_PERSONAL_ID": "Personal ID",
+    "ENTER_DECLARANT_PERSONAL_ID": "Enter Personal ID",
+    "PHONE_NUMBER": "Phone Number",
+    "ENTER_PHONE_NUMBER": "Enter Phone Number",
+    "DECLARANT_NAME_REQUIRED": "Please enter the name",
+    "DECLARANT_PERSONAL_ID_REQUIRED": "Please enter personal ID",
+    "PHONE_NUMBER_REQUIRED": "Please enter phone number"
+  },
+
+  "FILING_FREQUENCY": {
+    "FILING_FREQUENCY": "Filing Frequency",
+    "SELECT_FILING_FREQUENCY": "Select Filing Frequency",
+    "BIMONTHLY_FILING": "Bimonthly Filing",
+    "MONTHLY_FILING": "Monthly Filing",
+    "EVERY_TWO_MONTHS": "Every Two Months",
+    "EVERY_MONTH": "Every Month",
+    "FILING_FREQUENCY_REQUIRED": "Please select a filing frequency"
+  },
+
+  "FILING_METHOD": {
+    "FILING_METHOD": "Filing Method",
+    "SELECT_FILING_METHOD": "Select Filing Method",
+    "SINGLE_ENTITY_FILING": "Single Entity Filing",
+    "CONSOLIDATED_FILING": "Consolidated Filing",
+    "INDIVIDUAL_FILING": "Individual Filing",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "Single Head Office without Branch Units",
+    "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "Head Office Files for All Branches",
+    "EACH_UNIT_FILES_SEPARATELY": "Each Unit Files Separately",
+    "FILING_METHOD_REQUIRED": "Please select a filing method"
+  },
+
+  "DECLARANT_FILING_METHOD": {
+    "DECLARANT_FILING_METHOD": "Declarant Filing Method",
+    "SELECT_DECLARANT_FILING_METHOD": "Select Declarant Filing Method",
+    "SELF_FILING": "Self Filing",
+    "AGENT_FILING": "Agent Filing",
+    "DECLARANT_FILING_METHOD_REQUIRED": "Please select a declarant filing method"
+  },
+
+  "AGENT_FILING_ROLE": {
+    "ACCOUNTANT": "Accountant",
+    "BOOKKEEPER": "Bookkeeper",
+    "BOOKKEEPER_AND_FILING_AGENT": "Bookkeeper and Filing Agent",
+    "I_AM": "I am...",
+    "AGENT_FILING_ROLE_REQUIRED": "Please fill in the agent filing information"
   }
 }

@@ -9,22 +9,22 @@
   "CTA": {
     "MAIN_TITLE": "Your Gateway to the\nFuture of Accounting",
     "MAIN_DESCRIPTION": "A comprehensive accounting service platform that\naddresses all financial matters.",
-    "FREE_TRIAL_BTN": "Start Your Free Trial Now",
-    "BUSINESS_DESCRIPTION": "Helping companies with\nbookkeeping and tax operations",
-    "BUSINESS_BTN": "Apply Business Account",
-    "FIRM_DESCRIPTION": "Providing clients with financial\nstatements",
-    "FIRM_BTN": "Apply Firm Account",
-    "PERSONAL_DESCRIPTION": "Outsourcing financial work through\nthe platform",
-    "PERSONAL_BTN": "Apply Personal Account"
+    "FREE_TRIAL_BTN": "Free Trial",
+    "BUSINESS_DESCRIPTION": "Offering bookkeeping and tax services tailored to support companies in securing venture capital and applying for government subsidies.",
+    "BUSINESS_BTN": "Apply for Business Account",
+    "FIRM_DESCRIPTION": "Delivering comprehensive accounting reports and offering professional financial auditing and assurance services to clients.",
+    "FIRM_BTN": "Apply for Firm Account",
+    "PERSONAL_DESCRIPTION": "Providing financial services through the platform.",
+    "PERSONAL_BTN": "Apply for Personal Account"
   },
   "EASY_TO_USE": {
     "MAIN_TITLE": "Easy to Use Without Accounting Expertise",
-    "AUTOMATED_TITLE": "Automated input &\nreal-time analysis",
-    "AUTOMATED_DESCRIPTION": "Generates financial statements\nevery 24 hours",
-    "SIMPLY_TITLE": "Simply take a photo to\nrecord transactions",
-    "SIMPLY_DESCRIPTION": "Saves 85% of daily workflows",
-    "AI_TITLE": "AI-assistant",
-    "AI_DESCRIPTION": "Increases audit efficiency by 150\ntimes"
+    "AUTOMATED_TITLE": "Smart Analysis & Real-Time Audit",
+    "AUTOMATED_DESCRIPTION": "Generate financial reports every 24 hours to achieve true continuous auditing, empowering you to navigate valuation and due diligence with confidence.",
+    "SIMPLY_TITLE": "Record Data with Just a Photo",
+    "SIMPLY_DESCRIPTION": "Save 85% of your daily bookkeeping workload and stay focused on creating value through your products, services, and customers.",
+    "AI_TITLE": "AI-Powered Audit Assistance",
+    "AI_DESCRIPTION": "Boost audit efficiency by up to 150x with automated reconciliation of transactions and invoices, early anomaly detection, and precise alignment with government subsidy requirements to secure every available resource for your business."
   },
   "GLOBAL_MAP": {
     "MAIN_TITLE": "Suitable for Local Businesses to\nMultinational Corporations",
@@ -78,16 +78,16 @@
     "TW_GAAP_2": "Intelligent Evaluation",
     "TW_GAAP_3": "Integrates advanced GPT technology",
     "TECHNICAL_PATENTS": "Technical Patents",
-    "EFFICIENT_TITLE": "Efficient Peer-to-Peer Network Architecture",
-    "EFFICIENT_DESCRIPTION": "Through a bio-inspired routing model and role-based mechanism, we develop a highly efficient peer-to-peer network architecture. This system enables fast communication and protocol execution, supporting a blockchain system operating near traditional database efficiency. This ensures seamless handling of vast access requests from zero-knowledge bookkeeping (zk-bookkeeping) while minimizing data tampering risks.",
-    "DECENTRALIZED_TITLE": "Decentralized Identity Verification",
-    "DECENTRALIZED_DESCRIPTION": "We authenticate user identity using elliptic curve digital signature technology. Users provide proof of identity, validity period, purpose, and supplementary information, generating a time-limited and authorized identity certificate using a designated private key. This independent verification process ensures each zero-knowledge bookkeeping entry is endorsed by professionals or enterprises, deterring errors in bookkeeping.",
-    "ZK_PROOF_TITLE": "ZK- Proof Blockchain Preservation of Evidence",
-    "ZK_PROOF_DESCRIPTION": "Our method transforms data into matrix format, incorporating noise data and performing coordinate axis rotations. This process creates verifiable metadata consistent with the original data but cannot be reversed to obtain the original data.",
-    "REAL_TIME_TITLE": "Real-Time Generation of Accounting Reports Based on ZK- Proof Blockchain Preservation of Evidence",
-    "REAL_TIME_DESCRIPTION": "By embedding difference value metadata of accounting reports into the noise injection process, we achieve zero-knowledge bookkeeping. This enables real-time generation of accounting reports, including reporting period, list of included metadata, and environmental parameters like exchange rates, based on zero-knowledge blockchain certification.",
-    "AUDIT_TITLE": "Audit Method Based on ZK- Proof Blockchain Preservation of Evidence",
-    "AUDIT_DESCRIPTION": "Using specific algorithms, audits are swiftly conducted to verify the existence, order, and accuracy of metadata in accounting reports. The zero-knowledge proof method confirms metadata authenticity and consistency with the blockchain. This ensures an efficient audit method based on zero-knowledge blockchain certification."
+    "EFFICIENT_TITLE": "High-Efficiency Peer-to-Peer Network Architecture",
+    "EFFICIENT_DESCRIPTION": "By using a biological infection path model and a role division mechanism, we have designed a high-performance peer-to-peer network architecture. This architecture features fast communication and rapid protocol negotiation, enabling a blockchain platform that operates with efficiency comparable to traditional database systems, achieving high-speed computation and real-time consensus. Integrated with homomorphic encryption mechanisms, this blockchain network can securely process and store large amounts of financial data, support frequent access demands, and perform verification and computation without decrypting the data, effectively protecting privacy.",
+    "DECENTRALIZED_TITLE": "Decentralized Identity Verification Mechanism",
+    "DECENTRALIZED_DESCRIPTION": "Using elliptic curve digital signature technology based on a special process, user identities can be securely verified without transmitting private information to centralized systems. During identity verification, users must submit an identity declaration that includes validity time, applicable location, usage description, and supplementary information, and sign the declaration with their exclusive private key. This signature generates a time-sensitive and permission-limited identity credential, which can be verified by anyone through a public verification algorithm, without relying on centralized organizations or third-party services.",
+    "ZK_PROOF_TITLE": "Homomorphic Encryption Blockchain Evidence Method",
+    "ZK_PROOF_DESCRIPTION": "By transforming the raw data into matrix form and performing irreversible matrix operations to enhance its data dimensions, we then introduce random noise and apply multi-axis coordinate rotation. This process generates encrypted metadata with mathematical verifiability. While protecting data privacy, this metadata retains part of the original data's structure and characteristics, making it suitable for common mathematical and accounting operations such as summation, comparison, and trend analysis. This feature is highly suitable for accounting scenarios that balance data privacy, audit transparency, and compliance.",
+    "REAL_TIME_TITLE": "Real-Time Accounting Report Generation Mechanism Based on Homomorphic Encryption Blockchain Evidence",
+    "REAL_TIME_DESCRIPTION": "Building on the matrix transformation and multi-axis rotation encryption architecture, we further embed the difference value metadata of accounting reports into the noise addition process, creating a homomorphic encryption record system with privacy protection and verifiability. Each record, after encryption, retains its differential characteristics relative to accounting changes. By summing and cross-verifying all difference value metadata for a specified period, accounting reports can be generated in real-time without compromising privacy. This report, combined with the blockchain’s immutable evidence mechanism, ensures that each version is traceable, verifiable, and timely, ensuring data consistency and establishing a digital financial infrastructure that supports continuous auditing and real-time valuation.",
+    "AUDIT_TITLE": "Audit Method Based on Homomorphic Encryption Blockchain Evidence",
+    "AUDIT_DESCRIPTION": "The real-time accounting reports generated through the homomorphic encryption framework can be further integrated with blockchain and zero-knowledge proof technologies to achieve an audit process with privacy protection, high credibility, and efficiency. The process includes metadata integrity and consistency verification, identity and signature validation, as well as the derivation and verification of homomorphic encrypted data. Through this mechanism, auditing can be conducted without relying on third-party intermediaries and without exposing the original data, significantly improving audit efficiency, trust, and anti-counterfeiting capabilities, laying a solid foundation for continuous auditing and intelligent compliance."
   },
   "HAPPY_CUSTOMER": {
     "MAIN_TITLE": "Trusted by Happy Customer",

@@ -32,7 +32,7 @@ const PlanComparison: React.FC = () => {
     'UNSUBSCRIBE',
   ];
 
-  const plans = ['BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
+  const plans = ['TRIAL', 'BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
 
   const formatText = (text: string) => {
     return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {

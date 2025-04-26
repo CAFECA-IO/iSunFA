@@ -68,8 +68,8 @@
     "ACCOUNTING_SETTING_TITLE": "会计设定",
     "PERIOD_SETTINGS_SUBTITLE": "期间设定",
     "EVERY": "每",
-    "MONTH": "月",
-    "WEEK": "周",
+    "MONTHLY": "月",
+    "WEEKLY": "周",
     "FISCAL_YEAR": "会计年度",
     "FISCAL_YEAR_PERIOD": "会计年度期间",
     "GENERATE_REPORT_1": "报告将在结束日期后",
@@ -168,5 +168,31 @@
   },
   "ERROR": {
     "FETCH_DATA": "获取数据时出错，请稍后重试。"
+  },
+  "ACCOUNT_BOOK_INFO": {
+    "ACCOUNT_BOOK_INFORMATION": "帐本信息",
+    "COMPANY_NAME": "公司名称",
+    "ENTER_NAME": "输入公司名称",
+    "BUSINESS_TAX_ID_NUMBER": "统一编号",
+    "ENTER_NUMBER": "输入号码",
+    "TAX_SERIAL_NUMBER": "税籍编号",
+    "COMPANY_REPRESENTATIVE_NAME": "公司负责人姓名",
+    "ENTER_REPRESENTATIVE_NAME": "输入负责人姓名",
+    "COUNTRY_OF_INCORPORATION": "注册国家",
+    "SELECT_COUNTRY": "选择国家",
+    "PHONE_NUMBER": "电话号码",
+    "COMPANY_ADDRESS": "公司地址",
+    "PLEASE_ENTER_THE_FULL_ADDRESS": "请输入完整地址",
+    "REMOVE_ACCOUNT_BOOK": "删除帐本",
+    "CANCEL": "取消",
+    "SAVE": "保存",
+    "REMOVE": "删除",
+
+    "REMOVE_ACCOUNT_BOOK_CONFIRM": "您确定要删除这个帐本吗？",
+    "REMOVE_ACCOUNT_BOOK_FAIL": "删除帐本失败",
+    "REMOVE_ACCOUNT_BOOK_SUCCESS": "删除帐本成功",
+    "GET_ACCOUNT_BOOK_FAIL": "获取帐本信息失败",
+    "UPDATE_ACCOUNT_BOOK_FAIL": "更新帐本信息失败",
+    "UPDATE_ACCOUNT_BOOK_SUCCESS": "更新帐本信息成功"
   }
 }

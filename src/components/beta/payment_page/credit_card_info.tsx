@@ -1,5 +1,7 @@
-import { Dispatch, SetStateAction, useEffect } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
+import { PiSpinner } from 'react-icons/pi';
 import { IPlan, IUserOwnedTeam } from '@/interfaces/subscription';
 import SimpleToggle from '@/components/beta/subscriptions_page/simple_toggle';
 import { FiPlusCircle } from 'react-icons/fi';
@@ -11,6 +13,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -26,14 +29,15 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  // Deprecated: (20250220 - Tzuhan) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setIsDirty,
   isHideSubscribeButton,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { bindingResult, userAuth, paymentMethod, handlePaymentMethod } = useUserCtx();
   const { toastHandler } = useModalContext();
+  const router = useRouter();
+
+  const [isSubscribeBtnDisabled, setIsSubscribeBtnDisabled] = useState(false);
 
   // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
   const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
@@ -46,7 +50,37 @@ const CreditCardInfo = ({
     APIName.USER_PAYMENT_METHOD_LIST
   );
 
+  // Info: (20250418 - Julian) 更新訂閱方案 API
   const { trigger: updateSubscriptionAPI } = APIHandler(APIName.USER_PAYMENT_METHOD_CHARGE);
+
+  // Info: (20250418 - Julian) 發送 email API
+  const { trigger: sendEmail } = APIHandler<void>(APIName.EMAIL);
+
+  // ToDo: (20250418 - Julian) During the development
+  const sendEmailHandler = async () => {
+    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+
+    // Info: (20250418 - Julian) dummy data
+    const invoiceId = '1234567890';
+
+    sendEmail({
+      header: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: {
+        title: 'iSunFA Invoice',
+        content: `<div><h3>發票編號: ${invoiceId}，請參考附件</h3><p>${now}<p></div>`,
+        attachments: [
+          {
+            filename: `${t('subscriptions:INVOICE_PAGE.INVOICE_TITLE')} ${invoiceId}.pdf`,
+            // path: '/files/invoice_19.pdf',
+          },
+        ],
+      },
+    });
+
+    // Deprecated: (20250418 - Julian) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('sendEmailHandler');
+  };
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
   const getCreditCardInfo = async () => {
@@ -67,6 +101,9 @@ const CreditCardInfo = ({
           content: t('subscriptions:PAYMENT_PAGE.TOAST_GET_CREDIT_CARD_INFO_FAILED'),
           closeable: true,
         });
+
+        // Info: (20250418 - Julian) 發送 email
+        sendEmailHandler();
       }
     } catch (error) {
       // Info: (20250324 - Julian) 顯示錯誤訊息
@@ -101,6 +138,11 @@ const CreditCardInfo = ({
   const updateSubscription = async () => {
     if (!(userAuth && paymentMethod)) return;
 
+    // Info: (20250414 - Julian) 執行中，禁用訂閱按鈕
+    setIsSubscribeBtnDisabled(true);
+    // Info: (20250414 - Julian) 取消阻止離開頁面
+    setIsDirty(false);
+
     try {
       const { success } = await updateSubscriptionAPI({
         params: {
@@ -120,6 +162,9 @@ const CreditCardInfo = ({
           content: t('subscriptions:PAYMENT_PAGE.TOAST_SUBSCRIPTION_SUCCESS'),
           closeable: true,
         });
+
+        // Info: (20250414 - Julian) 導引到訂閱管理首頁
+        router.push(ISUNFA_ROUTE.SUBSCRIPTIONS);
       } else {
         toastHandler({
           id: 'UPDATE_SUBSCRIPTION_FAILED',
@@ -136,6 +181,9 @@ const CreditCardInfo = ({
         closeable: true,
       });
     }
+
+    // Info: (20250414 - Julian) 完成後，啟用訂閱按鈕
+    setIsSubscribeBtnDisabled(false);
   };
 
   /* Info: (20250220 - Tzuhan) 為串接 HiTrust 金流測試: 會替換成跳轉至 HiTrust 金流頁面
@@ -177,6 +225,19 @@ const CreditCardInfo = ({
     }
   };
   */
+
+  const subscribeBtn = isSubscribeBtnDisabled ? (
+    <Button type="button" variant="default" size="large" disabled className="hover:cursor-progress">
+      {t('subscriptions:PAYMENT_PAGE.PROCESSING')}{' '}
+      <div className="animate-spin">
+        <PiSpinner />
+      </div>
+    </Button>
+  ) : (
+    <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+      {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
+    </Button>
+  );
 
   return (
     <section className="flex flex-auto flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
@@ -227,11 +288,7 @@ const CreditCardInfo = ({
       </div>
 
       {/* Info: (20250326 - Julian) 在 CreateTeamModal 不需要顯示按鈕 */}
-      {!isHideSubscribeButton && (
-        <Button type="button" variant="default" size="large" onClick={updateSubscription}>
-          {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
-        </Button>
-      )}
+      {!isHideSubscribeButton && subscribeBtn}
     </section>
   );
 };

@@ -19,21 +19,17 @@ export const AUTH_WHITELIST = {
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
-export const AUTH_CHECK = {
+export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.CREATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SETTING_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PUT_ICON]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_SETTING_UPDATE]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_ADD]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_UPDATE]: [AuthFunctionsKeysNew.user],
   [APIName.COUNTERPARTY_DELETE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.COMPANY_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PENDING_TASK_GET]: [AuthFunctionsKeysNew.user],
   [APIName.USER_ROLE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.USER_SELECT_ROLE]: [AuthFunctionsKeysNew.user],
   [APIName.USER_CREATE_ROLE]: [AuthFunctionsKeysNew.user],
@@ -60,6 +56,8 @@ export const AUTH_CHECK = {
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.INPUT_CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
+  [APIName.OUTPUT_CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_LIST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_POST_V2]: [AuthFunctionsKeysNew.user],
   [APIName.CERTIFICATE_GET_V2]: [AuthFunctionsKeysNew.user],
@@ -111,7 +109,6 @@ export const AUTH_CHECK = {
   [APIName.CREATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ASSET_V2]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ASSET_V2]: [AuthFunctionsKeysNew.user],
-  [APIName.ASSET_SUGGESTED_NUMBER_GET_BY_TYPE]: [AuthFunctionsKeysNew.user],
   [APIName.LEDGER_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.TRIAL_BALANCE_EXPORT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_ASSET_BULK]: [AuthFunctionsKeysNew.user],
@@ -154,6 +151,8 @@ export const AUTH_CHECK = {
   [APIName.USER_PAYMENT_METHOD_CHARGE]: [AuthFunctionsKeysNew.user],
   [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: [AuthFunctionsKeysNew.user],
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
-  [APIName.ACCOUNT_BOOK_CREATE]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
+  [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
 };
