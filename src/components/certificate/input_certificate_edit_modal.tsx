@@ -18,7 +18,7 @@ import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
-import Magnifier from '@/components/magnifier/magifier';
+import ImageZoom from '@/components/image_zoom/image_zoom';
 import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
@@ -377,7 +377,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
       <form
-        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-800px`}
+        className={`relative flex max-h-900px w-90vw max-w-95vw flex-col gap-4 overflow-y-hidden rounded-sm bg-surface-neutral-surface-lv2 px-8 py-4 md:max-h-96vh md:max-w-1000px`}
         onSubmit={(e) => e.preventDefault()} // Info: (20250414 - Anna) 防止表單預設行為
       >
         {/* Info: (20240924 - Anna) 關閉按鈕 */}
@@ -397,9 +397,13 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         />
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-        <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
+        <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-          <Magnifier imageUrl={certificate.file.url} className="w-210px min-w-210px" />
+          <ImageZoom
+            imageUrl={certificate.file.url}
+            className="max-h-640px min-h-510px w-440px"
+            controlPosition="bottom-right"
+          />
           {/* Info: (20240924 - Anna) 編輯表單 */}
           {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
