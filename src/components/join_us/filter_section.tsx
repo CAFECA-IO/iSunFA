@@ -16,9 +16,9 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   const typeOptions = ['All', 'My Favorite'];
   const locationOptions = ['All', 'Taipei'];
 
-  const [selectedType, setSelectedType] = useState('All');
-  const [selectedLocation, setSelectedLocation] = useState('All');
-  const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedType, setSelectedType] = useState<string>('All');
+  const [selectedLocation, setSelectedLocation] = useState<string>('All');
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
 
   useEffect(() => {
     filterJobs(

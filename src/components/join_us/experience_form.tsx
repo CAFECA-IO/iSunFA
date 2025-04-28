@@ -108,10 +108,10 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   const { t } = useTranslation(['hiring']);
   const milestoneRef = useRef<HTMLDivElement>(null);
 
-  const [isShowLeftArrow, setIsShowLeftArrow] = useState(false);
-  const [isShowRightArrow, setIsShowRightArrow] = useState(true);
-  const [isShowEducationModal, setIsShowEducationModal] = useState(false);
-  const [isShowWorkModal, setIsShowWorkModal] = useState(false);
+  const [isShowLeftArrow, setIsShowLeftArrow] = useState<boolean>(false);
+  const [isShowRightArrow, setIsShowRightArrow] = useState<boolean>(true);
+  const [isShowEducationModal, setIsShowEducationModal] = useState<boolean>(false);
+  const [isShowWorkModal, setIsShowWorkModal] = useState<boolean>(false);
 
   // ToDo: (20250411 - Julian) during the development
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
