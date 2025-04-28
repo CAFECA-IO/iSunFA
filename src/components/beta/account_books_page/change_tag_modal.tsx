@@ -9,22 +9,22 @@ import {
 } from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
-  accountBookToEdit: IAccountBookWithTeam;
-  setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  accountBookToChangeTag: IAccountBookWithTeam;
+  setAccountBookToChangeTag: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
   getAccountBookListByTeamId?: () => Promise<void>;
 }
 
 const ChangeTagModal = ({
-  accountBookToEdit,
-  setAccountBookToEdit,
+  accountBookToChangeTag,
+  setAccountBookToChangeTag,
   setRefreshKey,
   getAccountBookListByTeamId,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { updateAccountBook } = useUserCtx();
 
-  const [tag, setTag] = useState<WORK_TAG>(accountBookToEdit.tag);
+  const [tag, setTag] = useState<WORK_TAG>(accountBookToChangeTag.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,7 +33,7 @@ const ChangeTagModal = ({
   };
 
   const closeChangeTagModal = () => {
-    setAccountBookToEdit(undefined);
+    setAccountBookToChangeTag(undefined);
   };
 
   // Info: (20241113 - Liz) 打 API 變更公司的 tag
@@ -46,7 +46,7 @@ const ChangeTagModal = ({
 
     try {
       const success = await updateAccountBook({
-        accountBookId: accountBookToEdit.id.toString(),
+        accountBookId: accountBookToChangeTag.id.toString(),
         action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG,
         tag,
       });
@@ -98,7 +98,7 @@ const ChangeTagModal = ({
               type="text"
               placeholder="Enter number"
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
-              value={accountBookToEdit.name}
+              value={accountBookToChangeTag.name}
             />
           </div>
 
