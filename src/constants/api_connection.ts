@@ -192,7 +192,7 @@ export enum APIPath {
   VOUCHER_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
-  VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/company/:companyId/voucher/read`,
+  VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/read`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`,
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`,
   REPORT_GET_BY_ID = `${apiPrefixV2}/company/:companyId/report/public/:reportId`,
