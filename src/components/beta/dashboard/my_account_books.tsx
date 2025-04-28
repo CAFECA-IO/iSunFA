@@ -7,7 +7,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250428 - Liz) 預計替換成新版的建立帳本 Modal (AccountBookInfoModal)
+// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250428 - Liz) 預計會替換成這個 Modal !!
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';

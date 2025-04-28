@@ -45,6 +45,7 @@ export enum AGENT_FILING_ROLE {
 
 // Info: (20250421 - Liz) 第一步驟表單狀態
 export interface Step1FormState {
+  imageId: string;
   companyName: string;
   responsiblePerson: string;
   taxId: string;
@@ -71,6 +72,7 @@ export interface Step1FormState {
 }
 
 export const initialStep1FormState: Step1FormState = {
+  imageId: '',
   companyName: '',
   responsiblePerson: '',
   taxId: '',

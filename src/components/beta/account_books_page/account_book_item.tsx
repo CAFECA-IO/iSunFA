@@ -1,7 +1,8 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import { IAccountBookWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
-import { FiEdit2, FiTag, FiTrash2, FiMoreVertical } from 'react-icons/fi';
+import { FiTag, FiTrash2, FiMoreVertical } from 'react-icons/fi';
+import { TbBuilding } from 'react-icons/tb';
 import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { useTranslation } from 'next-i18next';
@@ -16,19 +17,19 @@ import { cn } from '@/lib/utils/common';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookWithTeam;
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToChangeTag: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const AccountBookItem = ({
   accountBook,
-  setAccountBookToTransfer,
   setAccountBookToEdit,
+  setAccountBookToTransfer,
+  setAccountBookToChangeTag,
   setAccountBookToDelete,
-  setAccountBookToUploadPicture,
   setRefreshKey,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
@@ -68,13 +69,16 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
   });
 
-  const modifyImagePermission = convertTeamRoleCanDo({
+  const editPermission = convertTeamRoleCanDo({
     teamRole,
     canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
   });
 
   const hasPermission =
-    deletePermission.can || editTagPermission.can || requestTransferPermission.can;
+    deletePermission.can ||
+    editTagPermission.can ||
+    requestTransferPermission.can ||
+    editPermission.can;
 
   const toggleOptionsDropdown = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsOptionsDropdownOpen((prev) => !prev);
@@ -85,6 +89,13 @@ const AccountBookItem = ({
     setIsOptionsDropdownOpen(false);
   };
 
+  // Info: (20250428 - Liz) 開啟編輯帳本 modal
+  const openEditAccountBookModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setAccountBookToEdit(accountBook);
+    closeOptionsDropdown();
+    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
+  };
+
   const openAccountBookTransferModal = (e: React.MouseEvent<HTMLButtonElement>) => {
     setAccountBookToTransfer(accountBook);
     closeOptionsDropdown();
@@ -92,19 +103,13 @@ const AccountBookItem = ({
   };
 
   const openChangeTagModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAccountBookToEdit(accountBook);
+    setAccountBookToChangeTag(accountBook);
     closeOptionsDropdown();
     e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
   const openDeleteCompanyModal = (e: React.MouseEvent<HTMLButtonElement>) => {
     setAccountBookToDelete(accountBook);
-    closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
-  };
-
-  const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAccountBookToUploadPicture(accountBook);
     closeOptionsDropdown();
     e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
@@ -204,26 +209,13 @@ const AccountBookItem = ({
       >
         {/* Info: (20250326 - Liz) Account Book Image & Name */}
         <section className="flex w-300px flex-auto items-center gap-24px">
-          <button
-            type="button"
-            onClick={openUploadCompanyPictureModal}
-            className="group relative"
-            disabled={!modifyImagePermission.can}
-          >
-            <Image
-              src={accountBook.imageId}
-              alt={accountBook.name}
-              width={60}
-              height={60}
-              className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
-            ></Image>
-
-            {modifyImagePermission.can && (
-              <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
-                <FiEdit2 size={24} />
-              </div>
-            )}
-          </button>
+          <Image
+            src={accountBook.imageId}
+            alt={accountBook.name}
+            width={60}
+            height={60}
+            className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
+          ></Image>
 
           <div className="flex items-center justify-between gap-8px">
             <p className="max-w-170px truncate text-base font-medium text-text-neutral-solid-dark">
@@ -265,6 +257,18 @@ const AccountBookItem = ({
 
             {isOptionsDropdownOpen && (
               <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
+                {/* Info: (20250428 - Liz) Edit Account Book */}
+                {requestTransferPermission.can && (
+                  <button
+                    type="button"
+                    onClick={openEditAccountBookModal}
+                    className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+                  >
+                    <TbBuilding size={16} className="text-icon-surface-single-color-primary" />
+                    <span>{t('account_book:EDIT_ACCOUNT_BOOK_MODAL.EDIT_ACCOUNT_BOOK')}</span>
+                  </button>
+                )}
+
                 {/* Info: (20250213 - Liz) Account Book Transfer */}
                 {requestTransferPermission.can && (
                   <button
