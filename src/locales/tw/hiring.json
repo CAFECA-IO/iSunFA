@@ -75,7 +75,15 @@
   },
   "SKILLS": {
     "LANGUAGE": "語言",
-    "CERTIFICATE": "證照"
+    "CERTIFICATE": "證照",
+    "LANGUAGE_MODAL_TITLE": "語言能力",
+    "LANGUAGE_MODAL_LANG": "語言",
+    "LANG_PLACEHOLDER": "中文、英文、西班牙文等...",
+    "LANGUAGE_MODAL_PROF": "熟練程度",
+    "PROF_ELEMENTARY": "基礎程度",
+    "PROF_LIMITED": "有限工作能力",
+    "PROF_PROFESSIONAL": "專業工作能力",
+    "PROF_NATIVE": "母語或雙語程度"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",
