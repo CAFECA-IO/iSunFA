@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FaPlus } from 'react-icons/fa6';
 import { FiTrash2 } from 'react-icons/fi';
 import { LuPencil } from 'react-icons/lu';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import LanguageModal from '@/components/join_us/language_modal';
 
 interface ISkillFormProps {
   toPrevStep: () => void;
@@ -39,14 +40,21 @@ const SkillItem: React.FC = () => {
 const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
 
+  const [isLangModal, setIsLangModal] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isCertModal, setIsCertModal] = useState<boolean>(false);
+
   const dummyLanguageList = Array.from({ length: 2 }, (_, i) => <SkillItem key={i} />);
+
+  const toggleLangModal = () => setIsLangModal((prev) => !prev);
+  const toggleCertModal = () => setIsCertModal((prev) => !prev);
 
   return (
     <div className="flex flex-col">
       <div className="grid w-full grid-cols-2 divide-x divide-landing-page-black2">
         {/* Info: (20250415 - Julian) Language List */}
         <div className="flex min-h-500px min-w-400px flex-col items-center gap-40px px-14px">
-          <LandingButton variant="primary" className="font-bold">
+          <LandingButton variant="primary" className="font-bold" onClick={toggleLangModal}>
             <FaPlus /> {t('hiring:SKILLS.LANGUAGE')}
           </LandingButton>
 
@@ -55,7 +63,7 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
 
         {/* Info: (20250415 - Julian) Certificate List */}
         <div className="flex min-h-500px min-w-400px flex-col items-center gap-40px px-14px">
-          <LandingButton variant="primary" className="font-bold">
+          <LandingButton variant="primary" className="font-bold" onClick={toggleCertModal}>
             <FaPlus /> {t('hiring:SKILLS.CERTIFICATE')}
           </LandingButton>
 
@@ -74,6 +82,9 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
           {t('hiring:COMMON.NEXT')}
         </LandingButton>
       </div>
+
+      {/* Info: (20250428 - Julian) Language Modal */}
+      {isLangModal && <LanguageModal modalVisibilityHandler={toggleLangModal} />}
     </div>
   );
 };
