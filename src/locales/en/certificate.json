@@ -102,7 +102,9 @@
     "ENTER_ONE_INVOICE": "Enter one invoice No as a reference",
     "REPRESENTATIVE_INVOICE": "Representative Invoice No.",
     "TOTAL_OF_SUMMARIZED_INVOICES": "Total of Summarized Invoices",
-    "COPIES": "Copies"
+    "COPIES": "Copies",
+    "ALLOWANCE_ISSUE_DATE": "(Allowance) Issue Date",
+    "DUPLICATE_INVOICE_TAX": "Tax = 0 if using Duplicate invoice"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",

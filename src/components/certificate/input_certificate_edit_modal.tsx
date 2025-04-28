@@ -26,7 +26,6 @@ import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { HiCheck } from 'react-icons/hi';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
@@ -106,7 +105,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       }) as IInvoiceBetaOptional
   );
   const [errors] = useState<Record<string, string>>({});
-  const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
 
   const formStateRef = useRef(formState);
 
@@ -196,8 +194,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
     setIsInvoiceTypeMenuOpen(false);
     handleInputChange('type', id);
-    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
-    setIsReturnOrAllowance(false);
   };
 
   const priceBeforeTaxChangeHandler = (value: number) => {
@@ -363,16 +359,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         endTimeStamp: certificateDate + 86399,
       });
     }
-
-    // Info: (20250415 - Anna) 依據憑證類型判斷是否為折讓
-    if (
-      type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC ||
-      type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM
-    ) {
-      setIsReturnOrAllowance(true);
-    } else {
-      setIsReturnOrAllowance(false);
-    }
   }, [certificate, editingId]);
 
   return (
@@ -459,7 +445,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             {/* Info: (20240924 - Anna) Invoice Date */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
-                {t('certificate:EDIT.DATE')}
+                {formState.type === InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC ||
+                formState.type === InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER
+                  ? t('certificate:EDIT.ALLOWANCE_ISSUE_DATE')
+                  : t('certificate:EDIT.DATE')}
                 <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
@@ -595,7 +584,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </>
               ) : (
                 <>
-                  <p className="text-sm font-semibold text-input-text-primary">
+                  <p className="text-sm font-semibold text-neutral-300">
                     {t('certificate:EDIT.INVOICE_NUMBER')}
                     <span className="text-text-state-error">*</span>
                   </p>
@@ -653,7 +642,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
             {/* Info: (20250421 - Anna) Deduction Type */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:TABLE.DEDUCTION_TYPE')}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -672,6 +661,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                   handleInputChange('counterParty', cp);
                 }
               }}
+              labelClassName="text-neutral-300"
             />
             {errors.counterParty && (
               <p className="-translate-y-1 self-end text-sm text-text-state-error">
@@ -681,9 +671,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2">
-                <div id="price" className="absolute -top-20"></div>
-                <p className="text-sm font-semibold text-input-text-primary">
+              <div className="relative flex flex-col items-start gap-2 md:h-105px md:flex-1">
+                <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -695,7 +684,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     isDecimal
                     required
                     hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                    className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                     triggerWhenChanged={priceBeforeTaxChangeHandler}
                   />
                   <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
@@ -717,20 +706,37 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
               </div>
 
               {/* Info: (20250414 - Anna) Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2">
-                <p className="text-sm font-semibold text-input-text-primary">
-                  Tax
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px md:flex-1">
+                <p className="text-sm font-semibold text-neutral-300">
+                  {t('certificate:EDIT.TAX')}
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="flex w-full items-center">
                   <NumericInput
                     id="input-tax"
                     name="input-tax"
-                    value={formState.taxPrice ?? 0}
+                    value={
+                      formState.type === InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER ||
+                      formState.type ===
+                        InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER
+                        ? 0
+                        : (formState.taxPrice ?? 0)
+                    }
                     isDecimal
                     required
                     hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                    disabled={
+                      formState.type === InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER ||
+                      formState.type ===
+                        InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER
+                    }
+                    className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none ${
+                      formState.type === InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER ||
+                      formState.type ===
+                        InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER
+                        ? 'text-neutral-300'
+                        : 'text-input-text-primary'
+                    }`}
                   />
                   <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
@@ -743,6 +749,13 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     <p>{currencyAliasStr}</p>
                   </div>
                 </div>
+                {(formState.type === InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER ||
+                  formState.type ===
+                    InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER) && (
+                  <p className="w-full text-right text-sm font-medium tracking-wide text-neutral-300">
+                    {t('certificate:EDIT.DUPLICATE_INVOICE_TAX')}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -750,7 +763,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             <div className="hidden">
               <div className="relative flex w-full flex-1 flex-col items-start gap-2">
                 <div id="price" className="absolute -top-20"></div>
-                <p className="text-sm font-semibold text-input-text-primary">
+                <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.TOTAL_PRICE')}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -782,56 +795,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                   </p>
                 )}
               </div>
-            </div>
-
-            {/* Info: (20250414 - Anna) 退回或折讓checkbox */}
-            <div className="flex w-full items-center gap-2">
-              <div
-                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
-                  isReturnOrAllowance
-                    ? 'bg-checkbox-surface-selected'
-                    : 'bg-checkbox-surface-unselected'
-                }`}
-                onClick={() => {
-                  const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
-                  setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
-
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                  if (
-                    formState.type === InvoiceType.SALES_TRIPLICATE_INVOICE &&
-                    isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC);
-                  } else if (
-                    formState.type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.SALES_TRIPLICATE_INVOICE);
-                  } else if (
-                    formState.type === InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE &&
-                    isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM);
-                  } else if (
-                    formState.type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE);
-                  }
-                }}
-              >
-                {isReturnOrAllowance && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <HiCheck className="text-neutral-white" />
-                  </div>
-                )}
-              </div>
-
-              {/* Info: (20250414 - Anna) Checkbox label */}
-              <span className="text-sm font-medium text-input-text-primary">
-                {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
-              </span>
             </div>
           </div>
         </div>

@@ -102,7 +102,9 @@
     "ENTER_ONE_INVOICE": "輸入一個發票號碼作為代表",
     "REPRESENTATIVE_INVOICE": "代表發票號碼",
     "TOTAL_OF_SUMMARIZED_INVOICES": "彙總發票合計",
-    "COPIES": "張"
+    "COPIES": "張",
+    "ALLOWANCE_ISSUE_DATE": "（折讓單）開立日期",
+    "DUPLICATE_INVOICE_TAX": "如果使用二聯式發票，稅額為 0"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",
