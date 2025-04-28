@@ -4,36 +4,53 @@ import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import { ILanguageSkill, Proficiency, LangModalType } from '@/interfaces/skill';
 
 interface ILanguageModalProps {
   modalVisibilityHandler: () => void;
+  modalType: LangModalType;
+  langData?: ILanguageSkill;
+  saveHandler: (language: string, proficiency: keyof typeof Proficiency) => void;
+  deleteHandler?: (langId: number) => void;
 }
 
-enum Proficiency {
-  ELEMENTARY = 'Elementary',
-  LIMITED = 'Limited working',
-  PROFESSIONAL = 'Professional working',
-  NATIVE = 'Native or bilingual',
-}
-
-const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }) => {
-  const { t } = useTranslation(['hiring']);
+const LanguageModal: React.FC<ILanguageModalProps> = ({
+  modalVisibilityHandler,
+  modalType,
+  langData,
+  saveHandler,
+  deleteHandler,
+}) => {
+  const { t } = useTranslation(['hiring', 'common']);
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
-  const [langInput, setLangInput] = useState<string>('');
-  const [proficiencyInput, setProficiencyInput] = useState<keyof typeof Proficiency | null>(null);
+  // Info: (20250428 - Julian) 「用於編輯」熟練程度的預設值
+  const defaultProf = langData?.proficiency
+    ? (langData.proficiency as keyof typeof Proficiency)
+    : null;
+
+  const [langInput, setLangInput] = useState<string>(langData?.language ?? '');
+  const [proficiencyInput, setProficiencyInput] = useState<keyof typeof Proficiency | null>(
+    defaultProf
+  );
 
   const changeLangInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLangInput(e.target.value);
   };
 
   const saveDisable = langInput === '' || proficiencyInput === null;
-  const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
 
-    // Deprecated: (20250415 - Julian) For debugging purpose
-    // eslint-disable-next-line no-console
-    // console.log('Work Experience:', workExperience);
+  const deleteLangHandler = () => {
+    if (langData && deleteHandler) {
+      deleteHandler(langData.id);
+    }
+  };
+
+  const saveClickHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    if (saveDisable) return;
+
+    e.preventDefault();
+    saveHandler(langInput, proficiencyInput as keyof typeof Proficiency);
   };
 
   const proficiencyOptions = Object.keys(Proficiency);
@@ -44,7 +61,6 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }
       setProficiencyInput(proficiency);
     };
 
-    const isChecked = Proficiency[proficiencyInput as keyof typeof Proficiency] === option;
     return (
       <div key={option} className="flex items-center gap-lv-2 text-white">
         <input
@@ -52,7 +68,7 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }
           id={option}
           name="proficiency"
           value={option}
-          checked={isChecked}
+          checked={proficiencyInput === option}
           onChange={changeProficiencyInput}
           className={orangeRadioStyle}
           required
@@ -64,10 +80,32 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }
     );
   });
 
+  // Info: (20250428 - Julian) 新增 -> 取消按鈕 / 編輯 -> 刪除按鈕
+  const cancelButton =
+    modalType === LangModalType.CREATE ? (
+      <LandingButton
+        type="button"
+        variant="default"
+        className="font-bold"
+        onClick={modalVisibilityHandler}
+      >
+        {t('common:COMMON.CANCEL')}
+      </LandingButton>
+    ) : (
+      <LandingButton
+        type="button"
+        variant="default"
+        className="font-bold"
+        onClick={deleteLangHandler}
+      >
+        <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
+      </LandingButton>
+    );
+
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <form
-        onSubmit={saveHandler}
+        onSubmit={saveClickHandler}
         className="relative mx-auto flex w-90vw flex-col items-stretch rounded-lg border border-white bg-landing-nav px-52px py-40px shadow-lg shadow-black/80 backdrop-blur-lg"
       >
         {/* Info: (20250428 - Julian) Modal Title */}
@@ -94,6 +132,7 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }
               value={langInput}
               onChange={changeLangInput}
               className={inputStyle}
+              required
             />
           </div>
           {/* Info: (20250428 - Julian) Proficiency */}
@@ -107,9 +146,7 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({ modalVisibilityHandler }
         </div>
         {/* Info: (20250428 - Julian) Buttons */}
         <div className="ml-auto mt-40px flex items-center gap-lv-6">
-          <LandingButton type="button" variant="default" className="font-bold">
-            <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
-          </LandingButton>
+          {cancelButton}
           <LandingButton
             type="submit"
             variant="primary"
