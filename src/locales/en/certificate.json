@@ -100,7 +100,9 @@
     "CERTIFICATE_BY_CUSTOMS": "Certificate of payment for business tax collected by Customs No.",
     "CHARACTERS": "14 characters",
     "ENTER_ONE_INVOICE": "Enter one invoice No as a reference",
-    "REPRESENTATIVE_INVOICE": "Representative Invoice No."
+    "REPRESENTATIVE_INVOICE": "Representative Invoice No.",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "Total of Summarized Invoices",
+    "COPIES": "Copies"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",

@@ -97,6 +97,8 @@ export interface IInvoiceBeta {
   updatedAt: number;
   // Info: (20250421 - Anna) 扣抵類型
   deductionType?: string;
+  // Info: (20250428 - Anna) 彙總發票張數
+  summarizedInvoiceCount?: number;
 }
 
 export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;

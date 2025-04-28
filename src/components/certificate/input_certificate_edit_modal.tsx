@@ -135,6 +135,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   // Info: (20250414 - Anna) 用來記錄 setTimeout 的任務 ID，供 debounce 清除使用
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
+  // Info: (20250428 - Anna) 用來操作 input（focus 或 select）
+  const summarizedInvoiceInputRef = useRef<HTMLInputElement>(null);
+
   const handleInputChange = useCallback(
     (
       field: keyof typeof formState,
@@ -473,6 +476,59 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </p>
               )}
             </div>
+
+            {/* Info: (20250428 - Anna) 輸入彙總發票張數 */}
+            {(formState.type === InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC ||
+              formState.type ===
+                InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER) && (
+              <div className="flex w-full flex-col gap-2">
+                <p className="text-sm font-semibold text-neutral-300">
+                  {t('certificate:EDIT.TOTAL_OF_SUMMARIZED_INVOICES')}
+                  <span> </span>
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="flex w-full items-center">
+                  <input
+                    id="summarized-invoice-count"
+                    ref={summarizedInvoiceInputRef}
+                    type="number"
+                    value={
+                      formState.summarizedInvoiceCount !== undefined
+                        ? formState.summarizedInvoiceCount.toString()
+                        : '0'
+                    }
+                    onChange={(e) => {
+                      const inputValue = e.target.value;
+                      const numberValue = parseInt(inputValue, 10);
+                      if (inputValue === '') {
+                        handleInputChange('summarizedInvoiceCount', 0); // Info: (20250428 - Anna) 空的話直接設 0
+                      } else if (!Number.isNaN(numberValue)) {
+                        handleInputChange('summarizedInvoiceCount', numberValue);
+                      }
+                    }}
+                    // Info: (20250428 - Anna) 只在值是 0 或 undefined 時全部選取
+                    onFocus={() => {
+                      if (
+                        formState.summarizedInvoiceCount === undefined ||
+                        formState.summarizedInvoiceCount === 0
+                      ) {
+                        summarizedInvoiceInputRef.current?.select();
+                      }
+                    }}
+                    className={`h-44px w-16 flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-right uppercase outline-none ${
+                      formState.summarizedInvoiceCount === 0 ||
+                      formState.summarizedInvoiceCount === undefined
+                        ? 'text-neutral-300'
+                        : 'text-neutral-600'
+                    }`}
+                    placeholder="0"
+                  />
+                  <div className="flex h-44px min-w-70px items-center justify-center rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-14px font-medium text-neutral-300 outline-none">
+                    {t('certificate:EDIT.COPIES')}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Info: (20240924 - Anna) Invoice Number */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">

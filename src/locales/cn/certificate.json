@@ -100,7 +100,9 @@
     "CERTIFICATE_BY_CUSTOMS": "海关代征营业税缴纳证明书号码",
     "CHARACTERS": "14 个字符",
     "ENTER_ONE_INVOICE": "输入一个发票号码作为代表",
-    "REPRESENTATIVE_INVOICE": "代表发票号码"
+    "REPRESENTATIVE_INVOICE": "代表发票号码",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "汇总发票合计",
+    "COPIES": "张"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

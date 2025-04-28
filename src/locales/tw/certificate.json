@@ -100,7 +100,9 @@
     "CERTIFICATE_BY_CUSTOMS": "海關代徵營業稅繳納證明書號碼",
     "CHARACTERS": "14 個字符",
     "ENTER_ONE_INVOICE": "輸入一個發票號碼作為代表",
-    "REPRESENTATIVE_INVOICE": "代表發票號碼"
+    "REPRESENTATIVE_INVOICE": "代表發票號碼",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "彙總發票合計",
+    "COPIES": "張"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",
