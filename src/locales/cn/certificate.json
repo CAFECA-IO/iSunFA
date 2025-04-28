@@ -100,7 +100,11 @@
     "CERTIFICATE_BY_CUSTOMS": "海关代征营业税缴纳证明书号码",
     "CHARACTERS": "14 个字符",
     "ENTER_ONE_INVOICE": "输入一个发票号码作为代表",
-    "REPRESENTATIVE_INVOICE": "代表发票号码"
+    "REPRESENTATIVE_INVOICE": "代表发票号码",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "汇总发票合计",
+    "COPIES": "张",
+    "ALLOWANCE_ISSUE_DATE": "（折让单）开立日期",
+    "DUPLICATE_INVOICE_TAX": "如果使用二联式发票，税额为 0"
   },
   "TYPE": {
     "TRIPLICATE": "三联",
