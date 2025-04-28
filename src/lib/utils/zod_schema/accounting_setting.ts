@@ -7,7 +7,7 @@ const accountingSettingNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241015 - Jacky) Accounting setting get schema
 const accountingSettingGetQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 // Todo: (20250425 - Shirley) Share enum between frontend and backend
@@ -32,7 +32,7 @@ const returnPeriodicitySchema = z
 
 // Info: (20241015 - Jacky) Accounting setting put schema
 const accountingSettingPutQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 const accountingSettingPutBodySchema = z.object({
   id: z.number(),

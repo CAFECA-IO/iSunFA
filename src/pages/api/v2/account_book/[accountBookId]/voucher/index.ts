@@ -15,7 +15,7 @@ import {
   voucherAPIPostUtils as postUtils,
   voucherAPIGetUtils as getUtils,
   IGetManyVoucherBetaEntity,
-} from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/voucher/route_utils';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';

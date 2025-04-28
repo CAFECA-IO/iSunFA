@@ -48,7 +48,7 @@ import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@p
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
-import { voucherAPIGetOneUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import { voucherAPIGetOneUtils } from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
 import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IAccountEntity } from '@/interfaces/accounting_account';
