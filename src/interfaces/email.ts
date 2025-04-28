@@ -1,3 +1,5 @@
+import { EMAIL_LOGIN_ACTION } from '@/constants/email';
+
 export interface IInviteTemplate {
   inviterName: string;
   teamName: string;
@@ -42,4 +44,10 @@ export interface IEmailLogin {
   expiredAt: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface IEmailLoginLog {
+  email: string;
+  action: EMAIL_LOGIN_ACTION;
+  createdAt: number;
 }

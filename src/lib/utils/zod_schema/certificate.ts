@@ -12,11 +12,13 @@ import { IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import {
   IInvoiceBetaValidator,
   IInvoiceBetaValidatorOptional,
+  InvoiceInputSchema,
+  InvoiceOutputSchema,
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { CounterpartyType } from '@/constants/counterparty';
-import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
@@ -42,6 +44,32 @@ export const createCertificateValidator = (isInvoiceOptional = false) =>
     uploader: z.string(),
     uploaderUrl: z.string(),
   });
+
+const CertificateBaseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  accountbookId: z.number(),
+  incomplete: z.boolean(),
+  file: IFileBetaValidator,
+  voucherNo: z.string().nullable(),
+  voucherId: z.number().nullable(),
+  aiResultId: z.string().optional(),
+  aiStatus: z.string().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  uploader: z.string(),
+  uploaderUrl: z.string(),
+});
+
+export const CertificateInputSchema = CertificateBaseSchema.extend({
+  invoice: InvoiceInputSchema.partial(),
+  inputOrOutput: z.literal(InvoiceTransactionDirection.INPUT),
+});
+
+export const CertificateOutputSchema = CertificateBaseSchema.extend({
+  invoice: InvoiceOutputSchema.partial(),
+  inputOrOutput: z.literal(InvoiceTransactionDirection.OUTPUT),
+});
 
 export const ICertificateValidator = createCertificateValidator(false);
 export const ICertificatePartialInvoiceValidator = createCertificateValidator(true);
@@ -85,9 +113,25 @@ const certificateListQueryValidator = z.object({
   searchQuery: z.string().optional(),
 });
 
+export const certificateRC2ListQueryValidator = paginatedDataQuerySchema.extend({
+  accountbookId: zodStringToNumber,
+  tab: z.nativeEnum(InvoiceTabs).optional(),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .transform((data) => {
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
+      return result;
+    }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
+  isDeleted: z.boolean().default(false),
+});
+
 const certificateListBodyValidator = z.object({});
 
 const paginatedCertificates = paginatedDataSchema(ICertificatePartialInvoiceValidator);
+
+const paginatedInputCertificates = paginatedDataSchema(CertificateInputSchema);
+const paginatedOutputCertificates = paginatedDataSchema(CertificateOutputSchema);
 
 const certificateListFrontendSchema = paginatedCertificates;
 
@@ -192,6 +236,24 @@ export const certificateListSchema = {
   },
   outputSchema: certificateListOutputSchema,
   frontend: certificateListFrontendSchema,
+};
+
+export const inputCertificateListSchema = {
+  input: {
+    querySchema: certificateRC2ListQueryValidator,
+    bodySchema: nullSchema,
+  },
+  outputSchema: paginatedInputCertificates,
+  frontend: paginatedInputCertificates,
+};
+
+export const outputCertificateListSchema = {
+  input: {
+    querySchema: certificateRC2ListQueryValidator,
+    bodySchema: nullSchema,
+  },
+  outputSchema: paginatedOutputCertificates,
+  frontend: paginatedOutputCertificates,
 };
 
 export const certificatePostSchema = {

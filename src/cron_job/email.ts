@@ -63,15 +63,12 @@ export async function sendEmailJobs() {
 }
 
 if (require.main === module) {
-  // Info: (20250421 - Tzuhan) 每小時執行一次
-  setInterval(
-    () => {
-      sendEmailJobs().catch((err) => {
-        loggerBack.error('Email job failed', err);
-      });
-    },
-    1000 * 60 * 60
-  ); // Info: (20250421 - Tzuhan)  1 小時 = 3600000 ms
+  // Info: (20250421 - Tzuhan) 每分鐘執行一次
+  setInterval(() => {
+    sendEmailJobs().catch((err) => {
+      loggerBack.error('Email job failed', err);
+    });
+  }, 1000 * 60); // Info: (20250421 - Tzuhan)  1 分鐘 = 60000 ms
 
   // Info: (20250421 - Tzuhan)  預先跑一次
   sendEmailJobs().catch((err) => {

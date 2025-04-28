@@ -22,6 +22,7 @@ enum ErrorCode {
   INVALID_TIMEZONE_FORMAT = '400ISF0008',
   UNBALANCED_DEBIT_CREDIT = '400ISF0009',
   UNAUTHORIZED_ACCESS = '401ISF0000',
+  EMAIL_LOGIN_CODE_INVALID = '401ISF0001',
   PAYMENT_FAILED_TO_COMPLETE = '402ISF0000',
   FORBIDDEN = '403ISF0000',
   PERMISSION_DENIED = '403ISF0005',
@@ -104,6 +105,8 @@ enum ErrorCode {
   CERTIFICATES_NOT_EXIST = '404ISF0030',
   MODIFY_LINE_ITEMS_USE_POST_DELETE = '405ISF0031',
   VOUCHER_ALREADY_DELETED = '409ISF0032',
+  EMAIL_LOGIN_REGISTRATION_COOLDOWN = '429ISF0000',
+  EMAIL_LOGIN_TOO_MANY_ATTEMPTS = '429ISF0001',
   NOT_YET_IMPLEMENTED = '501ISF0000',
 }
 
@@ -132,6 +135,7 @@ enum ErrorMessage {
   INVALID_TIMEZONE_FORMAT = 'Invalid timezone format, should be +HHMM or -HHMM',
   UNBALANCED_DEBIT_CREDIT = 'Debit Amount Must Equal Credit Amount',
   UNAUTHORIZED_ACCESS = 'Unauthorized access',
+  EMAIL_LOGIN_CODE_INVALID = 'Email login code is invalid',
   RESOURCE_NOT_FOUND = 'Resource not found',
   FORBIDDEN = 'Forbidden',
   PERMISSION_DENIED = 'Permission denied',
@@ -213,6 +217,8 @@ enum ErrorMessage {
   CERTIFICATES_NOT_EXIST = 'Certificates do not all exist',
   MODIFY_LINE_ITEMS_USE_POST_DELETE = 'Use POST + DELETE instead to modify lineItems',
   VOUCHER_ALREADY_DELETED = 'Voucher already deleted',
+  EMAIL_LOGIN_REGISTRATION_COOLDOWN = 'Email login registration cooldown',
+  EMAIL_LOGIN_TOO_MANY_ATTEMPTS = 'Email login too many attempts',
   NOT_YET_IMPLEMENTED = 'Not yet implemented',
 }
 

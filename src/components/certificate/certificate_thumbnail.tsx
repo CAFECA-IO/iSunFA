@@ -66,7 +66,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
       )}
 
       {/* Info: (20240924 - Tzuhan) 資料不完整 */}
-      {!data.invoice?.isComplete && (
+      {data.incomplete && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center rounded-xs text-xs text-surface-state-error">
           <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
         </div>

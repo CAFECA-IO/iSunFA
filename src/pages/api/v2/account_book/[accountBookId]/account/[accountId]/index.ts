@@ -42,7 +42,7 @@ function formatParams(companyId: unknown, accountId: string | string[] | undefin
 }
 
 /**
- * Info: (20250424 - Shirley) Handle GET request for account details
+ * Info: (20250425 - Shirley) Handle GET request for account details
  * This function follows the flat coding style, with clear steps:
  * 1. Get session
  * 2. Check if user is logged in
@@ -58,32 +58,32 @@ async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  // Info: (20250424 - Shirley) Get user session
+  // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
   const { userId, teams } = session;
 
-  // Info: (20250424 - Shirley) Check if user is logged in
+  // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
 
-  // Info: (20250424 - Shirley) Check user authorization
+  // Info: (20250425 - Shirley) Check user authorization
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250424 - Shirley) Validate request data
+  // Info: (20250425 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.accountId || !query.companyId) {
+  if (!query || !query.accountId || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, companyId } = query;
+  const { accountId, accountBookId: companyId } = query;
 
   loggerBack.info(
     `User ${userId} requesting account details for accountId: ${accountId}, companyId: ${companyId}`
   );
 
-  // Info: (20250424 - Shirley) Format and validate parameters
+  // Info: (20250425 - Shirley) Format and validate parameters
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
 
-  // Info: (20250424 - Shirley) Check company and team permissions
+  // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyIdNumber);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -111,7 +111,7 @@ async function handleGetRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250424 - Shirley) Get account details
+  // Info: (20250425 - Shirley) Get account details
   const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS;
@@ -119,13 +119,13 @@ async function handleGetRequest(req: NextApiRequest) {
 
   loggerBack.info(`Successfully retrieved account ${accountId} for company ${companyId}`);
 
-  // Info: (20250424 - Shirley) Validate output data
+  // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   }
 
-  // Info: (20250424 - Shirley) Format response and log user action
+  // Info: (20250425 - Shirley) Format response and log user action
   const result = formatApiResponse(statusMessage, payload);
   await logUserAction(session, apiName, req, statusMessage);
 
@@ -133,7 +133,7 @@ async function handleGetRequest(req: NextApiRequest) {
 }
 
 /**
- * Info: (20250424 - Shirley) Handle PUT request for updating account
+ * Info: (20250425 - Shirley) Handle PUT request for updating account
  * This function follows the flat coding style, with clear steps:
  * 1. Get session
  * 2. Check if user is logged in
@@ -149,31 +149,31 @@ async function handlePutRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  // Info: (20250424 - Shirley) Get user session
+  // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
   const { userId, teams } = session;
 
-  // Info: (20250424 - Shirley) Check if user is logged in
+  // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
 
-  // Info: (20250424 - Shirley) Check user authorization
+  // Info: (20250425 - Shirley) Check user authorization
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250424 - Shirley) Validate request data
+  // Info: (20250425 - Shirley) Validate request data
   const { query, body } = checkRequestData(apiName, req, session);
-  if (!query || !query.accountId || !query.companyId || !body) {
+  if (!query || !query.accountId || !query.accountBookId || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, companyId } = query;
+  const { accountId, accountBookId: companyId } = query;
   const { name, note } = body;
 
   loggerBack.info(`User ${userId} updating account ${accountId} for company ${companyId}`);
 
-  // Info: (20250424 - Shirley) Format and validate parameters
+  // Info: (20250425 - Shirley) Format and validate parameters
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
 
-  // Info: (20250424 - Shirley) Check company and team permissions
+  // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyIdNumber);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -189,7 +189,7 @@ async function handlePutRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250424 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
+  // Info: (20250425 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
   const permissionResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
     canDo: TeamPermissionAction.ACCOUNTING_SETTING,
@@ -202,7 +202,7 @@ async function handlePutRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250424 - Shirley) Update account
+  // Info: (20250425 - Shirley) Update account
   const currentAccount = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
   if (!currentAccount) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -226,13 +226,13 @@ async function handlePutRequest(req: NextApiRequest) {
 
   loggerBack.info(`Successfully updated account ${accountId} for company ${companyId}`);
 
-  // Info: (20250424 - Shirley) Validate output data
+  // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   }
 
-  // Info: (20250424 - Shirley) Format response and log user action
+  // Info: (20250425 - Shirley) Format response and log user action
   const result = formatApiResponse(statusMessage, payload);
   await logUserAction(session, apiName, req, statusMessage);
 
@@ -240,7 +240,7 @@ async function handlePutRequest(req: NextApiRequest) {
 }
 
 /**
- * Info: (20250424 - Shirley) Handle DELETE request for account
+ * Info: (20250425 - Shirley) Handle DELETE request for account
  * This function follows the flat coding style, with clear steps:
  * 1. Get session
  * 2. Check if user is logged in
@@ -256,30 +256,30 @@ async function handleDeleteRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
-  // Info: (20250424 - Shirley) Get user session
+  // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
   const { userId, teams } = session;
 
-  // Info: (20250424 - Shirley) Check if user is logged in
+  // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
 
-  // Info: (20250424 - Shirley) Check user authorization
+  // Info: (20250425 - Shirley) Check user authorization
   await checkUserAuthorization(apiName, req, session);
 
-  // Info: (20250424 - Shirley) Validate request data
+  // Info: (20250425 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.accountId || !query.companyId) {
+  if (!query || !query.accountId || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, companyId } = query;
+  const { accountId, accountBookId: companyId } = query;
 
   loggerBack.info(`User ${userId} deleting account ${accountId} for company ${companyId}`);
 
-  // Info: (20250424 - Shirley) Format and validate parameters
+  // Info: (20250425 - Shirley) Format and validate parameters
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
 
-  // Info: (20250424 - Shirley) Check company and team permissions
+  // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyIdNumber);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -295,7 +295,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250424 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
+  // Info: (20250425 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
   const permissionResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
     canDo: TeamPermissionAction.ACCOUNTING_SETTING,
@@ -308,7 +308,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250424 - Shirley) Delete account
+  // Info: (20250425 - Shirley) Delete account
   const deletedAccount = await softDeleteAccountInPrisma(accountIdNumber, companyIdNumber);
 
   if (!deletedAccount) {
@@ -322,13 +322,13 @@ async function handleDeleteRequest(req: NextApiRequest) {
 
   loggerBack.info(`Successfully deleted account ${accountId} for company ${companyId}`);
 
-  // Info: (20250424 - Shirley) Validate output data
+  // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   }
 
-  // Info: (20250424 - Shirley) Format response and log user action
+  // Info: (20250425 - Shirley) Format response and log user action
   const result = formatApiResponse(statusMessage, payload);
   await logUserAction(session, apiName, req, statusMessage);
 
@@ -336,7 +336,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
 }
 
 /**
- * Info: (20250424 - Shirley) Export default handler function
+ * Info: (20250425 - Shirley) Export default handler function
  * This follows the flat coding style API pattern:
  * 1. Define a switch-case for different HTTP methods
  * 2. Call the appropriate handler based on method
@@ -350,7 +350,7 @@ export default async function handler(
   let result: IResponseData<IAccount | null>;
 
   try {
-    // Info: (20250424 - Shirley) Handle different HTTP methods
+    // Info: (20250425 - Shirley) Handle different HTTP methods
     const method = req.method || '';
     switch (method) {
       case HttpMethod.GET:
@@ -363,17 +363,17 @@ export default async function handler(
         ({ httpCode, result } = await handleDeleteRequest(req));
         break;
       default:
-        // Info: (20250424 - Shirley) Method not allowed
+        // Info: (20250425 - Shirley) Method not allowed
         ({ httpCode, result } = formatApiResponse(STATUS_MESSAGE.METHOD_NOT_ALLOWED, null));
     }
   } catch (_error) {
-    // Info: (20250424 - Shirley) Error handling
+    // Info: (20250425 - Shirley) Error handling
     const error = _error as Error;
     const statusMessage = error.message;
     loggerBack.error(`Error handling account operation: ${statusMessage}`);
     ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
 
-  // Info: (20250424 - Shirley) Send response
+  // Info: (20250425 - Shirley) Send response
   res.status(httpCode).json(result);
 }

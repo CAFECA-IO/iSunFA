@@ -46,7 +46,7 @@ export async function createAssetWithVouchers(
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
     createdUserId: userId,
-    companyId: assetData.companyId,
+    companyId: assetData.accountBookId,
     name: assetData.name,
     type: assetData.type,
     number: assetNumber,
@@ -71,7 +71,13 @@ export async function createAssetWithVouchers(
   // ToDo: (20241204 - Luphia) Create the future Vouchers and Asset mapping
   // lib/utils/asset.ts
 
-  return asset;
+  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  const assetWithAccountBookId = {
+    ...asset,
+    accountBookId: asset.companyId,
+  };
+
+  return assetWithAccountBookId;
 }
 
 /**
@@ -106,7 +112,7 @@ export async function createManyAssets(
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
       createdUserId: userId,
-      companyId: assetData.companyId,
+      companyId: assetData.accountBookId,
       name: assetData.name,
       type: assetData.type,
       number: assetNumbers[i],
@@ -133,7 +139,7 @@ export async function createManyAssets(
   const createdAssets = await prisma.asset.findMany({
     where: {
       AND: [
-        { companyId: assetData.companyId },
+        { companyId: assetData.accountBookId },
         { createdAt: timestampNow },
         // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一秒根據多個測試建立資產，因此需要加上這個條件
         { number: { startsWith: assetData.number || '' } },
@@ -158,7 +164,13 @@ export async function createManyAssets(
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  return createdAssets;
+  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  const assetsWithAccountBookId = createdAssets.map((asset) => ({
+    ...asset,
+    accountBookId: asset.companyId,
+  }));
+
+  return assetsWithAccountBookId;
 }
 
 /** Info: (20241206 - Shirley) 獲取公司單一資產，限制有 voucher 或者建立時間與當下不超過 1 天的資產
@@ -317,7 +329,13 @@ export async function listAssetsByCompanyId(
     },
   });
 
-  return assets;
+  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  const assetsWithAccountBookId = assets.map((asset) => ({
+    ...asset,
+    accountBookId: asset.companyId,
+  }));
+
+  return assetsWithAccountBookId;
 }
 
 /**

@@ -10,6 +10,26 @@ const accountingSettingGetQuerySchema = z.object({
   companyId: zodStringToNumber,
 });
 
+// Todo: (20250425 - Shirley) Share enum between frontend and backend
+const validReturnPeriodicity = ['Monthly', 'Weekly'] as const;
+type ReturnPeriodicity = (typeof validReturnPeriodicity)[number];
+
+// Todo: (20250425 - Shirley) Share enum between frontend and backend
+const returnPeriodicitySchema = z
+  .string()
+  .transform((val) => {
+    const normalized = val.trim().toLowerCase();
+    if (normalized === 'monthly') return 'Monthly';
+    if (normalized === 'weekly') return 'Weekly';
+    return val;
+  })
+  .refine(
+    (val): val is ReturnPeriodicity => validReturnPeriodicity.includes(val as ReturnPeriodicity),
+    {
+      message: `Return periodicity must be one of: ${validReturnPeriodicity.join(', ')}`,
+    }
+  );
+
 // Info: (20241015 - Jacky) Accounting setting put schema
 const accountingSettingPutQuerySchema = z.object({
   companyId: zodStringToNumber,
@@ -26,7 +46,8 @@ const accountingSettingPutBodySchema = z.object({
       taxable: z.boolean(),
       rate: z.number().min(0),
     }),
-    returnPeriodicity: z.string(),
+    // Info: (20250425 - Shirley) Normalize and restrict returnPeriodicity to only accept 'Monthly' or 'Weekly'
+    returnPeriodicity: returnPeriodicitySchema,
   }),
   currency: z.string(),
   shortcutList: z.array(
@@ -60,7 +81,8 @@ export const accountingSettingOutputSchema = z
         taxable: z.boolean(),
         rate: z.number(),
       }),
-      returnPeriodicity: z.string(),
+      // Info: (20250425 - Shirley) Normalize and restrict returnPeriodicity to only accept 'Monthly' or 'Weekly'
+      returnPeriodicity: returnPeriodicitySchema,
     }),
     currency: z.string(),
     shortcutList: z.array(
@@ -100,7 +122,8 @@ const accountingSettingValidateSchema = z.object({
       taxable: z.boolean(),
       rate: z.number(),
     }),
-    returnPeriodicity: z.string(),
+    // Info: (20250425 - Shirley) Normalize and restrict returnPeriodicity to only accept 'Monthly' or 'Weekly'
+    returnPeriodicity: returnPeriodicitySchema,
   }),
   currency: z.string(),
   shortcutList: z.array(
@@ -138,6 +161,7 @@ export const accountingSettingPutSchema = {
   frontend: accountingSettingValidateSchema,
 };
 
+// Info: (20250425 - Shirley) Update entity validator to normalize and enforce valid return periodicity values
 export const accountingSettingEntityValidator = z.object({
   companyId: z.number(),
   currency: z.nativeEnum(CurrencyType),
@@ -145,5 +169,5 @@ export const accountingSettingEntityValidator = z.object({
   salesTaxTaxable: z.boolean(),
   purchaseTaxRate: z.number(),
   purchaseTaxTaxable: z.boolean(),
-  returnPeriodicity: z.string(),
+  returnPeriodicity: returnPeriodicitySchema,
 });

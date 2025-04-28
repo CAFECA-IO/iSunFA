@@ -16,6 +16,8 @@ import {
   invoicePutV2Schema,
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
+  inputCertificateListSchema,
+  outputCertificateListSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
@@ -70,7 +72,10 @@ import {
 import { userSettingGetSchema, userSettingPutSchema } from '@/lib/utils/zod_schema/user_setting';
 
 import { userActionLogListSchema } from '@/lib/utils/zod_schema/user_action_log';
-import { trialBalanceListSchema } from '@/lib/utils/zod_schema/trial_balance';
+import {
+  trialBalanceListSchema,
+  trialBalanceExportSchema,
+} from '@/lib/utils/zod_schema/trial_balance';
 import { lineItemGetByAccountSchema } from '@/lib/utils/zod_schema/line_item_account';
 import { roleListSchema } from '@/lib/utils/zod_schema/role';
 import { assetExportSchema } from '@/lib/utils/zod_schema/export_asset';
@@ -147,6 +152,8 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
+  [APIName.INPUT_CERTIFICATE_LIST]: certificateListValidator,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
@@ -200,6 +207,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.INPUT_CERTIFICATE_LIST]: inputCertificateListSchema,
+  [APIName.OUTPUT_CERTIFICATE_LIST]: outputCertificateListSchema,
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: certificateMultiDeleteSchema,
@@ -248,7 +257,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LEDGER_LIST]: ledgerListSchema,
   [APIName.SIGN_IN]: nullAPISchema,
   [APIName.SIGN_OUT]: nullAPISchema,
-  [APIName.TRIAL_BALANCE_EXPORT]: nullAPISchema,
+  [APIName.TRIAL_BALANCE_EXPORT]: trialBalanceExportSchema,
   [APIName.CREATE_ASSET_BULK]: assetBulkPostSchema,
   [APIName.LEDGER_EXPORT]: exportLedgerPostSchema,
   [APIName.LIST_LOGIN_DEVICE]: nullAPISchema,
