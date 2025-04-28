@@ -29,7 +29,7 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   const dateString = timestampToString(date).dateWithSlash;
 
   // ToDo: (20250407 - Julian) 這邊要改成從後端取得的資料
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const toggleFavorite = () => setIsFavorite((prev) => !prev);
 
   const resList = jobResponsibilities.map((item) => (
