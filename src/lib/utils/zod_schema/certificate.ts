@@ -68,7 +68,7 @@ export const certificateEntityValidator = z.object({
 });
 
 const certificateListQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   tab: z.nativeEnum(InvoiceTabs).optional(),
@@ -136,7 +136,7 @@ export const certificateGetOneValidator: IZodValidator<
 };
 
 const certificatePostQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 /**
@@ -173,7 +173,7 @@ export const certificatePutValidator: IZodValidator<
 
 const certificateDeleteQueryValidator = z.object({
   certificateId: zodStringToNumber,
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 const certificateDeleteBodyValidator = z.object({});
