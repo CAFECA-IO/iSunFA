@@ -75,7 +75,23 @@
   },
   "SKILLS": {
     "LANGUAGE": "語言",
-    "CERTIFICATE": "證照"
+    "CERTIFICATE": "證照",
+    "LANGUAGE_MODAL_TITLE": "語言能力",
+    "LANGUAGE_MODAL_LANG": "語言",
+    "LANG_PLACEHOLDER": "中文、英文、西班牙文等...",
+    "LANGUAGE_MODAL_PROF": "熟練程度",
+    "PROF_ELEMENTARY": "基礎程度",
+    "PROF_LIMITED": "有限工作能力",
+    "PROF_PROFESSIONAL": "專業工作能力",
+    "PROF_NATIVE": "母語或雙語程度",
+    "CERTIFICATE_MODAL_TITLE": "證照",
+    "CERTIFICATE_MODAL_NAME": "證照名稱",
+    "CERTIFICATE_MODAL_ORGA": "發證機構",
+    "CERTIFICATE_MODAL_ISSUE_DATE": "發證日期",
+    "CERTIFICATE_MODAL_EXPIRE_DATE": "到期日",
+    "UPLOAD_TEXT_1": "將檔案拖曳至此或",
+    "UPLOAD_TEXT_2": "瀏覽",
+    "UPLOAD_MAXIMUM_SIZE": "檔案大小上限：4 MB"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",

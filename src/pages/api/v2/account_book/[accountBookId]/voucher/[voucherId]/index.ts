@@ -14,8 +14,8 @@ import {
   voucherAPIGetOneUtils as getUtils,
   voucherAPIPutUtils as putUtils,
   voucherAPIDeleteUtils as deleteUtils,
-} from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
-import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/voucher/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
+import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/account_book/[accountBookId]/voucher/route_utils';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import {
   deleteVoucherByCreateReverseVoucher,

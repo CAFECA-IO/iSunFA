@@ -9,19 +9,20 @@ import APIHandler from '@/lib/utils/api_handler';
 import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
-interface UploadCompanyPictureModalProps {
+interface UploadAccountBookPictureModalProps {
   accountBookToUploadPicture: IAccountBookWithTeam;
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
   getAccountBookListByTeamId?: () => Promise<void>;
+  // ToDo: (20250428 - Liz) 需要一支 API 取得帳本 by account book id，可以重新獲取帳本資料(包含圖片)
 }
 
-const UploadCompanyPictureModal = ({
+const UploadAccountBookPictureModal = ({
   accountBookToUploadPicture,
   setAccountBookToUploadPicture,
   setRefreshKey,
   getAccountBookListByTeamId,
-}: UploadCompanyPictureModalProps) => {
+}: UploadAccountBookPictureModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectedAccountBook, connectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
@@ -58,7 +59,7 @@ const UploadCompanyPictureModal = ({
           return;
         }
 
-        // Info: (20241212 - Liz) 打 API 更新帳本的公司圖片
+        // Info: (20241212 - Liz) 打 API 更新帳本圖片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
           params: { accountBookId: accountBookToUploadPicture.id },
           body: { fileId: fileMeta.id },
@@ -67,7 +68,7 @@ const UploadCompanyPictureModal = ({
         if (!success) {
           // Deprecated: (20241212 - Liz)
           // eslint-disable-next-line no-console
-          console.error('更新帳本的公司圖片失敗! error message:', error?.message);
+          console.error('更新帳本圖片失敗! error message:', error?.message);
           return;
         }
 
@@ -76,10 +77,12 @@ const UploadCompanyPictureModal = ({
 
         if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250326 - Liz) 重新取得團隊帳本清單
 
+        // ToDo: (20250428 - Liz) 需要一支 API 取得帳本 by account book id，可以重新獲取帳本資料(包含圖片)
+
         const isChangingSelectedCompany =
           connectedAccountBook?.id === accountBookToUploadPicture.id;
 
-        // Info: (20241212 - Liz) 如果是改變已選擇的帳本的公司圖片，就打 API 選擇該帳本以更新公司圖片
+        // Info: (20241212 - Liz) 如果是改變已選擇的帳本的圖片，就打 API 重新選擇該帳本以更新圖片
         if (isChangingSelectedCompany) {
           connectAccountBook(accountBookToUploadPicture.id);
         }
@@ -118,4 +121,4 @@ const UploadCompanyPictureModal = ({
   );
 };
 
-export default UploadCompanyPictureModal;
+export default UploadAccountBookPictureModal;

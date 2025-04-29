@@ -44,7 +44,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { teams } = session;
 
   // Info: (20250424 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -54,26 +54,24 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Validate request data
   const { query } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId) {
+  if (!query || !query.accountBookId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId } = query;
-
-  loggerBack.info(`User ${userId} requesting accounting settings for companyId: ${companyId}`);
+  const { accountBookId } = query;
 
   // Info: (20250424 - Shirley) Check company and team permissions
-  const company = await getCompanyById(companyId);
-  if (!company) {
+  const accountBook = await getCompanyById(accountBookId);
+  if (!accountBook) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const { teamId: companyTeamId } = company;
-  if (!companyTeamId) {
+  const { teamId: accountBookTeamId } = accountBook;
+  if (!accountBookTeamId) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  const userTeam = teams?.find((team) => team.id === accountBookTeamId);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -84,19 +82,16 @@ async function handleGetRequest(req: NextApiRequest) {
   });
 
   if (!assertResult.can) {
-    loggerBack.info(
-      `User ${userId} does not have permission to view accounting settings for company ${companyId}`
-    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   // Info: (20250424 - Shirley) Get accounting settings
-  const accountingSetting = await getAccountingSettingByCompanyId(companyId);
+  const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
   if (accountingSetting) {
     payload = formatAccountingSetting(accountingSetting);
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } else {
-    const createdAccountingSetting = await createAccountingSetting(companyId);
+    const createdAccountingSetting = await createAccountingSetting(accountBookId);
     if (createdAccountingSetting) {
       payload = formatAccountingSetting(createdAccountingSetting);
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -104,8 +99,6 @@ async function handleGetRequest(req: NextApiRequest) {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
-
-  loggerBack.info(`Successfully retrieved accounting settings for company ${companyId}`);
 
   // Info: (20250424 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
@@ -139,7 +132,7 @@ async function handlePutRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { teams } = session;
 
   // Info: (20250424 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -149,19 +142,15 @@ async function handlePutRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Validate request data
   const { query, body } = checkRequestData(apiName, req, session);
-  if (!query || !query.companyId || !body) {
+  if (!query || !query.accountBookId || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { companyId } = query;
+  const { accountBookId } = query;
   const accountingSetting = body;
 
-  loggerBack.info(`User ${userId} updating accounting settings for companyId: ${companyId}`, {
-    accountingSettingId: accountingSetting.id,
-  });
-
   // Info: (20250424 - Shirley) Check company and team permissions
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -182,27 +171,17 @@ async function handlePutRequest(req: NextApiRequest) {
   });
 
   if (!assertResult.can) {
-    loggerBack.info(
-      `User ${userId} does not have permission to update accounting settings for company ${companyId}`
-    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   // Info: (20250424 - Shirley) First check if the accounting setting exists
   try {
     // Info: (20250424 - Shirley) Check if the accounting setting exists before updating
-    const existingAccountingSetting = await getAccountingSettingByCompanyId(companyId);
+    const existingAccountingSetting = await getAccountingSettingByCompanyId(accountBookId);
 
     if (!existingAccountingSetting) {
-      loggerBack.error(`Accounting setting not found for company ${companyId}`);
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
-
-    loggerBack.info(`Found existing accounting setting for company ${companyId}`, {
-      existingId: existingAccountingSetting.id,
-      requestedId: accountingSetting.id,
-      deletedAt: existingAccountingSetting.deletedAt,
-    });
 
     // Info: (20250424 - Shirley) Make sure we're using the correct ID from the database
     if (existingAccountingSetting.id !== accountingSetting.id) {
@@ -214,30 +193,25 @@ async function handlePutRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Update accounting settings
     const updatedAccountingSetting = await updateAccountingSettingById(
-      companyId,
+      accountBookId,
       accountingSetting
     );
 
     if (updatedAccountingSetting) {
       payload = formatAccountingSetting(updatedAccountingSetting);
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-      loggerBack.info(`Successfully updated accounting settings for company ${companyId}`);
 
       // Info: (20250424 - Shirley) Only validate output data when we have valid payload
       const { isOutputDataValid } = validateOutputData(apiName, payload);
       if (!isOutputDataValid) {
-        loggerBack.error(`Invalid output data format for company ${companyId}`, { payload });
         statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
         payload = null;
       }
     } else {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      loggerBack.error(
-        `Failed to update accounting settings - resource not found for company ${companyId}`
-      );
     }
   } catch (error) {
-    loggerBack.error(`Failed to update accounting settings for company ${companyId}`, {
+    loggerBack.error(`Failed to update accounting settings for company ${accountBookId}`, {
       error,
       errorMessage: (error as Error).message,
       accountingSettingId: accountingSetting.id,

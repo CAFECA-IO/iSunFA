@@ -440,7 +440,7 @@ const StepTwoForm = ({
                 <span className="text-text-state-error"> *</span>
               </h4>
               <input
-                type="number"
+                type="text"
                 placeholder={t(
                   'dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_PERSONAL_ID'
                 )}

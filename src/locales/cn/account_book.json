@@ -64,5 +64,8 @@
   },
   "ACCOUNT_BOOK_PRIVACY_MODAL": {
     "CHANGE_ACCOUNT_BOOK_PRIVACY": "更改账本隐私"
+  },
+  "EDIT_ACCOUNT_BOOK_MODAL": {
+    "EDIT_ACCOUNT_BOOK": "编辑账本"
   }
 }

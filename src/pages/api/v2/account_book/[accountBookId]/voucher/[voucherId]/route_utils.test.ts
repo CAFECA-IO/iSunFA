@@ -5,7 +5,7 @@ import { IGetOneVoucherResponse } from '@/interfaces/voucher';
 import {
   voucherAPIGetOneUtils,
   voucherAPIPutUtils as putUtils,
-} from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
 import {
   // Asset as PrismaAsset,
   // AssetVoucher as PrismaAssetVoucher,
