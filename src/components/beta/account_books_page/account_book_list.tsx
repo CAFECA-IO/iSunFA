@@ -5,20 +5,20 @@ import { IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface AccountBookListProps {
   accountBookList: IAccountBookWithTeam[];
-  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToEdit: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToTransfer: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+  setAccountBookToChangeTag: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
   shouldGroupByTeam?: boolean;
 }
 
 const AccountBookList = ({
   accountBookList,
-  setAccountBookToTransfer,
   setAccountBookToEdit,
+  setAccountBookToTransfer,
+  setAccountBookToChangeTag,
   setAccountBookToDelete,
-  setAccountBookToUploadPicture,
   setRefreshKey,
   shouldGroupByTeam = false, // Info: (20250227 - Liz) 預設不把帳本依照 team 分組
 }: AccountBookListProps) => {
@@ -57,10 +57,10 @@ const AccountBookList = ({
               <AccountBookItem
                 key={accountBook.id}
                 accountBook={accountBook}
-                setAccountBookToTransfer={setAccountBookToTransfer}
                 setAccountBookToEdit={setAccountBookToEdit}
+                setAccountBookToTransfer={setAccountBookToTransfer}
+                setAccountBookToChangeTag={setAccountBookToChangeTag}
                 setAccountBookToDelete={setAccountBookToDelete}
-                setAccountBookToUploadPicture={setAccountBookToUploadPicture}
                 setRefreshKey={setRefreshKey}
               />
             ))}

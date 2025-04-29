@@ -653,7 +653,7 @@ const VoucherEditingPageBody: React.FC<{
 
     if (isOnlyUpdateVoucher) {
       // Info: (20241119 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
-      updateVoucher({ params: { accountBookId, voucherId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+      updateVoucher({ params: { accountBookId, voucherId }, body });
     } else {
       // Info: (20241119 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
       deleteVoucher({ params: { accountBookId, voucherId } });

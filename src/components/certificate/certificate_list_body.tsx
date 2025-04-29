@@ -39,7 +39,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
@@ -438,7 +438,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         });
       }
     },
-    [certificates, companyId]
+    [certificates, accountBookId]
   );
 
   const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
@@ -483,7 +483,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
@@ -491,11 +491,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
         channel.unsubscribe();
       }
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
-  return !companyId ? (
+  return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
         src="/elements/uploading.gif"
@@ -519,7 +519,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {isEditModalOpen && (
         <CertificateEditModal
-          companyId={companyId}
+          accountBookId={accountBookId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}

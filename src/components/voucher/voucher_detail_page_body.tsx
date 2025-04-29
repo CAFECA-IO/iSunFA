@@ -46,7 +46,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     data: voucherData,
     isLoading,
     error,
-  } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2, { params });
+  } = APIHandler<IVoucherDetailForFrontend>(
+    APIName.VOUCHER_GET_BY_ID_V2,
+    // { params } // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
+    { params: { companyId: accountBookId, voucherId } }
+  );
 
   // Info: (20241029 - Julian) Delete voucher API
   const {
@@ -54,12 +58,17 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     isLoading: isDeleting,
     success: deleteSuccess,
     error: deleteError,
-  } = APIHandler(APIName.VOUCHER_DELETE_V2, { params });
+  } = APIHandler(
+    APIName.VOUCHER_DELETE_V2,
+    // { params }
+    { params: { companyId: accountBookId, voucherId } }
+  );
 
   // Info: (20250221 - Julian) Restore voucher API
   const { trigger: restoreVoucher, isLoading: isRestoring } = APIHandler(
     APIName.VOUCHER_RESTORE_V2,
-    { params }
+    // { params }
+    { params: { accountBookId, voucherId } }
   );
 
   const {
@@ -141,11 +150,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   };
 
   useEffect(() => {
-    // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
+    // Info: (20241121 - Julian) Get voucher detail when accountBookId and voucherId are ready
     if (accountBookId && voucherId) {
       // Deprecated: (20250124 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('API Params:', params); // Info: (20250122 - Anna) 檢查 companyId 和 voucherId 是否正確
+      console.log('API Params:', { companyId: accountBookId, voucherId }); // Info: (20250122 - Anna) 檢查 accountBookId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [accountBookId, voucherId]);

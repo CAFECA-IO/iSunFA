@@ -119,7 +119,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
   const getAccountData = async () => {
     // Info: (20250425 - Julian) GET API
-    const { data, success } = await getAccountSetting({ params: { companyId: accountBookId } });
+    const { data, success } = await getAccountSetting({ params: { accountBookId } });
 
     // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
     if (success && data) {
