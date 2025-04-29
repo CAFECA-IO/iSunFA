@@ -83,7 +83,15 @@
     "PROF_ELEMENTARY": "Elementary",
     "PROF_LIMITED": "Limited working",
     "PROF_PROFESSIONAL": "Professional working",
-    "PROF_NATIVE": "Native or bilingual"
+    "PROF_NATIVE": "Native or bilingual",
+    "CERTIFICATE_MODAL_TITLE": "Certificate",
+    "CERTIFICATE_MODAL_NAME": "Name",
+    "CERTIFICATE_MODAL_ORGA": "Issuing Organization",
+    "CERTIFICATE_MODAL_ISSUE_DATE": "Issue Date",
+    "CERTIFICATE_MODAL_EXPIRE_DATE": "Expiration Date",
+    "UPLOAD_TEXT_1": "Drop your files here or",
+    "UPLOAD_TEXT_2": "Browse",
+    "UPLOAD_MAXIMUM_SIZE": "Maximum file size: 4 MB"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
