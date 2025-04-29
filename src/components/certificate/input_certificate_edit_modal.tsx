@@ -29,7 +29,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -43,7 +43,7 @@ interface InputCertificateEditModalProps {
 
 const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -162,7 +162,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
   const getSettingTaxRatio = useCallback(async () => {
     const { success, data } = await getAccountSetting({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success && data) {
       if (formState.taxRatio === undefined) {
@@ -170,16 +170,16 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
       }
     }
-  }, [companyId, formState.taxRatio]);
+  }, [accountBookId, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { companyId: accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   const {
     targetRef: invoiceTypeMenuRef,
@@ -671,7 +671,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-col items-start gap-2 md:h-105px flex-1">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
@@ -706,7 +706,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
               </div>
 
               {/* Info: (20250414 - Anna) Tax */}
-              <div className="relative flex flex-col items-start gap-2 md:h-105px flex-1">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.TAX')}
                   <span className="text-text-state-error">*</span>

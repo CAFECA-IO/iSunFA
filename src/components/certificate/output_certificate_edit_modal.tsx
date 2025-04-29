@@ -30,7 +30,7 @@ import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 
 interface OutputCertificateEditModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -44,7 +44,7 @@ interface OutputCertificateEditModalProps {
 
 const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -156,7 +156,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
   const getSettingTaxRatio = useCallback(async () => {
     const { success, data } = await getAccountSetting({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success && data) {
       if (formState.taxRatio === undefined) {
@@ -164,16 +164,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
       }
     }
-  }, [companyId, formState.taxRatio]);
+  }, [accountBookId, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { companyId: accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   const {
     targetRef: invoiceTypeMenuRef,
@@ -419,7 +419,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         />
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-        <div className="hide-scrollbar flex md:h-600px w-full items-start justify-between gap-5 overflow-y-scroll md:flex-row">
+        <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
           <ImageZoom
             imageUrl={certificate.file.url}

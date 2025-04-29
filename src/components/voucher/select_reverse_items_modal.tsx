@@ -133,7 +133,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   const { connectedAccountBook } = useUserCtx();
 
   const params = {
-    companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
+    accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID,
     accountId: modalData.account?.id,
   };
 
