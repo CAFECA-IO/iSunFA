@@ -18,7 +18,7 @@ export function transformCertificateRC2(
 ): z.infer<typeof CertificateRC2InputSchema> | z.infer<typeof CertificateRC2OutputSchema> {
   const base = {
     id: cert.id,
-    accountbookId: cert.accountbookId,
+    accountBookId: cert.accountBookId,
     fileId: cert.fileId,
     uploaderId: cert.uploaderId,
     direction: cert.direction,
@@ -76,10 +76,10 @@ export async function findCertificateRC2ById(certificateId: number) {
   return transformCertificateRC2(certificate);
 }
 
-export async function listCertificateRC2Input(accountbookId: number) {
+export async function listCertificateRC2Input(accountBookId: number) {
   const certificates = await prisma.certificateRC2.findMany({
     where: {
-      accountbookId,
+      accountBookId,
       direction: CertificateDirection.INPUT,
       deletedAt: null,
     },
@@ -93,10 +93,10 @@ export async function listCertificateRC2Input(accountbookId: number) {
     );
 }
 
-export async function listCertificateRC2Output(accountbookId: number) {
+export async function listCertificateRC2Output(accountBookId: number) {
   const certificates = await prisma.certificateRC2.findMany({
     where: {
-      accountbookId,
+      accountBookId,
       direction: CertificateDirection.OUTPUT,
       deletedAt: null,
     },

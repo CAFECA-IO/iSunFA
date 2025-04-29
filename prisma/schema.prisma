@@ -430,7 +430,7 @@ enum TaxType {
 
 model CertificateRC2 {
   id                            Int     @id @default(autoincrement())
-  accountbookId                 Int     @map("accountbook_id")
+  accountBookId                 Int     @map("accountbook_id")
   fileId                        Int     @map("file_id")
   uploaderId                    Int     @map("uploader_id")
   direction                     CertificateDirection @map("direction")
@@ -472,7 +472,7 @@ model CertificateRC2 {
 
 
   // Info: (20250429 - Tzuhan) 關聯
-  accountbook Company @relation(fields: [accountbookId], references: [id])
+  accountbook Company @relation(fields: [accountBookId], references: [id])
   file        File    @relation(fields: [fileId], references: [id])
   uploader    User    @relation(fields: [uploaderId], references: [id])
 

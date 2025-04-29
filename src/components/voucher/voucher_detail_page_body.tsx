@@ -36,8 +36,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
 
   const accountBookId = connectedAccountBook?.id;
 
-  // const params = { companyId, voucherId }; // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
-
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
 
   // Info: (20241029 - Julian) Get voucher details from API
@@ -352,21 +350,19 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const isDisplayAsset = !isLoading ? (
     <div className="flex flex-col">
       {assets.map((asset) => {
-        return (
-          // Info: (20250214 - Julian) 被刪除的資產不顯示連結
-          asset.deletedAt === null ? (
-            <Link
-              key={asset.id}
-              href={`/users/asset/${asset.id}`}
-              className="text-link-text-primary hover:underline"
-            >
-              {asset.id}
-            </Link>
-          ) : (
-            <div key={asset.id} className="text-text-neutral-tertiary">
-              {asset.id}
-            </div>
-          )
+        // Info: (20250214 - Julian) 被刪除的資產不顯示連結
+        return asset.deletedAt === null ? (
+          <Link
+            key={asset.id}
+            href={`/users/asset/${asset.id}`}
+            className="text-link-text-primary hover:underline"
+          >
+            {asset.id}
+          </Link>
+        ) : (
+          <div key={asset.id} className="text-text-neutral-tertiary">
+            {asset.id}
+          </div>
         );
       })}
     </div>

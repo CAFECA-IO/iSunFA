@@ -57,7 +57,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await listCertificateRC2Input(query.accountbookId);
+  const certificateList = await listCertificateRC2Input(query.accountBookId);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_CERTIFICATE_RC2_INPUT,

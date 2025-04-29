@@ -8,7 +8,7 @@ import {
 
 export interface ICertificateRC2Base {
   id: number;
-  accountbookId: number;
+  accountBookId: number;
   fileId: number;
   uploaderId: number;
   direction: CertificateDirection;

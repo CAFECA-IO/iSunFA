@@ -179,7 +179,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId: accountBookId },
+      params: { accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);

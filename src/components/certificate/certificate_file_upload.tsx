@@ -20,7 +20,7 @@ interface CertificateFileUploadProps {
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
   const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
@@ -55,7 +55,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
     async (fileId: number) => {
       try {
         const { success, data } = await createCertificateAPI({
-          params: { companyId },
+          params: { accountBookId },
           body: { fileIds: [fileId] },
         });
 
@@ -66,7 +66,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
         updateFileStatus(fileId, '', ProgressStatus.FAILED);
       }
     },
-    [companyId]
+    [accountBookId]
   );
 
   // Info: (20241204 - tzuhan) 處理來自 Pusher 的新文件

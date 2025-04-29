@@ -256,7 +256,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (selectedIds: number[]) => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
-          params: { companyId: accountBookId },
+          params: { accountBookId },
           body: { certificateIds: selectedIds },
         });
 
@@ -374,14 +374,14 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         const postOrPutAPI = invoice.id
           ? updateInvoiceAPI({
               params: {
-                companyId: accountBookId,
+                accountBookId,
                 certificateId: certificate.id,
                 invoiceId: invoice.id,
               },
               body: invoice,
             })
           : createInvoiceAPI({
-              params: { companyId: accountBookId, certificateId: certificate.id },
+              params: { accountBookId, certificateId: certificate.id },
               body: invoice,
             });
 
@@ -540,7 +540,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
-          params={{ companyId: accountBookId }}
+          params={{ accountBookId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}

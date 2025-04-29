@@ -166,7 +166,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
         const interval = setInterval(async () => {
           const { success, data } = await getAIStatus({
             params: {
-              companyId: params!.companyId,
+              accountBookId: params!.companyId,
               resultId: params!.askAIId,
             },
           });

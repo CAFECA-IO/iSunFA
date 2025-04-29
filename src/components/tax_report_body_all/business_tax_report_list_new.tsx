@@ -165,7 +165,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     try {
       const response = await generateFinancialReport({
-        params: { companyId: connectedAccountBook.id },
+        params: { accountBookId: connectedAccountBook.id },
         body: {
           type: FinancialReportTypesKey.report_401,
           reportLanguage: selectedReportLanguage,

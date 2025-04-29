@@ -77,20 +77,23 @@ async function handleGetRequest(req: NextApiRequest) {
   const { accountId, accountBookId } = query;
 
   // Info: (20250425 - Shirley) Format and validate parameters
-  const { accountIdNumber, companyIdNumber } = formatParams(accountBookId, accountId?.toString());
+  const { accountIdNumber, companyIdNumber: accountBookIdNumber } = formatParams(
+    accountBookId,
+    accountId?.toString()
+  );
 
   // Info: (20250425 - Shirley) Check company and team permissions
-  const company = await getCompanyById(companyIdNumber);
-  if (!company) {
+  const accountBook = await getCompanyById(accountBookIdNumber);
+  if (!accountBook) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const { teamId: companyTeamId } = company;
-  if (!companyTeamId) {
+  const { teamId: accountBookTeamId } = accountBook;
+  if (!accountBookTeamId) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  const userTeam = teams?.find((team) => team.id === accountBookTeamId);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -105,7 +108,7 @@ async function handleGetRequest(req: NextApiRequest) {
   }
 
   // Info: (20250425 - Shirley) Get account details
-  const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, companyIdNumber);
+  const accountFromDb = await findFirstAccountInPrisma(accountIdNumber, accountBookIdNumber);
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS;
   payload = account;

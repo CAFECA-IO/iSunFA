@@ -86,7 +86,7 @@ const certificateListQueryValidator = z.object({
 });
 
 export const certificateRC2ListQueryValidator = paginatedDataQuerySchema.extend({
-  accountbookId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   tab: z.nativeEnum(InvoiceTabs).optional(),
   type: z
     .nativeEnum(InvoiceType)

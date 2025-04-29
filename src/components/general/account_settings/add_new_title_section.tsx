@@ -67,7 +67,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   // Info: (20250212 - Julian) 取得會計科目列表的 API
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: accountBookId }, query: queryCondition }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    { params: { accountBookId }, query: queryCondition }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
   );
@@ -150,7 +150,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   // Info: (20250212 - Julian) 從 API 取得會計科目列表
   useEffect(() => {
-    getAccountList({ params: { companyId: accountBookId }, query: queryCondition }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    getAccountList({ params: { accountBookId }, query: queryCondition }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     setFilteredAccountList(accountList);
   }, []);
 

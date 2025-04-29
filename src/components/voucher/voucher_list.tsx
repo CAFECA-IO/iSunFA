@@ -158,7 +158,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isDeleting) {
       selectedVoucherList.forEach((voucher) => {
         deleteVoucher({
-          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
+          params: { accountBookId: connectedAccountBook?.id, voucherId: voucher.id },
         });
       });
 

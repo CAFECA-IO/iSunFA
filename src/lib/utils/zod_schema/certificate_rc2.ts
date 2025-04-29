@@ -10,7 +10,7 @@ import { z } from 'zod';
 
 export const CertificateRC2BaseSchema = z.object({
   id: z.number(),
-  accountbookId: z.number(),
+  accountBookId: z.number(),
   fileId: z.number(),
   uploaderId: z.number(),
   direction: z.nativeEnum(CertificateDirection),
@@ -61,7 +61,7 @@ export const CertificateRC2OutputSchema = CertificateRC2BaseSchema.extend({
 export const listCertificateRC2Input = {
   input: {
     querySchema: paginatedDataQuerySchema.extend({
-      accountbookId: z.number(),
+      accountBookId: z.number(),
     }),
     bodySchema: z.null(),
   },
@@ -72,7 +72,7 @@ export const listCertificateRC2Input = {
 export const listCertificateRC2Output = {
   input: {
     querySchema: paginatedDataQuerySchema.extend({
-      accountbookId: z.number(),
+      accountBookId: z.number(),
     }),
     bodySchema: z.null(),
   },
@@ -100,7 +100,7 @@ export const getCertificateRC2Output = {
 
 export const createCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountbookId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number() }),
     bodySchema: CertificateRC2InputSchema.omit({
       id: true,
       createdAt: true,
@@ -114,7 +114,7 @@ export const createCertificateRC2Input = {
 
 export const createCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountbookId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number() }),
     bodySchema: CertificateRC2OutputSchema.omit({
       id: true,
       createdAt: true,

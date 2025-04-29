@@ -53,12 +53,14 @@ export const handleGetRequest: IHandleRequest<
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
   const { userId, teams } = session;
+
   const { accountBookId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
     query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
     const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -193,11 +195,13 @@ export const handlePostRequest: IHandleRequest<
 
   const { fileIds } = body;
   const { userId, teams } = session;
+
   const { accountBookId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
     const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -299,11 +303,13 @@ export const handleDeleteRequest: IHandleRequest<
 
   const { certificateIds } = body;
   const { userId, teams } = session;
+
   const { accountBookId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
     const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
