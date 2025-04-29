@@ -31,7 +31,7 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
     issuingOrganization: '',
     issueDate: { year: 0, month: 0 },
     expirationDate: { year: 0, month: 0 },
-    certificate: null,
+    certificates: null,
   };
 
   const {
@@ -39,16 +39,18 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
     issuingOrganization: initialIssuingOrganization,
     issueDate: initialIssueDate,
     expirationDate: initialExpirationDate,
-    certificate: initialCertificate,
+    certificates: initialCertificates,
   } = certData || defaultState;
 
   const [nameInput, setNameInput] = useState<string>(initialName);
   const [organizationInput, setOrganizationInput] = useState<string>(initialIssuingOrganization);
   const [issueDate, setIssueDate] = useState<IExperienceDate>(initialIssueDate);
   const [expirationDate, setExpirationDate] = useState<IExperienceDate>(initialExpirationDate);
-  const [uploadedCertificate, setUploadedCertificate] = useState<File | null>(initialCertificate);
+  const [uploadedCertificates, setUploadedCertificates] = useState<FileList | null>(
+    initialCertificates
+  );
 
-  const saveDisable = !uploadedCertificate;
+  const saveDisable = !uploadedCertificates;
 
   const issueDateValueFormat = `${issueDate.year}-${String(issueDate.month).padStart(2, '0')}`;
   const expirationDateValueFormat = `${expirationDate.year}-${String(expirationDate.month).padStart(2, '0')}`;
@@ -74,7 +76,7 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
 
   // Info: (20250429 - Julian) 送出表單
   const saveClickHandler = (e: React.FormEvent<HTMLFormElement>) => {
-    if (!uploadedCertificate) return;
+    if (!uploadedCertificates) return;
     e.preventDefault();
 
     const data: ICertificateData = {
@@ -82,7 +84,7 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
       issuingOrganization: organizationInput,
       issueDate,
       expirationDate,
-      certificate: uploadedCertificate,
+      certificates: uploadedCertificates,
     };
 
     saveHandler(data);
@@ -193,8 +195,8 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
           </div>
           {/* Info: (20250429 - Julian) Upload Certificate */}
           <CertificateUploadArea
-            certificate={uploadedCertificate}
-            setCertificate={setUploadedCertificate}
+            certificates={uploadedCertificates}
+            setCertificates={setUploadedCertificates}
           />
         </div>
         {/* Info: (20250429 - Julian) Buttons */}

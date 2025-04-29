@@ -9,8 +9,8 @@ import CertificateUploadModal from '@/components/join_us/certificate_upload_moda
 import {
   ICertificateData,
   ICertificateSkill,
-  ILanguageSkill,
   ILanguageSkillData,
+  ILanguageSkill,
   ModalType,
 } from '@/interfaces/skill';
 
@@ -164,7 +164,7 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
         issuingOrganization: data.issuingOrganization,
         issueDate: data.issueDate,
         expirationDate: data.expirationDate,
-        certificate: data.certificate,
+        certificates: data.certificates,
       };
 
       setCertSkillList((prev) => [...prev, newData]);
@@ -180,7 +180,7 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
           issuingOrganization: data.issuingOrganization,
           issueDate: data.issueDate,
           expirationDate: data.expirationDate,
-          certificate: data.certificate,
+          certificates: data.certificates,
         };
         const updatedList = [...prev];
         updatedList[targetIndex] = newData;

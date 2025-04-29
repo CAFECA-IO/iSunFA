@@ -40,7 +40,7 @@ export interface ICertificateData {
   issuingOrganization: string;
   issueDate: IExperienceDate;
   expirationDate: IExperienceDate;
-  certificate: File;
+  certificates: FileList;
 }
 
 export interface ICertificateSkill extends ICertificateData {
