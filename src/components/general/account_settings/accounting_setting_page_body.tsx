@@ -193,7 +193,6 @@ const AccountingSettingPageBody: React.FC = () => {
     };
 
     updateSetting({ params: { accountBookId }, body });
-    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   // Info: (20250425 - Julian) 取得會計設定資料
