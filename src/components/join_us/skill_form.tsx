@@ -6,7 +6,7 @@ import { LuPencil } from 'react-icons/lu';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import LanguageModal from '@/components/join_us/language_modal';
 import CertificateUploadModal from '@/components/join_us/certificate_upload_modal';
-import { ILanguageSkill, LangModalType, Proficiency } from '@/interfaces/skill';
+import { ILanguageSkill, ModalType, Proficiency } from '@/interfaces/skill';
 
 interface ISkillFormProps {
   toPrevStep: () => void;
@@ -64,7 +64,7 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
   const [isShowCertModal, setIsShowCertModal] = useState<boolean>(false);
 
   // Info: (20250428 - Julian) Language state
-  const [langModalType, setLangModalType] = useState<LangModalType>(LangModalType.CREATE);
+  const [langModalType, setLangModalType] = useState<ModalType>(ModalType.CREATE);
   const [editedLangData, setEditedLangData] = useState<ILanguageSkill | undefined>(undefined);
 
   const toggleLangModal = () => setIsShowLangModal((prev) => !prev);
@@ -72,21 +72,21 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
 
   // Info: (20250428 - Julian) 「新增」語言技能
   const createLangHandler = () => {
-    setLangModalType(LangModalType.CREATE);
+    setLangModalType(ModalType.CREATE);
     setEditedLangData(undefined);
     setIsShowLangModal(true);
   };
 
   // Info: (20250428 - Julian) 「編輯」語言技能
   const editLangHandler = (landData: ILanguageSkill) => {
-    setLangModalType(LangModalType.EDIT);
+    setLangModalType(ModalType.EDIT);
     setEditedLangData(landData);
     setIsShowLangModal(true);
   };
 
   // Info: (20250428 - Julian) 更新 languageSkillList
   const saveLangHandler = (language: string, proficiency: keyof typeof Proficiency) => {
-    if (langModalType === LangModalType.CREATE) {
+    if (langModalType === ModalType.CREATE) {
       // Info: (20250428 - Julian) 「新增」直接加入
       const newId = (langSkillList[langSkillList.length - 1]?.id ?? 0) + 1; // Info: (20250428 - Julian) 新增 id: 找到最後一個 id + 1
       const newData: ILanguageSkill = {

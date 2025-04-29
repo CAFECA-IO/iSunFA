@@ -4,11 +4,11 @@ import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { ILanguageSkill, Proficiency, LangModalType } from '@/interfaces/skill';
+import { ILanguageSkill, Proficiency, ModalType } from '@/interfaces/skill';
 
 interface ILanguageModalProps {
   modalVisibilityHandler: () => void;
-  modalType: LangModalType;
+  modalType: ModalType;
   langData?: ILanguageSkill;
   saveHandler: (language: string, proficiency: keyof typeof Proficiency) => void;
   deleteHandler?: (langId: number) => void;
@@ -82,7 +82,7 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
 
   // Info: (20250428 - Julian) 新增 -> 取消按鈕 / 編輯 -> 刪除按鈕
   const cancelButton =
-    modalType === LangModalType.CREATE ? (
+    modalType === ModalType.CREATE ? (
       <LandingButton
         type="button"
         variant="default"

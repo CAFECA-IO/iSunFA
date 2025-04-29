@@ -27,6 +27,9 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
     year: 0,
     month: 0,
   });
+  const [uploadedCertificate, setUploadedCertificate] = useState<File | null>(null);
+
+  const saveDisable = !uploadedCertificate;
 
   const issueDateValueFormat = `${issueDate.year}-${String(issueDate.month).padStart(2, '0')}`;
   const expirationDateValueFormat = `${expirationDate.year}-${String(expirationDate.month).padStart(2, '0')}`;
@@ -51,6 +54,7 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
   };
 
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!uploadedCertificate) return;
     e.preventDefault();
   };
 
@@ -129,14 +133,22 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
             />
           </div>
           {/* Info: (20250429 - Julian) Upload Certificate */}
-          <CertificateUploadArea />
+          <CertificateUploadArea
+            certificate={uploadedCertificate}
+            setCertificate={setUploadedCertificate}
+          />
         </div>
         {/* Info: (20250429 - Julian) Buttons */}
         <div className="ml-auto mt-40px flex items-center gap-lv-6">
           <LandingButton type="button" variant="default" className="font-bold">
             <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
           </LandingButton>
-          <LandingButton type="submit" variant="primary" className="font-bold">
+          <LandingButton
+            type="submit"
+            variant="primary"
+            className="font-bold"
+            disabled={saveDisable}
+          >
             {t('hiring:COMMON.SAVE')}
           </LandingButton>
         </div>
