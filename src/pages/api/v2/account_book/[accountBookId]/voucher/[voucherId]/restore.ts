@@ -6,7 +6,7 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { loggerError } from '@/lib/utils/logger_back';
-import { voucherAPIRestoreUtils as restoreUtils } from '@/pages/api/v2/company/[companyId]/voucher/[voucherId]/route_utils';
+import { voucherAPIRestoreUtils as restoreUtils } from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
 

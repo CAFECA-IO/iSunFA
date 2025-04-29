@@ -14,7 +14,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { ILineItemEntity, IReverseItem } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { lineItemGetByAccountAPIUtils as getUtils } from '@/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
+import { lineItemGetByAccountAPIUtils as getUtils } from '@/pages/api/v2/account_book/[accountBookId]/account/[accountId]/route_utils';
 
 type ILineItemWithAccountAndVoucher = ILineItemEntity & {
   account: IAccountEntity;

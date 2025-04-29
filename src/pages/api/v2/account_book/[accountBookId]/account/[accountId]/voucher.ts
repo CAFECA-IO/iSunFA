@@ -16,7 +16,7 @@ import { IAccountEntity } from '@/interfaces/accounting_account';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IUserEntity } from '@/interfaces/user';
 import type { IFileEntity } from '@/interfaces/file';
-import { voucherGetByAccountAPIUtils as getUtils } from 'src/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
+import { voucherGetByAccountAPIUtils as getUtils } from '@/pages/api/v2/account_book/[accountBookId]/account/[accountId]/route_utils';
 
 type IVoucherEntityWithLineItems = IVoucherEntity &
   IVoucherEntity & {

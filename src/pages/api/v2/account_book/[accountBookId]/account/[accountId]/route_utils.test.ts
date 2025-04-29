@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { IGetLineItemByAccount } from '@/interfaces/line_item';
-import { lineItemGetByAccountAPIUtils } from '@/pages/api/v2/company/[companyId]/account/[accountId]/route_utils';
+import { lineItemGetByAccountAPIUtils } from '@/pages/api/v2/account_book/[accountBookId]/account/[accountId]/route_utils';
 import { LineItem as PrismaLineItem, Account as PrismaAccount } from '@prisma/client';
 
 describe('lineItemGetByAccountAPIUtils', () => {

@@ -60,7 +60,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { teams } = session;
 
   // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -74,14 +74,10 @@ async function handleGetRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, accountBookId: companyId } = query;
-
-  loggerBack.info(
-    `User ${userId} requesting account details for accountId: ${accountId}, companyId: ${companyId}`
-  );
+  const { accountId, accountBookId } = query;
 
   // Info: (20250425 - Shirley) Format and validate parameters
-  const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
+  const { accountIdNumber, companyIdNumber } = formatParams(accountBookId, accountId?.toString());
 
   // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyIdNumber);
@@ -105,9 +101,6 @@ async function handleGetRequest(req: NextApiRequest) {
   });
 
   if (!assertResult.can) {
-    loggerBack.info(
-      `User ${userId} does not have permission to view account ${accountId} for company ${companyId}`
-    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -116,8 +109,6 @@ async function handleGetRequest(req: NextApiRequest) {
   const account = accountFromDb ? formatAccount(accountFromDb) : ({} as IAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS;
   payload = account;
-
-  loggerBack.info(`Successfully retrieved account ${accountId} for company ${companyId}`);
 
   // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
@@ -151,7 +142,7 @@ async function handlePutRequest(req: NextApiRequest) {
 
   // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { teams } = session;
 
   // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -167,8 +158,6 @@ async function handlePutRequest(req: NextApiRequest) {
 
   const { accountId, accountBookId: companyId } = query;
   const { name, note } = body;
-
-  loggerBack.info(`User ${userId} updating account ${accountId} for company ${companyId}`);
 
   // Info: (20250425 - Shirley) Format and validate parameters
   const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
@@ -196,9 +185,6 @@ async function handlePutRequest(req: NextApiRequest) {
   });
 
   if (!permissionResult.can) {
-    loggerBack.info(
-      `User ${userId} with role ${userTeam.role} does not have permission to update account ${accountId} for company ${companyId}`
-    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -216,15 +202,12 @@ async function handlePutRequest(req: NextApiRequest) {
   );
 
   if (!updatedAccount) {
-    loggerBack.error(`Failed to update account ${accountId} for company ${companyId}`);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
   const account = formatAccount(updatedAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   payload = account;
-
-  loggerBack.info(`Successfully updated account ${accountId} for company ${companyId}`);
 
   // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
@@ -258,7 +241,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
 
   // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { teams } = session;
 
   // Info: (20250425 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -272,12 +255,10 @@ async function handleDeleteRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, accountBookId: companyId } = query;
-
-  loggerBack.info(`User ${userId} deleting account ${accountId} for company ${companyId}`);
+  const { accountId, accountBookId } = query;
 
   // Info: (20250425 - Shirley) Format and validate parameters
-  const { accountIdNumber, companyIdNumber } = formatParams(companyId, accountId?.toString());
+  const { accountIdNumber, companyIdNumber } = formatParams(accountBookId, accountId?.toString());
 
   // Info: (20250425 - Shirley) Check company and team permissions
   const company = await getCompanyById(companyIdNumber);
@@ -302,9 +283,6 @@ async function handleDeleteRequest(req: NextApiRequest) {
   });
 
   if (!permissionResult.can) {
-    loggerBack.info(
-      `User ${userId} with role ${userTeam.role} does not have permission to delete account ${accountId} for company ${companyId}`
-    );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
@@ -312,15 +290,12 @@ async function handleDeleteRequest(req: NextApiRequest) {
   const deletedAccount = await softDeleteAccountInPrisma(accountIdNumber, companyIdNumber);
 
   if (!deletedAccount) {
-    loggerBack.error(`Failed to delete account ${accountId} for company ${companyId}`);
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
 
   const account = formatAccount(deletedAccount);
   statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
   payload = account;
-
-  loggerBack.info(`Successfully deleted account ${accountId} for company ${companyId}`);
 
   // Info: (20250425 - Shirley) Validate output data
   const { isOutputDataValid } = validateOutputData(apiName, payload);
