@@ -39,7 +39,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const { t } = useTranslation(['certificate', 'common']);
 
     const { connectedAccountBook } = useUserCtx();
-    const companyId = connectedAccountBook?.id;
+    const accountBookId = connectedAccountBook?.id;
 
     const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
       APIName.COUNTERPARTY_LIST
@@ -92,7 +92,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(true);
       setCounterpartyMenuOpen(true);
       const { success, data } = await getCounterpartyList({
-        params: { accountBookId: companyId },
+        params: { accountBookId },
       });
       if (success) {
         setCounterpartyList(data?.data ?? []);
@@ -134,7 +134,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     useEffect(() => {
       // Info: (20241206 - Julian) Add Counterparty Event
       const handleAddCounterparty = (newCounterparty: ICounterparty) => {
-        if (!companyId) return;
+        if (!accountBookId) return;
 
         filteredCounterpartyList.push(newCounterparty);
         toastHandler({
@@ -159,7 +159,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         name: searchName,
         taxId: searchTaxId,
       });
-    }, [companyId, filteredCounterpartyList, searchName, searchTaxId]);
+    }, [accountBookId, filteredCounterpartyList, searchName, searchTaxId]);
 
     useEffect(() => {
       // Info: (20241209 - Julian) 如果 flagOfSubmit 改變，則顯示紅色提示
