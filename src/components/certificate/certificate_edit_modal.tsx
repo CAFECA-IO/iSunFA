@@ -30,7 +30,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 
 interface CertificateEditModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -41,7 +41,7 @@ interface CertificateEditModalProps {
 
 const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -129,7 +129,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   const getSettingTaxRatio = useCallback(async () => {
     const { success, data } = await getAccountSetting({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success && data) {
       setTaxSetting(data.taxSettings);
@@ -143,16 +143,16 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
         }
       }
     }
-  }, [companyId, formState.inputOrOutput, formState.taxRatio]);
+  }, [accountBookId, formState.inputOrOutput, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   const {
     targetRef: invoiceTypeMenuRef,

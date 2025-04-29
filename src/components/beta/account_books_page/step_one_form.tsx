@@ -1,31 +1,37 @@
-import { Dispatch } from 'react';
+import { Dispatch, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { FaArrowRightLong } from 'react-icons/fa6';
+import { FiEdit2 } from 'react-icons/fi';
 import { cn } from '@/lib/utils/common';
 import Image from 'next/image';
 import { cityDistrictMap, CityList } from '@/constants/city_district';
-import { WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { Step1FormAction, Step1FormState } from '@/constants/account_book';
 import { ITeam } from '@/interfaces/team';
+import UploadAccountBookPictureModal from '@/components/beta/account_books_page/upload_account_book_picture_modal';
+import ChangePictureModal from '@/components/beta/account_books_page/change_picture_modal';
 
 interface StepOneFormProps {
   teamList: ITeam[];
   handleNext: () => void;
-  closeCreateAccountBookModal: () => void;
+  closeAccountBookInfoModal: () => void;
   step1FormState: Step1FormState;
   step1FormDispatch: Dispatch<Step1FormAction>;
+  accountBookToEdit?: IAccountBookWithTeam;
 }
 const StepOneForm = ({
   teamList,
   handleNext,
-  closeCreateAccountBookModal,
+  closeAccountBookInfoModal,
   step1FormState,
   step1FormDispatch,
+  accountBookToEdit,
 }: StepOneFormProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
 
   const {
+    imageId,
     companyName,
     responsiblePerson,
     taxId,
@@ -50,6 +56,12 @@ const StepOneForm = ({
     teamError,
     tagError,
   } = step1FormState;
+
+  const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+    IAccountBookWithTeam | undefined
+  >();
+  // Info: (20250429 - Liz) test
+  const [isChangePictureModalOpen, setIsChangePictureModalOpen] = useState<boolean>(false);
 
   const handleChange =
     (field: keyof Step1FormState) =>
@@ -155,6 +167,11 @@ const StepOneForm = ({
     handleNext();
   };
 
+  const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setAccountBookToUploadPicture(accountBookToEdit);
+    e.stopPropagation(); // Info: (20250428 - Liz) 避免點擊選單時觸發父元素的點擊事件
+  };
+
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
@@ -162,7 +179,7 @@ const StepOneForm = ({
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
-          <button type="button" onClick={closeCreateAccountBookModal}>
+          <button type="button" onClick={closeAccountBookInfoModal}>
             <IoCloseOutline size={24} />
           </button>
         </header>
@@ -183,14 +200,38 @@ const StepOneForm = ({
           </section>
 
           <section className="flex items-center gap-24px">
-            <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
-              <Image
-                src={'/icons/upload_icon.svg'}
-                width={48}
-                height={48}
-                alt="upload_icon"
-              ></Image>
-            </div>
+            {/* Info: (20250428 - Liz) 帳本圖片 */}
+            {imageId ? (
+              // <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
+              //   <Image src={imageId} width={168} height={168} alt="account book image"></Image>
+              // </div>
+              <button
+                type="button"
+                onClick={openUploadCompanyPictureModal}
+                className="group relative"
+              >
+                <Image
+                  src={imageId}
+                  alt={'account book image'}
+                  width={168}
+                  height={168}
+                  className="h-168px w-168px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
+                ></Image>
+
+                <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+                  <FiEdit2 size={24} />
+                </div>
+              </button>
+            ) : (
+              <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
+                <Image
+                  src="/icons/upload_icon.svg"
+                  width={48}
+                  height={48}
+                  alt="upload_icon"
+                ></Image>
+              </div>
+            )}
 
             <section className="flex flex-col gap-24px">
               <div className="flex items-start gap-40px">
@@ -307,7 +348,6 @@ const StepOneForm = ({
                   type="button"
                   role="checkbox"
                   aria-checked={isSameAsResponsiblePerson}
-                  //   onClick={() => setIsSameAsResponsiblePerson((prev) => !prev)}
                   onClick={() => {
                     handleChange('isSameAsResponsiblePerson')((prev) => !prev);
                   }}
@@ -595,7 +635,7 @@ const StepOneForm = ({
           <section className="flex justify-end gap-12px">
             <button
               type="button"
-              onClick={closeCreateAccountBookModal}
+              onClick={closeAccountBookInfoModal}
               className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
             >
               {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CANCEL')}
@@ -610,9 +650,29 @@ const StepOneForm = ({
               <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.NEXT')}</span>
               <FaArrowRightLong size={16} />
             </button>
+
+            {/* Deprecated: (20250429 - Liz) 暫放，新版照片上傳完成後即移除 */}
+            <button type="button" onClick={() => setIsChangePictureModalOpen(true)}>
+              新版照片上傳
+            </button>
           </section>
         </div>
       </div>
+
+      {/* Info: (20250428 - Liz) modal */}
+      {accountBookToUploadPicture && (
+        <UploadAccountBookPictureModal
+          accountBookToUploadPicture={accountBookToUploadPicture}
+          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+        />
+      )}
+
+      {isChangePictureModalOpen && (
+        <ChangePictureModal
+          closeModal={() => setIsChangePictureModalOpen(false)}
+          onSave={() => {}}
+        />
+      )}
     </main>
   );
 };

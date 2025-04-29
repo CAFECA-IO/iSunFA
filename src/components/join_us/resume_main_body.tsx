@@ -16,7 +16,7 @@ const ResumeMainBody: React.FC<IResumeMainBodyProps> = ({ setIsProcess }) => {
   const { t } = useTranslation(['hiring']);
 
   const resumeRef = useRef<HTMLDivElement>(null);
-  const [isResumeRefVisible, setIsResumeRefVisible] = useState(false);
+  const [isResumeRefVisible, setIsResumeRefVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const waitForResume = setTimeout(() => {

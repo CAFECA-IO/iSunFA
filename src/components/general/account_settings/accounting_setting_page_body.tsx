@@ -119,7 +119,7 @@ const AccountingSettingPageBody: React.FC = () => {
 
   const getAccountData = async () => {
     // Info: (20250425 - Julian) GET API
-    const { data, success } = await getAccountSetting({ params: { companyId: accountBookId } });
+    const { data, success } = await getAccountSetting({ params: { accountBookId } });
 
     // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
     if (success && data) {
@@ -192,8 +192,7 @@ const AccountingSettingPageBody: React.FC = () => {
       shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
-    updateSetting({ params: { companyId: accountBookId }, body });
-    // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    updateSetting({ params: { accountBookId }, body });
   };
 
   // Info: (20250425 - Julian) 取得會計設定資料

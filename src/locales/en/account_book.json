@@ -64,5 +64,8 @@
   },
   "ACCOUNT_BOOK_PRIVACY_MODAL": {
     "CHANGE_ACCOUNT_BOOK_PRIVACY": "Change Account Book Privacy"
+  },
+  "EDIT_ACCOUNT_BOOK_MODAL": {
+    "EDIT_ACCOUNT_BOOK": "Edit Account Book"
   }
 }
