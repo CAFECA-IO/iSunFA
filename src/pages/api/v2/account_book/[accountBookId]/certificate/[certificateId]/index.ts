@@ -8,12 +8,12 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
-import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/account_book/[accountBookId]/certificate/[certificateId]/route_utils';
 import { loggerError } from '@/lib/utils/logger_back';
 import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
-} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';

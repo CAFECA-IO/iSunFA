@@ -23,7 +23,7 @@ import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
   certificateAPIDeleteMultipleUtils as deleteUtils,
-} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
