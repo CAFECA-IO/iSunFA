@@ -34,9 +34,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const { connectedAccountBook } = useUserCtx();
   const { refreshVoucherListHandler } = useAccountingCtx();
 
-  const companyId = connectedAccountBook?.id;
+  const accountBookId = connectedAccountBook?.id;
 
-  const params = { companyId, voucherId };
+  const params = { accountBookId, voucherId };
 
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
 
@@ -142,13 +142,13 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
 
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when companyId and voucherId are ready
-    if (companyId && voucherId) {
+    if (accountBookId && voucherId) {
       // Deprecated: (20250124 - Anna) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('API Params:', params); // Info: (20250122 - Anna) 檢查 companyId 和 voucherId 是否正確
       getVoucherDetail();
     }
-  }, [companyId, voucherId]);
+  }, [accountBookId, voucherId]);
 
   useEffect(() => {
     if (voucherData?.certificates) {
@@ -342,9 +342,9 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   // ToDo: (20241014 - Julian) should display asset name
   const isDisplayAsset = !isLoading ? (
     <div className="flex flex-col">
-      {assets.map((asset) =>
+      {assets.map((asset) => {
         // Info: (20250214 - Julian) 被刪除的資產不顯示連結
-        (asset.deletedAt === null ? (
+        return asset.deletedAt === null ? (
           <Link
             key={asset.id}
             href={`/users/asset/${asset.id}`}
@@ -356,8 +356,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           <div key={asset.id} className="text-text-neutral-tertiary">
             {asset.id}
           </div>
-        ))
-      )}
+        );
+      })}
     </div>
   ) : (
     <Skeleton width={200} height={24} rounded />
