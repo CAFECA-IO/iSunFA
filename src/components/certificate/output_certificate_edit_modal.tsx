@@ -422,9 +422,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
           <ImageZoom
-            // Todo: (20250428 - Anna) 先用假憑證測試
-            // imageUrl={certificate.file.url}
-            imageUrl={'/images/demo_certifate.png'}
+            imageUrl={certificate.file.url}
             className="max-h-630px min-h-450px w-440px"
             controlPosition="bottom-right"
           />
