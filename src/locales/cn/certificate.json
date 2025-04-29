@@ -104,7 +104,8 @@
     "TOTAL_OF_SUMMARIZED_INVOICES": "汇总发票合计",
     "COPIES": "张",
     "ALLOWANCE_ISSUE_DATE": "（折让单）开立日期",
-    "DUPLICATE_INVOICE_TAX": "如果使用二联式发票，税额为 0"
+    "DUPLICATE_INVOICE_TAX": "如果使用二联式发票，税额为 0",
+    "OTHER_CERTIFICATE_NO": "其他凭证编号"
   },
   "TYPE": {
     "TRIPLICATE": "三联",
@@ -206,6 +207,7 @@
     "NEXT": "下一笔"
   },
   "INPUT_CERTIFICATE": {
-    "INPUT_CERTIFICATE": "进项凭证"
+    "INPUT_CERTIFICATE": "进项凭证",
+    "MARK_AS_SHARED_AMOUNT": "勾选表示此为汇总金额代表凭证"
   }
 }
