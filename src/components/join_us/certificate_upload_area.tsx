@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiTrash2 } from 'react-icons/fi';
 import { MimeType } from '@/interfaces/skill';
@@ -67,6 +68,7 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
   certificate,
   setCertificate,
 }) => {
+  const { t } = useTranslation(['hiring']);
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -94,10 +96,14 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
         <Image src="/icons/double_file.svg" alt="Upload_Icon" width={55} height={61} />
         <div className="text-center text-base font-medium">
           <p>
-            Drop your files here or{' '}
-            <span className="font-semibold text-surface-brand-primary-moderate">Browse</span>
+            {t('hiring:SKILLS.UPLOAD_TEXT_1')}{' '}
+            <span className="font-semibold text-surface-brand-primary-moderate">
+              {t('hiring:SKILLS.UPLOAD_TEXT_2')}
+            </span>
           </p>
-          <p className="font-medium text-landing-page-gray">Maximum size: 50MB</p>
+          <p className="font-medium text-landing-page-gray">
+            {t('hiring:SKILLS.UPLOAD_MAXIMUM_SIZE')}
+          </p>
         </div>
       </label>
     </>

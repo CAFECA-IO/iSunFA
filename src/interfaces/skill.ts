@@ -19,10 +19,13 @@ export enum Proficiency {
   NATIVE = 'Native or bilingual',
 }
 
-export interface ILanguageSkill {
-  id: number;
+export interface ILanguageSkillData {
   language: string;
   proficiency: keyof typeof Proficiency;
+}
+
+export interface ILanguageSkill extends ILanguageSkillData {
+  id: number;
 }
 
 // Info: (20250429 - Julian) --------------- Certificate ---------------
@@ -32,11 +35,14 @@ export enum MimeType {
   DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 }
 
-export interface ICertificateSkill {
-  id: number;
+export interface ICertificateData {
   name: string;
   issuingOrganization: string;
   issueDate: IExperienceDate;
   expirationDate: IExperienceDate;
   certificate: File;
+}
+
+export interface ICertificateSkill extends ICertificateData {
+  id: number;
 }

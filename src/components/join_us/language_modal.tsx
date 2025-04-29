@@ -4,13 +4,13 @@ import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { ILanguageSkill, Proficiency, ModalType } from '@/interfaces/skill';
+import { ILanguageSkill, Proficiency, ModalType, ILanguageSkillData } from '@/interfaces/skill';
 
 interface ILanguageModalProps {
   modalVisibilityHandler: () => void;
   modalType: ModalType;
   langData?: ILanguageSkill;
-  saveHandler: (language: string, proficiency: keyof typeof Proficiency) => void;
+  saveHandler: (data: ILanguageSkillData) => void;
   deleteHandler?: (langId: number) => void;
 }
 
@@ -50,7 +50,7 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
     if (saveDisable) return;
 
     e.preventDefault();
-    saveHandler(langInput, proficiencyInput as keyof typeof Proficiency);
+    saveHandler({ language: langInput, proficiency: proficiencyInput as keyof typeof Proficiency });
   };
 
   const proficiencyOptions = Object.keys(Proficiency);
