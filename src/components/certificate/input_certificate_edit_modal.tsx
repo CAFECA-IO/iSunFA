@@ -30,7 +30,7 @@ import { HiCheck } from 'react-icons/hi';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -44,7 +44,7 @@ interface InputCertificateEditModalProps {
 
 const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -167,7 +167,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
   const getSettingTaxRatio = useCallback(async () => {
     const { success, data } = await getAccountSetting({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success && data) {
       if (formState.taxRatio === undefined) {
@@ -175,16 +175,16 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
       }
     }
-  }, [companyId, formState.taxRatio]);
+  }, [accountBookId, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { companyId: accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   const {
     targetRef: invoiceTypeMenuRef,
