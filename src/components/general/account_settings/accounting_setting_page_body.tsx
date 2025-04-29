@@ -192,7 +192,7 @@ const AccountingSettingPageBody: React.FC = () => {
       shortcutList: [], // ToDo: (20250109 - Julian) 自訂快捷鍵功能未實作
     };
 
-    updateSetting({ params: { companyId: accountBookId }, body });
+    updateSetting({ params: { accountBookId }, body });
     // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 

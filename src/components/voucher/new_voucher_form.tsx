@@ -210,7 +210,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
     const analysisResult = await getAIResult({
-      params: { companyId: accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+      params: { accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
     });
 
@@ -225,7 +225,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
   const askAIAnalysis = async (targetIds: number[]) => {
     const aiResult = await askAI({
-      params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+      params: { accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       query: { reason: 'voucher' },
       body: { targetIdList: targetIds },
     });
@@ -628,7 +628,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     clearTemporaryAssetHandler(accountBookId);
     clearReverseListHandler();
-    createVoucher({ params: { companyId: accountBookId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    createVoucher({ params: { accountBookId }, body }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {

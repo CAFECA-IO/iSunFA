@@ -24,7 +24,7 @@ const VoucherEditingPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
   // Info: (20241118 - Julian) 取得 Voucher 資料
   const { trigger: getVoucherData, data: voucherData } = APIHandler<IVoucherDetailForFrontend>(
     APIName.VOUCHER_GET_BY_ID_V2,
-    { params: { companyId: accountBookId, voucherId } }
+    { params: { accountBookId, voucherId } }
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   );
 
