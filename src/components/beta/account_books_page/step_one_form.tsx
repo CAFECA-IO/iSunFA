@@ -10,6 +10,7 @@ import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { Step1FormAction, Step1FormState } from '@/constants/account_book';
 import { ITeam } from '@/interfaces/team';
 import UploadAccountBookPictureModal from '@/components/beta/account_books_page/upload_account_book_picture_modal';
+import ChangePictureModal from '@/components/beta/account_books_page/change_picture_modal';
 
 interface StepOneFormProps {
   teamList: ITeam[];
@@ -59,6 +60,8 @@ const StepOneForm = ({
   const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
     IAccountBookWithTeam | undefined
   >();
+  // Info: (20250429 - Liz) test
+  const [isChangePictureModalOpen, setIsChangePictureModalOpen] = useState<boolean>(false);
 
   const handleChange =
     (field: keyof Step1FormState) =>
@@ -647,6 +650,11 @@ const StepOneForm = ({
               <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.NEXT')}</span>
               <FaArrowRightLong size={16} />
             </button>
+
+            {/* Deprecated: (20250429 - Liz) 暫放，新版照片上傳完成後即移除 */}
+            <button type="button" onClick={() => setIsChangePictureModalOpen(true)}>
+              新版照片上傳
+            </button>
           </section>
         </div>
       </div>
@@ -656,6 +664,13 @@ const StepOneForm = ({
         <UploadAccountBookPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+        />
+      )}
+
+      {isChangePictureModalOpen && (
+        <ChangePictureModal
+          closeModal={() => setIsChangePictureModalOpen(false)}
+          onSave={() => {}}
         />
       )}
     </main>
