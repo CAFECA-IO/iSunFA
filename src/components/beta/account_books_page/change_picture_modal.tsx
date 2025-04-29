@@ -13,7 +13,7 @@ type CroppedAreaPixels = {
   y: number;
 };
 
-// utils/cropImage.ts
+// Info: (20250429 - Liz) utils/cropImage.ts
 const getCroppedImg = async (
   imageSrc: string,
   pixelCrop: CroppedAreaPixels
@@ -60,11 +60,13 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
   const { t } = useTranslation(['account_book', 'common', 'certificate']);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Info: (20250429 - Liz)
-  // imageSrc: 儲存選擇的圖片 base64 字串
-  // crop: 裁切的位置
-  // zoom: 縮放比例
-  // croppedAreaPixels: 使用者選擇的裁切區域的像素資訊
+  /**
+   * Info: (20250429 - Liz)
+   * imageSrc: 儲存選擇的圖片 base64 字串
+   * crop: 裁切的位置
+   * zoom: 縮放比例
+   * croppedAreaPixels: 使用者選擇的裁切區域的像素資訊
+   */
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -133,7 +135,7 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
   // Info: (20250429 - Liz) 移除已選圖片
   const handleRemove = () => {
     setImageSrc(null);
-    setPreviewUrl(null); // 同時清除預覽
+    setPreviewUrl(null); // Info: (20250429 - Liz) 同時清除預覽
   };
 
   // Info: (20250429 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
