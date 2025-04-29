@@ -36,8 +36,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
 
   const accountBookId = connectedAccountBook?.id;
 
-  const params = { accountBookId, voucherId };
-
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
 
   // Info: (20241029 - Julian) Get voucher details from API
