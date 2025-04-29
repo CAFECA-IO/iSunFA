@@ -32,7 +32,7 @@ export const createEmailLogin = async (
 };
 
 // Info: (20250424 - Luphia) 只能驗證一次，驗證成功後即更新為已使用
-export const checkEmailLogin = async (
+export const verifyEmailLogin = async (
   email: string,
   hash: string,
   tx: Prisma.TransactionClient | PrismaClient = prisma

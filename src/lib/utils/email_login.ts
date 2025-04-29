@@ -21,12 +21,6 @@ class EmailLoginHandler {
         log.createdAt > nowInSecond - 60 * 60
     ).length;
     const result = loginCount < MAX_EMIL_LOGIN_ERROR_TIMES;
-    const log = {
-      email,
-      action: EMAIL_LOGIN_ACTION.VERIFY,
-      createdAt: nowInSecond,
-    };
-    this.logs.push(log);
     return result;
   }
 
@@ -40,17 +34,21 @@ class EmailLoginHandler {
         log.createdAt > cooldownTime
     ).length;
     const result = registerCount === 0;
-    const log = {
-      email,
-      action: EMAIL_LOGIN_ACTION.REGISTER,
-      createdAt: nowInSecond,
-    };
-    this.logs.push(log);
     return result;
   }
 
   public static cleanLogs(email: string): void {
     this.logs = this.logs.filter((log) => log.email !== email);
+  }
+
+  public static log(email: string, action: EMAIL_LOGIN_ACTION): void {
+    const nowInSecond = getTimestampNow();
+    const log = {
+      email,
+      action,
+      createdAt: nowInSecond,
+    };
+    this.logs.push(log);
   }
 }
 
