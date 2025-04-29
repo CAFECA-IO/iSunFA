@@ -260,7 +260,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (selectedIds: number[]) => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
-          params: { companyId },
+          params: { accountBookId: companyId },
           body: { certificateIds: selectedIds },
         });
 
@@ -377,11 +377,15 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
         const postOrPutAPI = invoice.id
           ? updateInvoiceAPI({
-              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
+              params: {
+                accountBookId: companyId,
+                certificateId: certificate.id,
+                invoiceId: invoice.id,
+              },
               body: invoice,
             })
           : createInvoiceAPI({
-              params: { companyId, certificateId: certificate.id },
+              params: { accountBookId: companyId, certificateId: certificate.id },
               body: invoice,
             });
 

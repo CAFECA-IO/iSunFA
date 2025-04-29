@@ -42,7 +42,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     success,
   } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: accountBookId }, query: queryCondition },
+    { params: { accountBookId }, query: queryCondition },
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true

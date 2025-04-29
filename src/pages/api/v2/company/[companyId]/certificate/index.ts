@@ -53,8 +53,17 @@ export const handleGetRequest: IHandleRequest<
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
   const { userId, teams } = session;
-  const { companyId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
-    query;
+  const {
+    accountBookId: companyId,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    tab,
+    sortOption,
+    searchQuery,
+    type,
+  } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
@@ -197,7 +206,7 @@ export const handlePostRequest: IHandleRequest<
 
   const { fileIds } = body;
   const { userId, teams } = session;
-  const { companyId } = query;
+  const { accountBookId: companyId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
@@ -303,7 +312,7 @@ export const handleDeleteRequest: IHandleRequest<
 
   const { certificateIds } = body;
   const { userId, teams } = session;
-  const { companyId } = query;
+  const { accountBookId: companyId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查

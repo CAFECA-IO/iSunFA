@@ -55,7 +55,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
     async (fileId: number) => {
       try {
         const { success, data } = await createCertificateAPI({
-          params: { companyId },
+          params: { accountBookId: companyId },
           body: { fileIds: [fileId] },
         });
 

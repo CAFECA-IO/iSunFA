@@ -147,7 +147,7 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { accountBookId: companyId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);

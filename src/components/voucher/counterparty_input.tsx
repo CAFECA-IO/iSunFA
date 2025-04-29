@@ -92,7 +92,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       setIsLoadingCounterparty(true);
       setCounterpartyMenuOpen(true);
       const { success, data } = await getCounterpartyList({
-        params: { companyId },
+        params: { accountBookId: companyId },
       });
       if (success) {
         setCounterpartyList(data?.data ?? []);

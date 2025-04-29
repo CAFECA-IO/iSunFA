@@ -31,7 +31,10 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const certificateList = await getPaginatedCertificateListByType(
-    query,
+    {
+      ...query,
+      accountBookId: query.companyId,
+    },
     session,
     InvoiceTransactionDirection.OUTPUT
   );

@@ -96,6 +96,24 @@ export const certificateEntityValidator = z.object({
 });
 
 const certificateListQueryValidator = z.object({
+  accountBookId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  tab: z.nativeEnum(InvoiceTabs).optional(),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .transform((data) => {
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
+      return result;
+    }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
+  startDate: zodStringToNumberWithDefault(0),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
+  sortOption: zodFilterSectionSortingOptions(),
+  searchQuery: z.string().optional(),
+});
+
+const certificateInputListQueryValidator = z.object({
   companyId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
@@ -113,8 +131,52 @@ const certificateListQueryValidator = z.object({
   searchQuery: z.string().optional(),
 });
 
+const certificateOutputListQueryValidator = z.object({
+  companyId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  tab: z.nativeEnum(InvoiceTabs).optional(),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .transform((data) => {
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
+      return result;
+    }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
+  startDate: zodStringToNumberWithDefault(0),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
+  sortOption: zodFilterSectionSortingOptions(),
+  searchQuery: z.string().optional(),
+});
+
+export const certificateRC2InputListQueryValidator = paginatedDataQuerySchema.extend({
+  companyId: zodStringToNumber,
+  tab: z.nativeEnum(InvoiceTabs).optional(),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .transform((data) => {
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
+      return result;
+    }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
+  isDeleted: z.boolean().default(false),
+});
+
+export const certificateRC2OutputListQueryValidator = paginatedDataQuerySchema.extend({
+  companyId: zodStringToNumber,
+  tab: z.nativeEnum(InvoiceTabs).optional(),
+  type: z
+    .nativeEnum(InvoiceType)
+    .optional()
+    .transform((data) => {
+      const result = data ? (data === InvoiceType.ALL ? undefined : data) : undefined;
+      return result;
+    }), // Info: (20241107 - Murky) @tzuhan, type 使用 InvoiceType, 如果要選擇全部可以填 undefined
+  isDeleted: z.boolean().default(false),
+});
+
 export const certificateRC2ListQueryValidator = paginatedDataQuerySchema.extend({
-  accountbookId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   tab: z.nativeEnum(InvoiceTabs).optional(),
   type: z
     .nativeEnum(InvoiceType)
@@ -145,6 +207,22 @@ export const certificateListValidator: IZodValidator<
   body: certificateListBodyValidator,
 };
 
+export const certificateInputListValidator: IZodValidator<
+  (typeof certificateInputListQueryValidator)['shape'],
+  (typeof certificateListBodyValidator)['shape']
+> = {
+  query: certificateInputListQueryValidator,
+  body: certificateListBodyValidator,
+};
+
+export const certificateOutputListValidator: IZodValidator<
+  (typeof certificateOutputListQueryValidator)['shape'],
+  (typeof certificateListBodyValidator)['shape']
+> = {
+  query: certificateOutputListQueryValidator,
+  body: certificateListBodyValidator,
+};
+
 const certificateGetOneQueryValidator = z.object({
   certificateId: zodStringToNumber,
 });
@@ -167,7 +245,7 @@ export const certificateGetOneValidator: IZodValidator<
 };
 
 const certificatePostQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 /**
@@ -204,7 +282,7 @@ export const certificatePutValidator: IZodValidator<
 
 const certificateDeleteQueryValidator = z.object({
   certificateId: zodStringToNumber,
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 const certificateDeleteBodyValidator = z.object({});
@@ -240,7 +318,7 @@ export const certificateListSchema = {
 
 export const inputCertificateListSchema = {
   input: {
-    querySchema: certificateRC2ListQueryValidator,
+    querySchema: certificateRC2InputListQueryValidator,
     bodySchema: nullSchema,
   },
   outputSchema: paginatedInputCertificates,
@@ -249,7 +327,7 @@ export const inputCertificateListSchema = {
 
 export const outputCertificateListSchema = {
   input: {
-    querySchema: certificateRC2ListQueryValidator,
+    querySchema: certificateRC2OutputListQueryValidator,
     bodySchema: nullSchema,
   },
   outputSchema: paginatedOutputCertificates,

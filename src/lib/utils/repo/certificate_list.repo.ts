@@ -1,7 +1,12 @@
 import { z } from 'zod';
 import prisma from '@/client';
 import { ISessionData } from '@/interfaces/session';
-import { InvoiceTransactionDirection, InvoiceTaxType, InputInvoiceType, OutputInvoiceType } from '@/constants/invoice';
+import {
+  InvoiceTransactionDirection,
+  InvoiceTaxType,
+  InputInvoiceType,
+  OutputInvoiceType,
+} from '@/constants/invoice';
 import { ICertificateInput, ICertificateOutput } from '@/interfaces/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
 import {
@@ -47,7 +52,7 @@ async function getFilteredCertificateListByType(
   type: InvoiceTransactionDirection
 ) {
   const where: Prisma.CertificateRC2WhereInput = {
-    accountbookId: query.accountbookId,
+    accountbookId: query.accountBookId,
     deletedAt: query.isDeleted ? { not: null } : query.isDeleted === false ? null : undefined,
     inputOrOutput: type,
     invoice: {
@@ -220,11 +225,11 @@ export const getPaginatedCertificateListByType = async (
   session: ISessionData,
   type: InvoiceTransactionDirection
 ): Promise<IPaginatedData<(ICertificateInput | ICertificateOutput)[]> | null> => {
-  await checkUserHasCompanyAccess(session, query.accountbookId);
+  await checkUserHasCompanyAccess(session, query.accountBookId);
 
   const { data, totalCount } = await getFilteredCertificateListByType(query, type);
   const transformedData = data.map((certificate) => transformCertificateByType(certificate, type));
-  const summary = await getCertificateSummaryByType(query.accountbookId, type);
+  const summary = await getCertificateSummaryByType(query.accountBookId, type);
 
   return {
     page: query.page,

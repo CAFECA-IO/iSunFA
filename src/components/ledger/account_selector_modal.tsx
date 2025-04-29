@@ -48,7 +48,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: connectedAccountBook?.id }, query: queryCondition },
+    { params: { accountBookId: connectedAccountBook?.id }, query: queryCondition },
     false,
     true
   );
