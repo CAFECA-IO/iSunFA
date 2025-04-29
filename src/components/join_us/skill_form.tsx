@@ -5,6 +5,7 @@ import { FiTrash2 } from 'react-icons/fi';
 import { LuPencil } from 'react-icons/lu';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import LanguageModal from '@/components/join_us/language_modal';
+import CertificateUploadModal from '@/components/join_us/certificate_upload_modal';
 import { ILanguageSkill, LangModalType, Proficiency } from '@/interfaces/skill';
 
 interface ISkillFormProps {
@@ -178,6 +179,9 @@ const SkillForm: React.FC<ISkillFormProps> = ({ toPrevStep, toNextStep }) => {
           deleteHandler={deleteLangHandler}
         />
       )}
+
+      {/* Info: (20250428 - Julian) Certificate Modal */}
+      {isShowCertModal && <CertificateUploadModal modalVisibilityHandler={toggleCertModal} />}
     </div>
   );
 };
