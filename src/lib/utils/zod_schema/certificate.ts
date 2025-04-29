@@ -12,8 +12,6 @@ import { IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import {
   IInvoiceBetaValidator,
   IInvoiceBetaValidatorOptional,
-  InvoiceInputSchema,
-  InvoiceOutputSchema,
 } from '@/lib/utils/zod_schema/invoice';
 import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
@@ -44,32 +42,6 @@ export const createCertificateValidator = (isInvoiceOptional = false) =>
     uploader: z.string(),
     uploaderUrl: z.string(),
   });
-
-const CertificateBaseSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  accountbookId: z.number(),
-  incomplete: z.boolean(),
-  file: IFileBetaValidator,
-  voucherNo: z.string().nullable(),
-  voucherId: z.number().nullable(),
-  aiResultId: z.string().optional(),
-  aiStatus: z.string().optional(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-  uploader: z.string(),
-  uploaderUrl: z.string(),
-});
-
-export const CertificateInputSchema = CertificateBaseSchema.extend({
-  invoice: InvoiceInputSchema.partial(),
-  inputOrOutput: z.literal(InvoiceTransactionDirection.INPUT),
-});
-
-export const CertificateOutputSchema = CertificateBaseSchema.extend({
-  invoice: InvoiceOutputSchema.partial(),
-  inputOrOutput: z.literal(InvoiceTransactionDirection.OUTPUT),
-});
 
 export const ICertificateValidator = createCertificateValidator(false);
 export const ICertificatePartialInvoiceValidator = createCertificateValidator(true);
@@ -129,9 +101,6 @@ export const certificateRC2ListQueryValidator = paginatedDataQuerySchema.extend(
 const certificateListBodyValidator = z.object({});
 
 const paginatedCertificates = paginatedDataSchema(ICertificatePartialInvoiceValidator);
-
-const paginatedInputCertificates = paginatedDataSchema(CertificateInputSchema);
-const paginatedOutputCertificates = paginatedDataSchema(CertificateOutputSchema);
 
 const certificateListFrontendSchema = paginatedCertificates;
 
@@ -236,24 +205,6 @@ export const certificateListSchema = {
   },
   outputSchema: certificateListOutputSchema,
   frontend: certificateListFrontendSchema,
-};
-
-export const inputCertificateListSchema = {
-  input: {
-    querySchema: certificateRC2ListQueryValidator,
-    bodySchema: nullSchema,
-  },
-  outputSchema: paginatedInputCertificates,
-  frontend: paginatedInputCertificates,
-};
-
-export const outputCertificateListSchema = {
-  input: {
-    querySchema: certificateRC2ListQueryValidator,
-    bodySchema: nullSchema,
-  },
-  outputSchema: paginatedOutputCertificates,
-  frontend: paginatedOutputCertificates,
 };
 
 export const certificatePostSchema = {

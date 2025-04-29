@@ -145,10 +145,6 @@ export const handleGetRequest: IHandleRequest<
     const summary: ICertificateListSummary = {
       totalInvoicePrice,
       incomplete: incompleteSummary,
-      unRead: {
-        withVoucher: 0,
-        withoutVoucher: 0,
-      },
       currency,
     };
 
