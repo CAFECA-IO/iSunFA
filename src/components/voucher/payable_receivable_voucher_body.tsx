@@ -76,7 +76,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
     t(`journal:VOUCHER.${value.toUpperCase()}_TAB`)
   );
 
-  const params = { companyId: connectedAccountBook?.id };
+  const params = { accountBookId: connectedAccountBook?.id };
 
   const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
     const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;

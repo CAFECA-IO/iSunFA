@@ -96,7 +96,7 @@ export const certificateEntityValidator = z.object({
 });
 
 const certificateListQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_NUMBER),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   tab: z.nativeEnum(InvoiceTabs).optional(),
@@ -114,7 +114,7 @@ const certificateListQueryValidator = z.object({
 });
 
 export const certificateRC2ListQueryValidator = paginatedDataQuerySchema.extend({
-  accountbookId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   tab: z.nativeEnum(InvoiceTabs).optional(),
   type: z
     .nativeEnum(InvoiceType)
@@ -167,7 +167,7 @@ export const certificateGetOneValidator: IZodValidator<
 };
 
 const certificatePostQueryValidator = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 /**
@@ -204,7 +204,7 @@ export const certificatePutValidator: IZodValidator<
 
 const certificateDeleteQueryValidator = z.object({
   certificateId: zodStringToNumber,
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 const certificateDeleteBodyValidator = z.object({});

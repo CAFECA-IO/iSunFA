@@ -120,7 +120,7 @@ const FinancialReportSection = ({ reportType }: IFinancialReportSectionProps) =>
     if (connectedAccountBook) {
       generateFinancialReport({
         params: {
-          companyId: connectedAccountBook.id,
+          accountBookId: connectedAccountBook.id,
         },
         body,
       });

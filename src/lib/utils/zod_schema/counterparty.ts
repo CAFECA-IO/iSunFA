@@ -24,7 +24,7 @@ const counterpartyNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241022 - Jacky) Counterparty list schema
 const counterpartyListQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
   type: z.string().optional(),
   searchQuery: z.string().optional(),
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
@@ -33,7 +33,7 @@ const counterpartyListQuerySchema = z.object({
 
 // Info: (20241022 - Jacky) Counterparty post schema
 const counterpartyPostQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 const counterpartyPostBodySchema = z.object({
   name: z.string(),

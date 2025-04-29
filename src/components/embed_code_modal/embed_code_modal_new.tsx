@@ -188,7 +188,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
           try {
             const report = await generateFinancialReport({
-              params: { companyId: connectedAccountBook.id },
+              params: { accountBookId: connectedAccountBook.id },
               body,
             });
 
