@@ -31,7 +31,7 @@ export async function balanceSheetHandler({
   startDate,
   endDate,
   // Deprecated: (20250429 - Luphia) remove eslint-disable
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   language,
 }: {
   companyId: number;
@@ -124,7 +124,7 @@ export async function incomeStatementHandler({
   startDate,
   endDate,
   // Deprecated: (20250429 - Luphia) remove eslint-disable
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   language,
 }: {
   companyId: number;
@@ -217,7 +217,7 @@ export async function cashFlowHandler({
   startDate,
   endDate,
   // Deprecated: (20250429 - Luphia) remove eslint-disable
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   language,
 }: {
   companyId: number;
@@ -309,11 +309,17 @@ export async function cashFlowHandler({
 
 export async function report401Handler({
   // ToDo: (20241007 - Murky) Use these param in function
+  // Deprecated: (20250429 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   companyId,
+  // Deprecated: (20250429 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   startDate,
+  // Deprecated: (20250429 - Luphia) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   endDate,
   // Deprecated: (20250429 - Luphia) remove eslint-disable
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   language,
 }: {
   companyId: number;
