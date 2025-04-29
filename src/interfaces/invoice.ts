@@ -99,6 +99,10 @@ export interface IInvoiceBeta {
   deductionType?: string;
   // Info: (20250428 - Anna) 彙總發票張數
   summarizedInvoiceCount?: number;
+  // Info: (20250429 - Anna) 是否為彙總金額代表憑證
+  isSharedAmount?: boolean;
+  // Info: (20250429 - Anna) 其他憑證編號
+  otherCertificateNo?: string;
 }
 
 export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;
