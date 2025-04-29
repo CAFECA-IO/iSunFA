@@ -540,7 +540,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
-          params={{ companyId }}
+          params={{ accountBookId: companyId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}

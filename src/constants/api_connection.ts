@@ -185,7 +185,7 @@ export enum APIPath {
   COUNTERPARTY_DELETE = `${apiPrefixV2}/counterparty/:counterpartyId`,
 
   IMAGE_GET_BY_ID = `${apiPrefixV2}/image/:imageId`,
-  ASK_AI_STATUS = `${apiPrefix}/account_book/:accountBookId/ask_ai/:resultId/status`,
+  ASK_AI_STATUS = `${apiPrefixV2}/account_book/:accountBookId/ask_ai/:resultId/status`,
   ASK_AI_V2 = `${apiPrefixV2}/ask_ai`,
   ASK_AI_RESULT_V2 = `${apiPrefixV2}/ask_ai/:resultId`,
   VOUCHER_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
@@ -193,8 +193,8 @@ export enum APIPath {
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
   VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/read`,
-  JOURNAL_LIST = `${apiPrefix}/account_book/:accountBookId/journal`,
-  REPORT_LIST = `${apiPrefix}/account_book/:accountBookId/report`,
+  JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`, // Deprecated: (20250430 - Shirley) 沒有使用，且跟 v2 版本衝突，故不遷移
+  REPORT_LIST = `${apiPrefix}/company/:companyId/report`, // Deprecated: (20250430 - Shirley) 沒有使用，且跟 v2 版本衝突，故不遷移
   REPORT_GET_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/report/public/:reportId`,
   REPORT_GET_V2 = `${apiPrefixV2}/account_book/:accountBookId/report`,
   REPORT_GENERATE = `${apiPrefixV2}/account_book/:accountBookId/report/public`,
