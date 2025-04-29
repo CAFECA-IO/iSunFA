@@ -26,10 +26,11 @@ import { APIName } from '@/constants/api_connection';
 import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
+import { HiCheck } from 'react-icons/hi';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
-  companyId: number;
+  accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
   certificate?: ICertificateUI;
@@ -43,7 +44,7 @@ interface InputCertificateEditModalProps {
 
 const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   isOpen,
-  companyId,
+  accountBookId,
   toggleModel,
   currencyAlias,
   certificate,
@@ -100,8 +101,12 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         counterParty: certificate.invoice.counterParty,
         type: certificate.invoice.type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
         deductible: certificate.invoice.deductible,
-        // Info: (20250422 - Anna) 多存「扣抵類型」
+        // Info: (20250422 - Anna)「扣抵類型」
         deductionType: certificate.invoice.deductionType ?? 'DEDUCTIBLE_PURCHASE_AND_EXPENSE',
+        // Info: (20250429 - Anna)「是否為彙總金額代表憑證」
+        isSharedAmount: certificate.invoice.isSharedAmount ?? false,
+        // Info: (20250429 - Anna)「其他憑證編號」
+        otherCertificateNo: certificate.invoice.otherCertificateNo ?? '',
       }) as IInvoiceBetaOptional
   );
   const [errors] = useState<Record<string, string>>({});
@@ -162,7 +167,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
   const getSettingTaxRatio = useCallback(async () => {
     const { success, data } = await getAccountSetting({
-      params: { companyId },
+      params: { accountBookId },
     });
     if (success && data) {
       if (formState.taxRatio === undefined) {
@@ -170,16 +175,16 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
       }
     }
-  }, [companyId, formState.taxRatio]);
+  }, [accountBookId, formState.taxRatio]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
-      params: { companyId },
+      params: { companyId: accountBookId },
     });
     if (success) {
       setCounterpartyList(data?.data ?? []);
     }
-  }, [companyId]);
+  }, [accountBookId]);
 
   const {
     targetRef: invoiceTypeMenuRef,
@@ -257,6 +262,11 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       ...certificate.invoice,
       ...formStateRef.current,
     };
+    // ToDo: (20250429 - Anna) 等後端欄位完成，確認 isSharedAmount 正確存取後，移除 console.log
+    // eslint-disable-next-line no-console
+    console.log('傳到後端的 isSharedAmount(formStateRef):', formStateRef.current.isSharedAmount);
+    // eslint-disable-next-line no-console
+    console.log('傳到後端的 isSharedAmount(updatedInvoice):', updatedInvoice.isSharedAmount);
 
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
     if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
@@ -441,7 +451,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </div>
               </div>
             </div>
-
             {/* Info: (20240924 - Anna) Invoice Date */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
@@ -465,7 +474,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </p>
               )}
             </div>
-
             {/* Info: (20250428 - Anna) 輸入彙總發票張數 */}
             {(formState.type === InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC ||
               formState.type ===
@@ -518,7 +526,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </div>
               </div>
             )}
-
             {/* Info: (20240924 - Anna) Invoice Number */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
@@ -543,7 +550,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     />
                   </div>
                 </>
-              ) : formState.type === InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC ? (
+              ) : // Info: (20250429 - Anna) 格式26
+              formState.type === InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC ? (
                 <>
                   <p className="text-sm font-semibold text-neutral-300">
                     {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
@@ -582,13 +590,82 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     />
                   </div>
                 </>
+              ) : // Info: (20250429 - Anna) 格式22
+              formState.type === InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER ? (
+                <div className="flex w-full justify-between">
+                  {/* Info: (20250429 - Anna) Invoice No. */}
+                  <div className="flex flex-col gap-2 md:w-52">
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.INVOICE_NUMBER')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
+
+                    <div className="flex items-center">
+                      {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
+                      <input
+                        id="invoice-prefix"
+                        type="text"
+                        maxLength={2}
+                        value={formState.no?.substring(0, 2) ?? ''}
+                        onChange={(e) => {
+                          const latestNo = formStateRef.current.no ?? '';
+                          const suffix = latestNo.substring(2);
+                          handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
+                        }}
+                        className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                        placeholder="AB"
+                        disabled={!!formState.otherCertificateNo}
+                      />
+
+                      <input
+                        id="invoice-number"
+                        type="text"
+                        maxLength={8}
+                        value={formState.no?.substring(2) ?? ''}
+                        onChange={(e) => {
+                          const latestNo = formStateRef.current.no ?? '';
+                          const prefix = latestNo.substring(0, 2);
+                          handleInputChange('no', `${prefix}${e.target.value}`);
+                        }}
+                        className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                        placeholder="12345678"
+                        disabled={!!formState.otherCertificateNo}
+                      />
+                    </div>
+                  </div>
+                  {/* Info: (20250429 - Anna) or */}
+                  <p className="flex items-end text-neutral-400">{t('common:COMMON.OR')}</p>
+                  {/* Info: (20250429 - Anna) Other Certificate No. */}
+                  <div className="flex flex-col gap-2 md:w-52">
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
+
+                    <div className="flex w-full items-center">
+                      <input
+                        id="other-certificate-no"
+                        type="text"
+                        value={formState.otherCertificateNo ?? ''}
+                        onChange={(e) => {
+                          handleInputChange('otherCertificateNo', e.target.value);
+                        }}
+                        className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                        placeholder="CC12345678"
+                        disabled={!!formState.no}
+                      />
+                    </div>
+                  </div>
+                </div>
               ) : (
+                // Info: (20250415 - Anna) 其他憑證類型的UI
                 <>
                   <p className="text-sm font-semibold text-neutral-300">
                     {t('certificate:EDIT.INVOICE_NUMBER')}
                     <span className="text-text-state-error">*</span>
                   </p>
-                  {/* Info: (20250415 - Anna) 其他憑證類型的UI */}
                   <div className="flex w-full items-center">
                     {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
                     <input
@@ -622,7 +699,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </>
               )}
             </div>
-
             {/* Info: (20250414 - Anna) Tax Type */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
@@ -639,7 +715,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 </p>
               )}
             </div>
-
             {/* Info: (20250421 - Anna) Deduction Type */}
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
@@ -650,7 +725,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 <DeductionTypeMenu selectDeductionTypeHandler={selectDeductionTypeHandler} />
               </div>
             </div>
-
             {/* Info: (20240924 - Anna) CounterParty */}
             <CounterpartyInput
               ref={counterpartyInputRef}
@@ -668,10 +742,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 {errors.counterParty}
               </p>
             )}
-
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-col items-start gap-2 md:h-105px flex-1">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
@@ -706,7 +779,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
               </div>
 
               {/* Info: (20250414 - Anna) Tax */}
-              <div className="relative flex flex-col items-start gap-2 md:h-105px flex-1">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.TAX')}
                   <span className="text-text-state-error">*</span>
@@ -758,7 +831,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 )}
               </div>
             </div>
-
             {/* Info: (20240924 - Anna) Total Price */}
             <div className="hidden">
               <div className="relative flex w-full flex-1 flex-col items-start gap-2">
@@ -796,6 +868,35 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 )}
               </div>
             </div>
+            {/* Info: (20250429 - Anna) Mark as shared amount checkbox */}
+            {formState.type === InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE && (
+              <div className="flex w-full items-center gap-2">
+                <div
+                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
+                    formState.isSharedAmount
+                      ? 'bg-checkbox-surface-selected'
+                      : 'bg-checkbox-surface-unselected'
+                  }`}
+                  onClick={() => {
+                    const isTogglingToSharedAmount = !(
+                      formStateRef.current.isSharedAmount ?? false
+                    );
+                    handleInputChange('isSharedAmount', isTogglingToSharedAmount);
+                  }}
+                >
+                  {formState.isSharedAmount && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <HiCheck className="text-neutral-white" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info: (20250414 - Anna) Checkbox label */}
+                <span className="text-sm font-medium text-input-text-primary">
+                  {t('certificate:INPUT_CERTIFICATE.MARK_AS_SHARED_AMOUNT')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         {/* Info: (20240924 - Anna) Save 按鈕 */}

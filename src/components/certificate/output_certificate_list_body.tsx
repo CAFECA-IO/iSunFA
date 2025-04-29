@@ -39,7 +39,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
@@ -256,7 +256,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (selectedIds: number[]) => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
-          params: { companyId },
+          params: { companyId: accountBookId },
           body: { certificateIds: selectedIds },
         });
 
@@ -373,11 +373,15 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
         const postOrPutAPI = invoice.id
           ? updateInvoiceAPI({
-              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
+              params: {
+                companyId: accountBookId,
+                certificateId: certificate.id,
+                invoiceId: invoice.id,
+              },
               body: invoice,
             })
           : createInvoiceAPI({
-              params: { companyId, certificateId: certificate.id },
+              params: { companyId: accountBookId, certificateId: certificate.id },
               body: invoice,
             });
 
@@ -415,7 +419,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         });
       }
     },
-    [certificates, companyId]
+    [certificates, accountBookId]
   );
 
   const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
@@ -463,7 +467,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
@@ -471,11 +475,11 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
         channel.unsubscribe();
       }
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
-  return !companyId ? (
+  return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
         src="/elements/uploading.gif"
@@ -499,7 +503,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       )}
       {isEditModalOpen && editingId !== null && (
         <OutputCertificateEditModal
-          companyId={companyId}
+          accountBookId={accountBookId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
@@ -536,7 +540,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
-          params={{ companyId }}
+          params={{ companyId: accountBookId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}

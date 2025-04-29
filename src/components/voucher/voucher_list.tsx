@@ -146,7 +146,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     if (!isRestoring) {
       stashedVoucherList.forEach((voucher) => {
         restoreVoucher({
-          params: { companyId: connectedAccountBook?.id, voucherId: voucher.id },
+          params: { accountBookId: connectedAccountBook?.id, voucherId: voucher.id },
         });
       });
     }
