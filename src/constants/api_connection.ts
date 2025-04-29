@@ -169,8 +169,8 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
-  INPUT_CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate/input`,
-  OUTPUT_CERTIFICATE_LIST = `${apiPrefix}/company/:companyId/certificate/output`,
+  INPUT_CERTIFICATE_LIST = `${apiPrefix}/account_book/:accountBookId/certificate/input`,
+  OUTPUT_CERTIFICATE_LIST = `${apiPrefix}/account_book/:accountBookId/certificate/output`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,

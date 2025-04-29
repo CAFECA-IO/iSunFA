@@ -14,32 +14,29 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { IPaginatedOptions } from '@/interfaces/pagination';
-import { ICertificateInput } from '@/interfaces/certificate';
+import { ICertificateOutput } from '@/interfaces/certificate';
 import { validateOutputData } from '@/lib/utils/validator';
-import { getPaginatedCertificateListByType } from '@/lib/utils/repo/certificate_list.repo';
+import { getPaginatedCertificateListByType } from '@/lib/utils/repo/certificate_list.repo'; // ToDo: (20250425 - tzuhan) 後續實作
 import { InvoiceTransactionDirection } from '@/constants/invoice';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedOptions<ICertificateInput[]> | null = null;
+  let payload: IPaginatedOptions<ICertificateOutput[]> | null = null;
 
-  await checkSessionUser(session, APIName.INPUT_CERTIFICATE_LIST, req);
-  await checkUserAuthorization(APIName.INPUT_CERTIFICATE_LIST, req, session);
+  await checkSessionUser(session, APIName.OUTPUT_CERTIFICATE_LIST, req);
+  await checkUserAuthorization(APIName.OUTPUT_CERTIFICATE_LIST, req, session);
 
-  const { query } = checkRequestData(APIName.INPUT_CERTIFICATE_LIST, req, session);
+  const { query } = checkRequestData(APIName.OUTPUT_CERTIFICATE_LIST, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const certificateList = await getPaginatedCertificateListByType(
-    {
-      ...query,
-      accountBookId: query.companyId,
-    },
+    query,
     session,
-    InvoiceTransactionDirection.INPUT
+    InvoiceTransactionDirection.OUTPUT
   );
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.INPUT_CERTIFICATE_LIST,
+    APIName.OUTPUT_CERTIFICATE_LIST,
     certificateList
   );
 
@@ -80,6 +77,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.INPUT_CERTIFICATE_LIST, req, statusMessage);
+  await logUserAction(session, APIName.OUTPUT_CERTIFICATE_LIST, req, statusMessage);
   res.status(httpCode).json(result);
 }
