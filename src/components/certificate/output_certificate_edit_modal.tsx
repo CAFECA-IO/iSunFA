@@ -431,7 +431,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
             {/* Info: (20240924 - Anna) Invoice Type */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.INVOICE_TYPE')}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -476,7 +476,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
             {/* Info: (20240924 - Anna) Invoice Date */}
             <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.DATE')}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -495,9 +495,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
 
             {/* Info: (20240924 - Anna) Invoice Number */}
-            <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+            <div className="relative flex w-full flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
-              <p className="text-sm font-semibold text-input-text-primary">
+              <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.INVOICE_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -599,27 +599,31 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
 
             {/* Info: (20240924 - Anna) CounterParty */}
-            <CounterpartyInput
-              ref={counterpartyInputRef}
-              counterparty={formState.counterParty}
-              counterpartyList={counterpartyList}
-              onSelect={(cp: ICounterpartyOptional) => {
-                if (cp && cp.name) {
-                  handleInputChange('counterParty', cp);
-                }
-              }}
-            />
-            {errors.counterParty && (
-              <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                {errors.counterParty}
-              </p>
+            {formState.type !== InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE && (
+              <>
+                <CounterpartyInput
+                  ref={counterpartyInputRef}
+                  counterparty={formState.counterParty}
+                  counterpartyList={counterpartyList}
+                  onSelect={(cp: ICounterpartyOptional) => {
+                    if (cp && cp.name) {
+                      handleInputChange('counterParty', cp);
+                    }
+                  }}
+                  labelClassName="text-neutral-300"
+                />
+                {errors.counterParty && (
+                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                    {errors.counterParty}
+                  </p>
+                )}
+              </>
             )}
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
               <div className="relative flex flex-1 flex-col items-start gap-2">
-                <div id="price" className="absolute -top-20"></div>
-                <p className="text-sm font-semibold text-input-text-primary">
+                <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -631,7 +635,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     isDecimal
                     required
                     hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                    className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                     triggerWhenChanged={priceBeforeTaxChangeHandler}
                   />
                   <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
@@ -651,35 +655,38 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   </p>
                 )}
               </div>
-
-              {/* Info: (20250414 - Anna) Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2">
-                <p className="text-sm font-semibold text-input-text-primary">
-                  Tax
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <div className="flex w-full items-center">
-                  <NumericInput
-                    id="input-tax"
-                    name="input-tax"
-                    value={formState.taxPrice ?? 0}
-                    isDecimal
-                    required
-                    hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                  />
-                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
-                    <Image
-                      src={currencyAliasImageSrc}
-                      width={16}
-                      height={16}
-                      alt={currencyAliasImageAlt}
-                      className="rounded-full"
-                    />
-                    <p>{currencyAliasStr}</p>
+              {formState.type !== InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE && (
+                <>
+                  {/* Info: (20250414 - Anna) Tax */}
+                  <div className="relative flex flex-1 flex-col items-start gap-2">
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.TAX')}
+                      <span className="text-text-state-error">*</span>
+                    </p>
+                    <div className="flex w-full items-center">
+                      <NumericInput
+                        id="input-tax"
+                        name="input-tax"
+                        value={formState.taxPrice ?? 0}
+                        isDecimal
+                        required
+                        hasComma
+                        className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                      />
+                      <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                        <Image
+                          src={currencyAliasImageSrc}
+                          width={16}
+                          height={16}
+                          alt={currencyAliasImageAlt}
+                          className="rounded-full"
+                        />
+                        <p>{currencyAliasStr}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
 
             {/* Info: (20240924 - Anna) Total Price */}
