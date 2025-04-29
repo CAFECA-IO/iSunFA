@@ -22,16 +22,16 @@ const handlePostRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.OUTPUT_CERTIFICATE_CREATE, req);
-  await checkUserAuthorization(APIName.OUTPUT_CERTIFICATE_CREATE, req, session);
+  await checkSessionUser(session, APIName.CREATE_CERTIFICATE_RC2_OUTPUT, req);
+  await checkUserAuthorization(APIName.CREATE_CERTIFICATE_RC2_OUTPUT, req, session);
 
-  const { query, body } = checkRequestData(APIName.OUTPUT_CERTIFICATE_CREATE, req, session);
+  const { query, body } = checkRequestData(APIName.CREATE_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await createCertificateRC2Output(query.accountbookId);
+  const certificate = await createCertificateRC2Output(body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.OUTPUT_CERTIFICATE_CREATE,
+    APIName.CREATE_CERTIFICATE_RC2_OUTPUT,
     certificate
   );
 
@@ -51,16 +51,16 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.OUTPUT_CERTIFICATE_LIST, req);
-  await checkUserAuthorization(APIName.OUTPUT_CERTIFICATE_LIST, req, session);
+  await checkSessionUser(session, APIName.LIST_CERTIFICATE_RC2_OUTPUT, req);
+  await checkUserAuthorization(APIName.LIST_CERTIFICATE_RC2_OUTPUT, req, session);
 
-  const { query } = checkRequestData(APIName.OUTPUT_CERTIFICATE_LIST, req, session);
+  const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await listCertificateRC2Output(query);
+  const certificateList = await listCertificateRC2Output(query.accountbookId);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.OUTPUT_CERTIFICATE_LIST,
+    APIName.LIST_CERTIFICATE_RC2_OUTPUT,
     certificateList
   );
 
@@ -105,6 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.OUTPUT_CERTIFICATE_LIST, req, statusMessage);
+  await logUserAction(session, APIName.LIST_CERTIFICATE_RC2_OUTPUT, req, statusMessage);
   res.status(httpCode).json(result);
 }
