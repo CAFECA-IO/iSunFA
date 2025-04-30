@@ -81,21 +81,22 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   const shifts = ['Morning Shift', 'Night Shift', 'Graveyard Shift', 'Shift Work'];
   const locationTypes = ['On Site', 'Hybrid', 'Remote'];
   const startDates = ['Immediately', 'Custom date'];
-  //   const salaryExpectations = ['Negotiable', 'By Company Policy', 'Piecework', 'Custom salary'];
+  const salaryExpectations = ['Negotiable', 'By Company Policy', 'Piecework', 'Custom salary'];
 
   // Info: (20250430 - Julian) 以 string array 的形式儲存選項
   const [selectedEmploymentTypes, setSelectedEmploymentTypes] = useState<string[]>([]);
   const [selectedShifts, setSelectedShifts] = useState<string[]>([]);
   const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>([]);
   const [selectedStartDate, setSelectedStartDate] = useState<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedSalary, setSelectedSalary] = useState<string>('');
 
   // Info: (20250430 - Julian) 自訂選項
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [customDateInput, setCustomDateInput] = useState<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [customSalaryInput, setCustomSalaryInput] = useState<string>('');
+  const [customDateInput, setCustomDateInput] = useState<number | null>(null);
+  //   const [customDateUnits, setCustomDateUnits] = useState<'Day' | 'Week' | 'Month' | 'Year'>('Day');
+  //   const [customSalaryInput, setCustomSalaryInput] = useState<string>('');
+  //   const [customSalaryUnits, setCustomSalaryUnits] = useState<
+  //     'Hour' | 'Day' | 'Week' | 'Month' | 'Year'
+  //   >('Hour');
 
   // Info: (20250430 - Julian) 禁用按鈕：未選擇 location types
   const saveDisable = selectedLocationTypes.length < 1;
@@ -118,25 +119,64 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
     // toNextStep();
   };
 
-  const startDateOptions = (
-    <div className="flex w-450px flex-wrap items-center gap-x-40px gap-y-16px">
-      {startDates.map((opt) => (
-        // ToDo: (20250430 - Julian) during development, add custom date input
-        <div className="flex items-center gap-8px">
-          <input
-            type="radio"
-            id={opt}
-            name="start-date"
-            checked={selectedStartDate === opt}
-            className={orangeRadioStyle}
-            onChange={() => setSelectedStartDate(opt)}
-            required
-          />
-          <label htmlFor={opt}>{opt}</label>
-        </div>
-      ))}
+  const changeCustomDateInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = event.target;
+    const numberValue = Number(value);
+    setCustomDateInput(numberValue);
+  };
+
+  // ToDo: (20250430 - Julian) during development, add unit select
+  const customDateOption = (
+    <div className="flex items-center gap-lv-2">
+      After...{' '}
+      <input
+        type="number"
+        id="custom-date"
+        className="w-70px border-b bg-transparent text-center"
+        value={customDateInput || ''}
+        onChange={changeCustomDateInput}
+      />
     </div>
   );
+
+  // Info: (20250430 - Julian) 日期選項
+  const startDateOptions = startDates.map((opt) => {
+    const optionString = opt === 'Custom date' ? customDateOption : opt;
+
+    return (
+      <div className="flex items-center gap-8px">
+        <input
+          type="radio"
+          id={opt}
+          name="start-date"
+          checked={selectedStartDate === opt}
+          className={orangeRadioStyle}
+          onChange={() => setSelectedStartDate(opt)}
+          required
+        />
+        <label htmlFor={opt}>{optionString}</label>
+      </div>
+    );
+  });
+
+  // Info: (20250430 - Julian) 薪資選項
+  // ToDo: (20250430 - Julian) during development, add custom salary input
+  const salaryOptions = salaryExpectations.map((opt) => {
+    return (
+      <div className="flex items-center gap-8px">
+        <input
+          type="radio"
+          id={opt}
+          name="salary"
+          checked={selectedSalary === opt}
+          className={orangeRadioStyle}
+          onChange={() => setSelectedSalary(opt)}
+          required
+        />
+        <label htmlFor={opt}>{opt}</label>
+      </div>
+    );
+  });
 
   return (
     <div className="flex flex-col">
@@ -175,7 +215,22 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
             <span className="ml-4px text-stroke-state-error">*</span>
           </p>
           {/* Info: (20250430 - Julian) 選項 */}
-          {startDateOptions}
+          <div className="flex w-450px flex-wrap items-center gap-x-40px gap-y-16px">
+            {startDateOptions}
+          </div>
+        </div>
+
+        {/* Info: (20250430 - Julian) Salary Expectation */}
+        <div className="flex gap-x-50px">
+          {/* Info: (20250430 - Julian) 項目 */}
+          <p className="w-150px whitespace-nowrap text-base font-normal">
+            Salary Expectation
+            <span className="ml-4px text-stroke-state-error">*</span>
+          </p>
+          {/* Info: (20250430 - Julian) 選項 */}
+          <div className="flex w-450px flex-wrap items-center gap-x-40px gap-y-16px">
+            {salaryOptions}
+          </div>
         </div>
       </form>
 
