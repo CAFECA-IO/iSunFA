@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+// Deprecated: (20250430 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 
@@ -72,6 +73,7 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
   );
 };
 
+// Deprecated: (20250430 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
@@ -112,6 +114,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
       startDate: selectedStartDate,
       salary: selectedSalary,
     };
+    // Deprecated: (20250430 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Form submitted:', formData);
 
