@@ -29,7 +29,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
 import { EventType, TransactionStatus } from '@/constants/account';
 import { HTTP_STATUS } from '@/constants/http';
-import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { validateOutputData } from '@/lib/utils/validator';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -83,9 +83,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
-  const { can } = await assertUserCanByCompany({
+  const { can } = await assertUserCanByAccountBook({
     userId,
-    companyId,
+    accountBookId: companyId,
     action: TeamPermissionAction.VIEW_VOUCHER_LIST,
   });
 
@@ -203,9 +203,9 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const { userId, companyId } = session;
 
-  const { can } = await assertUserCanByCompany({
+  const { can } = await assertUserCanByAccountBook({
     userId,
-    companyId,
+    accountBookId: companyId,
     action: TeamPermissionAction.CREATE_VOUCHER,
   });
 

@@ -21,7 +21,7 @@ import {
   deleteVoucherByCreateReverseVoucher,
   putVoucherWithoutCreateNew,
 } from '@/lib/utils/repo/voucher.repo';
-import { assertUserCanByCompany } from '@/lib/utils/permission/assert_user_team_permission';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { validateOutputData } from '@/lib/utils/validator';
 import loggerBack from '@/lib/utils/logger_back';
@@ -72,9 +72,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   const { userId, companyId } = session;
 
-  const { can } = await assertUserCanByCompany({
+  const { can } = await assertUserCanByAccountBook({
     userId,
-    companyId,
+    accountBookId: companyId,
     action: TeamPermissionAction.VIEW_VOUCHER,
   });
 
@@ -161,9 +161,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { voucherId, isVoucherNo } = query;
   const { userId, companyId } = session;
 
-  const { can } = await assertUserCanByCompany({
+  const { can } = await assertUserCanByAccountBook({
     userId,
-    companyId,
+    accountBookId: companyId,
     action: TeamPermissionAction.MODIFY_VOUCHER,
   });
 
@@ -283,9 +283,9 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   const { voucherId, isVoucherNo } = query;
   const { userId, companyId } = session;
-  const { can } = await assertUserCanByCompany({
+  const { can } = await assertUserCanByAccountBook({
     userId,
-    companyId,
+    accountBookId: companyId,
     action: TeamPermissionAction.DELETE_VOUCHER,
   });
 

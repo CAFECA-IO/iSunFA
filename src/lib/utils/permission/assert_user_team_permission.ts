@@ -138,46 +138,53 @@ export const getEffectiveTeamMeta = async (userId: number, teamId: number) => {
   return { effectiveRole, expiredAt, inGracePeriod };
 };
 
-type AssertUserCanByCompanyOptions = {
+type AssertUserCanByAccountBookOptions = {
   userId: number;
-  companyId: number;
+  accountBookId: number;
   action: TeamPermissionAction;
 };
 
-export const assertUserCanByCompany = async ({
+export function throwObjectError(name: string, message: string) {
+  const error = new Error(message);
+  error.name = name;
+  throw error;
+}
+
+export const assertUserCanByAccountBook = async ({
   userId,
-  companyId,
+  accountBookId,
   action,
-}: AssertUserCanByCompanyOptions): Promise<{
+}: AssertUserCanByAccountBookOptions): Promise<{
   teamId: number;
   actualRole: TeamRole;
   effectiveRole: TeamRole;
   can: boolean;
   alterableRoles?: TeamRole[];
 }> => {
-  const company = await prisma.company.findFirst({
+  const accountBook = await prisma.company.findFirst({
     where: {
-      id: companyId,
+      id: accountBookId,
     },
     select: {
       teamId: true,
     },
   });
 
-  if (!company?.teamId) {
-    const error = new Error(STATUS_MESSAGE.TEAM_NOT_FOUND_FROM_COMPANY);
-    error.name = STATUS_CODE.TEAM_NOT_FOUND_FROM_COMPANY;
-    throw error;
+  if (!accountBook?.teamId) {
+    throwObjectError(
+      STATUS_CODE.TEAM_NOT_FOUND_FROM_COMPANY,
+      STATUS_MESSAGE.TEAM_NOT_FOUND_FROM_COMPANY
+    );
   }
 
   const result = await assertUserCan({
     userId,
-    teamId: company.teamId,
+    teamId: accountBook!.teamId,
     action,
   });
 
   return {
-    teamId: company.teamId,
+    teamId: accountBook!.teamId,
     ...result,
   };
 };

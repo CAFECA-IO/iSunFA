@@ -95,6 +95,12 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
     TeamRole.EDITOR,
     TeamRole.VIEWER,
   ],
+  [TeamPermissionAction.UPDATE_CERTIFICATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
   [TeamPermissionAction.DELETE_CERTIFICATE]: [
     TeamRole.OWNER,
     TeamRole.ADMIN,

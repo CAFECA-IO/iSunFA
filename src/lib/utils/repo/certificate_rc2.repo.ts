@@ -1,189 +1,239 @@
-import { CertificateRC2 } from '@prisma/client';
 import prisma from '@/client';
-
+import { CertificateRC2, CurrencyCode, CertificateType as PrismaCertificateType } from '@prisma/client';
 import { z } from 'zod';
 import {
-  CertificateDirection,
-  CurrencyCode,
-  DeductionType,
-  TaxType,
-} from '@/constants/certificate';
-import {
+  listCertificateRC2QuerySchema,
   CertificateRC2InputSchema,
   CertificateRC2OutputSchema,
+  isCertificateRC2Input,
 } from '@/lib/utils/zod_schema/certificate_rc2';
+import { CertificateDirection, CertificateTab } from '@/constants/certificate';
+import { TeamPermissionAction } from '@/interfaces/permissions';
+import { createOrderByList } from '@/lib/utils/sort';
+import { getTimestampNow } from '@/lib/utils/common';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 
-export function transformCertificateRC2(
-  cert: CertificateRC2
-): z.infer<typeof CertificateRC2InputSchema> | z.infer<typeof CertificateRC2OutputSchema> {
-  const base = {
-    id: cert.id,
-    accountBookId: cert.accountBookId,
-    fileId: cert.fileId,
-    uploaderId: cert.uploaderId,
-    direction: cert.direction,
-    aiResultId: cert.aiResultId,
-    aiStatus: cert.aiStatus,
-    createdAt: cert.createdAt,
-    updatedAt: cert.updatedAt,
-    deletedAt: cert.deletedAt ?? null,
-    type: cert.type,
-    issuedDate: cert.issuedDate,
-    no: cert.no,
-    currencyCode: cert.currencyCode as CurrencyCode,
-    taxType: cert.taxType as TaxType,
-    taxRate: cert.taxRate,
-    netAmount: cert.netAmount,
-    taxAmount: cert.taxAmount,
-    totalAmount: cert.totalAmount,
-    isGenerated: cert.isGenerated,
-    totalOfSummarizedCertificates: cert.totalOfSummarizedCertificates,
-    carrierSerialNumber: cert.carrierSerialNumber,
-    otherCertificateNo: cert.otherCertificateNo,
-  };
-
-  if (cert.direction === CertificateDirection.INPUT) {
-    const input = {
-      ...base,
-      deductionType: cert.deductionType as DeductionType,
-      salesName: cert.salesName ?? '',
-      salesIdNumber: cert.salesIdNumber ?? '',
-      isSharedAmount: cert.isSharedAmount ?? false,
-      buyerName: undefined,
-      buyerIdNumber: undefined,
-      isReturnOrAllowance: undefined,
-    } as unknown as z.infer<typeof CertificateRC2InputSchema>;
-    return input;
-  } else {
-    const output = {
-      ...base,
-      buyerName: cert.buyerName ?? '',
-      buyerIdNumber: cert.buyerIdNumber ?? '',
-      isReturnOrAllowance: cert.isReturnOrAllowance ?? false,
-      deductionType: undefined,
-      salesName: undefined,
-      salesIdNumber: undefined,
-    } as unknown as z.infer<typeof CertificateRC2OutputSchema>;
-    return output;
-  }
+function transformInput(cert: CertificateRC2): z.infer<typeof CertificateRC2InputSchema> {
+  return CertificateRC2InputSchema.parse({
+    ...cert,
+    taxRate: cert?.taxRate ?? null,
+    deductionType: cert?.deductionType ?? null,
+    salesName: cert?.salesName ?? '',
+    salesIdNumber: cert?.salesIdNumber ?? '',
+    isSharedAmount: cert?.isSharedAmount ?? false,
+    buyerName: undefined,
+    buyerIdNumber: undefined,
+    isReturnOrAllowance: undefined,
+  });
 }
 
-export async function findCertificateRC2ById(certificateId: number) {
-  const certificate = await prisma.certificateRC2.findUnique({
+function transformOutput(cert: CertificateRC2): z.infer<typeof CertificateRC2OutputSchema> {
+  return CertificateRC2OutputSchema.parse({
+    ...cert,
+    taxRate: cert?.taxRate ?? null,
+    buyerName: cert?.buyerName ?? '',
+    buyerIdNumber: cert?.buyerIdNumber ?? '',
+    isReturnOrAllowance: cert?.isReturnOrAllowance ?? false,
+    deductionType: undefined,
+    salesName: undefined,
+    salesIdNumber: undefined,
+    isSharedAmount: undefined,
+  });
+}
+
+export async function findCertificateRC2ById(data: {
+  userId: number;
+  accountBookId: number;
+  certificateId: number;
+}) {
+  const { userId, accountBookId, certificateId } = data;
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.VIEW_CERTIFICATE,
+  });
+  const cert = await prisma.certificateRC2.findUnique({
     where: { id: certificateId, deletedAt: null },
   });
-  if (!certificate) return null;
-  return transformCertificateRC2(certificate);
+  if (!cert) return null;
+  return isCertificateRC2Input(cert.direction) ? transformInput(cert) : transformOutput(cert);
 }
 
-export async function listCertificateRC2Input(accountBookId: number) {
+export async function listCertificateRC2(
+  userId: number,
+  direction: CertificateDirection,
+  query: z.infer<typeof listCertificateRC2QuerySchema>
+) {
+  const {
+    accountBookId,
+    isDeleted,
+    tab,
+    type,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
+    sortOption,
+  } = query;
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.VIEW_CERTIFICATE,
+  });
   const certificates = await prisma.certificateRC2.findMany({
     where: {
       accountBookId,
-      direction: CertificateDirection.INPUT,
-      deletedAt: null,
+      direction,
+      deletedAt: isDeleted ? { not: null } : null,
+      voucherId: tab === CertificateTab.WITHOUT_VOUCHER ? null : { not: null },
+      type: type ?? undefined,
+      issuedDate: {
+        gte: startDate || undefined,
+        lte: endDate || undefined,
+      },
+      OR: [
+        { salesName: { contains: searchQuery, mode: 'insensitive' } },
+        { salesIdNumber: { contains: searchQuery, mode: 'insensitive' } },
+        { no: { contains: searchQuery, mode: 'insensitive' } },
+      ],
     },
-    orderBy: { createdAt: 'desc' },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: createOrderByList(sortOption || []),
   });
-  return certificates
-    .map(transformCertificateRC2)
-    .filter(
-      (c): c is z.infer<typeof CertificateRC2InputSchema> =>
-        c.direction === CertificateDirection.INPUT
-    );
-}
 
-export async function listCertificateRC2Output(accountBookId: number) {
-  const certificates = await prisma.certificateRC2.findMany({
-    where: {
-      accountBookId,
-      direction: CertificateDirection.OUTPUT,
-      deletedAt: null,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  return certificates
-    .map(transformCertificateRC2)
-    .filter(
-      (c): c is z.infer<typeof CertificateRC2OutputSchema> =>
-        c.direction === CertificateDirection.OUTPUT
-    );
+  return certificates.map(transformInput);
 }
 
 export async function createCertificateRC2Input(
-  data: Omit<
-    z.infer<typeof CertificateRC2InputSchema>,
-    'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
-  >
+  userId: number,
+  data: {
+    accountBookId: number;
+    fileId: number;
+    uploaderId: number;
+    direction: CertificateDirection;
+    isGenerated: boolean;
+    currencyCode: CurrencyCode;
+  }
 ) {
-  const created = await prisma.certificateRC2.create({
-    data: {
-      ...data,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
-      direction: CertificateDirection.INPUT,
-    },
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId: data.accountBookId,
+    action: TeamPermissionAction.CREATE_CERTIFICATE,
   });
-  return transformCertificateRC2(created);
+  const now = getTimestampNow();
+  const cert = await prisma.certificateRC2.create({
+    data: { ...data, createdAt: now, updatedAt: now },
+  });
+  return transformInput(cert);
 }
-
 export async function createCertificateRC2Output(
-  data: Omit<
-    z.infer<typeof CertificateRC2OutputSchema>,
-    'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
-  >
+  userId: number,
+  data: {
+    accountBookId: number;
+    fileId: number;
+    uploaderId: number;
+    direction: CertificateDirection;
+    isGenerated: boolean;
+    currencyCode: CurrencyCode;
+  }
 ) {
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId: data.accountBookId,
+    action: TeamPermissionAction.CREATE_CERTIFICATE,
+  });
+  const now = getTimestampNow();
   const created = await prisma.certificateRC2.create({
     data: {
       ...data,
-      createdAt: Math.floor(Date.now() / 1000),
-      updatedAt: Math.floor(Date.now() / 1000),
+      createdAt: now,
+      updatedAt: now,
       direction: CertificateDirection.OUTPUT,
     },
   });
-  return transformCertificateRC2(created);
+  return transformOutput(created);
 }
 
 export async function updateCertificateRC2Input(
+  userId: number,
+  accountBookId: number,
   certificateId: number,
   data: Partial<z.infer<typeof CertificateRC2InputSchema>>
 ) {
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.UPDATE_CERTIFICATE,
+  });
+  const now = getTimestampNow();
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
       ...data,
-      updatedAt: Math.floor(Date.now() / 1000),
+      type: data.type as PrismaCertificateType,
+      updatedAt: now,
     },
   });
-  return transformCertificateRC2(updated);
+  return transformInput(updated);
 }
 
 export async function updateCertificateRC2Output(
+  userId: number,
+  accountBookId: number,
   certificateId: number,
   data: Partial<z.infer<typeof CertificateRC2OutputSchema>>
 ) {
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.UPDATE_CERTIFICATE,
+  });
+  const now = getTimestampNow();
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
       ...data,
-      updatedAt: Math.floor(Date.now() / 1000),
+      type: data.type as PrismaCertificateType,
+      updatedAt: now,
     },
   });
-  return transformCertificateRC2(updated);
+  return transformOutput(updated);
 }
 
-export async function deleteCertificateRC2Input(certificateId: number) {
+export async function deleteCertificateRC2Input(
+  userId: number,
+  accountBookId: number,
+  certificateId: number
+) {
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.DELETE_CERTIFICATE,
+  });
+  const now = getTimestampNow();
   const deleted = await prisma.certificateRC2.update({
     where: { id: certificateId },
-    data: { deletedAt: Math.floor(Date.now() / 1000) },
+    data: { deletedAt: now },
   });
   return { success: !!deleted };
 }
 
-export async function deleteCertificateRC2Output(certificateId: number) {
+export async function deleteCertificateRC2Output(
+  userId: number,
+  accountBookId: number,
+  certificateId: number
+) {
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.DELETE_CERTIFICATE,
+  });
+  const now = getTimestampNow();
   const deleted = await prisma.certificateRC2.update({
     where: { id: certificateId },
-    data: { deletedAt: Math.floor(Date.now() / 1000) },
+    data: { deletedAt: now },
   });
   return { success: !!deleted };
 }
