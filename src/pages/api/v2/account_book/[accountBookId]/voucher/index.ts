@@ -157,12 +157,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
         paymentVoucher: 0,
         receivingVoucher: 0,
       },
-      unRead: {
-        uploadedVoucher: 0,
-        upcomingEvents: 0,
-        paymentVoucher: 0,
-        receivingVoucher: 0,
-      },
     };
 
     const paginatedVoucher: IVoucherGetOutput = toPaginatedData({

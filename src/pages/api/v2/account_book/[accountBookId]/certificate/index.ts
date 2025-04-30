@@ -23,7 +23,7 @@ import {
   certificateAPIPostUtils as postUtils,
   certificateAPIGetListUtils as getListUtils,
   certificateAPIDeleteMultipleUtils as deleteUtils,
-} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
@@ -53,21 +53,14 @@ export const handleGetRequest: IHandleRequest<
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
   const { userId, teams } = session;
-  const {
-    accountBookId: companyId,
-    page,
-    pageSize,
-    startDate,
-    endDate,
-    tab,
-    sortOption,
-    searchQuery,
-    type,
-  } = query;
+
+  const { accountBookId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
+    query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
-    const company = await getCompanyById(companyId);
+    const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -95,7 +88,7 @@ export const handleGetRequest: IHandleRequest<
 
     const paginationCertificates = await getListUtils.getPaginatedCertificateList({
       tab,
-      companyId,
+      companyId: accountBookId,
       startDate,
       endDate,
       page,
@@ -108,7 +101,7 @@ export const handleGetRequest: IHandleRequest<
 
     const { data: certificatesFromPrisma, where, ...pagination } = paginationCertificates;
 
-    const currency = await getListUtils.getCurrencyFromSetting(companyId);
+    const currency = await getListUtils.getCurrencyFromSetting(accountBookId);
 
     const certificatesWithoutIncomplete = certificatesFromPrisma.map((certificateFromPrisma) => {
       const fileEntity = postUtils.initFileEntity(certificateFromPrisma);
@@ -141,7 +134,7 @@ export const handleGetRequest: IHandleRequest<
     const incompleteSummary = summarizeIncompleteCertificates(certificates);
 
     const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
-      companyId,
+      companyId: accountBookId,
       startDate,
       endDate,
       searchQuery,
@@ -154,10 +147,6 @@ export const handleGetRequest: IHandleRequest<
     const summary: ICertificateListSummary = {
       totalInvoicePrice,
       incomplete: incompleteSummary,
-      unRead: {
-        withVoucher: 0,
-        withoutVoucher: 0,
-      },
       currency,
     };
 
@@ -206,11 +195,13 @@ export const handlePostRequest: IHandleRequest<
 
   const { fileIds } = body;
   const { userId, teams } = session;
-  const { accountBookId: companyId } = query;
+
+  const { accountBookId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
-    const company = await getCompanyById(companyId);
+    const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -240,7 +231,7 @@ export const handlePostRequest: IHandleRequest<
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
           nowInSecond,
-          companyId,
+          companyId: accountBookId,
           uploaderId: userId,
           fileId,
         });
@@ -275,7 +266,7 @@ export const handlePostRequest: IHandleRequest<
         );
 
         postUtils.triggerPusherNotification(certificate, {
-          companyId,
+          companyId: accountBookId,
         });
 
         return certificate;
@@ -312,11 +303,13 @@ export const handleDeleteRequest: IHandleRequest<
 
   const { certificateIds } = body;
   const { userId, teams } = session;
-  const { accountBookId: companyId } = query;
+
+  const { accountBookId } = query;
 
   try {
     // Info: (20250417 - Shirley) 添加團隊權限檢查
-    const company = await getCompanyById(companyId);
+    const company = await getCompanyById(accountBookId);
+
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }

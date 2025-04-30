@@ -50,7 +50,6 @@ import { readFile } from 'fs/promises';
 import { bufferToBlob } from '@/lib/utils/parse_image_form';
 import { ProgressStatus } from '@/constants/account';
 import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
-import { isCertificateIncomplete } from '@/lib/utils/certificate';
 
 export const certificateAPIPostUtils = {
   /**
@@ -242,7 +241,6 @@ export const certificateAPIPostUtils = {
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
       incomplete: false,
-      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -253,8 +251,6 @@ export const certificateAPIPostUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
-
-    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },
@@ -461,7 +457,6 @@ export const certificateAPIGetListUtils = {
       name: certificateEntity.file.name,
       companyId: certificateEntity.companyId,
       incomplete: false,
-      unRead: false,
       file,
       invoice,
       voucherNo,
@@ -472,8 +467,6 @@ export const certificateAPIGetListUtils = {
       uploader: certificateEntity.uploader.name,
       uploaderUrl: certificateEntity.uploader.imageFile.url,
     };
-
-    certificate.incomplete = isCertificateIncomplete(certificate);
 
     return certificate;
   },
