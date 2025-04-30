@@ -13,6 +13,7 @@ type CroppedAreaPixels = {
   y: number;
 };
 
+// Info: (20250430 - Liz) 裁切圖片的函式。使用 canvas 將圖片裁切成指定的區域，並轉換成 Blob 格式
 const getCroppedImg = async (
   imageSrc: string,
   pixelCrop: CroppedAreaPixels
@@ -124,10 +125,10 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
     }
   };
 
-  // Info: (20250429 - Liz) 移除已選圖片
+  // Info: (20250429 - Liz) 移除已選圖片及預覽
   const handleRemove = () => {
     setImageSrc(null);
-    setPreviewUrl(null); // Info: (20250429 - Liz) 同時清除預覽
+    setPreviewUrl(null);
   };
 
   // Info: (20250429 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
