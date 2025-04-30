@@ -172,7 +172,6 @@ export const certificatePutValidator: IZodValidator<
 };
 
 const certificateDeleteQueryValidator = z.object({
-  certificateId: zodStringToNumber,
   accountBookId: zodStringToNumber,
 });
 
