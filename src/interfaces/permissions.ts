@@ -51,6 +51,7 @@ export enum TeamPermissionAction {
   // Info: (20250418 - Shirley) 憑證相關
   VIEW_CERTIFICATE = 'VIEW_CERTIFICATE', // Info: (20250418 - Shirley) 查看憑證
   CREATE_CERTIFICATE = 'CREATE_CERTIFICATE', // Info: (20250418 - Shirley) 創建憑證
+  UPDATE_CERTIFICATE = 'UPDATE_CERTIFICATE',
   DELETE_CERTIFICATE = 'DELETE_CERTIFICATE', // Info: (20250418 - Shirley) 刪除憑證
 
   // Info: (20250417 - Shirley) 交易對象相關

@@ -3,12 +3,13 @@ import {
   CertificateType,
   CurrencyCode,
   DeductionType,
+  CertificateTab,
   TaxType,
 } from '@/constants/certificate';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { z } from 'zod';
 
-export const CertificateRC2BaseSchema = z.object({
+const CertificateRC2BaseSchema = z.object({
   id: z.number(),
   accountBookId: z.number(),
   fileId: z.number(),
@@ -25,44 +26,48 @@ export const CertificateRC2BaseSchema = z.object({
   no: z.string(),
   currencyCode: z.nativeEnum(CurrencyCode),
   taxType: z.nativeEnum(TaxType),
-  taxRate: z.number().optional(),
+  taxRate: z.number().nullable().optional(),
   netAmount: z.number(),
   taxAmount: z.number(),
   totalAmount: z.number(),
 
   isGenerated: z.boolean(),
 
-  totalOfSummarizedCertificates: z.number().optional(),
-  carrierSerialNumber: z.string().optional(),
-  otherCertificateNo: z.string().optional(),
+  totalOfSummarizedCertificates: z.number().nullable().optional(),
+  carrierSerialNumber: z.string().nullable().optional(),
+  otherCertificateNo: z.string().nullable().optional(),
+
+  deductionType: z.nativeEnum(DeductionType).nullable().optional(),
+  salesName: z.string().nullable().optional(),
+  salesIdNumber: z.string().nullable().optional(),
+  isSharedAmount: z.boolean().nullable().optional(),
+
+  buyerName: z.string().nullable().optional(),
+  buyerIdNumber: z.string().nullable().optional(),
+  isReturnOrAllowance: z.boolean().nullable().optional(),
 });
 
 export const CertificateRC2InputSchema = CertificateRC2BaseSchema.extend({
   direction: z.literal(CertificateDirection.INPUT),
-  deductionType: z.nativeEnum(DeductionType).optional(),
-  salesName: z.string().optional(),
-  salesIdNumber: z.string().optional(),
-  isSharedAmount: z.boolean().optional(),
-  buyerName: z.never().optional(),
-  buyerIdNumber: z.never().optional(),
-  isReturnOrAllowance: z.never().optional(),
 });
 
 export const CertificateRC2OutputSchema = CertificateRC2BaseSchema.extend({
   direction: z.literal(CertificateDirection.OUTPUT),
-  buyerName: z.string().optional(),
-  buyerIdNumber: z.string().optional(),
-  isReturnOrAllowance: z.boolean().optional(),
-  deductionType: z.never().optional(),
-  salesName: z.never().optional(),
-  salesIdNumber: z.never().optional(),
+});
+
+export const listCertificateRC2QuerySchema = paginatedDataQuerySchema.extend({
+  accountBookId: z.number(),
+  isDeleted: z.boolean().optional().default(false),
+  tab: z.nativeEnum(CertificateTab).optional(),
+  type: z
+    .nativeEnum(CertificateType)
+    .optional()
+    .transform((val) => (val === CertificateType.ALL ? undefined : val)),
 });
 
 export const listCertificateRC2Input = {
   input: {
-    querySchema: paginatedDataQuerySchema.extend({
-      accountBookId: z.number(),
-    }),
+    querySchema: listCertificateRC2QuerySchema,
     bodySchema: z.null(),
   },
   outputSchema: z.array(CertificateRC2InputSchema),
@@ -71,9 +76,7 @@ export const listCertificateRC2Input = {
 
 export const listCertificateRC2Output = {
   input: {
-    querySchema: paginatedDataQuerySchema.extend({
-      accountBookId: z.number(),
-    }),
+    querySchema: listCertificateRC2QuerySchema,
     bodySchema: z.null(),
   },
   outputSchema: z.array(CertificateRC2OutputSchema),
@@ -82,7 +85,7 @@ export const listCertificateRC2Output = {
 
 export const getCertificateRC2Input = {
   input: {
-    querySchema: z.object({ certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: z.null(),
   },
   outputSchema: CertificateRC2InputSchema,
@@ -91,7 +94,7 @@ export const getCertificateRC2Input = {
 
 export const getCertificateRC2Output = {
   input: {
-    querySchema: z.object({ certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: z.null(),
   },
   outputSchema: CertificateRC2OutputSchema,
@@ -100,7 +103,7 @@ export const getCertificateRC2Output = {
 
 export const createCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: CertificateRC2InputSchema.omit({
       id: true,
       createdAt: true,
@@ -114,7 +117,7 @@ export const createCertificateRC2Input = {
 
 export const createCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountBookId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: CertificateRC2OutputSchema.omit({
       id: true,
       createdAt: true,
@@ -128,7 +131,7 @@ export const createCertificateRC2Output = {
 
 export const updateCertificateRC2Input = {
   input: {
-    querySchema: z.object({ certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: CertificateRC2InputSchema.partial(),
   },
   outputSchema: CertificateRC2InputSchema,
@@ -137,7 +140,7 @@ export const updateCertificateRC2Input = {
 
 export const updateCertificateRC2Output = {
   input: {
-    querySchema: z.object({ certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: CertificateRC2OutputSchema.partial(),
   },
   outputSchema: CertificateRC2OutputSchema,
@@ -146,7 +149,7 @@ export const updateCertificateRC2Output = {
 
 export const deleteCertificateRC2Input = {
   input: {
-    querySchema: z.object({ certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
     bodySchema: z.null(),
   },
   outputSchema: z.object({ success: z.boolean() }),
@@ -184,10 +187,7 @@ export function isCertificateRC2Complete(cert: CertificateRC2Type): boolean {
   ) {
     return false;
   }
-
-  const requiredByType: Partial<
-    Record<CertificateType, (keyof (CertificateRC2InputType & CertificateRC2OutputType))[]>
-  > = {
+  const requiredByType: Partial<Record<CertificateType, (keyof CertificateRC2Type)[]>> = {
     [CertificateType.INPUT_21]: ['deductionType', 'salesName'],
     [CertificateType.INPUT_22]: ['deductionType', 'salesName'],
     [CertificateType.INPUT_23]: ['deductionType', 'salesName'],
@@ -202,13 +202,10 @@ export function isCertificateRC2Complete(cert: CertificateRC2Type): boolean {
     [CertificateType.OUTPUT_35]: ['buyerName'],
     [CertificateType.OUTPUT_36]: ['buyerName'],
   };
-
   const requiredFields = requiredByType[cert.type] || [];
-
   return requiredFields.every((key) => {
-    return (
-      Object.prototype.hasOwnProperty.call(cert, key) &&
-      (cert[key as keyof CertificateRC2Type] ?? '') !== ''
-    );
+    const val = cert[key];
+    if (typeof val === 'string') return val.trim().length > 0;
+    return val !== undefined && val !== null;
   });
 }

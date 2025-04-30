@@ -14,8 +14,9 @@ import {
 import { validateOutputData } from '@/lib/utils/validator';
 import {
   createCertificateRC2Input,
-  listCertificateRC2Input,
+  listCertificateRC2,
 } from '@/lib/utils/repo/certificate_rc2.repo';
+import { CertificateDirection } from '@/constants/certificate';
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -28,7 +29,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const { query, body } = checkRequestData(APIName.CREATE_CERTIFICATE_RC2_INPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await createCertificateRC2Input(body);
+  const certificate = await createCertificateRC2Input(session.userId, body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_CERTIFICATE_RC2_INPUT,
@@ -57,7 +58,11 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await listCertificateRC2Input(query.accountBookId);
+  const certificateList = await listCertificateRC2(
+    session.userId,
+    CertificateDirection.INPUT,
+    query
+  );
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_CERTIFICATE_RC2_INPUT,

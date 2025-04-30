@@ -13,9 +13,43 @@ import {
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
+  findCertificateRC2ById,
   deleteCertificateRC2Output,
   updateCertificateRC2Output,
 } from '@/lib/utils/repo/certificate_rc2.repo';
+
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+
+  await checkSessionUser(session, APIName.GET_CERTIFICATE_RC2_OUTPUT, req);
+  await checkUserAuthorization(APIName.GET_CERTIFICATE_RC2_OUTPUT, req, session);
+
+  const { query } = checkRequestData(APIName.GET_CERTIFICATE_RC2_OUTPUT, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+
+  const certificateList = await findCertificateRC2ById({
+    userId: session.userId,
+    accountBookId: query.accountBookId,
+    certificateId: query.certificateId,
+  });
+
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.GET_CERTIFICATE_RC2_OUTPUT,
+    certificateList
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
 
 const handlePutRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -28,7 +62,12 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { query, body } = checkRequestData(APIName.UPDATE_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await updateCertificateRC2Output(query.certificateId, body);
+  const certificate = await updateCertificateRC2Output(
+    session.userId,
+    query.accountBookId,
+    query.certificateId,
+    body
+  );
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.UPDATE_CERTIFICATE_RC2_OUTPUT,
@@ -57,7 +96,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(APIName.DELETE_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await deleteCertificateRC2Output(query.certificateId);
+  const certificateList = await deleteCertificateRC2Output(
+    session.userId,
+    query.accountBookId,
+    query.certificateId
+  );
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.DELETE_CERTIFICATE_RC2_OUTPUT,
@@ -85,12 +128,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case HttpMethod.DELETE:
-        ({ response, statusMessage } = await handleDeleteRequest(req));
+      case HttpMethod.GET:
+        ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
       case HttpMethod.PUT:
         ({ response, statusMessage } = await handlePutRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.DELETE:
+        ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);
         break;
       default:
