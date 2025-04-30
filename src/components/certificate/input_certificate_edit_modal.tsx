@@ -399,7 +399,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
           <ImageZoom
-            imageUrl={certificate.file.url}
+            // Todo: (20250428 - Anna) 先用假憑證測試
+            // imageUrl={certificate.file.url}
+            imageUrl={'/images/demo_certifate.png'}
             className="max-h-640px min-h-510px w-440px"
             controlPosition="bottom-right"
           />
@@ -597,6 +599,76 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                   <div className="flex flex-col gap-2 md:w-52">
                     <p className="text-sm font-semibold text-neutral-300">
                       {t('certificate:EDIT.INVOICE_NUMBER')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
+
+                    <div className="flex items-center">
+                      {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
+                      <input
+                        id="invoice-prefix"
+                        type="text"
+                        maxLength={2}
+                        value={formState.no?.substring(0, 2) ?? ''}
+                        onChange={(e) => {
+                          const latestNo = formStateRef.current.no ?? '';
+                          const suffix = latestNo.substring(2);
+                          handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
+                        }}
+                        className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                        placeholder="AB"
+                        disabled={!!formState.otherCertificateNo}
+                      />
+
+                      <input
+                        id="invoice-number"
+                        type="text"
+                        maxLength={8}
+                        value={formState.no?.substring(2) ?? ''}
+                        onChange={(e) => {
+                          const latestNo = formStateRef.current.no ?? '';
+                          const prefix = latestNo.substring(0, 2);
+                          handleInputChange('no', `${prefix}${e.target.value}`);
+                        }}
+                        className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                        placeholder="12345678"
+                        disabled={!!formState.otherCertificateNo}
+                      />
+                    </div>
+                  </div>
+                  {/* Info: (20250429 - Anna) or */}
+                  <p className="flex items-end text-neutral-400">{t('common:COMMON.OR')}</p>
+                  {/* Info: (20250429 - Anna) Other Certificate No. */}
+                  <div className="flex flex-col gap-2 md:w-52">
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
+
+                    <div className="flex w-full items-center">
+                      <input
+                        id="other-certificate-no"
+                        type="text"
+                        value={formState.otherCertificateNo ?? ''}
+                        onChange={(e) => {
+                          handleInputChange('otherCertificateNo', e.target.value);
+                        }}
+                        className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                        placeholder="CC12345678"
+                        disabled={!!formState.no}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : // Info: (20250429 - Anna) 格式27
+              formState.type ===
+                InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER ? (
+                <div className="flex w-full justify-between">
+                  {/* Info: (20250429 - Anna) Representative Invoice No. */}
+                  <div className="flex flex-col gap-2 md:w-52">
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
                       <span> </span>
                       <span className="text-text-state-error">*</span>
                     </p>

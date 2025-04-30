@@ -105,7 +105,13 @@
     "COPIES": "张",
     "ALLOWANCE_ISSUE_DATE": "（折让单）开立日期",
     "DUPLICATE_INVOICE_TAX": "如果使用二联式发票，税额为 0",
-    "OTHER_CERTIFICATE_NO": "其他凭证编号"
+    "OTHER_CERTIFICATE_NO": "其他凭证编号",
+    "ELECTRONIC_INVOICE_INFO": "电子发票资讯",
+    "INVOICE_DATE": "开立时间",
+    "SELLER": "卖方",
+    "BUYER": "买方",
+    "SALES": "销售额",
+    "LUMP_SUM": "总金额"
   },
   "TYPE": {
     "TRIPLICATE": "三联",
