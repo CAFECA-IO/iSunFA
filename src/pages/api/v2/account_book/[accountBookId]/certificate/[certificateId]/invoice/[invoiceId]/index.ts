@@ -8,11 +8,11 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { IHandleRequest } from '@/interfaces/handleRequest';
-import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/invoice/[invoiceId]/route_utils';
+import { invoicePutApiUtils as putUtils } from '@/pages/api/v2/account_book/[accountBookId]/certificate/[certificateId]/invoice/[invoiceId]/route_utils';
 import {
   certificateAPIGetListUtils,
   certificateAPIPostUtils,
-} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
@@ -23,7 +23,7 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/account_book/[accountBookId]/certificate/[certificateId]/route_utils';
 
 const handlePutRequest: IHandleRequest<APIName.INVOICE_PUT_V2, ICertificate | null> = async ({
   query,

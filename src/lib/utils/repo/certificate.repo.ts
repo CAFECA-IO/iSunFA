@@ -9,14 +9,13 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { InvoiceTabs } from '@/constants/certificate';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DefaultValue } from '@/constants/default_value';
-import { isCertificateIncomplete } from '@/lib/utils/certificate';
 import { Prisma } from '@prisma/client';
 
 /**
  * Info: (20250422 - Tzuhan) 補上每一筆 Certificate 的 `incomplete` 屬性（從原本的 DB 回傳中推導）
  */
 export function mapCertificateWithIncomplete(certificate: ICertificate): ICertificate {
-  const incomplete = isCertificateIncomplete(certificate);
+  const incomplete = true;
   return {
     ...certificate,
     incomplete,

@@ -197,12 +197,6 @@ export interface IVoucherListSummary {
     receivingVoucher: number;
     paymentVoucher: number;
   };
-  unRead: {
-    uploadedVoucher: number;
-    upcomingEvents: number;
-    receivingVoucher: number;
-    paymentVoucher: number;
-  };
 }
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
@@ -218,7 +212,6 @@ export interface IVoucherBeta {
     name: string;
   };
   incomplete: boolean;
-  unRead: boolean;
 
   lineItemsInfo: {
     sum: {

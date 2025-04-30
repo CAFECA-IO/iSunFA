@@ -55,7 +55,6 @@ export const InvoiceUnifiedSchema = z.union([InvoiceInputSchema, InvoiceOutputSc
  */
 export const IInvoiceBetaValidator = z.object({
   id: z.number(),
-  isComplete: z.boolean(),
   counterParty: ICounterpartyValidator,
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),

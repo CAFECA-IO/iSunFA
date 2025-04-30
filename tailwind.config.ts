@@ -1561,6 +1561,7 @@ module.exports = {
 
       content: {
         checked: '"✔"',
+        orange: 'url("/icons/orange_check.svg")',
       },
       listStyleType: {
         arrow: '"‣ "',
