@@ -14,7 +14,6 @@ interface UploadAccountBookPictureModalProps {
   setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
   getAccountBookListByTeamId?: () => Promise<void>;
-  // ToDo: (20250428 - Liz) 需要一支 API 取得帳本 by account book id，可以重新獲取帳本資料(包含圖片)
 }
 
 const UploadAccountBookPictureModal = ({
@@ -76,8 +75,6 @@ const UploadAccountBookPictureModal = ({
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
 
         if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250326 - Liz) 重新取得團隊帳本清單
-
-        // ToDo: (20250428 - Liz) 需要一支 API 取得帳本 by account book id，可以重新獲取帳本資料(包含圖片)
 
         const isChangingSelectedCompany =
           connectedAccountBook?.id === accountBookToUploadPicture.id;

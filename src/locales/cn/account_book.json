@@ -54,7 +54,8 @@
     "WARNING": "您确定要删除此账本吗？"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "TITLE": "变更公司图片"
+    "TITLE": "变更公司图片",
+    "REMOVE_PICTURE": "移除图片"
   },
   "ACCOUNT_BOOK_TRANSFER_MODAL": {
     "ACCOUNT_BOOK_TRANSFER": "账本转移",

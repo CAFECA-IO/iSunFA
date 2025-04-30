@@ -1,6 +1,8 @@
-import { ChangeEvent, DragEvent, useCallback, useEffect, useState, useRef } from 'react';
+import { ChangeEvent, DragEvent, useCallback, useState, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline } from 'react-icons/io5';
+import { FaPlus, FaMinus } from 'react-icons/fa6';
+import { FiTrash2, FiSave } from 'react-icons/fi';
 import Image from 'next/image';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
@@ -57,33 +59,19 @@ interface ChangePictureModalProps {
 }
 
 const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => {
-  const { t } = useTranslation(['account_book', 'common', 'certificate']);
+  const { t } = useTranslation(['account_book', 'common']);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [imageSrc, setImageSrc] = useState<string | null>(null); // Info: (20250430 - Liz) 儲存選擇的圖片 base64 字串
   const [crop, setCrop] = useState({ x: 0, y: 0 }); // Info: (20250430 - Liz) 裁切的位置
   const [zoom, setZoom] = useState(1); // Info: (20250430 - Liz) 縮放比例
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null); // Info: (20250430 - Liz) 使用者選擇的裁切區域的像素資訊
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   // Info: (20250429 - Liz) 當裁切完成時，react-easy-crop 會呼叫這個 callback，將裁切區域的資料儲存起來，並產生 previewUrl
-  // const onCropComplete = useCallback((_: unknown, croppedPixels: Area) => {
-  //   setCroppedAreaPixels(croppedPixels);
-  // }, []);
-  const onCropComplete = useCallback(
-    async (_: unknown, croppedPixels: Area) => {
-      setCroppedAreaPixels(croppedPixels);
-      if (imageSrc) {
-        const croppedBlob = await getCroppedImg(imageSrc, croppedPixels);
-        if (croppedBlob) {
-          const preview = URL.createObjectURL(croppedBlob);
-          setPreviewUrl(preview);
-        }
-      }
-    },
-    [imageSrc]
-  );
+  const onCropComplete = useCallback((_: unknown, croppedPixels: Area) => {
+    setCroppedAreaPixels(croppedPixels);
+  }, []);
 
   // Info: (20250429 - Liz) 讀取圖片檔案函式。使用 FileReader 把圖片轉成 base64，並更新到 imageSrc
   const readImageFile = (file: File) => {
@@ -100,7 +88,7 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
     if (file) readImageFile(file);
   };
 
-  // Info: (20250429 - Liz) 拖曳上傳圖片
+  // Info: (20250429 - Liz) 拖曳上傳圖片，當檔案被放到區域裡的時候觸發
   const handleDrop = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
@@ -108,11 +96,12 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
     setIsDragging(false);
   };
 
-  // Info: (20250429 - Liz) 拖曳圖片時，顯示拖曳區域的樣式
+  // Info: (20250429 - Liz) 拖曳圖片時，顯示拖曳區域的樣式。只要拖曳的檔案移動到這個區域上方就會一直觸發
   const onDragOver = (e: DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   };
+  // Info: (20250430 - Liz) 拖曳檔案離開這個區域時觸發
   const onDragLeave = () => setIsDragging(false);
 
   // Info: (20250429 - Liz) 儲存裁切結果
@@ -128,15 +117,10 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
   // Info: (20250429 - Liz) 移除已選圖片及預覽
   const handleRemove = () => {
     setImageSrc(null);
-    setPreviewUrl(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
   };
-
-  // Info: (20250429 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -150,9 +134,9 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
           </button>
         </section>
 
-        <section className="border-2 border-red-500">
+        <section className="flex flex-col gap-24px">
           {imageSrc ? (
-            <div className="relative h-256px w-full">
+            <div className="relative h-320px w-full">
               <Cropper
                 image={imageSrc}
                 crop={crop}
@@ -205,53 +189,59 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
           )}
 
           {imageSrc && (
-            <div className="flex items-center justify-center gap-4 border-2 border-lime-400">
+            <div className="flex items-center justify-center gap-12px px-20px">
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.min(z + 0.1, 3))}
-                className="rounded bg-gray-200 px-3 py-1"
+                className="rounded-xs border border-button-stroke-secondary p-10px text-button-text-secondary"
               >
-                +
+                <FaPlus size={16} />
               </button>
-              <span>{Math.round(zoom * 100)}%</span>
+              <span>{Math.round(zoom * 100)} %</span>
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.max(z - 0.1, 1))}
-                className="rounded bg-gray-200 px-3 py-1"
+                className="rounded-xs border border-button-stroke-secondary p-10px text-button-text-secondary"
               >
-                -
+                <FaMinus size={16} />
               </button>
             </div>
           )}
         </section>
 
-        {/* Info: (20250429 - Liz) 預覽區塊 */}
-        {imageSrc && previewUrl && (
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Preview</p>
-            <Image src={previewUrl} alt="Preview" width={96} height={96} />
-          </div>
-        )}
-
-        <div className="flex justify-between">
+        {/* Info: (20250430 - Liz) Footer Buttons */}
+        <section className="flex items-center justify-between">
           {imageSrc && (
-            <button type="button" onClick={handleRemove} className="text-sm text-red-500">
-              Remove Profile Picture
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="flex items-center gap-4px text-sm font-medium text-button-text-secondary"
+            >
+              <FiTrash2 size={16} />
+              <span className="text-start">
+                {t('account_book:UPLOAD_COMPANY_AVATAR_MODAL.REMOVE_PICTURE')}
+              </span>
             </button>
           )}
-          <div className="flex gap-2">
-            <button type="button" onClick={closeModal} className="rounded bg-gray-300 px-4 py-2">
-              Cancel
+
+          <div className="ml-auto flex items-center gap-12px">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary"
+            >
+              <span>{t('common:COMMON.CANCEL')}</span>
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="rounded bg-blue-600 px-4 py-2 text-white"
+              className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert"
             >
-              Save
+              <span>{t('common:COMMON.SAVE')}</span>
+              <FiSave size={16} />
             </button>
           </div>
-        </div>
+        </section>
       </div>
     </main>
   );
