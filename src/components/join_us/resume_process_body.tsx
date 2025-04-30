@@ -5,6 +5,7 @@ import ResumeStepper from '@/components/join_us/resume_stepper';
 import PersonalInfoForm from '@/components/join_us/personal_info_form';
 import ExperienceForm from '@/components/join_us/experience_form';
 import SkillForm from '@/components/join_us/skill_form';
+import PreferenceForm from '@/components/join_us/preference_form';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
@@ -31,6 +32,8 @@ const ResumeProcessBody: React.FC = () => {
       <ExperienceForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
     ) : currentStep === 3 ? (
       <SkillForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
+    ) : currentStep === 4 ? (
+      <PreferenceForm toPrevStep={toPrevStep} toNextStep={toNextStep} />
     ) : null;
 
   return (
