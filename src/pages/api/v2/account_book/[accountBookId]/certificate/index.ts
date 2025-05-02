@@ -289,15 +289,23 @@ const handlePostRequest = async (req: NextApiRequest) => {
           ),
         };
 
-        const certificate: ICertificate = getListUtils.transformCertificateEntityToResponse(
+        const certificate: ICertificate = postUtils.transformCertificateEntityToResponse(
           certificateReadyForTransfer
         );
+
+        postUtils.triggerPusherNotification(certificate, {
+          accountBookId,
+        });
 
         return certificate;
       })
     );
+    // Info: (20241121 - tzuhan) @Murkey 這是 createCertificate 成功h後，後端使用 pusher 的傳送 CERTIFICATE_EVENT.CREATE 的範例
+    /**
+     * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
+     */
 
-    statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+    statusMessage = STATUS_MESSAGE.CREATED;
     payload = certificates;
   } catch (_error) {
     const error = _error as Error;
