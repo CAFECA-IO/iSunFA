@@ -109,6 +109,7 @@ const UploadArea: React.FC<IUploadAreaProps> = ({
       } else {
         // Info: (20250502 - Julian) 文件類型不正確
         const validFileTypes = limitedTypes.join(', ');
+        // Deprecated: (20250502 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error(`Invalid file type. Please upload files of type: ${validFileTypes}`);
       }
