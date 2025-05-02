@@ -24,6 +24,7 @@ const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep
       personalWebsite: websiteInput,
     };
 
+    // Deprecated: (20250502 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Form submitted:', formData);
 
