@@ -3,34 +3,35 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiTrash2 } from 'react-icons/fi';
-import { MimeType } from '@/interfaces/skill';
+import { MimeType } from '@/constants/mime_type';
 
 interface IUploadItemProps {
-  certificate: File;
+  file: File;
   removeFile: () => void;
 }
 
-interface ICertificateUploadAreaProps {
-  certificates: FileList | null;
-  setCertificates: React.Dispatch<React.SetStateAction<FileList | null>>;
+interface IUploadAreaProps {
+  files: FileList | null;
+  setFiles: React.Dispatch<React.SetStateAction<FileList | null>>;
+  className?: string;
+  limitedFileTypes?: MimeType[]; // Info: (20250502 - Julian) 限制的檔案類型
 }
 
-const UploadItem: React.FC<IUploadItemProps> = ({ certificate, removeFile }) => {
+const UploadItem: React.FC<IUploadItemProps> = ({ file, removeFile }) => {
   // ToDo: Info: (20250429 - Julian) Developing the upload progress
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadProgress, setUploadProgress] = useState<number>(100);
 
-  const fileTypeImages: Record<MimeType, string> = {
-    [MimeType.PDF]: '/icons/pdf_file.png',
-    [MimeType.DOC]: '/icons/doc_file.png',
-    [MimeType.DOCX]: '/icons/docx_file.png',
-  };
+  // Info: (20250502 - Julian) Find key of file type
+  const fileType = Object.keys(MimeType).find(
+    (key) => MimeType[key as keyof typeof MimeType] === file.type
+  );
+  const imgSrc = `/file_icon/${fileType}.png`;
 
-  const imgSrc = fileTypeImages[certificate.type as MimeType] || '/icons/default_file.png';
-  const fileSize = (certificate.size / 1024).toFixed(2); // Info: (20250429 - Julian) 換算 KB
+  const fileSize = (file.size / 1024).toFixed(2); // Info: (20250429 - Julian) 換算 KB
 
   // Info: (20250429 - Julian) 取得檔名
-  const fileName = certificate.name.split('.');
+  const fileName = file.name.split('.');
 
   // Info: (20250429 - Julian) 檔名長度超過 20 字元時，顯示前 5 個字元 + '...' + 後 5 個字元
   const nameParts =
@@ -75,20 +76,26 @@ const UploadItem: React.FC<IUploadItemProps> = ({ certificate, removeFile }) => 
   );
 };
 
-const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
-  certificates,
-  setCertificates,
+const UploadArea: React.FC<IUploadAreaProps> = ({
+  files,
+  setFiles,
+  className,
+  limitedFileTypes,
 }) => {
   const { t } = useTranslation(['hiring']);
   const [isDragOver, setIsDragOver] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
-  const handleUpload = (files: FileList | null) => {
+  // Info: (20250429 - Julian) 若無 limitedFileTypes ，則不限制檔案類型
+  const limitedTypes = limitedFileTypes || Object.values(MimeType);
+
+  const handleUpload = (fileList: FileList | null) => {
     // Info: (20250429 - Julian) 檢查文件類型
-    if (files) {
-      const validFiles = Array.from(files).filter((file) => {
+    if (fileList) {
+      // Info: (20250429 - Julian) 過濾有效的文件類型
+      const validFiles = Array.from(fileList).filter((file) => {
         const fileType = file.type as MimeType;
-        return Object.values(MimeType).includes(fileType);
+        return limitedTypes.includes(fileType);
       });
 
       if (validFiles.length > 0) {
@@ -97,12 +104,13 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
         const validFileList = new DataTransfer();
         validFiles.forEach((file) => validFileList.items.add(file));
         // Info: (20250429 - Julian) 更新文件列表
-        setCertificates(validFileList.files);
+        setFiles(validFileList.files);
         setIsUploading(false);
       } else {
-        // Info: (20250429 - Julian) 文件類型不正確
+        // Info: (20250502 - Julian) 文件類型不正確
+        const validFileTypes = limitedTypes.join(', ');
         // eslint-disable-next-line no-console
-        console.error('Invalid file type. Please upload PDF, DOC, or DOCX files.');
+        console.error(`Invalid file type. Please upload files of type: ${validFileTypes}`);
       }
     } else {
       // ToDo: (20250429 - Julian) for debugging
@@ -113,9 +121,9 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
 
   // Info: (20250429 - Julian) 點擊上傳
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { files } = event.target;
-    if (files) {
-      handleUpload(files);
+    const file = event.target.files;
+    if (file) {
+      handleUpload(file);
     }
   };
 
@@ -136,25 +144,25 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
     setIsDragOver(false);
   };
 
-  const certList = certificates ? Array.from(certificates) : [];
+  const fileList = files ? Array.from(files) : [];
 
   const uploadArea =
-    certList.length > 0 ? (
+    fileList.length > 0 ? (
       <div className="rounded-lg border border-dashed border-landing-page-gray p-lv-7">
         <div className="flex h-160px flex-col gap-10px overflow-y-auto">
-          {certList.map((cert) => {
+          {fileList.map((cert) => {
             // Info: (20250429 - Julian) 移除文件
             const removeFile = () => {
               // Info: (20250429 - Julian) 取得當前文件列表
-              const updatedFiles = certList.filter((item) => item.name !== cert.name);
+              const updatedFiles = fileList.filter((item) => item.name !== cert.name);
               // Info: (20250429 - Julian) 更新文件列表
               const newFileList = new DataTransfer();
               // Info: (20250429 - Julian) 將更新後的文件添加到 DataTransfer 物件中
               updatedFiles.forEach((file) => newFileList.items.add(file));
               // Info: (20250429 - Julian) 更新 state
-              setCertificates(newFileList.files);
+              setFiles(newFileList.files);
             };
-            return <UploadItem key={cert.name} certificate={cert} removeFile={removeFile} />;
+            return <UploadItem key={cert.name} file={cert} removeFile={removeFile} />;
           })}
         </div>
       </div>
@@ -194,7 +202,7 @@ const CertificateUploadArea: React.FC<ICertificateUploadAreaProps> = ({
       </div>
     );
 
-  return <div className="col-span-2">{uploadArea}</div>;
+  return <div className={className}>{uploadArea}</div>;
 };
 
-export default CertificateUploadArea;
+export default UploadArea;

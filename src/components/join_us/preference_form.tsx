@@ -105,8 +105,6 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
   );
 };
 
-// Deprecated: (20250430 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring', 'common']);
 
@@ -167,7 +165,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
     console.log('Form submitted:', formData);
 
     // Info: (20250430 - Julian) 提交後跳轉到下一步
-    // toNextStep();
+    toNextStep();
   };
 
   // Info: (20250502 - Julian) ============ 自訂日期相關 ============
