@@ -51,6 +51,8 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
   setCurrentOptions,
   required,
 }) => {
+  const { t } = useTranslation(['hiring']);
+
   const displayedOptions = options.map((opt) => {
     // Info: (20250430 - Julian) checkbox 樣式
     const orangeCheckboxStyle =
@@ -58,6 +60,9 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
 
     // Info: (20250430 - Julian) 判斷選項是否被選中
     const isChecked = currentOptions.includes(opt);
+
+    // Info: (20250502 - Julian) 轉換為 i18n Code
+    const optStr = `hiring:PREFERENCE.OPTION_${opt.replaceAll(' ', '_').toUpperCase()}`;
 
     // Info: (20250502 - Julian) 變更選項狀態
     const handleChange = () => {
@@ -80,7 +85,7 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
           onChange={handleChange}
           className={orangeCheckboxStyle}
         />
-        <label htmlFor={opt}>{opt}</label>
+        <label htmlFor={opt}>{t(optStr)}</label>
       </div>
     );
   });
@@ -103,10 +108,10 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
 // Deprecated: (20250430 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep }) => {
-  const { t } = useTranslation(['hiring']);
+  const { t } = useTranslation(['hiring', 'common']);
 
   // Info: (20250430 - Julian) 定義選項
-  const employmentTypes = ['Full-Time', 'Part-Time', 'Contract', 'Internship', 'Temporary'];
+  const employmentTypes = ['Full Time', 'Part Time', 'Contract', 'Internship', 'Temporary'];
   const shifts = ['Morning Shift', 'Night Shift', 'Graveyard Shift', 'Shift Work'];
   const locationTypes = ['On Site', 'Hybrid', 'Remote'];
   const startDates = Object.values(DateOption);
@@ -126,8 +131,14 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   const [customSalaryInput, setCustomSalaryInput] = useState<string | null>(null);
   const [customSalaryUnits, setCustomSalaryUnits] = useState<SalaryUnit>(SalaryUnit.HOUR);
 
-  // Info: (20250430 - Julian) 禁用按鈕：未選擇 location types
-  const saveDisable = selectedLocationTypes.length < 1;
+  // Info: (20250430 - Julian) 禁用按鈕
+  const saveDisable =
+    // Info: (20250502 - Julian) 未選擇 location types
+    selectedLocationTypes.length < 1 ||
+    // Info: (20250502 - Julian) 選擇 custom date 的狀況下輸入框為空
+    (selectedStartDate === DateOption.CUSTOM_DATE && !customDateInput) ||
+    // Info: (20250502 - Julian) 選擇 custom salary 的狀況下輸入框為空
+    (selectedSalary === SalaryOption.CUSTOM_SALARY && !customSalaryInput);
 
   // Info: (20250502 - Julian) 送出表單
   const handleSubmit = (event: React.FormEvent) => {
@@ -140,7 +151,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
 
     const salary =
       selectedSalary === SalaryOption.CUSTOM_SALARY
-        ? `${customSalaryInput} per ${customSalaryUnits}`
+        ? `${customSalaryInput} NTD per ${customSalaryUnits}`
         : selectedSalary;
 
     // ToDo: (20250430 - Julian) 在這裡可以處理表單提交的邏輯
@@ -203,14 +214,14 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   // Info: (20250502 - Julian) 日期單位選項：天、週、月、年
   const customDateOptions = Object.values(DateUnit).map((unit) => (
     <option key={unit} value={unit}>
-      {unit}
+      {t(`hiring:PREFERENCE.DATE_UNIT_${unit.toUpperCase()}`)}
     </option>
   ));
 
   // Info: (20250502 - Julian) 自訂日期選項
   const customDateOption = (
     <div className="flex items-center gap-lv-2">
-      After...{' '}
+      {t('hiring:PREFERENCE.OPTION_CUSTOM_DATE_1')}{' '}
       <input
         type="number"
         id="custom-date"
@@ -229,12 +240,17 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
         </select>
         <FaChevronDown className="absolute right-16px" />
       </div>
+      {t('hiring:PREFERENCE.OPTION_CUSTOM_DATE_2')}
     </div>
   );
 
   // Info: (20250430 - Julian) 日期選項
   const startDateOptions = startDates.map((opt) => {
-    const optionString = opt === DateOption.CUSTOM_DATE ? customDateOption : opt;
+    const optionString =
+      opt === DateOption.CUSTOM_DATE
+        ? customDateOption
+        : t(`hiring:PREFERENCE.OPTION_${opt.toUpperCase()}`);
+
     const onChange = () => {
       setSelectedStartDate(opt);
       // Info: (20250502 - Julian) 如果選擇「自訂日期」以外的選項，則清空輸入框
@@ -262,14 +278,14 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   // Info: (20250502 - Julian) 薪資選項：時、天、週、月、年
   const customSalaryOptions = Object.values(SalaryUnit).map((unit) => (
     <option key={unit} value={unit}>
-      {unit}
+      {t(`hiring:PREFERENCE.SALARY_UNIT_${unit.toUpperCase()}`)}
     </option>
   ));
 
   // Info: (20250502 - Julian) 自訂薪資選項
   const customSalaryOption = (
     <div className="flex items-center gap-lv-2">
-      From{' '}
+      {t('hiring:PREFERENCE.OPTION_CUSTOM_SALARY_1')}{' '}
       <input
         type="number"
         id="custom-salary"
@@ -277,7 +293,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
         value={customSalaryInput || ''}
         onChange={changeCustomSalaryInput}
       />
-      NTD
+      {t('hiring:PREFERENCE.OPTION_CUSTOM_SALARY_2')}
       {/* Info: (20250502 - Julian) 單位選擇 */}
       <div className="relative flex items-center">
         <select
@@ -294,7 +310,11 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
 
   // Info: (20250430 - Julian) 薪資選項
   const salaryOptions = salaryExpectations.map((opt) => {
-    const optionString = opt === 'Custom salary' ? customSalaryOption : opt;
+    const optionString =
+      opt === SalaryOption.CUSTOM_SALARY
+        ? customSalaryOption
+        : t(`hiring:PREFERENCE.OPTION_${opt.replaceAll(' ', '_').toUpperCase()}`);
+
     const onChange = () => {
       setSelectedSalary(opt);
       // Info: (20250502 - Julian) 如果選擇「自訂薪資」以外的選項，則清空輸入框
@@ -324,7 +344,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
       <div className="flex flex-col gap-lv-7">
         {/* Info: (20250430 - Julian) Employment types */}
         <CheckOptions
-          title="Employment Types"
+          title={t('hiring:PREFERENCE.EMPLOYMENT_TYPES')}
           options={employmentTypes}
           currentOptions={selectedEmploymentTypes}
           setCurrentOptions={setSelectedEmploymentTypes}
@@ -332,7 +352,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
 
         {/* Info: (20250430 - Julian) Shifts */}
         <CheckOptions
-          title="Shift"
+          title={t('hiring:PREFERENCE.SHIFT')}
           options={shifts}
           currentOptions={selectedShifts}
           setCurrentOptions={setSelectedShifts}
@@ -340,7 +360,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
 
         {/* Info: (20250430 - Julian) Location Types */}
         <CheckOptions
-          title="Location Type"
+          title={t('hiring:PREFERENCE.LOCATION_TYPE')}
           options={locationTypes}
           currentOptions={selectedLocationTypes}
           setCurrentOptions={setSelectedLocationTypes}
@@ -351,7 +371,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
         <div className="flex gap-x-50px">
           {/* Info: (20250430 - Julian) 項目 */}
           <p className="w-150px whitespace-nowrap text-base font-normal">
-            Start date
+            {t('hiring:PREFERENCE.START_DATE')}
             <span className="ml-4px text-stroke-state-error">*</span>
           </p>
           {/* Info: (20250430 - Julian) 選項 */}
@@ -364,7 +384,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
         <div className="flex gap-x-50px">
           {/* Info: (20250430 - Julian) 項目 */}
           <p className="w-150px whitespace-nowrap text-base font-normal">
-            Salary Expectation
+            {t('hiring:PREFERENCE.SALARY_EXPECTATION')}
             <span className="ml-4px text-stroke-state-error">*</span>
           </p>
           {/* Info: (20250430 - Julian) 選項 */}
