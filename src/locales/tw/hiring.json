@@ -38,10 +38,10 @@
     "PHONE_TITLE": "聯絡電話",
     "EMAIL_TITLE": "電子郵件",
     "ADDRESS_TITLE": "通訊地址",
-    "QUESTION_1_TITLE": "Have you ever worked for a related company?",
-    "QUESTION_2_TITLE": "Do you currently have any relatives working at iSunCloud?",
-    "QUESTION_3_TITLE": "Do you have any criminal records or a history of bad credit?",
-    "QUESTION_4_TITLE": "Where did you learn about this job opening?",
+    "QUESTION_1_TITLE": "您曾經在相關公司工作過嗎？",
+    "QUESTION_2_TITLE": "您目前有親戚在 iSunCloud 工作嗎？",
+    "QUESTION_3_TITLE": "您有任何犯罪記錄或不良信用記錄嗎？",
+    "QUESTION_4_TITLE": "您從哪裡得知這個職缺？",
     "YES": "是",
     "NO": "否",
     "WHERE_OPTION_104": "104",
@@ -128,6 +128,11 @@
     "SALARY_UNIT_WEEK": "週",
     "SALARY_UNIT_MONTH": "月",
     "SALARY_UNIT_YEAR": "年"
+  },
+  "ATTACHMENT_PAGE": {
+    "ATTACHMENT": "附件 (求職信)",
+    "PERSONAL_WEBSITE": "個人網站",
+    "PLACEHOLDER": "請分享您的個人網站或作品集（如有）"
   },
   "FINISH_PAGE": {
     "MAIN_TITLE": "感謝您的應徵！",

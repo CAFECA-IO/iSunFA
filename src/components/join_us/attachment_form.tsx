@@ -9,7 +9,6 @@ interface IAttachmentFormProps {
   toNextStep: () => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring', 'common']);
 
@@ -27,6 +26,8 @@ const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep
 
     // eslint-disable-next-line no-console
     console.log('Form submitted:', formData);
+
+    toNextStep();
   };
 
   return (
@@ -34,19 +35,19 @@ const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep
       <div className="flex flex-col items-stretch gap-50px">
         {/* Info: (20250502 - Julian) Attachment */}
         <div className="flex flex-col items-start gap-10px">
-          <p className="text-base font-normal">Attachment (Cover letter)</p>
+          <p className="text-base font-normal">{t('hiring:ATTACHMENT_PAGE.ATTACHMENT')}</p>
           <UploadArea files={attachments} setFiles={setAttachments} className="w-full" />
         </div>
 
         {/* Info: (20250502 - Julian) Personal Website */}
         <div className="flex flex-col items-start gap-6px">
-          <p className="text-base font-normal">Personal Website</p>
+          <p className="text-base font-normal">{t('hiring:ATTACHMENT_PAGE.PERSONAL_WEBSITE')}</p>
           <input
             type="text"
             className={`${haloStyle} h-60px w-full rounded-full px-24px`}
             value={websiteInput}
             onChange={(e) => setWebsiteInput(e.target.value)}
-            placeholder="Share your personal website or portfolio if available"
+            placeholder={t('hiring:ATTACHMENT_PAGE.PLACEHOLDER')}
           />
         </div>
       </div>

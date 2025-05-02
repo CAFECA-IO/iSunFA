@@ -129,6 +129,11 @@
     "SALARY_UNIT_MONTH": "Month",
     "SALARY_UNIT_YEAR": "Year"
   },
+  "ATTACHMENT_PAGE": {
+    "ATTACHMENT": "Attachment (Cover letter)",
+    "PERSONAL_WEBSITE": "Personal Website",
+    "PLACEHOLDER": "Please share your personal website or portfolio if available"
+  },
   "FINISH_PAGE": {
     "MAIN_TITLE": "Thank You for Applying!",
     "TEXT": "Thank you for applying! Due to a high number of candidates, our team needs time to carefully review each application. We’ll notify you of the results via email.",
