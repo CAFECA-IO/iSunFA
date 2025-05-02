@@ -23,12 +23,18 @@ export enum InvoiceTabs {
   WITH_VOUCHER = 'withVoucher',
 }
 
+export enum CertificateTab {
+  WITH_VOUCHER = 'WITH_VOUCHER',
+  WITHOUT_VOUCHER = 'WITHOUT_VOUCHER',
+}
+
 export enum CertificateDirection {
   INPUT = 'INPUT',
   OUTPUT = 'OUTPUT',
 }
 
 export enum CertificateType {
+  ALL = 'ALL',
   INPUT_21 = 'INPUT_21',
   INPUT_22 = 'INPUT_22',
   INPUT_23 = 'INPUT_23',

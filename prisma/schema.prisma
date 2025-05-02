@@ -431,25 +431,26 @@ enum TaxType {
 model CertificateRC2 {
   id                            Int     @id @default(autoincrement())
   accountBookId                 Int     @map("accountbook_id")
+  voucherId                     Int?     @map("voucher_id")
   fileId                        Int     @map("file_id")
   uploaderId                    Int     @map("uploader_id")
   direction                     CertificateDirection @map("direction")
-  aiResultId                    String  @default("0") @map("ai_result_id")
-  aiStatus                      String  @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
+  aiResultId                    String?  @default("0") @map("ai_result_id")
+  aiStatus                      String?  @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
   createdAt                     Int     @map("created_at")
   updatedAt                     Int     @map("updated_at")
   deletedAt                     Int?    @map("deleted_at")
 
   // Info: (20250429 - Tzuhan) Invoice 基本欄位
-  type                          CertificateType @map("type")
-  issuedDate                    Int    @map("issued_date")
-  no                            String @map("no")
+  type                          CertificateType? @map("type")
+  issuedDate                    Int?    @map("issued_date")
+  no                            String? @map("no")
   currencyCode                  CurrencyCode @map("currency_code")
-  taxType                       TaxType @map("tax_type")
+  taxType                       TaxType? @map("tax_type")
   taxRate                       Int?   @map("tax_rate")
-  netAmount                     Int    @map("net_amount")
-  taxAmount                     Int    @map("tax_amount")
-  totalAmount                   Int    @map("total_amount")
+  netAmount                     Int?    @map("net_amount")
+  taxAmount                     Int?    @map("tax_amount")
+  totalAmount                   Int?    @map("total_amount")
 
   // Info: (20250429 - Tzuhan) Input 發票專屬欄位
   deductionType                 DeductionType? @map("deduction_type")
@@ -472,9 +473,10 @@ model CertificateRC2 {
 
 
   // Info: (20250429 - Tzuhan) 關聯
-  accountbook Company @relation(fields: [accountBookId], references: [id])
-  file        File    @relation(fields: [fileId], references: [id])
-  uploader    User    @relation(fields: [uploaderId], references: [id])
+  accountbook Company          @relation(fields: [accountBookId], references: [id])
+  file        File             @relation(fields: [fileId], references: [id])
+  uploader    User             @relation(fields: [uploaderId], references: [id])
+  voucher     Voucher?         @relation(fields: [voucherId], references: [id])
 
   @@map("certificate_rc2")
 }
@@ -1246,6 +1248,7 @@ model Voucher {
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
+  CertificateRC2         CertificateRC2[]
 
   originalVouchers AssociateVoucher[] @relation("original_voucher")
   resultVouchers   AssociateVoucher[] @relation("result_voucher")
