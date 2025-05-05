@@ -40,28 +40,26 @@ export function convertToTodoAccountBook(
     };
   }>
 ): ITodoAccountBook {
-  const company = todo.userTodoCompanies?.[0]?.company;
-  if (!company) throw new Error(`[convertToTodoAccountBook] Company 不存在 (todoId: ${todo.id})`);
-
+  const company = todo.userTodoCompanies?.[0]?.company ?? null;
   const { note } = splitStartEndTimeInNote(todo.note);
 
   return {
     ...todo,
     note,
-
     startTime: timestampInMilliSeconds(todo.startDate),
     endTime: timestampInMilliSeconds(todo.endDate),
-    company: {
-      ...company,
-      imageId: company.imageFile?.url ?? '',
-
-      tag: company.tag as WORK_TAG,
-    },
+    company: company
+      ? {
+          ...company,
+          imageId: company.imageFile?.url ?? '',
+          tag: company.tag as WORK_TAG,
+        }
+      : null, // ✅ 若無關聯公司，設為 null
   };
 }
 
 export async function createTodo(data: {
-  accountBookId: number;
+  accountBookId?: number;
   name: string;
   deadline: number;
   userId: number;
@@ -71,6 +69,7 @@ export async function createTodo(data: {
 }) {
   const nowTimestamp = getTimestampNow();
   const { name, deadline, userId, startDate, endDate, note, accountBookId: companyId } = data;
+
   const newTodo = await prisma.todo.create({
     data: {
       name,
@@ -81,14 +80,16 @@ export async function createTodo(data: {
       status: true,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
-      userTodoCompanies: {
-        create: {
-          userId,
-          companyId,
-          createdAt: nowTimestamp,
-          updatedAt: nowTimestamp,
+      ...(companyId && {
+        userTodoCompanies: {
+          create: {
+            userId,
+            companyId,
+            createdAt: nowTimestamp,
+            updatedAt: nowTimestamp,
+          },
         },
-      },
+      }),
     },
     include: {
       userTodoCompanies: {

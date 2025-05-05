@@ -16,7 +16,7 @@ export const userIdSchema = z.object({
 });
 
 export const todoPostPutBodySchema = z.object({
-  accountBookId: z.number(),
+  accountBookId: z.number().optional(),
   name: z.string(),
   deadline: z.number(),
   startDate: z.number(),
