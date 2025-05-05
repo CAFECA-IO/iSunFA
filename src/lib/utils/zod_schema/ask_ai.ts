@@ -52,6 +52,21 @@ const askAIGetResultQueryV2Schema = z.object({
 const askAIGetResultBodyV2Schema = nullSchema;
 
 /**
+ * Info: (20250505 - Shirley) Schema for Ask AI Status API
+ * Defines the query parameters schema for checking AI process status
+ */
+const askAIStatusQuerySchema = z.object({
+  resultId: z.string(),
+  aiApi: z.string().optional(),
+});
+
+/**
+ * Info: (20250505 - Shirley) Output schema for Ask AI Status API
+ * Uses the ProgressStatus enum to validate response
+ */
+const askAIStatusOutputSchema = z.nativeEnum(ProgressStatus);
+
+/**
  * Info: (20241107 - Murky)
  * @description IAIResultVoucherSchema is for AI result coming from ai service,
  * - lineItem id will be negative, account in lineItem beta need fuzzy search to make sure id  or code is correct
@@ -155,5 +170,18 @@ export const askAiPostSchema = {
     bodySchema: askAIPostBodySchema,
   },
   outputSchema: askAIPostOutputSchema,
+  frontend: nullSchema,
+};
+
+/**
+ * Info: (20250505 - Shirley) Export schema for Ask AI Status API
+ * Defines the input and output schema for checking AI process status
+ */
+export const askAIStatusSchema = {
+  input: {
+    querySchema: askAIStatusQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: askAIStatusOutputSchema,
   frontend: nullSchema,
 };
