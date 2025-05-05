@@ -306,7 +306,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
 
         {/* Info: (20250410 - Julian) Where did you learn about this job opening? */}
         <div className="flex items-center justify-between">
-          <p>Where did you learn about this job opening?</p>
+          <p>{t('hiring:PERSONAL_INFO.QUESTION_4_TITLE')}</p>
           <div ref={targetRef} className="relative flex flex-col">
             <div
               onClick={toggleDropdown}

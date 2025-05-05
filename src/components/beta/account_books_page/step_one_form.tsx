@@ -1,4 +1,4 @@
-import { Dispatch, useState } from 'react';
+import { Dispatch, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
 import { FaArrowRightLong } from 'react-icons/fa6';
@@ -6,11 +6,15 @@ import { FiEdit2 } from 'react-icons/fi';
 import { cn } from '@/lib/utils/common';
 import Image from 'next/image';
 import { cityDistrictMap, CityList } from '@/constants/city_district';
-import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { Step1FormAction, Step1FormState } from '@/constants/account_book';
 import { ITeam } from '@/interfaces/team';
-import UploadAccountBookPictureModal from '@/components/beta/account_books_page/upload_account_book_picture_modal';
 import ChangePictureModal from '@/components/beta/account_books_page/change_picture_modal';
+// ToDo: (20250430 - Liz) 這是測試用的上傳檔案 API，等串接新 API 後就移除
+import { APIName } from '@/constants/api_connection';
+import { UploadType } from '@/constants/file';
+import { IFileUIBeta } from '@/interfaces/file';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface StepOneFormProps {
   teamList: ITeam[];
@@ -57,11 +61,15 @@ const StepOneForm = ({
     tagError,
   } = step1FormState;
 
-  const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
-    IAccountBookWithTeam | undefined
-  >();
-  // Info: (20250429 - Liz) test
   const [isChangePictureModalOpen, setIsChangePictureModalOpen] = useState<boolean>(false);
+  const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null); // Info: (20250430 - Liz) 這是用來上傳的圖片格式
+  const [savedImage, setSavedImage] = useState<string | null>(null); // Info: (20250430 - Liz) 這是用來預覽的圖片格式
+
+  const [isLoading, setIsLoading] = useState(false);
+  const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
+  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
+    APIName.ACCOUNT_BOOK_PUT_ICON
+  );
 
   const handleChange =
     (field: keyof Step1FormState) =>
@@ -168,9 +176,81 @@ const StepOneForm = ({
   };
 
   const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setAccountBookToUploadPicture(accountBookToEdit);
+    setIsChangePictureModalOpen(true);
     e.stopPropagation(); // Info: (20250428 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
+
+  const onSave = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    setSavedImage(url);
+    setCroppedBlob(blob);
+    setIsChangePictureModalOpen(false);
+  };
+
+  // ToDo: (20250430 - Liz) 這是測試用的上傳檔案 API，等串接新 API 後就移除
+  const handleUpload = useCallback(
+    async (file: File) => {
+      if (isLoading) return;
+      setIsLoading(true);
+
+      try {
+        // Info: (20241212 - Liz) 打 API 上傳檔案
+        const formData = new FormData();
+        formData.append('file', file);
+        const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
+          query: {
+            type: UploadType.COMPANY,
+            targetId: String(accountBookToEdit?.id),
+          },
+          body: formData,
+        });
+
+        if (!uploadFileSuccess || !fileMeta) {
+          // Deprecated: (20241212 - Liz)
+          // eslint-disable-next-line no-console
+          console.error('Failed to upload file:', file.name);
+          return;
+        }
+
+        // Info: (20241212 - Liz) 打 API 更新帳本圖片
+        const { success, error } = await uploadAccountBookCompanyPictureAPI({
+          params: { accountBookId: accountBookToEdit?.id },
+          body: { fileId: fileMeta.id },
+        });
+
+        if (!success) {
+          // Deprecated: (20241212 - Liz)
+          // eslint-disable-next-line no-console
+          console.error('更新帳本圖片失敗! error message:', error?.message);
+          return;
+        }
+
+        setIsChangePictureModalOpen(false);
+      } catch (error) {
+        // Deprecated: (20241212 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('Failed to upload file:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [accountBookToEdit?.id, isLoading]
+  );
+
+  // Info: (20250430 - Liz) 測試用的上傳檔案 API，等串接新 API 後就移除
+  const handleUploadCroppedImage = () => {
+    if (!croppedBlob) return;
+
+    const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
+    handleUpload(file);
+  };
+
+  // Info: (20250430 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
+  useEffect(() => {
+    return () => {
+      if (savedImage) URL.revokeObjectURL(savedImage);
+    };
+  }, [savedImage]);
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -202,16 +282,13 @@ const StepOneForm = ({
           <section className="flex items-center gap-24px">
             {/* Info: (20250428 - Liz) 帳本圖片 */}
             {imageId ? (
-              // <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
-              //   <Image src={imageId} width={168} height={168} alt="account book image"></Image>
-              // </div>
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
                 className="group relative"
               >
                 <Image
-                  src={imageId}
+                  src={savedImage || imageId}
                   alt={'account book image'}
                   width={168}
                   height={168}
@@ -651,27 +728,17 @@ const StepOneForm = ({
               <FaArrowRightLong size={16} />
             </button>
 
-            {/* Deprecated: (20250429 - Liz) 暫放，新版照片上傳完成後即移除 */}
-            <button type="button" onClick={() => setIsChangePictureModalOpen(true)}>
-              新版照片上傳
+            {/* ToDo: (20250430 - Liz) 測試用，等串接新 API 後就移除 */}
+            <button type="button" onClick={handleUploadCroppedImage}>
+              測試用照片上傳按鈕
             </button>
           </section>
         </div>
       </div>
 
       {/* Info: (20250428 - Liz) modal */}
-      {accountBookToUploadPicture && (
-        <UploadAccountBookPictureModal
-          accountBookToUploadPicture={accountBookToUploadPicture}
-          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
-        />
-      )}
-
       {isChangePictureModalOpen && (
-        <ChangePictureModal
-          closeModal={() => setIsChangePictureModalOpen(false)}
-          onSave={() => {}}
-        />
+        <ChangePictureModal closeModal={() => setIsChangePictureModalOpen(false)} onSave={onSave} />
       )}
     </main>
   );

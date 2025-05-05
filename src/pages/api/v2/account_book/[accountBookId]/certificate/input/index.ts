@@ -1,42 +1,71 @@
-// /pages/api/v2/company/[companyId]/certificate/input/index.ts
-
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { getSession } from '@/lib/utils/session';
 import { formatApiResponse } from '@/lib/utils/common';
+import { HTTP_STATUS } from '@/constants/http';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
-  checkRequestData,
   checkSessionUser,
   checkUserAuthorization,
+  checkRequestData,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { APIName, HttpMethod } from '@/constants/api_connection';
-import { getSession } from '@/lib/utils/session';
-import { HTTP_STATUS } from '@/constants/http';
-import loggerBack from '@/lib/utils/logger_back';
-import { IPaginatedOptions } from '@/interfaces/pagination';
-import { ICertificateInput } from '@/interfaces/certificate';
 import { validateOutputData } from '@/lib/utils/validator';
-import { getPaginatedCertificateListByType } from '@/lib/utils/repo/certificate_list.repo';
-import { InvoiceTransactionDirection } from '@/constants/invoice';
+import {
+  createCertificateRC2Input,
+  listCertificateRC2,
+} from '@/lib/utils/repo/certificate_rc2.repo';
+import { CertificateDirection } from '@/constants/certificate';
+
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+
+  await checkSessionUser(session, APIName.CREATE_CERTIFICATE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.CREATE_CERTIFICATE_RC2_INPUT, req, session);
+
+  const { query, body } = checkRequestData(APIName.CREATE_CERTIFICATE_RC2_INPUT, req, session);
+  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+
+  const certificate = await createCertificateRC2Input(session.userId, body);
+
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT,
+    certificate
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedOptions<ICertificateInput[]> | null = null;
+  let payload = null;
 
-  await checkSessionUser(session, APIName.INPUT_CERTIFICATE_LIST, req);
-  await checkUserAuthorization(APIName.INPUT_CERTIFICATE_LIST, req, session);
+  await checkSessionUser(session, APIName.LIST_CERTIFICATE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
 
-  const { query } = checkRequestData(APIName.INPUT_CERTIFICATE_LIST, req, session);
+  const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await getPaginatedCertificateListByType(
-    query,
-    session,
-    InvoiceTransactionDirection.INPUT
+  const certificateList = await listCertificateRC2(
+    session.userId,
+    CertificateDirection.INPUT,
+    query
   );
+
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.INPUT_CERTIFICATE_LIST,
+    APIName.LIST_CERTIFICATE_RC2_INPUT,
     certificateList
   );
 
@@ -44,9 +73,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -65,6 +94,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
+      case HttpMethod.POST:
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
         ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
@@ -77,6 +110,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.INPUT_CERTIFICATE_LIST, req, statusMessage);
+  await logUserAction(session, APIName.LIST_CERTIFICATE_RC2_INPUT, req, statusMessage);
   res.status(httpCode).json(result);
 }

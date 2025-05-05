@@ -22,3 +22,47 @@ export enum InvoiceTabs {
   WITHOUT_VOUCHER = 'withoutVoucher',
   WITH_VOUCHER = 'withVoucher',
 }
+
+export enum CertificateTab {
+  WITH_VOUCHER = 'WITH_VOUCHER',
+  WITHOUT_VOUCHER = 'WITHOUT_VOUCHER',
+}
+
+export enum CertificateDirection {
+  INPUT = 'INPUT',
+  OUTPUT = 'OUTPUT',
+}
+
+export enum CertificateType {
+  ALL = 'ALL',
+  INPUT_21 = 'INPUT_21',
+  INPUT_22 = 'INPUT_22',
+  INPUT_23 = 'INPUT_23',
+  INPUT_24 = 'INPUT_24',
+  INPUT_25 = 'INPUT_25',
+  INPUT_26 = 'INPUT_26',
+  INPUT_27 = 'INPUT_27',
+  INPUT_28 = 'INPUT_28',
+  INPUT_29 = 'INPUT_29',
+  OUTPUT_31 = 'OUTPUT_31',
+  OUTPUT_32 = 'OUTPUT_32',
+  OUTPUT_35 = 'OUTPUT_35',
+  OUTPUT_36 = 'OUTPUT_36',
+}
+
+export enum CurrencyCode {
+  TWD = 'TWD',
+  EUR = 'EUR',
+}
+
+export enum TaxType {
+  TAXABLE = 'TAXABLE',
+  TAX_FREE = 'TAX_FREE',
+}
+
+export enum DeductionType {
+  DEDUCTIBLE_PURCHASE_AND_EXPENSE = 'DEDUCTIBLE_PURCHASE_AND_EXPENSE',
+  DEDUCTIBLE_FIXED_ASSETS = 'DEDUCTIBLE_FIXED_ASSETS',
+  NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE = 'NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE',
+  NON_DEDUCTIBLE_FIXED_ASSETS = 'NON_DEDUCTIBLE_FIXED_ASSETS',
+}

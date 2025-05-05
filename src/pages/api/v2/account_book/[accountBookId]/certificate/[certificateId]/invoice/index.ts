@@ -1,18 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-import { IHandleRequest } from '@/interfaces/handleRequest';
-import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/invoice/route_utils';
+import { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
+import { invoicePostApiUtils as postUtils } from '@/pages/api/v2/account_book/[accountBookId]/certificate/[certificateId]/invoice/route_utils';
 import {
   certificateAPIGetListUtils,
   certificateAPIPostUtils,
-} from '@/pages/api/v2/company/[companyId]/certificate/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
@@ -23,22 +20,37 @@ import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { certificateGetOneAPIUtils } from '@/pages/api/v2/company/[companyId]/certificate/[certificateId]/route_utils';
+import { certificateGetOneAPIUtils } from '@/pages/api/v2/account_book/[accountBookId]/certificate/[certificateId]/route_utils';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import { validateOutputData } from '@/lib/utils/validator';
 
 /**
  * Info: (20241127 - Murky)
  * @note
  * - taxable
  */
-const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | null> = async ({
-  query,
-  body,
-  session,
-}) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate | null = null;
 
-  const { userId, teams } = session;
+  await checkSessionUser(session, APIName.INVOICE_POST_V2, req);
+  await checkUserAuthorization(APIName.INVOICE_POST_V2, req, session);
+
+  // Info: (20250430 - Shirley) Validate request data
+  const { query, body } = checkRequestData(APIName.INVOICE_POST_V2, req, session);
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
   const { certificateId } = query;
   const {
     counterParty,
@@ -90,7 +102,7 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    const userTeam = session.teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -161,58 +173,67 @@ const handlePostRequest: IHandleRequest<APIName.INVOICE_POST_V2, ICertificate | 
   } catch (_error) {
     const error = _error as Error;
     statusMessage = error.message;
-    const errorInfo = {
+    loggerError({
       userId,
       errorType: error.name,
       errorMessage: error.message,
-    };
-    loggerError(errorInfo);
+    });
   }
 
-  return {
-    statusMessage,
-    payload,
-  };
+  // Info: (20250430 - Shirley) Validate output data
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.INVOICE_POST_V2, payload);
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    payload = null;
+  } else {
+    payload = outputData;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
 type APIResponse = ICertificate | null;
 
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{
-    statusMessage: string;
-    payload: APIResponse;
-  }>;
-} = {
-  POST: (req) => withRequestValidation(APIName.INVOICE_POST_V2, req, handlePostRequest),
-};
-
+/**
+ * Info: (20250430 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern:
+ * 1. Define a switch-case for different HTTP methods
+ * 2. Call the appropriate handler based on method
+ * 3. Handle errors and return consistent response format
+ */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<APIResponse>>
 ) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = null;
-  const userId: number = -1;
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.INVOICE_POST_V2;
+  const session = await getSession(req);
 
   try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+    // Info: (20250430 - Shirley) Handle different HTTP methods
+    switch (method) {
+      case HttpMethod.POST:
+        apiName = APIName.INVOICE_POST_V2;
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
     }
-  } catch (_error) {
-    const error = _error as Error;
-    const errorInfo = {
-      userId,
-      errorType: error.name,
-      errorMessage: error.message,
-    };
-    loggerError(errorInfo);
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
+
+  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }
