@@ -5,8 +5,9 @@ import { useTranslation } from 'next-i18next';
 import { haloStyle } from '@/constants/display';
 import { IExperienceDate } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import CertificateUploadArea from '@/components/join_us/certificate_upload_area';
+import UploadArea from '@/components/join_us/upload_area';
 import { ICertificateData, ICertificateSkill, ModalType } from '@/interfaces/skill';
+import { MimeType } from '@/constants/mime_type';
 
 interface ICertificateUploadModalProps {
   modalVisibilityHandler: () => void;
@@ -194,9 +195,11 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
             />
           </div>
           {/* Info: (20250429 - Julian) Upload Certificate */}
-          <CertificateUploadArea
-            certificates={uploadedCertificates}
-            setCertificates={setUploadedCertificates}
+          <UploadArea
+            files={uploadedCertificates}
+            setFiles={setUploadedCertificates}
+            className="col-span-2"
+            limitedFileTypes={[MimeType.PDF, MimeType.DOC, MimeType.DOCX]}
           />
         </div>
         {/* Info: (20250429 - Julian) Buttons */}

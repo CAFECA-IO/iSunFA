@@ -28,13 +28,6 @@ export interface ILanguageSkill extends ILanguageSkillData {
   id: number;
 }
 
-// Info: (20250429 - Julian) --------------- Certificate ---------------
-export enum MimeType {
-  PDF = 'application/pdf',
-  DOC = 'application/msword',
-  DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-}
-
 export interface ICertificateData {
   name: string;
   issuingOrganization: string;

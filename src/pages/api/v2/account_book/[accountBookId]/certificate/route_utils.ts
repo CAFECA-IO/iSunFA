@@ -258,16 +258,16 @@ export const certificateAPIPostUtils = {
   triggerPusherNotification: (
     certificate: ICertificate,
     options: {
-      companyId: number;
+      accountBookId: number;
     }
   ) => {
-    const { companyId } = options;
+    const { accountBookId } = options;
     /**
      * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
      */
     const pusher = getPusherInstance();
 
-    pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`, CERTIFICATE_EVENT.CREATE, {
+    pusher.trigger(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`, CERTIFICATE_EVENT.CREATE, {
       message: JSON.stringify(certificate),
     });
   },
