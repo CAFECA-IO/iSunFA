@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
@@ -16,6 +16,7 @@ import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IJobDetail } from '@/interfaces/job';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IJobDetailBodyProps {
   jobData: IJobDetail;
@@ -23,14 +24,17 @@ interface IJobDetailBodyProps {
 
 const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   const { t } = useTranslation(['hiring', 'common']);
-
   const { id, title, location, date, description, jobResponsibilities, requirements, extraSkills } =
     jobData;
+  const { favoriteJobIds, toggleFavoriteJobId } = useHiringCtx();
+
+  // Info: (20250505 - Julian) 將時間戳轉換為日期格式
   const dateString = timestampToString(date).dateWithSlash;
 
-  // ToDo: (20250407 - Julian) 這邊要改成從後端取得的資料
-  const [isFavorite, setIsFavorite] = useState<boolean>(false);
-  const toggleFavorite = () => setIsFavorite((prev) => !prev);
+  // Info: (20250505 - Julian) 在 favoriteJobIds 中找是否有該 jobId
+  const isFavorite = favoriteJobIds.includes(id);
+  // Info: (20250505 - Julian) 點擊後 toggle favorite
+  const toggleFavorite = () => toggleFavoriteJobId(id);
 
   const resList = jobResponsibilities.map((item) => (
     <li key={item} className="text-lg leading-10">
