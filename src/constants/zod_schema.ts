@@ -3,6 +3,7 @@ import {
   askAIGetResultV2Schema,
   askAiPostSchema,
   askAIPostValidatorV2,
+  askAIStatusSchema,
 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
@@ -29,6 +30,7 @@ import {
   generatePublicReportSchemaV2,
   getPublicReportSchemaV2,
   reportGetValidatorV2,
+  reportGetSchemaV2,
 } from '@/lib/utils/zod_schema/report';
 import {
   userRoleListSchema,
@@ -243,13 +245,13 @@ export const ZOD_SCHEMA_API = {
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
-  [APIName.ASK_AI_STATUS]: nullAPISchema,
+  [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
   [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
-  [APIName.REPORT_GET_V2]: nullAPISchema,
+  [APIName.REPORT_GET_V2]: reportGetSchemaV2,
   [APIName.REPORT_GENERATE]: generatePublicReportSchemaV2,
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: accountGetV2Schema,
