@@ -111,7 +111,9 @@
     "SELLER": "卖方",
     "BUYER": "买方",
     "SALES": "销售额",
-    "LUMP_SUM": "总金额"
+    "LUMP_SUM": "总金额",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三联式收银机发票则跳过",
+    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

@@ -111,7 +111,9 @@
     "SELLER": "賣方",
     "BUYER": "買方",
     "SALES": "銷售額",
-    "LUMP_SUM": "總金額"
+    "LUMP_SUM": "總金額",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三聯式收銀機發票則跳過",
+    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",

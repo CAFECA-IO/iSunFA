@@ -19,6 +19,9 @@ import CounterpartyInput, {
 } from '@/components/certificate/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
 import ImageZoom from '@/components/image_zoom/image_zoom';
+import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import dayjs from 'dayjs';
+import html2canvas from 'html2canvas';
 import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
@@ -68,6 +71,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+
+   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
+    const invoiceRef = useRef<HTMLDivElement>(null);
+    const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
@@ -371,6 +378,15 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     }
   }, [certificate, editingId]);
 
+   useEffect(() => {
+     if (!invoiceRef.current) return;
+
+     html2canvas(invoiceRef.current).then((canvas) => {
+       const dataUrl = canvas.toDataURL('image/png');
+       setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
+     });
+   }, [formState]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -398,13 +414,37 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-          <ImageZoom
-            // Todo: (20250428 - Anna) 先用假憑證測試
-            // imageUrl={certificate.file.url}
-            imageUrl={'/images/demo_certifate.png'}
-            className="max-h-640px min-h-510px w-440px"
-            controlPosition="bottom-right"
-          />
+
+          {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
+          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
+          {formState.type === InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE && (
+            <div className="h-0 w-0 overflow-hidden">
+              <EInvoicePreview
+                ref={invoiceRef}
+                invoiceType={formState.type}
+                issuedDate={dayjs
+                  .unix(formState.date ?? certificate.invoice.date ?? 0)
+                  .format('YYYY-MM-DD')}
+                invoiceNo={formState.no ?? certificate.invoice.no ?? ''}
+                buyerTaxId={
+                  formState.counterParty?.taxId ??
+                  certificate.invoice.counterParty?.taxId ??
+                  undefined
+                }
+                priceBeforeTax={formState.priceBeforeTax ?? certificate.invoice.priceBeforeTax ?? 0}
+                taxPrice={formState.taxPrice ?? certificate.invoice.taxPrice ?? 0}
+                totalPrice={formState.totalPrice ?? certificate.invoice.totalPrice ?? 0}
+              />
+            </div>
+          )}
+          {eInvoiceImageUrl && (
+            <ImageZoom
+              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              className="max-h-640px min-h-510px w-440px"
+              controlPosition="bottom-right"
+            />
+          )}
+
           {/* Info: (20240924 - Anna) 編輯表單 */}
           {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">

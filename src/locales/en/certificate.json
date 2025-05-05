@@ -111,7 +111,9 @@
     "SELLER": "Seller",
     "BUYER": "Buyer",
     "SALES": "Sales",
-    "LUMP_SUM": "Lump Sum"
+    "LUMP_SUM": "Lump Sum",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "Skip if using triplicate cash register invoice",
+    "INVOICE_PERIOD": "Year {{year}}, {{startMonth}} - {{endMonth}}"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
