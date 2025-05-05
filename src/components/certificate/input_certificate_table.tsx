@@ -87,7 +87,6 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setInvoiceTypeSort(null);
       setVoucherSort(null);
     },
   });
