@@ -20,7 +20,7 @@ import {
 } from '@/lib/utils/zod_schema/certificate';
 import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
-import { kycRequestValidators } from '@/lib/utils/zod_schema/kyc';
+import { kycRequestValidators, kycBookkeeperUploadSchema } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
 import {
   accountBookPendingTaskSchema,
@@ -140,6 +140,7 @@ import {
   updateCertificateRC2Input,
   updateCertificateRC2Output,
 } from '@/lib/utils/zod_schema/certificate_rc2';
+import { publicKeyGetSchema } from '@/lib/utils/zod_schema/public_key';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -260,12 +261,12 @@ export const ZOD_SCHEMA_API = {
   [APIName.FILE_DELETE_V2]: fileDeleteSchema,
   [APIName.FILE_GET]: fileGetSchema,
   [APIName.FILE_PUT_V2]: filePutSchema,
-  [APIName.KYC_UPLOAD]: nullAPISchema,
+  [APIName.KYC_UPLOAD]: kycBookkeeperUploadSchema,
   [APIName.ACCOUNT_GET_BY_ID]: accountGetByIdSchema,
   [APIName.CREATE_NEW_SUB_ACCOUNT]: accountPostV2Schema,
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: accountUpdateSchema,
   [APIName.DELETE_ACCOUNT_BY_ID]: accountDeleteSchema,
-  [APIName.PUBLIC_KEY_GET]: nullAPISchema,
+  [APIName.PUBLIC_KEY_GET]: publicKeyGetSchema,
   [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER_AUTH]: nullAPISchema,
