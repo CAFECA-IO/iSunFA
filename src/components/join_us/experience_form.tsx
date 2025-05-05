@@ -19,6 +19,7 @@ interface IExperienceBarProps {
     bg: string;
   };
   data: IExperienceBar;
+  clickHandler: (id: number) => void;
 }
 
 // ToDo: (20250411 - Julian) during the development
@@ -27,7 +28,7 @@ const yearsWithDivider = years.flatMap(
   (item, index) => (index < years.length - 1 ? [item, '-'] : [item]) // Info: (20250414 - Julian) Add divider between years
 );
 
-// Info: (20250415 - Julian) Experience Bar Color
+// Info: (20250415 - Julian) 經驗條的顏色
 const mainColors = [
   {
     text: 'text-surface-support-strong-maple',
@@ -55,7 +56,7 @@ const mainColors = [
   },
 ];
 
-const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data }) => {
+const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data, clickHandler }) => {
   const { mainTitle, subTitle, start, end } = data;
 
   // Info: (20250415 - Julian)
@@ -71,9 +72,13 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
   const endOffset = end.month > 6 ? 2 : 1;
   const endPosition = endIndex === -1 ? yearsWithDivider.length - 1 : endIndex * 2 + endOffset + 1;
 
+  const clickBarHandler = () => clickHandler(data.id);
+
   return (
-    <div
-      className="flex flex-col items-start gap-14px whitespace-nowrap"
+    <button
+      type="button"
+      onClick={clickBarHandler}
+      className="group flex flex-col items-start gap-14px whitespace-nowrap"
       style={{
         gridColumnStart: startPosition,
         gridColumnEnd: endPosition,
@@ -81,7 +86,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
     >
       {/* Info: (20250415 - Julian) 工作經歷的 line bar 在上方 */}
       {type === ExperienceType.WORK && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full group-hover:opacity-75`}></div>
       )}
       <p className={`${mainColor.text} font-semibold`}>{mainTitle}</p>
       <p className="">
@@ -92,9 +97,9 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
       </p>
       {/* Info: (20250415 - Julian) 學歷的 line bar 在下方 */}
       {type === ExperienceType.EDUCATION && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full group-hover:opacity-75`}></div>
       )}
-    </div>
+    </button>
   );
 };
 
@@ -107,6 +112,10 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   const [isShowRightArrow, setIsShowRightArrow] = useState<boolean>(true);
   const [isShowEducationModal, setIsShowEducationModal] = useState<boolean>(false);
   const [isShowWorkModal, setIsShowWorkModal] = useState<boolean>(false);
+
+  // Info: (20250505 - Julian) edit id
+  const [editedEducationId, setEditedEducationId] = useState<number | null>(null);
+  const [editedWorkId, setEditedWorkId] = useState<number | null>(null);
 
   // Info: (20250415 - Julian) | 40px | 48px | 50px | 58px | (將每個格子分成 2 等份，加上間隔)
   const milestoneTemplateColumns = `repeat(${years.length}, 40px 48px 50px 58px)`;
@@ -130,7 +139,18 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   }, [milestoneRef]);
 
   const toggleEducationModal = () => setIsShowEducationModal((prev) => !prev);
+  // Info: (20250505 - Julian) 新增模式
+  const addEducationHandler = () => {
+    setIsShowEducationModal((prev) => !prev);
+    setEditedEducationId(null);
+  };
+
   const toggleWorkModal = () => setIsShowWorkModal((prev) => !prev);
+  // Info: (20250505 - Julian) 新增模式
+  const addWorkHandler = () => {
+    setIsShowWorkModal((prev) => !prev);
+    setEditedWorkId(null);
+  };
 
   // Info: (20250415 - Julian) 滾動事件
   const scrollMilestone = (direction: 'L' | 'R') => {
@@ -176,6 +196,12 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       end: education.end,
     };
 
+    // Info: (20250505 - Julian) 編輯模式
+    const editEducationHandler = () => {
+      setIsShowEducationModal(true);
+      setEditedEducationId(education.id);
+    };
+
     return (
       <div
         className="grid grid-flow-row items-center"
@@ -188,6 +214,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           type={ExperienceType.EDUCATION}
           mainColor={mainColors[index]}
           data={educationData}
+          clickHandler={editEducationHandler}
         />
       </div>
     );
@@ -202,6 +229,12 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       end: work.end,
     };
 
+    // Info: (20250505 - Julian) 編輯模式
+    const editWorkHandler = () => {
+      setIsShowWorkModal(true);
+      setEditedWorkId(work.id);
+    };
+
     return (
       <div
         className="grid grid-flow-row items-center"
@@ -214,6 +247,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           type={ExperienceType.WORK}
           mainColor={mainColors[index]}
           data={workData}
+          clickHandler={editWorkHandler}
         />
       </div>
     );
@@ -262,7 +296,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
   return (
     <div className="relative flex flex-col items-stretch gap-10px">
-      <LandingButton variant="primary" className="font-bold" onClick={toggleEducationModal}>
+      <LandingButton variant="primary" className="font-bold" onClick={addEducationHandler}>
         <FaPlus size={20} /> {t('hiring:EXPERIENCE.EDUCATION_TITLE')}
       </LandingButton>
 
@@ -274,7 +308,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       </div>
 
       <div className="z-100 flex items-center justify-between">
-        <LandingButton variant="primary" className="font-bold" onClick={toggleWorkModal}>
+        <LandingButton variant="primary" className="font-bold" onClick={addWorkHandler}>
           <FaPlus size={20} /> {t('hiring:EXPERIENCE.WORK_TITLE')}
         </LandingButton>
 
@@ -293,11 +327,16 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
       {/* Info: (20250411 - Julian) Education Experience Modal */}
       {isShowEducationModal && (
-        <EducationExperienceModal modalVisibilityHandler={toggleEducationModal} />
+        <EducationExperienceModal
+          modalVisibilityHandler={toggleEducationModal}
+          editId={editedEducationId}
+        />
       )}
 
       {/* Info: (20250415 - Julian) Work Experience Modal */}
-      {isShowWorkModal && <WorkExperienceModal modalVisibilityHandler={toggleWorkModal} />}
+      {isShowWorkModal && (
+        <WorkExperienceModal modalVisibilityHandler={toggleWorkModal} editId={editedWorkId} />
+      )}
     </div>
   );
 };

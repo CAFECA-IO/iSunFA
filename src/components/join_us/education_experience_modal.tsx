@@ -16,28 +16,48 @@ import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IEducationExperienceModalProps {
   modalVisibilityHandler: () => void;
+  editId: number | null; // Info: (20250505 - Julian) 用來判斷是否為編輯模式
 }
+
+// Info: (20250505 - Julian) 設定日期最早從 2015 年開始
+const MIN_DATE = '2015-01';
+// Info: (20250505 - Julian) 設定日期最晚到 2025 年
+const MAX_DATE = '2025-12';
 
 const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   modalVisibilityHandler,
+  editId,
 }) => {
   const { t } = useTranslation(['hiring']);
   const { tempEducationList, addEducationExperience, removeEducationExperience } = useHiringCtx();
 
+  const initialData = tempEducationList.find((item) => item.id === editId);
+  const isEditMode = editId !== null;
+
+  const {
+    degree: initDegree,
+    schoolName: initSchoolName,
+    department: initDepartment,
+    start: initStart,
+    end: initEnd,
+    status: initStatus,
+  } = initialData || {
+    degree: Degree.ELEMENTARY,
+    schoolName: '',
+    department: '',
+    start: { year: 0, month: 0 },
+    end: { year: 0, month: 0 },
+    status: SchoolStatus.GRADUATED,
+  };
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
-  const [selectedDegree, setSelectedDegree] = useState<Degree>(Degree.ELEMENTARY);
-  const [schoolNameInput, setSchoolNameInput] = useState<string>('');
-  const [departmentInput, setDepartmentInput] = useState<string>('');
-  const [startInput, setStartInput] = useState<IExperienceDate>({
-    year: 0,
-    month: 0,
-  });
-  const [endInput, setEndInput] = useState<IExperienceDate>({
-    year: 0,
-    month: 0,
-  });
-  const [selectedStatus, setSelectedStatus] = useState<SchoolStatus>(SchoolStatus.GRADUATED);
+  const [selectedDegree, setSelectedDegree] = useState<Degree>(initDegree);
+  const [schoolNameInput, setSchoolNameInput] = useState<string>(initSchoolName);
+  const [departmentInput, setDepartmentInput] = useState<string>(initDepartment);
+  const [startInput, setStartInput] = useState<IExperienceDate>(initStart);
+  const [endInput, setEndInput] = useState<IExperienceDate>(initEnd);
+  const [selectedStatus, setSelectedStatus] = useState<SchoolStatus>(initStatus);
 
   const {
     targetRef,
@@ -47,6 +67,17 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
 
   const startDateValueFormat = `${startInput.year}-${startInput.month.toString().padStart(2, '0')}`;
   const endDateValueFormat = `${endInput.year}-${endInput.month.toString().padStart(2, '0')}`;
+
+  // Info: (20250505 - Julian) 起始日期不能大於結束日期
+  const maxOfStartDate =
+    endInput.year !== 0 && endInput.month !== 0
+      ? `${endInput.year}-${endInput.month.toString().padStart(2, '0')}`
+      : MAX_DATE;
+  // Info: (20250505 - Julian) 結束日期不能小於起始日期
+  const minOfEndDate =
+    startInput.year !== 0 && startInput.month !== 0
+      ? `${startInput.year}-${startInput.month.toString().padStart(2, '0')}`
+      : MIN_DATE;
 
   const toggleDegreeDropdown = () => setIsOpen((prev) => !prev);
 
@@ -71,9 +102,11 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     });
   };
 
-  // Info: (20250505 - Julian) 取消按鈕
-  const cancelHandler = () => {
-    removeEducationExperience(tempEducationList[tempEducationList.length - 1]?.id);
+  // Info: (20250505 - Julian) 刪除按鈕
+  const deleteHandler = () => {
+    if (!editId) return;
+    removeEducationExperience(editId);
+    modalVisibilityHandler();
   };
 
   // Info: (20250505 - Julian) 儲存學歷資訊
@@ -81,7 +114,10 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     e.preventDefault();
 
     // Info: (20250505 - Julian) new id -> 目前的學歷資訊列表最後一筆的 id + 1，或者 0
-    const newId = tempEducationList[tempEducationList.length - 1].id + 1 || 0;
+    const newId =
+      tempEducationList && tempEducationList.length - 1 > 0
+        ? tempEducationList[tempEducationList.length - 1].id + 1
+        : 0;
 
     const educationExperience: IEducationExperience = {
       id: newId,
@@ -144,6 +180,23 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
       </label>
     </div>
   ));
+
+  const cancelButton = isEditMode ? (
+    // Info: (20250505 - Julian) 編輯模式下的刪除按鈕
+    <LandingButton type="button" variant="default" className="font-bold" onClick={deleteHandler}>
+      <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
+    </LandingButton>
+  ) : (
+    // Info: (20250505 - Julian) 創建模式下的取消按鈕
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={modalVisibilityHandler}
+    >
+      {t('common:COMMON.CANCEL')}
+    </LandingButton>
+  );
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -222,6 +275,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
               onChange={changeStartTimestamp}
               className={inputStyle}
               required
+              min={MIN_DATE}
+              max={maxOfStartDate}
             />
           </div>
           {/* Info: (20250411 - Julian) End Date */}
@@ -236,6 +291,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
               onChange={changeEndTimestamp}
               className={inputStyle}
               required
+              min={minOfEndDate}
+              max={MAX_DATE}
             />
           </div>
           {/* Info: (20250411 - Julian) Status */}
@@ -249,14 +306,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
         </div>
         {/* Info: (20250411 - Julian) Buttons */}
         <div className="ml-auto mt-40px flex items-center gap-lv-6">
-          <LandingButton
-            type="button"
-            variant="default"
-            className="font-bold"
-            onClick={cancelHandler}
-          >
-            <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
-          </LandingButton>
+          {cancelButton}
           <LandingButton type="submit" variant="primary" className="font-bold">
             {t('hiring:COMMON.SAVE')}
           </LandingButton>
