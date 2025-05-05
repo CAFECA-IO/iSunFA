@@ -12,6 +12,7 @@ import {
 } from '@/interfaces/experience';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IEducationExperienceModalProps {
   modalVisibilityHandler: () => void;
@@ -21,6 +22,8 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   modalVisibilityHandler,
 }) => {
   const { t } = useTranslation(['hiring']);
+  const { tempEducationList, addEducationExperience, removeEducationExperience } = useHiringCtx();
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const [selectedDegree, setSelectedDegree] = useState<Degree>(Degree.ELEMENTARY);
@@ -68,11 +71,20 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     });
   };
 
+  // Info: (20250505 - Julian) 取消按鈕
+  const cancelHandler = () => {
+    removeEducationExperience(tempEducationList[tempEducationList.length - 1]?.id);
+  };
+
+  // Info: (20250505 - Julian) 儲存學歷資訊
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Info: (20250505 - Julian) new id -> 目前的學歷資訊列表最後一筆的 id + 1，或者 0
+    const newId = tempEducationList[tempEducationList.length - 1].id + 1 || 0;
+
     const educationExperience: IEducationExperience = {
-      id: 0, // ToDo: (20250411 - Julian) Need to be updated
+      id: newId,
       degree: selectedDegree,
       schoolName: schoolNameInput,
       department: departmentInput,
@@ -81,9 +93,11 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
       status: selectedStatus,
     };
 
-    // Deprecated: (20250411 - Julian) For debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Education Experience:', educationExperience);
+    // Info: (20250505 - Julian) 新增學歷資訊至 Hiring Context
+    addEducationExperience(educationExperience);
+
+    // Info: (20250505 - Julian) 關閉 Modal
+    modalVisibilityHandler();
   };
 
   const degreeOptions = Object.values(Degree);
@@ -235,7 +249,12 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
         </div>
         {/* Info: (20250411 - Julian) Buttons */}
         <div className="ml-auto mt-40px flex items-center gap-lv-6">
-          <LandingButton type="button" variant="default" className="font-bold">
+          <LandingButton
+            type="button"
+            variant="default"
+            className="font-bold"
+            onClick={cancelHandler}
+          >
             <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
           </LandingButton>
           <LandingButton type="submit" variant="primary" className="font-bold">

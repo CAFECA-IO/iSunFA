@@ -7,10 +7,16 @@ import ExperienceForm from '@/components/join_us/experience_form';
 import SkillForm from '@/components/join_us/skill_form';
 import PreferenceForm from '@/components/join_us/preference_form';
 import AttachmentForm from '@/components/join_us/attachment_form';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const { tempPersonalInfo } = useHiringCtx();
+
+  // Info: (20250505 - Julian) 透過 HiringContext 的暫存判斷步驟
+  const initialStep = tempPersonalInfo ? 2 : 1;
+
+  const [currentStep, setCurrentStep] = useState<number>(initialStep);
 
   const toPrevStep = () => {
     if (currentStep > 1) {

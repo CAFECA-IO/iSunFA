@@ -1,17 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaChevronRight, FaChevronLeft, FaPlus } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
-import {
-  ExperienceType,
-  IEducationExperience,
-  dummyEducationExperience,
-  IWorkExperience,
-  IExperienceBar,
-  dummyWorkExperience,
-} from '@/interfaces/experience';
+import { ExperienceType, IExperienceBar } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import EducationExperienceModal from '@/components/join_us/education_experience_modal';
 import WorkExperienceModal from '@/components/join_us/work_experience_modal';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IExperienceFormProps {
   toPrevStep: () => void;
@@ -107,19 +101,12 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
 const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
   const milestoneRef = useRef<HTMLDivElement>(null);
+  const { tempEducationList, tempWorkList } = useHiringCtx();
 
   const [isShowLeftArrow, setIsShowLeftArrow] = useState<boolean>(false);
   const [isShowRightArrow, setIsShowRightArrow] = useState<boolean>(true);
   const [isShowEducationModal, setIsShowEducationModal] = useState<boolean>(false);
   const [isShowWorkModal, setIsShowWorkModal] = useState<boolean>(false);
-
-  // ToDo: (20250411 - Julian) during the development
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [educationList, setEducationList] =
-    useState<IEducationExperience[]>(dummyEducationExperience);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [workList, setWorkList] = useState<IWorkExperience[]>(dummyWorkExperience);
 
   // Info: (20250415 - Julian) | 40px | 48px | 50px | 58px | (將每個格子分成 2 等份，加上間隔)
   const milestoneTemplateColumns = `repeat(${years.length}, 40px 48px 50px 58px)`;
@@ -180,7 +167,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     </div>
   );
 
-  const displayEducation = educationList.map((education, index) => {
+  const displayEducation = tempEducationList.map((education, index) => {
     const educationData: IExperienceBar = {
       id: education.id,
       mainTitle: education.schoolName,
@@ -206,7 +193,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     );
   });
 
-  const displayWork = workList.map((work, index) => {
+  const displayWork = tempWorkList.map((work, index) => {
     const workData: IExperienceBar = {
       id: work.id,
       mainTitle: work.position,
