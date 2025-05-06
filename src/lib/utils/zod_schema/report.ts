@@ -27,6 +27,19 @@ export const reportGetValidatorV2: IZodValidator<
   body: reportGetBodyValidatorV2,
 };
 
+/**
+ * Info: (20250502 - Shirley) New schema format for report GET endpoint
+ * Following the standard schema structure with input, outputSchema, and frontend
+ */
+export const reportGetSchemaV2 = {
+  input: {
+    querySchema: reportGetQueryValidatorV2,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z.object({}).passthrough(), // Using passthrough as the report structure is complex
+  frontend: z.object({}).passthrough(),
+};
+
 export const reportRequestValidatorsV2: {
   [method: string]: IZodValidator<z.ZodRawShape, z.ZodRawShape>;
 } = {

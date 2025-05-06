@@ -72,7 +72,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
   const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
@@ -500,8 +499,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
-    } else if (invoiceNoSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -645,12 +642,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 dateSort={dateSort}
                 amountSort={amountSort}
                 voucherSort={voucherSort}
-                invoiceNoSort={invoiceNoSort}
                 invoiceTypeSort={invoiceTypeSort}
                 setDateSort={setDateSort}
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
-                setInvoiceNoSort={setInvoiceNoSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
               />
             </div>
