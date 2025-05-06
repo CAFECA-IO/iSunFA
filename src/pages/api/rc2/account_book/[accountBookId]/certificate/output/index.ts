@@ -14,9 +14,8 @@ import {
 import { validateOutputData } from '@/lib/utils/validator';
 import {
   createCertificateRC2Output,
-  listCertificateRC2,
+  listCertificateRC2Output,
 } from '@/lib/utils/repo/certificate_rc2.repo';
-import { CertificateDirection } from '@/constants/certificate';
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -58,11 +57,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await listCertificateRC2(
-    session.userId,
-    CertificateDirection.OUTPUT,
-    query
-  );
+  const certificateList = await listCertificateRC2Output(session.userId, query);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_CERTIFICATE_RC2_OUTPUT,
