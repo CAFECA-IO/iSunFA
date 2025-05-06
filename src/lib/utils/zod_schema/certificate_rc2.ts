@@ -162,9 +162,10 @@ export const deleteCertificateRC2Output = deleteCertificateRC2Input;
 export function isCertificateRC2Input(
   cert: unknown
 ): cert is z.infer<typeof CertificateRC2InputSchema> {
-  return z.object({ direction: z.literal(CertificateDirection.INPUT) }).safeParse(cert).success;
+  return z
+    .object({ direction: z.literal(CertificateDirection.INPUT) })
+    .safeParse({ direction: cert }).success;
 }
-
 export function isCertificateRC2Output(
   cert: unknown
 ): cert is z.infer<typeof CertificateRC2OutputSchema> {

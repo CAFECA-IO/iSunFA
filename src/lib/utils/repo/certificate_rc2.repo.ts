@@ -9,7 +9,6 @@ import {
   listCertificateRC2QuerySchema,
   CertificateRC2InputSchema,
   CertificateRC2OutputSchema,
-  isCertificateRC2Input,
 } from '@/lib/utils/zod_schema/certificate_rc2';
 import { CertificateDirection, CertificateTab } from '@/constants/certificate';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -60,7 +59,9 @@ export async function findCertificateRC2ById(data: {
     where: { id: certificateId, deletedAt: null },
   });
   if (!cert) return null;
-  return isCertificateRC2Input(cert.direction) ? transformInput(cert) : transformOutput(cert);
+  return cert.direction === CertificateDirection.INPUT
+    ? transformInput(cert)
+    : transformOutput(cert);
 }
 
 export async function listCertificateRC2(
@@ -90,7 +91,12 @@ export async function listCertificateRC2(
       accountBookId,
       direction,
       deletedAt: isDeleted ? { not: null } : null,
-      voucherId: tab === CertificateTab.WITHOUT_VOUCHER ? null : { not: null },
+      voucherId:
+        tab === CertificateTab.WITHOUT_VOUCHER
+          ? null
+          : tab === CertificateTab.WITH_VOUCHER
+            ? { not: null }
+            : undefined,
       type: type ?? undefined,
       issuedDate: {
         gte: startDate || undefined,
@@ -107,7 +113,11 @@ export async function listCertificateRC2(
     orderBy: createOrderByList(sortOption || []),
   });
 
-  return certificates.map(transformInput);
+  return certificates.map((cert) => {
+    return cert.direction === CertificateDirection.INPUT
+      ? transformInput(cert)
+      : transformOutput(cert);
+  });
 }
 
 export async function createCertificateRC2Input(
