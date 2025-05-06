@@ -61,6 +61,7 @@ const ResumeProcessBody: React.FC = () => {
         attachment: tempAttachment,
       };
 
+      // Deprecated: (20250506 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Resume Data:', resumeData);
 
