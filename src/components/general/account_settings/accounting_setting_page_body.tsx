@@ -371,6 +371,7 @@ const AccountingSettingPageBody: React.FC = () => {
             const periodClickHandler = () => setCurrentTaxPeriod(period as ITaxPeriod);
             return (
               <button
+                key={period}
                 type="button"
                 onClick={periodClickHandler}
                 className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"

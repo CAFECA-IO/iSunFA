@@ -257,7 +257,9 @@ const StepOneForm = ({
       <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
         <header className="flex items-center justify-between px-40px pb-24px pt-40px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
-            {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
+            {accountBookToEdit
+              ? t('dashboard:ACCOUNT_BOOK_INFO_MODAL.EDIT_ACCOUNT_BOOK')
+              : t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
           <button type="button" onClick={closeAccountBookInfoModal}>
             <IoCloseOutline size={24} />
