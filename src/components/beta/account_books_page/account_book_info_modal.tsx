@@ -126,7 +126,11 @@ const AccountBookInfoModal = ({
   };
 
   // ToDo: (20250428 - Liz) 打 API 編輯帳本(原為公司) 目前沒有 API
-  const handleEdit = async () => {};
+  const handleEdit = async () => {
+    // Deprecated: (20250506 - Liz)
+    // eslint-disable-next-line no-alert
+    window.alert('打 API 編輯帳本！但是目前 API 正在修改中，無法使用');
+  };
 
   // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
   useEffect(() => {

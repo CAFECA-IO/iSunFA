@@ -42,20 +42,20 @@ export interface IAccountBook {
   // taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
   // contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
   // phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
-  // city: string | null; // Info: (20250423 - Liz) 縣市
-  // district: string | null; // Info: (20250423 - Liz) 行政區
+  // city: string; // Info: (20250423 - Liz) 縣市
+  // district: string; // Info: (20250423 - Liz) 行政區
   // enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
 
-  // filingFrequency: string | null; // Info: (20250423 - Liz) 申報頻率
-  // filingMethod: string | null; // Info: (20250423 - Liz) 總繳種類
-  // declarantFilingMethod: string | null; // Info: (20250423 - Liz) 申報方式
+  // filingFrequency: string; // Info: (20250423 - Liz) 申報頻率
+  // filingMethod: string; // Info: (20250423 - Liz) 總繳種類
+  // declarantFilingMethod: string; // Info: (20250423 - Liz) 申報方式
 
   // declarantName: string; // Info: (20250423 - Liz) 申報人姓名
   // declarantPersonalId: string; // Info: (20250423 - Liz) 申報人身分證字號
   // declarantPhoneNumber: string; // Info: (20250423 - Liz) 申報人電話號碼
-  // agentFilingRole: AGENT_FILING_ROLE | null; // Info: (20250423 - Liz) 申報代理人的角色(記帳士/會計師等)
-  // agentFilingRoleIdText: string; // Info: (20250423 - Liz) 申報代理人的字號
-  // agentFilingRoleIdNumber: string; // Info: (20250423 - Liz) 申報代理人的證號
+
+  // agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
+  // licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
 }
 
 export interface IAccountBookWithTeam extends IAccountBook {
