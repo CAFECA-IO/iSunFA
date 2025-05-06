@@ -7,10 +7,37 @@ import ExperienceForm from '@/components/join_us/experience_form';
 import SkillForm from '@/components/join_us/skill_form';
 import PreferenceForm from '@/components/join_us/preference_form';
 import AttachmentForm from '@/components/join_us/attachment_form';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const {
+    tempPersonalInfo,
+    tempEducationList,
+    tempWorkList,
+    tempLanguageList,
+    tempCertificateList,
+    tempPreference,
+    tempAttachment,
+  } = useHiringCtx();
+
+  // Info: (20250505 - Julian) 透過 HiringContext 的暫存判斷步驟
+  const initialStep =
+    // Info: (20250506 - Julian) 如果有暫存的偏好設定，則跳到第五步
+    tempPreference
+      ? 5
+      : // Info: (20250506 - Julian) 如果有暫存的語言或證書技能，則跳到第四步
+        tempLanguageList.length > 0 || tempCertificateList.length > 0
+        ? 4
+        : // Info: (20250506 - Julian) 如果有暫存的學歷或工作經歷，則跳到第三步
+          tempEducationList.length > 0 || tempWorkList.length > 0
+          ? 3
+          : // Info: (20250506 - Julian) 如果有暫存的個人資訊，則跳到第二步
+            tempPersonalInfo
+            ? 2
+            : 1;
+
+  const [currentStep, setCurrentStep] = useState<number>(initialStep);
 
   const toPrevStep = () => {
     if (currentStep > 1) {
@@ -24,11 +51,22 @@ const ResumeProcessBody: React.FC = () => {
   const toNextStep = () => {
     if (currentStep === 5) {
       // ToDo: (20250502 - Julian) Post API
+      const resumeData = {
+        personalInfo: tempPersonalInfo,
+        educationList: tempEducationList,
+        workList: tempWorkList,
+        languageList: tempLanguageList,
+        certificateList: tempCertificateList,
+        preference: tempPreference,
+        attachment: tempAttachment,
+      };
+
+      // Deprecated: (20250506 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('Resume submitted!');
+      console.log('Resume Data:', resumeData);
 
       // Info: (20250502 - Julian) 提交後跳轉到完成頁面
-      router.push(ISUNFA_ROUTE.FINISH_PAGE);
+      // router.push(ISUNFA_ROUTE.FINISH_PAGE);
     } else {
       setCurrentStep((prev) => prev + 1);
     }
