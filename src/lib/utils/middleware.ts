@@ -65,7 +65,7 @@ export function checkRequestData<T extends APIName>(
     loggerError({
       userId: session.userId || DefaultValue.USER_ID.GUEST,
       errorType: `Invalid Input Parameter for ${apiName} in middleware.ts`,
-      errorMessage: req.body,
+      errorMessage: `req.body: ${JSON.stringify(req.body)}, req.query: ${JSON.stringify(req.query)}`,
     });
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }

@@ -8,6 +8,7 @@ import { UserProvider } from '@/contexts/user_context';
 import { GlobalProvider } from '@/contexts/global_context';
 import { DashboardProvider } from '@/contexts/dashboard_context';
 import { AccountingProvider } from '@/contexts/accounting_context';
+import { HiringProvider } from '@/contexts/hiring_context';
 import { SessionProvider } from 'next-auth/react';
 import { ModalProvider } from '@/contexts/modal_context';
 import '@/styles/globals.css';
@@ -23,9 +24,11 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
             <DashboardProvider>
               <AccountingProvider>
                 <ModalProvider>
-                  <GlobalProvider>
-                    <Component {...pageProps} />
-                  </GlobalProvider>
+                  <HiringProvider>
+                    <GlobalProvider>
+                      <Component {...pageProps} />
+                    </GlobalProvider>
+                  </HiringProvider>
                 </ModalProvider>
               </AccountingProvider>
             </DashboardProvider>

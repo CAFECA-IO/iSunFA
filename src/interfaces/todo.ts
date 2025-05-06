@@ -13,6 +13,6 @@ export interface ITodo {
 }
 
 export interface ITodoAccountBook extends ITodo {
-  company: IAccountBook;
+  company: IAccountBook | null;
 }
 // ToDo: (20250306 - Liz) 這個 interface 預計改成 ITodoAccountBook

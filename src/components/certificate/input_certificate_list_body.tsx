@@ -24,7 +24,6 @@ import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -151,30 +150,44 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
-
-  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-    setExportModalData(resData.data);
-  }, []);
-
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
+    setIsExporting(true);
   }, []);
+
+  // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
+  const waitForNextFrame = () => {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve(true));
+    });
+  };
 
   // Info: (20250418 - Anna) 匯出憑證表格
   const handleDownload = async () => {
+    setIsExporting(true);
+
+    // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
+    await waitForNextFrame();
+
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
+    // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
+    downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
+      el.classList.remove('h-54px');
+    });
+
+    // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-  .download-pb-4 {
+    .download-pb-4 {
     padding-bottom: 16px;
   }
-      .download-pb-3 {
+    .download-pb-3 {
     padding-bottom: 12px;
+  }
+    .download-hidden {
+    display: none;
   }
 `;
 
@@ -199,15 +212,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
     style.remove();
     pdf.save('input-certificates.pdf');
-  };
 
-  const onExport = useCallback(() => {
-    if (exportModalData.length > 0) {
-      exportModalData.forEach((item) => {
-        handleDownloadItem(item.id);
-      });
-    }
-  }, [exportModalData]);
+    // Info: (20250506 - Anna) 匯出後還原畫面
+    setIsExporting(false);
+  };
 
   const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
@@ -531,15 +539,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {isExportModalOpen && (
-        <CertificateExportModal
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
-          handleApiResponse={handleExportModalApiResponse}
-          handleExport={onExport}
-          certificates={exportModalData}
-        />
-      )}
       {isEditModalOpen && editingId !== null && (
         <InputCertificateEditModal
           accountBookId={accountBookId}
@@ -647,6 +646,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
+                isExporting={isExporting}
               />
             </div>
           </>

@@ -6,6 +6,9 @@ const apiPrefix = `/api/${apiVersion}`;
 const apiVersionV2 = 'v2';
 const apiPrefixV2 = `/api/${apiVersionV2}`;
 
+const apiVersionRC2 = 'rc2';
+const apiPrefixRC2 = `/api/${apiVersionRC2}`;
+
 const apiPayment = `/api/payment`;
 
 const initialInput: IAPIInput = {
@@ -177,16 +180,16 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
-  LIST_CERTIFICATE_RC2_INPUT = `${apiPrefix}/account_book/:accountBookId/certificate/input`,
-  CREATE_CERTIFICATE_RC2_INPUT = `${apiPrefix}/account_book/:accountBookId/certificate/input`,
-  GET_CERTIFICATE_RC2_INPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/input`,
-  DELETE_CERTIFICATE_RC2_INPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/input`,
-  UPDATE_CERTIFICATE_RC2_INPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/input`,
-  CREATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefix}/account_book/:accountBookId/certificate/output`,
-  GET_CERTIFICATE_RC2_OUTPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/output`,
-  DELETE_CERTIFICATE_RC2_OUTPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/output`,
-  UPDATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefix}/account_book/:accountBookId/certificate/:certificateId/output`,
-  LIST_CERTIFICATE_RC2_OUTPUT = `${apiPrefix}/account_book/:accountBookId/certificate/output`,
+  LIST_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/input`,
+  CREATE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/input`,
+  GET_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
+  DELETE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
+  UPDATE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
+  CREATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/output`,
+  GET_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
+  DELETE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
+  UPDATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
+  LIST_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/output`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,

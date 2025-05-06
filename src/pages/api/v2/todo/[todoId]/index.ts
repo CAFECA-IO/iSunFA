@@ -58,7 +58,12 @@ const handlePutRequest = async (req: NextApiRequest) => {
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const { todoId } = query;
   const constructedNote = postUtils.combineStartEndTimeInNote(body);
-  const updatedTodo = await updateTodo({ ...body, id: todoId, note: constructedNote });
+  const updatedTodo = await updateTodo({
+    ...body,
+    id: todoId,
+    note: constructedNote,
+    userId: session.userId,
+  });
 
   const { isOutputDataValid, outputData } = validateOutputData(APIName.UPDATE_TODO, updatedTodo);
   if (!isOutputDataValid) {
