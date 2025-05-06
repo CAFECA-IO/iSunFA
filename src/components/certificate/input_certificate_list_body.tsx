@@ -213,11 +213,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     style.remove();
     pdf.save('input-certificates.pdf');
 
-    // Info: (20250506 - Anna) 還原日曆高度限制
-    downloadRef.current.querySelectorAll('.calendar-cell').forEach((el) => {
-      el.classList.add('h-54px');
-    });
-
     // Info: (20250506 - Anna) 匯出後還原畫面
     setIsExporting(false);
   };
