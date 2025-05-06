@@ -267,6 +267,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <div
               id={`${index + 1}`}
+              // Deprecated: (20250506 - Luphia) remove eslint-disable
               // eslint-disable-next-line react/no-array-index-key
               key={`${index}`}
               className="col-span-2 h-px w-100px bg-landing-page-gray3"
@@ -276,6 +277,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <p
               id={`${index + 1}`}
+              // Deprecated: (20250506 - Luphia) remove eslint-disable
               // eslint-disable-next-line react/no-array-index-key
               key={`${index}`}
               className="col-span-2 text-center text-2xl text-landing-page-gray2"
