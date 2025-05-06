@@ -8,6 +8,7 @@ import {
 } from '@/constants/certificate';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { z } from 'zod';
+import { zodStringToNumber, nullSchema } from '@/lib/utils/zod_schema/common';
 
 const CertificateRC2BaseSchema = z.object({
   id: z.number(),
@@ -56,7 +57,7 @@ export const CertificateRC2OutputSchema = CertificateRC2BaseSchema.extend({
 });
 
 export const listCertificateRC2QuerySchema = paginatedDataQuerySchema.extend({
-  accountBookId: z.number(),
+  accountBookId: zodStringToNumber,
   isDeleted: z.boolean().optional().default(false),
   tab: z.nativeEnum(CertificateTab).optional(),
   type: z
@@ -68,7 +69,7 @@ export const listCertificateRC2QuerySchema = paginatedDataQuerySchema.extend({
 export const listCertificateRC2Input = {
   input: {
     querySchema: listCertificateRC2QuerySchema,
-    bodySchema: z.null(),
+    bodySchema: nullSchema,
   },
   outputSchema: z.array(CertificateRC2InputSchema),
   frontend: paginatedDataSchema(CertificateRC2InputSchema),
@@ -77,7 +78,7 @@ export const listCertificateRC2Input = {
 export const listCertificateRC2Output = {
   input: {
     querySchema: listCertificateRC2QuerySchema,
-    bodySchema: z.null(),
+    bodySchema: nullSchema,
   },
   outputSchema: z.array(CertificateRC2OutputSchema),
   frontend: paginatedDataSchema(CertificateRC2InputSchema),
@@ -85,8 +86,8 @@ export const listCertificateRC2Output = {
 
 export const getCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
-    bodySchema: z.null(),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
+    bodySchema: nullSchema,
   },
   outputSchema: CertificateRC2InputSchema,
   frontend: CertificateRC2InputSchema,
@@ -94,8 +95,8 @@ export const getCertificateRC2Input = {
 
 export const getCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
-    bodySchema: z.null(),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
+    bodySchema: nullSchema,
   },
   outputSchema: CertificateRC2OutputSchema,
   frontend: CertificateRC2OutputSchema,
@@ -103,7 +104,7 @@ export const getCertificateRC2Output = {
 
 export const createCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
     bodySchema: CertificateRC2InputSchema.omit({
       id: true,
       createdAt: true,
@@ -117,7 +118,7 @@ export const createCertificateRC2Input = {
 
 export const createCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
     bodySchema: CertificateRC2OutputSchema.omit({
       id: true,
       createdAt: true,
@@ -131,7 +132,7 @@ export const createCertificateRC2Output = {
 
 export const updateCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
     bodySchema: CertificateRC2InputSchema.partial(),
   },
   outputSchema: CertificateRC2InputSchema,
@@ -140,7 +141,7 @@ export const updateCertificateRC2Input = {
 
 export const updateCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
     bodySchema: CertificateRC2OutputSchema.partial(),
   },
   outputSchema: CertificateRC2OutputSchema,
@@ -149,8 +150,8 @@ export const updateCertificateRC2Output = {
 
 export const deleteCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: z.number(), certificateId: z.number() }),
-    bodySchema: z.null(),
+    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
+    bodySchema: nullSchema,
   },
   outputSchema: z.object({ success: z.boolean() }),
   frontend: z.object({ success: z.boolean() }),
@@ -161,9 +162,10 @@ export const deleteCertificateRC2Output = deleteCertificateRC2Input;
 export function isCertificateRC2Input(
   cert: unknown
 ): cert is z.infer<typeof CertificateRC2InputSchema> {
-  return z.object({ direction: z.literal(CertificateDirection.INPUT) }).safeParse(cert).success;
+  return z
+    .object({ direction: z.literal(CertificateDirection.INPUT) })
+    .safeParse({ direction: cert }).success;
 }
-
 export function isCertificateRC2Output(
   cert: unknown
 ): cert is z.infer<typeof CertificateRC2OutputSchema> {

@@ -29,7 +29,9 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
   const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
 
   // Info: (20241204 - tzuhan) 通用文件狀態更新函數
   const updateFileStatus = (
