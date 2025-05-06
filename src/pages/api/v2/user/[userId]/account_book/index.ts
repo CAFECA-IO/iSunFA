@@ -19,7 +19,6 @@ import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
-import { createCompanySetting } from '@/lib/utils/repo/company_setting.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -111,17 +110,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const accountBook = await createAccountBook(userId, body);
-
-  if (accountBook && accountBook.id) {
-    loggerBack.info(`Creating company setting for account book ${accountBook.id}`);
-    const companySetting = await createCompanySetting(accountBook.id);
-
-    if (!companySetting) {
-      loggerBack.warn(`Failed to create company setting for account book ${accountBook.id}`);
-    } else {
-      loggerBack.info(`Successfully created company setting for account book ${accountBook.id}`);
-    }
-  }
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_ACCOUNT_BOOK,
