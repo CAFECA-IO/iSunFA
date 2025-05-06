@@ -26,7 +26,6 @@ export function splitStartEndTimeInNote(note: string | null): {
   }
 }
 
-// Info: (20250408 - Tzuhan) 資料轉換器：後端統一 mapping 成 ITodoAccountBook
 export function convertToTodoAccountBook(
   todo: Prisma.TodoGetPayload<{
     include: {
@@ -54,8 +53,23 @@ export function convertToTodoAccountBook(
           imageId: company.imageFile?.url ?? '',
           tag: company.tag as WORK_TAG,
         }
-      : null, // ✅ 若無關聯公司，設為 null
+      : null,
   };
+}
+
+export async function getTodoById(id: number): Promise<ITodoAccountBook | null> {
+  const todo = await prisma.todo.findUnique({
+    where: { id, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+    include: {
+      userTodoCompanies: {
+        include: {
+          company: { include: { imageFile: true } },
+        },
+      },
+    },
+  });
+
+  return todo ? convertToTodoAccountBook(todo) : null;
 }
 
 export async function createTodo(data: {
@@ -67,63 +81,66 @@ export async function createTodo(data: {
   endDate: number;
   note: string | null;
 }) {
-  const nowTimestamp = getTimestampNow();
-  const { name, deadline, userId, startDate, endDate, note, accountBookId: companyId } = data;
+  const now = getTimestampNow();
 
-  const newTodo = await prisma.todo.create({
+  const noteWithUser = JSON.stringify({
+    note: data.note,
+    userId: data.userId,
+  });
+
+  const createdTodo = await prisma.todo.create({
     data: {
-      name,
-      deadline,
-      startDate: timestampInSeconds(startDate),
-      endDate: timestampInSeconds(endDate),
-      note,
+      name: data.name,
+      deadline: data.deadline,
+      startDate: timestampInSeconds(data.startDate),
+      endDate: timestampInSeconds(data.endDate),
+      note: noteWithUser,
       status: true,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-      ...(companyId && {
-        userTodoCompanies: {
-          create: {
-            userId,
-            companyId,
-            createdAt: nowTimestamp,
-            updatedAt: nowTimestamp,
-          },
-        },
-      }),
-    },
-    include: {
-      userTodoCompanies: {
-        include: {
-          company: {
-            include: { imageFile: true },
-          },
-        },
-      },
+      createdAt: now,
+      updatedAt: now,
     },
   });
 
-  return convertToTodoAccountBook(newTodo);
+  if (data.accountBookId) {
+    await prisma.userTodoCompany.create({
+      data: {
+        todoId: createdTodo.id,
+        userId: data.userId,
+        companyId: data.accountBookId,
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  }
+
+  return getTodoById(createdTodo.id);
 }
 
-// Info: (20250408 - Tzuhan) listTodo 改為僅供內部使用
 async function listTodo(userId: number) {
-  return prisma.todo.findMany({
+  const todos = await prisma.todo.findMany({
     where: {
-      userTodoCompanies: {
-        some: { userId },
-      },
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      AND: [
+        {
+          OR: [
+            { userTodoCompanies: { some: { userId } } },
+            { note: { contains: `"userId":${userId}` } },
+          ],
+        },
+        {
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        },
+      ],
     },
     include: {
       userTodoCompanies: {
         include: {
-          company: {
-            include: { imageFile: true },
-          },
+          company: { include: { imageFile: true } },
         },
       },
     },
   });
+
+  return todos;
 }
 
 export async function listTodoMapped(userId: number): Promise<ITodoAccountBook[]> {
@@ -131,25 +148,6 @@ export async function listTodoMapped(userId: number): Promise<ITodoAccountBook[]
   return rawTodos.map(convertToTodoAccountBook).sort((a, b) => a.endTime - b.endTime);
 }
 
-export async function getTodoById(id: number): Promise<ITodoAccountBook | null> {
-  const todo = await prisma.todo.findUnique({
-    where: {
-      id,
-      OR: [{ deletedAt: 0 }, { deletedAt: null }],
-    },
-    include: {
-      userTodoCompanies: {
-        include: {
-          company: {
-            include: { imageFile: true },
-          },
-        },
-      },
-    },
-  });
-
-  return todo ? convertToTodoAccountBook(todo) : null;
-}
 export async function updateTodo(data: {
   id: number;
   name: string;
@@ -157,66 +155,63 @@ export async function updateTodo(data: {
   endDate: number;
   deadline: number;
   note: string | null;
-  accountBookId: number;
+  accountBookId?: number;
+  userId: number;
 }) {
-  const nowInSecond = getTimestampNow();
-  const { name, deadline, startDate, endDate, note, accountBookId: companyId } = data;
+  const now = getTimestampNow();
 
-  const updatedTodo = await prisma.todo.update({
-    where: {
-      id: data.id,
-      deletedAt: null,
-    },
+  await prisma.todo.update({
+    where: { id: data.id, deletedAt: null },
     data: {
-      name,
-      deadline,
-      note,
-      startDate: timestampInSeconds(startDate),
-      endDate: timestampInSeconds(endDate),
-      updatedAt: nowInSecond,
-      userTodoCompanies: {
-        updateMany: {
-          where: { todoId: data.id },
-          data: {
-            companyId,
-            updatedAt: nowInSecond,
-          },
-        },
-      },
-    },
-    include: {
-      userTodoCompanies: {
-        include: {
-          company: {
-            include: { imageFile: true },
-          },
-        },
-      },
+      name: data.name,
+      note: data.note,
+      startDate: timestampInSeconds(data.startDate),
+      endDate: timestampInSeconds(data.endDate),
+      deadline: data.deadline,
+      updatedAt: now,
     },
   });
 
-  return convertToTodoAccountBook(updatedTodo);
+  if (data.accountBookId) {
+    const existing = await prisma.userTodoCompany.findFirst({
+      where: { todoId: data.id, userId: data.userId },
+    });
+
+    if (existing) {
+      await prisma.userTodoCompany.update({
+        where: { id: existing.id },
+        data: { companyId: data.accountBookId, updatedAt: now },
+      });
+    } else {
+      await prisma.userTodoCompany.create({
+        data: {
+          todoId: data.id,
+          userId: data.userId,
+          companyId: data.accountBookId,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+  }
+
+  return getTodoById(data.id);
 }
 
 export async function deleteTodo(id: number) {
-  const nowInSecond = getTimestampNow();
+  const now = getTimestampNow();
 
   const deletedTodo = await prisma.todo.update({
-    where: {
-      id,
-      deletedAt: null,
-    },
+    where: { id, deletedAt: null },
     data: {
       status: false,
-      updatedAt: nowInSecond,
-      deletedAt: nowInSecond,
+      updatedAt: now,
+      deletedAt: now,
     },
     include: {
       userTodoCompanies: {
         include: {
-          company: {
-            include: { imageFile: true },
-          },
+          company: { include: { imageFile: true } },
         },
       },
     },

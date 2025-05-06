@@ -1,43 +1,52 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { getSession } from '@/lib/utils/session';
 import { formatApiResponse } from '@/lib/utils/common';
-import { deleteTodo, getTodoById, updateTodo } from '@/lib/utils/repo/todo.repo';
+import { HTTP_STATUS } from '@/constants/http';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import loggerBack from '@/lib/utils/logger_back';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
-  checkRequestData,
   checkSessionUser,
   checkUserAuthorization,
+  checkRequestData,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { ITodoAccountBook } from '@/interfaces/todo';
-import { todoListPostApiUtils as postUtils } from '@/pages/api/v2/user/[userId]/todo/route_utils';
-import { HTTP_STATUS } from '@/constants/http';
-import { getSession } from '@/lib/utils/session';
 import { validateOutputData } from '@/lib/utils/validator';
+import {
+  findCertificateRC2ById,
+  deleteCertificateRC2Input,
+  updateCertificateRC2Input,
+} from '@/lib/utils/repo/certificate_rc2.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoAccountBook | null = null;
-  await checkSessionUser(session, APIName.TODO_GET_BY_ID, req);
-  await checkUserAuthorization(APIName.TODO_GET_BY_ID, req, session);
+  let payload = null;
 
-  const { query } = checkRequestData(APIName.TODO_GET_BY_ID, req, session);
+  await checkSessionUser(session, APIName.GET_CERTIFICATE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.GET_CERTIFICATE_RC2_INPUT, req, session);
 
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  const { query } = checkRequestData(APIName.GET_CERTIFICATE_RC2_INPUT, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
-  const { todoId } = query;
-  const todo = await getTodoById(todoId);
+  const certificateList = await findCertificateRC2ById({
+    userId: session.userId,
+    accountBookId: query.accountBookId,
+    certificateId: query.certificateId,
+  });
 
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.TODO_GET_BY_ID, todo);
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.GET_CERTIFICATE_RC2_INPUT,
+    certificateList
+  );
+
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
+
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -45,32 +54,33 @@ const handleGetRequest = async (req: NextApiRequest) => {
 const handlePutRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoAccountBook | null = null;
-  await checkSessionUser(session, APIName.UPDATE_TODO, req);
-  await checkUserAuthorization(APIName.UPDATE_TODO, req, session);
+  let payload = null;
 
-  const { query, body } = checkRequestData(APIName.UPDATE_TODO, req, session);
+  await checkSessionUser(session, APIName.UPDATE_CERTIFICATE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.UPDATE_CERTIFICATE_RC2_INPUT, req, session);
 
-  if (query === null || body === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  const { query, body } = checkRequestData(APIName.UPDATE_CERTIFICATE_RC2_INPUT, req, session);
+  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
-  const { todoId } = query;
-  const constructedNote = postUtils.combineStartEndTimeInNote(body);
-  const updatedTodo = await updateTodo({
-    ...body,
-    id: todoId,
-    note: constructedNote,
-    userId: session.userId,
-  });
+  const certificate = await updateCertificateRC2Input(
+    session.userId,
+    query.accountBookId,
+    query.certificateId,
+    body
+  );
 
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.UPDATE_TODO, updatedTodo);
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.UPDATE_CERTIFICATE_RC2_INPUT,
+    certificate
+  );
+
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
+
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -78,26 +88,32 @@ const handlePutRequest = async (req: NextApiRequest) => {
 const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: ITodoAccountBook | null = null;
-  await checkSessionUser(session, APIName.DELETE_TODO, req);
-  await checkUserAuthorization(APIName.DELETE_TODO, req, session);
+  let payload = null;
 
-  const { query } = checkRequestData(APIName.DELETE_TODO, req, session);
+  await checkSessionUser(session, APIName.DELETE_CERTIFICATE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.DELETE_CERTIFICATE_RC2_INPUT, req, session);
 
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  const { query } = checkRequestData(APIName.DELETE_CERTIFICATE_RC2_INPUT, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
-  const { todoId } = query;
-  const deletedTodo = await deleteTodo(Number(todoId));
+  const certificateList = await deleteCertificateRC2Input(
+    session.userId,
+    query.accountBookId,
+    query.certificateId
+  );
 
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.DELETE_TODO, deletedTodo);
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.DELETE_CERTIFICATE_RC2_INPUT,
+    certificateList
+  );
+
   if (!isOutputDataValid) {
     statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   } else {
     payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
   }
+
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -108,23 +124,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let result;
   let response;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-  let apiName: APIName = APIName.TODO_GET_BY_ID;
   const session = await getSession(req);
 
   try {
     switch (method) {
       case HttpMethod.GET:
-        apiName = APIName.TODO_GET_BY_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
       case HttpMethod.PUT:
-        apiName = APIName.UPDATE_TODO;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);
         break;
       case HttpMethod.DELETE:
-        apiName = APIName.DELETE_TODO;
         ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);
         break;
@@ -134,10 +146,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         break;
     }
   } catch (error) {
+    loggerBack.error(`error: ${JSON.stringify(error)}`);
     const err = error as Error;
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
-  await logUserAction(session, apiName, req, statusMessage);
+
+  await logUserAction(session, APIName.DELETE_CERTIFICATE_RC2_INPUT, req, statusMessage);
   res.status(httpCode).json(result);
 }
