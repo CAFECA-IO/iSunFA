@@ -72,9 +72,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
 
-   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
-    const invoiceRef = useRef<HTMLDivElement>(null);
-    const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
+  // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
@@ -378,14 +378,14 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     }
   }, [certificate, editingId]);
 
-   useEffect(() => {
-     if (!invoiceRef.current) return;
+  useEffect(() => {
+    if (!invoiceRef.current) return;
 
-     html2canvas(invoiceRef.current).then((canvas) => {
-       const dataUrl = canvas.toDataURL('image/png');
-       setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
-     });
-   }, [formState]);
+    html2canvas(invoiceRef.current).then((canvas) => {
+      const dataUrl = canvas.toDataURL('image/png');
+      setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
+    });
+  }, [formState]);
 
   return (
     <div

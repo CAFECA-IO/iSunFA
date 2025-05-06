@@ -25,6 +25,7 @@ interface InputCertificateTableProps {
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  isExportModalOpen: boolean; // Info: (20250506 - Anna)
 }
 
 const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
@@ -44,6 +45,7 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
   setAmountSort,
   setVoucherSort,
   setInvoiceTypeSort,
+  isExportModalOpen, // Info: (20250506 - Anna)
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -108,7 +110,8 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
               </div>
             )}
             <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedIssuedDate}
+              {/* {displayedIssuedDate} */}
+              {isExportModalOpen ? t('certificate:TABLE.DATE') : displayedIssuedDate}
             </div>
             <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_NUMBER')}

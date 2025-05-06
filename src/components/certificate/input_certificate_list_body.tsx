@@ -647,6 +647,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
+                isExportModalOpen={isExportModalOpen} // Info: (20250506 - Anna)
               />
             </div>
           </>
