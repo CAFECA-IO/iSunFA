@@ -48,6 +48,8 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
   isExportModalOpen, // Info: (20250506 - Anna)
 }) => {
   const { t } = useTranslation('certificate');
+  // eslint-disable-next-line no-console
+  console.log('isExportModalOpen in Table:', isExportModalOpen);
   const displayedIssuedDate = SortingButton({
     string: t('certificate:TABLE.DATE'),
     sortOrder: dateSort,

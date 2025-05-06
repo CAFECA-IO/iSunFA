@@ -62,6 +62,8 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   setInvoiceTypeSort,
   isExportModalOpen, // Info: (20250506 - Anna)
 }) => {
+  // eslint-disable-next-line no-console
+  console.log('isExportModalOpen in input_certificate:', isExportModalOpen);
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (

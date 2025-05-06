@@ -24,7 +24,7 @@ import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
+// import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -151,11 +151,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
+  // const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
 
-  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-    setExportModalData(resData.data);
-  }, []);
+  // const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
+  //   setExportModalData(resData.data);
+  // }, []);
 
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
@@ -163,8 +163,24 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     setIsExportModalOpen(true);
   }, []);
 
+  // Info: (20250506 - Anna)
+  const waitForNextFrame = () => {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve(true));
+    });
+  };
+
   // Info: (20250418 - Anna) 匯出憑證表格
   const handleDownload = async () => {
+    // Info: (20250506 - Anna)
+    // eslint-disable-next-line no-console
+    console.log('isExportModalOpen:[handleDownload] 被觸發');
+    setIsExportModalOpen(true);
+
+    // Info: (20250506 - Anna) 等待畫面進入「isExportModalOpen=true」的狀態
+    await waitForNextFrame();
+    await waitForNextFrame(); // 再多等一幀更保險
+
     if (!downloadRef.current) return;
 
     //  Info: (20250401 - Anna) 插入修正樣式
@@ -199,17 +215,20 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
     style.remove();
     pdf.save('input-certificates.pdf');
+
+    // Info: (20250506 - Anna) 若匯出後需要還原畫面
+    setIsExportModalOpen(false);
   };
 
-  const onExport = useCallback(() => {
-    if (exportModalData.length > 0) {
-      exportModalData.forEach((item) => {
-        handleDownloadItem(item.id);
-      });
-    }
-  }, [exportModalData]);
+  // const onExport = useCallback(() => {
+  //   if (exportModalData.length > 0) {
+  //     exportModalData.forEach((item) => {
+  //       handleDownloadItem(item.id);
+  //     });
+  //   }
+  // }, [exportModalData]);
 
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
+    const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
       buttonStr: 'certificate:EXPORT.TITLE',
@@ -518,6 +537,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log('[InputCertificateListBody] isExportModalOpen:', isExportModalOpen);
+  }, [isExportModalOpen]);
+
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
@@ -531,7 +555,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {isExportModalOpen && (
+      {/* {isExportModalOpen && (
         <CertificateExportModal
           isOpen={isExportModalOpen}
           onClose={() => setIsExportModalOpen(false)}
@@ -539,7 +563,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           handleExport={onExport}
           certificates={exportModalData}
         />
-      )}
+      )} */}
       {isEditModalOpen && editingId !== null && (
         <InputCertificateEditModal
           accountBookId={accountBookId}
