@@ -15,19 +15,21 @@ import loggerBack from '@/lib/utils/logger_back';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { TPlanType } from '@/interfaces/subscription';
 import { getOptimizedCompanySettingsByUserId } from '@/lib/utils/repo/company_setting.repo';
-import { IGetAccountBookResponse, ICountry } from '@/lib/utils/zod_schema/account_book';
+import { IAccountBookInfoWithTeam, ICountry } from '@/lib/utils/zod_schema/account_book';
 import { DefaultValue } from '@/constants/default_value';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import { validateOutputData } from '@/lib/utils/validator';
 import { listCountries } from '@/lib/utils/repo/country.repo';
+import { WORK_TAG } from '@/interfaces/account_book';
+import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IGetAccountBookResponse[]> | null = null;
+  let payload: IPaginatedData<IAccountBookInfoWithTeam[]> | null = null;
 
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID, req);
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID, req, session);
@@ -93,6 +95,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
     });
 
     loggerBack.info(
+      `JSON ${JSON.stringify(companySettings)} company settings for user ${userId} with search query: "${searchQuery}"`
+    );
+    loggerBack.info(
       `Retrieved ${companySettings.length} company settings for user ${userId} with search query: "${searchQuery}"`
     );
 
@@ -101,7 +106,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     loggerBack.info(`Retrieved ${countries.length} countries from database`);
 
-    // TODO: (20250421 - Shirley) workaround: 在 companySettings 中的 countryCode 和 country 沒有與 countries 建立關聯，因此需要建立快取映射，提高查詢效率
+    // Info: (20250421 - Shirley) workaround: 在 companySettings 中的 countryCode 和 country 沒有與 countries 建立關聯，因此需要建立快取映射，提高查詢效率
     const countryByCode = new Map();
     const countryByLocaleKey = new Map();
 
@@ -110,7 +115,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       countryByLocaleKey.set(country.localeKey, country);
     });
 
-    // Info: (20250421 - Shirley) 處理取得的公司設置資料
+    // Info: (20250505 - Shirley) Process company settings to include tag and team information
     const accountBookInfos = companySettings.map((setting) => {
       try {
         const { company } = setting;
@@ -145,8 +150,72 @@ const handleGetRequest = async (req: NextApiRequest) => {
               phoneExample: '0902345678', // Info: (20250421 - Shirley) Default phone example
             };
 
-        // Info: (20250421 - Shirley) Build account book detailed information
-        const accountBookInfo: IGetAccountBookResponse = {
+        // Info: (20250505 - Shirley) Extract team information for IAccountBookWithTeam compatibility
+        const team = company.team
+          ? {
+              id: company.team.id,
+              name: {
+                value: company.team.name || '',
+                editable: false,
+              },
+              imageId: '', // Info: (20250505 - Shirley) 默認空字串
+              role: TeamRole.VIEWER, // Info: (20250505 - Shirley) 默認為 TeamRole.VIEWER
+              about: {
+                value: '',
+                editable: false,
+              },
+              profile: {
+                value: '',
+                editable: false,
+              },
+              planType: {
+                value: TPlanType.BEGINNER,
+                editable: false,
+              },
+              totalMembers: 0, // Info: (20250505 - Shirley) 默認值 0
+              totalAccountBooks: 0, // Info: (20250505 - Shirley) 默認值 0
+              bankAccount: {
+                value: '',
+                editable: false,
+              },
+              expiredAt: 0, // Info: (20250505 - Shirley) 默認值 0
+              inGracePeriod: false, // Info: (20250505 - Shirley) 默認值 false
+              gracePeriodEndAt: 0, // Info: (20250505 - Shirley) 默認值 0
+            }
+          : {
+              id: 0,
+              name: {
+                value: '',
+                editable: false,
+              },
+              imageId: '',
+              role: TeamRole.VIEWER,
+              about: {
+                value: '',
+                editable: false,
+              },
+              profile: {
+                value: '',
+                editable: false,
+              },
+              planType: {
+                value: TPlanType.BEGINNER,
+                editable: false,
+              },
+              totalMembers: 0,
+              totalAccountBooks: 0,
+              bankAccount: {
+                value: '',
+                editable: false,
+              },
+              expiredAt: 0,
+              inGracePeriod: false,
+              gracePeriodEndAt: 0,
+            };
+
+        // Info: (20250505 - Shirley) Build extended account book information that includes all required fields
+        const accountBookInfo = {
+          // Original IAccountBookInfoWithTeam fields
           id: `${companyId}`, // Convert to string using template literal
           name: company.name,
           taxId: company.taxId || '',
@@ -158,6 +227,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
           startDate: company.startDate,
           createdAt: company.createdAt,
           updatedAt: company.updatedAt,
+
+          tag: company.tag as WORK_TAG,
+          team,
+          isTransferring: false, // Default value since we don't track this in company settings
+          teamId: company.teamId || 0,
+          userId: company.userId || 0,
+          imageId: company.imageFile?.id ? String(company.imageFile.id) : '',
         };
 
         return accountBookInfo;
@@ -173,11 +249,11 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     // Info: (20250421 - Shirley) Filter out successfully retrieved account book information
     const filteredResults = accountBookInfos.filter(
-      (info): info is IGetAccountBookResponse => info !== null
+      (info): info is IAccountBookInfoWithTeam => info !== null
     );
 
     // Info: (20250421 - Shirley) 直接使用 pagination 資訊構建分頁數據結構，避免重複計算
-    const paginationOptions: IPaginatedOptions<IGetAccountBookResponse[]> = {
+    const paginationOptions: IPaginatedOptions<IAccountBookInfoWithTeam[]> = {
       data: filteredResults,
       page: pagination.page,
       pageSize: pagination.pageSize,
@@ -189,21 +265,29 @@ const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250421 - Shirley) 使用 toPaginatedData 函數處理分頁邏輯
     const paginatedResult = toPaginatedData(paginationOptions);
 
-    // Info: (20250421 - Shirley) 使用 validateOutputData 驗證輸出資料，與 index.ts 保持一致的寫法
+    const result = {
+      data: filteredResults,
+      page: paginatedResult.page,
+      totalPages: paginatedResult.totalPages,
+      totalCount: paginatedResult.totalCount,
+      pageSize: paginatedResult.pageSize,
+      hasNextPage: paginatedResult.hasNextPage,
+      hasPreviousPage: paginatedResult.hasPreviousPage,
+      sort: paginatedResult.sort,
+    };
+
+    payload = result;
+
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-      paginatedResult
+      payload
     );
 
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
     } else {
       payload = outputData;
-      loggerBack.info(
-        `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId}`
-      );
     }
-
     // Info: (20250421 - Shirley) Format API response
     const response = formatApiResponse(statusMessage, payload);
     return { response, statusMessage };
