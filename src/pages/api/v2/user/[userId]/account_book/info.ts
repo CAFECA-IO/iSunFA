@@ -158,8 +158,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
                 value: company.team.name || '',
                 editable: false,
               },
-              imageId: '', // 默認空字串
-              role: TeamRole.VIEWER, // 默認值
+              imageId: '', // Info: (20250505 - Shirley) 默認空字串
+              role: TeamRole.VIEWER, // Info: (20250505 - Shirley) 默認為 TeamRole.VIEWER
               about: {
                 value: '',
                 editable: false,
@@ -172,15 +172,15 @@ const handleGetRequest = async (req: NextApiRequest) => {
                 value: TPlanType.BEGINNER,
                 editable: false,
               },
-              totalMembers: 0, // 默認值
-              totalAccountBooks: 0, // 默認值
+              totalMembers: 0, // Info: (20250505 - Shirley) 默認值 0
+              totalAccountBooks: 0, // Info: (20250505 - Shirley) 默認值 0
               bankAccount: {
                 value: '',
                 editable: false,
               },
-              expiredAt: 0, // 默認值
-              inGracePeriod: false, // 默認值
-              gracePeriodEndAt: 0, // 默認值
+              expiredAt: 0, // Info: (20250505 - Shirley) 默認值 0
+              inGracePeriod: false, // Info: (20250505 - Shirley) 默認值 false
+              gracePeriodEndAt: 0, // Info: (20250505 - Shirley) 默認值 0
             }
           : {
               id: 0,

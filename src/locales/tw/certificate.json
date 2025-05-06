@@ -105,7 +105,15 @@
     "COPIES": "張",
     "ALLOWANCE_ISSUE_DATE": "（折讓單）開立日期",
     "DUPLICATE_INVOICE_TAX": "如果使用二聯式發票，稅額為 0",
-    "OTHER_CERTIFICATE_NO": "其他憑證編號"
+    "OTHER_CERTIFICATE_NO": "其他憑證編號",
+    "ELECTRONIC_INVOICE_INFO": "電子發票資訊",
+    "INVOICE_DATE": "開立時間",
+    "SELLER": "賣方",
+    "BUYER": "買方",
+    "SALES": "銷售額",
+    "LUMP_SUM": "總金額",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三聯式收銀機發票則跳過",
+    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",

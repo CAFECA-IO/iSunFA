@@ -26,8 +26,10 @@ const CalendarIcon = ({ timestamp, incomplete = true }: ICalendarIconProps) => {
       {/* Info: (20240916 - Julian) 日曆外框 */}
       <div className="flex h-54px w-54px flex-col items-stretch divide-y-2 divide-stroke-neutral-tertiary rounded-sm border-2 border-stroke-neutral-tertiary">
         {/* Info: (20240916 - Julian) 年份 */}
-        <p className="text-center text-xs font-semibold text-text-neutral-tertiary">{year}</p>
-        <div className="flex flex-col items-center">
+        <p className="download-pb-3 text-center text-xs font-semibold text-text-neutral-tertiary">
+          {year}
+        </p>
+        <div className="download-pb-3 flex flex-col items-center">
           {/* Info: (20240916 - Julian) 月份 */}
           <p className="text-sm font-semibold leading-3 text-text-brand-primary-lv2">
             {displayMonth}
@@ -38,9 +40,11 @@ const CalendarIcon = ({ timestamp, incomplete = true }: ICalendarIconProps) => {
       </div>
 
       {/* Info: (20241004 - Julian) 未讀標記 */}
-      <div
-        className={`absolute ${incompleteStyle} -bottom-1 -right-1 h-14px w-14px rounded-full border-2 border-avatar-stroke-primary bg-surface-state-error`}
-      ></div>
+      <div className="download-hidden">
+        <div
+          className={`absolute ${incompleteStyle} -bottom-1 -right-1 h-14px w-14px rounded-full border-2 border-avatar-stroke-primary bg-surface-state-error`}
+        ></div>
+      </div>
     </div>
   );
 };

@@ -6,11 +6,6 @@ export enum SkillType {
   CERTIFICATE = 'Certificate',
 }
 
-export enum ModalType {
-  CREATE = 'create',
-  EDIT = 'edit',
-}
-
 // Info: (20250428 - Julian) --------------- Language ---------------
 export enum Proficiency {
   ELEMENTARY = 'Elementary',
@@ -19,23 +14,16 @@ export enum Proficiency {
   NATIVE = 'Native or bilingual',
 }
 
-export interface ILanguageSkillData {
+export interface ILanguageSkill {
   language: string;
   proficiency: keyof typeof Proficiency;
-}
-
-export interface ILanguageSkill extends ILanguageSkillData {
   id: number;
 }
-
-export interface ICertificateData {
+export interface ICertificateSkill {
+  id: number;
   name: string;
   issuingOrganization: string;
   issueDate: IExperienceDate;
   expirationDate: IExperienceDate;
   certificates: FileList;
-}
-
-export interface ICertificateSkill extends ICertificateData {
-  id: number;
 }

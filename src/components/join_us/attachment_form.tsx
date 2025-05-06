@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { haloStyle } from '@/constants/display';
 import UploadArea from '@/components/join_us/upload_area';
+import { IAttachment } from '@/interfaces/resume';
 
 interface IAttachmentFormProps {
   toPrevStep: () => void;
@@ -18,8 +19,7 @@ const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep
   const submitHandler = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // ToDo: (20250502 - Julian) 處理表單提交邏輯
-    const formData = {
+    const formData: IAttachment = {
       attachments,
       personalWebsite: websiteInput,
     };

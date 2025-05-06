@@ -3,6 +3,8 @@ import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
+import { IPreference } from '@/interfaces/resume';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IPreferenceFormProps {
   toPrevStep: () => void;
@@ -44,6 +46,7 @@ enum SalaryUnit {
   YEAR = 'Year',
 }
 
+// Info: (20250506 - Julian) 勾選選項
 const CheckOptions: React.FC<ICheckOptionsProps> = ({
   title,
   options,
@@ -107,6 +110,7 @@ const CheckOptions: React.FC<ICheckOptionsProps> = ({
 
 const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring', 'common']);
+  const { tempPreference, savePreference } = useHiringCtx();
 
   // Info: (20250430 - Julian) 定義選項
   const employmentTypes = ['Full Time', 'Part Time', 'Contract', 'Internship', 'Temporary'];
@@ -115,13 +119,34 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   const startDates = Object.values(DateOption);
   const salaryExpectations = Object.values(SalaryOption);
 
+  // Info: (20250506 - Julian) 預設值
+  const {
+    employmentTypes: initialEmploymentTypes,
+    shifts: initialShifts,
+    locationTypes: initialLocationTypes,
+    startDate: initialStartDate,
+    salaryExpectation: initialSalaryExpectation,
+  } = tempPreference || {
+    employmentTypes: [],
+    shifts: [],
+    locationTypes: [],
+    startDate: null,
+    salaryExpectation: null,
+  };
+
   // Info: (20250430 - Julian) 以 string array 的形式儲存選項
-  const [selectedEmploymentTypes, setSelectedEmploymentTypes] = useState<string[]>([]);
-  const [selectedShifts, setSelectedShifts] = useState<string[]>([]);
-  const [selectedLocationTypes, setSelectedLocationTypes] = useState<string[]>([]);
+  const [selectedEmploymentTypes, setSelectedEmploymentTypes] =
+    useState<string[]>(initialEmploymentTypes);
+  const [selectedShifts, setSelectedShifts] = useState<string[]>(initialShifts);
+  const [selectedLocationTypes, setSelectedLocationTypes] =
+    useState<string[]>(initialLocationTypes);
   // Info: (20250502 - Julian) 必選項目
-  const [selectedStartDate, setSelectedStartDate] = useState<DateOption>(DateOption.IMMEDIATELY);
-  const [selectedSalary, setSelectedSalary] = useState<SalaryOption>(SalaryOption.NEGOTIABLE);
+  const [selectedStartDate, setSelectedStartDate] = useState<DateOption | null>(
+    initialStartDate as DateOption
+  );
+  const [selectedSalary, setSelectedSalary] = useState<SalaryOption | null>(
+    initialSalaryExpectation as SalaryOption
+  );
 
   // Info: (20250430 - Julian) 自訂選項
   const [customDateInput, setCustomDateInput] = useState<number | null>(null);
@@ -133,13 +158,18 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
   const saveDisable =
     // Info: (20250502 - Julian) 未選擇 location types
     selectedLocationTypes.length < 1 ||
+    // Info: (20250502 - Julian) 未選擇 start date
+    selectedStartDate === null ||
+    // Info: (20250502 - Julian) 未選擇 salary expectation
+    selectedSalary === null ||
     // Info: (20250502 - Julian) 選擇 custom date 的狀況下輸入框為空
     (selectedStartDate === DateOption.CUSTOM_DATE && !customDateInput) ||
     // Info: (20250502 - Julian) 選擇 custom salary 的狀況下輸入框為空
     (selectedSalary === SalaryOption.CUSTOM_SALARY && !customSalaryInput);
 
   // Info: (20250502 - Julian) 送出表單
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    if (!(selectedStartDate !== null && selectedSalary !== null)) return;
     event.preventDefault();
 
     const startDate =
@@ -147,22 +177,21 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
         ? `After ${customDateInput} ${customDateUnits}`
         : selectedStartDate;
 
-    const salary =
+    const salaryExpectation =
       selectedSalary === SalaryOption.CUSTOM_SALARY
         ? `${customSalaryInput} NTD per ${customSalaryUnits}`
         : selectedSalary;
 
-    // ToDo: (20250430 - Julian) 在這裡可以處理表單提交的邏輯
-    const formData = {
+    const formData: IPreference = {
       employmentTypes: selectedEmploymentTypes,
       shifts: selectedShifts,
       locationTypes: selectedLocationTypes,
       startDate,
-      salary,
+      salaryExpectation,
     };
-    // Deprecated: (20250430 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Form submitted:', formData);
+
+    // Info: (20250506 - Julian) 儲存表單資料
+    savePreference(formData);
 
     // Info: (20250430 - Julian) 提交後跳轉到下一步
     toNextStep();
