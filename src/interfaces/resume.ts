@@ -9,3 +9,16 @@ export interface IPersonalInfo {
   hasCriminalRecord: boolean;
   whereLearnAboutJob: string;
 }
+
+export interface IPreference {
+  employmentTypes: string[];
+  shifts: string[];
+  locationTypes: string[];
+  startDate: string;
+  salaryExpectation: string;
+}
+
+export interface IAttachment {
+  attachments: FileList | null;
+  personalWebsite: string;
+}
