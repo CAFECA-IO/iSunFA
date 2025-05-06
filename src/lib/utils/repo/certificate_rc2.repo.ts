@@ -1,5 +1,9 @@
 import prisma from '@/client';
-import { CertificateRC2, CurrencyCode, CertificateType as PrismaCertificateType } from '@prisma/client';
+import {
+  CertificateRC2,
+  CurrencyCode,
+  CertificateType as PrismaCertificateType,
+} from '@prisma/client';
 import { z } from 'zod';
 import {
   listCertificateRC2QuerySchema,
@@ -33,7 +37,7 @@ function transformOutput(cert: CertificateRC2): z.infer<typeof CertificateRC2Out
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
-    isReturnOrAllowance: cert?.isReturnOrAllowance ?? false,
+    isReturnOrAllowance: cert?.isReturnOrAllowance ?? null,
     deductionType: undefined,
     salesName: undefined,
     salesIdNumber: undefined,
