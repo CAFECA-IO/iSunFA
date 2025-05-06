@@ -6,26 +6,31 @@ import { haloStyle } from '@/constants/display';
 import { IExperienceDate } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import UploadArea from '@/components/join_us/upload_area';
-import { ICertificateData, ICertificateSkill, ModalType } from '@/interfaces/skill';
+import { ICertificateSkill } from '@/interfaces/skill';
 import { MimeType } from '@/constants/mime_type';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface ICertificateUploadModalProps {
   modalVisibilityHandler: () => void;
-  modalType: ModalType;
-  certData?: ICertificateSkill;
-  saveHandler: (data: ICertificateData) => void;
-  deleteHandler?: (langId: number) => void;
+  editId: number | null;
 }
 
 const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
   modalVisibilityHandler,
-  modalType,
-  certData,
-  saveHandler,
-  deleteHandler,
+  editId,
 }) => {
   const { t } = useTranslation(['hiring', 'common']);
+  const {
+    tempCertificateList,
+    addCertificateSkill,
+    updateCertificateSkill,
+    removeCertificateSkill,
+  } = useHiringCtx();
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const isEditMode = editId !== null;
+
+  const initialData = tempCertificateList.find((cert) => cert.id === editId);
 
   const defaultState = {
     name: '',
@@ -41,7 +46,7 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
     issueDate: initialIssueDate,
     expirationDate: initialExpirationDate,
     certificates: initialCertificates,
-  } = certData || defaultState;
+  } = initialData || defaultState;
 
   const [nameInput, setNameInput] = useState<string>(initialName);
   const [organizationInput, setOrganizationInput] = useState<string>(initialIssuingOrganization);
@@ -80,43 +85,61 @@ const CertificateUploadModal: React.FC<ICertificateUploadModalProps> = ({
     if (!uploadedCertificates) return;
     e.preventDefault();
 
-    const data: ICertificateData = {
-      name: nameInput,
-      issuingOrganization: organizationInput,
-      issueDate,
-      expirationDate,
-      certificates: uploadedCertificates,
-    };
+    if (isEditMode) {
+      // Info: (20250506 - Julian) 編輯模式
+      const updateData: ICertificateSkill = {
+        id: editId,
+        name: nameInput,
+        issuingOrganization: organizationInput,
+        issueDate,
+        expirationDate,
+        certificates: uploadedCertificates,
+      };
+      updateCertificateSkill(editId, updateData);
+    } else {
+      // Info: (20250506 - Julian) 新增模式
+      const newId = (tempCertificateList[tempCertificateList.length - 1]?.id ?? 0) + 1;
+      const newData: ICertificateSkill = {
+        id: newId,
+        name: nameInput,
+        issuingOrganization: organizationInput,
+        issueDate,
+        expirationDate,
+        certificates: uploadedCertificates,
+      };
+      addCertificateSkill(newData);
+    }
 
-    saveHandler(data);
+    // Info: (20250506 - Julian) 關閉 Modal
+    modalVisibilityHandler();
   };
 
   const deleteCertHandler = () => {
-    if (certData && deleteHandler) {
-      deleteHandler(certData.id);
+    if (isEditMode) {
+      removeCertificateSkill(editId!);
+      modalVisibilityHandler();
     }
   };
 
-  const cancelButton =
-    modalType === ModalType.CREATE ? (
-      <LandingButton
-        type="button"
-        variant="default"
-        className="font-bold"
-        onClick={modalVisibilityHandler}
-      >
-        {t('common:COMMON.CANCEL')}
-      </LandingButton>
-    ) : (
-      <LandingButton
-        type="button"
-        variant="default"
-        className="font-bold"
-        onClick={deleteCertHandler}
-      >
-        <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
-      </LandingButton>
-    );
+  const cancelButton = isEditMode ? (
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={deleteCertHandler}
+    >
+      <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
+    </LandingButton>
+  ) : (
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={modalVisibilityHandler}
+    >
+      {t('common:COMMON.CANCEL')}
+    </LandingButton>
+  );
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">

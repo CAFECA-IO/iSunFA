@@ -4,34 +4,34 @@ import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { ILanguageSkill, Proficiency, ModalType, ILanguageSkillData } from '@/interfaces/skill';
+import { ILanguageSkill, Proficiency } from '@/interfaces/skill';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
-interface ILanguageModalProps {
+interface ILanguageSkillModalProps {
   modalVisibilityHandler: () => void;
-  modalType: ModalType;
-  langData?: ILanguageSkill;
-  saveHandler: (data: ILanguageSkillData) => void;
-  deleteHandler?: (langId: number) => void;
+  editId: number | null;
 }
 
-const LanguageModal: React.FC<ILanguageModalProps> = ({
+const LanguageSkillModal: React.FC<ILanguageSkillModalProps> = ({
   modalVisibilityHandler,
-  modalType,
-  langData,
-  saveHandler,
-  deleteHandler,
+  editId,
 }) => {
   const { t } = useTranslation(['hiring', 'common']);
+  const { tempLanguageList, addLanguageSkill, updateLanguageSkill, removeLanguageSkill } =
+    useHiringCtx();
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const isEditMode = editId !== null;
 
-  // Info: (20250428 - Julian) 「用於編輯」熟練程度的預設值
-  const defaultProf = langData?.proficiency
-    ? (langData.proficiency as keyof typeof Proficiency)
-    : null;
+  const initialData = tempLanguageList.find((lang) => lang.id === editId);
 
-  const [langInput, setLangInput] = useState<string>(langData?.language ?? '');
+  // Info: (20250506 - Julian) 用於「編輯」的預設值
+  const initialLang = initialData ? initialData.language : '';
+  const initialProf = initialData ? initialData.proficiency : null;
+
+  const [langInput, setLangInput] = useState<string>(initialLang);
   const [proficiencyInput, setProficiencyInput] = useState<keyof typeof Proficiency | null>(
-    defaultProf
+    initialProf
   );
 
   const changeLangInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,8 +41,9 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
   const saveDisable = langInput === '' || proficiencyInput === null;
 
   const deleteLangHandler = () => {
-    if (langData && deleteHandler) {
-      deleteHandler(langData.id);
+    if (isEditMode) {
+      removeLanguageSkill(editId);
+      modalVisibilityHandler();
     }
   };
 
@@ -50,7 +51,29 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
     if (saveDisable) return;
 
     e.preventDefault();
-    saveHandler({ language: langInput, proficiency: proficiencyInput as keyof typeof Proficiency });
+
+    if (isEditMode) {
+      // Info: (20250506 - Julian) 編輯模式
+      const updatedData: ILanguageSkill = {
+        id: editId,
+        language: langInput,
+        proficiency: proficiencyInput as keyof typeof Proficiency,
+      };
+      updateLanguageSkill(editId, updatedData);
+    } else {
+      // Info: (20250506 - Julian) 新增模式
+      const newId =
+        tempLanguageList.length > 0 ? tempLanguageList[tempLanguageList.length - 1].id + 1 : 1;
+      const newData: ILanguageSkill = {
+        id: newId,
+        language: langInput,
+        proficiency: proficiencyInput as keyof typeof Proficiency,
+      };
+      addLanguageSkill(newData);
+    }
+
+    // Info: (20250506 - Julian) 提交後關閉 Modal
+    modalVisibilityHandler();
   };
 
   const proficiencyOptions = Object.keys(Proficiency);
@@ -81,26 +104,25 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
   });
 
   // Info: (20250428 - Julian) 新增 -> 取消按鈕 / 編輯 -> 刪除按鈕
-  const cancelButton =
-    modalType === ModalType.CREATE ? (
-      <LandingButton
-        type="button"
-        variant="default"
-        className="font-bold"
-        onClick={modalVisibilityHandler}
-      >
-        {t('common:COMMON.CANCEL')}
-      </LandingButton>
-    ) : (
-      <LandingButton
-        type="button"
-        variant="default"
-        className="font-bold"
-        onClick={deleteLangHandler}
-      >
-        <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
-      </LandingButton>
-    );
+  const cancelButton = isEditMode ? (
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={deleteLangHandler}
+    >
+      <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
+    </LandingButton>
+  ) : (
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={modalVisibilityHandler}
+    >
+      {t('common:COMMON.CANCEL')}
+    </LandingButton>
+  );
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -161,4 +183,4 @@ const LanguageModal: React.FC<ILanguageModalProps> = ({
   );
 };
 
-export default LanguageModal;
+export default LanguageSkillModal;
