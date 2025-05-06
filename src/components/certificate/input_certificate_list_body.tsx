@@ -24,7 +24,6 @@ import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -151,19 +150,13 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  // const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
-
-  // const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-  //   setExportModalData(resData.data);
-  // }, []);
-
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
     setIsExporting(true);
   }, []);
 
-  // Info: (20250506 - Anna)
+  // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
   const waitForNextFrame = () => {
     return new Promise((resolve) => {
       requestAnimationFrame(() => resolve(true));
@@ -172,25 +165,29 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   // Info: (20250418 - Anna) 匯出憑證表格
   const handleDownload = async () => {
-    // Info: (20250506 - Anna)
-    // eslint-disable-next-line no-console
-    console.log('isExportModalOpen:[handleDownload] 被觸發');
     setIsExporting(true);
 
     // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
     await waitForNextFrame();
-    await waitForNextFrame(); // 再多等一幀更保險
 
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
+    // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
+    downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
+      el.classList.remove('h-54px');
+    });
+
+    // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-  .download-pb-4 {
+    .download-pb-4 {
     padding-bottom: 16px;
   }
-      .download-pb-3 {
+    .download-pb-3 {
     padding-bottom: 12px;
+  }
+    .download-hidden {
+    display: none;
   }
 `;
 
@@ -216,19 +213,16 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     style.remove();
     pdf.save('input-certificates.pdf');
 
-    // Info: (20250506 - Anna) 若匯出後需要還原畫面
+    // Info: (20250506 - Anna) 還原日曆高度限制
+    downloadRef.current.querySelectorAll('.calendar-cell').forEach((el) => {
+      el.classList.add('h-54px');
+    });
+
+    // Info: (20250506 - Anna) 匯出後還原畫面
     setIsExporting(false);
   };
 
-  // const onExport = useCallback(() => {
-  //   if (exportModalData.length > 0) {
-  //     exportModalData.forEach((item) => {
-  //       handleDownloadItem(item.id);
-  //     });
-  //   }
-  // }, [exportModalData]);
-
-    const [exportOperations] = useState<ISelectionToolBarOperation[]>([
+  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
       operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
       buttonStr: 'certificate:EXPORT.TITLE',
@@ -537,11 +531,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     };
   }, []);
 
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('[InputCertificateListBody] isExportModalOpen:', isExporting);
-  }, [isExporting]);
-
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
@@ -555,15 +544,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {/* {isExporting && (
-        <CertificateExportModal
-          isOpen={isExporting}
-          onClose={() => setIsExporting(false)}
-          handleApiResponse={handleExportModalApiResponse}
-          handleExport={onExport}
-          certificates={exportModalData}
-        />
-      )} */}
       {isEditModalOpen && editingId !== null && (
         <InputCertificateEditModal
           accountBookId={accountBookId}
@@ -671,7 +651,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
-                isExporting={isExporting} // Info: (20250506 - Anna)
+                isExporting={isExporting}
               />
             </div>
           </>

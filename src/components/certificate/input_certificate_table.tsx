@@ -25,7 +25,7 @@ interface InputCertificateTableProps {
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
-  isExporting: boolean; // Info: (20250506 - Anna)
+  isExporting: boolean;
 }
 
 const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
@@ -45,11 +45,9 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
   setAmountSort,
   setVoucherSort,
   setInvoiceTypeSort,
-  isExporting, // Info: (20250506 - Anna)
+  isExporting,
 }) => {
   const { t } = useTranslation('certificate');
-  // eslint-disable-next-line no-console
-  console.log('isExporting in Table:', isExporting);
   const displayedIssuedDate = SortingButton({
     string: t('certificate:TABLE.DATE'),
     sortOrder: dateSort,
@@ -112,14 +110,13 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
               </div>
             )}
             <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {/* {displayedIssuedDate} */}
               {isExporting ? t('certificate:TABLE.DATE') : displayedIssuedDate}
             </div>
             <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.INVOICE_NUMBER')}
             </div>
             <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedInvoiceType}
+              {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedInvoiceType}
             </div>
             <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.DEDUCTION_TYPE')}
@@ -134,7 +131,7 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
               </div>
             </div>
             <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedAmount}
+              {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>

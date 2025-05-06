@@ -32,7 +32,7 @@ interface InputCertificateProps {
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
-  isExporting: boolean; // Info: (20250506 - Anna)
+  isExporting: boolean;
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
@@ -60,10 +60,8 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   setAmountSort,
   setVoucherSort,
   setInvoiceTypeSort,
-  isExporting, // Info: (20250506 - Anna)
+  isExporting,
 }) => {
-  // eslint-disable-next-line no-console
-  console.log('isExporting in input_certificate:', isExporting);
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
@@ -84,7 +82,7 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
           setInvoiceTypeSort={setInvoiceTypeSort}
-          isExporting={isExporting} // Info: (20250506 - Anna)
+          isExporting={isExporting}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (

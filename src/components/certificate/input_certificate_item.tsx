@@ -82,7 +82,13 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
           {certificate.incomplete && (
-            <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
+            <Image
+              src="/icons/hint.svg"
+              alt="Hint"
+              width={16}
+              height={16}
+              className="download-hidden min-w-16px"
+            />
           )}
           <div className="flex flex-col">
             <div className="download-pb-4 text-text-neutral-primary">
@@ -132,7 +138,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="flex flex-col items-center gap-2">
+        <div className="download-pb-4 flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
             {certificate.invoice?.counterParty?.taxId ?? ''}
           </div>
@@ -201,7 +207,7 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
                 {certificate.uploader.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span>{certificate.uploader ?? ''}</span>
+            <span className="download-pb-4">{certificate.uploader ?? ''}</span>
           </div>
         </div>
       </BorderCell>
