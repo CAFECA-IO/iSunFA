@@ -29,7 +29,12 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   editId,
 }) => {
   const { t } = useTranslation(['hiring']);
-  const { tempEducationList, addEducationExperience, removeEducationExperience } = useHiringCtx();
+  const {
+    tempEducationList,
+    addEducationExperience,
+    updateEducationExperience,
+    removeEducationExperience,
+  } = useHiringCtx();
 
   const initialData = tempEducationList.find((item) => item.id === editId);
   const isEditMode = editId !== null;
@@ -104,7 +109,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
 
   // Info: (20250505 - Julian) 刪除按鈕
   const deleteHandler = () => {
-    if (!editId) return;
+    if (!isEditMode) return;
     removeEducationExperience(editId);
     modalVisibilityHandler();
   };
@@ -113,24 +118,39 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Info: (20250505 - Julian) new id -> 目前的學歷資訊列表最後一筆的 id + 1，或者 0
-    const newId =
-      tempEducationList && tempEducationList.length - 1 > 0
-        ? tempEducationList[tempEducationList.length - 1].id + 1
-        : 0;
+    if (isEditMode) {
+      // Info: (20250506 - Julian) 編輯模式: 更新學歷資訊
+      const updatedEducationExperience: IEducationExperience = {
+        id: editId,
+        degree: selectedDegree,
+        schoolName: schoolNameInput,
+        department: departmentInput,
+        start: startInput,
+        end: endInput,
+        status: selectedStatus,
+      };
+      updateEducationExperience(editId, updatedEducationExperience);
+    } else {
+      // Info: (20250506 - Julian) 新增模式: 新增學歷資訊
+      // Info: (20250505 - Julian) new id -> 目前的學歷資訊列表最後一筆的 id + 1，或者 1
+      const newId =
+        tempEducationList.length - 1 >= 0
+          ? tempEducationList[tempEducationList.length - 1].id + 1
+          : 1;
 
-    const educationExperience: IEducationExperience = {
-      id: newId,
-      degree: selectedDegree,
-      schoolName: schoolNameInput,
-      department: departmentInput,
-      start: startInput,
-      end: endInput,
-      status: selectedStatus,
-    };
+      const educationExperience: IEducationExperience = {
+        id: newId,
+        degree: selectedDegree,
+        schoolName: schoolNameInput,
+        department: departmentInput,
+        start: startInput,
+        end: endInput,
+        status: selectedStatus,
+      };
 
-    // Info: (20250505 - Julian) 新增學歷資訊至 Hiring Context
-    addEducationExperience(educationExperience);
+      // Info: (20250505 - Julian) 新增學歷資訊至 Hiring Context
+      addEducationExperience(educationExperience);
+    }
 
     // Info: (20250505 - Julian) 關閉 Modal
     modalVisibilityHandler();

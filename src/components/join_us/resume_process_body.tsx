@@ -11,10 +11,17 @@ import { useHiringCtx } from '@/contexts/hiring_context';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
-  const { tempPersonalInfo } = useHiringCtx();
+  const { tempPersonalInfo, tempEducationList, tempWorkList } = useHiringCtx();
 
   // Info: (20250505 - Julian) 透過 HiringContext 的暫存判斷步驟
-  const initialStep = tempPersonalInfo ? 2 : 1;
+  const initialStep =
+    // Info: (20250505 - Julian) 如果有暫存的學歷或工作經歷，則跳到第三步
+    tempEducationList.length > 0 || tempWorkList.length > 0
+      ? 3
+      : // Info: (20250505 - Julian) 如果有暫存的個人資訊，則跳到第二步
+        tempPersonalInfo
+        ? 2
+        : 1;
 
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
 

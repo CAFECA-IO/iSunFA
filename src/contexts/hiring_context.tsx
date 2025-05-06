@@ -16,10 +16,12 @@ interface IHiringContext {
 
   tempEducationList: IEducationExperience[];
   addEducationExperience: (education: IEducationExperience) => void;
+  updateEducationExperience: (id: number, updatedEducation: IEducationExperience) => void;
   removeEducationExperience: (id: number) => void;
 
   tempWorkList: IWorkExperience[];
   addWorkExperience: (work: IWorkExperience) => void;
+  updateWorkExperience: (id: number, updatedWork: IWorkExperience) => void;
   removeWorkExperience: (id: number) => void;
 }
 
@@ -51,6 +53,12 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
   const addEducationExperience = (educationList: IEducationExperience) => {
     setEducationList((prev) => [...prev, educationList]);
   };
+  // Info: (20250505 - Julian) [Step 2] 更新學歷資訊
+  const updateEducationExperience = (id: number, updatedEducation: IEducationExperience) => {
+    setEducationList((prev) =>
+      prev.map((education) => (education.id === id ? updatedEducation : education))
+    );
+  };
   // Info: (20250505 - Julian) [Step 2] 刪除學歷資訊
   const removeEducationExperience = (id: number) => {
     setEducationList((prev) => prev.filter((education) => education.id !== id));
@@ -59,6 +67,10 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
   // Info: (20250505 - Julian) [Step 2] 新增工作經歷資訊
   const addWorkExperience = (workList: IWorkExperience) => {
     setWorkList((prev) => [...prev, workList]);
+  };
+  // Info: (20250505 - Julian) [Step 2] 更新工作經歷資訊
+  const updateWorkExperience = (id: number, updatedWork: IWorkExperience) => {
+    setWorkList((prev) => prev.map((work) => (work.id === id ? updatedWork : work)));
   };
   // Info: (20250505 - Julian) [Step 2] 刪除工作經歷資訊
   const removeWorkExperience = (id: number) => {
@@ -75,10 +87,12 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
 
       tempEducationList: educationListRef.current,
       addEducationExperience,
+      updateEducationExperience,
       removeEducationExperience,
 
       tempWorkList: workListRef.current,
       addWorkExperience,
+      updateWorkExperience,
       removeWorkExperience,
     }),
     [
@@ -88,9 +102,11 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
       savePersonalInfo,
       educationListRef.current,
       addEducationExperience,
+      updateEducationExperience,
       removeEducationExperience,
       workListRef.current,
       addWorkExperience,
+      updateWorkExperience,
       removeWorkExperience,
     ]
   );

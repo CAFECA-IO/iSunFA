@@ -22,7 +22,7 @@ interface IExperienceBarProps {
   clickHandler: (id: number) => void;
 }
 
-// ToDo: (20250411 - Julian) during the development
+// Info: (20250506 - Julian) start from 2015
 const years = Array.from({ length: 10 }, (_, i) => 2024 - i).reverse();
 const yearsWithDivider = years.flatMap(
   (item, index) => (index < years.length - 1 ? [item, '-'] : [item]) // Info: (20250414 - Julian) Add divider between years
@@ -78,7 +78,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data, c
     <button
       type="button"
       onClick={clickBarHandler}
-      className="group flex flex-col items-start gap-14px whitespace-nowrap"
+      className="flex flex-col items-start gap-14px whitespace-nowrap hover:opacity-75"
       style={{
         gridColumnStart: startPosition,
         gridColumnEnd: endPosition,
@@ -86,7 +86,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data, c
     >
       {/* Info: (20250415 - Julian) 工作經歷的 line bar 在上方 */}
       {type === ExperienceType.WORK && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full group-hover:opacity-75`}></div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
       )}
       <p className={`${mainColor.text} font-semibold`}>{mainTitle}</p>
       <p className="">
@@ -97,7 +97,7 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data, c
       </p>
       {/* Info: (20250415 - Julian) 學歷的 line bar 在下方 */}
       {type === ExperienceType.EDUCATION && (
-        <div className={`${mainColor.bg} h-24px w-full rounded-full group-hover:opacity-75`}></div>
+        <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
       )}
     </button>
   );
@@ -168,7 +168,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   // Info: (20250411 - Julian) Left Arrow
   const isDisplayLeftArrow = (
     <div
-      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 flex items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
+      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 z-30 flex items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
     >
       <button type="button" className="p-8px" onClick={() => scrollMilestone('L')}>
         <FaChevronLeft size={40} />
@@ -245,7 +245,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
         <ExperienceBar
           key={work.id}
           type={ExperienceType.WORK}
-          mainColor={mainColors[index]}
+          mainColor={mainColors[5 - index]} // Info: (20250506 - Julian) 取得顏色的順序和學歷相反
           data={workData}
           clickHandler={editWorkHandler}
         />
@@ -267,7 +267,8 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <div
               id={`${index + 1}`}
-              key={year}
+              // eslint-disable-next-line react/no-array-index-key
+              key={`${index}`}
               className="col-span-2 h-px w-100px bg-landing-page-gray3"
             ></div>
           );
@@ -275,7 +276,8 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <p
               id={`${index + 1}`}
-              key={year}
+              // eslint-disable-next-line react/no-array-index-key
+              key={`${index}`}
               className="col-span-2 text-center text-2xl text-landing-page-gray2"
             >
               {year}

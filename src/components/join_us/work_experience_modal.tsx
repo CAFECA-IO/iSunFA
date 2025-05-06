@@ -22,7 +22,8 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
   editId,
 }) => {
   const { t } = useTranslation(['hiring']);
-  const { tempWorkList, addWorkExperience, removeWorkExperience } = useHiringCtx();
+  const { tempWorkList, addWorkExperience, updateWorkExperience, removeWorkExperience } =
+    useHiringCtx();
 
   const initialData = tempWorkList.find((work) => work.id === editId);
   const isEditMode = editId !== null;
@@ -93,7 +94,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
 
   // Info: (20250505 - Julian) 刪除按鈕
   const deleteHandler = () => {
-    if (!editId) return;
+    if (!isEditMode) return;
     removeWorkExperience(editId);
     modalVisibilityHandler();
   };
@@ -102,22 +103,36 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Info: (20250505 - Julian) new id -> 從 HiringContext 的 tempWorkList 中取得最後一筆資料的 id + 1；或者為 0
-    const newId =
-      tempWorkList && tempWorkList.length > 0 ? tempWorkList[tempWorkList.length - 1].id + 1 : 0;
+    if (isEditMode) {
+      // Info: (20250506 - Julian) 編輯模式: 更新工作經歷
+      const updatedWorkExperience: IWorkExperience = {
+        id: editId,
+        companyName: companyNameInput,
+        position: positionInput,
+        start: startDate,
+        end: endDate,
+        description: descriptionInput,
+        leavingReason: leavingReasonInput,
+      };
+      updateWorkExperience(editId, updatedWorkExperience);
+    } else {
+      // Info: (20250506 - Julian) 新增模式: 新增工作經歷
+      // Info: (20250505 - Julian) new id -> 從 HiringContext 的 tempWorkList 中取得最後一筆資料的 id + 1；或者為 1
+      const newId = tempWorkList.length - 1 >= 0 ? tempWorkList[tempWorkList.length - 1].id + 1 : 1;
 
-    const workExperience: IWorkExperience = {
-      id: newId,
-      companyName: companyNameInput,
-      position: positionInput,
-      start: startDate,
-      end: endDate,
-      description: descriptionInput,
-      leavingReason: leavingReasonInput,
-    };
+      const workExperience: IWorkExperience = {
+        id: newId,
+        companyName: companyNameInput,
+        position: positionInput,
+        start: startDate,
+        end: endDate,
+        description: descriptionInput,
+        leavingReason: leavingReasonInput,
+      };
 
-    // Info: (20250505 - Julian) 將工作經歷資訊加入 HiringContext
-    addWorkExperience(workExperience);
+      // Info: (20250505 - Julian) 將工作經歷資訊加入 HiringContext
+      addWorkExperience(workExperience);
+    }
 
     // Info: (20250505 - Julian) 關閉 Modal
     modalVisibilityHandler();
