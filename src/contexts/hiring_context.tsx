@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import useStateRef from 'react-usestateref';
-import { IPersonalInfo } from '@/interfaces/resume';
+import { IAttachment, IPersonalInfo, IPreference } from '@/interfaces/resume';
 import { IEducationExperience, IWorkExperience } from '@/interfaces/experience';
 import { ICertificateSkill, ILanguageSkill } from '@/interfaces/skill';
 
@@ -34,6 +34,11 @@ interface IHiringContext {
   addCertificateSkill: (certificate: ICertificateSkill) => void;
   updateCertificateSkill: (id: number, updatedCertificate: ICertificateSkill) => void;
   removeCertificateSkill: (id: number) => void;
+
+  tempPreference: IPreference | undefined;
+  savePreference: (preference: IPreference) => void;
+
+  tempAttachment: IAttachment | undefined;
 }
 
 const HiringContext = createContext<IHiringContext | undefined>(undefined);
@@ -46,6 +51,8 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
   const [, setWorkList, workListRef] = useStateRef<IWorkExperience[]>([]);
   const [, setLanguageList, languageListRef] = useStateRef<ILanguageSkill[]>([]);
   const [, setCertificateList, certificateListRef] = useStateRef<ICertificateSkill[]>([]);
+  const [, setPreference, preferenceRef] = useStateRef<IPreference | undefined>(undefined);
+  const [, setAttachment, attachmentRef] = useStateRef<IAttachment | undefined>(undefined);
 
   // Info: (20250505 - Julian) 收藏工作職缺的 ID
   const toggleFavoriteJobId = (jobId: number) => {
@@ -120,6 +127,16 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
     setCertificateList((prev) => prev.filter((certificate) => certificate.id !== id));
   };
 
+  // Info: (20250505 - Julian) [Step 4] 儲存求職偏好資訊
+  const savePreference = (preference: IPreference) => {
+    setPreference(preference);
+  };
+
+  // Info: (20250505 - Julian) [Step 5] 儲存附件資訊
+  const saveAttachment = (attachment: IAttachment) => {
+    setAttachment(attachment);
+  };
+
   const value = useMemo(
     () => ({
       favoriteJobIds: favoriteJobIdsRef.current,
@@ -147,6 +164,12 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
       addCertificateSkill,
       updateCertificateSkill,
       removeCertificateSkill,
+
+      tempPreference: preferenceRef.current,
+      savePreference,
+
+      tempAttachment: attachmentRef.current,
+      saveAttachment,
     }),
     [
       favoriteJobIdsRef.current,
@@ -169,6 +192,10 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
       addCertificateSkill,
       updateCertificateSkill,
       removeCertificateSkill,
+      preferenceRef.current,
+      savePreference,
+      attachmentRef.current,
+      saveAttachment,
     ]
   );
 

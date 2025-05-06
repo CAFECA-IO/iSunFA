@@ -23,7 +23,7 @@ interface IExperienceBarProps {
 }
 
 // Info: (20250506 - Julian) start from 2015
-const years = Array.from({ length: 10 }, (_, i) => 2024 - i).reverse();
+const years = Array.from({ length: 11 }, (_, i) => 2025 - i).reverse();
 const yearsWithDivider = years.flatMap(
   (item, index) => (index < years.length - 1 ? [item, '-'] : [item]) // Info: (20250414 - Julian) Add divider between years
 );
