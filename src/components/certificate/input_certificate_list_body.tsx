@@ -157,10 +157,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   //   setExportModalData(resData.data);
   // }, []);
 
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
+    setIsExporting(true);
   }, []);
 
   // Info: (20250506 - Anna)
@@ -175,9 +175,9 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     // Info: (20250506 - Anna)
     // eslint-disable-next-line no-console
     console.log('isExportModalOpen:[handleDownload] 被觸發');
-    setIsExportModalOpen(true);
+    setIsExporting(true);
 
-    // Info: (20250506 - Anna) 等待畫面進入「isExportModalOpen=true」的狀態
+    // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
     await waitForNextFrame();
     await waitForNextFrame(); // 再多等一幀更保險
 
@@ -217,7 +217,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     pdf.save('input-certificates.pdf');
 
     // Info: (20250506 - Anna) 若匯出後需要還原畫面
-    setIsExportModalOpen(false);
+    setIsExporting(false);
   };
 
   // const onExport = useCallback(() => {
@@ -539,8 +539,8 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log('[InputCertificateListBody] isExportModalOpen:', isExportModalOpen);
-  }, [isExportModalOpen]);
+    console.log('[InputCertificateListBody] isExportModalOpen:', isExporting);
+  }, [isExporting]);
 
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
@@ -555,10 +555,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {/* {isExportModalOpen && (
+      {/* {isExporting && (
         <CertificateExportModal
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
+          isOpen={isExporting}
+          onClose={() => setIsExporting(false)}
           handleApiResponse={handleExportModalApiResponse}
           handleExport={onExport}
           certificates={exportModalData}
@@ -671,7 +671,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
-                isExportModalOpen={isExportModalOpen} // Info: (20250506 - Anna)
+                isExporting={isExporting} // Info: (20250506 - Anna)
               />
             </div>
           </>

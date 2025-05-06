@@ -32,7 +32,7 @@ interface InputCertificateProps {
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
-  isExportModalOpen: boolean; // Info: (20250506 - Anna)
+  isExporting: boolean; // Info: (20250506 - Anna)
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
@@ -60,10 +60,10 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   setAmountSort,
   setVoucherSort,
   setInvoiceTypeSort,
-  isExportModalOpen, // Info: (20250506 - Anna)
+  isExporting, // Info: (20250506 - Anna)
 }) => {
   // eslint-disable-next-line no-console
-  console.log('isExportModalOpen in input_certificate:', isExportModalOpen);
+  console.log('isExporting in input_certificate:', isExporting);
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
@@ -84,7 +84,7 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
           setInvoiceTypeSort={setInvoiceTypeSort}
-          isExportModalOpen={isExportModalOpen} // Info: (20250506 - Anna)
+          isExporting={isExporting} // Info: (20250506 - Anna)
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
