@@ -1,3 +1,4 @@
+// Deprecated: (20250507 - Liz) 即將棄用，先暫時保留做參照用
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { FiTrash2 } from 'react-icons/fi';

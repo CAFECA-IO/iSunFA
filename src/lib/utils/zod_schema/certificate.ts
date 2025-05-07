@@ -273,7 +273,11 @@ const invoicePutV2BodySchema = z.object({
   currencyAlias: z.nativeEnum(CurrencyType).optional(),
   priceBeforeTax: z.number().optional(),
   taxType: z.nativeEnum(InvoiceTaxType).optional(),
-  taxRatio: z.number().optional(),
+  taxRatio: z
+    .number()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? 0),
   taxPrice: z.number().optional(),
   totalPrice: z.number().optional(),
   type: z.nativeEnum(InvoiceType).optional(),
@@ -322,7 +326,11 @@ export const invoicePostV2BodySchema = z.object({
   // currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
   // taxType: z.nativeEnum(InvoiceTaxType),
-  taxRatio: z.number(),
+  taxRatio: z
+    .number()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? 0),
   taxPrice: z.number(),
   totalPrice: z.number(),
   type: z.nativeEnum(InvoiceType),
