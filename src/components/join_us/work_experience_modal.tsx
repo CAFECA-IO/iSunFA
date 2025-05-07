@@ -5,30 +5,67 @@ import { useTranslation } from 'next-i18next';
 import { haloStyle } from '@/constants/display';
 import { IExperienceDate, IWorkExperience } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IWorkExperienceModalProps {
   modalVisibilityHandler: () => void;
+  editId: number | null;
 }
 
-const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibilityHandler }) => {
+// Info: (20250505 - Julian) 設定日期最早從 2015 年開始
+const MIN_DATE = '2015-01';
+// Info: (20250505 - Julian) 設定日期最晚到 2025 年
+const MAX_DATE = '2025-12';
+
+const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
+  modalVisibilityHandler,
+  editId,
+}) => {
   const { t } = useTranslation(['hiring']);
+  const { tempWorkList, addWorkExperience, updateWorkExperience, removeWorkExperience } =
+    useHiringCtx();
+
+  const initialData = tempWorkList.find((work) => work.id === editId);
+  const isEditMode = editId !== null;
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
-  const [companyNameInput, setCompanyNameInput] = useState<string>('');
-  const [positionInput, setPositionInput] = useState<string>('');
-  const [startDate, setStartDate] = useState<IExperienceDate>({
-    year: 0,
-    month: 0,
-  });
-  const [endDate, setEndDate] = useState<IExperienceDate>({
-    year: 0,
-    month: 0,
-  });
-  const [descriptionInput, setDescriptionInput] = useState<string>('');
-  const [leavingReasonInput, setLeavingReasonInput] = useState<string>('');
+  const {
+    companyName: initialCompanyName,
+    position: initialPosition,
+    start: initialStart,
+    end: initialEnd,
+    description: initialDescription,
+    leavingReason: initialLeavingReason,
+  } = initialData || {
+    companyName: '',
+    position: '',
+    start: { year: 0, month: 0 },
+    end: { year: 0, month: 0 },
+    description: '',
+    leavingReason: '',
+  };
+
+  const [companyNameInput, setCompanyNameInput] = useState<string>(initialCompanyName);
+  const [positionInput, setPositionInput] = useState<string>(initialPosition);
+  const [startDate, setStartDate] = useState<IExperienceDate>(initialStart);
+  const [endDate, setEndDate] = useState<IExperienceDate>(initialEnd);
+  const [descriptionInput, setDescriptionInput] = useState<string>(initialDescription ?? '');
+  const [leavingReasonInput, setLeavingReasonInput] = useState<string>(initialLeavingReason ?? '');
 
   const startDateValueFormat = `${startDate.year}-${String(startDate.month).padStart(2, '0')}`;
   const endDateValueFormat = `${endDate.year}-${String(endDate.month).padStart(2, '0')}`;
+
+  // Info: (20250505 - Julian) 起始日期不能大於結束日期
+  const maxOfStartDate =
+    endDate.year !== 0 && endDate.month !== 0
+      ? `${endDate.year}-${endDate.month.toString().padStart(2, '0')}`
+      : MAX_DATE;
+  // Info: (20250505 - Julian) 結束日期不能小於起始日期
+  const minOfEndDate =
+    startDate.year !== 0 && startDate.month !== 0
+      ? `${startDate.year}-${startDate.month.toString().padStart(2, '0')}`
+      : MIN_DATE;
 
   const changeCompanyNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCompanyNameInput(e.target.value);
@@ -55,23 +92,66 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
     setLeavingReasonInput(e.target.value);
   };
 
+  // Info: (20250505 - Julian) 刪除按鈕
+  const deleteHandler = () => {
+    if (!isEditMode) return;
+    removeWorkExperience(editId);
+    modalVisibilityHandler();
+  };
+
+  // Info: (20250505 - Julian) 儲存按鈕
   const saveHandler = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const workExperience: IWorkExperience = {
-      id: 0, // Info: (20250415 - Julian) This will be set by the backend
-      companyName: companyNameInput,
-      position: positionInput,
-      start: startDate,
-      end: endDate,
-      description: descriptionInput,
-      leavingReason: leavingReasonInput,
-    };
+    if (isEditMode) {
+      // Info: (20250506 - Julian) 編輯模式: 更新工作經歷
+      const updatedWorkExperience: IWorkExperience = {
+        id: editId,
+        companyName: companyNameInput,
+        position: positionInput,
+        start: startDate,
+        end: endDate,
+        description: descriptionInput,
+        leavingReason: leavingReasonInput,
+      };
+      updateWorkExperience(editId, updatedWorkExperience);
+    } else {
+      // Info: (20250506 - Julian) 新增模式: 新增工作經歷
+      // Info: (20250505 - Julian) new id -> 從 HiringContext 的 tempWorkList 中取得最後一筆資料的 id + 1；或者為 1
+      const newId = tempWorkList.length - 1 >= 0 ? tempWorkList[tempWorkList.length - 1].id + 1 : 1;
 
-    // Deprecated: (20250415 - Julian) For debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Work Experience:', workExperience);
+      const workExperience: IWorkExperience = {
+        id: newId,
+        companyName: companyNameInput,
+        position: positionInput,
+        start: startDate,
+        end: endDate,
+        description: descriptionInput,
+        leavingReason: leavingReasonInput,
+      };
+
+      // Info: (20250505 - Julian) 將工作經歷資訊加入 HiringContext
+      addWorkExperience(workExperience);
+    }
+
+    // Info: (20250505 - Julian) 關閉 Modal
+    modalVisibilityHandler();
   };
+
+  const cancelButton = isEditMode ? (
+    <LandingButton type="button" variant="default" className="font-bold" onClick={deleteHandler}>
+      <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
+    </LandingButton>
+  ) : (
+    <LandingButton
+      type="button"
+      variant="default"
+      className="font-bold"
+      onClick={modalVisibilityHandler}
+    >
+      {t('common:COMMON.CANCEL')}
+    </LandingButton>
+  );
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -133,6 +213,8 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
               onChange={changeStartTimestamp}
               className={inputStyle}
               required
+              min={MIN_DATE}
+              max={maxOfStartDate}
             />
           </div>
           {/* Info: (20250415 - Julian) End Date */}
@@ -147,6 +229,8 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
               onChange={changeEndTimestamp}
               className={inputStyle}
               required
+              min={minOfEndDate}
+              max={MAX_DATE}
             />
           </div>
           {/* Info: (20250415 - Julian) Job Description */}
@@ -176,9 +260,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({ modalVisibil
         </div>
         {/* Info: (20250415 - Julian) Buttons */}
         <div className="ml-auto mt-40px flex items-center gap-lv-6">
-          <LandingButton type="button" variant="default" className="font-bold">
-            <FiTrash2 size={20} /> {t('hiring:COMMON.DELETE')}
-          </LandingButton>
+          {cancelButton}
           <LandingButton type="submit" variant="primary" className="font-bold">
             {t('hiring:COMMON.SAVE')}
           </LandingButton>

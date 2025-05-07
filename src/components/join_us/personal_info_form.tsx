@@ -5,6 +5,7 @@ import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IPersonalInfo } from '@/interfaces/resume';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface ITFQuestionProps {
   id: string;
@@ -78,6 +79,8 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
 const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
 
+  const { tempPersonalInfo, savePersonalInfo } = useHiringCtx();
+
   const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const questions = [
@@ -97,15 +100,42 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
 
   const learnAboutJobOptions = ['104', 'FB', 'Linkedin', 'OW', 'Others'];
 
-  const [firstNameInput, setFirstNameInput] = useState<string>('');
-  const [lastNameInput, setLastNameInput] = useState<string>('');
-  const [phoneNumberInput, setPhoneNumberInput] = useState<string>('');
-  const [emailInput, setEmailInput] = useState<string>('');
-  const [addressInput, setAddressInput] = useState<string>('');
-  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean | null>(null);
-  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean | null>(null);
-  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean | null>(null);
-  const [whereLearnAboutJob, setWhereLearnAboutJob] = useState<string>(learnAboutJobOptions[0]);
+  // Info: (20250505 - Julian) input 預設值
+  const {
+    firstName: initialFirstName,
+    lastName: initialLastName,
+    phoneNumber: initialPhoneNumber,
+    email: initialEmail,
+    address: initialAddress,
+    isRelatedCompany: initialIsRelatedCompany,
+    isWorkingISunCloud: initialIsWorkingISunCloud,
+    hasCriminalRecord: initialHasCriminalRecord,
+    whereLearnAboutJob: initialWhereLearnAboutJob,
+  } = tempPersonalInfo || {
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    email: '',
+    address: '',
+    isRelatedCompany: null,
+    isWorkingISunCloud: null,
+    hasCriminalRecord: null,
+    whereLearnAboutJob: learnAboutJobOptions[0],
+  };
+
+  const [firstNameInput, setFirstNameInput] = useState<string>(initialFirstName);
+  const [lastNameInput, setLastNameInput] = useState<string>(initialLastName);
+  const [phoneNumberInput, setPhoneNumberInput] = useState<string>(initialPhoneNumber);
+  const [emailInput, setEmailInput] = useState<string>(initialEmail);
+  const [addressInput, setAddressInput] = useState<string>(initialAddress);
+  const [isRelatedCompany, setIsRelatedCompany] = useState<boolean | null>(initialIsRelatedCompany);
+  const [isWorkingISunCloud, setIsWorkingISunCloud] = useState<boolean | null>(
+    initialIsWorkingISunCloud
+  );
+  const [hasCriminalRecord, setHasCriminalRecord] = useState<boolean | null>(
+    initialHasCriminalRecord
+  );
+  const [whereLearnAboutJob, setWhereLearnAboutJob] = useState<string>(initialWhereLearnAboutJob);
 
   const {
     targetRef,
@@ -153,9 +183,8 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
         whereLearnAboutJob,
       };
 
-      // deprecated: (20250410 - Julian) for debugging
-      // eslint-disable-next-line no-console
-      console.log('Form Data:', formData);
+      // Info: (20250505 - Julian) 儲存個人資訊至 HiringContext
+      savePersonalInfo(formData);
 
       // Info: (20250410 - Julian) 進行到下一步
       toNextStep();
@@ -306,7 +335,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
 
         {/* Info: (20250410 - Julian) Where did you learn about this job opening? */}
         <div className="flex items-center justify-between">
-          <p>Where did you learn about this job opening?</p>
+          <p>{t('hiring:PERSONAL_INFO.QUESTION_4_TITLE')}</p>
           <div ref={targetRef} className="relative flex flex-col">
             <div
               onClick={toggleDropdown}

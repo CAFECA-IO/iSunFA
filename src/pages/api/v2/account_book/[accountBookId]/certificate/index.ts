@@ -4,11 +4,18 @@ import { IResponseData } from '@/interfaces/response_data';
 // import { checkAuthorization } from '@/lib/utils/auth_check';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { APIName } from '@/constants/api_connection';
+import { APIName, HttpMethod } from '@/constants/api_connection';
 
 import { loggerError } from '@/lib/utils/logger_back';
-import { withRequestValidation } from '@/lib/utils/middleware';
-import { IHandleRequest } from '@/interfaces/handleRequest';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { getSession } from '@/lib/utils/session';
+import { HTTP_STATUS } from '@/constants/http';
+import { validateOutputData } from '@/lib/utils/validator';
 import {
   ICertificate,
   ICertificateEntity,
@@ -44,15 +51,20 @@ type APIResponse = ICertificate[] | IPaginatedData<ICertificate[]> | number[] | 
  * - 要從account setting讀取currency
  * - 要Post UserCertificate Read
  */
-export const handleGetRequest: IHandleRequest<
-  APIName.CERTIFICATE_LIST_V2,
-  IPaginatedData<ICertificate[]>
-> = async ({ query, session }) => {
-  // ToDo: (20241024 - Murky) API接口請符合 FilterSection 公版
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICertificate[]> | null = null;
 
-  const { userId, teams } = session;
+  await checkSessionUser(session, APIName.CERTIFICATE_LIST_V2, req);
+  await checkUserAuthorization(APIName.CERTIFICATE_LIST_V2, req, session);
+
+  // Info: (20250430 - Shirley) Validate request data
+  const { query } = checkRequestData(APIName.CERTIFICATE_LIST_V2, req, session);
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
   const { accountBookId, page, pageSize, startDate, endDate, tab, sortOption, searchQuery, type } =
     query;
@@ -70,7 +82,7 @@ export const handleGetRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    const userTeam = session.teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -173,10 +185,21 @@ export const handleGetRequest: IHandleRequest<
     });
   }
 
-  return {
-    statusMessage,
-    payload,
-  };
+  // Info: (20250430 - Shirley) Validate output data
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.CERTIFICATE_LIST_V2,
+    payload
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    payload = null;
+  } else {
+    payload = outputData;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
 /**
@@ -186,16 +209,22 @@ export const handleGetRequest: IHandleRequest<
  * - 回傳 ICertificate
  * - 記得放在Pusher CERTIFICATE_EVENT.CREATE
  */
-export const handlePostRequest: IHandleRequest<
-  APIName.CERTIFICATE_POST_V2,
-  ICertificate[]
-> = async ({ body, session, query }) => {
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICertificate[] | null = null;
 
-  const { fileIds } = body;
-  const { userId, teams } = session;
+  await checkSessionUser(session, APIName.CERTIFICATE_POST_V2, req);
+  await checkUserAuthorization(APIName.CERTIFICATE_POST_V2, req, session);
 
+  // Info: (20250430 - Shirley) Validate request data
+  const { query, body } = checkRequestData(APIName.CERTIFICATE_POST_V2, req, session);
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { fileIds } = body;
   const { accountBookId } = query;
 
   try {
@@ -211,7 +240,7 @@ export const handlePostRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    const userTeam = session.teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -249,7 +278,6 @@ export const handlePostRequest: IHandleRequest<
           invoice: IInvoiceEntity & { counterParty: ICounterPartyEntity };
           file: IFileEntity;
           uploader: IUserEntity & { imageFile: IFileEntity };
-
           vouchers: IVoucherEntity[];
         } = {
           ...certificateEntity,
@@ -266,7 +294,7 @@ export const handlePostRequest: IHandleRequest<
         );
 
         postUtils.triggerPusherNotification(certificate, {
-          companyId: accountBookId,
+          accountBookId,
         });
 
         return certificate;
@@ -288,22 +316,46 @@ export const handlePostRequest: IHandleRequest<
       errorMessage: error.message,
     });
   }
-  return {
-    statusMessage,
-    payload,
-  };
+
+  // Info: (20250430 - Shirley) Validate output data
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.CERTIFICATE_POST_V2,
+    payload
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    payload = null;
+  } else {
+    payload = outputData;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
 };
 
-export const handleDeleteRequest: IHandleRequest<
-  APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
-  number[]
-> = async ({ body, session, query }) => {
+/**
+ * Info: (20241205 - Murky)
+ * 1. 根據前端傳來的 id 陣列
+ * 2. 對那些 certificate 執行 softDelete (isDeleted = true)
+ * 3. 回傳被刪除的 id list
+ */
+const handleDeleteRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number[] | null = null;
 
-  const { certificateIds } = body;
-  const { userId, teams } = session;
+  await checkSessionUser(session, APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req);
+  await checkUserAuthorization(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, session);
 
+  // Info: (20250430 - Shirley) Validate request data
+  const { query, body } = checkRequestData(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, session);
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { certificateIds } = body;
   const { accountBookId } = query;
 
   try {
@@ -319,7 +371,7 @@ export const handleDeleteRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
+    const userTeam = session.teams?.find((team) => team.id === companyTeamId);
     if (!userTeam) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -333,67 +385,88 @@ export const handleDeleteRequest: IHandleRequest<
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
 
-    const nowInSecond = getTimestampNow();
-
-    const deletedCertificateIds = await deleteUtils.deleteCertificates({
+    const deletedCertificateIdList = await deleteUtils.deleteCertificates({
       certificateIds,
-      nowInSecond,
+      nowInSecond: getTimestampNow(),
     });
 
     statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
-    payload = deletedCertificateIds;
+    payload = deletedCertificateIdList;
   } catch (_error) {
     const error = _error as Error;
-    const errorInfo = {
-      userId,
-      errorType: error.name,
-      errorMessage: error.message,
-    };
-    loggerError(errorInfo);
-  }
-  return {
-    statusMessage,
-    payload,
-  };
-};
-const methodHandlers: {
-  [key: string]: (
-    req: NextApiRequest,
-    res: NextApiResponse
-  ) => Promise<{
-    statusMessage: string;
-    payload: APIResponse;
-  }>;
-} = {
-  GET: (req) => withRequestValidation(APIName.CERTIFICATE_LIST_V2, req, handleGetRequest),
-  POST: (req) => withRequestValidation(APIName.CERTIFICATE_POST_V2, req, handlePostRequest),
-  DELETE: (req) =>
-    withRequestValidation(APIName.CERTIFICATE_DELETE_MULTIPLE_V2, req, handleDeleteRequest),
-};
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<APIResponse>>
-) {
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: APIResponse = null;
-  const userId = -1;
-  try {
-    const handleRequest = methodHandlers[req.method || ''];
-    if (handleRequest) {
-      ({ statusMessage, payload } = await handleRequest(req, res));
-    } else {
-      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-    }
-  } catch (_error) {
-    const error = _error as Error;
+    statusMessage = error.message;
     loggerError({
       userId,
       errorType: error.name,
       errorMessage: error.message,
     });
-    statusMessage = error.message;
   }
-  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
+
+  // Info: (20250430 - Shirley) Validate output data
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.CERTIFICATE_DELETE_MULTIPLE_V2,
+    payload
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+    payload = null;
+  } else {
+    payload = outputData;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
+
+/**
+ * Info: (20250430 - Shirley) Export default handler function
+ * This follows the flat coding style API pattern:
+ * 1. Define a switch-case for different HTTP methods
+ * 2. Call the appropriate handler based on method
+ * 3. Handle errors and return consistent response format
+ */
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<IResponseData<APIResponse>>
+) {
+  const method = req.method || HttpMethod.GET;
+  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
+  let result;
+  let response;
+  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let apiName: APIName = APIName.CERTIFICATE_LIST_V2;
+  const session = await getSession(req);
+
+  try {
+    // Info: (20250430 - Shirley) Handle different HTTP methods
+    switch (method) {
+      case HttpMethod.GET:
+        apiName = APIName.CERTIFICATE_LIST_V2;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.POST:
+        apiName = APIName.CERTIFICATE_POST_V2;
+        ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.DELETE:
+        apiName = APIName.CERTIFICATE_DELETE_MULTIPLE_V2;
+        ({ response, statusMessage } = await handleDeleteRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      default:
+        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
+        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+        break;
+    }
+  } catch (error) {
+    const err = error as Error;
+    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+  }
+
+  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }

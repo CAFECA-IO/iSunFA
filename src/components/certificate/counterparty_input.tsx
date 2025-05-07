@@ -319,7 +319,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       <div className={`relative flex w-full flex-1 flex-col items-start gap-2 ${className}`}>
         <p className={`text-sm font-semibold ${props.labelClassName ?? 'text-input-text-primary'}`}>
           {t('certificate:EDIT.COUNTERPARTY')}
-          <span className="text-text-state-error">*</span>
         </p>
         <div className="relative w-full" ref={counterpartyMenuRef}>
           <div

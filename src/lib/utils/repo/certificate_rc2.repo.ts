@@ -1,11 +1,14 @@
 import prisma from '@/client';
-import { CertificateRC2, CurrencyCode, CertificateType as PrismaCertificateType } from '@prisma/client';
+import {
+  CertificateRC2,
+  CurrencyCode,
+  CertificateType as PrismaCertificateType,
+} from '@prisma/client';
 import { z } from 'zod';
 import {
   listCertificateRC2QuerySchema,
   CertificateRC2InputSchema,
   CertificateRC2OutputSchema,
-  isCertificateRC2Input,
 } from '@/lib/utils/zod_schema/certificate_rc2';
 import { CertificateDirection, CertificateTab } from '@/constants/certificate';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -33,7 +36,7 @@ function transformOutput(cert: CertificateRC2): z.infer<typeof CertificateRC2Out
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
-    isReturnOrAllowance: cert?.isReturnOrAllowance ?? false,
+    isReturnOrAllowance: cert?.isReturnOrAllowance ?? null,
     deductionType: undefined,
     salesName: undefined,
     salesIdNumber: undefined,
@@ -56,12 +59,13 @@ export async function findCertificateRC2ById(data: {
     where: { id: certificateId, deletedAt: null },
   });
   if (!cert) return null;
-  return isCertificateRC2Input(cert.direction) ? transformInput(cert) : transformOutput(cert);
+  return cert.direction === CertificateDirection.INPUT
+    ? transformInput(cert)
+    : transformOutput(cert);
 }
 
-export async function listCertificateRC2(
+export async function listCertificateRC2Input(
   userId: number,
-  direction: CertificateDirection,
   query: z.infer<typeof listCertificateRC2QuerySchema>
 ) {
   const {
@@ -76,27 +80,36 @@ export async function listCertificateRC2(
     searchQuery,
     sortOption,
   } = query;
+
   await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.VIEW_CERTIFICATE,
   });
+
   const certificates = await prisma.certificateRC2.findMany({
     where: {
       accountBookId,
-      direction,
+      direction: CertificateDirection.INPUT,
       deletedAt: isDeleted ? { not: null } : null,
-      voucherId: tab === CertificateTab.WITHOUT_VOUCHER ? null : { not: null },
+      voucherId:
+        tab === CertificateTab.WITHOUT_VOUCHER
+          ? null
+          : tab === CertificateTab.WITH_VOUCHER
+            ? { not: null }
+            : undefined,
       type: type ?? undefined,
       issuedDate: {
         gte: startDate || undefined,
         lte: endDate || undefined,
       },
-      OR: [
-        { salesName: { contains: searchQuery, mode: 'insensitive' } },
-        { salesIdNumber: { contains: searchQuery, mode: 'insensitive' } },
-        { no: { contains: searchQuery, mode: 'insensitive' } },
-      ],
+      OR: searchQuery
+        ? [
+            { salesName: { contains: searchQuery, mode: 'insensitive' } },
+            { salesIdNumber: { contains: searchQuery, mode: 'insensitive' } },
+            { no: { contains: searchQuery, mode: 'insensitive' } },
+          ]
+        : undefined,
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -104,6 +117,61 @@ export async function listCertificateRC2(
   });
 
   return certificates.map(transformInput);
+}
+
+export async function listCertificateRC2Output(
+  userId: number,
+  query: z.infer<typeof listCertificateRC2QuerySchema>
+) {
+  const {
+    accountBookId,
+    isDeleted,
+    tab,
+    type,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
+    sortOption,
+  } = query;
+
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.VIEW_CERTIFICATE,
+  });
+
+  const certificates = await prisma.certificateRC2.findMany({
+    where: {
+      accountBookId,
+      direction: CertificateDirection.OUTPUT,
+      deletedAt: isDeleted ? { not: null } : null,
+      voucherId:
+        tab === CertificateTab.WITHOUT_VOUCHER
+          ? null
+          : tab === CertificateTab.WITH_VOUCHER
+            ? { not: null }
+            : undefined,
+      type: type ?? undefined,
+      issuedDate: {
+        gte: startDate || undefined,
+        lte: endDate || undefined,
+      },
+      OR: searchQuery
+        ? [
+            { buyerName: { contains: searchQuery, mode: 'insensitive' } },
+            { buyerIdNumber: { contains: searchQuery, mode: 'insensitive' } },
+            { no: { contains: searchQuery, mode: 'insensitive' } },
+          ]
+        : undefined,
+    },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: createOrderByList(sortOption || []),
+  });
+
+  return certificates.map(transformOutput);
 }
 
 export async function createCertificateRC2Input(

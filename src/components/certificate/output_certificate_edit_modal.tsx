@@ -19,6 +19,9 @@ import CounterpartyInput, {
 } from '@/components/certificate/counterparty_input';
 import EditableFilename from '@/components/certificate/edible_file_name';
 import ImageZoom from '@/components/image_zoom/image_zoom';
+import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import dayjs from 'dayjs';
+import html2canvas from 'html2canvas';
 import { IInvoiceBetaOptional } from '@/interfaces/invoice';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
@@ -65,6 +68,10 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+
+  // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
+  const invoiceRef = useRef<HTMLDivElement>(null);
+  const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
@@ -394,6 +401,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     }
   }, [certificate, editingId]);
 
+  useEffect(() => {
+    if (!invoiceRef.current) return;
+
+    html2canvas(invoiceRef.current).then((canvas) => {
+      const dataUrl = canvas.toDataURL('image/png');
+      setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
+    });
+  }, [formState]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -421,11 +437,37 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-          <ImageZoom
-            imageUrl={certificate.file.url}
-            className="max-h-630px min-h-450px w-440px"
-            controlPosition="bottom-right"
-          />
+
+          {/*  Info: (20250430 - Anna) e-invoice UI (格式35的時候套用) */}
+          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
+          {formState.type === InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC && (
+            <div className="h-0 w-0 overflow-hidden">
+              <EInvoicePreview
+                ref={invoiceRef}
+                invoiceType={formState.type}
+                issuedDate={dayjs
+                  .unix(formState.date ?? certificate.invoice.date ?? 0)
+                  .format('YYYY-MM-DD')}
+                invoiceNo={formState.no ?? certificate.invoice.no ?? ''}
+                buyerTaxId={
+                  formState.counterParty?.taxId ??
+                  certificate.invoice.counterParty?.taxId ??
+                  undefined
+                }
+                priceBeforeTax={formState.priceBeforeTax ?? certificate.invoice.priceBeforeTax ?? 0}
+                taxPrice={formState.taxPrice ?? certificate.invoice.taxPrice ?? 0}
+                totalPrice={formState.totalPrice ?? certificate.invoice.totalPrice ?? 0}
+              />
+            </div>
+          )}
+
+          {eInvoiceImageUrl && (
+            <ImageZoom
+              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              className="max-h-630px min-h-450px w-440px"
+              controlPosition="bottom-right"
+            />
+          )}
           {/* Info: (20240924 - Anna) 編輯表單 */}
           {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
@@ -498,7 +540,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="relative flex w-full flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-neutral-300">
-                {t('certificate:EDIT.INVOICE_NUMBER')}
+                {formState.type === InvoiceType.SALES_NON_UNIFORM_INVOICE
+                  ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
+                  : t('certificate:EDIT.INVOICE_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
 
@@ -617,12 +661,17 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     {errors.counterParty}
                   </p>
                 )}
+                {formState.type === InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC && (
+                  <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                    {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                  </p>
+                )}
               </>
             )}
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
@@ -658,7 +707,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               {formState.type !== InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE && (
                 <>
                   {/* Info: (20250414 - Anna) Tax */}
-                  <div className="relative flex flex-1 flex-col items-start gap-2">
+                  <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
                     <p className="text-sm font-semibold text-neutral-300">
                       {t('certificate:EDIT.TAX')}
                       <span className="text-text-state-error">*</span>
@@ -684,6 +733,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                         <p>{currencyAliasStr}</p>
                       </div>
                     </div>
+                    {formState.type ===
+                      InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC && (
+                      <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                        {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
