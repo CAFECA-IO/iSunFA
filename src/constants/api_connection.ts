@@ -221,9 +221,9 @@ export enum APIPath {
   STATUS_INFO_GET = `${apiPrefixV2}/status_info`,
   ACCOUNT_LIST = `${apiPrefixV2}/account_book/:accountBookId/account`,
   FILE_UPLOAD = `${apiPrefixV2}/file`,
-  FILE_DELETE = `${apiPrefix}/account_book/:accountBookId/file/:fileId`, // Info: (20250325 - Tzuhan) 有 v2 的版本，但是目前沒有使用
+  FILE_DELETE = `${apiPrefixV2}/account_book/:accountBookId/file/:fileId`, // Info: (20250325 - Tzuhan) 有 v2 的版本，但是目前沒有使用
   FILE_DELETE_V2 = `${apiPrefixV2}/file/:fileId`,
-  FILE_GET = `${apiPrefix}/account_book/:accountBookId/file/:fileId`, // Info: (20250325 - Tzuhan) 有 v2 的版本，但是目前沒有使用
+  FILE_GET = `${apiPrefixV2}/account_book/:accountBookId/file/:fileId`, // Info: (20250325 - Tzuhan) 有 v2 的版本，但是目前沒有使用
   FILE_PUT_V2 = `${apiPrefixV2}/file/:fileId`,
   USER_ROLE_LIST = `${apiPrefixV2}/user/:userId/role`,
   USER_CREATE_ROLE = `${apiPrefixV2}/user/:userId/role`,
