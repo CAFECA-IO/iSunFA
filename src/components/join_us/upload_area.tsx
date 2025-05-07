@@ -89,6 +89,16 @@ const UploadArea: React.FC<IUploadAreaProps> = ({
   // Info: (20250429 - Julian) 若無 limitedFileTypes ，則不限制檔案類型
   const limitedTypes = limitedFileTypes || Object.values(MimeType);
 
+  // Info: (20250507 - Julian) 取得可接受的副檔名
+  const acceptedFileTypes = limitedTypes
+    .map((type) => {
+      const fileType = Object.keys(MimeType).find(
+        (key) => MimeType[key as keyof typeof MimeType] === type
+      );
+      return fileType ? `.${fileType}` : '';
+    })
+    .join(', ');
+
   const handleUpload = (fileList: FileList | null) => {
     // Info: (20250429 - Julian) 檢查文件類型
     if (fileList) {
@@ -179,7 +189,7 @@ const UploadArea: React.FC<IUploadAreaProps> = ({
         <input
           id="file-upload"
           type="file"
-          accept=".pdf,.doc,.docx"
+          accept={acceptedFileTypes}
           onChange={handleFileChange}
           className="hidden"
         />

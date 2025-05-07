@@ -9,6 +9,7 @@ import {
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { z } from 'zod';
 import { zodStringToNumber, nullSchema } from '@/lib/utils/zod_schema/common';
+import { ProgressStatus } from '@/constants/account';
 
 const CertificateRC2BaseSchema = z.object({
   id: z.number(),
@@ -16,23 +17,23 @@ const CertificateRC2BaseSchema = z.object({
   fileId: z.number(),
   uploaderId: z.number(),
   direction: z.nativeEnum(CertificateDirection),
-  aiResultId: z.string(),
-  aiStatus: z.string(),
+  aiResultId: z.string().optional().default('0'),
+  aiStatus: z.string().optional().default(ProgressStatus.IN_PROGRESS),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable().optional(),
 
-  type: z.nativeEnum(CertificateType),
-  issuedDate: z.number(),
-  no: z.string(),
+  type: z.nativeEnum(CertificateType).nullable().optional(),
+  issuedDate: z.number().nullable().optional(),
+  no: z.string().nullable().optional(),
   currencyCode: z.nativeEnum(CurrencyCode),
-  taxType: z.nativeEnum(TaxType),
+  taxType: z.nativeEnum(TaxType).nullable().optional(),
   taxRate: z.number().nullable().optional(),
-  netAmount: z.number(),
-  taxAmount: z.number(),
-  totalAmount: z.number(),
+  netAmount: z.number().nullable().optional(),
+  taxAmount: z.number().nullable().optional(),
+  totalAmount: z.number().nullable().optional(),
 
-  isGenerated: z.boolean(),
+  isGenerated: z.boolean().optional().default(false),
 
   totalOfSummarizedCertificates: z.number().nullable().optional(),
   carrierSerialNumber: z.string().nullable().optional(),
@@ -102,15 +103,21 @@ export const getCertificateRC2Output = {
   frontend: CertificateRC2OutputSchema,
 };
 
+export const createCertificateRC2QuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
+export const createCertificateRC2BodySchema = z.object({
+  fileId: z.number(),
+  direction: z.nativeEnum(CertificateDirection),
+  isGenerated: z.boolean().optional().default(false),
+  currencyCode: z.nativeEnum(CurrencyCode).optional().default(CurrencyCode.TWD),
+});
+
 export const createCertificateRC2Input = {
   input: {
-    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
-    bodySchema: CertificateRC2InputSchema.omit({
-      id: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    }),
+    querySchema: createCertificateRC2QuerySchema,
+    bodySchema: createCertificateRC2BodySchema,
   },
   outputSchema: CertificateRC2InputSchema,
   frontend: CertificateRC2InputSchema,
@@ -118,13 +125,8 @@ export const createCertificateRC2Input = {
 
 export const createCertificateRC2Output = {
   input: {
-    querySchema: z.object({ accountBookId: zodStringToNumber, certificateId: zodStringToNumber }),
-    bodySchema: CertificateRC2OutputSchema.omit({
-      id: true,
-      createdAt: true,
-      updatedAt: true,
-      deletedAt: true,
-    }),
+    querySchema: createCertificateRC2QuerySchema,
+    bodySchema: createCertificateRC2BodySchema,
   },
   outputSchema: CertificateRC2OutputSchema,
   frontend: CertificateRC2OutputSchema,
