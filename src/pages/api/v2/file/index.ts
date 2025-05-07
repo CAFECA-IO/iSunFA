@@ -14,7 +14,12 @@ import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
-import { checkSessionUser, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { roomManager } from '@/lib/utils/room';
 import { getPusherInstance } from '@/lib/utils/pusher';
@@ -168,11 +173,11 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, APIName.FILE_UPLOAD, req);
   await checkUserAuthorization(APIName.FILE_UPLOAD, req, session);
 
-  if (!req.query || !req.query.type || !req.query.targetId) {
+  const { query } = checkRequestData(APIName.FILE_UPLOAD, req, session);
+  if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
-
-  const { type, targetId } = req.query as { type: UploadType; targetId: string };
+  const { type, targetId } = query;
 
   // Info: (20250410 - Shirley) 檢查用戶是否有權限上傳圖片(Team, Company)
   if (type === UploadType.TEAM) {

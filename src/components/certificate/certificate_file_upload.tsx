@@ -12,13 +12,20 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ICertificate } from '@/interfaces/certificate';
 import { ProgressStatus } from '@/constants/account';
 import { IRoom } from '@/interfaces/room';
+import { ICertificateRC2Input, ICertificateRC2Output } from '@/interfaces/certificate_rc2';
+import { CertificateDirection, CurrencyCode } from '@/constants/certificate';
 
 interface CertificateFileUploadProps {
   isDisabled: boolean;
+  certificateDirection?: CertificateDirection;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
 }
 
-const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
+const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
+  isDisabled,
+  setFiles,
+  certificateDirection,
+}) => {
   const { userAuth, connectedAccountBook } = useUserCtx();
   const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
@@ -29,8 +36,12 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
   const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: createCertificateRC2Input } = APIHandler<ICertificateRC2Input>(
     APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
+  const { trigger: createCertificateRC2Output } = APIHandler<ICertificateRC2Output>(
+    APIName.CREATE_CERTIFICATE_RC2_OUTPUT
   );
 
   // Info: (20241204 - tzuhan) 通用文件狀態更新函數
@@ -56,11 +67,51 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
   const createCertificate = useCallback(
     async (fileId: number) => {
       try {
-        const { success, data } = await createCertificateAPI({
-          params: { accountBookId },
-          body: { fileIds: [fileId] },
-        });
-
+        let success: boolean;
+        let data: ICertificate | ICertificateRC2Input | ICertificateRC2Output | null = null;
+        if (certificateDirection) {
+          switch (certificateDirection) {
+            case CertificateDirection.INPUT: {
+              const result = await createCertificateRC2Input({
+                params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+                body: {
+                  fileId,
+                  direction: CertificateDirection.INPUT,
+                  isGenerated: false,
+                  currencyCode: CurrencyCode.TWD,
+                },
+              });
+              success = result.success;
+              data = result.data;
+              break;
+            }
+            case CertificateDirection.OUTPUT: {
+              const result = await createCertificateRC2Output({
+                params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+                body: {
+                  fileId,
+                  direction: CertificateDirection.INPUT,
+                  isGenerated: false,
+                  currencyCode: CurrencyCode.TWD,
+                },
+              });
+              success = result.success;
+              data = result.data;
+              break;
+            }
+            default:
+              success = false;
+              data = null;
+              break;
+          }
+        } else {
+          const result = await createCertificateAPI({
+            params: { accountBookId },
+            body: { fileIds: [fileId] },
+          });
+          success = result.success;
+          data = result.data;
+        }
         if (success && data) {
           updateFileStatus(fileId, '', ProgressStatus.SUCCESS, 100, data.id);
         }
@@ -157,7 +208,12 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
           toggleQRCode={toggleQRCodeModal}
         />
       )}
-      <InvoiceUpload isDisabled={isDisabled} toggleQRCode={toggleQRCodeModal} setFiles={setFiles} />
+      <InvoiceUpload
+        isDisabled={isDisabled}
+        toggleQRCode={toggleQRCodeModal}
+        setFiles={setFiles}
+        certificateDirection={certificateDirection}
+      />
     </>
   );
 };
