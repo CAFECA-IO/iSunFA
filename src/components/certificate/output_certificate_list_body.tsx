@@ -4,7 +4,11 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { CERTIFICATE_USER_INTERACT_OPERATION, InvoiceTabs } from '@/constants/certificate';
+import {
+  CERTIFICATE_USER_INTERACT_OPERATION,
+  CertificateDirection,
+  InvoiceTabs,
+} from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -522,7 +526,11 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - Anna) Upload Area */}
-        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
+        <CertificateFileUpload
+          isDisabled={false}
+          setFiles={setFiles}
+          certificateDirection={CertificateDirection.OUTPUT}
+        />
         <FloatingUploadPopup
           files={files}
           pauseFileUpload={pauseFileUpload}

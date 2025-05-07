@@ -11,19 +11,33 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
+import { CertificateDirection, CurrencyCode } from '@/constants/certificate';
+import { ICertificateRC2Input, ICertificateRC2Output } from '@/interfaces/certificate_rc2';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
+  certificateDirection?: CertificateDirection;
   toggleQRCode?: () => void;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
 }
 
-const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode, setFiles }) => {
+const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
+  isDisabled,
+  toggleQRCode,
+  setFiles,
+  certificateDirection,
+}) => {
   const { t } = useTranslation(['certificate']);
   const { connectedAccountBook } = useUserCtx();
   const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: createCertificateRC2Input } = APIHandler<ICertificateRC2Input>(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
+  const { trigger: createCertificateRC2Output } = APIHandler<ICertificateRC2Output>(
+    APIName.CREATE_CERTIFICATE_RC2_OUTPUT
+  );
   const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
 
   const handleUploadFailed = useCallback(
@@ -132,10 +146,53 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
           })
         );
 
-        const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
-          body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
-        });
+        // eslint-disable-next-line no-console
+        console.log('InvoiceUpload fileMeta.id:', fileMeta.id);
+        let successCreated: boolean;
+        let certificate: ICertificate | ICertificateRC2Input | ICertificateRC2Output | null = null;
+        if (certificateDirection) {
+          switch (certificateDirection) {
+            case CertificateDirection.INPUT: {
+              const result = await createCertificateRC2Input({
+                params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+                body: {
+                  fileId: fileMeta.id,
+                  direction: CertificateDirection.INPUT,
+                  isGenerated: false,
+                  currencyCode: CurrencyCode.TWD,
+                },
+              });
+              successCreated = result.success;
+              certificate = result.data;
+              break;
+            }
+            case CertificateDirection.OUTPUT: {
+              const result = await createCertificateRC2Output({
+                params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+                body: {
+                  fileId: fileMeta.id,
+                  direction: CertificateDirection.INPUT,
+                  isGenerated: false,
+                  currencyCode: CurrencyCode.TWD,
+                },
+              });
+              successCreated = result.success;
+              certificate = result.data;
+              break;
+            }
+            default:
+              successCreated = false;
+              certificate = null;
+              break;
+          }
+        } else {
+          const result = await createCertificateAPI({
+            params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+            body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
+          });
+          successCreated = result.success;
+          certificate = result.data;
+        }
         if (!successCreated || !certificate) {
           handleUploadFailed(compressedFile.file.name);
           return;
