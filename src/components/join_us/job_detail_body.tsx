@@ -83,19 +83,19 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   const toggleShare = () => setSharingOpen(!isSharingOpen);
 
   const resList = jobResponsibilities.map((item) => (
-    <li key={item} className="text-lg leading-10">
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
 
   const reqList = requirements.map((item) => (
-    <li key={item} className="text-lg leading-10">
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
 
   const extraList = extraSkills.map((item) => (
-    <li key={item} className="text-lg leading-10">
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
@@ -127,13 +127,13 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
 
       <main className="z-10 overflow-y-auto overflow-x-hidden">
         {/* Info: (20250407 - Julian) Job Detail */}
-        <div className="flex flex-col items-stretch gap-100px px-150px pb-100px pt-500px">
+        <div className="flex flex-col items-stretch gap-50px px-16px pb-100px pt-50px lg:gap-100px lg:px-150px lg:pt-500px">
           {/* Info: (20250407 - Julian) Job Head */}
           <div className="flex flex-col items-center">
             <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
               {title}
             </LinearGradientText>
-            <div className="flex items-center gap-lv-5 text-xl font-semibold text-surface-brand-primary">
+            <div className="flex items-center gap-lv-5 text-base font-semibold text-surface-brand-primary lg:text-xl">
               <p>{location}</p>
               <p>{dateString}</p>
             </div>
@@ -142,20 +142,22 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
           {/* Info: (20250407 - Julian) Job Body */}
           <div className="flex flex-col gap-lv-10">
             {/* Info: (20250407 - Julian) Job Description */}
-            <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">Job Description</h2>
-              <p className="text-lg leading-10">{description}</p>
+            <div className="flex flex-col gap-10px lg:gap-40px">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
+                Job Description
+              </h2>
+              <p className="text-sm leading-8 lg:text-lg lg:leading-10">{description}</p>
             </div>
             {/* Info: (20250407 - Julian) Your Job Will Be ... */}
-            <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+            <div className="flex flex-col gap-10px lg:gap-40px">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 Your Job Will Be ...
               </h2>
               <ul className="list-inside list-disc">{resList}</ul>
             </div>
             {/* Info: (20250407 - Julian) What Makes You a Great Fit */}
             <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 What Makes You a Great Fit
               </h2>
               <ul className="flex list-inside list-disc list-image-orange-check flex-col gap-4px">
@@ -164,7 +166,7 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
             </div>
             {/* Info: (20250407 - Julian) Extra Power You Bring */}
             <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 Extra Power You Bring
               </h2>
               <ul className="flex list-inside list-disc list-image-orange-plus flex-col gap-4px">
