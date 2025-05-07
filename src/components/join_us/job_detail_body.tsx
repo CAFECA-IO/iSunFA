@@ -2,7 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import useShareProcess from '@/lib/hooks/use_share_process';
 import { TbArrowBack } from 'react-icons/tb';
+import { FaLine, FaFacebookSquare } from 'react-icons/fa';
+import { FaSquareXTwitter } from 'react-icons/fa6';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
 import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
@@ -17,6 +21,8 @@ import { IJobDetail } from '@/interfaces/job';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useHiringCtx } from '@/contexts/hiring_context';
+import { haloStyle } from '@/constants/display';
+import { ShareSettings } from '@/constants/social_media';
 
 interface IJobDetailBodyProps {
   jobData: IJobDetail;
@@ -28,13 +34,53 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
     jobData;
   const { favoriteJobIds, toggleFavoriteJobId } = useHiringCtx();
 
+  const {
+    targetRef,
+    componentVisible: isSharingOpen,
+    setComponentVisible: setSharingOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250507 - Julian) 分享路徑
+  const { share } = useShareProcess({ sharePath: `${ISUNFA_ROUTE.JOIN_US}/${id}` });
+
+  // Info: (20250507 - Julian) 社群媒體按鈕
+  const socialMedias = Object.entries(ShareSettings).map(([key, value]) => {
+    const icon = {
+      FACEBOOK: <FaFacebookSquare size={24} />,
+      TWITTER: <FaSquareXTwitter size={24} />,
+      LINE: <FaLine size={24} />,
+    }[key as keyof typeof ShareSettings];
+
+    const onClick = () => {
+      share({
+        socialMedia: key as keyof typeof ShareSettings,
+        text: 'Check out this job opportunity!',
+        size: value.size,
+      });
+    };
+
+    return (
+      <button
+        key={key}
+        type="button"
+        onClick={onClick}
+        className="text-white hover:text-surface-brand-primary-moderate"
+      >
+        {icon}
+      </button>
+    );
+  });
+
   // Info: (20250505 - Julian) 將時間戳轉換為日期格式
   const dateString = timestampToString(date).dateWithSlash;
 
   // Info: (20250505 - Julian) 在 favoriteJobIds 中找是否有該 jobId
   const isFavorite = favoriteJobIds.includes(id);
+
   // Info: (20250505 - Julian) 點擊後 toggle favorite
   const toggleFavorite = () => toggleFavoriteJobId(id);
+  // Info: (20250505 - Julian) 點擊後 toggle share
+  const toggleShare = () => setSharingOpen(!isSharingOpen);
 
   const resList = jobResponsibilities.map((item) => (
     <li key={item} className="text-lg leading-10">
@@ -53,6 +99,23 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
       {item}
     </li>
   ));
+
+  const sharingBtn = (
+    <div ref={targetRef} className="relative flex flex-col">
+      <div
+        className={`${haloStyle} ${
+          isSharingOpen
+            ? 'visible translate-y-0 opacity-100'
+            : 'invisible translate-y-10px opacity-0'
+        } absolute -top-14 flex items-center gap-12px rounded-xs px-12px py-8px transition-all duration-200 ease-in-out`}
+      >
+        {socialMedias}
+      </div>
+      <button type="button" className="p-10px hover:opacity-80" onClick={toggleShare}>
+        <Image src="/icons/share_link.svg" width={24} height={24} alt="share_icon" />
+      </button>
+    </div>
+  );
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -116,9 +179,7 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
               {/* Info: (20250402 - Julian) Favorite Button */}
               <FavoriteButton isActive={isFavorite} clickHandler={toggleFavorite} />
               {/* Info: (20250407 - Julian) Share Button */}
-              <button type="button" className="p-10px hover:opacity-80">
-                <Image src="/icons/share_link.svg" width={24} height={24} alt="share_icon" />
-              </button>
+              {sharingBtn}
             </div>
 
             <div className="flex items-center gap-lv-6">

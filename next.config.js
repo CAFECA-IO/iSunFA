@@ -62,6 +62,7 @@ const nextConfig = {
     FACEBOOK_LINK: process.env.REACT_APP_FACEBOOK_LINK,
     YOUTUBE_LINK: process.env.REACT_APP_YOUTUBE_LINK,
     NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
+    WEB_URL: process.env.WEB_URL,
   },
   images: {
     loader: 'custom',
