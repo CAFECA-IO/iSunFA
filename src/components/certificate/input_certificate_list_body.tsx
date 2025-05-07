@@ -26,7 +26,8 @@ import SelectionToolbar, {
 } from '@/components/certificate/certificate_selection_tool_bar_new';
 import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
-import { InvoiceType } from '@/constants/invoice';
+// Info: (20250507 - Anna)
+// import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
@@ -86,7 +87,9 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
+  // Info: (20250507 - Anna)
+  // const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
+  const currency = CurrencyType.TWD;
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
@@ -229,45 +232,84 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     },
   ]);
 
+  // Info: (20250507 - Anna)
+  // const handleApiResponse = useCallback(
+  //   // Info: (20250507 - Anna) Debug
+  //   (resData: IPaginatedData<ICertificate[]>) => {
+  //     // eslint-disable-next-line no-console
+  //     console.log('📦 CERTIFICATE_LIST_V2 response:', resData);
+  //     try {
+  //       const note = JSON.parse(resData.note || '{}') as {
+  //         totalInvoicePrice: number;
+  //         incomplete: {
+  //           withVoucher: number;
+  //           withoutVoucher: number;
+  //         };
+  //         currency: string;
+  //       };
+  //       setTotalInvoicePrice(note.totalInvoicePrice);
+  //       setIncomplete(note.incomplete);
+  //       setTotalPages(resData.totalPages);
+  //       setTotalCount(resData.totalCount);
+  //       setPage(resData.page);
+  //       setCurrency(note.currency as CurrencyType);
+
+  //       const certificateData = resData.data.map((item) => ({
+  //         ...item,
+  //         isSelected: false,
+  //         actions:
+  //           activeTab === InvoiceTabs.WITHOUT_VOUCHER
+  //             ? [
+  //                 CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+  //                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+  //               ]
+  //             : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+  //       }));
+
+  //       setCertificates(certificateData);
+  //     } catch (error) {
+  //       toastHandler({
+  //         id: ToastId.LIST_CERTIFICATE_ERROR,
+  //         type: ToastType.ERROR,
+  //         content: t('certificate:ERROR.WENT_WRONG'),
+  //         closeable: true,
+  //       });
+  //     }
+  //   },
+  //   [activeTab]
+  // );
+
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<ICertificate[]>) => {
-      try {
-        const note = JSON.parse(resData.note || '{}') as {
-          totalInvoicePrice: number;
-          incomplete: {
-            withVoucher: number;
-            withoutVoucher: number;
-          };
-          currency: string;
-        };
-        setTotalInvoicePrice(note.totalInvoicePrice);
-        setIncomplete(note.incomplete);
-        setTotalPages(resData.totalPages);
-        setTotalCount(resData.totalCount);
-        setPage(resData.page);
-        setCurrency(note.currency as CurrencyType);
-
-        const certificateData = resData.data.map((item) => ({
-          ...item,
-          isSelected: false,
-          actions:
-            activeTab === InvoiceTabs.WITHOUT_VOUCHER
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-        }));
-
-        setCertificates(certificateData);
-      } catch (error) {
-        toastHandler({
-          id: ToastId.LIST_CERTIFICATE_ERROR,
-          type: ToastType.ERROR,
-          content: t('certificate:ERROR.WENT_WRONG'),
-          closeable: true,
-        });
+      if (!resData || !Array.isArray(resData.data)) {
+        // eslint-disable-next-line no-console
+        console.error('🚨 resData 或 resData.data 無效：', resData);
+        return;
       }
+
+      // eslint-disable-next-line no-console
+      console.log('📦 RC2 response:', resData);
+
+      // 這裡的 note 不再需要解析，移除
+      setTotalInvoicePrice(0); // RC2 沒有 totalInvoicePrice，設為 0 或自定邏輯
+      setIncomplete({ withVoucher: 0, withoutVoucher: 0 }); // 同上
+      setTotalPages(resData.totalPages);
+      setTotalCount(resData.totalCount);
+      setPage(resData.page);
+
+      const certificateData = resData.data.map((item) => ({
+        ...item,
+        isSelected: false,
+        actions:
+          activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+      }));
+
+      setCertificates(certificateData);
     },
     [activeTab]
   );
@@ -586,25 +628,39 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
-          params={{ accountBookId }}
-          apiName={APIName.CERTIFICATE_LIST_V2}
+          // Info: (20250507 - Anna)
+          // params={{
+          //   accountBookId,
+          // }}
+          params={{
+            accountBookId,
+            ...(selectedSort && {
+              sortBy: selectedSort.by,
+              sortOrder: selectedSort.order,
+            }),
+          }}
+          // Info: (20250507 - Anna)
+          // apiName={APIName.CERTIFICATE_LIST_V2}
+          apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          tab={activeTab}
-          types={[
-            InvoiceType.ALL,
-            InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
-            InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
-            InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
-          ]}
-          sort={selectedSort}
+          // Info: (20250507 - Anna)
+          // tab={activeTab}
+          // Info: (20250507 - Anna)
+          // types={[
+          //   InvoiceType.ALL,
+          //   InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+          //   InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
+          //   InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
+          //   InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
+          //   InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
+          //   InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
+          //   InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
+          //   InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
+          //   InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
+          // ]}
+          // types={['INPUT_21', 'INPUT_22']} // 先暫時用字串
           labelClassName="text-neutral-300"
         />
 

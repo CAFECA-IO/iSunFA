@@ -41,7 +41,7 @@ export const ISUNFA_ROUTE = {
   ADD_NEW_VOUCHER: '/users/accounting/add_new_voucher',
   VOUCHER_LIST: '/users/accounting/voucher_list',
   PAYABLE_RECEIVABLE_LIST: '/users/accounting/payable_receivable_list',
-  CERTIFICATE_LIST: '/users/accounting/certificate_list',
+  CERTIFICATE_LIST: '/users/accounting/input_certificate_list',
   ASSET_LIST: '/users/asset',
   USERS_MY_REPORTS: '/users/reports/my_reports',
   USERS_ANALYSES_REPORTS_VIEW: '/users/reports/analyses/view',
