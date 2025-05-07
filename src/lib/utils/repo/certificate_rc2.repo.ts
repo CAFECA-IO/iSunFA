@@ -1,14 +1,12 @@
 import prisma from '@/client';
-import {
-  CertificateRC2,
-  CurrencyCode,
-  CertificateType as PrismaCertificateType,
-} from '@prisma/client';
+import { CertificateRC2, CertificateType as PrismaCertificateType } from '@prisma/client';
 import { z } from 'zod';
 import {
   listCertificateRC2QuerySchema,
   CertificateRC2InputSchema,
   CertificateRC2OutputSchema,
+  createCertificateRC2QuerySchema,
+  createCertificateRC2BodySchema,
 } from '@/lib/utils/zod_schema/certificate_rc2';
 import { CertificateDirection, CertificateTab } from '@/constants/certificate';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -174,54 +172,29 @@ export async function listCertificateRC2Output(
   return certificates.map(transformOutput);
 }
 
-export async function createCertificateRC2Input(
+export async function createCertificateRC2(
   userId: number,
-  data: {
-    accountBookId: number;
-    fileId: number;
-    uploaderId: number;
-    direction: CertificateDirection;
-    isGenerated: boolean;
-    currencyCode: CurrencyCode;
-  }
+  query: z.infer<typeof createCertificateRC2QuerySchema>,
+  body: z.infer<typeof createCertificateRC2BodySchema>
 ) {
   await assertUserCanByAccountBook({
     userId,
-    accountBookId: data.accountBookId,
+    accountBookId: query.accountBookId,
     action: TeamPermissionAction.CREATE_CERTIFICATE,
   });
   const now = getTimestampNow();
   const cert = await prisma.certificateRC2.create({
-    data: { ...data, createdAt: now, updatedAt: now },
-  });
-  return transformInput(cert);
-}
-export async function createCertificateRC2Output(
-  userId: number,
-  data: {
-    accountBookId: number;
-    fileId: number;
-    uploaderId: number;
-    direction: CertificateDirection;
-    isGenerated: boolean;
-    currencyCode: CurrencyCode;
-  }
-) {
-  await assertUserCanByAccountBook({
-    userId,
-    accountBookId: data.accountBookId,
-    action: TeamPermissionAction.CREATE_CERTIFICATE,
-  });
-  const now = getTimestampNow();
-  const created = await prisma.certificateRC2.create({
     data: {
-      ...data,
+      ...body,
+      accountBookId: query.accountBookId,
+      uploaderId: userId,
       createdAt: now,
       updatedAt: now,
-      direction: CertificateDirection.OUTPUT,
     },
   });
-  return transformOutput(created);
+  return body.direction === CertificateDirection.INPUT
+    ? transformInput(cert)
+    : transformOutput(cert);
 }
 
 export async function updateCertificateRC2Input(

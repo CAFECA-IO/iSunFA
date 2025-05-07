@@ -65,7 +65,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
     if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
       getAccountList({
-        params: { companyId: accountBookId },
+        params: { accountBookId },
         query: { ...queryCondition, searchKey: searchWord },
       });
     }
@@ -95,13 +95,13 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   }, [isModalVisible]);
 
   useEffect(() => {
-    getAccountList({ params: { companyId: accountBookId } });
+    getAccountList({ params: { accountBookId } });
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
 
   const clearSearchWord = () => {
     setSearchWord('');
-    getAccountList({ params: { companyId: accountBookId } });
+    getAccountList({ params: { accountBookId } });
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
