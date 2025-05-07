@@ -214,7 +214,7 @@ const UploadArea = ({
     if (uploadedFileId) {
       const result = await deleteFileAPI({
         params: {
-          companyId: connectedAccountBook?.id,
+          accountBookId: connectedAccountBook?.id,
           fileId: uploadedFileId,
         },
       });
