@@ -13,7 +13,7 @@ import {
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
-  createCertificateRC2Output,
+  createCertificateRC2,
   listCertificateRC2Output,
 } from '@/lib/utils/repo/certificate_rc2.repo';
 
@@ -28,7 +28,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const { query, body } = checkRequestData(APIName.CREATE_CERTIFICATE_RC2_OUTPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await createCertificateRC2Output(session.userId, body);
+  const certificate = await createCertificateRC2(session.userId, query, body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_CERTIFICATE_RC2_OUTPUT,
