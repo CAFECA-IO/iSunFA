@@ -31,6 +31,7 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { HTTP_STATUS } from '@/constants/http';
+import { testGeneratePDFThumbnail } from '@/lib/utils/pdf_thumbnail';
 
 export const config = {
   api: {
@@ -136,6 +137,32 @@ async function handleFileUpload(
     }
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
+  }
+
+  loggerBack.info(`fileForSave: ${fileForSave}`);
+
+  // Test PDF thumbnail generation for Invoice uploads
+  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+    try {
+      /**
+       * Info: (20250507 - Shirley) Updated the PDF thumbnail generation process
+       * to use pdf-to-img library for better compatibility and performance.
+       * Added detailed logging to track the thumbnail generation process.
+       */
+      loggerBack.info(`Testing PDF thumbnail generation for file: ${fileForSave.filepath}`);
+      const thumbnailResult = await testGeneratePDFThumbnail(fileForSave.filepath);
+
+      if (thumbnailResult.success) {
+        loggerBack.info(
+          `PDF thumbnail generation successful! Thumbnail saved at: ${thumbnailResult.filepath}`
+        );
+        loggerBack.info(`Thumbnail size: ${thumbnailResult.size} bytes`);
+      } else {
+        loggerBack.error('PDF thumbnail generation failed');
+      }
+    } catch (error) {
+      loggerBack.error(error, 'Error testing PDF thumbnail generation');
+    }
   }
   return returnFile;
 }
