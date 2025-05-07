@@ -8,7 +8,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { createEmailLogin, verifyEmailLogin } from '@/lib/utils/repo/email_login.repo';
 import loggerBack from '@/lib/utils/logger_back';
 import { emailVerifier } from '@/lib/utils/verifier/email.verifier';
-import { EMAIL_LOGIN_ACTION } from '@/constants/email';
+import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
 import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
 

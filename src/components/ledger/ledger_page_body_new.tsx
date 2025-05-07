@@ -152,7 +152,7 @@ const LedgerPageBody = () => {
 
     const getAccountList = async () => {
       const { data: accountTitleList } = await getAccountListAPI({
-        params: { companyId: connectedAccountBook.id },
+        params: { accountBookId: connectedAccountBook.id },
         query: {
           limit: 0, // Info: (20250312 - Anna) 取所有數據
           forUser: true,

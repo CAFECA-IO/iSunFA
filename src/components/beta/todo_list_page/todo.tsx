@@ -37,7 +37,10 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
     const startTime = formatDateForGoogleCalendar(todo.startTime);
     const endTime = formatDateForGoogleCalendar(todo.endTime);
     const eventTitle = encodeURIComponent(todo.name);
-    const companyName = todo.company.id === 555 ? '' : todo.company.name + ':';
+    const companyName =
+      !todo.company || (todo.company && todo.company?.id === 555)
+        ? ''
+        : (todo.company?.name || '') + ':';
     const eventDetails = encodeURIComponent(companyName + todo.note || '');
     const timeZone = 'Asia/Taipei';
 
@@ -58,7 +61,7 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
       </div>
 
       <div className="flex w-160px items-center px-16px py-8px text-xs font-semibold text-text-neutral-primary">
-        {todo.company.id === 555 ? (
+        {!todo.company || (todo.company && todo.company?.id === 555) ? (
           <h5>{t('dashboard:TODO_LIST_PAGE.NO_COMPANY')}</h5>
         ) : (
           <div key={todo.company.id} className="flex items-center justify-start gap-8px truncate">

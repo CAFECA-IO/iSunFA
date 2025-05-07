@@ -1,17 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FaChevronRight, FaChevronLeft, FaPlus } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
-import {
-  ExperienceType,
-  IEducationExperience,
-  dummyEducationExperience,
-  IWorkExperience,
-  IExperienceBar,
-  dummyWorkExperience,
-} from '@/interfaces/experience';
+import { ExperienceType, IExperienceBar } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import EducationExperienceModal from '@/components/join_us/education_experience_modal';
 import WorkExperienceModal from '@/components/join_us/work_experience_modal';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IExperienceFormProps {
   toPrevStep: () => void;
@@ -25,15 +19,16 @@ interface IExperienceBarProps {
     bg: string;
   };
   data: IExperienceBar;
+  clickHandler: (id: number) => void;
 }
 
-// ToDo: (20250411 - Julian) during the development
-const years = Array.from({ length: 10 }, (_, i) => 2024 - i).reverse();
+// Info: (20250506 - Julian) start from 2015
+const years = Array.from({ length: 11 }, (_, i) => 2025 - i).reverse();
 const yearsWithDivider = years.flatMap(
   (item, index) => (index < years.length - 1 ? [item, '-'] : [item]) // Info: (20250414 - Julian) Add divider between years
 );
 
-// Info: (20250415 - Julian) Experience Bar Color
+// Info: (20250415 - Julian) 經驗條的顏色
 const mainColors = [
   {
     text: 'text-surface-support-strong-maple',
@@ -61,7 +56,7 @@ const mainColors = [
   },
 ];
 
-const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data }) => {
+const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data, clickHandler }) => {
   const { mainTitle, subTitle, start, end } = data;
 
   // Info: (20250415 - Julian)
@@ -77,9 +72,13 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
   const endOffset = end.month > 6 ? 2 : 1;
   const endPosition = endIndex === -1 ? yearsWithDivider.length - 1 : endIndex * 2 + endOffset + 1;
 
+  const clickBarHandler = () => clickHandler(data.id);
+
   return (
-    <div
-      className="flex flex-col items-start gap-14px whitespace-nowrap"
+    <button
+      type="button"
+      onClick={clickBarHandler}
+      className="flex flex-col items-start gap-14px whitespace-nowrap hover:opacity-75"
       style={{
         gridColumnStart: startPosition,
         gridColumnEnd: endPosition,
@@ -100,26 +99,23 @@ const ExperienceBar: React.FC<IExperienceBarProps> = ({ type, mainColor, data })
       {type === ExperienceType.EDUCATION && (
         <div className={`${mainColor.bg} h-24px w-full rounded-full`}></div>
       )}
-    </div>
+    </button>
   );
 };
 
 const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring']);
   const milestoneRef = useRef<HTMLDivElement>(null);
+  const { tempEducationList, tempWorkList } = useHiringCtx();
 
-  const [isShowLeftArrow, setIsShowLeftArrow] = useState(false);
-  const [isShowRightArrow, setIsShowRightArrow] = useState(true);
-  const [isShowEducationModal, setIsShowEducationModal] = useState(false);
-  const [isShowWorkModal, setIsShowWorkModal] = useState(false);
+  const [isShowLeftArrow, setIsShowLeftArrow] = useState<boolean>(false);
+  const [isShowRightArrow, setIsShowRightArrow] = useState<boolean>(true);
+  const [isShowEducationModal, setIsShowEducationModal] = useState<boolean>(false);
+  const [isShowWorkModal, setIsShowWorkModal] = useState<boolean>(false);
 
-  // ToDo: (20250411 - Julian) during the development
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [educationList, setEducationList] =
-    useState<IEducationExperience[]>(dummyEducationExperience);
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [workList, setWorkList] = useState<IWorkExperience[]>(dummyWorkExperience);
+  // Info: (20250505 - Julian) edit id
+  const [editedEducationId, setEditedEducationId] = useState<number | null>(null);
+  const [editedWorkId, setEditedWorkId] = useState<number | null>(null);
 
   // Info: (20250415 - Julian) | 40px | 48px | 50px | 58px | (將每個格子分成 2 等份，加上間隔)
   const milestoneTemplateColumns = `repeat(${years.length}, 40px 48px 50px 58px)`;
@@ -143,7 +139,18 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   }, [milestoneRef]);
 
   const toggleEducationModal = () => setIsShowEducationModal((prev) => !prev);
+  // Info: (20250505 - Julian) 新增模式
+  const addEducationHandler = () => {
+    setIsShowEducationModal((prev) => !prev);
+    setEditedEducationId(null);
+  };
+
   const toggleWorkModal = () => setIsShowWorkModal((prev) => !prev);
+  // Info: (20250505 - Julian) 新增模式
+  const addWorkHandler = () => {
+    setIsShowWorkModal((prev) => !prev);
+    setEditedWorkId(null);
+  };
 
   // Info: (20250415 - Julian) 滾動事件
   const scrollMilestone = (direction: 'L' | 'R') => {
@@ -161,7 +168,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
   // Info: (20250411 - Julian) Left Arrow
   const isDisplayLeftArrow = (
     <div
-      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 flex items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
+      className={`${isShowLeftArrow ? 'visible' : 'invisible'} sticky left-0 z-30 flex items-center bg-gradient-to-r from-landing-page-black from-60% to-transparent pr-80px`}
     >
       <button type="button" className="p-8px" onClick={() => scrollMilestone('L')}>
         <FaChevronLeft size={40} />
@@ -180,13 +187,19 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
     </div>
   );
 
-  const displayEducation = educationList.map((education, index) => {
+  const displayEducation = tempEducationList.map((education, index) => {
     const educationData: IExperienceBar = {
       id: education.id,
       mainTitle: education.schoolName,
       subTitle: education.department,
       start: education.start,
       end: education.end,
+    };
+
+    // Info: (20250505 - Julian) 編輯模式
+    const editEducationHandler = () => {
+      setIsShowEducationModal(true);
+      setEditedEducationId(education.id);
     };
 
     return (
@@ -201,18 +214,25 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           type={ExperienceType.EDUCATION}
           mainColor={mainColors[index]}
           data={educationData}
+          clickHandler={editEducationHandler}
         />
       </div>
     );
   });
 
-  const displayWork = workList.map((work, index) => {
+  const displayWork = tempWorkList.map((work, index) => {
     const workData: IExperienceBar = {
       id: work.id,
       mainTitle: work.position,
       subTitle: work.companyName,
       start: work.start,
       end: work.end,
+    };
+
+    // Info: (20250505 - Julian) 編輯模式
+    const editWorkHandler = () => {
+      setIsShowWorkModal(true);
+      setEditedWorkId(work.id);
     };
 
     return (
@@ -225,8 +245,9 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
         <ExperienceBar
           key={work.id}
           type={ExperienceType.WORK}
-          mainColor={mainColors[index]}
+          mainColor={mainColors[5 - index]} // Info: (20250506 - Julian) 取得顏色的順序和學歷相反
           data={workData}
+          clickHandler={editWorkHandler}
         />
       </div>
     );
@@ -246,7 +267,9 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <div
               id={`${index + 1}`}
-              key={year}
+              // Deprecated: (20250506 - Luphia) remove eslint-disable
+              // eslint-disable-next-line react/no-array-index-key
+              key={`${index}`}
               className="col-span-2 h-px w-100px bg-landing-page-gray3"
             ></div>
           );
@@ -254,7 +277,9 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
           return (
             <p
               id={`${index + 1}`}
-              key={year}
+              // Deprecated: (20250506 - Luphia) remove eslint-disable
+              // eslint-disable-next-line react/no-array-index-key
+              key={`${index}`}
               className="col-span-2 text-center text-2xl text-landing-page-gray2"
             >
               {year}
@@ -275,7 +300,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
   return (
     <div className="relative flex flex-col items-stretch gap-10px">
-      <LandingButton variant="primary" className="font-bold" onClick={toggleEducationModal}>
+      <LandingButton variant="primary" className="font-bold" onClick={addEducationHandler}>
         <FaPlus size={20} /> {t('hiring:EXPERIENCE.EDUCATION_TITLE')}
       </LandingButton>
 
@@ -287,7 +312,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
       </div>
 
       <div className="z-100 flex items-center justify-between">
-        <LandingButton variant="primary" className="font-bold" onClick={toggleWorkModal}>
+        <LandingButton variant="primary" className="font-bold" onClick={addWorkHandler}>
           <FaPlus size={20} /> {t('hiring:EXPERIENCE.WORK_TITLE')}
         </LandingButton>
 
@@ -306,11 +331,16 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
       {/* Info: (20250411 - Julian) Education Experience Modal */}
       {isShowEducationModal && (
-        <EducationExperienceModal modalVisibilityHandler={toggleEducationModal} />
+        <EducationExperienceModal
+          modalVisibilityHandler={toggleEducationModal}
+          editId={editedEducationId}
+        />
       )}
 
       {/* Info: (20250415 - Julian) Work Experience Modal */}
-      {isShowWorkModal && <WorkExperienceModal modalVisibilityHandler={toggleWorkModal} />}
+      {isShowWorkModal && (
+        <WorkExperienceModal modalVisibilityHandler={toggleWorkModal} editId={editedWorkId} />
+      )}
     </div>
   );
 };

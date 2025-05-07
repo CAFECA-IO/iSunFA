@@ -15,7 +15,7 @@ interface IResumePageBodyProps {
 const ResumePageBody: React.FC<IResumePageBodyProps> = ({ jobId }) => {
   const { t } = useTranslation(['hiring']);
 
-  const [isProcess, setIsProcess] = useState(false);
+  const [isProcess, setIsProcess] = useState<boolean>(false);
 
   return (
     <div className="relative flex min-h-screen flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">

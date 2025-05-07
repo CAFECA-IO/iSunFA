@@ -40,7 +40,6 @@ import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/account
 import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
-import { isCertificateIncomplete } from '@/lib/utils/certificate';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
 
 const iVoucherValidator = z.object({
@@ -597,7 +596,7 @@ const voucherGetOneOutputValidatorV2 = z
           createdAt: certificate.createdAt,
           updatedAt: certificate.updatedAt,
         };
-        certificateInstance.incomplete = isCertificateIncomplete(certificateInstance);
+
         return certificateInstance;
       }),
       lineItems: data.lineItems.map((lineItem) => ({

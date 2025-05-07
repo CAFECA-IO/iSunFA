@@ -39,7 +39,7 @@ const CounterpartyPageBody = () => {
 
     try {
       const response = await getCounterpartyList({
-        params: { companyId: connectedAccountBook.id },
+        params: { accountBookId: connectedAccountBook.id },
         query: queryCondition,
       });
       const { success, data: responseData } = response;

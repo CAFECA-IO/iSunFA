@@ -246,7 +246,7 @@ const UploadArea = ({
       if (id && file) {
         getFile({
           params: {
-            companyId: connectedAccountBook?.id,
+            accountBookId: connectedAccountBook?.id,
             fileId: id,
           },
         });

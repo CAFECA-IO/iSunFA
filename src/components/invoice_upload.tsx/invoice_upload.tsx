@@ -48,7 +48,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
       let key = publicKey;
       if (!key) {
         const { success, data } = await fetchPublicKey({
-          params: { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+          params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
         });
         if (!success || !data) {
           throw new Error(t('certificate:UPLOAD.FAILED'));
@@ -133,7 +133,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({ isDisabled, toggleQRCode,
         );
 
         const { success: successCreated, data: certificate } = await createCertificateAPI({
-          params: { companyId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
+          params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
           body: { fileIds: [fileMeta.id] }, // Info: (20241126 - Murky) @tsuhan 這邊已經可以使用批次上傳, 但是我不知道怎麼改，所以先放在array
         });
         if (!successCreated || !certificate) {

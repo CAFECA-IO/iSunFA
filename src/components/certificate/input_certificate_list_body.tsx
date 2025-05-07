@@ -24,7 +24,6 @@ import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -43,7 +42,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
@@ -72,7 +71,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
   const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
@@ -152,30 +150,44 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
-
-  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-    setExportModalData(resData.data);
-  }, []);
-
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
+    setIsExporting(true);
   }, []);
+
+  // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
+  const waitForNextFrame = () => {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve(true));
+    });
+  };
 
   // Info: (20250418 - Anna) 匯出憑證表格
   const handleDownload = async () => {
+    setIsExporting(true);
+
+    // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
+    await waitForNextFrame();
+
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
+    // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
+    downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
+      el.classList.remove('h-54px');
+    });
+
+    // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-  .download-pb-4 {
+    .download-pb-4 {
     padding-bottom: 16px;
   }
-      .download-pb-3 {
+    .download-pb-3 {
     padding-bottom: 12px;
+  }
+    .download-hidden {
+    display: none;
   }
 `;
 
@@ -200,15 +212,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
     style.remove();
     pdf.save('input-certificates.pdf');
-  };
 
-  const onExport = useCallback(() => {
-    if (exportModalData.length > 0) {
-      exportModalData.forEach((item) => {
-        handleDownloadItem(item.id);
-      });
-    }
-  }, [exportModalData]);
+    // Info: (20250506 - Anna) 匯出後還原畫面
+    setIsExporting(false);
+  };
 
   const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
@@ -298,7 +305,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (selectedIds: number[]) => {
       try {
         const { success, data: deletedIds } = await deleteCertificatesAPI({
-          params: { companyId },
+          params: { accountBookId },
           body: { certificateIds: selectedIds },
         });
 
@@ -415,11 +422,15 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
         const postOrPutAPI = invoice.id
           ? updateInvoiceAPI({
-              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
+              params: {
+                accountBookId,
+                certificateId: certificate.id,
+                invoiceId: invoice.id,
+              },
               body: invoice,
             })
           : createInvoiceAPI({
-              params: { companyId, certificateId: certificate.id },
+              params: { accountBookId, certificateId: certificate.id },
               body: invoice,
             });
 
@@ -457,7 +468,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         });
       }
     },
-    [certificates, companyId]
+    [certificates, accountBookId]
   );
 
   const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
@@ -496,8 +507,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
-    } else if (invoiceNoSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -505,7 +514,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
@@ -513,11 +522,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
         channel.unsubscribe();
       }
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
-  return !companyId ? (
+  return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
         src="/elements/uploading.gif"
@@ -530,18 +539,9 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {isExportModalOpen && (
-        <CertificateExportModal
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
-          handleApiResponse={handleExportModalApiResponse}
-          handleExport={onExport}
-          certificates={exportModalData}
-        />
-      )}
       {isEditModalOpen && editingId !== null && (
         <InputCertificateEditModal
-          companyId={companyId}
+          accountBookId={accountBookId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
@@ -578,7 +578,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificate[]>
           className="mt-2"
-          params={{ companyId }}
+          params={{ accountBookId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}
@@ -641,13 +641,12 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 dateSort={dateSort}
                 amountSort={amountSort}
                 voucherSort={voucherSort}
-                invoiceNoSort={invoiceNoSort}
                 invoiceTypeSort={invoiceTypeSort}
                 setDateSort={setDateSort}
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
-                setInvoiceNoSort={setInvoiceNoSort}
                 setInvoiceTypeSort={setInvoiceTypeSort}
+                isExporting={isExporting}
               />
             </div>
           </>

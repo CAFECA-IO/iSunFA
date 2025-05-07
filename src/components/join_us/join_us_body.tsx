@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -12,6 +12,7 @@ import {
 import JobFilterSection from '@/components/join_us/filter_section';
 import { dummyJobList, IJobUI } from '@/interfaces/job';
 import VacancyItem from '@/components/join_us/vacancy_item';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 enum SortOrder {
   Newest = 'newest',
@@ -20,6 +21,7 @@ enum SortOrder {
 
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
+  const { favoriteJobIds, toggleFavoriteJobId } = useHiringCtx();
 
   const defaultJobList: IJobUI[] = dummyJobList.map((job) => {
     return { ...job, isFavorite: false };
@@ -32,6 +34,17 @@ const JoinUsPageBody: React.FC = () => {
   // Info: (20250402 - Julian) 排序方式
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
 
+  // Info: (20250505 - Julian) 監聽 favoriteJobIds 的變化
+  useEffect(() => {
+    const updatedJobList = jobList.map((job) => {
+      const isFavorite = favoriteJobIds.includes(job.id);
+      return { ...job, isFavorite };
+    });
+    setJobList(updatedJobList);
+    setFilteredJobList(updatedJobList);
+  }, [favoriteJobIds]);
+
+  // Info: (20250505 - Julian) 監聽 jobList 的變化
   const filterJobs = (type: string, location: string, keyword: string) => {
     const newJobList = jobList.filter((job) => {
       // Info: (20250402 - Julian) Type filter: 不是 all 就是 我的最愛
@@ -88,39 +101,18 @@ const JoinUsPageBody: React.FC = () => {
     });
   };
 
-  const toggleFavorite = (jobId: number) => {
-    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
-    setJobList((prev) => {
-      const newJobList = prev.map((item) => {
-        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
-        if (item.id === jobId) {
-          return { ...item, isFavorite: !item.isFavorite };
-        }
-        return item;
-      });
-      return newJobList;
-    });
+  const vacancyList = filteredJobList.map((job) => {
+    const toggleFavorite = () => toggleFavoriteJobId(job.id);
 
-    setFilteredJobList((prev) => {
-      const newFilterList = prev.map((item) => {
-        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
-        if (item.id === jobId) {
-          return { ...item, isFavorite: !item.isFavorite };
-        }
-        return item;
-      });
-      return newFilterList;
-    });
-  };
-
-  const vacancyList = filteredJobList.map((job) => (
-    <VacancyItem
-      key={job.id}
-      job={job}
-      isFavorite={job.isFavorite}
-      toggleFavorite={() => toggleFavorite(job.id)}
-    />
-  ));
+    return (
+      <VacancyItem
+        key={job.id}
+        job={job}
+        isFavorite={job.isFavorite}
+        toggleFavorite={toggleFavorite}
+      />
+    );
+  });
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">

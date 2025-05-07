@@ -1,15 +1,8 @@
 import { IPayment } from '@/interfaces/payment';
 import { EventType } from '@/constants/account';
 import { ICounterPartyEntity, ICounterpartyOptional } from '@/interfaces/counterparty';
-import {
-  InputInvoiceType,
-  InvoiceTaxType,
-  InvoiceTransactionDirection,
-  InvoiceType,
-  OutputInvoiceType,
-} from '@/constants/invoice';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
-import { DeductionType } from '@/constants/deduction_type';
 
 // Info: （ 20240522 - Murky）To Emily, To Julian 這個interface是用來存入prisma的資料, 用來在ISFMK00052時Upload使用
 export interface IInvoice {
@@ -42,43 +35,6 @@ export interface ITeamInvoice {
   updatedAt: number;
 }
 
-// Info: (20250424 - Tzuhan) RC2 更新 invoice 並拆成兩個 interface: input 與 output
-export interface IInvoiceBase {
-  id: number;
-  inputOrOutput: InvoiceTransactionDirection;
-  date: number;
-  no: string;
-  currencyAlias: CurrencyType;
-  priceBeforeTax: number;
-  taxType: InvoiceTaxType;
-  taxRatio: number | null;
-  taxPrice: number;
-  totalPrice: number;
-  type: InputInvoiceType | OutputInvoiceType;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface IInvoiceInput extends IInvoiceBase {
-  inputOrOutput: InvoiceTransactionDirection.INPUT;
-  deductionType: DeductionType;
-  type: InputInvoiceType;
-  sales: {
-    idNumber?: string;
-    name: string;
-  };
-}
-
-export interface IInvoiceOutput extends IInvoiceBase {
-  inputOrOutput: InvoiceTransactionDirection.OUTPUT;
-  type: OutputInvoiceType;
-  buyer: {
-    idNumber?: string;
-    name: string;
-  };
-  returnOrAllowance?: boolean;
-}
-
 export interface IInvoiceBeta {
   id: number;
   counterParty: ICounterpartyOptional;
@@ -97,6 +53,12 @@ export interface IInvoiceBeta {
   updatedAt: number;
   // Info: (20250421 - Anna) 扣抵類型
   deductionType?: string;
+  // Info: (20250428 - Anna) 彙總發票張數
+  summarizedInvoiceCount?: number;
+  // Info: (20250429 - Anna) 是否為彙總金額代表憑證
+  isSharedAmount?: boolean;
+  // Info: (20250429 - Anna) 其他憑證編號
+  otherCertificateNo?: string;
 }
 
 export type IInvoiceBetaOptional = Partial<IInvoiceBeta>;

@@ -16,7 +16,7 @@ export const userIdSchema = z.object({
 });
 
 export const todoPostPutBodySchema = z.object({
-  accountBookId: z.number(),
+  accountBookId: z.number().optional(),
   name: z.string(),
   deadline: z.number(),
   startDate: z.number(),
@@ -38,7 +38,7 @@ export const todoSchema = z.object({
 
 // Info: (20250408 - Tzuhan) Backend Output Schema
 export const todoOutputSchema = todoSchema.extend({
-  company: accountBookSchema,
+  company: accountBookSchema.nullable(),
 });
 
 export const paginatedTodoOutputSchema = paginatedDataSchema(todoOutputSchema);

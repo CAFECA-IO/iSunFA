@@ -6,7 +6,15 @@ import { Button } from '@/components/button/button';
 const MAGNIFICATION_MAX = 500;
 const MAGNIFICATION_MIN = 100;
 
-const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: string }) => {
+const ImageZoom = ({
+  imageUrl,
+  className,
+  controlPosition = 'top-right', // Info: (20250428 - Anna) 預設位置右上角
+}: {
+  imageUrl: string;
+  className?: string;
+  controlPosition?: 'top-right' | 'bottom-right'; // Info: (20250428 - Anna) 可選為位置右上角或右下角
+}) => {
   // Info: (20250307 - Julian) 縮放倍率
   const [magnification, setMagnification] = useState<number>(100);
   // Info: (20250307 - Julian) 是否處於縮放狀態(滑鼠是否在圖片上)
@@ -126,9 +134,11 @@ const ImageZoom = ({ imageUrl, className }: { imageUrl: string; className?: stri
   }, [magnification]);
 
   return (
-    <div className="flex flex-col">
+    <div className="relative flex h-full flex-col">
       {/* Info: (20250307 - Julian) 縮放倍率 */}
-      <div className="ml-auto flex items-center gap-12px py-16px text-button-stroke-secondary">
+      <div
+        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} flex items-center gap-12px text-button-stroke-secondary`}
+      >
         <Button
           type="button"
           size="smallSquare"

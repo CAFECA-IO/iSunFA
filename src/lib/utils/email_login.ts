@@ -3,7 +3,7 @@ import {
   EMAIL_LOGIN_ACTION,
   EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
   MAX_EMIL_LOGIN_ERROR_TIMES,
-} from '@/constants/email';
+} from '@/constants/email_login';
 import { getTimestampNow } from '@/lib/utils/common';
 
 class EmailLoginHandler {

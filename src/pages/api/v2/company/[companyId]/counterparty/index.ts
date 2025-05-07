@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
-  const { companyId, page, pageSize, type, searchQuery } = query;
+  const { accountBookId: companyId, page, pageSize, type, searchQuery } = query;
 
   // Info: (20250416 - Shirley) 添加團隊權限檢查
   const { teams } = await getSession(req);
@@ -78,7 +78,7 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICounterPartyEntity | null = null;
 
-  const { companyId } = query;
+  const { accountBookId: companyId } = query;
   const { name, taxId, type, note } = body;
 
   // Info: (20250416 - Shirley) 添加團隊權限檢查

@@ -27,6 +27,7 @@ interface ICounterpartyInputProps {
   onSelect: (counterparty: ICounterpartyOptional) => void;
   flagOfSubmit?: boolean;
   className?: string;
+  labelClassName?: string;
 }
 
 export interface CounterpartyInputRef {
@@ -316,9 +317,8 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
 
     return (
       <div className={`relative flex w-full flex-1 flex-col items-start gap-2 ${className}`}>
-        <p className="text-sm font-semibold text-input-text-primary">
+        <p className={`text-sm font-semibold ${props.labelClassName ?? 'text-input-text-primary'}`}>
           {t('certificate:EDIT.COUNTERPARTY')}
-          <span className="text-text-state-error">*</span>
         </p>
         <div className="relative w-full" ref={counterpartyMenuRef}>
           <div

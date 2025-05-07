@@ -20,7 +20,7 @@ interface CertificateFileUploadProps {
 
 const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisabled, setFiles }) => {
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const [room, setRoom] = useState<IRoom | null>(null);
   const [getRoomSuccess, setGetRoomSuccess] = useState<boolean | undefined>(undefined);
   const [getRoomCode, setGetRoomCode] = useState<string | undefined>(undefined);
@@ -29,7 +29,9 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
   const { trigger: createRoomAPI } = APIHandler<IRoom>(APIName.ROOM_ADD);
   const { trigger: deleteRoomAPI } = APIHandler<boolean>(APIName.ROOM_DELETE);
   // const { trigger: getRoomByIdAPI } = APIHandler<IRoom>(APIName.ROOM_GET_BY_ID); // Info: (20241121 - tzuhan) 目前沒有用的，目前用 pusher 傳來的是足夠的
-  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
+  const { trigger: createCertificateAPI } = APIHandler<ICertificate>(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
 
   // Info: (20241204 - tzuhan) 通用文件狀態更新函數
   const updateFileStatus = (
@@ -55,7 +57,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
     async (fileId: number) => {
       try {
         const { success, data } = await createCertificateAPI({
-          params: { companyId },
+          params: { accountBookId },
           body: { fileIds: [fileId] },
         });
 
@@ -66,7 +68,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({ isDisable
         updateFileStatus(fileId, '', ProgressStatus.FAILED);
       }
     },
-    [companyId]
+    [accountBookId]
   );
 
   // Info: (20241204 - tzuhan) 處理來自 Pusher 的新文件

@@ -71,8 +71,8 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
 
   const { connectedAccountBook } = useUserCtx(); // Info: (20241107 - Anna) 使用 useUserCtx 獲取 connectedAccountBook
-  const companyId = connectedAccountBook?.id; // Info: (20241107 - Anna) 獲取 companyId
-  const params = { companyId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params
+  const accountBookId = connectedAccountBook?.id; // Info: (20241107 - Anna) 獲取 accountBookId
+  const params = { companyId: accountBookId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法 const params = { accountBookId, accountId };
 
   const handleApiResponse = (resData: IPaginatedData<IVoucherForSingleAccount[]>) => {
     // Deprecated: (20250120 - Anna) remove eslint-disable
@@ -181,7 +181,8 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                 {shouldFetch && (
                   <div style={{ display: 'none' }}>
                     <FilterSection<IVoucherForSingleAccount[]> // Info: (20241107 - Anna)  加入 FilterSection，用於 API 請求
-                      params={params}
+                      // params={params} // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
+                      params={{ accountBookId, accountId }}
                       apiName={APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2}
                       onApiResponse={handleApiResponse}
                       page={1}

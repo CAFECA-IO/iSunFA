@@ -33,6 +33,7 @@ const PlanComparison: React.FC = () => {
   ];
 
   const plans = ['TRIAL', 'BEGINNER', 'PROFESSIONAL', 'ENTERPRISE'];
+  const comparisonPlans = plans.filter((plan) => plan !== 'TRIAL');
 
   const formatText = (text: string) => {
     return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
@@ -61,7 +62,7 @@ const PlanComparison: React.FC = () => {
               <th className="pricing-header h-80px min-w-200px border border-white px-4 py-2 text-xl backdrop-blur-pricing">
                 {t('COMPARISON.FEATURES')}
               </th>
-              {plans.map((plan) => (
+              {comparisonPlans.map((plan) => (
                 <th
                   key={plan}
                   className="pricing-header w-1/3 border border-white px-4 py-2 text-center text-base backdrop-blur-pricing"
@@ -77,7 +78,7 @@ const PlanComparison: React.FC = () => {
                 <td className="pricing-subtitle h-80px border border-white px-4 py-2 backdrop-blur-pricing">
                   {t(`FEATURES.${feature}`)}
                 </td>
-                {plans.map((planId) => {
+                {comparisonPlans.map((planId) => {
                   const plan = PLANS.find((p) => p.id === planId);
                   const comparisonValue = plan?.comparison?.[feature];
 

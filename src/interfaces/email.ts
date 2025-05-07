@@ -1,4 +1,4 @@
-import { EMAIL_LOGIN_ACTION } from '@/constants/email';
+import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
 
 export interface IInviteTemplate {
   inviterName: string;

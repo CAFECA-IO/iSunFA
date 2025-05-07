@@ -3,6 +3,7 @@ import {
   askAIGetResultV2Schema,
   askAiPostSchema,
   askAIPostValidatorV2,
+  askAIStatusSchema,
 } from '@/lib/utils/zod_schema/ask_ai';
 import {
   certificateDeleteValidator,
@@ -16,8 +17,6 @@ import {
   invoicePutV2Schema,
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
-  inputCertificateListSchema,
-  outputCertificateListSchema,
 } from '@/lib/utils/zod_schema/certificate';
 import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
@@ -31,6 +30,7 @@ import {
   generatePublicReportSchemaV2,
   getPublicReportSchemaV2,
   reportGetValidatorV2,
+  reportGetSchemaV2,
 } from '@/lib/utils/zod_schema/report';
 import {
   userRoleListSchema,
@@ -128,6 +128,18 @@ import {
   disconnectAccountBookSchema,
   listAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
+import {
+  createCertificateRC2Input,
+  createCertificateRC2Output,
+  deleteCertificateRC2Input,
+  deleteCertificateRC2Output,
+  getCertificateRC2Input,
+  getCertificateRC2Output,
+  listCertificateRC2Input,
+  listCertificateRC2Output,
+  updateCertificateRC2Input,
+  updateCertificateRC2Output,
+} from '@/lib/utils/zod_schema/certificate_rc2';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -152,8 +164,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
-  [APIName.INPUT_CERTIFICATE_LIST]: certificateListValidator,
-  [APIName.OUTPUT_CERTIFICATE_LIST]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
@@ -207,8 +217,17 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
-  [APIName.INPUT_CERTIFICATE_LIST]: inputCertificateListSchema,
-  [APIName.OUTPUT_CERTIFICATE_LIST]: outputCertificateListSchema,
+  [APIName.LIST_CERTIFICATE_RC2_INPUT]: listCertificateRC2Input,
+  [APIName.CREATE_CERTIFICATE_RC2_INPUT]: createCertificateRC2Input,
+  [APIName.GET_CERTIFICATE_RC2_INPUT]: getCertificateRC2Input,
+  [APIName.UPDATE_CERTIFICATE_RC2_INPUT]: updateCertificateRC2Input,
+  [APIName.DELETE_CERTIFICATE_RC2_INPUT]: deleteCertificateRC2Input,
+  [APIName.LIST_CERTIFICATE_RC2_OUTPUT]: listCertificateRC2Output,
+  [APIName.CREATE_CERTIFICATE_RC2_OUTPUT]: createCertificateRC2Output,
+  [APIName.GET_CERTIFICATE_RC2_OUTPUT]: getCertificateRC2Output,
+  [APIName.UPDATE_CERTIFICATE_RC2_OUTPUT]: updateCertificateRC2Output,
+  [APIName.DELETE_CERTIFICATE_RC2_OUTPUT]: deleteCertificateRC2Output,
+
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
   [APIName.CERTIFICATE_DELETE_MULTIPLE_V2]: certificateMultiDeleteSchema,
@@ -225,13 +244,13 @@ export const ZOD_SCHEMA_API = {
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
-  [APIName.ASK_AI_STATUS]: nullAPISchema,
+  [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
   [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
-  [APIName.REPORT_GET_V2]: nullAPISchema,
+  [APIName.REPORT_GET_V2]: reportGetSchemaV2,
   [APIName.REPORT_GENERATE]: generatePublicReportSchemaV2,
   [APIName.STATUS_INFO_GET]: statusInfoGetSchema,
   [APIName.ACCOUNT_LIST]: accountGetV2Schema,

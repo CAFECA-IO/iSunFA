@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal';
+import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250428 - Liz) 預計替換成新版的建立帳本 Modal (AccountBookInfoModal)
+// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250428 - Liz) 預計會替換成這個 Modal !!
 import AccountBookListModal from '@/components/general/account_book_settings/account_book_list_modal';
 
 const AccountBookSettings = () => {
