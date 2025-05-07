@@ -7,6 +7,7 @@ import { getSession } from '@/lib/utils/session';
 import { formatApiResponse, isStringNumber } from '@/lib/utils/common';
 import { deleteFileById, findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
 import { File } from '@prisma/client';
+import { loggerError } from '@/lib/utils/logger_back';
 
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -40,8 +41,14 @@ async function handleGetRequest(req: NextApiRequest) {
         payload = { id: -1, name: 'not found', size: 0, existed: false };
       }
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
-    } catch (error) {
+    } catch (_error) {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      const error = _error as Error;
+      loggerError({
+        userId,
+        errorType: error.name,
+        errorMessage: error.message,
+      });
     }
   }
 
@@ -85,9 +92,14 @@ async function handleDeleteRequest(req: NextApiRequest) {
         statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
         payload = { id: -1, name: 'not found', size: 0, existed: false };
       }
-    } catch (error) {
-      // ToDo: (20240828 - Jacky) Log error message
+    } catch (_error) {
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      const error = _error as Error;
+      loggerError({
+        userId,
+        errorType: error.name,
+        errorMessage: error.message,
+      });
     }
   }
 
