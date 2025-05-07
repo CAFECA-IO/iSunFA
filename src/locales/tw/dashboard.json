@@ -223,7 +223,7 @@
     "SINGLE_ENTITY_FILING": "單一法人申報",
     "CONSOLIDATED_FILING": "合併申報",
     "INDIVIDUAL_FILING": "個人申報",
-    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "單一總公司無分支機構",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "無分公司之單一機構",
     "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "總公司為所有分支機構檔案",
     "EACH_UNIT_FILES_SEPARATELY": "每個單位單獨歸檔",
     "FILING_METHOD_REQUIRED": "請選擇總繳種類"
@@ -240,7 +240,7 @@
   "AGENT_FILING_ROLE": {
     "ACCOUNTANT": "會計師",
     "BOOKKEEPER": "記帳士",
-    "BOOKKEEPER_AND_FILING_AGENT": "記帳士及申報代理人",
+    "BOOKKEEPER_AND_FILING_AGENT": "記帳及報稅代理人",
     "I_AM": "我是...",
     "AGENT_FILING_ROLE_REQUIRED": "請填寫申報人資料"
   }
