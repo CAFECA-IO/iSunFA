@@ -12,7 +12,7 @@ import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
-import { createFile } from '@/lib/utils/repo/file.repo';
+import { createFile, putFileById } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import {
   checkRequestData,
@@ -31,7 +31,8 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { HTTP_STATUS } from '@/constants/http';
-import { testGeneratePDFThumbnail } from '@/lib/utils/pdf_thumbnail';
+import { generatePDFThumbnail } from '@/lib/utils/pdf_thumbnail';
+import path from 'path';
 
 export const config = {
   api: {
@@ -53,6 +54,76 @@ async function handleFileUpload(
   const fileSize = fileForSave.size;
   const targetIdNum = type !== UploadType.ROOM ? convertStringToNumber(targetId) : -1;
   let fileUrl = '';
+
+  // Generate thumbnail for PDF files before encryption
+  let thumbnailInfo = null;
+  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+    try {
+      loggerBack.info(`Generating PDF thumbnail for file: ${fileForSave.filepath}`);
+      thumbnailInfo = await generatePDFThumbnail(fileForSave.filepath);
+
+      if (!thumbnailInfo.success) {
+        loggerBack.error('Failed to generate PDF thumbnail');
+      }
+    } catch (error) {
+      loggerBack.error(error, 'Error generating PDF thumbnail');
+    }
+  }
+
+  // Generate thumbnail for PDF files before encryption
+  // let thumbnailInfo = null;
+  // if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+  //   try {
+  //     /**
+  //      * Info: (20250507 - Shirley) Updated the PDF thumbnail generation process
+  //      * to use pdf-to-img library for better compatibility and performance.
+  //      * Added detailed logging to track the thumbnail generation process.
+  //      */
+  //     loggerBack.info(`Testing PDF thumbnail generation for file: ${fileForSave.filepath}`);
+  //     const {
+  //       filepath: thumbnailPath,
+  //       size: thumbnailSize,
+  //       success,
+  //     } = await generatePDFThumbnail(fileForSave.filepath);
+
+  //     if (success) {
+  //       loggerBack.info(
+  //         `PDF thumbnail generation successful! Thumbnail saved at: ${thumbnailPath}`
+  //       );
+  //       loggerBack.info(`Thumbnail size: ${thumbnailSize} bytes`);
+
+  //       // Generate thumbnail URL
+  //       const thumbnailFileName = path.basename(thumbnailPath);
+  //       const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
+  //         thumbnailFileName,
+  //         UPLOAD_TYPE_TO_FOLDER_MAP[type]
+  //       );
+
+  //       // Create thumbnail record
+  //       const thumbnailInDB = await createFile({
+  //         name: thumbnailFileName,
+  //         size: thumbnailSize,
+  //         mimeType: 'image/png',
+  //         type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+  //         url: thumbnailUrl,
+  //         isEncrypted: false,
+  //         encryptedSymmetricKey: '',
+  //         iv: new Uint8Array(),
+  //       });
+
+  //       if (thumbnailInDB && fileInDB) {
+  //         // Update original file record with thumbnail ID
+  //         await putFileById(fileInDB.id, {
+  //           thumbnailId: thumbnailInDB.id,
+  //         });
+  //       }
+  //     } else {
+  //       loggerBack.error('PDF thumbnail generation failed');
+  //     }
+  //   } catch (error) {
+  //     loggerBack.error(error, 'Error testing PDF thumbnail generation');
+  //   }
+  // }
 
   switch (type) {
     case UploadType.KYC:
@@ -91,6 +162,34 @@ async function handleFileUpload(
 
   if (!fileInDB) {
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+  }
+
+  // If we have a thumbnail, process it with the same encryption parameters
+  if (thumbnailInfo && thumbnailInfo.success) {
+    const thumbnailFileName = path.basename(thumbnailInfo.filepath);
+    const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
+      thumbnailFileName,
+      UPLOAD_TYPE_TO_FOLDER_MAP[type]
+    );
+
+    // Create thumbnail record with the same encryption parameters
+    const thumbnailInDB = await createFile({
+      name: thumbnailFileName,
+      size: thumbnailInfo.size,
+      mimeType: 'image/png',
+      type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+      url: thumbnailUrl,
+      isEncrypted,
+      encryptedSymmetricKey,
+      iv: ivBuffer,
+    });
+
+    if (thumbnailInDB && fileInDB) {
+      // Update original file record with thumbnail ID
+      await putFileById(fileInDB.id, {
+        thumbnailId: thumbnailInDB.id,
+      });
+    }
   }
 
   const fileId = fileInDB.id;
@@ -141,29 +240,6 @@ async function handleFileUpload(
 
   loggerBack.info(`fileForSave: ${fileForSave}`);
 
-  // Test PDF thumbnail generation for Invoice uploads
-  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
-    try {
-      /**
-       * Info: (20250507 - Shirley) Updated the PDF thumbnail generation process
-       * to use pdf-to-img library for better compatibility and performance.
-       * Added detailed logging to track the thumbnail generation process.
-       */
-      loggerBack.info(`Testing PDF thumbnail generation for file: ${fileForSave.filepath}`);
-      const thumbnailResult = await testGeneratePDFThumbnail(fileForSave.filepath);
-
-      if (thumbnailResult.success) {
-        loggerBack.info(
-          `PDF thumbnail generation successful! Thumbnail saved at: ${thumbnailResult.filepath}`
-        );
-        loggerBack.info(`Thumbnail size: ${thumbnailResult.size} bytes`);
-      } else {
-        loggerBack.error('PDF thumbnail generation failed');
-      }
-    } catch (error) {
-      loggerBack.error(error, 'Error testing PDF thumbnail generation');
-    }
-  }
   return returnFile;
 }
 
