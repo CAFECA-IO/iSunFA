@@ -17,22 +17,22 @@ import {
 } from '@/components/landing_page_v2/linear_gradient_text';
 import FavoriteButton from '@/components/join_us/favorite_button';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { IJobDetail } from '@/interfaces/vacancy';
+import { IVacancyDetail } from '@/interfaces/vacancy';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useHiringCtx } from '@/contexts/hiring_context';
 import { haloStyle } from '@/constants/display';
 import { ShareSettings } from '@/constants/social_media';
 
-interface IJobDetailBodyProps {
-  jobData: IJobDetail;
+interface IVacancyDetailBodyProps {
+  jobData: IVacancyDetail;
 }
 
-const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
+const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   const { t } = useTranslation(['hiring', 'common']);
   const { id, title, location, date, description, jobResponsibilities, requirements, extraSkills } =
     jobData;
-  const { favoriteJobIds, toggleFavoriteJobId } = useHiringCtx();
+  const { favoriteVacancyIds, toggleFavoriteVacancyId } = useHiringCtx();
 
   const {
     targetRef,
@@ -74,11 +74,11 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   // Info: (20250505 - Julian) 將時間戳轉換為日期格式
   const dateString = timestampToString(date).dateWithSlash;
 
-  // Info: (20250505 - Julian) 在 favoriteJobIds 中找是否有該 jobId
-  const isFavorite = favoriteJobIds.includes(id);
+  // Info: (20250505 - Julian) 在 favoriteVacancyIds 中找是否有該 jobId
+  const isFavorite = favoriteVacancyIds.includes(id);
 
   // Info: (20250505 - Julian) 點擊後 toggle favorite
-  const toggleFavorite = () => toggleFavoriteJobId(id);
+  const toggleFavorite = () => toggleFavoriteVacancyId(id);
   // Info: (20250505 - Julian) 點擊後 toggle share
   const toggleShare = () => setSharingOpen(!isSharingOpen);
 
@@ -210,4 +210,4 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   );
 };
 
-export default JobDetailBody;
+export default VacancyDetailBody;
