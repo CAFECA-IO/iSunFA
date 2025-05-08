@@ -11,7 +11,7 @@ import {
 } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
+// import { ICertificate } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -28,6 +28,7 @@ import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
 // Info: (20250507 - Anna)
 // import { InvoiceType } from '@/constants/invoice';
+// import { CertificateType } from '@/constants/certificate';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
@@ -38,11 +39,13 @@ import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateListBodyProps {}
 
 const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
+
   const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250418 - Anna) 引用下載範圍
 
   const router = useRouter();
@@ -50,15 +53,15 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: updateInvoiceAPI } = APIHandler<ICertificateRC2Input>(APIName.INVOICE_PUT_V2);
+  const { trigger: createInvoiceAPI } = APIHandler<ICertificateRC2Input>(APIName.INVOICE_POST_V2);
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
   const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [certificates, setCertificates] = useState<ICertificateRC2InputUI[]>([]);
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2InputUI[]>([]);
 
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
@@ -88,8 +91,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   // Info: (20250507 - Anna)
-  // const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
-  const currency = CurrencyType.TWD;
+  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
@@ -145,7 +147,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleDownloadItem = useCallback(
     (id: number) => {
       const downloadItem = certificates.find((certificate) => certificate.id === id);
-      if (!downloadItem) return;
+      if (!downloadItem || !downloadItem.file?.url) return;
       const { file } = downloadItem;
       const link = document.createElement('a');
       link.href = file.url;
@@ -233,83 +235,48 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   // Info: (20250507 - Anna)
-  // const handleApiResponse = useCallback(
-  //   // Info: (20250507 - Anna) Debug
-  //   (resData: IPaginatedData<ICertificate[]>) => {
-  //     // eslint-disable-next-line no-console
-  //     console.log('📦 CERTIFICATE_LIST_V2 response:', resData);
-  //     try {
-  //       const note = JSON.parse(resData.note || '{}') as {
-  //         totalInvoicePrice: number;
-  //         incomplete: {
-  //           withVoucher: number;
-  //           withoutVoucher: number;
-  //         };
-  //         currency: string;
-  //       };
-  //       setTotalInvoicePrice(note.totalInvoicePrice);
-  //       setIncomplete(note.incomplete);
-  //       setTotalPages(resData.totalPages);
-  //       setTotalCount(resData.totalCount);
-  //       setPage(resData.page);
-  //       setCurrency(note.currency as CurrencyType);
-
-  //       const certificateData = resData.data.map((item) => ({
-  //         ...item,
-  //         isSelected: false,
-  //         actions:
-  //           activeTab === InvoiceTabs.WITHOUT_VOUCHER
-  //             ? [
-  //                 CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-  //                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-  //               ]
-  //             : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-  //       }));
-
-  //       setCertificates(certificateData);
-  //     } catch (error) {
-  //       toastHandler({
-  //         id: ToastId.LIST_CERTIFICATE_ERROR,
-  //         type: ToastType.ERROR,
-  //         content: t('certificate:ERROR.WENT_WRONG'),
-  //         closeable: true,
-  //       });
-  //     }
-  //   },
-  //   [activeTab]
-  // );
-
   const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
-      if (!resData || !Array.isArray(resData.data)) {
-        // eslint-disable-next-line no-console
-        console.error('🚨 resData 或 resData.data 無效：', resData);
-        return;
-      }
-
+    // Info: (20250507 - Anna) Debug
+    (resData: IPaginatedData<ICertificateRC2Input[]>) => {
       // eslint-disable-next-line no-console
-      console.log('📦 RC2 response:', resData);
+      console.log('📦 CERTIFICATE_LIST_V2 response:', resData);
+      try {
+        const note = JSON.parse(resData.note || '{}') as {
+          totalInvoicePrice: number;
+          incomplete: {
+            withVoucher: number;
+            withoutVoucher: number;
+          };
+          currency: string;
+        };
+        setTotalInvoicePrice(note.totalInvoicePrice);
+        setIncomplete(note.incomplete);
+        setTotalPages(resData.totalPages);
+        setTotalCount(resData.totalCount);
+        setPage(resData.page);
+        setCurrency(note.currency as CurrencyType);
 
-      // 這裡的 note 不再需要解析，移除
-      setTotalInvoicePrice(0); // RC2 沒有 totalInvoicePrice，設為 0 或自定邏輯
-      setIncomplete({ withVoucher: 0, withoutVoucher: 0 }); // 同上
-      setTotalPages(resData.totalPages);
-      setTotalCount(resData.totalCount);
-      setPage(resData.page);
+        const certificateData = resData.data.map((item) => ({
+          ...item,
+          isSelected: false,
+          actions:
+            activeTab === InvoiceTabs.WITHOUT_VOUCHER
+              ? [
+                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+                ]
+              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        }));
 
-      const certificateData = resData.data.map((item) => ({
-        ...item,
-        isSelected: false,
-        actions:
-          activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? [
-                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-              ]
-            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-      }));
-
-      setCertificates(certificateData);
+        setCertificates(certificateData);
+      } catch (error) {
+        toastHandler({
+          id: ToastId.LIST_CERTIFICATE_ERROR,
+          type: ToastType.ERROR,
+          content: t('certificate:ERROR.WENT_WRONG'),
+          closeable: true,
+        });
+      }
     },
     [activeTab]
   );
@@ -383,7 +350,8 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
+        // notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
+        notes: '',
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
@@ -444,46 +412,43 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [editingId]
   );
 
-  const onUpdateFilename = useCallback(
-    (id: number, filename: string) => {
-      setCertificates((prev) =>
-        prev.map((cert) => {
-          return cert.id === id
-            ? {
-                ...cert,
-                file: { ...cert.file, name: filename },
-                name: filename,
-              }
-            : cert;
-        })
-      );
-    },
-    [certificates]
-  );
+  // const onUpdateFilename = useCallback(
+  //   (id: number, filename: string) => {
+  //     setCertificates((prev) =>
+  //       prev.map((cert) => {
+  //         return cert.id === id
+  //           ? {
+  //               ...cert,
+  //               file: { ...cert.file, name: filename },
+  //               name: filename,
+  //             }
+  //           : cert;
+  //       })
+  //     );
+  //   },
+  //   [certificates]
+  // );
 
   const handleEditItem = useCallback(
-    async (certificate: ICertificate) => {
+    async (certificate: ICertificateRC2Input) => {
       try {
-        const { invoice } = certificate;
-
-        const postOrPutAPI = invoice.id
+        const postOrPutAPI = certificate.id
           ? updateInvoiceAPI({
               params: {
                 accountBookId,
                 certificateId: certificate.id,
-                invoiceId: invoice.id,
               },
-              body: invoice,
+              body: { ...certificate },
             })
           : createInvoiceAPI({
               params: { accountBookId, certificateId: certificate.id },
-              body: invoice,
+              body: { ...certificate },
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          let updatedData: ICertificateUI[] = [];
+          let updatedData: ICertificateRC2InputUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
             const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
@@ -517,7 +482,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
+  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificateRC2InputUI) => {
     setCertificates((prev) => [
       {
         ...newCertificate,
@@ -535,8 +500,18 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
-      handleNewCertificateComing(newCertificate);
+      // Info: (20250507 - Anna)
+      // const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: ICertificateRC2Input = JSON.parse(data.message);
+      // handleNewCertificateComing(newCertificate);
+      handleNewCertificateComing({
+        ...newCertificate,
+        isSelected: false,
+        actions: [
+          CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+          CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+        ],
+      });
       setIncomplete((prev) => ({
         ...prev,
         withoutVoucher: prev.withoutVoucher + 1,
@@ -592,7 +567,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
           certificate={currentEditingCertificate}
-          onUpdateFilename={onUpdateFilename}
+          // onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
           certificates={certificates} // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
@@ -624,14 +599,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           onTabClick={onTabClick}
           counts={incomplete ? [incomplete.withoutVoucher, incomplete.withVoucher] : [0, 0]}
         />
-
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<ICertificate[]>
+        <FilterSection<ICertificateRC2Input[]>
           className="mt-2"
-          // Info: (20250507 - Anna)
-          // params={{
-          //   accountBookId,
-          // }}
+          // params={{ accountBookId }}
           params={{
             accountBookId,
             ...(selectedSort && {
@@ -639,28 +610,24 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               sortOrder: selectedSort.order,
             }),
           }}
-          // Info: (20250507 - Anna)
-          // apiName={APIName.CERTIFICATE_LIST_V2}
           apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
-          // Info: (20250507 - Anna)
           // tab={activeTab}
-          // Info: (20250507 - Anna)
           // types={[
-          //   InvoiceType.ALL,
-          //   InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-          //   InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
-          //   InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-          //   InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
-          //   InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
-          //   InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
-          //   InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
-          //   InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
-          //   InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
+          //   CertificateType.ALL,
+          //   CertificateType.INPUT_21,
+          //   CertificateType.INPUT_22,
+          //   CertificateType.INPUT_23,
+          //   CertificateType.INPUT_24,
+          //   CertificateType.INPUT_25,
+          //   CertificateType.INPUT_26,
+          //   CertificateType.INPUT_27,
+          //   CertificateType.INPUT_28,
+          //   CertificateType.INPUT_29,
           // ]}
-          // types={['INPUT_21', 'INPUT_22']} // 先暫時用字串
+          // sort={selectedSort}
           labelClassName="text-neutral-300"
         />
 

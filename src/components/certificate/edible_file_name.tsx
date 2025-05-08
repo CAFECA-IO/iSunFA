@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-import { ICertificateUI } from '@/interfaces/certificate';
+// import { ICertificateUI } from '@/interfaces/certificate';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
@@ -9,10 +10,10 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 
 interface EditableFilenameProps {
-  certificate: ICertificateUI;
+  certificate: ICertificateRC2InputUI;
   certificateFilename: string;
   setCertificateFilename: (name: string) => void;
-  onUpdateFilename: (certificateId: number, name: string) => void;
+  onUpdateFilename?: (certificateId: number, name: string) => void;
 }
 
 const EditableFilename: React.FC<EditableFilenameProps> = ({
@@ -53,7 +54,7 @@ const EditableFilename: React.FC<EditableFilenameProps> = ({
 
     const newFilename = `${editingBaseName}${extension}`; // Info: (20241213 - tzuhan) 拼接完整檔名
     const { success } = await updateFilename({
-      params: { fileId: certificate.file.id },
+      params: { fileId: certificate.file?.id },
       body: { name: newFilename },
     });
 
@@ -68,7 +69,7 @@ const EditableFilename: React.FC<EditableFilenameProps> = ({
     }
 
     setCertificateFilename(newFilename); // Info: (20241213 - tzuhan) 更新父層檔名
-    onUpdateFilename(certificate.id, newFilename);
+    onUpdateFilename?.(certificate.id, newFilename);
     toastHandler({
       id: ToastId.UPDATE_FILENAME_SUCCESS,
       type: ToastType.SUCCESS,

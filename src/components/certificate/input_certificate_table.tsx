@@ -1,16 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import InputCertificateItem from '@/components/certificate/input_certificate_item';
-import { ICertificateUI } from '@/interfaces/certificate';
+// import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
 import { InvoiceTabs } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface InputCertificateTableProps {
   activeTab: InvoiceTabs;
-  certificates: ICertificateUI[];
+  certificates: ICertificateRC2InputUI[];
   currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數

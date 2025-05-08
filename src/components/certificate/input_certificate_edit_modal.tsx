@@ -7,7 +7,6 @@ import NumericInput from '@/components/numeric_input/numeric_input';
 import { Button } from '@/components/button/button';
 import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useModalContext } from '@/contexts/modal_context';
@@ -30,17 +29,22 @@ import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
+import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
+import { mapCertificateTypeToInvoiceType, isDeductible } from '@/lib/utils/certificate';
+import { mapInvoiceTypeToCertificateType } from '@/lib/utils/certificate';
+import { CertificateType } from '@/constants/certificate';
+import { TaxType } from '@/constants/certificate';
 
 interface InputCertificateEditModalProps {
   isOpen: boolean;
   accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
-  certificate?: ICertificateUI;
-  onUpdateFilename: (certificateId: number, name: string) => void;
-  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
+  certificate?: ICertificateRC2InputUI;
+  onUpdateFilename?: (certificateId: number, name: string) => void;
+  onSave: (data: ICertificateRC2Input) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
   onDelete: (id: number) => void;
-  certificates: ICertificateUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
+  certificates: ICertificateRC2InputUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
   editingId: number; // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
@@ -77,7 +81,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
-  const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
+  // const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
+  const savedInvoiceRef = useRef<ICertificateRC2InputUI | undefined>(certificate);
 
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
@@ -88,32 +93,44 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
   // Info: (20240924 - Anna) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-  const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
+  // const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
+  const [certificateFilename, setCertificateFilename] = useState<string>(
+    certificate.file?.name ?? ''
+  );
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.invoice?.date ?? 0,
+    // startTimeStamp: certificate.invoice?.date ?? 0,
+    startTimeStamp: certificate.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
+  const deductionType =
+    'deductionType' in certificate
+      ? (certificate as { deductionType?: string }).deductionType
+      : undefined;
   const [formState, setFormState] = useState(
     () =>
       ({
         // Info: (20250414 - Anna) 這個組件改為全為進項
         inputOrOutput: InvoiceTransactionDirection.INPUT,
-        date: certificate.invoice.date,
-        no: certificate.invoice.no,
-        priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxRatio: certificate.invoice.taxRatio,
-        taxPrice: certificate.invoice.taxPrice,
-        totalPrice: certificate.invoice.totalPrice,
-        counterParty: certificate.invoice.counterParty,
-        type: certificate.invoice.type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-        deductible: certificate.invoice.deductible,
+        date: certificate.issuedDate ?? 0,
+        no: certificate.no ?? '',
+        priceBeforeTax: certificate.netAmount ?? 0,
+        taxRatio: certificate.taxRate ?? 0,
+        taxPrice: certificate.taxAmount ?? 0,
+        totalPrice: certificate.totalAmount ?? 0,
+        // counterParty: certificate.invoice.counterParty,
+        counterParty: {
+          name: certificate.salesName ?? '',
+          taxId: certificate.salesIdNumber ?? '',
+        },
+        type: mapCertificateTypeToInvoiceType(certificate.type),
+        deductible: isDeductible(deductionType),
         // Info: (20250422 - Anna)「扣抵類型」
-        deductionType: certificate.invoice.deductionType ?? 'DEDUCTIBLE_PURCHASE_AND_EXPENSE',
+        deductionType: deductionType ?? 'DEDUCTIBLE_PURCHASE_AND_EXPENSE',
         // Info: (20250429 - Anna)「是否為彙總金額代表憑證」
-        isSharedAmount: certificate.invoice.isSharedAmount ?? false,
+        isSharedAmount: certificate.isSharedAmount ?? false,
         // Info: (20250429 - Anna)「其他憑證編號」
-        otherCertificateNo: certificate.invoice.otherCertificateNo ?? '',
+        otherCertificateNo: certificate.otherCertificateNo ?? '',
       }) as IInvoiceBetaOptional
   );
   const [errors] = useState<Record<string, string>>({});
@@ -235,10 +252,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasImageSrc = `/currencies/${(certificate.currency || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.currency || currencyAlias).toLowerCase()}-icon`;
   const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
+    `common:CURRENCY_ALIAS.${(certificate.currency || currencyAlias).toUpperCase()}`
   );
 
   // Info: (20250414 - Anna) 處理保存
@@ -266,7 +283,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     if (!validateForm()) return;
 
     const updatedInvoice = {
-      ...certificate.invoice,
+      ...certificate,
       ...formStateRef.current,
     };
     // ToDo: (20250429 - Anna) 等後端欄位完成，確認 isSharedAmount 正確存取後，移除 console.log
@@ -276,16 +293,32 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     console.log('傳到後端的 isSharedAmount(updatedInvoice):', updatedInvoice.isSharedAmount);
 
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
-    if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
-
-    const updatedData: ICertificate = {
+    // if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
+    if (
+      shallowEqual(
+        savedInvoiceRef.current as unknown as Record<string, unknown>,
+        updatedInvoice as unknown as Record<string, unknown>
+      )
+    ) {
+      return;
+    }
+    const { type, taxType, ...restFormState } = formStateRef.current;
+    const updatedData: ICertificateRC2Input = {
       ...certificate,
-      invoice: updatedInvoice,
+      // 把所有表單欄位直接 merge 到 certificate 上
+      // invoice: updatedInvoice,
+      ...restFormState, // 展開已移除 type 的欄位
+      type: mapInvoiceTypeToCertificateType(type!),
     };
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
-    savedInvoiceRef.current = updatedInvoice;
+    // savedInvoiceRef.current = updatedInvoice;
+    savedInvoiceRef.current = {
+      ...updatedData,
+      isSelected: savedInvoiceRef.current?.isSelected ?? false,
+      actions: savedInvoiceRef.current?.actions ?? [],
+    };
   }, [certificate, onSave]);
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
@@ -301,10 +334,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   // Info: (20250414 - Anna) 初始化 savedInvoiceRef，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
   useEffect(() => {
     // Info: (20250414 - Anna) 確保 savedInvoiceRef.current 被正確初始化為 certificate.invoice
-    if (certificate?.invoice) {
-      savedInvoiceRef.current = certificate.invoice;
+    if (certificate) {
+      savedInvoiceRef.current = certificate;
     }
-  }, [certificate?.invoice]);
+  }, [certificate]);
 
   // Info: (20250414 - Anna) 用戶輸入新內容都同步放入formStateRef.current，用來和前面兩種舊資料內容比較
   useEffect(() => {
@@ -321,8 +354,19 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     // Info: (20250414 - Anna) 取消上一次的 debounce 任務（如果還沒執行），避免重複打 API
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
+    // debounceTimer.current = setTimeout(() => {
+    //   const isSame = shallowEqual(formStateRef.current, savedInvoiceRef.current);
+    //   const isValid = validateForm();
+
+    //   if (!isSame && isValid) {
+    //     handleSave();
+    //   }
+    // }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
     debounceTimer.current = setTimeout(() => {
-      const isSame = shallowEqual(formStateRef.current, savedInvoiceRef.current);
+      const isSame = shallowEqual(
+        formStateRef.current as Record<string, unknown>,
+        (savedInvoiceRef.current ?? {}) as Record<string, unknown>
+      );
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -338,14 +382,19 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     const {
       type,
       // Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
-      date: certificateDate,
+      issuedDate: certificateDate,
       no,
-      taxRatio,
-      counterParty,
-      priceBeforeTax,
-      taxPrice,
-      totalPrice,
-    } = certificate.invoice;
+      taxRate: taxRatio,
+      // counterParty,
+      netAmount: priceBeforeTax,
+      taxAmount: taxPrice,
+      totalAmount: totalPrice,
+    } = certificate;
+
+    const counterParty = {
+      name: certificate.salesName ?? '',
+      taxId: certificate.salesIdNumber ?? '',
+    };
 
     // Info: (20250415 - Anna) 初始化 formState
     const newFormState: IInvoiceBetaOptional = {
@@ -357,15 +406,20 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       taxPrice,
       totalPrice,
       counterParty,
-      type: type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+      // type: type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
+      type: mapCertificateTypeToInvoiceType(type ?? CertificateType.INPUT_21),
     };
 
     // Info: (20250415 - Anna) 更新 state 與 Ref
     setFormState(newFormState);
     formStateRef.current = newFormState;
     savedInvoiceRef.current = {
-      ...certificate.invoice,
+      ...certificate,
       ...newFormState,
+      type: mapInvoiceTypeToCertificateType(
+        newFormState.type ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC
+      ),
+      taxType: newFormState.taxType as unknown as TaxType, // 強制轉型
     };
 
     // Info: (20250415 - Anna) Debug 日期內容
@@ -423,23 +477,19 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                 ref={invoiceRef}
                 invoiceType={formState.type}
                 issuedDate={dayjs
-                  .unix(formState.date ?? certificate.invoice.date ?? 0)
+                  .unix(formState.date ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
-                invoiceNo={formState.no ?? certificate.invoice.no ?? ''}
-                buyerTaxId={
-                  formState.counterParty?.taxId ??
-                  certificate.invoice.counterParty?.taxId ??
-                  undefined
-                }
-                priceBeforeTax={formState.priceBeforeTax ?? certificate.invoice.priceBeforeTax ?? 0}
-                taxPrice={formState.taxPrice ?? certificate.invoice.taxPrice ?? 0}
-                totalPrice={formState.totalPrice ?? certificate.invoice.totalPrice ?? 0}
+                invoiceNo={formState.no ?? certificate.no ?? ''}
+                buyerTaxId={formState.counterParty?.taxId ?? certificate.salesIdNumber}
+                priceBeforeTax={formState.priceBeforeTax ?? certificate.netAmount ?? 0}
+                taxPrice={formState.taxPrice ?? certificate.taxAmount ?? 0}
+                totalPrice={formState.totalPrice ?? certificate.totalAmount ?? 0}
               />
             </div>
           )}
           {eInvoiceImageUrl && (
             <ImageZoom
-              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              imageUrl={eInvoiceImageUrl ?? certificate.file?.url ?? ''}
               className="max-h-640px min-h-510px w-440px"
               controlPosition="bottom-right"
             />

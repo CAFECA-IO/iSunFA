@@ -4,7 +4,10 @@ import {
   TaxType,
   CurrencyCode,
   DeductionType,
+  // Info: (20250507 - Anna)
+  CERTIFICATE_USER_INTERACT_OPERATION,
 } from '@/constants/certificate';
+import { IFileUIBeta } from '@/interfaces/file';
 
 export interface ICertificateRC2Base {
   id: number;
@@ -44,6 +47,18 @@ export interface ICertificateRC2Input extends ICertificateRC2Base {
   buyerName?: never;
   buyerIdNumber?: never;
   isReturnOrAllowance?: never;
+}
+
+ // Info: (20250507 - Anna)
+export interface ICertificateRC2InputUI extends ICertificateRC2Input {
+  isSelected: boolean;
+  actions: CERTIFICATE_USER_INTERACT_OPERATION[];
+  file?: IFileUIBeta;
+  voucherNo?: string;
+  voucherId?: number;
+  incomplete?: boolean;
+  uploaderUrl?: string;
+  uploader?: string;
 }
 
 export interface ICertificateRC2Output extends ICertificateRC2Base {
