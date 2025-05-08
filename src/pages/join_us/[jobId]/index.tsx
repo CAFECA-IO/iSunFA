@@ -28,13 +28,24 @@ const JobDetailPage: React.FC<IJobDetailPageProps> = ({ jobId }) => {
     );
   }
 
+  // Info: (20250507 - Julian) 取得網址
+  const domain = process.env.WEB_URL;
+  const jobUrl = `${domain}/join_us/${jobId}`;
+
+  // Info: (20250507 - Julian) 標題
+  const pageTitle = `${jobData.title} - iSunFA`;
+
   return (
     <>
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta property="og:url" content={jobUrl} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{jobData.title}</title>
+        <title>{pageTitle}</title>
       </Head>
 
       <JobDetailBody jobData={jobData} />

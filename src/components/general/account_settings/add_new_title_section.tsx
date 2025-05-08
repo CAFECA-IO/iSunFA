@@ -351,7 +351,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const addBtnClickHandler = async () => {
     if (selectSubcategory) {
       createNewAccount({
-        params: { companyId: accountBookId },
+        params: { accountBookId },
         // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         body: {
           accountId: selectSubcategory.id,

@@ -146,6 +146,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
           })
         );
 
+        // Deprecated: (20250507 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('InvoiceUpload fileMeta.id:', fileMeta.id);
         let successCreated: boolean;
