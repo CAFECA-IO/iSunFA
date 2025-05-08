@@ -1,4 +1,4 @@
-export interface IJob {
+export interface IVacancy {
   id: number;
   title: string;
   location: string;
@@ -6,17 +6,17 @@ export interface IJob {
   description: string;
 }
 
-export interface IJobUI extends IJobDetail {
+export interface IVacancyUI extends IVacancyDetail {
   isFavorite: boolean;
 }
 
-export interface IJobDetail extends IJob {
+export interface IVacancyDetail extends IVacancy {
   jobResponsibilities: string[];
   requirements: string[];
   extraSkills: string[];
 }
 
-export const dummyJobList: IJobDetail[] = [
+export const dummyVacancyList: IVacancyDetail[] = [
   {
     id: 1,
     title: 'Front-end Developer',

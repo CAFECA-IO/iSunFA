@@ -15,9 +15,9 @@ export enum Proficiency {
 }
 
 export interface ILanguageSkill {
+  id: number;
   language: string;
   proficiency: keyof typeof Proficiency;
-  id: number;
 }
 export interface ICertificateSkill {
   id: number;

@@ -6,11 +6,11 @@ import { FiSearch } from 'react-icons/fi';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
-interface IJobFilterSectionProps {
-  filterJobs: (type: string, location: string, keyword: string) => void;
+interface IVacancyFilterSectionProps {
+  filterVacancies: (type: string, location: string, keyword: string) => void;
 }
 
-const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
+const VacancyFilterSection: React.FC<IVacancyFilterSectionProps> = ({ filterVacancies }) => {
   const { t } = useTranslation(['hiring']);
 
   const typeOptions = ['All', 'My Favorite'];
@@ -21,7 +21,7 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   const [searchKeyword, setSearchKeyword] = useState<string>('');
 
   useEffect(() => {
-    filterJobs(
+    filterVacancies(
       selectedType.toLowerCase(),
       selectedLocation.toLowerCase(),
       searchKeyword.toLowerCase()
@@ -49,7 +49,7 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   const keyDownHandler = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Info: (20250402 - Julian) 按下 Enter 鍵才觸發搜尋
     if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
-      filterJobs(
+      filterVacancies(
         selectedType.toLowerCase(),
         selectedLocation.toLowerCase(),
         searchKeyword.toLowerCase()
@@ -177,4 +177,4 @@ const JobFilterSection: React.FC<IJobFilterSectionProps> = ({ filterJobs }) => {
   );
 };
 
-export default JobFilterSection;
+export default VacancyFilterSection;
