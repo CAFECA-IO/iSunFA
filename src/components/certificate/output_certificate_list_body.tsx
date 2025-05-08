@@ -7,11 +7,11 @@ import { useModalContext } from '@/contexts/modal_context';
 import {
   CERTIFICATE_USER_INTERACT_OPERATION,
   CertificateDirection,
-  InvoiceTabs,
+  CertificateTab,
+  CertificateType,
 } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -26,8 +26,8 @@ import SelectionToolbar, {
 } from '@/components/certificate/certificate_selection_tool_bar_new';
 import OutputCertificate from '@/components/certificate/output_certificate';
 import OutputCertificateEditModal from '@/components/certificate/output_certificate_edit_modal';
-import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
@@ -36,6 +36,7 @@ import { CurrencyType } from '@/constants/currency';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
+import { ICertificateRC2Output, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateListBodyProps {}
 
@@ -46,17 +47,21 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: updateCertificateAPI } = APIHandler<ICertificateRC2Output>(
+    APIName.UPDATE_CERTIFICATE_RC2_OUTPUT
+  );
+  const { trigger: createCertificateAPI } = APIHandler<ICertificateRC2Output>(
+    APIName.CREATE_CERTIFICATE_RC2_OUTPUT
+  );
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
-  const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [activeTab, setActiveTab] = useState<CertificateTab>(CertificateTab.WITHOUT_VOUCHER);
+  const [certificates, setCertificates] = useState<ICertificateRC2OutputUI[]>([]);
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2OutputUI[]>([]);
 
-  const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
+  const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
     withVoucher: number;
     withoutVoucher: number;
@@ -72,8 +77,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
-  const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
+  const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
+  const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -152,18 +157,24 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
+  const [exportModalData, setExportModalData] = useState<ICertificateRC2Output[]>([]);
 
-  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-    setExportModalData(resData.data);
-  }, []);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleExportModalApiResponse = useCallback(
+    (resData: IPaginatedData<ICertificateRC2Output[]>) => {
+      setExportModalData(resData.data);
+    },
+    []
+  );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
     setIsExportModalOpen(true);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onExport = useCallback(() => {
     if (exportModalData.length > 0) {
       exportModalData.forEach((item) => {
@@ -181,17 +192,17 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
+    (resData: IPaginatedData<ICertificateRC2Output[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalInvoicePrice: number;
+          totalCertificatePrice: number;
           incomplete: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalInvoicePrice(note.totalInvoicePrice);
+        setTotalCertificatePrice(note.totalCertificatePrice);
         setIncomplete(note.incomplete);
         setTotalPages(resData.totalPages);
         setTotalCount(resData.totalCount);
@@ -202,7 +213,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           ...item,
           isSelected: false,
           actions:
-            activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            activeTab === CertificateTab.WITHOUT_VOUCHER
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
                   CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
@@ -247,7 +258,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelectAll = useCallback(() => {
     const ids = certificates
       .filter((certificate) => {
-        return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+        return activeTab === CertificateTab.WITHOUT_VOUCHER
           ? !certificate.voucherNo
           : certificate.voucherNo;
       })
@@ -292,7 +303,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
+        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.id || ''}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
@@ -328,7 +339,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onTabClick = useCallback(
     (tab: string) => {
-      if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
+      if ((tab as CertificateTab) === CertificateTab.WITHOUT_VOUCHER) {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
@@ -339,7 +350,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       } else {
         setAddOperations([]);
       }
-      setActiveTab(tab as InvoiceTabs);
+      setActiveTab(tab as CertificateTab);
       setActiveSelection(false);
     },
     [activeTab, handleAddVoucher, handleExport]
@@ -371,28 +382,25 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleEditItem = useCallback(
-    async (certificate: ICertificate) => {
+    async (certificate: Partial<ICertificateRC2Output>) => {
       try {
-        const { invoice } = certificate;
-
-        const postOrPutAPI = invoice.id
-          ? updateInvoiceAPI({
+        const postOrPutAPI = certificate.id
+          ? updateCertificateAPI({
               params: {
                 accountBookId,
                 certificateId: certificate.id,
-                invoiceId: invoice.id,
               },
-              body: invoice,
+              body: certificate,
             })
-          : createInvoiceAPI({
+          : createCertificateAPI({
               params: { accountBookId, certificateId: certificate.id },
-              body: invoice,
+              body: certificate,
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          let updatedData: ICertificateUI[] = [];
+          let updatedData: ICertificateRC2OutputUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
             const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
@@ -426,7 +434,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
+  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificateRC2Output) => {
     setCertificates((prev) => [
       {
         ...newCertificate,
@@ -444,7 +452,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: ICertificateRC2Output = JSON.parse(data.message);
       handleNewCertificateComing(newCertificate);
       setIncomplete((prev) => ({
         ...prev,
@@ -462,8 +470,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
-    } else if (invoiceNoSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
+    } else if (certificateNoSort) {
+      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: certificateNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -496,7 +504,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {isExportModalOpen && (
+      {/* Info: (20250508 - Tzuhan) @Anna 需要請你協助
+       {isExportModalOpen && (
         <CertificateExportModal
           isOpen={isExportModalOpen}
           onClose={() => setIsExportModalOpen(false)}
@@ -504,7 +513,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           handleExport={onExport}
           certificates={exportModalData}
         />
-      )}
+      )} */}
       {isEditModalOpen && editingId !== null && (
         <OutputCertificateEditModal
           accountBookId={accountBookId}
@@ -538,7 +547,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - Anna) Tabs */}
         <Tabs
-          tabs={Object.values(InvoiceTabs)}
+          tabs={Object.values(CertificateTab)}
           tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
@@ -546,7 +555,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<ICertificate[]>
+        <FilterSection<ICertificateRC2Output[]>
           className="mt-2"
           params={{ accountBookId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
@@ -555,13 +564,13 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
           types={[
-            InvoiceType.ALL,
-            InvoiceType.SALES_TRIPLICATE_INVOICE,
-            InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-            InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
-            InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
-            InvoiceType.SALES_NON_UNIFORM_INVOICE,
+            CertificateType.ALL,
+            CertificateType.OUTPUT_31,
+            CertificateType.OUTPUT_32,
+            CertificateType.OUTPUT_33,
+            CertificateType.OUTPUT_34,
+            CertificateType.OUTPUT_35,
+            CertificateType.OUTPUT_36,
           ]}
           sort={selectedSort}
           labelClassName="text-neutral-300"
@@ -573,11 +582,11 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
-              isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
+              isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
-              totalPrice={totalInvoicePrice}
+              totalPrice={totalCertificatePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
               totalCount={Object.values(certificates).length || 0}
@@ -606,13 +615,13 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               dateSort={dateSort}
               amountSort={amountSort}
               voucherSort={voucherSort}
-              invoiceNoSort={invoiceNoSort}
-              invoiceTypeSort={invoiceTypeSort}
+              certificateNoSort={certificateNoSort}
+              certificateTypeSort={certificateTypeSort}
               setDateSort={setDateSort}
               setAmountSort={setAmountSort}
               setVoucherSort={setVoucherSort}
-              setInvoiceNoSort={setInvoiceNoSort}
-              setInvoiceTypeSort={setInvoiceTypeSort}
+              setCertificateNoSort={setCertificateNoSort}
+              setCertificateTypeSort={setCertificateTypeSort}
             />
           </>
         ) : (
