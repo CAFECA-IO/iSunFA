@@ -1,9 +1,10 @@
 import React from 'react';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateThumbnail from '@/components/certificate/certificate_thumbnail';
+import { ICertificateRC2InputUI, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateGridProps {
-  certificates: ICertificateUI[]; // Info: (20240923 - tzuhan) 項目列表
+  certificates: ICertificateUI[] | ICertificateRC2InputUI[] | ICertificateRC2OutputUI[]; // Info: (20240923 - tzuhan) 項目列表
   activeSelection: boolean; // Info: (20240923 - tzuhan) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onRemove: (id: number) => void;

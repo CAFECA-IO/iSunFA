@@ -7,11 +7,10 @@ import { useModalContext } from '@/contexts/modal_context';
 import {
   CERTIFICATE_USER_INTERACT_OPERATION,
   CertificateDirection,
-  InvoiceTabs,
+  CertificateTab,
 } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
@@ -37,6 +36,7 @@ import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateListBodyProps {}
 
@@ -49,15 +49,19 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
+  const { trigger: updateInvoiceAPI } = APIHandler<ICertificateRC2Input>(
+    APIName.UPDATE_CERTIFICATE_RC2_INPUT
+  );
+  const { trigger: createInvoiceAPI } = APIHandler<ICertificateRC2Input>(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
     APIName.CERTIFICATE_DELETE_MULTIPLE_V2
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
-  const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [activeTab, setActiveTab] = useState<CertificateTab>(CertificateTab.WITHOUT_VOUCHER);
+  const [certificates, setCertificates] = useState<ICertificateRC2InputUI[]>([]);
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2InputUI[]>([]);
 
   const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
@@ -230,7 +234,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
+    (resData: IPaginatedData<ICertificateRC2Input[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalInvoicePrice: number;
@@ -251,7 +255,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           ...item,
           isSelected: false,
           actions:
-            activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            activeTab === CertificateTab.WITHOUT_VOUCHER
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
                   CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
@@ -296,7 +300,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelectAll = useCallback(() => {
     const ids = certificates
       .filter((certificate) => {
-        return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+        return activeTab === CertificateTab.WITHOUT_VOUCHER
           ? !certificate.voucherNo
           : certificate.voucherNo;
       })
@@ -341,7 +345,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
+        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.id || ''}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
@@ -377,7 +381,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onTabClick = useCallback(
     (tab: string) => {
-      if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
+      if ((tab as CertificateTab) === CertificateTab.WITHOUT_VOUCHER) {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
@@ -388,7 +392,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       } else {
         setAddOperations([]);
       }
-      setActiveTab(tab as InvoiceTabs);
+      setActiveTab(tab as CertificateTab);
       setActiveSelection(false);
     },
     [activeTab, handleAddVoucher, handleExport]
@@ -420,28 +424,25 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleEditItem = useCallback(
-    async (certificate: ICertificate) => {
+    async (certificate: Partial<ICertificateRC2InputUI>) => {
       try {
-        const { invoice } = certificate;
-
-        const postOrPutAPI = invoice.id
+        const postOrPutAPI = certificate.id
           ? updateInvoiceAPI({
               params: {
                 accountBookId,
                 certificateId: certificate.id,
-                invoiceId: invoice.id,
               },
-              body: invoice,
+              body: certificate,
             })
           : createInvoiceAPI({
               params: { accountBookId, certificateId: certificate.id },
-              body: invoice,
+              body: certificate,
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          let updatedData: ICertificateUI[] = [];
+          let updatedData: ICertificateRC2InputUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
             const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
@@ -475,7 +476,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
+  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificateRC2Input) => {
     setCertificates((prev) => [
       {
         ...newCertificate,
@@ -493,7 +494,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: ICertificateRC2Input = JSON.parse(data.message);
       handleNewCertificateComing(newCertificate);
       setIncomplete((prev) => ({
         ...prev,
@@ -576,7 +577,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - Anna) Tabs */}
         <Tabs
-          tabs={Object.values(InvoiceTabs)}
+          tabs={Object.values(CertificateTab)}
           tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
@@ -584,7 +585,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<ICertificate[]>
+        <FilterSection<ICertificateRC2Input[]>
           className="mt-2"
           params={{ accountBookId }}
           apiName={APIName.CERTIFICATE_LIST_V2}
@@ -614,7 +615,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
-              isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
+              isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}

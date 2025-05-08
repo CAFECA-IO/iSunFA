@@ -1,16 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import OutputCertificateItem from '@/components/certificate/output_certificate_item';
-import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
-import { InvoiceTabs } from '@/constants/certificate';
+import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
+import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface OutputCertificateTableProps {
-  activeTab: InvoiceTabs;
-  certificates: ICertificateUI[];
+  activeTab: CertificateTab;
+  certificates: ICertificateRC2OutputUI[];
   currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
@@ -152,7 +152,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
-              {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
+              {activeTab === CertificateTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>

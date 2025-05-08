@@ -46,6 +46,8 @@ export enum CertificateType {
   INPUT_29 = 'INPUT_29',
   OUTPUT_31 = 'OUTPUT_31',
   OUTPUT_32 = 'OUTPUT_32',
+  OUTPUT_33 = 'OUTPUT_33',
+  OUTPUT_34 = 'OUTPUT_34',
   OUTPUT_35 = 'OUTPUT_35',
   OUTPUT_36 = 'OUTPUT_36',
 }
