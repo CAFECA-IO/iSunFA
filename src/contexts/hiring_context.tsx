@@ -9,8 +9,8 @@ export interface IHiringProvider {
 }
 
 interface IHiringContext {
-  favoriteJobIds: number[];
-  toggleFavoriteJobId: (jobId: number) => void;
+  favoriteVacancyIds: number[];
+  toggleFavoriteVacancyId: (jobId: number) => void;
 
   tempPersonalInfo: IPersonalInfo | undefined;
   savePersonalInfo: (info: IPersonalInfo) => void;
@@ -44,7 +44,7 @@ interface IHiringContext {
 const HiringContext = createContext<IHiringContext | undefined>(undefined);
 
 export const HiringProvider = ({ children }: IHiringProvider) => {
-  const [, setFavoriteJobIds, favoriteJobIdsRef] = useStateRef<number[]>([]);
+  const [, setFavoriteVacancyIds, favoriteVacancyIdsRef] = useStateRef<number[]>([]);
 
   const [, setPersonalInfo, personalInfoRef] = useStateRef<IPersonalInfo | undefined>(undefined);
   const [, setEducationList, educationListRef] = useStateRef<IEducationExperience[]>([]);
@@ -55,8 +55,8 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
   const [, setAttachment, attachmentRef] = useStateRef<IAttachment | undefined>(undefined);
 
   // Info: (20250505 - Julian) 收藏工作職缺的 ID
-  const toggleFavoriteJobId = (jobId: number) => {
-    setFavoriteJobIds((prev) => {
+  const toggleFavoriteVacancyId = (jobId: number) => {
+    setFavoriteVacancyIds((prev) => {
       const newFavorites = prev.includes(jobId)
         ? prev.filter((id) => id !== jobId) // Info: (20250505 - Julian) 若已有該 jobId，則移除
         : [...prev, jobId]; // Info: (20250505 - Julian) 若沒有該 jobId，則加入
@@ -139,8 +139,8 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
 
   const value = useMemo(
     () => ({
-      favoriteJobIds: favoriteJobIdsRef.current,
-      toggleFavoriteJobId,
+      favoriteVacancyIds: favoriteVacancyIdsRef.current,
+      toggleFavoriteVacancyId,
 
       tempPersonalInfo: personalInfoRef.current,
       savePersonalInfo,
@@ -172,8 +172,8 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
       saveAttachment,
     }),
     [
-      favoriteJobIdsRef.current,
-      toggleFavoriteJobId,
+      favoriteVacancyIdsRef.current,
+      toggleFavoriteVacancyId,
       personalInfoRef.current,
       savePersonalInfo,
       educationListRef.current,

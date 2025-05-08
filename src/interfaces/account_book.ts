@@ -1,4 +1,4 @@
-// import { AGENT_FILING_ROLE } from '@/constants/account_book'; // ToDo: (20250423 - Liz) RC2 use
+// import { DECLARANT_FILING_METHOD, FILING_FREQUENCY, FILING_METHOD, AGENT_FILING_ROLE } from '@/constants/account_book'; // ToDo: (20250507 - Liz) RC2 新增表單欄位
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
 
@@ -46,9 +46,9 @@ export interface IAccountBook {
   // district: string; // Info: (20250423 - Liz) 行政區
   // enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
 
-  // filingFrequency: string; // Info: (20250423 - Liz) 申報頻率
-  // filingMethod: string; // Info: (20250423 - Liz) 總繳種類
-  // declarantFilingMethod: string; // Info: (20250423 - Liz) 申報方式
+  // filingFrequency: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
+  // filingMethod: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
+  // declarantFilingMethod: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
 
   // declarantName: string; // Info: (20250423 - Liz) 申報人姓名
   // declarantPersonalId: string; // Info: (20250423 - Liz) 申報人身分證字號

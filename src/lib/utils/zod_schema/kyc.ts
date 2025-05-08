@@ -10,7 +10,7 @@ import {
 } from '@/constants/kyc';
 import { z, ZodRawShape } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { zodTimestampInSeconds } from '@/lib/utils/zod_schema/common';
+import { zodTimestampInSeconds, nullSchema } from '@/lib/utils/zod_schema/common';
 
 export const iCompanyKYCFormValidator = z.object({
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: z.string(),
@@ -79,4 +79,36 @@ export const kycRequestValidators: {
   [method: string]: IZodValidator<ZodRawShape, ZodRawShape>;
 } = {
   POST: kycUploadValidator,
+};
+
+/**
+ * Info: (20250505 - Shirley) KYC Bookkeeper schema for validating request body
+ */
+const kycBookkeeperBodySchema = z.object({
+  name: z.string(),
+  birthDate: z.string(),
+  email: z.string().email(),
+  phone: z.string(),
+  qualification: z.boolean(),
+  certificationNumber: z.string(),
+  personalIdType: z.string(),
+  personalIdFileId: z.number(),
+  certificationFileId: z.number(),
+});
+
+/**
+ * Info: (20250505 - Shirley) KYC Bookkeeper schema for validating response
+ */
+export const kycBookkeeperOutputSchema = kycBookkeeperBodySchema;
+
+/**
+ * Info: (20250505 - Shirley) KYC Bookkeeper upload schema
+ */
+export const kycBookkeeperUploadSchema = {
+  input: {
+    querySchema: nullSchema,
+    bodySchema: kycBookkeeperBodySchema,
+  },
+  outputSchema: kycBookkeeperOutputSchema,
+  frontend: nullSchema,
 };

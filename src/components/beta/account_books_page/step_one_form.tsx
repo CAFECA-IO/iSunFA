@@ -320,18 +320,20 @@ const StepOneForm = ({
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.COMPANY_NAME')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
-                  <input
-                    type="text"
-                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_NAME')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                    value={companyName}
-                    onChange={(e) => handleChange('companyName')(e.target.value)}
-                  />
-                  {companyNameError && !companyName && (
-                    <p className="text-right text-sm font-medium text-text-state-error">
-                      {companyNameError}
-                    </p>
-                  )}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_NAME')}
+                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={companyName}
+                      onChange={(e) => handleChange('companyName')(e.target.value)}
+                    />
+                    {companyNameError && !companyName && (
+                      <p className="text-right text-sm font-medium text-text-state-error">
+                        {companyNameError}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Info: (20250410 - Liz) 負責人 */}
@@ -340,18 +342,20 @@ const StepOneForm = ({
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.RESPONSIBLE_PERSON')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
-                  <input
-                    type="text"
-                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_RESPONSIBLE_PERSON')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                    value={responsiblePerson}
-                    onChange={(e) => handleChange('responsiblePerson')(e.target.value)}
-                  />
-                  {responsiblePersonError && !responsiblePerson && (
-                    <p className="text-right text-sm font-medium text-text-state-error">
-                      {responsiblePersonError}
-                    </p>
-                  )}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_RESPONSIBLE_PERSON')}
+                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={responsiblePerson}
+                      onChange={(e) => handleChange('responsiblePerson')(e.target.value)}
+                    />
+                    {responsiblePersonError && !responsiblePerson && (
+                      <p className="text-right text-sm font-medium text-text-state-error">
+                        {responsiblePersonError}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -362,18 +366,20 @@ const StepOneForm = ({
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_ID')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
-                  <input
-                    type="number"
-                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                    value={taxId}
-                    onChange={(e) => handleChange('taxId')(e.target.value)}
-                  />
-                  {taxIdError && !taxId && (
-                    <p className="text-right text-sm font-medium text-text-state-error">
-                      {taxIdError}
-                    </p>
-                  )}
+                  <div>
+                    <input
+                      type="number"
+                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
+                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={taxId}
+                      onChange={(e) => handleChange('taxId')(e.target.value)}
+                    />
+                    {taxIdError && !taxId && (
+                      <p className="text-right text-sm font-medium text-text-state-error">
+                        {taxIdError}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Info: (20250409 - Liz) 稅籍編號 */}
@@ -382,18 +388,20 @@ const StepOneForm = ({
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_SERIAL_NUMBER')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
-                  <input
-                    type="number"
-                    placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_SERIAL_NUMBER')}
-                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                    value={taxSerialNumber}
-                    onChange={(e) => handleChange('taxSerialNumber')(e.target.value)}
-                  />
-                  {taxSerialNumberError && !taxSerialNumber && (
-                    <p className="text-right text-sm font-medium text-text-state-error">
-                      {taxSerialNumberError}
-                    </p>
-                  )}
+                  <div>
+                    <input
+                      type="number"
+                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_SERIAL_NUMBER')}
+                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                      value={taxSerialNumber}
+                      onChange={(e) => handleChange('taxSerialNumber')(e.target.value)}
+                    />
+                    {taxSerialNumberError && !taxSerialNumber && (
+                      <p className="text-right text-sm font-medium text-text-state-error">
+                        {taxSerialNumberError}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </section>
