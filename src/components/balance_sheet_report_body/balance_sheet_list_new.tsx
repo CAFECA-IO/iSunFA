@@ -295,20 +295,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
-    <div className="flex w-300px items-center justify-center">
-      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="232"
-        height="232"
-        fill="none"
-        viewBox="0 0 200 200"
-      >
-        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('reports:REPORTS.NO_DATA')}
-        </text>
-      </svg>
+    <div
+      className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+      style={{
+        width: '232px',
+        height: '232px',
+      }}
+    >
+      {t('reports:REPORTS.NO_DATA')}
     </div>
   ) : (
     <div className="ml-10">
@@ -318,19 +312,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="flex w-300px items-center justify-center">
-      {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="232"
-        height="232"
-        fill="none"
-        viewBox="0 0 200 200"
+      <div
+        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+        style={{
+          width: '232px',
+          height: '232px',
+        }}
       >
-        <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-        <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-          {t('reports:REPORTS.NO_DATA')}
-        </text>
-      </svg>
+        {t('reports:REPORTS.NO_DATA')}
+      </div>
     </div>
   ) : (
     <div className="ml-10">
@@ -737,19 +727,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
                   <div className="flex w-300px items-center justify-center">
-                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="232"
-                      height="232"
-                      fill="none"
-                      viewBox="0 0 200 200"
+                    <div
+                      className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+                      style={{
+                        width: '232px',
+                        height: '232px',
+                      }}
                     >
-                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-                        {t('reports:REPORTS.NO_DATA')}
-                      </text>
-                    </svg>
+                      {t('reports:REPORTS.NO_DATA')}
+                    </div>
                   </div>
                 ) : (
                   <PieChartAssets
@@ -778,19 +764,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
                   <div className="flex w-300px items-center justify-center">
-                    {/* ToDo: (20240911 - Liz) 未來可以改用 CSS 刻，以便拔掉 svg */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="232"
-                      height="232"
-                      fill="none"
-                      viewBox="0 0 200 200"
+                    <div
+                      className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+                      style={{
+                        width: '232px',
+                        height: '232px',
+                      }}
                     >
-                      <circle cx="100" cy="100" r="100" fill="#D9D9D9"></circle>
-                      <text x="100" y="105" fill="#fff" fontSize="20" textAnchor="middle">
-                        {t('reports:REPORTS.NO_DATA')}
-                      </text>
-                    </svg>
+                      {t('reports:REPORTS.NO_DATA')}
+                    </div>
                   </div>
                 ) : (
                   <PieChartAssets
