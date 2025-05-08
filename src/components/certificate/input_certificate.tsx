@@ -27,11 +27,11 @@ interface InputCertificateProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
+  certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   isExporting: boolean;
 }
 
@@ -55,11 +55,11 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceTypeSort,
+  certificateTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceTypeSort,
+  setCertificateTypeSort,
   isExporting,
 }) => {
   return (
@@ -77,11 +77,11 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
           dateSort={dateSort}
           amountSort={amountSort}
           voucherSort={voucherSort}
-          invoiceTypeSort={invoiceTypeSort}
+          certificateTypeSort={certificateTypeSort}
           setDateSort={setDateSort}
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
-          setInvoiceTypeSort={setInvoiceTypeSort}
+          setCertificateTypeSort={setCertificateTypeSort}
           isExporting={isExporting}
         />
       )}

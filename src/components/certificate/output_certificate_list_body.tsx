@@ -8,6 +8,7 @@ import {
   CERTIFICATE_USER_INTERACT_OPERATION,
   CertificateDirection,
   CertificateTab,
+  CertificateType,
 } from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
@@ -25,7 +26,6 @@ import SelectionToolbar, {
 } from '@/components/certificate/certificate_selection_tool_bar_new';
 import OutputCertificate from '@/components/certificate/output_certificate';
 import OutputCertificateEditModal from '@/components/certificate/output_certificate_edit_modal';
-import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CertificateExportModal from '@/components/certificate/certificate_export_modal';
@@ -47,10 +47,10 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateInvoiceAPI } = APIHandler<ICertificateRC2Output>(
+  const { trigger: updateCertificateAPI } = APIHandler<ICertificateRC2Output>(
     APIName.UPDATE_CERTIFICATE_RC2_OUTPUT
   );
-  const { trigger: createInvoiceAPI } = APIHandler<ICertificateRC2Output>(
+  const { trigger: createCertificateAPI } = APIHandler<ICertificateRC2Output>(
     APIName.CREATE_CERTIFICATE_RC2_OUTPUT
   );
   const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
@@ -61,7 +61,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [certificates, setCertificates] = useState<ICertificateRC2OutputUI[]>([]);
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2OutputUI[]>([]);
 
-  const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
+  const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
     withVoucher: number;
     withoutVoucher: number;
@@ -77,8 +77,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
-  const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
+  const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
+  const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -195,14 +195,14 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     (resData: IPaginatedData<ICertificateRC2Output[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalInvoicePrice: number;
+          totalCertificatePrice: number;
           incomplete: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalInvoicePrice(note.totalInvoicePrice);
+        setTotalCertificatePrice(note.totalCertificatePrice);
         setIncomplete(note.incomplete);
         setTotalPages(resData.totalPages);
         setTotalCount(resData.totalCount);
@@ -385,14 +385,14 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     async (certificate: Partial<ICertificateRC2Output>) => {
       try {
         const postOrPutAPI = certificate.id
-          ? updateInvoiceAPI({
+          ? updateCertificateAPI({
               params: {
                 accountBookId,
                 certificateId: certificate.id,
               },
               body: certificate,
             })
-          : createInvoiceAPI({
+          : createCertificateAPI({
               params: { accountBookId, certificateId: certificate.id },
               body: certificate,
             });
@@ -470,8 +470,8 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
-    } else if (invoiceNoSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
+    } else if (certificateNoSort) {
+      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: certificateNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -564,13 +564,13 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
           types={[
-            InvoiceType.ALL,
-            InvoiceType.SALES_TRIPLICATE_INVOICE,
-            InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-            InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
-            InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
-            InvoiceType.SALES_NON_UNIFORM_INVOICE,
+            CertificateType.ALL,
+            CertificateType.OUTPUT_31,
+            CertificateType.OUTPUT_32,
+            CertificateType.OUTPUT_33,
+            CertificateType.OUTPUT_34,
+            CertificateType.OUTPUT_35,
+            CertificateType.OUTPUT_36,
           ]}
           sort={selectedSort}
           labelClassName="text-neutral-300"
@@ -586,7 +586,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
-              totalPrice={totalInvoicePrice}
+              totalPrice={totalCertificatePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
               totalCount={Object.values(certificates).length || 0}
@@ -615,13 +615,13 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               dateSort={dateSort}
               amountSort={amountSort}
               voucherSort={voucherSort}
-              invoiceNoSort={invoiceNoSort}
-              invoiceTypeSort={invoiceTypeSort}
+              certificateNoSort={certificateNoSort}
+              certificateTypeSort={certificateTypeSort}
               setDateSort={setDateSort}
               setAmountSort={setAmountSort}
               setVoucherSort={setVoucherSort}
-              setInvoiceNoSort={setInvoiceNoSort}
-              setInvoiceTypeSort={setInvoiceTypeSort}
+              setCertificateNoSort={setCertificateNoSort}
+              setCertificateTypeSort={setCertificateTypeSort}
             />
           </>
         ) : (

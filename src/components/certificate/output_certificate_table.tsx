@@ -20,13 +20,13 @@ interface OutputCertificateTableProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  invoiceNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
-  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
+  certificateNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
+  certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
-  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
+  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
 const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
@@ -41,13 +41,13 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceNoSort,
-  invoiceTypeSort,
+  certificateNoSort,
+  certificateTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceNoSort,
-  setInvoiceTypeSort,
+  setCertificateNoSort,
+  setCertificateTypeSort,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -57,8 +57,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -69,8 +69,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -81,34 +81,34 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證號碼表頭
-  const displayedInvoiceNo = SortingButton({
+  const displayedCertificateNo = SortingButton({
     string: t('certificate:TABLE.INVOICE_NUMBER'),
-    sortOrder: invoiceNoSort,
-    setSortOrder: setInvoiceNoSort,
+    sortOrder: certificateNoSort,
+    setSortOrder: setCertificateNoSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證類型表頭
-  const displayedInvoiceType = SortingButton({
+  const displayedCertificateType = SortingButton({
     string: t('certificate:TABLE.INVOICE_TYPE'),
-    sortOrder: invoiceTypeSort,
-    setSortOrder: setInvoiceTypeSort,
+    sortOrder: certificateTypeSort,
+    setSortOrder: setCertificateTypeSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
+      setCertificateNoSort(null);
     },
   });
 
@@ -132,10 +132,10 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
               {displayedIssuedDate}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              {displayedInvoiceNo}
+              {displayedCertificateNo}
             </div>
             <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedInvoiceType}
+              {displayedCertificateType}
             </div>
 
             <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">

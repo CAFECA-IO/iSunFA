@@ -20,11 +20,11 @@ interface InputCertificateTableProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
+  certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   isExporting: boolean;
 }
 
@@ -40,11 +40,11 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceTypeSort,
+  certificateTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceTypeSort,
+  setCertificateTypeSort,
   isExporting,
 }) => {
   const { t } = useTranslation('certificate');
@@ -55,7 +55,7 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -66,7 +66,7 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -77,15 +77,15 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證類型表頭
   const displayedInvoiceType = SortingButton({
     string: t('certificate:TABLE.INVOICE_TYPE'),
-    sortOrder: invoiceTypeSort,
-    setSortOrder: setInvoiceTypeSort,
+    sortOrder: certificateTypeSort,
+    setSortOrder: setCertificateTypeSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
