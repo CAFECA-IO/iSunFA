@@ -17,7 +17,7 @@ import {
 } from '@/components/landing_page_v2/linear_gradient_text';
 import FavoriteButton from '@/components/join_us/favorite_button';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { IJobDetail } from '@/interfaces/job';
+import { IJobDetail } from '@/interfaces/vacancy';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useHiringCtx } from '@/contexts/hiring_context';

@@ -10,7 +10,7 @@ import {
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
 import JobFilterSection from '@/components/join_us/filter_section';
-import { dummyJobList, IJobUI } from '@/interfaces/job';
+import { dummyJobList, IJobUI } from '@/interfaces/vacancy';
 import VacancyItem from '@/components/join_us/vacancy_item';
 import { useHiringCtx } from '@/contexts/hiring_context';
 
@@ -107,7 +107,7 @@ const JoinUsPageBody: React.FC = () => {
     return (
       <VacancyItem
         key={job.id}
-        job={job}
+        vacancy={job}
         isFavorite={job.isFavorite}
         toggleFavorite={toggleFavorite}
       />

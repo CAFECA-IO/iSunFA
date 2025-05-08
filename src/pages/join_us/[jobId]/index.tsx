@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import JobDetailBody from '@/components/join_us/job_detail_body';
-import { dummyJobList } from '@/interfaces/job';
+import { dummyJobList } from '@/interfaces/vacancy';
 
 interface IJobDetailPageProps {
   jobId: string;
