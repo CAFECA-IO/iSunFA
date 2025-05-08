@@ -1,7 +1,6 @@
 import React from 'react';
-// import { ICertificateUI } from '@/interfaces/certificate';
-import CertificateThumbnail from '@/components/certificate/certificate_thumbnail';
 import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
+import CertificateThumbnail from '@/components/certificate/certificate_thumbnail';
 
 interface CertificateGridProps {
   certificates: ICertificateRC2InputUI[]; // Info: (20240923 - tzuhan) 項目列表

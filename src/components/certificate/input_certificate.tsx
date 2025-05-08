@@ -1,13 +1,12 @@
 import React from 'react';
 import Pagination from '@/components/pagination/pagination';
-// import { ICertificateUI } from '@/interfaces/certificate';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import InputCertificateTable from '@/components/certificate/input_certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { InvoiceTabs } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
-import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface InputCertificateProps {
   activeTab: InvoiceTabs;

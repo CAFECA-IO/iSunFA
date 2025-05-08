@@ -89,8 +89,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   // Info: (20250507 - Anna)
-  // const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
-  const currency = CurrencyType.TWD;
+  const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
@@ -235,86 +234,48 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   // Info: (20250507 - Anna)
-  // const handleApiResponse = useCallback(
-  //   // Info: (20250507 - Anna) Debug
-  //   (resData: IPaginatedData<ICertificate[]>) => {
-  //     // eslint-disable-next-line no-console
-  //     console.log('📦 CERTIFICATE_LIST_V2 response:', resData);
-  //     try {
-  //       const note = JSON.parse(resData.note || '{}') as {
-  //         totalInvoicePrice: number;
-  //         incomplete: {
-  //           withVoucher: number;
-  //           withoutVoucher: number;
-  //         };
-  //         currency: string;
-  //       };
-  //       setTotalInvoicePrice(note.totalInvoicePrice);
-  //       setIncomplete(note.incomplete);
-  //       setTotalPages(resData.totalPages);
-  //       setTotalCount(resData.totalCount);
-  //       setPage(resData.page);
-  //       setCurrency(note.currency as CurrencyType);
+ const handleApiResponse = useCallback(
+   (resData: IPaginatedData<ICertificateRC2Input[]>) => {
+     try {
+       const note = JSON.parse(resData.note || '{}') as {
+         totalInvoicePrice: number;
+         incomplete: {
+           withVoucher: number;
+           withoutVoucher: number;
+         };
+         currency: string;
+       };
+       setTotalInvoicePrice(note.totalInvoicePrice);
+       setIncomplete(note.incomplete);
+       setTotalPages(resData.totalPages);
+       setTotalCount(resData.totalCount);
+       setPage(resData.page);
+       setCurrency(note.currency as CurrencyType);
 
-  //       const certificateData = resData.data.map((item) => ({
-  //         ...item,
-  //         isSelected: false,
-  //         actions:
-  //           activeTab === InvoiceTabs.WITHOUT_VOUCHER
-  //             ? [
-  //                 CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-  //                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-  //               ]
-  //             : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-  //       }));
+       const certificateData = resData.data.map((item) => ({
+         ...item,
+         isSelected: false,
+         actions:
+           activeTab === InvoiceTabs.WITHOUT_VOUCHER
+             ? [
+                 CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+               ]
+             : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+       }));
 
-  //       setCertificates(certificateData);
-  //     } catch (error) {
-  //       toastHandler({
-  //         id: ToastId.LIST_CERTIFICATE_ERROR,
-  //         type: ToastType.ERROR,
-  //         content: t('certificate:ERROR.WENT_WRONG'),
-  //         closeable: true,
-  //       });
-  //     }
-  //   },
-  //   [activeTab]
-  // );
-
-  const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificateRC2Input[]>) => {
-      if (!resData || !Array.isArray(resData.data)) {
-        // eslint-disable-next-line no-console
-        console.error('🚨 resData 或 resData.data 無效：', resData);
-        return;
-      }
-
-      // eslint-disable-next-line no-console
-      console.log('📦 RC2 response:', resData);
-
-      // 這裡的 note 不再需要解析，移除
-      setTotalInvoicePrice(0); // RC2 沒有 totalInvoicePrice，設為 0 或自定邏輯
-      setIncomplete({ withVoucher: 0, withoutVoucher: 0 }); // 同上
-      setTotalPages(resData.totalPages);
-      setTotalCount(resData.totalCount);
-      setPage(resData.page);
-
-      const certificateData = resData.data.map((item) => ({
-        ...item,
-        isSelected: false,
-        actions:
-          activeTab === InvoiceTabs.WITHOUT_VOUCHER
-            ? [
-                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-              ]
-            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-      }));
-
-      setCertificates(certificateData);
-    },
-    [activeTab]
-  );
+       setCertificates(certificateData);
+     } catch (error) {
+       toastHandler({
+         id: ToastId.LIST_CERTIFICATE_ERROR,
+         type: ToastType.ERROR,
+         content: t('certificate:ERROR.WENT_WRONG'),
+         closeable: true,
+       });
+     }
+   },
+   [activeTab]
+ );
 
   const handleSelect = useCallback(
     (ids: number[], isSelected: boolean) => {
@@ -673,7 +634,8 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - Anna) Certificate Table */}
-        {Object.values(certificates) && Object.values(certificates).length > 0 ? (
+        {/* {Object.values(certificates) && Object.values(certificates).length > 0 ? ( */}
+        {certificates && certificates.length > 0 ? (
           <>
             <SelectionToolbar
               className="mt-6"

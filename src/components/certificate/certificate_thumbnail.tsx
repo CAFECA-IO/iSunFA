@@ -1,12 +1,11 @@
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
-// import { ICertificateUI } from '@/interfaces/certificate';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
 import { timestampToString } from '@/lib/utils/common';
-import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateThumbnailProps {
   data: ICertificateRC2InputUI;
@@ -42,7 +41,6 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
           <Image
-            // src={data.file.url}
             src={data.file?.url ?? ''}
             alt={`Certificate`}
             height={136}

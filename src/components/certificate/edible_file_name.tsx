@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
-// import { ICertificateUI } from '@/interfaces/certificate';
 import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';

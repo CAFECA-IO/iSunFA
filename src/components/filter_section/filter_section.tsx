@@ -173,6 +173,8 @@ const FilterSection = <T,>({
         });
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('API Request Error:', error);
       // ToDo: (20241021 - tzuhan) handle error
       toastHandler({
         id: ToastId.API_REQUEST_FAILED,

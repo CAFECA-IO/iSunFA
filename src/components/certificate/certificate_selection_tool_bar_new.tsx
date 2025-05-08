@@ -1,12 +1,11 @@
 import React from 'react';
-// import { ICertificateUI } from '@/interfaces/certificate';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 import { FaPlus } from 'react-icons/fa6';
 import { FiDownload, FiTrash2 } from 'react-icons/fi';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { numberWithCommas } from '@/lib/utils/common';
-import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 export interface ISelectionToolBarOperation {
   operation: string;

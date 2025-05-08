@@ -46,6 +46,7 @@ export function initCertificateEntity(
 
 export function mapCertificateTypeToInvoiceType(type: CertificateType): InvoiceType {
   const mapping: Record<CertificateType, InvoiceType> = {
+    [CertificateType.ALL]: InvoiceType.ALL,
     [CertificateType.INPUT_21]: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
     [CertificateType.INPUT_22]: InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
     [CertificateType.INPUT_23]: InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
@@ -55,12 +56,10 @@ export function mapCertificateTypeToInvoiceType(type: CertificateType): InvoiceT
     [CertificateType.INPUT_27]: InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
     [CertificateType.INPUT_28]: InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
     [CertificateType.INPUT_29]: InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
-    // 根據需要補上 OUTPUT 類型或其他
-    [CertificateType.ALL]: InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC, // fallback 預設值
     [CertificateType.OUTPUT_31]: InvoiceType.SALES_TRIPLICATE_INVOICE,
     [CertificateType.OUTPUT_32]: InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-    [CertificateType.OUTPUT_35]: InvoiceType.SALES_NON_UNIFORM_INVOICE,
-    [CertificateType.OUTPUT_36]: InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
+    [CertificateType.OUTPUT_35]: InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
+    [CertificateType.OUTPUT_36]: InvoiceType.SALES_NON_UNIFORM_INVOICE,
   };
 
   return mapping[type] ?? InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC;
@@ -68,6 +67,7 @@ export function mapCertificateTypeToInvoiceType(type: CertificateType): InvoiceT
 
 export function mapInvoiceTypeToCertificateType(type: InvoiceType): CertificateType {
  const mapping: Partial<Record<InvoiceType, CertificateType>> = {
+   [InvoiceType.ALL]: CertificateType.ALL,
    [InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC]: CertificateType.INPUT_21,
    [InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER]: CertificateType.INPUT_22,
    [InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC]: CertificateType.INPUT_23,
@@ -79,9 +79,8 @@ export function mapInvoiceTypeToCertificateType(type: InvoiceType): CertificateT
    [InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND]: CertificateType.INPUT_29,
    [InvoiceType.SALES_TRIPLICATE_INVOICE]: CertificateType.OUTPUT_31,
    [InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE]: CertificateType.OUTPUT_32,
-   [InvoiceType.SALES_NON_UNIFORM_INVOICE]: CertificateType.OUTPUT_35,
-   [InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM]: CertificateType.OUTPUT_36,
-   [InvoiceType.ALL]: CertificateType.ALL, // fallback
+   [InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC]: CertificateType.OUTPUT_35,
+   [InvoiceType.SALES_NON_UNIFORM_INVOICE]: CertificateType.OUTPUT_36,
  };
 
   return mapping[type] ?? CertificateType.INPUT_21;
