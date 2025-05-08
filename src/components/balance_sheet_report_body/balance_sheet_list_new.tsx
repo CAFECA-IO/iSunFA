@@ -295,14 +295,16 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   }
 
   const displayedCurALRChart = isNoDataForCurALR ? (
-    <div
-      className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
-      style={{
-        width: '232px',
-        height: '232px',
-      }}
-    >
-      {t('reports:REPORTS.NO_DATA')}
+    <div className="flex w-300px items-center justify-center">
+      <div
+        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+        style={{
+          width: '232px',
+          height: '232px',
+        }}
+      >
+        {t('reports:REPORTS.NO_DATA')}
+      </div>
     </div>
   ) : (
     <div className="ml-10">
