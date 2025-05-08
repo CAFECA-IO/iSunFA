@@ -7,7 +7,7 @@ import {
   CERTIFICATE_USER_INTERACT_OPERATION,
 } from '@/constants/certificate';
 import { ICertificateUI } from '@/interfaces/certificate';
-import { IFileBeta } from './file';
+import { IFileBeta } from '@/interfaces/file';
 
 export interface ICertificateRC2Base {
   id: number;
