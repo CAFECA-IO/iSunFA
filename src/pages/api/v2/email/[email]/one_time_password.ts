@@ -42,10 +42,11 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   const expiredAt = new Date(emailLogin.expiredAt * 1000).toLocaleString('zh-TW', {
     timeZone: 'Asia/Taipei',
   });
+  const loginLink = `${process.env.NEXT_PUBLIC_DOMAIN}/api/v2/email/${email}/one_time_login?hash=${emailLogin.hash}`;
   const data: EmailTemplateData[EmailTemplateName.ONE_TIME_PASSWORD] = {
-    email: email as string,
-    code: emailLogin.code,
-    hash: emailLogin.hash,
+    receiverName: email as string,
+    loginCode: emailLogin.code,
+    loginLink,
     expiredAt,
   };
   const emailResult = sendEmail(email as string, title, EmailTemplateName.ONE_TIME_PASSWORD, data);

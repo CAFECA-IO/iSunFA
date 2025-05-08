@@ -32,6 +32,8 @@ export const sendEmail = async (
     result = true;
   } catch (error) {
     // Info: (20250113 - Luphia) 寄送 email 失敗
+    loggerBack.error('sendEmail error');
+    loggerBack.error(error);
     result = false;
   }
   return result;
