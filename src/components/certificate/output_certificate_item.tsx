@@ -118,7 +118,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currency ?? currencyAlias}
+                {certificate.currencyCode ?? currencyAlias}
               </span>
             </div>
           </div>
@@ -132,7 +132,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currency ?? currencyAlias}
+                {certificate.currencyCode ?? currencyAlias}
               </span>
             </div>
           </div>

@@ -172,7 +172,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
                 params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
                 body: {
                   fileId: fileMeta.id,
-                  direction: CertificateDirection.INPUT,
+                  direction: CertificateDirection.OUTPUT,
                   isGenerated: false,
                   currencyCode: CurrencyCode.TWD,
                 },
