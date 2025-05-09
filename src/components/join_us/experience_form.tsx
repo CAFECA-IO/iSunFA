@@ -210,7 +210,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
         }}
       >
         <ExperienceBar
-          key={education.id}
+          key={`education-${education.id}`}
           type={ExperienceType.EDUCATION}
           mainColor={mainColors[index]}
           data={educationData}
@@ -243,7 +243,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
         }}
       >
         <ExperienceBar
-          key={work.id}
+          key={`work-${work.id}`}
           type={ExperienceType.WORK}
           mainColor={mainColors[5 - index]} // Info: (20250506 - Julian) 取得顏色的順序和學歷相反
           data={workData}

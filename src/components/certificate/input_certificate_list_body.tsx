@@ -15,7 +15,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
@@ -46,7 +46,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const accountBookId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { trigger: updateCertificateAPI } = APIHandler<ICertificateRC2Input>(
@@ -55,8 +55,8 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const { trigger: createCertificateAPI } = APIHandler<ICertificateRC2Input>(
     APIName.CREATE_CERTIFICATE_RC2_INPUT
   );
-  const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
-    APIName.CERTIFICATE_DELETE_MULTIPLE_V2
+  const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
+    APIName.DELETE_CERTIFICATE_RC2_INPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
   const [activeTab, setActiveTab] = useState<CertificateTab>(CertificateTab.WITHOUT_VOUCHER);
@@ -312,14 +312,16 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const deleteSelectedCertificates = useCallback(
     async (selectedIds: number[]) => {
       try {
-        const { success, data: deletedIds } = await deleteCertificatesAPI({
+        const { success, data } = await deleteCertificatesAPI({
           params: { accountBookId },
           body: { certificateIds: selectedIds },
         });
 
-        if (success && deletedIds) {
-          setCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
-          setSelectedCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
+        if (success && data?.success && data.deletedIds) {
+          setCertificates((prev) => prev.filter((cert) => !data.deletedIds.includes(cert.id)));
+          setSelectedCertificates((prev) =>
+            prev.filter((cert) => !data.deletedIds.includes(cert.id))
+          );
 
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
@@ -425,6 +427,9 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<ICertificateRC2InputUI>) => {
+      // Deprecated: (20250509 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('handleEditItem', certificate);
       try {
         const postOrPutAPI = certificate.id
           ? updateCertificateAPI({
@@ -588,7 +593,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <FilterSection<ICertificateRC2Input[]>
           className="mt-2"
           params={{ accountBookId }}
-          apiName={APIName.CERTIFICATE_LIST_V2}
+          apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
@@ -618,7 +623,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
-              subtitle={`${t('certificate:LIST.CERTIFICATE_TOTAL_PRICE')}:`}
+              subtitle={`${t('certificate:LIST.INPUT_TOTAL_PRICE')}:`}
               totalPrice={totalCertificatePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
