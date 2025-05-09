@@ -10,7 +10,7 @@ export interface IHiringProvider {
 
 interface IHiringContext {
   favoriteVacancyIds: number[];
-  toggleFavoriteVacancyId: (jobId: number) => void;
+  toggleFavoriteVacancyId: (vacancyId: number) => void;
 
   tempPersonalInfo: IPersonalInfo | undefined;
   savePersonalInfo: (info: IPersonalInfo) => void;
@@ -55,11 +55,11 @@ export const HiringProvider = ({ children }: IHiringProvider) => {
   const [, setAttachment, attachmentRef] = useStateRef<IAttachment | undefined>(undefined);
 
   // Info: (20250505 - Julian) 收藏工作職缺的 ID
-  const toggleFavoriteVacancyId = (jobId: number) => {
+  const toggleFavoriteVacancyId = (vacancyId: number) => {
     setFavoriteVacancyIds((prev) => {
-      const newFavorites = prev.includes(jobId)
-        ? prev.filter((id) => id !== jobId) // Info: (20250505 - Julian) 若已有該 jobId，則移除
-        : [...prev, jobId]; // Info: (20250505 - Julian) 若沒有該 jobId，則加入
+      const newFavorites = prev.includes(vacancyId)
+        ? prev.filter((id) => id !== vacancyId) // Info: (20250505 - Julian) 若已有該 vacancyId，則移除
+        : [...prev, vacancyId]; // Info: (20250505 - Julian) 若沒有該 vacancyId，則加入
       return newFavorites;
     });
   };

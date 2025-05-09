@@ -44,7 +44,7 @@ const ResumeProcessBody: React.FC = () => {
       setCurrentStep((prev) => prev - 1);
     } else {
       // Info: (20250411 - Julian) 如果當前步驟為第一步，則返回到工作列表頁面
-      router.push(`${ISUNFA_ROUTE.JOIN_US}/${router.query.jobId}`);
+      router.push(`${ISUNFA_ROUTE.JOIN_US}/${router.query.vacancyId}`);
     }
   };
 

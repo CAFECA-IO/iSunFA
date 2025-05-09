@@ -6,10 +6,10 @@ import { useTranslation } from 'next-i18next';
 import ResumePageBody from '@/components/join_us/resume_page_body';
 
 interface IResumePageProps {
-  jobId: string;
+  vacancyId: string;
 }
 
-const ResumePage: React.FC<IResumePageProps> = ({ jobId }) => {
+const ResumePage: React.FC<IResumePageProps> = ({ vacancyId }) => {
   const { t } = useTranslation(['hiring']);
 
   return (
@@ -21,13 +21,13 @@ const ResumePage: React.FC<IResumePageProps> = ({ jobId }) => {
         <title>iSunFA - {t('hiring:RESUME_PAGE.HEAD_TITLE')}</title>
       </Head>
 
-      <ResumePageBody jobId={jobId} />
+      <ResumePageBody vacancyId={vacancyId} />
     </>
   );
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
-  if (!params || !params.jobId || typeof params.jobId !== 'string') {
+  if (!params || !params.vacancyId || typeof params.vacancyId !== 'string') {
     return {
       notFound: true,
     };
@@ -35,7 +35,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
 
   return {
     props: {
-      jobId: params.jobId,
+      vacancyId: params.vacancyId,
       ...(await serverSideTranslations(locale as string, ['landing_page_v2', 'hiring', 'common'])),
     },
   };
