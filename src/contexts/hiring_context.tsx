@@ -39,6 +39,7 @@ interface IHiringContext {
   savePreference: (preference: IPreference) => void;
 
   tempAttachment: IAttachment | undefined;
+  saveAttachment: (attachment: IAttachment) => void;
 }
 
 const HiringContext = createContext<IHiringContext | undefined>(undefined);

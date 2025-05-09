@@ -4,6 +4,7 @@ import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { haloStyle } from '@/constants/display';
 import UploadArea from '@/components/join_us/upload_area';
 import { IAttachment } from '@/interfaces/resume';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 interface IAttachmentFormProps {
   toPrevStep: () => void;
@@ -12,6 +13,7 @@ interface IAttachmentFormProps {
 
 const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep }) => {
   const { t } = useTranslation(['hiring', 'common']);
+  const { saveAttachment } = useHiringCtx();
 
   const [attachments, setAttachments] = useState<FileList | null>(null);
   const [websiteInput, setWebsiteInput] = useState<string>('');
@@ -24,10 +26,10 @@ const AttachmentForm: React.FC<IAttachmentFormProps> = ({ toPrevStep, toNextStep
       personalWebsite: websiteInput,
     };
 
-    // Deprecated: (20250502 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Form submitted:', formData);
+    // Info: (20250509 - Julian) 儲存附件資料
+    saveAttachment(formData);
 
+    // Info: (20250509 - Julian) 進入下一步
     toNextStep();
   };
 
