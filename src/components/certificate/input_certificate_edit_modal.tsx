@@ -14,7 +14,6 @@ import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
-import EditableFilename from '@/components/certificate/edible_file_name';
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import EInvoicePreview from '@/components/certificate/e_invoice_preview';
 import dayjs from 'dayjs';
@@ -50,7 +49,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   toggleModel,
   currencyAlias,
   certificate,
-  onUpdateFilename,
   onSave,
   onDelete,
   certificates,
@@ -87,7 +85,6 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
   // Info: (20240924 - Anna) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-  const [certificateFilename, setCertificateFilename] = useState<string>(certificate.id.toString());
   const [date, setDate] = useState<IDatePeriod>({
     startTimeStamp: certificate.issuedDate ?? 0,
     endTimeStamp: 0,
@@ -398,12 +395,15 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <EditableFilename
+        {/* <EditableFilename
           certificate={certificate}
           certificateFilename={certificateFilename}
           setCertificateFilename={setCertificateFilename}
           onUpdateFilename={onUpdateFilename}
-        />
+        /> */}
+        <div className="text-xl font-bold leading-8 text-neutral-600 flex justify-center">
+          {t(`certificate:EDIT.INPUT_INVOICE`)}
+        </div>
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">

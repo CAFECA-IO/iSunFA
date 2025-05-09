@@ -1,7 +1,9 @@
 {
   "LIST": {
     "INVOICE_TOTAL_PRICE": "Invoice Total Price",
-    "EXPORT_CERTIFICATES": "Export Certificates"
+    "EXPORT_CERTIFICATES": "Export Certificates",
+    "INPUT_TOTAL_PRICE": "Input Total Price",
+    "OUTPUT_TOTAL_PRICE": "Output Total Price"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "Certificate Without Voucher",
@@ -113,7 +115,9 @@
     "SALES": "Sales",
     "LUMP_SUM": "Lump Sum",
     "SKIP_IF_TRIPLICATE_CASH_REGISTER": "Skip if using triplicate cash register invoice",
-    "INVOICE_PERIOD": "Year {{year}}, {{startMonth}} - {{endMonth}}"
+    "INVOICE_PERIOD": "Year {{year}}, {{startMonth}} - {{endMonth}}",
+    "INPUT_INVOICE": "Input Invoice",
+    "OUTPUT_INVOICE": "Output Invoice"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
