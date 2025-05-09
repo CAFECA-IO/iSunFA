@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { FiArrowRight } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
@@ -6,30 +5,26 @@ import { cn } from '@/lib/utils/common';
 
 interface InputEmailStepProps {
   inputEmail: string;
-  setInputEmail: Dispatch<SetStateAction<string>>;
+  updateInputEmail: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isEmailNotValid: boolean;
-  setIsEmailNotValid: Dispatch<SetStateAction<boolean>>;
   sendLoginEmail: () => void;
   googleAuthSignIn: () => void;
   isSendingEmail: boolean;
   sendEmailError: string;
+  resendCountdown: number;
 }
 
 const InputEmailStep = ({
   inputEmail,
-  setInputEmail,
+  updateInputEmail,
   isEmailNotValid,
-  setIsEmailNotValid,
   sendLoginEmail,
   googleAuthSignIn,
   isSendingEmail,
   sendEmailError,
+  resendCountdown,
 }: InputEmailStepProps) => {
   const { t } = useTranslation('dashboard');
-  const updateInputEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputEmail(e.target.value);
-    setIsEmailNotValid(false);
-  };
 
   return (
     <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
@@ -75,7 +70,7 @@ const InputEmailStep = ({
             <button
               type="button"
               onClick={sendLoginEmail}
-              disabled={isEmailNotValid}
+              disabled={isEmailNotValid || resendCountdown > 0}
               className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
             >
               <span className="text-base font-medium text-button-text-primary-solid">Login</span>
@@ -83,6 +78,12 @@ const InputEmailStep = ({
             </button>
             {sendEmailError && (
               <p className="text-xs font-medium text-text-state-error">{sendEmailError}</p>
+            )}
+            {resendCountdown > 0 && (
+              <p className="text-xs font-medium text-text-state-error">
+                驗證信稍早已寄送過了，請至您的信箱查看，若沒有收到驗證信，請等倒數秒數結束後再試一次
+                ({resendCountdown} 秒)
+              </p>
             )}
           </div>
         )}

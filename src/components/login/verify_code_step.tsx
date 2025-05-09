@@ -10,6 +10,7 @@ interface VerifyCodeStepProps {
   resendCountdown: number;
   handleVerifyCode: () => void;
   handleResend: () => void;
+  isResendingEmail: boolean;
   isVerifyingCode: boolean;
   verifyCodeError: string;
   goBackToInputEmailStep: () => void;
@@ -22,6 +23,7 @@ const VerifyCodeStep = ({
   resendCountdown,
   handleVerifyCode,
   handleResend,
+  isResendingEmail,
   isVerifyingCode,
   verifyCodeError,
   goBackToInputEmailStep,
@@ -88,7 +90,7 @@ const VerifyCodeStep = ({
             type="button"
             onClick={handleVerifyCode}
             className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px text-base font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-            disabled={isVerifyingCode || verificationCode.trim() === ''}
+            disabled={isVerifyingCode || verificationCode.trim() === '' || isResendingEmail}
           >
             確認驗證碼 ({verifyCountdown}s)
           </button>
