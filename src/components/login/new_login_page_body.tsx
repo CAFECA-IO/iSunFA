@@ -155,10 +155,6 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         return;
       }
 
-      // Deprecated: (20250508 - Liz) 暫時顯示驗證成功的提示，之後會刪除
-      // eslint-disable-next-line no-alert
-      window.alert('驗證成功');
-
       // Info: (20250509 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
       router.push(ISUNFA_ROUTE.DASHBOARD); // Info: (20250508 - Liz) 跳轉到儀表板頁面
     } catch (err) {

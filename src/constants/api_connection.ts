@@ -1023,7 +1023,7 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.VERIFY_CODE]: createConfig({
     name: APIName.VERIFY_CODE,
-    method: HttpMethod.PUT,
+    method: HttpMethod.POST,
     path: APIPath.VERIFY_CODE,
   }),
 };
