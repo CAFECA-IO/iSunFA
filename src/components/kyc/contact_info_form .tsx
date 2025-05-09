@@ -3,6 +3,8 @@ import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ContactInfoKeys, AreaCodeOptions } from '@/constants/kyc';
 import { useTranslation } from 'next-i18next';
+import { BsChevronDown } from 'react-icons/bs';
+import { MdOutlineEmail } from 'react-icons/md';
 
 // Info: (20240718 - Liz) 根據 Area Code 對應到國家的國旗
 const areaCodeFlagMap: Record<AreaCodeOptions, string> = {
@@ -113,20 +115,7 @@ const ContactInfoForm = ({
             ></Image>
             <p className="w-36px">{data[ContactInfoKeys.AREA_CODE]}</p>
             <div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-              >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M2.97162 5.22162C3.26452 4.92873 3.73939 4.92873 4.03228 5.22162L8.00195 9.19129L11.9716 5.22162C12.2645 4.92873 12.7394 4.92873 13.0323 5.22162C13.3252 5.51452 13.3252 5.98939 13.0323 6.28228L8.53228 10.7823C8.23939 11.0752 7.76452 11.0752 7.47162 10.7823L2.97162 6.28228C2.67873 5.98939 2.67873 5.51452 2.97162 5.22162Z"
-                  fill="currentColor"
-                />
-              </svg>
+              <BsChevronDown w-4 h-4 />
             </div>
             {/* Info: (20240718 - Liz) Dropmenu */}
             <div
@@ -161,26 +150,7 @@ const ContactInfoForm = ({
         </h6>
         <div className="flex rounded-sm bg-input-surface-input-background">
           <div className="flex items-center rounded-l-sm border border-input-stroke-input px-12px">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M2.75195 3.50195C2.33774 3.50195 2.00195 3.83774 2.00195 4.25195V11.752C2.00195 12.1662 2.33774 12.502 2.75195 12.502H13.252C13.6662 12.502 14.002 12.1662 14.002 11.752V4.25195C14.002 3.83774 13.6662 3.50195 13.252 3.50195H2.75195ZM1.00195 4.25195C1.00195 3.28545 1.78545 2.50195 2.75195 2.50195H13.252C14.2185 2.50195 15.002 3.28545 15.002 4.25195V11.752C15.002 12.7185 14.2185 13.502 13.252 13.502H2.75195C1.78545 13.502 1.00195 12.7185 1.00195 11.752V4.25195Z"
-                fill="#314362"
-              />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M3.1073 4.69501C3.27683 4.47703 3.59097 4.43777 3.80895 4.6073L8.00198 7.86855L12.195 4.6073C12.413 4.43777 12.7271 4.47703 12.8967 4.69501C13.0662 4.91298 13.0269 5.22712 12.8089 5.39665L8.30895 8.89665C8.12839 9.03708 7.87556 9.03708 7.69501 8.89665L3.19501 5.39665C2.97703 5.22712 2.93777 4.91298 3.1073 4.69501Z"
-                fill="#314362"
-              />
-            </svg>
+            <MdOutlineEmail className="h-4 w-4 text-neutral-500" />
           </div>
           <input
             id="emailAddress"
