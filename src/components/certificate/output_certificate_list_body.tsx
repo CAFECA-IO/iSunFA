@@ -558,7 +558,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <FilterSection<ICertificateRC2Output[]>
           className="mt-2"
           params={{ accountBookId }}
-          apiName={APIName.LIST_CERTIFICATE_RC2_OUTPUT}
+          apiName={APIName.CERTIFICATE_LIST_V2}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
