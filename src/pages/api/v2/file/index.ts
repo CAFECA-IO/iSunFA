@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -12,7 +13,7 @@ import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
-import { createFile } from '@/lib/utils/repo/file.repo';
+import { createFile, putFileById } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import {
   checkRequestData,
@@ -25,12 +26,20 @@ import { roomManager } from '@/lib/utils/room';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
-import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
+import {
+  decryptFile,
+  encryptFile,
+  getPrivateKeyByCompany,
+  getPublicKeyByCompany,
+  uint8ArrayToBuffer,
+} from '@/lib/utils/crypto';
 import { getSession } from '@/lib/utils/session';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { HTTP_STATUS } from '@/constants/http';
+import { generatePDFThumbnail } from '@/lib/utils/pdf_thumbnail';
+import path from 'path';
 
 export const config = {
   api: {
@@ -92,6 +101,100 @@ async function handleFileUpload(
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
 
+  let thumbnailInfo = null;
+  let pdfPath = fileForSave.filepath;
+  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+    // Decrypt PDF file if it's encrypted
+    if (isEncrypted) {
+      // 獲取公司ID和私鑰
+      const companyId = convertStringToNumber(targetId);
+      const encryptedFileBuffer = await fs.readFile(fileForSave.filepath);
+      const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
+
+      // 獲取私鑰
+      const privateKey = await getPrivateKeyByCompany(companyId);
+      if (!privateKey) {
+        throw new Error('Private key not found for decryption');
+      }
+
+      // 解密檔案
+      const ivUint8Array = new Uint8Array(ivBuffer);
+      const decryptedBuffer = await decryptFile(
+        arrayBuffer,
+        encryptedSymmetricKey,
+        privateKey,
+        ivUint8Array
+      );
+
+      // 寫入臨時解密檔案
+      const tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
+      await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
+      pdfPath = tempDecryptedPath;
+    }
+
+    // Notes: generate PDF thumbnail
+    try {
+      loggerBack.info(`Generating PDF thumbnail for file: ${fileForSave.filepath}`);
+      // thumbnailInfo = await generatePDFThumbnail(fileForSave.filepath);
+      thumbnailInfo = await generatePDFThumbnail(pdfPath);
+
+      if (!thumbnailInfo.success) {
+        loggerBack.error('Failed to generate PDF thumbnail');
+      }
+    } catch (error) {
+      loggerBack.error(error, 'Error generating PDF thumbnail');
+    }
+  }
+
+  // If we have a thumbnail, process it with the same encryption parameters
+  if (thumbnailInfo && thumbnailInfo.success) {
+    const thumbnailFileName = path.basename(thumbnailInfo.filepath);
+    const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
+      thumbnailFileName,
+      UPLOAD_TYPE_TO_FOLDER_MAP[type]
+    );
+
+    if (isEncrypted) {
+      // 加密 thumbnail 之後存到 DB
+      const companyId = convertStringToNumber(targetId);
+      const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
+      const publicKey = await getPublicKeyByCompany(companyId);
+
+      if (!publicKey) {
+        throw new Error('Public key not found for encryption');
+      }
+
+      const ivUint8Array = new Uint8Array(ivBuffer);
+      const { encryptedContent } = await encryptFile(
+        new Uint8Array(thumbnailBuffer).buffer as ArrayBuffer,
+        publicKey,
+        ivUint8Array
+      );
+
+      // 寫入加密縮略圖
+      const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
+      await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
+    }
+    // Create thumbnail record with the same encryption parameters
+    const thumbnailInDB = await createFile({
+      name: thumbnailFileName,
+      size: thumbnailInfo.size,
+      mimeType: 'image/png',
+      type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+      url: thumbnailUrl,
+      isEncrypted,
+      encryptedSymmetricKey,
+      iv: ivBuffer,
+    });
+
+    if (thumbnailInDB && fileInDB) {
+      // Update original file record with thumbnail ID
+      await putFileById(fileInDB.id, {
+        thumbnailId: thumbnailInDB.id,
+      });
+    }
+  }
+
   const fileId = fileInDB.id;
   const returnFile: IFileBeta = {
     id: fileId,
@@ -99,6 +202,7 @@ async function handleFileUpload(
     size: fileSize,
     url: `/image/${fileId}`,
     existed: true,
+    // thumbnailId: thumbnailInDB?.id,
   };
 
   switch (type) {
@@ -137,6 +241,9 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
+
+  loggerBack.info(`fileForSave: ${fileForSave}`);
+
   return returnFile;
 }
 
