@@ -108,6 +108,7 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   // ToDo: (20250509 - Luphia) 寫法太粗糙，需優化
   const user = {
     id: email as string,
+    name: (email as string).split('@')[0],
     email: email as string,
     image: 'https://isunfa.com/entities/happy.png',
     emailVerified: true,
