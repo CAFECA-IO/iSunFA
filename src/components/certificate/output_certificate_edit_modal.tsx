@@ -400,12 +400,6 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        {/* <EditableFilename
-          certificate={certificate}
-          certificateFilename={certificateFilename}
-          setCertificateFilename={setCertificateFilename}
-          onUpdateFilename={onUpdateFilename}
-        /> */}
         <div className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
           {t(`certificate:EDIT.OUTPUT_INVOICE`)}
         </div>
