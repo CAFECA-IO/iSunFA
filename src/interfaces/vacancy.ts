@@ -11,7 +11,7 @@ export interface IVacancyUI extends IVacancyDetail {
 }
 
 export interface IVacancyDetail extends IVacancy {
-  jobResponsibilities: string[];
+  responsibilities: string[];
   requirements: string[];
   extraSkills: string[];
 }
@@ -23,7 +23,7 @@ export const dummyVacancyList: IVacancyDetail[] = [
     location: 'Taipei',
     date: 1743533087,
     description: `As a Frontend Engineer, you'll design, develop, and optimize user interfaces for web and mobile applications. You'll work with modern frameworks (e.g., React, Vue, Angular) to build seamless, responsive, and high-performing experiences. Collaborating with designers and backend developers, you'll ensure smooth functionality, maintain code quality, and enhance user interactions. Strong proficiency in HTML, CSS, JavaScript, and UI/UX principles is essential.`,
-    jobResponsibilities: [
+    responsibilities: [
       'Develop and maintain responsive, user-friendly web interfaces.',
       'Collaborate with designers and backend engineers to create seamless experiences.',
       'Optimize applications for speed and performance.',
@@ -56,7 +56,7 @@ export const dummyVacancyList: IVacancyDetail[] = [
     location: 'Taipei',
     date: 1743473634,
     description: `As a Backend Engineer, you'll design, develop, and maintain server-side logic for web and mobile applications. You'll work with databases, APIs, and cloud services to build scalable, secure, and efficient systems. Collaborating with frontend developers and DevOps engineers, you'll ensure smooth functionality, maintain code quality, and optimize performance. Strong proficiency in Node.js, Python, Java, or Go is essential.`,
-    jobResponsibilities: [
+    responsibilities: [
       'Design, develop, and maintain server-side logic and APIs.',
       'Collaborate with frontend developers to integrate user interfaces with server-side systems.',
       'Optimize applications for speed, scalability, and security.',
@@ -89,7 +89,7 @@ export const dummyVacancyList: IVacancyDetail[] = [
     location: 'Kaohsiung',
     date: 1746414181,
     description: `As a Fullstack Engineer, you'll design, develop, and deploy end-to-end solutions for web and mobile applications. You'll work with frontend and backend technologies to build seamless, responsive, and scalable systems. Collaborating with designers, backend developers, and DevOps engineers, you'll ensure smooth functionality, maintain code quality, and optimize performance. Strong proficiency in full-stack development is essential.`,
-    jobResponsibilities: [
+    responsibilities: [
       'Design, develop, and deploy end-to-end solutions for web and mobile applications.',
       'Collaborate with designers, frontend developers, and backend engineers to create seamless experiences.',
       'Optimize applications for speed, scalability, and security.',

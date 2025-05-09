@@ -30,7 +30,7 @@ interface IVacancyDetailBodyProps {
 
 const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   const { t } = useTranslation(['hiring', 'common']);
-  const { id, title, location, date, description, jobResponsibilities, requirements, extraSkills } =
+  const { id, title, location, date, description, responsibilities, requirements, extraSkills } =
     jobData;
   const { favoriteVacancyIds, toggleFavoriteVacancyId } = useHiringCtx();
 
@@ -74,7 +74,7 @@ const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   // Info: (20250505 - Julian) 將時間戳轉換為日期格式
   const dateString = timestampToString(date).dateWithSlash;
 
-  // Info: (20250505 - Julian) 在 favoriteVacancyIds 中找是否有該 jobId
+  // Info: (20250505 - Julian) 在 favoriteVacancyIds 中找是否有該 vacancyId
   const isFavorite = favoriteVacancyIds.includes(id);
 
   // Info: (20250505 - Julian) 點擊後 toggle favorite
@@ -82,7 +82,7 @@ const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   // Info: (20250505 - Julian) 點擊後 toggle share
   const toggleShare = () => setSharingOpen(!isSharingOpen);
 
-  const resList = jobResponsibilities.map((item) => (
+  const resList = responsibilities.map((item) => (
     <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>

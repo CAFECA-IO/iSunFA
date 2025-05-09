@@ -10,6 +10,9 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { SortOrder } from '@/constants/sort';
+import { HiOutlineMenuAlt2 } from 'react-icons/hi';
+import { FaAngleDown, FaListUl } from 'react-icons/fa6';
+import { RxTrackPrevious } from 'react-icons/rx';
 
 const isAuditReportDisabled = true; // Info: (20240719 - Liz) Audit Report 目前都是假資料所以不開放
 
@@ -301,36 +304,18 @@ const AuditReport = () => {
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>{t('reports:AUDIT_REPORT.INFORMATION_YEAR')}</div>
                   <div onClick={() => handleSort('informationYear')} className="cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill={sortBy === 'informationYear' ? '#53B1FD' : '#1D2433'}
-                    >
-                      <path
-                        d="M6.66667 14.167H3.33333C3.09722 14.167 2.89944 14.087 2.74 13.927C2.58 13.7675 2.5 13.5698 2.5 13.3337C2.5 13.0975 2.58 12.8998 2.74 12.7403C2.89944 12.5803 3.09722 12.5003 3.33333 12.5003H6.66667C6.90278 12.5003 7.10083 12.5803 7.26083 12.7403C7.42028 12.8998 7.5 13.0975 7.5 13.3337C7.5 13.5698 7.42028 13.7675 7.26083 13.927C7.10083 14.087 6.90278 14.167 6.66667 14.167ZM16.6667 5.83366H3.33333C3.09722 5.83366 2.89944 5.75394 2.74 5.59449C2.58 5.43449 2.5 5.23644 2.5 5.00033C2.5 4.76421 2.58 4.56616 2.74 4.40616C2.89944 4.24671 3.09722 4.16699 3.33333 4.16699H16.6667C16.9028 4.16699 17.1006 4.24671 17.26 4.40616C17.42 4.56616 17.5 4.76421 17.5 5.00033C17.5 5.23644 17.42 5.43449 17.26 5.59449C17.1006 5.75394 16.9028 5.83366 16.6667 5.83366ZM11.6667 10.0003H3.33333C3.09722 10.0003 2.89944 9.92033 2.74 9.76033C2.58 9.60088 2.5 9.4031 2.5 9.16699C2.5 8.93088 2.58 8.73283 2.74 8.57282C2.89944 8.41338 3.09722 8.33366 3.33333 8.33366H11.6667C11.9028 8.33366 12.1008 8.41338 12.2608 8.57282C12.4203 8.73283 12.5 8.93088 12.5 9.16699C12.5 9.4031 12.4203 9.60088 12.2608 9.76033C12.1008 9.92033 11.9028 10.0003 11.6667 10.0003Z"
-                        fillOpacity="0.8"
-                      />
-                    </svg>
+                    <HiOutlineMenuAlt2
+                      className={`h-5 w-5 ${sortBy === 'creditRating' ? 'text-support-baby-400' : 'text-neutral-700'}`}
+                    />
                   </div>
                 </th>
                 <th className="px-8px py-12px">{t('reports:AUDIT_REPORT.DETAILED_INFORMATION')}</th>
                 <th className="flex items-center justify-center gap-1 px-8px py-12px">
                   <div>{t('reports:AUDIT_REPORT.CREDIT_RATING')}</div>
                   <div onClick={() => handleSort('creditRating')} className="cursor-pointer">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 20 20"
-                      fill={sortBy === 'creditRating' ? '#53B1FD' : '#1D2433'}
-                    >
-                      <path
-                        d="M6.66667 14.167H3.33333C3.09722 14.167 2.89944 14.087 2.74 13.927C2.58 13.7675 2.5 13.5698 2.5 13.3337C2.5 13.0975 2.58 12.8998 2.74 12.7403C2.89944 12.5803 3.09722 12.5003 3.33333 12.5003H6.66667C6.90278 12.5003 7.10083 12.5803 7.26083 12.7403C7.42028 12.8998 7.5 13.0975 7.5 13.3337C7.5 13.5698 7.42028 13.7675 7.26083 13.927C7.10083 14.087 6.90278 14.167 6.66667 14.167ZM16.6667 5.83366H3.33333C3.09722 5.83366 2.89944 5.75394 2.74 5.59449C2.58 5.43449 2.5 5.23644 2.5 5.00033C2.5 4.76421 2.58 4.56616 2.74 4.40616C2.89944 4.24671 3.09722 4.16699 3.33333 4.16699H16.6667C16.9028 4.16699 17.1006 4.24671 17.26 4.40616C17.42 4.56616 17.5 4.76421 17.5 5.00033C17.5 5.23644 17.42 5.43449 17.26 5.59449C17.1006 5.75394 16.9028 5.83366 16.6667 5.83366ZM11.6667 10.0003H3.33333C3.09722 10.0003 2.89944 9.92033 2.74 9.76033C2.58 9.60088 2.5 9.4031 2.5 9.16699C2.5 8.93088 2.58 8.73283 2.74 8.57282C2.89944 8.41338 3.09722 8.33366 3.33333 8.33366H11.6667C11.9028 8.33366 12.1008 8.41338 12.2608 8.57282C12.4203 8.73283 12.5 8.93088 12.5 9.16699C12.5 9.4031 12.4203 9.60088 12.2608 9.76033C12.1008 9.92033 11.9028 10.0003 11.6667 10.0003Z"
-                        fillOpacity="0.8"
-                      />
-                    </svg>
+                    <HiOutlineMenuAlt2
+                      className={`h-5 w-5 ${sortBy === 'creditRating' ? 'text-support-baby-400' : 'text-neutral-700'}`}
+                    />
                   </div>
                 </th>
                 <th className="px-8px py-12px">{t('reports:AUDIT_REPORT.DATE_OF_UPLOAD')}</th>
@@ -473,20 +458,7 @@ const AuditReport = () => {
             {t('reports:AUDIT_REPORT.REGION')}
           </div>
           <div className="text-navy-blue-25">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M3.47162 5.47077C3.76452 5.17788 4.23939 5.17788 4.53228 5.47077L8.00195 8.94044L11.4716 5.47077C11.7645 5.17788 12.2394 5.17788 12.5323 5.47077C12.8252 5.76366 12.8252 6.23854 12.5323 6.53143L8.53228 10.5314C8.23939 10.8243 7.76452 10.8243 7.47162 10.5314L3.47162 6.53143C3.17873 6.23854 3.17873 5.76366 3.47162 5.47077Z"
-                className="fill-current"
-              />
-            </svg>
+            <FaAngleDown className="h-4 w-4" />
           </div>
         </div>
         {/* Switch daily reports  */}
@@ -503,21 +475,7 @@ const AuditReport = () => {
       {/* Info: (20240424 - Liz) ===== Divider ===== */}
       <div className="flex items-center gap-16px pt-6">
         <div className="flex items-center gap-8px">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-          >
-            <path
-              d="M14 8.00004L6 8.00004M14 4.00004L6 4.00004M14 12L6 12M3.33333 8.00004C3.33333 8.36823 3.03486 8.66671 2.66667 8.66671C2.29848 8.66671 2 8.36823 2 8.00004C2 7.63185 2.29848 7.33337 2.66667 7.33337C3.03486 7.33337 3.33333 7.63185 3.33333 8.00004ZM3.33333 4.00004C3.33333 4.36823 3.03486 4.66671 2.66667 4.66671C2.29848 4.66671 2 4.36823 2 4.00004C2 3.63185 2.29848 3.33337 2.66667 3.33337C3.03486 3.33337 3.33333 3.63185 3.33333 4.00004ZM3.33333 12C3.33333 12.3682 3.03486 12.6667 2.66667 12.6667C2.29848 12.6667 2 12.3682 2 12C2 11.6319 2.29848 11.3334 2.66667 11.3334C3.03486 11.3334 3.33333 11.6319 3.33333 12Z"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <FaListUl className="h-4 w-4 text-white" />
           <div className="whitespace-nowrap text-navy-blue-25">
             {t('reports:AUDIT_REPORT.CARD_LIST')}
           </div>
@@ -550,26 +508,7 @@ const AuditReport = () => {
       <section className="flex flex-col items-center pb-20px pt-40px">
         <div className="flex gap-10px">
           <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M14.7369 4.08614L5.05348 9.88153C5.0352 9.89246 5.00244 9.92673 5.00244 10.0011C5.00244 10.0755 5.03509 10.1097 5.05336 10.1206L14.7369 15.9161C14.7706 15.9362 14.7952 15.9393 14.8126 15.9386C14.8324 15.9379 14.858 15.9313 14.8861 15.913C14.9415 15.877 15.0024 15.7966 15.0024 15.6652V4.33704C15.0024 4.20564 14.9415 4.12521 14.8861 4.08918C14.858 4.07088 14.8324 4.06431 14.8126 4.06356C14.7952 4.0629 14.7706 4.06605 14.7369 4.08614ZM15.568 3.04153C15.9814 3.31058 16.2524 3.78718 16.2524 4.33704V15.6652C16.2524 16.215 15.9814 16.6916 15.568 16.9607C15.1493 17.2332 14.5899 17.2841 14.0961 16.9893L4.41168 11.1933C3.9566 10.921 3.75244 10.441 3.75244 10.0011C3.75244 9.56125 3.95648 9.08123 4.41156 8.80895L14.0958 3.01309C14.5896 2.71821 15.1493 2.76904 15.568 3.04153Z"
-                className="fill-current"
-              />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M4.37744 2.5011C4.72262 2.5011 5.00244 2.78092 5.00244 3.1261V16.8761C5.00244 17.2213 4.72262 17.5011 4.37744 17.5011C4.03226 17.5011 3.75244 17.2213 3.75244 16.8761V3.1261C3.75244 2.78092 4.03226 2.5011 4.37744 2.5011Z"
-                className="fill-current"
-              />
-            </svg>
+            <RxTrackPrevious size={20} />
           </div>
           <div className="flex items-center justify-center rounded-xs border border-navy-blue-25 p-3 text-navy-blue-25">
             <svg

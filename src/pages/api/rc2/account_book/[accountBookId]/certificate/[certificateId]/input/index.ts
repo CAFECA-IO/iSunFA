@@ -14,7 +14,7 @@ import {
 import { validateOutputData } from '@/lib/utils/validator';
 import {
   findCertificateRC2ById,
-  deleteCertificateRC2Input,
+  deleteCertificateRC2,
   updateCertificateRC2Input,
 } from '@/lib/utils/repo/certificate_rc2.repo';
 
@@ -93,13 +93,13 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, APIName.DELETE_CERTIFICATE_RC2_INPUT, req);
   await checkUserAuthorization(APIName.DELETE_CERTIFICATE_RC2_INPUT, req, session);
 
-  const { query } = checkRequestData(APIName.DELETE_CERTIFICATE_RC2_INPUT, req, session);
-  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  const { query, body } = checkRequestData(APIName.DELETE_CERTIFICATE_RC2_INPUT, req, session);
+  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await deleteCertificateRC2Input(
+  const certificateList = await deleteCertificateRC2(
     session.userId,
     query.accountBookId,
-    query.certificateId
+    body.certificateIds
   );
 
   const { isOutputDataValid, outputData } = validateOutputData(

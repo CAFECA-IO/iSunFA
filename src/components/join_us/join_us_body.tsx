@@ -62,7 +62,7 @@ const JoinUsPageBody: React.FC = () => {
         const isMatched =
           job.title.toLowerCase().includes(keyword) ||
           job.description.toLowerCase().includes(keyword) ||
-          job.jobResponsibilities.join(' ').toLowerCase().includes(keyword) ||
+          job.responsibilities.join(' ').toLowerCase().includes(keyword) ||
           job.requirements.join(' ').toLowerCase().includes(keyword) ||
           job.extraSkills.join(' ').toLowerCase().includes(keyword);
 
