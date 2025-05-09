@@ -394,7 +394,7 @@ export async function deleteCertificateRC2(
   const deleted = await prisma.certificateRC2.updateMany({
     where: {
       id: { in: certificateIds },
-      accountBookId, // 保險：避免誤刪其他帳本的資料
+      accountBookId, // Info: (20250509 - Tzuhan) 保險：避免誤刪其他帳本的資料
       deletedAt: null,
     },
     data: { deletedAt: now },
