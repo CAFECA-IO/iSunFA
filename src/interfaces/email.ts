@@ -1,3 +1,5 @@
+import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
+
 export interface IInviteTemplate {
   inviterName: string;
   teamName: string;
@@ -31,4 +33,32 @@ export interface IPayErrorTemplate {
 
 export interface ISubscribeTemplate {
   userName: string;
+}
+
+export interface IEmailLogin {
+  id?: number;
+  email: string;
+  code: string;
+  hash: string;
+  used: boolean;
+  expiredAt: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface IEmailLoginLog {
+  email: string;
+  action: EMAIL_LOGIN_ACTION;
+  createdAt: number;
+}
+
+export interface IOneTimePasswordResult {
+  email: string;
+  expiredAt: number;
+  coolDown: number;
+  coolDownAt: number;
+}
+export interface ICoolDown {
+  coolDown: number;
+  coolDownAt: number;
 }
