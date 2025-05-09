@@ -6,6 +6,7 @@ import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { numberWithCommas } from '@/lib/utils/common';
+import { ICertificateRC2InputUI, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 export interface ISelectionToolBarOperation {
   operation: string;
@@ -18,7 +19,7 @@ interface SelectionToolbarProps {
   active: boolean; // Info: (20240920 - Anna) 是否打開
   isSelectable: boolean; // Info: (20240920 - Anna) 是否可選擇
   onActiveChange: (active: boolean) => void; // Info: (20240920 - Anna) 當打開狀態變更時的回調函數
-  items: ICertificateUI[] | IVoucherBeta[]; // Info: (20240920 - Anna) 項目列表
+  items: ICertificateUI[] | IVoucherBeta[] | ICertificateRC2InputUI[] | ICertificateRC2OutputUI[]; // Info: (20240920 - Anna) 項目列表
   subtitle?: string;
   totalPrice?: number;
   currency?: string;

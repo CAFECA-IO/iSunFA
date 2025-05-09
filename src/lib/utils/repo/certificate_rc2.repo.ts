@@ -14,9 +14,19 @@ import { createOrderByList } from '@/lib/utils/sort';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 
-function transformInput(cert: CertificateRC2): z.infer<typeof CertificateRC2InputSchema> {
+type CertificateRC2WithFile = CertificateRC2 & {
+  file: {
+    id: number;
+    name: string;
+    url: string;
+    size: number;
+  };
+};
+
+function transformInput(cert: CertificateRC2WithFile): z.infer<typeof CertificateRC2InputSchema> {
   return CertificateRC2InputSchema.parse({
     ...cert,
+    file: cert.file,
     taxRate: cert?.taxRate ?? null,
     deductionType: cert?.deductionType ?? null,
     salesName: cert?.salesName ?? '',
@@ -28,9 +38,10 @@ function transformInput(cert: CertificateRC2): z.infer<typeof CertificateRC2Inpu
   });
 }
 
-function transformOutput(cert: CertificateRC2): z.infer<typeof CertificateRC2OutputSchema> {
+function transformOutput(cert: CertificateRC2WithFile): z.infer<typeof CertificateRC2OutputSchema> {
   return CertificateRC2OutputSchema.parse({
     ...cert,
+    file: cert.file,
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
@@ -55,6 +66,7 @@ export async function findCertificateRC2ById(data: {
   });
   const cert = await prisma.certificateRC2.findUnique({
     where: { id: certificateId, deletedAt: null },
+    include: { file: true },
   });
   if (!cert) return null;
   return cert.direction === CertificateDirection.INPUT
@@ -112,6 +124,7 @@ export async function listCertificateRC2Input(
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: createOrderByList(sortOption || []),
+    include: { file: true },
   });
 
   return certificates.map(transformInput);
@@ -167,6 +180,7 @@ export async function listCertificateRC2Output(
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: createOrderByList(sortOption || []),
+    include: { file: true },
   });
 
   return certificates.map(transformOutput);
@@ -191,6 +205,7 @@ export async function createCertificateRC2(
       createdAt: now,
       updatedAt: now,
     },
+    include: { file: true },
   });
   return body.direction === CertificateDirection.INPUT
     ? transformInput(cert)
@@ -209,13 +224,15 @@ export async function updateCertificateRC2Input(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
+  const { id, createdAt, file, ...rest } = data;
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
-      ...data,
+      ...rest,
       type: data.type as PrismaCertificateType,
       updatedAt: now,
     },
+    include: { file: true },
   });
   return transformInput(updated);
 }
@@ -232,13 +249,15 @@ export async function updateCertificateRC2Output(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
+  const { id, createdAt, file, ...rest } = data;
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
-      ...data,
+      ...rest,
       type: data.type as PrismaCertificateType,
       updatedAt: now,
     },
+    include: { file: true },
   });
   return transformOutput(updated);
 }

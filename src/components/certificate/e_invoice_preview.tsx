@@ -1,31 +1,31 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
-import { InvoiceType } from '@/constants/invoice';
 import { useUserCtx } from '@/contexts/user_context';
+import { CertificateType } from '@prisma/client';
 
 interface EInvoicePreviewProps {
   className?: string;
-  invoiceType?: InvoiceType;
+  certificateType?: CertificateType;
   issuedDate: string;
   invoiceNo: string;
   buyerTaxId?: string;
-  priceBeforeTax: number;
-  taxPrice: number;
-  totalPrice: number;
+  netAmount: number;
+  taxAmount: number;
+  totalAmount: number;
 }
 
 const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
   (
     {
       className,
-      invoiceType,
+      certificateType,
       issuedDate,
       invoiceNo,
       buyerTaxId,
-      priceBeforeTax,
-      taxPrice,
-      totalPrice,
+      netAmount,
+      taxAmount,
+      totalAmount,
     },
     ref
   ) => {
@@ -35,11 +35,11 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
     let seller = '';
     let buyer = '';
     // Info: (20250430 - Anna) 格式35
-    if (invoiceType === InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC) {
+    if (certificateType === CertificateType.OUTPUT_35) {
       seller = taxId;
       buyer = buyerTaxId ?? '';
       // Info: (20250430 - Anna) 格式25
-    } else if (invoiceType === InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE) {
+    } else if (certificateType === CertificateType.INPUT_25) {
       seller = buyerTaxId ?? '';
       buyer = taxId;
     }
@@ -57,7 +57,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
       });
     };
 
-    if (!invoiceType) return null;
+    if (!certificateType) return null;
 
     return (
       <div ref={ref} className={`relative h-600px w-400px shrink-0 bg-neutral-50 ${className}`}>
@@ -100,7 +100,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
               <div className="flex gap-1 text-lg font-semibold">
                 <span className="text-neutral-600">
                   {/* Info: (20250430 - Anna) 加千分位 */}
-                  {priceBeforeTax.toLocaleString()}
+                  {netAmount.toLocaleString()}
                 </span>
                 <span className="text-neutral-300">TWD</span>
               </div>
@@ -112,7 +112,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
               <div className="flex gap-1 text-lg font-semibold">
                 <span className="text-neutral-600">
                   {/* Info: (20250430 - Anna) 加千分位 */}
-                  {taxPrice.toLocaleString()}
+                  {taxAmount.toLocaleString()}
                 </span>
                 <span className="text-neutral-300">TWD</span>
               </div>
@@ -126,7 +126,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
             <p className="text-xl font-medium leading-8"> {t('certificate:EDIT.LUMP_SUM')}：</p>
             <p className="text-32px font-bold leading-10">
               {/* Info: (20250430 - Anna) 加千分位 */}
-              {totalPrice.toLocaleString()}
+              {totalAmount.toLocaleString()}
             </p>
             <p className="text-xl font-medium leading-8">TWD</p>
           </div>

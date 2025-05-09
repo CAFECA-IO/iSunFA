@@ -10,12 +10,12 @@ import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_s
 import { z } from 'zod';
 import { zodStringToNumber, nullSchema } from '@/lib/utils/zod_schema/common';
 import { ProgressStatus } from '@/constants/account';
+import { IFileBetaValidator } from '@/lib/utils/zod_schema//file';
 
 const CertificateRC2BaseSchema = z.object({
   id: z.number(),
   accountBookId: z.number(),
-  fileId: z.number(),
-  uploaderId: z.number(),
+  file: IFileBetaValidator,
   direction: z.nativeEnum(CertificateDirection),
   aiResultId: z.string().optional().default('0'),
   aiStatus: z.string().optional().default(ProgressStatus.IN_PROGRESS),
@@ -47,6 +47,12 @@ const CertificateRC2BaseSchema = z.object({
   buyerName: z.string().nullable().optional(),
   buyerIdNumber: z.string().nullable().optional(),
   isReturnOrAllowance: z.boolean().nullable().optional(),
+
+  incomplete: z.boolean(),
+  uploaderId: z.number(),
+  uploaderName: z.string(),
+  voucherId: z.number().nullable(),
+  voucherNo: z.string().nullable(),
 });
 
 export const CertificateRC2InputSchema = CertificateRC2BaseSchema.extend({
