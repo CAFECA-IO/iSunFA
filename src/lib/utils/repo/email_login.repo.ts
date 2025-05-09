@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { createHash } from 'crypto';
 import { getTimestampNow, randomCode } from '@/lib/utils/common';
 import { IEmailLogin } from '@/interfaces/email';
-import { FIVE_MINUTES_IN_S, ONE_HOUR_IN_S } from '@/constants/time';
+import { FIVE_MINUTES_IN_S } from '@/constants/time';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 
 export const createEmailLogin = async (
@@ -57,14 +57,14 @@ export const verifyEmailLogin = async (
 };
 
 // Info: (20250424 - Luphia) 刪除過期超過一小時的 login code
-export const deleteEmailLogin = async (): Promise<void> => {
-  const nowInSecond = getTimestampNow();
-  const oneHourExpired = nowInSecond - ONE_HOUR_IN_S;
-  await prisma.emailLogin.deleteMany({
+export const deleteEmailLogin = async (
+  email: string,
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+): Promise<void> => {
+  await tx.emailLogin.deleteMany({
     where: {
-      expiredAt: {
-        lt: oneHourExpired,
-      },
+      email,
+      used: false,
     },
   });
 };

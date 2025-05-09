@@ -1,4 +1,4 @@
-import { IEmailLoginLog } from '@/interfaces/email';
+import { IEmailLoginLog, IOneTimePasswordResult } from '@/interfaces/email';
 import {
   EMAIL_LOGIN_ACTION,
   EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
@@ -24,7 +24,7 @@ class EmailLoginHandler {
     return result;
   }
 
-  public static checkRegisterCooldown(email: string): boolean {
+  public static checkRegisterCooldown(email: string): IOneTimePasswordResult | undefined {
     const nowInSecond = getTimestampNow();
     const cooldownTime = nowInSecond - EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S;
     const registerCount = this.logs.filter(
@@ -33,7 +33,15 @@ class EmailLoginHandler {
         log.action === EMAIL_LOGIN_ACTION.REGISTER &&
         log.createdAt > cooldownTime
     ).length;
-    const result = registerCount === 0;
+    const result =
+      registerCount === 0
+        ? {
+            email,
+            expiredAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+            coolDown: EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+            coolDownAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+          }
+        : undefined;
     return result;
   }
 

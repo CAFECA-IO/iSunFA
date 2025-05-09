@@ -51,3 +51,14 @@ export interface IEmailLoginLog {
   action: EMAIL_LOGIN_ACTION;
   createdAt: number;
 }
+
+export interface IOneTimePasswordResult {
+  email: string;
+  expiredAt: number;
+  coolDown: number;
+  coolDownAt: number;
+}
+export interface ICoolDown {
+  coolDown: number;
+  coolDownAt: number;
+}

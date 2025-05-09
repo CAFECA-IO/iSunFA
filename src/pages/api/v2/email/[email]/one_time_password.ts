@@ -1,11 +1,21 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+// Deprecated: (20250509 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSession } from '@/lib/utils/session';
+// Deprecated: (20250509 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { APIName, HttpMethod } from '@/constants/api_connection';
+// Deprecated: (20250509 - Luphia) remove eslint-disable
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { logUserAction } from '@/lib/utils/middleware';
 import { formatApiResponse } from '@/lib/utils/common';
 import EmailLoginHandler from '@/lib/utils/email_login';
-import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
-import { createEmailLogin, verifyEmailLogin } from '@/lib/utils/repo/email_login.repo';
+import { STATUS_MESSAGE } from '@/constants/status_code';
+import {
+  createEmailLogin,
+  deleteEmailLogin,
+  verifyEmailLogin,
+} from '@/lib/utils/repo/email_login.repo';
 import loggerBack from '@/lib/utils/logger_back';
 import { emailVerifier } from '@/lib/utils/verifier/email.verifier';
 import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
@@ -27,8 +37,10 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250429 - Luphia) email 格式不正確
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
   }
-  const notCooldown = await EmailLoginHandler.checkRegisterCooldown(email as string);
-  if (!notCooldown) {
+  const checkRegisterCooldownResult = await EmailLoginHandler.checkRegisterCooldown(
+    email as string
+  );
+  if (!checkRegisterCooldownResult) {
     // Info: (20250429 - Luphia) 註冊冷卻期內
     throw new Error(STATUS_MESSAGE.EMAIL_LOGIN_REGISTRATION_COOLDOWN);
   }
@@ -54,20 +66,20 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
-
   // Info: (20250429 - Luphia) 記錄 log
   EmailLoginHandler.log(email as string, EMAIL_LOGIN_ACTION.REGISTER);
   const result = {
-    httpCode: STATUS_CODE.SUCCESS_GET,
-    result: { email },
+    statusMessage: STATUS_MESSAGE.SUCCESS_GET,
+    result: checkRegisterCooldownResult,
   };
   return result;
 };
 
 // Info: (20250429 - Luphia) 執行一次性登入
 export const handlePostRequest = async (req: NextApiRequest) => {
-  const { body } = req;
-  const { email, code } = body;
+  const { body, query } = req;
+  const { email } = query;
+  const { code } = body;
   const isValidEmail = emailVerifier(email as string);
   if (!isValidEmail) {
     // Info: (20250429 - Luphia) email 格式不正確
@@ -87,7 +99,24 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   // Info: (20250429 - Luphia) 驗證成功，清除登入紀錄
   EmailLoginHandler.cleanLogs(email as string);
   const result = {
-    httpCode: STATUS_CODE.SUCCESS,
+    statusMessage: STATUS_MESSAGE.SUCCESS,
+    result: { email },
+  };
+  return result;
+};
+
+// Info: (20250508 - Luphia) 刪除一次性登入密碼
+export const handleDeleteRequest = async (req: NextApiRequest) => {
+  const { query } = req;
+  const { email } = query;
+  const isValidEmail = emailVerifier(email as string);
+  if (!isValidEmail) {
+    // Info: (20250508 - Luphia) email 格式不正確
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
+  }
+  await deleteEmailLogin(email as string);
+  const result = {
+    statusMessage: STATUS_MESSAGE.SUCCESS,
     result: { email },
   };
   return result;
@@ -98,7 +127,6 @@ export const handlePostRequest = async (req: NextApiRequest) => {
  */
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   const method = req.method || HttpMethod.GET;
-  const session = await getSession(req);
   let httpCode;
   let result;
   let statusMessage;
@@ -106,12 +134,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case HttpMethod.POST:
-        ({ httpCode, result } = await handlePostRequest(req));
+        ({ statusMessage, result } = await handlePostRequest(req));
         break;
       case HttpMethod.GET:
       default:
-        ({ httpCode, result } = await handleGetRequest(req));
+        ({ statusMessage, result } = await handleGetRequest(req));
     }
+    ({ httpCode, result } = formatApiResponse(statusMessage, result));
+    res.status(httpCode).json(result);
   } catch (error) {
     loggerBack.error(error);
     const err = error as Error;
@@ -119,12 +149,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     ({ httpCode, result } = formatApiResponse(statusMessage, {}));
     res.status(httpCode).json(result);
   }
+  // ToDo: (20250509 - Luphia) 需補充 logUserAction 格式
+  /*
   await logUserAction(
     session,
     APIName.PAYMENT_METHOD_REGISTER_REDIRECT,
     req,
     statusMessage as string
   );
+   */
   res.end();
 };
 

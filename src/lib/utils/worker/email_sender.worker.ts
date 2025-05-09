@@ -9,7 +9,6 @@ export const sendEmail = async (
   templateName: EmailTemplateName,
   data: EmailTemplateData[keyof EmailTemplateData]
 ): Promise<boolean> => {
-  loggerBack.warn(`sendEmail: ${to}, ${subject}, ${templateName}`);
   let result = false;
   try {
     const html = compileTemplate({
