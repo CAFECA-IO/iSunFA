@@ -81,7 +81,7 @@ const VerifyCodeStep = ({
           <button
             type="button"
             onClick={handleVerifyCode}
-            className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
+            className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px text-base font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             disabled={isVerifyingCode || verificationCode.trim() === ''}
           >
             確認驗證碼 ({verifyCountdown}s)

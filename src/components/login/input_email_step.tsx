@@ -85,7 +85,7 @@ const InputEmailStep = ({
       <div className="flex flex-col gap-16px">
         <div className="flex items-center gap-24px">
           <hr className="flex-auto border-t border-stroke-neutral-mute" />
-          <p>Or Login with</p>
+          <p className="text-base font-medium text-text-neutral-mute">Or Login with</p>
           <hr className="flex-auto border-t border-stroke-neutral-mute" />
         </div>
 
