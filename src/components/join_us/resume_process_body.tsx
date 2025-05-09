@@ -8,6 +8,7 @@ import SkillForm from '@/components/join_us/skill_form';
 import PreferenceForm from '@/components/join_us/preference_form';
 import AttachmentForm from '@/components/join_us/attachment_form';
 import { useHiringCtx } from '@/contexts/hiring_context';
+import { IResume } from '@/interfaces/resume';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
@@ -39,6 +40,28 @@ const ResumeProcessBody: React.FC = () => {
 
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
 
+  // ToDo: (20250502 - Julian) Post API
+  const saveResume = async () => {
+    if (!(tempPersonalInfo && tempPreference && tempAttachment)) return;
+
+    const resumeData: IResume = {
+      personalInfo: tempPersonalInfo,
+      educationList: tempEducationList,
+      workList: tempWorkList,
+      languageList: tempLanguageList,
+      certificateList: tempCertificateList,
+      preference: tempPreference,
+      attachment: tempAttachment,
+    };
+
+    // Deprecated: (20250506 - Luphia) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('Resume Data:', resumeData);
+
+    // Info: (20250502 - Julian) 提交後跳轉到完成頁面
+    // router.push(ISUNFA_ROUTE.FINISH_PAGE);
+  };
+
   const toPrevStep = () => {
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
@@ -50,23 +73,7 @@ const ResumeProcessBody: React.FC = () => {
 
   const toNextStep = () => {
     if (currentStep === 5) {
-      // ToDo: (20250502 - Julian) Post API
-      const resumeData = {
-        personalInfo: tempPersonalInfo,
-        educationList: tempEducationList,
-        workList: tempWorkList,
-        languageList: tempLanguageList,
-        certificateList: tempCertificateList,
-        preference: tempPreference,
-        attachment: tempAttachment,
-      };
-
-      // Deprecated: (20250506 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Resume Data:', resumeData);
-
-      // Info: (20250502 - Julian) 提交後跳轉到完成頁面
-      // router.push(ISUNFA_ROUTE.FINISH_PAGE);
+      saveResume();
     } else {
       setCurrentStep((prev) => prev + 1);
     }
