@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { TbLogout } from 'react-icons/tb';
+import { cn } from '@/lib/utils/common';
 
 interface VerifyCodeStepProps {
   verificationCode: string;
@@ -41,7 +42,7 @@ const VerifyCodeStep = ({
           <h4 className="text-start text-xl font-bold leading-8 text-text-neutral-primary">
             Verification code
           </h4>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-8px">
             <input
               type="number"
               placeholder="Ex: 123456"
@@ -50,7 +51,12 @@ const VerifyCodeStep = ({
               }}
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+              className={cn(
+                'rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder',
+                {
+                  'border-text-state-error text-input-text-error': verifyCodeError,
+                }
+              )}
             />
             {verifyCodeError && (
               <p className="text-start text-xs font-medium text-text-state-error">

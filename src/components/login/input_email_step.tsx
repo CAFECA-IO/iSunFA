@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { FiArrowRight } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
+import { cn } from '@/lib/utils/common';
 
 interface InputEmailStepProps {
   inputEmail: string;
@@ -46,39 +47,44 @@ const InputEmailStep = ({
           <h4 className="text-start text-xl font-bold leading-8 text-text-neutral-primary">
             Email
           </h4>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-8px">
             <input
               type="text"
               placeholder="Enter your Email Address"
               value={inputEmail}
               onChange={updateInputEmail}
-              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+              className={cn(
+                'rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder',
+                {
+                  'border-text-state-error text-input-text-error': isEmailNotValid,
+                }
+              )}
             />
             <p
-              className={`text-end text-xs font-medium text-text-state-error ${isEmailNotValid ? 'visible' : 'invisible'}`}
+              className={`text-start text-xs font-medium text-text-state-error ${isEmailNotValid ? 'visible' : 'invisible'}`}
             >
               請輸入有效的電子郵件地址
             </p>
-            {sendEmailError && (
-              <p className="text-start text-xs font-medium text-text-state-error">
-                {sendEmailError}
-              </p>
-            )}
           </div>
         </div>
 
         {isSendingEmail ? (
           <p>驗證信正在寄送中...</p>
         ) : (
-          <button
-            type="button"
-            onClick={sendLoginEmail}
-            disabled={isEmailNotValid}
-            className="flex items-center gap-8px self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
-          >
-            <span className="text-base font-medium text-button-text-primary-solid">Login</span>
-            <FiArrowRight size={20} />
-          </button>
+          <div className="flex flex-col items-center gap-8px">
+            <button
+              type="button"
+              onClick={sendLoginEmail}
+              disabled={isEmailNotValid}
+              className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
+            >
+              <span className="text-base font-medium text-button-text-primary-solid">Login</span>
+              <FiArrowRight size={20} />
+            </button>
+            {sendEmailError && (
+              <p className="text-xs font-medium text-text-state-error">{sendEmailError}</p>
+            )}
+          </div>
         )}
       </section>
 
