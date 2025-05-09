@@ -10,30 +10,59 @@ import Loader from '@/components/loader/loader';
 import TermsOfServiceModal from '@/components/login/terms_of_service_modal';
 import InputEmailStep from '@/components/login/input_email_step';
 import VerifyCodeStep from '@/components/login/verify_code_step';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
-const SEND_VERIFICATION_EMAIL_RES_SUCCESS = {
+// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Success
+const SEND_VERIFICATION_EMAIL_RES = {
   success: true,
   code: '200',
   message: 'Success',
   data: {
     expiredAt: '1746706335',
-    coolDown: 180,
+    coolDown: 30,
     coolDownAt: 1746706515,
   },
 };
 
-const VERIFY_CODE_RESULT_SUCCESS = {
-  success: true,
-  code: '200',
-  message: 'Success',
+// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Fail
+// const SEND_VERIFICATION_EMAIL_RES = {
+//   success: false,
+//   code: '429ISF0000',
+//   message: 'Email login registration cooldown',
+//   data: {
+//     coolDown: 180,
+//     coolDownAt: 1756727800,
+//   },
+// };
+
+// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Success
+// const VERIFY_CODE_RESULT = {
+//   success: true,
+//   code: '200',
+//   message: 'Success',
+//   data: {
+//     id: 10000001,
+//     name: 'Lisa',
+//     email: 'lisa@gmail.com',
+//     imageId: '10000000',
+//     agreementList: [],
+//     createdAt: 1725359150,
+//     updatedAt: 1725359150,
+//   },
+// };
+
+// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Fail
+const VERIFY_CODE_RESULT = {
+  success: false,
+  code: '429ISF0001',
+  message: 'Email login too many attempts',
   data: {
-    id: 10000001,
-    name: 'Lisa',
-    email: 'lisa@gmail.com',
-    imageId: '10000000',
-    agreementList: [],
-    createdAt: 1725359150,
-    updatedAt: 1725359150,
+    attempts: 6,
+    maxAttempts: 5,
+    coolDown: 30,
+    coolDownAt: 1756727800,
   },
 };
 
@@ -44,6 +73,7 @@ export interface NewLoginPageProps {
 
 const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService } = useUserCtx();
+  const { toastHandler } = useModalContext();
 
   const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // 當前步驟
   const [inputEmail, setInputEmail] = useState<string>(''); // 使用者輸入的 email
@@ -99,9 +129,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     try {
       // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
 
-      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES_SUCCESS 來模擬 API 回傳
-      const { success, message } = SEND_VERIFICATION_EMAIL_RES_SUCCESS;
-      const coolDown = SEND_VERIFICATION_EMAIL_RES_SUCCESS.data?.coolDown ?? undefined;
+      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
+      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
+      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
 
       if (!success) {
         setSendEmailError('驗證信寄送失敗');
@@ -129,14 +159,29 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     try {
       // ToDo: (20250508 - Liz) 打 API 驗證驗證碼 (VERIFY_CODE)
 
-      // Info: (20250508 - Liz) 先使用假資料 VERIFY_CODE_RESULT_SUCCESS 來模擬 API 回傳
-      const { success, message } = VERIFY_CODE_RESULT_SUCCESS;
+      // Info: (20250508 - Liz) 先使用假資料 VERIFY_CODE_RESULT 來模擬 API 回傳
+      const { success, message } = VERIFY_CODE_RESULT;
+      const maxAttempts = VERIFY_CODE_RESULT.data?.maxAttempts ?? undefined;
+
+      // Deprecated: (20250509 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('success:', success);
 
       if (!success) {
         setVerifyCodeError('驗證碼錯誤');
         // Deprecated: (20250509 - Liz)
         // eslint-disable-next-line no-console
         console.log(`驗證碼錯誤: ${message}`);
+
+        if (maxAttempts > 0) {
+          toastHandler({
+            id: ToastId.VERIFY_CODE_ERROR,
+            type: ToastType.ERROR,
+            content: `Incorrect code. You have ${maxAttempts} more attempts remaining.`,
+            closeable: true,
+            position: ToastPosition.TOP_CENTER,
+          });
+        }
         return;
       }
 
@@ -144,7 +189,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       // eslint-disable-next-line no-alert
       window.alert('驗證成功');
 
-      // ToDo: (20250508 - Liz) 驗證成功後，進行登入或其他操作(例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
+      // ToDo: (20250508 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
     } catch (err) {
       setVerifyCodeError('驗證失敗，請稍後再試');
     } finally {
@@ -159,9 +204,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     try {
       // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
 
-      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES_SUCCESS 來模擬 API 回傳
-      const { success, message } = SEND_VERIFICATION_EMAIL_RES_SUCCESS;
-      const coolDown = SEND_VERIFICATION_EMAIL_RES_SUCCESS.data?.coolDown ?? undefined;
+      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
+      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
+      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
       if (coolDown) setResendCountdown(coolDown); // Info: (20250509 - Liz) 從 API 回傳的資料中取得重新寄出驗證信的冷卻時間 coolDown
 
       if (!success) {

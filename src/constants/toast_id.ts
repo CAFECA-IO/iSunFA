@@ -63,4 +63,5 @@ export enum ToastId {
   ACCOUNT_BOOK_INFO_GET_ERROR = 'toast-account-book-info-get-error',
   ACCOUNT_BOOK_DELETE_ERROR = 'toast-account-book-delete-error',
   ACCOUNT_BOOK_DELETE_SUCCESS = 'toast-account-book-delete-success',
+  VERIFY_CODE_ERROR = 'toast-verify-code-error',
 }
