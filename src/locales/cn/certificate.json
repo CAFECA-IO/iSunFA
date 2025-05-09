@@ -1,7 +1,9 @@
 {
   "LIST": {
     "INVOICE_TOTAL_PRICE": "凭证总价",
-    "EXPORT_CERTIFICATES": "导出发票"
+    "EXPORT_CERTIFICATES": "导出发票",
+    "INPUT_TOTAL_PRICE": "进项发票总额",
+    "OUTPUT_TOTAL_PRICE": "销项发票总额"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "未入帐的凭证",
@@ -113,7 +115,9 @@
     "SALES": "销售额",
     "LUMP_SUM": "总金额",
     "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三联式收银机发票则跳过",
-    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月"
+    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月",
+    "INPUT_INVOICE": "进项发票",
+    "OUTPUT_INVOICE": "销项发票"
   },
   "TYPE": {
     "TRIPLICATE": "三联",

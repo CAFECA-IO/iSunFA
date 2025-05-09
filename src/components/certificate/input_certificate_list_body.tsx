@@ -623,7 +623,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
               isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
-              subtitle={`${t('certificate:LIST.CERTIFICATE_TOTAL_PRICE')}:`}
+              subtitle={`${t('certificate:LIST.INPUT_TOTAL_PRICE')}:`}
               totalPrice={totalCertificatePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
