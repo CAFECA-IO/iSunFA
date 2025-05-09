@@ -30,14 +30,31 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService } = useUserCtx();
   const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // 當前步驟
   const [inputEmail, setInputEmail] = useState<string>(''); // 使用者輸入的 email
-  const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false);
-  const [verificationCode, setVerificationCode] = useState(''); // 使用者輸入的驗證碼
-  const [isSendingEmail, setIsSendingEmail] = useState(false); // 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
-  const [isVerifyingCode, setIsVerifyingCode] = useState(false); // 是否正在驗證驗證碼
-  const [verifyCountdown, setVerifyCountdown] = useState(0); // 驗證碼的有效時間倒數(例如 60 秒)
-  const [resendCountdown, setResendCountdown] = useState(0); // 重新寄送驗證信的冷卻倒數(例如 180 秒)
-  const [sendEmailError, setSendEmailError] = useState(''); // 寄送驗證信的錯誤訊息
-  const [verifyCodeError, setVerifyCodeError] = useState(''); // 驗證碼的錯誤訊息
+  const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false); // email 格式是否正確
+  const [verificationCode, setVerificationCode] = useState<string>(''); // 使用者輸入的驗證碼
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false); // 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
+  const [isVerifyingCode, setIsVerifyingCode] = useState<boolean>(false); // 是否正在驗證驗證碼
+  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // 驗證碼的有效時間倒數(例如 180 秒)
+  const [resendCountdown, setResendCountdown] = useState<number>(0); // 重新寄送驗證信的冷卻時間倒數(例如 180 秒)
+  const [sendEmailError, setSendEmailError] = useState<string>(''); // 寄送驗證信的錯誤訊息
+  const [verifyCodeError, setVerifyCodeError] = useState<string>(''); // 驗證碼的錯誤訊息
+
+  // Info: (20250509 - Liz) 回到輸入 email 的步驟，並重置所有的狀態
+  const goBackToInputEmailStep = () => {
+    setStep('inputEmail');
+    setInputEmail('');
+    setVerificationCode('');
+    setVerifyCountdown(0);
+    setResendCountdown(0);
+    setSendEmailError('');
+    setVerifyCodeError('');
+    setIsEmailNotValid(false);
+    setIsSendingEmail(false);
+    setIsVerifyingCode(false);
+    setIsEmailNotValid(false);
+    setSendEmailError('');
+    setVerifyCodeError('');
+  };
 
   // Info: (20250508 - Liz) 使用者點擊登入按鈕後，會先進行 email 格式驗證，接著會打 API 寄送驗證信
   const sendLoginEmail = () => {
@@ -60,12 +77,12 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       if (SEND_VERIFICATION_EMAIL_RESULT.success) {
         // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RESULT 來模擬 API 回傳
         setStep('verifyCode');
-        setVerifyCountdown(60);
+        setVerifyCountdown(180);
       } else {
         setSendEmailError('驗證信寄送失敗');
       }
     } catch (err) {
-      setSendEmailError('發生錯誤，請稍後再試');
+      setSendEmailError('寄送驗證信失敗，請稍後再試');
     } finally {
       setIsSendingEmail(false);
     }
@@ -100,8 +117,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     try {
       // ToDo: (20250508 - Liz) 打 API 重新寄送驗證信 (SEND_VERIFICATION_EMAIL)
       setResendCountdown(180);
+      setVerifyCountdown(180);
     } catch (err) {
-      setVerifyCodeError('重新寄送失敗');
+      setVerifyCodeError('重新寄送驗證信失敗，請稍後再試');
     }
   };
 
@@ -146,7 +164,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     return () => clearInterval(timer);
   }, [verifyCountdown]);
 
-  // Info: (20250508 - Liz) 每秒減一，直到 0（不能連續重寄太快）
+  // Info: (20250508 - Liz) 每秒減一，直到 0 (不能太快重新寄送驗證信，需要冷卻時間)
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (resendCountdown > 0) {
@@ -199,6 +217,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
               resendCountdown={resendCountdown}
               handleResend={handleResend}
               verifyCodeError={verifyCodeError}
+              goBackToInputEmailStep={goBackToInputEmailStep}
             />
           )}
         </>

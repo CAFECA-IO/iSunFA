@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
+import { TbLogout } from 'react-icons/tb';
 
 interface VerifyCodeStepProps {
   verificationCode: string;
@@ -9,7 +10,8 @@ interface VerifyCodeStepProps {
   handleVerifyCode: () => void;
   handleResend: () => void;
   isVerifyingCode: boolean;
-  verifyCodeError?: string;
+  verifyCodeError: string;
+  goBackToInputEmailStep: () => void;
 }
 
 const VerifyCodeStep = ({
@@ -21,6 +23,7 @@ const VerifyCodeStep = ({
   handleResend,
   isVerifyingCode,
   verifyCodeError,
+  goBackToInputEmailStep,
 }: VerifyCodeStepProps) => {
   return (
     <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
@@ -53,23 +56,30 @@ const VerifyCodeStep = ({
             )}
           </div>
 
-          <button type="button" className="self-end">
-            沒有收到驗證信?
-          </button>
+          {resendCountdown === 0 && (
+            <button
+              type="button"
+              className="self-end text-base font-medium text-text-neutral-link"
+              onClick={handleResend}
+            >
+              沒有收到驗證信?
+            </button>
+          )}
 
           {resendCountdown > 0 && (
             <p className="text-end text-xs font-medium text-text-state-error">
-              {`驗證信已寄送，請稍後 ${resendCountdown} 秒後再試`}
+              {`驗證信已寄送，請稍後再試 (${resendCountdown} 秒)`}
             </p>
           )}
         </div>
 
+        {/* Info: (20250509 - Liz) Confirm Button */}
         {verifyCountdown > 0 ? (
           <button
             type="button"
             onClick={handleVerifyCode}
-            className="mr-2 rounded bg-green-500 px-4 py-2 text-white disabled:opacity-50"
-            disabled={verifyCountdown <= 0 || isVerifyingCode}
+            className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
+            disabled={isVerifyingCode || verificationCode.trim() === ''}
           >
             確認驗證碼 ({verifyCountdown}s)
           </button>
@@ -77,11 +87,23 @@ const VerifyCodeStep = ({
           <button
             type="button"
             onClick={handleResend}
-            className="rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
+            className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
           >
             重新寄送驗證信
           </button>
         )}
+
+        {/* Info: (20250509 - Liz) Back to Login */}
+        <button
+          type="button"
+          className="flex items-center gap-8px self-start"
+          onClick={goBackToInputEmailStep}
+        >
+          <TbLogout size={20} className="text-stroke-brand-secondary-moderate" />
+          <span className="text-base font-semibold text-text-brand-secondary-lv2">
+            Back to Login
+          </span>
+        </button>
       </section>
     </div>
   );

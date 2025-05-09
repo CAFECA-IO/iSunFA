@@ -11,7 +11,7 @@ interface InputEmailStepProps {
   sendLoginEmail: () => void;
   googleAuthSignIn: () => void;
   isSendingEmail: boolean;
-  sendEmailError?: string;
+  sendEmailError: string;
 }
 
 const InputEmailStep = ({
