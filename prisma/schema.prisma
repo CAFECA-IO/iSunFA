@@ -1616,3 +1616,16 @@ model emailJob {
 
   @@map("email_job")
 }
+
+model emailLogin {
+  id        Int     @id @default(autoincrement())
+  email     String
+  code      String
+  hash      String
+  used      Boolean @default(false)
+  expiredAt Int     @map("expired_at")
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+
+  @@map("email_login")
+}

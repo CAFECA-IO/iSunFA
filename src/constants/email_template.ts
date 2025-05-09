@@ -1,9 +1,10 @@
 export enum EmailTemplateName {
   INVITE = 'invite',
   PAY = 'pay',
-  PAY_ERROR = 'pay-error',
+  PAY_ERROR = 'pay_error',
   SUBSCRIBE = 'subscribe',
   FREE = 'free',
+  ONE_TIME_PASSWORD = 'one_time_password',
 }
 
 export type EmailTemplateData = {
@@ -31,5 +32,11 @@ export type EmailTemplateData = {
   [EmailTemplateName.FREE]: {
     teamName: string;
     reminderDate: string;
+  };
+  [EmailTemplateName.ONE_TIME_PASSWORD]: {
+    receiverName: string;
+    loginCode: string;
+    loginLink: string;
+    expiredAt: string;
   };
 };
