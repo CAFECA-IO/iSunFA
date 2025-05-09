@@ -368,7 +368,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     formStateRef.current = newFormState;
     savedCertificateRC2Ref.current = newFormState;
 
-    // 同步更新日期 UI
+    // Info: (20250509 - Tzuhan) 同步更新日期 UI
     if (certificate.issuedDate) {
       setDate({
         startTimeStamp: certificate.issuedDate,
@@ -771,8 +771,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
                   setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
 
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                  // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                  // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
                   if (
                     formState.type === CertificateType.OUTPUT_31 &&
                     isTogglingToReturnOrAllowance
