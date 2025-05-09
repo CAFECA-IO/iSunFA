@@ -334,47 +334,33 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   useEffect(() => {
     if (!certificate) return;
 
-    const {
-      type,
-      // Info: (20250415 - Anna) 避免命名衝突，將 issuedDate 改名為 certificateDate
-      issuedDate: certificateDate,
-      no,
-      taxRate,
-      buyerIdNumber,
-      buyerName,
-      netAmount,
-      taxAmount,
-      totalAmount,
-    } = certificate;
-
-    // Info: (20250415 - Anna) 初始化 formState
     const newFormState: Partial<ICertificateRC2Input> = {
       direction: CertificateDirection.INPUT,
-      issuedDate: certificateDate,
-      no,
-      netAmount,
-      taxRate,
-      taxAmount,
-      totalAmount,
-      buyerIdNumber,
-      buyerName,
-      type: type ?? CertificateType.INPUT_21,
+      issuedDate: certificate.issuedDate,
+      no: certificate.no,
+      netAmount: certificate.netAmount,
+      taxRate: certificate.taxRate,
+      taxAmount: certificate.taxAmount,
+      totalAmount: certificate.totalAmount,
+      type: certificate.type ?? CertificateType.INPUT_21,
+      salesIdNumber: certificate.salesIdNumber,
+      salesName: certificate.salesName,
+      deductionType: certificate.deductionType,
+      isSharedAmount: certificate.isSharedAmount,
+      otherCertificateNo: certificate.otherCertificateNo,
+      totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
     };
 
-    // Info: (20250415 - Anna) 更新 state 與 Ref
     setFormState(newFormState);
     formStateRef.current = newFormState;
-    savedCertificateRC2Ref.current = {
-      ...certificate,
-      ...newFormState,
-    };
+    savedCertificateRC2Ref.current = newFormState;
 
-    // Info: (20250415 - Anna) Debug 日期內容
-    if (certificateDate) {
+    // Info: (20250415 - Anna)同步更新日期 UI
+    if (certificate.issuedDate) {
       setDate({
-        startTimeStamp: certificateDate,
+        startTimeStamp: certificate.issuedDate,
         // Info: (20250415 - Anna) 補足當天結束時間（23:59:59）(24 小時 × 60 分鐘 × 60 秒 = 86400 秒，86400 - 1 = 86399 秒)
-        endTimeStamp: certificateDate + 86399,
+        endTimeStamp: certificate.issuedDate + 86399,
       });
     }
   }, [certificate, editingId]);
@@ -1027,7 +1013,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             <Button
               type="button"
               disabled={!hasPrev}
-              onClick={() => setEditingId(certificates[currentIndex - 1].id)}
+              onClick={async () => {
+                await handleSave();
+                setEditingId(certificates[currentIndex - 1].id);
+              }}
               variant="tertiaryOutline"
               className="px-16px py-8px"
             >
@@ -1036,7 +1025,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             </Button>
             {/* Info: (20250415 - Anna) 下一筆 */}
             <Button
-              onClick={() => setEditingId(certificates[currentIndex + 1].id)}
+              onClick={async () => {
+                await handleSave();
+                setEditingId(certificates[currentIndex + 1].id);
+              }}
               type="button"
               disabled={!hasNext}
               variant="tertiary"

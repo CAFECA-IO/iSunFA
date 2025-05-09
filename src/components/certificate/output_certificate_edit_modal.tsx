@@ -347,55 +347,32 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   useEffect(() => {
     if (!certificate) return;
 
-    const {
-      type,
-      // Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
-      issuedDate: certificateDate,
-      no,
-      taxRate,
-      salesName,
-      salesIdNumber,
-      netAmount,
-      taxAmount,
-      totalAmount,
-    } = certificate;
-
-    // Info: (20250415 - Anna) 初始化 formState
     const newFormState: Partial<ICertificateRC2Output> = {
       direction: CertificateDirection.OUTPUT,
-      issuedDate: certificateDate,
-      no,
-      netAmount,
-      taxRate,
-      taxAmount,
-      totalAmount,
-      salesIdNumber,
-      salesName,
-      type: type ?? CertificateType.OUTPUT_31,
+      issuedDate: certificate.issuedDate,
+      no: certificate.no,
+      netAmount: certificate.netAmount,
+      taxRate: certificate.taxRate,
+      taxAmount: certificate.taxAmount,
+      totalAmount: certificate.totalAmount,
+      buyerIdNumber: certificate.buyerIdNumber,
+      buyerName: certificate.buyerName,
+      isReturnOrAllowance: certificate.isReturnOrAllowance,
+      type: certificate.type ?? CertificateType.OUTPUT_31,
+      otherCertificateNo: certificate.otherCertificateNo,
+      totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
     };
 
-    // Info: (20250415 - Anna) 更新 state 與 Ref
     setFormState(newFormState);
     formStateRef.current = newFormState;
-    savedCertificateRC2Ref.current = {
-      ...certificate,
-      ...newFormState,
-    };
+    savedCertificateRC2Ref.current = newFormState;
 
-    // Info: (20250415 - Anna) Debug 日期內容
-    if (certificateDate) {
+    // 同步更新日期 UI
+    if (certificate.issuedDate) {
       setDate({
-        startTimeStamp: certificateDate,
-        // Info: (20250415 - Anna) 補足當天結束時間（23:59:59）(24 小時 × 60 分鐘 × 60 秒 = 86400 秒，86400 - 1 = 86399 秒)
-        endTimeStamp: certificateDate + 86399,
+        startTimeStamp: certificate.issuedDate,
+        endTimeStamp: certificate.issuedDate + 86399,
       });
-    }
-
-    // Info: (20250415 - Anna) 依據憑證類型判斷是否為折讓
-    if (type === CertificateType.OUTPUT_33 || type === CertificateType.OUTPUT_34) {
-      setIsReturnOrAllowance(true);
-    } else {
-      setIsReturnOrAllowance(false);
     }
   }, [certificate, editingId]);
 

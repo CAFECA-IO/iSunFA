@@ -90,7 +90,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
                 params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
                 body: {
                   fileId,
-                  direction: CertificateDirection.INPUT,
+                  direction: CertificateDirection.OUTPUT,
                   isGenerated: false,
                   currencyCode: CurrencyCode.TWD,
                 },

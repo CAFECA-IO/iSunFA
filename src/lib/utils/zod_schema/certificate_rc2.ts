@@ -169,8 +169,8 @@ export const deleteCertificateRC2Input = {
       certificateIds: z.array(z.number()),
     }),
   },
-  outputSchema: z.object({ success: z.boolean(), deletedIds: z.number() }),
-  frontend: z.object({ success: z.boolean(), deletedIds: z.number() }),
+  outputSchema: z.object({ success: z.boolean(), deletedIds: z.array(z.number()) }),
+  frontend: z.object({ success: z.boolean(), deletedIds: z.array(z.number()) }),
 };
 
 export const deleteCertificateRC2Output = deleteCertificateRC2Input;
