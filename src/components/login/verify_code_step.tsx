@@ -28,6 +28,10 @@ const VerifyCodeStep = ({
   verifyCodeError,
   goBackToInputEmailStep,
 }: VerifyCodeStepProps) => {
+  // Deprecated: (20250509 - Liz)
+  // eslint-disable-next-line no-console
+  console.error('verifyCodeError :', verifyCodeError);
+
   return (
     <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
       <div className="flex items-center justify-center gap-10px">
@@ -60,11 +64,6 @@ const VerifyCodeStep = ({
                 }
               )}
             />
-            {verifyCodeError && (
-              <p className="text-start text-xs font-medium text-text-state-error">
-                {verifyCodeError}
-              </p>
-            )}
           </div>
 
           {resendCountdown === 0 && (

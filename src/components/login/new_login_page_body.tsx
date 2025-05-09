@@ -199,6 +199,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) 重新寄出驗證信
   const handleResend = async () => {
+    setVerificationCode('');
     setIsResendingEmail(true);
     setVerifyCodeError('');
     try {
