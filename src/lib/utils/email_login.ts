@@ -1,26 +1,34 @@
-import { IEmailLoginLog, IOneTimePasswordResult } from '@/interfaces/email';
+import { ICoolDown, IEmailLoginLog, IOneTimePasswordResult } from '@/interfaces/email';
 import {
   EMAIL_LOGIN_ACTION,
   EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+  EMAIL_LOGIN_TOO_MANY_ATTEMPTS_COOLDOWN_IN_S,
   MAX_EMIL_LOGIN_ERROR_TIMES,
 } from '@/constants/email_login';
 import { getTimestampNow } from '@/lib/utils/common';
+import { ONE_HOUR_IN_S } from '@/constants/time';
 
 class EmailLoginHandler {
-  // Info: (20250428 - Luphia) singleton
-  private static instance: EmailLoginHandler;
-
   private static logs: IEmailLoginLog[] = [];
 
-  public static checkLoginTimes(email: string): boolean {
+  public static checkLoginTimes(email: string): ICoolDown {
     const nowInSecond = getTimestampNow();
     const loginCount = this.logs.filter(
       (log) =>
         log.email === email &&
         log.action === EMAIL_LOGIN_ACTION.VERIFY &&
-        log.createdAt > nowInSecond - 60 * 60
+        log.createdAt > nowInSecond - ONE_HOUR_IN_S
     ).length;
-    const result = loginCount < MAX_EMIL_LOGIN_ERROR_TIMES;
+    // Info: (20250509 - Luphia) 一小時內登入失敗次數超過上限，每多一次登入失敗，冷卻時間增加 10 分鐘
+    const coolDownAt =
+      nowInSecond +
+      (loginCount - MAX_EMIL_LOGIN_ERROR_TIMES) * EMAIL_LOGIN_TOO_MANY_ATTEMPTS_COOLDOWN_IN_S;
+    const result = {
+      coolDown: EMAIL_LOGIN_TOO_MANY_ATTEMPTS_COOLDOWN_IN_S,
+      coolDownAt,
+      maxAttempts: MAX_EMIL_LOGIN_ERROR_TIMES,
+      attempts: loginCount,
+    };
     return result;
   }
 
@@ -33,15 +41,13 @@ class EmailLoginHandler {
         log.action === EMAIL_LOGIN_ACTION.REGISTER &&
         log.createdAt > cooldownTime
     ).length;
-    const result =
-      registerCount === 0
-        ? {
-            email,
-            expiredAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
-            coolDown: EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
-            coolDownAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
-          }
-        : undefined;
+    const result = {
+      isAvailable: registerCount === 0,
+      email,
+      expiredAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+      coolDown: EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+      coolDownAt: nowInSecond + EMAIL_LOGIN_REGISTER_COOLDOWN_IN_S,
+    };
     return result;
   }
 

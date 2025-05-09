@@ -166,6 +166,8 @@ export enum APIName {
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
+  SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
+  VERIFY_CODE = 'VERIFY_CODE',
 }
 
 export enum APIPath {
@@ -309,6 +311,8 @@ export enum APIPath {
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
   LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
+  SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
+  VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
 }
 
 const createConfig = ({
@@ -1011,5 +1015,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.ACCOUNT_BOOK_PUT_ICON,
     method: HttpMethod.PUT,
     path: APIPath.ACCOUNT_BOOK_PUT_ICON,
+  }),
+  [APIName.SEND_VERIFICATION_EMAIL]: createConfig({
+    name: APIName.SEND_VERIFICATION_EMAIL,
+    method: HttpMethod.GET,
+    path: APIPath.SEND_VERIFICATION_EMAIL,
+  }),
+  [APIName.VERIFY_CODE]: createConfig({
+    name: APIName.VERIFY_CODE,
+    method: HttpMethod.POST,
+    path: APIPath.VERIFY_CODE,
   }),
 };

@@ -21,6 +21,7 @@ import { emailVerifier } from '@/lib/utils/verifier/email.verifier';
 import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
 import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
+import { handleSignInSession } from '@/lib/utils/signIn';
 
 /* Info: (20250429 - Luphia) 註冊 Email 一次性登入密碼
  * 1. 檢驗是否還在註冊冷卻期內
@@ -42,7 +43,12 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   );
   if (!checkRegisterCooldownResult) {
     // Info: (20250429 - Luphia) 註冊冷卻期內
-    throw new Error(STATUS_MESSAGE.EMAIL_LOGIN_REGISTRATION_COOLDOWN);
+    // throw new Error(STATUS_MESSAGE.EMAIL_LOGIN_REGISTRATION_COOLDOWN);
+    const result = {
+      statusMessage: STATUS_MESSAGE.EMAIL_LOGIN_REGISTRATION_COOLDOWN,
+      result: checkRegisterCooldownResult,
+    };
+    return result;
   }
   const emailLogin = await createEmailLogin(email as string);
   if (!emailLogin) {
@@ -66,7 +72,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
   }
-  // Info: (20250429 - Luphia) 記錄 log
+  // Info: (20250429 - Luphia) 記錄 log 進入冷卻期
   EmailLoginHandler.log(email as string, EMAIL_LOGIN_ACTION.REGISTER);
   const result = {
     statusMessage: STATUS_MESSAGE.SUCCESS_GET,
@@ -98,6 +104,23 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   }
   // Info: (20250429 - Luphia) 驗證成功，清除登入紀錄
   EmailLoginHandler.cleanLogs(email as string);
+
+  // ToDo: (20250509 - Luphia) 寫法太粗糙，需優化
+  const user = {
+    id: email as string,
+    name: (email as string).split('@')[0],
+    email: email as string,
+    image: 'https://isunfa.com/entities/happy.png',
+    emailVerified: true,
+  };
+  const account = {
+    provider: 'email',
+    type: 'one-time-password',
+    providerAccountId: email as string,
+    access_token: '',
+  };
+  await handleSignInSession(req, user, account);
+
   const result = {
     statusMessage: STATUS_MESSAGE.SUCCESS,
     result: { email },

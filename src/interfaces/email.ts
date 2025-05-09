@@ -61,4 +61,6 @@ export interface IOneTimePasswordResult {
 export interface ICoolDown {
   coolDown: number;
   coolDownAt: number;
+  maxAttempts: number;
+  attempts: number;
 }
