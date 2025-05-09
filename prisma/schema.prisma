@@ -414,6 +414,8 @@ enum CertificateType {
   // Info: (20250429 - Tzuhan) Output 類型
   OUTPUT_31
   OUTPUT_32
+  OUTPUT_33
+  OUTPUT_34
   OUTPUT_35
   OUTPUT_36
 }
@@ -1613,4 +1615,17 @@ model emailJob {
   updatedAt Int    @map("updated_at")
 
   @@map("email_job")
+}
+
+model emailLogin {
+  id        Int     @id @default(autoincrement())
+  email     String
+  code      String
+  hash      String
+  used      Boolean @default(false)
+  expiredAt Int     @map("expired_at")
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+
+  @@map("email_login")
 }

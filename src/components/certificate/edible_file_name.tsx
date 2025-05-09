@@ -7,9 +7,10 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { ICertificateRC2InputUI, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface EditableFilenameProps {
-  certificate: ICertificateUI;
+  certificate: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI;
   certificateFilename: string;
   setCertificateFilename: (name: string) => void;
   onUpdateFilename: (certificateId: number, name: string) => void;
@@ -53,7 +54,9 @@ const EditableFilename: React.FC<EditableFilenameProps> = ({
 
     const newFilename = `${editingBaseName}${extension}`; // Info: (20241213 - tzuhan) 拼接完整檔名
     const { success } = await updateFilename({
-      params: { fileId: certificate.file.id },
+      params: {
+        fileId: certificate.file.id,
+      },
       body: { name: newFilename },
     });
 

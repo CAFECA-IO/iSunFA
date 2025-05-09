@@ -2,27 +2,27 @@ import React from 'react';
 import Head from 'next/head';
 import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import JobDetailBody from '@/components/join_us/job_detail_body';
-import { dummyJobList } from '@/interfaces/job';
+import VacancyDetailBody from '@/components/join_us/job_detail_body';
+import { dummyVacancyList } from '@/interfaces/vacancy';
 
-interface IJobDetailPageProps {
+interface IVacancyDetailPageProps {
   jobId: string;
 }
 
-const JobDetailPage: React.FC<IJobDetailPageProps> = ({ jobId }) => {
+const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ jobId }) => {
   // Info: (20250407 - Julian) 取得 Data
   const jobIdNumber = parseInt(jobId, 10);
-  const jobData = dummyJobList.find((job) => job.id === jobIdNumber);
+  const jobData = dummyVacancyList.find((job) => job.id === jobIdNumber);
 
   // Info: (20250407 - Julian) 如果沒有資料，顯示錯誤訊息
   if (!jobData) {
     return (
       <>
         <Head>
-          <title>Job not found</title>
+          <title>Vacancy not found</title>
         </Head>
         <div className="flex h-screen flex-auto flex-col bg-landing-page-black p-32px font-dm-sans text-4xl text-landing-page-white">
-          Job not found
+          Vacancy not found
         </div>
       </>
     );
@@ -48,7 +48,7 @@ const JobDetailPage: React.FC<IJobDetailPageProps> = ({ jobId }) => {
         <title>{pageTitle}</title>
       </Head>
 
-      <JobDetailBody jobData={jobData} />
+      <VacancyDetailBody jobData={jobData} />
     </>
   );
 };
@@ -68,4 +68,4 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   };
 };
 
-export default JobDetailPage;
+export default VacancyDetailPage;
