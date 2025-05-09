@@ -587,8 +587,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         {/* Info: (20240919 - Anna) Filter Section */}
         <FilterSection<ICertificateRC2Input[]>
           className="mt-2"
-          params={{ accountBookId }}
-          apiName={APIName.CERTIFICATE_LIST_V2}
+          params={{
+            accountBookId,
+          }}
+          apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
