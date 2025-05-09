@@ -401,6 +401,7 @@ enum CertificateDirection {
 
 enum CertificateType {
   // Info: (20250429 - Tzuhan) Input 類型
+  INPUT_20
   INPUT_21
   INPUT_22
   INPUT_23
@@ -412,6 +413,7 @@ enum CertificateType {
   INPUT_29
 
   // Info: (20250429 - Tzuhan) Output 類型
+  OUTPUT_30
   OUTPUT_31
   OUTPUT_32
   OUTPUT_33
@@ -453,6 +455,12 @@ model CertificateRC2 {
   netAmount                     Int?    @map("net_amount")
   taxAmount                     Int?    @map("tax_amount")
   totalAmount                   Int?    @map("total_amount")
+  
+  // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
+  isGenerated                   Boolean @default(false) @map("is_generated")
+  incomplete                    Boolean @default(true) @map("incomplete") // Info: (20250509 - Tzuhan) 是否為不完整發票
+  description                   String? @map("description") // Info: (20250509 - Tzuhan) 發票描述
+  note                          Json? @map("note") // Info: (20250509 - Tzuhan) 可以擴充
 
   // Info: (20250429 - Tzuhan) Input 發票專屬欄位
   deductionType                 DeductionType? @map("deduction_type")
@@ -469,10 +477,6 @@ model CertificateRC2 {
   totalOfSummarizedCertificates Int?   @map("total_of_summarized_invoices")
   carrierSerialNumber           String? @map("carrier_serial_number")
   otherCertificateNo            String? @map("other_certificate_no")
-
-  // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
-  isGenerated                   Boolean @default(false) @map("is_generated")
-
 
   // Info: (20250429 - Tzuhan) 關聯
   accountbook Company          @relation(fields: [accountBookId], references: [id])
@@ -1615,4 +1619,17 @@ model emailJob {
   updatedAt Int    @map("updated_at")
 
   @@map("email_job")
+}
+
+model emailLogin {
+  id        Int     @id @default(autoincrement())
+  email     String
+  code      String
+  hash      String
+  used      Boolean @default(false)
+  expiredAt Int     @map("expired_at")
+  createdAt Int     @map("created_at")
+  updatedAt Int     @map("updated_at")
+
+  @@map("email_login")
 }

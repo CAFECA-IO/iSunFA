@@ -26,6 +26,7 @@ import Image from 'next/image';
 import Toggle from '@/components/toggle/toggle';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
+import { FaArrowLeft } from 'react-icons/fa6';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -545,21 +546,7 @@ const ViewFinancialSection = ({
           className="my-auto flex flex-col justify-center self-stretch rounded-xs p-2.5"
         >
           <div className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="none"
-              viewBox="0 0 16 16"
-            >
-              <path
-                className="fill-current"
-                fill="none"
-                fillRule="evenodd"
-                d="M8.532 2.804a.75.75 0 010 1.06L5.146 7.251h7.523a.75.75 0 010 1.5H5.146l3.386 3.386a.75.75 0 11-1.06 1.06L2.805 8.532a.75.75 0 010-1.06l4.667-4.667a.75.75 0 011.06 0z"
-                clipRule="evenodd"
-              ></path>
-            </svg>
+            <FaArrowLeft className="h-4 w-4" />
           </div>
         </Button>
         {/* Info: (20240723 - Shirley) */}
@@ -600,20 +587,7 @@ const ViewFinancialSection = ({
               className="flex h-9 w-9 flex-col items-center justify-center rounded-xs p-2.5"
             >
               <div className="flex items-center justify-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill="#FCFDFF"
-                    fillRule="evenodd"
-                    d="M6.83 2.042c.21-.26.53-.407.866-.4.297.008.52.157.625.232a5.563 5.563 0 01.383.312l5.647 4.84.014.013c.069.059.152.13.22.2.078.078.19.208.258.396.085.237.085.496 0 .732-.068.189-.18.318-.258.397-.068.07-.151.14-.22.2l-.014.012-5.647 4.84-.02.017c-.122.105-.25.215-.363.295a1.128 1.128 0 01-.625.231 1.083 1.083 0 01-.867-.398 1.129 1.129 0 01-.231-.625 5.557 5.557 0 01-.012-.469V10.898a6.848 6.848 0 00-4.007 2.357.75.75 0 01-1.327-.479v-.408a7.194 7.194 0 015.334-6.945V3.16v-.026c0-.162 0-.33.012-.468.012-.13.043-.395.231-.625zm1.256 1.59v2.392a.75.75 0 01-.621.739 5.694 5.694 0 00-4.51 4.103A8.353 8.353 0 017.285 9.3a.75.75 0 01.8.748v2.322l5.098-4.369-5.097-4.37z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
+                <IoArrowRedoOutline className="h-4 w-4 text-neutral-25" />
               </div>
             </Button> */}
             {/* Info: (20240930 - Anna) 列印按鈕獨立出組件，並且在這裡使用 */}
