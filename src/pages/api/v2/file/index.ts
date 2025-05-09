@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -25,7 +26,13 @@ import { roomManager } from '@/lib/utils/room';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
-import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
+import {
+  decryptFile,
+  encryptFile,
+  getPrivateKeyByCompany,
+  getPublicKeyByCompany,
+  uint8ArrayToBuffer,
+} from '@/lib/utils/crypto';
 import { getSession } from '@/lib/utils/session';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
@@ -54,76 +61,6 @@ async function handleFileUpload(
   const fileSize = fileForSave.size;
   const targetIdNum = type !== UploadType.ROOM ? convertStringToNumber(targetId) : -1;
   let fileUrl = '';
-
-  // Generate thumbnail for PDF files before encryption
-  let thumbnailInfo = null;
-  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
-    try {
-      loggerBack.info(`Generating PDF thumbnail for file: ${fileForSave.filepath}`);
-      thumbnailInfo = await generatePDFThumbnail(fileForSave.filepath);
-
-      if (!thumbnailInfo.success) {
-        loggerBack.error('Failed to generate PDF thumbnail');
-      }
-    } catch (error) {
-      loggerBack.error(error, 'Error generating PDF thumbnail');
-    }
-  }
-
-  // Generate thumbnail for PDF files before encryption
-  // let thumbnailInfo = null;
-  // if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
-  //   try {
-  //     /**
-  //      * Info: (20250507 - Shirley) Updated the PDF thumbnail generation process
-  //      * to use pdf-to-img library for better compatibility and performance.
-  //      * Added detailed logging to track the thumbnail generation process.
-  //      */
-  //     loggerBack.info(`Testing PDF thumbnail generation for file: ${fileForSave.filepath}`);
-  //     const {
-  //       filepath: thumbnailPath,
-  //       size: thumbnailSize,
-  //       success,
-  //     } = await generatePDFThumbnail(fileForSave.filepath);
-
-  //     if (success) {
-  //       loggerBack.info(
-  //         `PDF thumbnail generation successful! Thumbnail saved at: ${thumbnailPath}`
-  //       );
-  //       loggerBack.info(`Thumbnail size: ${thumbnailSize} bytes`);
-
-  //       // Generate thumbnail URL
-  //       const thumbnailFileName = path.basename(thumbnailPath);
-  //       const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
-  //         thumbnailFileName,
-  //         UPLOAD_TYPE_TO_FOLDER_MAP[type]
-  //       );
-
-  //       // Create thumbnail record
-  //       const thumbnailInDB = await createFile({
-  //         name: thumbnailFileName,
-  //         size: thumbnailSize,
-  //         mimeType: 'image/png',
-  //         type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
-  //         url: thumbnailUrl,
-  //         isEncrypted: false,
-  //         encryptedSymmetricKey: '',
-  //         iv: new Uint8Array(),
-  //       });
-
-  //       if (thumbnailInDB && fileInDB) {
-  //         // Update original file record with thumbnail ID
-  //         await putFileById(fileInDB.id, {
-  //           thumbnailId: thumbnailInDB.id,
-  //         });
-  //       }
-  //     } else {
-  //       loggerBack.error('PDF thumbnail generation failed');
-  //     }
-  //   } catch (error) {
-  //     loggerBack.error(error, 'Error testing PDF thumbnail generation');
-  //   }
-  // }
 
   switch (type) {
     case UploadType.KYC:
@@ -164,6 +101,51 @@ async function handleFileUpload(
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
 
+  let thumbnailInfo = null;
+  let pdfPath = fileForSave.filepath;
+  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+    // Decrypt PDF file if it's encrypted
+    if (isEncrypted) {
+      // 獲取公司ID和私鑰
+      const companyId = convertStringToNumber(targetId);
+      const encryptedFileBuffer = await fs.readFile(fileForSave.filepath);
+      const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
+
+      // 獲取私鑰
+      const privateKey = await getPrivateKeyByCompany(companyId);
+      if (!privateKey) {
+        throw new Error('Private key not found for decryption');
+      }
+
+      // 解密檔案
+      const ivUint8Array = new Uint8Array(ivBuffer);
+      const decryptedBuffer = await decryptFile(
+        arrayBuffer,
+        encryptedSymmetricKey,
+        privateKey,
+        ivUint8Array
+      );
+
+      // 寫入臨時解密檔案
+      const tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
+      await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
+      pdfPath = tempDecryptedPath;
+    }
+
+    // Notes: generate PDF thumbnail
+    try {
+      loggerBack.info(`Generating PDF thumbnail for file: ${fileForSave.filepath}`);
+      // thumbnailInfo = await generatePDFThumbnail(fileForSave.filepath);
+      thumbnailInfo = await generatePDFThumbnail(pdfPath);
+
+      if (!thumbnailInfo.success) {
+        loggerBack.error('Failed to generate PDF thumbnail');
+      }
+    } catch (error) {
+      loggerBack.error(error, 'Error generating PDF thumbnail');
+    }
+  }
+
   // If we have a thumbnail, process it with the same encryption parameters
   if (thumbnailInfo && thumbnailInfo.success) {
     const thumbnailFileName = path.basename(thumbnailInfo.filepath);
@@ -172,6 +154,27 @@ async function handleFileUpload(
       UPLOAD_TYPE_TO_FOLDER_MAP[type]
     );
 
+    if (isEncrypted) {
+      // 加密 thumbnail 之後存到 DB
+      const companyId = convertStringToNumber(targetId);
+      const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
+      const publicKey = await getPublicKeyByCompany(companyId);
+
+      if (!publicKey) {
+        throw new Error('Public key not found for encryption');
+      }
+
+      const ivUint8Array = new Uint8Array(ivBuffer);
+      const { encryptedContent } = await encryptFile(
+        new Uint8Array(thumbnailBuffer).buffer as ArrayBuffer,
+        publicKey,
+        ivUint8Array
+      );
+
+      // 寫入加密縮略圖
+      const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
+      await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
+    }
     // Create thumbnail record with the same encryption parameters
     const thumbnailInDB = await createFile({
       name: thumbnailFileName,
@@ -199,6 +202,7 @@ async function handleFileUpload(
     size: fileSize,
     url: `/image/${fileId}`,
     existed: true,
+    // thumbnailId: thumbnailInDB?.id,
   };
 
   switch (type) {

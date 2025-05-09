@@ -26,9 +26,6 @@ export async function generatePDFThumbnail(pdfPath: string): Promise<{
     await fs.access(pdfPath);
     loggerBack.info(`PDF file exists at: ${pdfPath}`);
 
-    // Dynamically import pdf-to-img to avoid ESM/CJS compatibility issues
-    loggerBack.info(`Importing pdf-to-img library...`);
-
     // Log file information
     const fileStats = await fs.stat(pdfPath);
     loggerBack.info(`PDF file size: ${fileStats.size} bytes`);

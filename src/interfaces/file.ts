@@ -14,6 +14,7 @@ export interface IFileBeta extends IFile {
   name: string;
   size: number;
   url: string;
+  thumbnail?: IFileBeta;
 }
 
 // (20241021 - tzuhan) Info: only for frontend without confidential data
