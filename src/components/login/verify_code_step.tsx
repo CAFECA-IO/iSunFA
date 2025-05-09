@@ -43,8 +43,11 @@ const VerifyCodeStep = ({
           </h4>
           <div className="flex flex-col">
             <input
-              type="text"
+              type="number"
               placeholder="Ex: 123456"
+              onKeyDown={(e) => {
+                if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+              }}
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value)}
               className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
