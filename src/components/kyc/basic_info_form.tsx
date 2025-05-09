@@ -3,6 +3,7 @@ import { IBasicInfo } from '@/interfaces/kyc_basic_info';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
+import { BsChevronDown } from 'react-icons/bs';
 
 // Info: (20240719 - Liz) 根據 Country Options 對應到國家的國旗。P.S.目前國旗的下拉選單不會傳值給後端，因為在下一個表單的第一個欄位已有國家選項，會傳那個給後端(可搜尋 id="country-menu")
 const countryFlagMap: Record<CountryOptions, string> = {
@@ -125,20 +126,7 @@ const BasicInfoForm = ({
                 className="h-16px w-16px rounded-full object-cover"
               ></Image>
               <div className="pr-6px">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                >
-                  <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M2.97162 5.22162C3.26452 4.92873 3.73939 4.92873 4.03228 5.22162L8.00195 9.19129L11.9716 5.22162C12.2645 4.92873 12.7394 4.92873 13.0323 5.22162C13.3252 5.51452 13.3252 5.98939 13.0323 6.28228L8.53228 10.7823C8.23939 11.0752 7.76452 11.0752 7.47162 10.7823L2.97162 6.28228C2.67873 5.98939 2.67873 5.51452 2.97162 5.22162Z"
-                    fill="currentColor"
-                  />
-                </svg>
+                <BsChevronDown className="h-4 w-4" />
               </div>
               {/* Info: Dropmenu */}
               <div
