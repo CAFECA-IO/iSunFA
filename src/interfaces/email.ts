@@ -61,4 +61,6 @@ export interface IOneTimePasswordResult {
 export interface ICoolDown {
   coolDown: number;
   coolDownAt: number;
+  // maxAttempts: number; // ToDo: (20250509 - Liz) 需要此欄位
+  // attempts: number; // ToDo: (20250509 - Liz) 其實目前前端沒用到這個欄位，但文件上有寫
 }

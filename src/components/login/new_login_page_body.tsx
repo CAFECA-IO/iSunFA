@@ -100,9 +100,6 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
           email: trimmedEmail,
         },
       });
-
-      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
-      // const { success, message } = SEND_VERIFICATION_EMAIL_RES;
       const coolDown = data?.coolDown ?? undefined;
 
       if (!success) {
@@ -139,10 +136,6 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       });
 
       const maxAttempts: number = data && 'maxAttempts' in data ? (data.maxAttempts as number) : 0; // ToDo: (20250509 - Liz) 從 API 回傳的資料中取得最大嘗試次數 maxAttempts (但目前 API 還沒有這個欄位，且暫時斷言型別為 number)
-
-      // Deprecated: (20250509 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('success:', success);
 
       if (!success) {
         setVerifyCodeError('驗證碼錯誤');
