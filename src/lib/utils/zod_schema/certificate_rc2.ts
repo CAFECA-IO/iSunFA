@@ -20,7 +20,6 @@ const CertificateRC2BaseSchema = z.object({
     name: z.string(),
     size: z.number().describe('Bytes of file'),
     url: z.string(),
-    isEncrypted: z.boolean(),
   }),
   uploaderId: z.number(),
   direction: z.nativeEnum(CertificateDirection),
@@ -85,7 +84,7 @@ export const listCertificateRC2Input = {
     querySchema: listCertificateRC2QuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: z.array(CertificateRC2InputSchema),
+  outputSchema: paginatedDataSchema(CertificateRC2InputSchema),
   frontend: paginatedDataSchema(CertificateRC2InputSchema),
 };
 
@@ -94,7 +93,7 @@ export const listCertificateRC2Output = {
     querySchema: listCertificateRC2QuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: z.array(CertificateRC2OutputSchema),
+  outputSchema: paginatedDataSchema(CertificateRC2InputSchema),
   frontend: paginatedDataSchema(CertificateRC2InputSchema),
 };
 

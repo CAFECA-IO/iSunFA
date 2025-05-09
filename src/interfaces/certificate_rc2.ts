@@ -7,13 +7,17 @@ import {
   CERTIFICATE_USER_INTERACT_OPERATION,
 } from '@/constants/certificate';
 import { ICertificateUI } from '@/interfaces/certificate';
-import { IFileBeta } from '@/interfaces/file';
 
 export interface ICertificateRC2Base {
   id: number;
   accountBookId: number;
   voucherId: number | null;
-  file: IFileBeta;
+  file: {
+    id: number;
+    name: string;
+    size: number;
+    url: string;
+  };
   uploaderId: number;
   direction: CertificateDirection;
   aiResultId: string;

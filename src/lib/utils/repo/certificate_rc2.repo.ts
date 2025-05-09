@@ -13,7 +13,7 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { createOrderByList } from '@/lib/utils/sort';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
-import loggerBack from '@/lib/utils/logger_back';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 type CertificateRC2WithFullRelations = CertificateRC2 & {
   file: File;
@@ -180,17 +180,40 @@ export async function listCertificateRC2Input(
       : undefined,
   };
 
-  loggerBack.info(`listCertificateRC2Input - whereClause: ${JSON.stringify(whereClause)}`);
+  const [totalCount, certificates] = await Promise.all([
+    prisma.certificateRC2.count({ where: whereClause }),
+    prisma.certificateRC2.findMany({
+      where: whereClause,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption || []),
+      include: { file: true, voucher: true, uploader: true },
+    }),
+  ]);
 
-  const certificates = await prisma.certificateRC2.findMany({
-    where: whereClause,
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy: createOrderByList(sortOption || []),
-    include: { file: true, voucher: true, uploader: true },
+  const transformed = certificates.map(transformInput);
+
+  const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
+
+  const incompleteStats = {
+    withVoucher: transformed.filter((c) => c.voucherId !== null && c.incomplete).length,
+    withoutVoucher: transformed.filter((c) => c.voucherId === null && c.incomplete).length,
+  };
+
+  const currencySet = new Set(transformed.map((c) => c.currencyCode));
+  const currencies = Array.from(currencySet);
+  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+
+  return toPaginatedData({
+    ...query,
+    totalCount,
+    data: transformed,
+    note: JSON.stringify({
+      totalCertificatePrice,
+      incomplete: incompleteStats,
+      currency,
+    }),
   });
-
-  return certificates.map(transformInput);
 }
 
 export async function listCertificateRC2Output(
@@ -216,37 +239,64 @@ export async function listCertificateRC2Output(
     action: TeamPermissionAction.VIEW_CERTIFICATE,
   });
 
-  const certificates = await prisma.certificateRC2.findMany({
-    where: {
-      accountBookId,
-      direction: CertificateDirection.OUTPUT,
-      deletedAt: isDeleted ? { not: null } : null,
-      voucherId:
-        tab === CertificateTab.WITHOUT_VOUCHER
-          ? null
-          : tab === CertificateTab.WITH_VOUCHER
-            ? { not: null }
-            : undefined,
-      type: type ?? undefined,
-      issuedDate: {
-        gte: startDate || undefined,
-        lte: endDate || undefined,
-      },
-      OR: searchQuery
-        ? [
-            { buyerName: { contains: searchQuery, mode: 'insensitive' } },
-            { buyerIdNumber: { contains: searchQuery, mode: 'insensitive' } },
-            { no: { contains: searchQuery, mode: 'insensitive' } },
-          ]
-        : undefined,
+  const whereClause = {
+    accountBookId,
+    direction: CertificateDirection.OUTPUT,
+    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
+    voucherId:
+      tab === CertificateTab.WITHOUT_VOUCHER
+        ? null
+        : tab === CertificateTab.WITH_VOUCHER
+          ? { not: null }
+          : undefined,
+    type: type ?? undefined,
+    issuedDate: {
+      gte: startDate || undefined,
+      lte: endDate || undefined,
     },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy: createOrderByList(sortOption || []),
-    include: { file: true, voucher: true, uploader: true },
-  });
+    OR: searchQuery
+      ? [
+          { buyerName: { contains: searchQuery, mode: 'insensitive' as const } },
+          { buyerIdNumber: { contains: searchQuery, mode: 'insensitive' as const } },
+          { no: { contains: searchQuery, mode: 'insensitive' as const } },
+        ]
+      : undefined,
+  };
 
-  return certificates.map(transformOutput);
+  const [totalCount, certificates] = await Promise.all([
+    prisma.certificateRC2.count({ where: whereClause }),
+    prisma.certificateRC2.findMany({
+      where: whereClause,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption || []),
+      include: { file: true, voucher: true, uploader: true },
+    }),
+  ]);
+
+  const transformed = certificates.map(transformOutput);
+
+  const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
+
+  const incompleteStats = {
+    withVoucher: transformed.filter((c) => c.voucherId !== null && c.incomplete).length,
+    withoutVoucher: transformed.filter((c) => c.voucherId === null && c.incomplete).length,
+  };
+
+  const currencySet = new Set(transformed.map((c) => c.currencyCode));
+  const currencies = Array.from(currencySet);
+  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+
+  return toPaginatedData({
+    ...query,
+    totalCount,
+    data: transformed,
+    note: JSON.stringify({
+      totalCertificatePrice,
+      incomplete: incompleteStats,
+      currency,
+    }),
+  });
 }
 
 export async function createCertificateRC2(
