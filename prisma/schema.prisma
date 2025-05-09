@@ -414,6 +414,8 @@ enum CertificateType {
   // Info: (20250429 - Tzuhan) Output 類型
   OUTPUT_31
   OUTPUT_32
+  OUTPUT_33
+  OUTPUT_34
   OUTPUT_35
   OUTPUT_36
 }

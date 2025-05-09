@@ -1,20 +1,20 @@
 import React from 'react';
 import Pagination from '@/components/pagination/pagination';
-import { ICertificateUI } from '@/interfaces/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import InputCertificateTable from '@/components/certificate/input_certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
-import { InvoiceTabs } from '@/constants/certificate';
+import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface InputCertificateProps {
-  activeTab: InvoiceTabs;
+  activeTab: CertificateTab;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   totalCount: number;
   totalPages: number;
-  certificates: ICertificateUI[]; // Info: (20240923 - Anna) 項目列表
+  certificates: ICertificateRC2InputUI[]; // Info: (20240923 - Anna) 項目列表
   currencyAlias: CurrencyType;
   viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - Anna) 顯示模式
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態
@@ -27,11 +27,11 @@ interface InputCertificateProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
+  certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   isExporting: boolean;
 }
 
@@ -55,11 +55,11 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceTypeSort,
+  certificateTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceTypeSort,
+  setCertificateTypeSort,
   isExporting,
 }) => {
   return (
@@ -77,11 +77,11 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
           dateSort={dateSort}
           amountSort={amountSort}
           voucherSort={voucherSort}
-          invoiceTypeSort={invoiceTypeSort}
+          certificateTypeSort={certificateTypeSort}
           setDateSort={setDateSort}
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
-          setInvoiceTypeSort={setInvoiceTypeSort}
+          setCertificateTypeSort={setCertificateTypeSort}
           isExporting={isExporting}
         />
       )}
