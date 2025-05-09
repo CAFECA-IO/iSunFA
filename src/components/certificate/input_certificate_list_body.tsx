@@ -427,6 +427,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<ICertificateRC2InputUI>) => {
+      // Deprecated: (20250509 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('handleEditItem', certificate);
       try {
