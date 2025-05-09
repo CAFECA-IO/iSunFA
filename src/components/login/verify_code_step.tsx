@@ -1,6 +1,7 @@
 import { Dispatch, SetStateAction } from 'react';
 import Image from 'next/image';
 import { TbLogout } from 'react-icons/tb';
+import { useTranslation } from 'next-i18next';
 import { cn } from '@/lib/utils/common';
 
 interface VerifyCodeStepProps {
@@ -28,9 +29,7 @@ const VerifyCodeStep = ({
   verifyCodeError,
   goBackToInputEmailStep,
 }: VerifyCodeStepProps) => {
-  // Deprecated: (20250509 - Liz)
-  // eslint-disable-next-line no-console
-  console.error('verifyCodeError :', verifyCodeError);
+  const { t } = useTranslation('dashboard');
 
   return (
     <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
@@ -41,17 +40,17 @@ const VerifyCodeStep = ({
 
       <section className="flex flex-col gap-24px">
         <h1 className="text-start text-4xl font-bold leading-44px text-text-brand-secondary-lv2">
-          Enter the code
+          {t('dashboard:LOGIN.ENTER_THE_CODE')}
         </h1>
 
         <div className="flex flex-col gap-8px">
           <h4 className="text-start text-xl font-bold leading-8 text-text-neutral-primary">
-            Verification code
+            {t('dashboard:LOGIN.VERIFICATION_CODE')}
           </h4>
           <div className="flex flex-col gap-8px">
             <input
               type="number"
-              placeholder="Ex: 123456"
+              placeholder={t('dashboard:LOGIN.VERIFICATION_CODE_PLACEHOLDER')}
               onKeyDown={(e) => {
                 if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
               }}
@@ -72,13 +71,13 @@ const VerifyCodeStep = ({
               className="self-end text-base font-medium text-text-neutral-link"
               onClick={handleResend}
             >
-              沒有收到驗證信?
+              {t('dashboard:LOGIN.DID_NOT_GET_THE_CODE')}
             </button>
           )}
 
           {resendCountdown > 0 && (
             <p className="text-end text-xs font-medium text-text-state-error">
-              {`驗證信已寄送，請稍後再試 (${resendCountdown} 秒)`}
+              {`${t('dashboard:LOGIN.SENT_CODE_MESSAGE')} (${resendCountdown} ${t('dashboard:LOGIN.S')})`}
             </p>
           )}
         </div>
@@ -91,7 +90,7 @@ const VerifyCodeStep = ({
             className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px text-base font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             disabled={isVerifyingCode || verificationCode.trim() === '' || isResendingEmail}
           >
-            確認驗證碼 ({verifyCountdown}s)
+            {`${t('dashboard:LOGIN.CONFIRM')} (${verifyCountdown} ${t('dashboard:LOGIN.S')})`}
           </button>
         ) : (
           <button
@@ -99,7 +98,7 @@ const VerifyCodeStep = ({
             onClick={handleResend}
             className="self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
           >
-            重新寄送驗證信
+            {t('dashboard:LOGIN.RESEND_CODE')}
           </button>
         )}
 
@@ -111,7 +110,7 @@ const VerifyCodeStep = ({
         >
           <TbLogout size={20} className="text-stroke-brand-secondary-moderate" />
           <span className="text-base font-semibold text-text-brand-secondary-lv2">
-            Back to Login
+            {t('dashboard:LOGIN.BACK_TO_LOGIN')}
           </span>
         </button>
       </section>

@@ -2,7 +2,22 @@
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "使用 Google 登录",
     "LOG_IN_WITH_APPLE": "使用 Apple 登录",
-    "LAST_LOGIN_TIME": "上次登录时间"
+    "LAST_LOGIN_TIME": "上次登录时间",
+    "LOGIN": "登录",
+    "EMAIL": "电子邮件",
+    "ENTER_YOUR_EMAIL_ADDRESS": "输入电子邮件地址",
+    "INVALID_EMAIL_FORMAT": "电子邮件格式不正确",
+    "SENT_EMAIL_MESSAGE": "验证信稍早已寄送过了，请至您的信箱查看，若没有收到验证信，请等倒数秒数结束后再试一次",
+    "S": "秒",
+    "OR_LOGIN_WITH": "或使用以下方式登录",
+    "ENTER_THE_CODE": "输入验证码",
+    "VERIFICATION_CODE": "验证码",
+    "VERIFICATION_CODE_PLACEHOLDER": "例如: 123456",
+    "DID_NOT_GET_THE_CODE": "没有收到验证码?",
+    "SENT_CODE_MESSAGE": "验证信已寄送，请稍后再试",
+    "CONFIRM": "确认验证码",
+    "RESEND_CODE": "重新发送验证码",
+    "BACK_TO_LOGIN": "回到登录画面"
   },
 
   "DASHBOARD": {

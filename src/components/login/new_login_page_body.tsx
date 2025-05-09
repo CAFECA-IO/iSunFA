@@ -75,17 +75,17 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService } = useUserCtx();
   const { toastHandler } = useModalContext();
 
-  const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // 當前步驟
-  const [inputEmail, setInputEmail] = useState<string>(''); // 使用者輸入的 email
-  const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false); // email 格式是否正確
-  const [verificationCode, setVerificationCode] = useState<string>(''); // 使用者輸入的驗證碼
-  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false); // 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
-  const [isVerifyingCode, setIsVerifyingCode] = useState<boolean>(false); // 是否正在驗證驗證碼
-  const [isResendingEmail, setIsResendingEmail] = useState<boolean>(false); // 是否正在重新寄送驗證信
-  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // 驗證碼的有效時間倒數(例如 180 秒)
-  const [resendCountdown, setResendCountdown] = useState<number>(0); // 重新寄送驗證信的冷卻時間倒數(例如 180 秒)
-  const [sendEmailError, setSendEmailError] = useState<string>(''); // 寄送驗證信的錯誤訊息
-  const [verifyCodeError, setVerifyCodeError] = useState<string>(''); // 驗證碼的錯誤訊息
+  const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // Info: (20250509 - Liz) 當前步驟
+  const [inputEmail, setInputEmail] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的 email
+  const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false); // Info: (20250509 - Liz) email 格式是否正確
+  const [verificationCode, setVerificationCode] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的驗證碼
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
+  const [isVerifyingCode, setIsVerifyingCode] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在驗證驗證碼
+  const [isResendingEmail, setIsResendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在重新寄送驗證信
+  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // Info: (20250509 - Liz) 驗證碼的有效時間倒數(例如 180 秒)
+  const [resendCountdown, setResendCountdown] = useState<number>(0); // Info: (20250509 - Liz) 重新寄送驗證信的冷卻時間倒數(例如 180 秒)
+  const [sendEmailError, setSendEmailError] = useState<string>(''); // Info: (20250509 - Liz) 寄送驗證信的錯誤訊息
+  const [verifyCodeError, setVerifyCodeError] = useState<string>(''); // Info: (20250509 - Liz) 驗證碼的錯誤訊息
 
   // Info: (20250509 - Liz) 回到輸入 email 的步驟，並重置所有的狀態
   const goBackToInputEmailStep = () => {

@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { FiArrowRight } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { cn } from '@/lib/utils/common';
+import Loader, { LoaderSize } from '@/components/loader/loader';
 
 interface InputEmailStepProps {
   inputEmail: string;
@@ -35,17 +36,17 @@ const InputEmailStep = ({
 
       <section className="flex flex-col gap-24px">
         <h1 className="text-start text-4xl font-bold leading-44px text-text-brand-secondary-lv2">
-          Login
+          {t('dashboard:LOGIN.LOGIN')}
         </h1>
 
         <div className="flex flex-col gap-8px">
           <h4 className="text-start text-xl font-bold leading-8 text-text-neutral-primary">
-            Email
+            {t('dashboard:LOGIN.EMAIL')}
           </h4>
           <div className="flex flex-col gap-8px">
             <input
               type="text"
-              placeholder="Enter your Email Address"
+              placeholder={t('dashboard:LOGIN.ENTER_YOUR_EMAIL_ADDRESS')}
               value={inputEmail}
               onChange={updateInputEmail}
               className={cn(
@@ -58,13 +59,13 @@ const InputEmailStep = ({
             <p
               className={`text-start text-xs font-medium text-text-state-error ${isEmailNotValid ? 'visible' : 'invisible'}`}
             >
-              請輸入有效的電子郵件地址
+              {t('dashboard:LOGIN.INVALID_EMAIL_FORMAT')}
             </p>
           </div>
         </div>
 
         {isSendingEmail ? (
-          <p>驗證信正在寄送中...</p>
+          <Loader size={LoaderSize.MEDIUM} notScreen />
         ) : (
           <div className="flex flex-col items-center gap-8px">
             <button
@@ -73,7 +74,9 @@ const InputEmailStep = ({
               disabled={isEmailNotValid || resendCountdown > 0}
               className="flex items-center gap-8px rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
             >
-              <span className="text-base font-medium text-button-text-primary-solid">Login</span>
+              <span className="text-base font-medium text-button-text-primary-solid">
+                {t('dashboard:LOGIN.LOGIN')}
+              </span>
               <FiArrowRight size={20} />
             </button>
             {sendEmailError && (
@@ -81,8 +84,8 @@ const InputEmailStep = ({
             )}
             {resendCountdown > 0 && (
               <p className="text-xs font-medium text-text-state-error">
-                驗證信稍早已寄送過了，請至您的信箱查看，若沒有收到驗證信，請等倒數秒數結束後再試一次
-                ({resendCountdown} 秒)
+                {t('dashboard:LOGIN.SENT_EMAIL_MESSAGE')} ({resendCountdown}
+                {t('dashboard:LOGIN.S')})
               </p>
             )}
           </div>
@@ -92,7 +95,9 @@ const InputEmailStep = ({
       <div className="flex flex-col gap-16px">
         <div className="flex items-center gap-24px">
           <hr className="flex-auto border-t border-stroke-neutral-mute" />
-          <p className="text-base font-medium text-text-neutral-mute">Or Login with</p>
+          <p className="text-base font-medium text-text-neutral-mute">
+            {t('dashboard:LOGIN.OR_LOGIN_WITH')}
+          </p>
           <hr className="flex-auto border-t border-stroke-neutral-mute" />
         </div>
 
