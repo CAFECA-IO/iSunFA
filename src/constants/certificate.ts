@@ -24,8 +24,8 @@ export enum InvoiceTabs {
 }
 
 export enum CertificateTab {
-  WITH_VOUCHER = 'WITH_VOUCHER',
   WITHOUT_VOUCHER = 'WITHOUT_VOUCHER',
+  WITH_VOUCHER = 'WITH_VOUCHER',
 }
 
 export enum CertificateDirection {

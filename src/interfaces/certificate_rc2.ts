@@ -12,7 +12,9 @@ import { IFileBeta } from '@/interfaces/file';
 export interface ICertificateRC2Base {
   id: number;
   accountBookId: number;
+  voucherId: number | null;
   file: IFileBeta;
+  uploaderId: number;
   direction: CertificateDirection;
   aiResultId: string;
   aiStatus: string;
@@ -23,7 +25,7 @@ export interface ICertificateRC2Base {
   type: CertificateType;
   issuedDate: number;
   no: string;
-  currency: CurrencyCode;
+  currencyCode: CurrencyCode;
   taxType: TaxType;
   taxRate?: number;
   netAmount: number;
@@ -31,15 +33,15 @@ export interface ICertificateRC2Base {
   totalAmount: number;
 
   isGenerated: boolean;
+  incomplete: boolean;
+  description?: string;
+  note?: JSON;
 
   totalOfSummarizedCertificates?: number;
   carrierSerialNumber?: string;
   otherCertificateNo?: string;
 
-  incomplete: boolean;
-  uploaderId: number;
   uploaderName: string;
-  voucherId: number | null;
   voucherNo: string | null;
 }
 
@@ -67,6 +69,7 @@ export interface ICertificateRC2Output extends ICertificateRC2Base {
   deductionType?: never;
   salesName?: never;
   salesIdNumber?: never;
+  isSharedAmount?: never;
 }
 
 export interface ICertificateRC2OutputUI extends ICertificateRC2Output {

@@ -242,10 +242,10 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currency || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.currency || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
   const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currency || currencyAlias).toUpperCase()}`
+    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
   );
 
   // Info: (20250416 - Anna) 發票字軌選單
