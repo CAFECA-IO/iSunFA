@@ -17,6 +17,7 @@ import Skeleton from '@/components/skeleton/skeleton';
 import { useTranslation } from 'next-i18next';
 import { MILLISECONDS_IN_A_SECOND } from '@/constants/display';
 import Image from 'next/image';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -405,19 +406,7 @@ const ViewFinancialSectionNew = ({
           disabled={pageNumber <= 1 || isInvalidReport || isLoading}
           className="fixed left-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            viewBox="0 0 17 16"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <FaChevronLeft className="h-5 w-5" />
         </Button>
 
         {/* Info: (20240529 - Shirley) next button */}
@@ -428,19 +417,7 @@ const ViewFinancialSectionNew = ({
           disabled={pageNumber >= numPages || isInvalidReport || isLoading}
           className="fixed right-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            viewBox="0 0 17 16"
-          >
-            <path
-              fillRule="evenodd"
-              d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <FaChevronRight className="h-5 w-5" />
         </Button>
       </div>
 
