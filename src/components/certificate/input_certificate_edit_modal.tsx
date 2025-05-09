@@ -138,6 +138,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
+    // Deprecated: (20250509 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('newErrors:', newErrors);
 
