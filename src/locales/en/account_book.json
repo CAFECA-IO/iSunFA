@@ -54,7 +54,8 @@
     "WARNING": "Are you sure you want to delete the account book?"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "TITLE": "Change Company Picture"
+    "TITLE": "Change Company Picture",
+    "REMOVE_PICTURE": "Remove Picture"
   },
   "ACCOUNT_BOOK_TRANSFER_MODAL": {
     "ACCOUNT_BOOK_TRANSFER": "Account Book Transfer",
@@ -64,5 +65,8 @@
   },
   "ACCOUNT_BOOK_PRIVACY_MODAL": {
     "CHANGE_ACCOUNT_BOOK_PRIVACY": "Change Account Book Privacy"
+  },
+  "EDIT_ACCOUNT_BOOK_MODAL": {
+    "EDIT_ACCOUNT_BOOK": "Edit Account Book"
   }
 }

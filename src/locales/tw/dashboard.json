@@ -2,7 +2,22 @@
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "使用 Google 登入",
     "LOG_IN_WITH_APPLE": "使用 Apple 登入",
-    "LAST_LOGIN_TIME": "上次登入時間"
+    "LAST_LOGIN_TIME": "上次登入時間",
+    "LOGIN": "登入",
+    "EMAIL": "電子郵件",
+    "ENTER_YOUR_EMAIL_ADDRESS": "輸入電子郵件地址",
+    "INVALID_EMAIL_FORMAT": "電子郵件格式不正確",
+    "SENT_EMAIL_MESSAGE": "驗證信稍早已寄送過了，請至您的信箱查看，若沒有收到驗證信，請等倒數秒數結束後再試一次",
+    "S": "秒",
+    "OR_LOGIN_WITH": "或使用以下方式登入",
+    "ENTER_THE_CODE": "輸入驗證碼",
+    "VERIFICATION_CODE": "驗證碼",
+    "VERIFICATION_CODE_PLACEHOLDER": "例如: 123456",
+    "DID_NOT_GET_THE_CODE": "沒有收到驗證碼?",
+    "SENT_CODE_MESSAGE": "驗證信已寄送，請稍後再試",
+    "CONFIRM": "確認驗證碼",
+    "RESEND_CODE": "重新發送驗證碼",
+    "BACK_TO_LOGIN": "回到登入畫面"
   },
 
   "DASHBOARD": {
@@ -155,6 +170,7 @@
     "WORK_TAG": "工作標籤",
     "TEAM": "團隊",
     "CREATE_NEW_ACCOUNT_BOOK": "建立新帳本",
+    "EDIT_ACCOUNT_BOOK": "編輯帳本",
     "ENTER_NAME": "輸入名稱",
     "RESPONSIBLE_PERSON": "負責人",
     "ENTER_RESPONSIBLE_PERSON": "輸入負責人",
@@ -222,7 +238,7 @@
     "SINGLE_ENTITY_FILING": "單一法人申報",
     "CONSOLIDATED_FILING": "合併申報",
     "INDIVIDUAL_FILING": "個人申報",
-    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "單一總公司無分支機構",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "無分公司之單一機構",
     "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "總公司為所有分支機構檔案",
     "EACH_UNIT_FILES_SEPARATELY": "每個單位單獨歸檔",
     "FILING_METHOD_REQUIRED": "請選擇總繳種類"
@@ -239,7 +255,7 @@
   "AGENT_FILING_ROLE": {
     "ACCOUNTANT": "會計師",
     "BOOKKEEPER": "記帳士",
-    "BOOKKEEPER_AND_FILING_AGENT": "記帳士及申報代理人",
+    "BOOKKEEPER_AND_FILING_AGENT": "記帳及報稅代理人",
     "I_AM": "我是...",
     "AGENT_FILING_ROLE_REQUIRED": "請填寫申報人資料"
   }

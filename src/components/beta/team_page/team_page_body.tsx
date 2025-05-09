@@ -11,7 +11,7 @@ import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
-import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
+import UploadAccountBookPictureModal from '@/components/beta/account_books_page/upload_account_book_picture_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
@@ -19,6 +19,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -30,10 +31,14 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const { deleteAccountBook } = useUserCtx();
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[] | null>(null);
   const [teamToChangeImage, setTeamToChangeImage] = useState<ITeam | undefined>();
+
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
+  const [accountBookToChangeTag, setAccountBookToChangeTag] = useState<
+    IAccountBookWithTeam | undefined
+  >();
   const [accountBookToDelete, setAccountBookToDelete] = useState<
     IAccountBookWithTeam | undefined
   >();
@@ -45,13 +50,9 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const isNoData = !accountBookList || accountBookList.length === 0;
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const closeDeleteModal = () => {
-    setAccountBookToDelete(undefined);
-  };
-
-  const openMemberListModal = () => {
-    setIsMemberListModalOpen(true);
-  };
+  const closeDeleteModal = () => setAccountBookToDelete(undefined);
+  const openMemberListModal = () => setIsMemberListModalOpen(true);
+  const closeAccountBookInfoModal = () => setAccountBookToEdit(undefined);
 
   // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
   const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
@@ -143,10 +144,10 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       {!isNoData && (
         <AccountBookList
           accountBookList={accountBookList}
-          setAccountBookToTransfer={setAccountBookToTransfer}
           setAccountBookToEdit={setAccountBookToEdit}
+          setAccountBookToTransfer={setAccountBookToTransfer}
+          setAccountBookToChangeTag={setAccountBookToChangeTag}
           setAccountBookToDelete={setAccountBookToDelete}
-          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
         />
       )}
 
@@ -159,6 +160,14 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         />
       )}
 
+      {accountBookToEdit && (
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeAccountBookInfoModal}
+          getAccountBookList={getAccountBookListByTeamId}
+        />
+      )}
+
       {accountBookToTransfer && (
         <TransferAccountBookModal
           accountBookToTransfer={accountBookToTransfer}
@@ -167,16 +176,16 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         />
       )}
 
-      {accountBookToEdit && (
+      {accountBookToChangeTag && (
         <ChangeTagModal
-          accountBookToEdit={accountBookToEdit}
-          setAccountBookToEdit={setAccountBookToEdit}
+          accountBookToChangeTag={accountBookToChangeTag}
+          setAccountBookToChangeTag={setAccountBookToChangeTag}
           getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}
 
       {accountBookToUploadPicture && (
-        <UploadCompanyPictureModal
+        <UploadAccountBookPictureModal
           accountBookToUploadPicture={accountBookToUploadPicture}
           setAccountBookToUploadPicture={setAccountBookToUploadPicture}
           getAccountBookListByTeamId={getAccountBookListByTeamId}

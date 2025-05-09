@@ -11,9 +11,8 @@ import Pagination from '@/components/pagination/pagination';
 import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/account_books_page/no_data';
-import UploadCompanyPictureModal from '@/components/beta/account_books_page/upload_company_picture_modal';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250411 - Liz) 未來會替換成下個版本的建立帳本 Modal (AccountBookInfoModal)
-// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250411 - Liz) 未來會使用這個 Modal
+// import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250411 - Liz) 未來會替換成下個版本的建立帳本 Modal (AccountBookInfoModal)
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250411 - Liz) 未來會使用這個 Modal
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
@@ -27,14 +26,15 @@ const AccountBooksPageBody = () => {
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
   const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
+
+  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
-  const [accountBookToDelete, setAccountBookToDelete] = useState<
+  const [accountBookToChangeTag, setAccountBookToChangeTag] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+  const [accountBookToDelete, setAccountBookToDelete] = useState<
     IAccountBookWithTeam | undefined
   >();
 
@@ -49,6 +49,10 @@ const AccountBooksPageBody = () => {
   };
   const closeCreateAccountBookModal = () => {
     setIsCreateAccountBookModalOpen(false);
+  };
+
+  const closeEditAccountBookModal = () => {
+    setAccountBookToEdit(undefined);
   };
 
   const closeDeleteModal = () => {
@@ -137,10 +141,10 @@ const AccountBooksPageBody = () => {
         <>
           <AccountBookList
             accountBookList={accountBookList}
-            setAccountBookToTransfer={setAccountBookToTransfer}
             setAccountBookToEdit={setAccountBookToEdit}
+            setAccountBookToTransfer={setAccountBookToTransfer}
+            setAccountBookToChangeTag={setAccountBookToChangeTag}
             setAccountBookToDelete={setAccountBookToDelete}
-            setAccountBookToUploadPicture={setAccountBookToUploadPicture}
             setRefreshKey={setRefreshKey}
             shouldGroupByTeam
           />
@@ -154,8 +158,16 @@ const AccountBooksPageBody = () => {
 
       {/* // Info: (20241108 - Liz) Modals */}
       {isCreateAccountBookModalOpen && (
-        <CreateAccountBookModal
-          closeCreateAccountBookModal={closeCreateAccountBookModal}
+        <AccountBookInfoModal
+          closeAccountBookInfoModal={closeCreateAccountBookModal}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToEdit && (
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeEditAccountBookModal}
           setRefreshKey={setRefreshKey}
         />
       )}
@@ -168,18 +180,10 @@ const AccountBooksPageBody = () => {
         />
       )}
 
-      {accountBookToEdit && (
+      {accountBookToChangeTag && (
         <ChangeTagModal
-          accountBookToEdit={accountBookToEdit}
-          setAccountBookToEdit={setAccountBookToEdit}
-          setRefreshKey={setRefreshKey}
-        />
-      )}
-
-      {accountBookToUploadPicture && (
-        <UploadCompanyPictureModal
-          accountBookToUploadPicture={accountBookToUploadPicture}
-          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+          accountBookToChangeTag={accountBookToChangeTag}
+          setAccountBookToChangeTag={setAccountBookToChangeTag}
           setRefreshKey={setRefreshKey}
         />
       )}

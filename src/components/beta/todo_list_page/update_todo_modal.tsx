@@ -28,7 +28,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   const [endTimeStamp, setEndTimeStamp] = useState<number | undefined>(todoToUpdate.endTime);
   const [note, setNote] = useState(todoToUpdate.note);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [accountBook, setAccountBook] = useState<IAccountBook>(todoToUpdate.company);
+  const [accountBook, setAccountBook] = useState<IAccountBook | null>(todoToUpdate?.company);
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);
@@ -76,7 +76,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
           deadline: 0, // Info: (20241219 - Liz) 之後會捨棄 deadline 欄位，先傳 0
           startDate: startTimeStamp,
           endDate: endTimeStamp,
-          accountBookId: accountBook.id,
+          accountBookId: accountBook?.id,
           note,
         },
       });
@@ -202,7 +202,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
                     onClick={toggleDropdown}
                   >
                     <p className="px-12px py-10px text-base font-medium">
-                      {accountBook.name === 'N/A'
+                      {!accountBook || accountBook.name === 'N/A'
                         ? t('dashboard:TODO_LIST_PAGE.SELECT_COMPANY')
                         : accountBook.name}
                     </p>

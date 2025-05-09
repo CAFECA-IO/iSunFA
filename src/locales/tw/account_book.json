@@ -54,7 +54,8 @@
     "WARNING": "您確定要刪除此帳本嗎？"
   },
   "UPLOAD_COMPANY_AVATAR_MODAL": {
-    "TITLE": "變更公司圖片"
+    "TITLE": "變更公司圖片",
+    "REMOVE_PICTURE": "移除圖片"
   },
   "ACCOUNT_BOOK_TRANSFER_MODAL": {
     "ACCOUNT_BOOK_TRANSFER": "帳本轉移",
@@ -64,5 +65,8 @@
   },
   "ACCOUNT_BOOK_PRIVACY_MODAL": {
     "CHANGE_ACCOUNT_BOOK_PRIVACY": "變更帳本隱私權"
+  },
+  "EDIT_ACCOUNT_BOOK_MODAL": {
+    "EDIT_ACCOUNT_BOOK": "編輯帳本"
   }
 }

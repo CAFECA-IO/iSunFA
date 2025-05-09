@@ -4,14 +4,18 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
-import { CERTIFICATE_USER_INTERACT_OPERATION, InvoiceTabs } from '@/constants/certificate';
+import {
+  CERTIFICATE_USER_INTERACT_OPERATION,
+  CertificateDirection,
+  CertificateTab,
+  CertificateType,
+} from '@/constants/certificate';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
@@ -22,9 +26,7 @@ import SelectionToolbar, {
 } from '@/components/certificate/certificate_selection_tool_bar_new';
 import InputCertificate from '@/components/certificate/input_certificate';
 import InputCertificateEditModal from '@/components/certificate/input_certificate_edit_modal';
-import { InvoiceType } from '@/constants/invoice';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -34,6 +36,7 @@ import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
 interface CertificateListBodyProps {}
 
@@ -43,20 +46,24 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id || FREE_ACCOUNT_BOOK_ID;
+  const accountBookId = connectedAccountBook?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_PUT_V2);
-  const { trigger: createInvoiceAPI } = APIHandler<ICertificate>(APIName.INVOICE_POST_V2);
-  const { trigger: deleteCertificatesAPI } = APIHandler<number[]>(
-    APIName.CERTIFICATE_DELETE_MULTIPLE_V2
+  const { trigger: updateCertificateAPI } = APIHandler<ICertificateRC2Input>(
+    APIName.UPDATE_CERTIFICATE_RC2_INPUT
+  );
+  const { trigger: createCertificateAPI } = APIHandler<ICertificateRC2Input>(
+    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  );
+  const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
+    APIName.DELETE_CERTIFICATE_RC2_INPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
-  const [activeTab, setActiveTab] = useState<InvoiceTabs>(InvoiceTabs.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [activeTab, setActiveTab] = useState<CertificateTab>(CertificateTab.WITHOUT_VOUCHER);
+  const [certificates, setCertificates] = useState<ICertificateRC2InputUI[]>([]);
+  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2InputUI[]>([]);
 
-  const [totalInvoicePrice, setTotalInvoicePrice] = useState<number>(0);
+  const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
     withVoucher: number;
     withoutVoucher: number;
@@ -72,8 +79,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [invoiceNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
-  const [invoiceTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
+  const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -152,30 +158,44 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<ICertificate[]>([]);
-
-  const handleExportModalApiResponse = useCallback((resData: IPaginatedData<ICertificate[]>) => {
-    setExportModalData(resData.data);
-  }, []);
-
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
+    setIsExporting(true);
   }, []);
+
+  // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
+  const waitForNextFrame = () => {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve(true));
+    });
+  };
 
   // Info: (20250418 - Anna) 匯出憑證表格
   const handleDownload = async () => {
+    setIsExporting(true);
+
+    // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
+    await waitForNextFrame();
+
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
+    // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
+    downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
+      el.classList.remove('h-54px');
+    });
+
+    // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-  .download-pb-4 {
+    .download-pb-4 {
     padding-bottom: 16px;
   }
-      .download-pb-3 {
+    .download-pb-3 {
     padding-bottom: 12px;
+  }
+    .download-hidden {
+    display: none;
   }
 `;
 
@@ -200,15 +220,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
     style.remove();
     pdf.save('input-certificates.pdf');
-  };
 
-  const onExport = useCallback(() => {
-    if (exportModalData.length > 0) {
-      exportModalData.forEach((item) => {
-        handleDownloadItem(item.id);
-      });
-    }
-  }, [exportModalData]);
+    // Info: (20250506 - Anna) 匯出後還原畫面
+    setIsExporting(false);
+  };
 
   const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
@@ -219,17 +234,17 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
+    (resData: IPaginatedData<ICertificateRC2Input[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalInvoicePrice: number;
+          totalCertificatePrice: number;
           incomplete: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalInvoicePrice(note.totalInvoicePrice);
+        setTotalCertificatePrice(note.totalCertificatePrice);
         setIncomplete(note.incomplete);
         setTotalPages(resData.totalPages);
         setTotalCount(resData.totalCount);
@@ -240,7 +255,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           ...item,
           isSelected: false,
           actions:
-            activeTab === InvoiceTabs.WITHOUT_VOUCHER
+            activeTab === CertificateTab.WITHOUT_VOUCHER
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
                   CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
@@ -285,7 +300,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelectAll = useCallback(() => {
     const ids = certificates
       .filter((certificate) => {
-        return activeTab === InvoiceTabs.WITHOUT_VOUCHER
+        return activeTab === CertificateTab.WITHOUT_VOUCHER
           ? !certificate.voucherNo
           : certificate.voucherNo;
       })
@@ -297,14 +312,16 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const deleteSelectedCertificates = useCallback(
     async (selectedIds: number[]) => {
       try {
-        const { success, data: deletedIds } = await deleteCertificatesAPI({
-          params: { companyId },
+        const { success, data } = await deleteCertificatesAPI({
+          params: { accountBookId },
           body: { certificateIds: selectedIds },
         });
 
-        if (success && deletedIds) {
-          setCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
-          setSelectedCertificates((prev) => prev.filter((cert) => !deletedIds.includes(cert.id)));
+        if (success && data?.success && data.deletedIds) {
+          setCertificates((prev) => prev.filter((cert) => !data.deletedIds.includes(cert.id)));
+          setSelectedCertificates((prev) =>
+            prev.filter((cert) => !data.deletedIds.includes(cert.id))
+          );
 
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
@@ -330,7 +347,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.name || ''}?`,
+        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.id || ''}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
@@ -366,7 +383,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onTabClick = useCallback(
     (tab: string) => {
-      if ((tab as InvoiceTabs) === InvoiceTabs.WITHOUT_VOUCHER) {
+      if ((tab as CertificateTab) === CertificateTab.WITHOUT_VOUCHER) {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
@@ -377,7 +394,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       } else {
         setAddOperations([]);
       }
-      setActiveTab(tab as InvoiceTabs);
+      setActiveTab(tab as CertificateTab);
       setActiveSelection(false);
     },
     [activeTab, handleAddVoucher, handleExport]
@@ -409,24 +426,28 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleEditItem = useCallback(
-    async (certificate: ICertificate) => {
+    async (certificate: Partial<ICertificateRC2InputUI>) => {
+      // Deprecated: (20250509 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('handleEditItem', certificate);
       try {
-        const { invoice } = certificate;
-
-        const postOrPutAPI = invoice.id
-          ? updateInvoiceAPI({
-              params: { companyId, certificateId: certificate.id, invoiceId: invoice.id },
-              body: invoice,
+        const postOrPutAPI = certificate.id
+          ? updateCertificateAPI({
+              params: {
+                accountBookId,
+                certificateId: certificate.id,
+              },
+              body: certificate,
             })
-          : createInvoiceAPI({
-              params: { companyId, certificateId: certificate.id },
-              body: invoice,
+          : createCertificateAPI({
+              params: { accountBookId, certificateId: certificate.id },
+              body: certificate,
             });
 
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          let updatedData: ICertificateUI[] = [];
+          let updatedData: ICertificateRC2InputUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
             const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
@@ -457,10 +478,10 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         });
       }
     },
-    [certificates, companyId]
+    [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificate) => {
+  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificateRC2Input) => {
     setCertificates((prev) => [
       {
         ...newCertificate,
@@ -478,7 +499,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: ICertificateRC2Input = JSON.parse(data.message);
       handleNewCertificateComing(newCertificate);
       setIncomplete((prev) => ({
         ...prev,
@@ -496,8 +517,6 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
-    } else if (invoiceNoSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: invoiceNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -505,7 +524,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
@@ -513,11 +532,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
         channel.unsubscribe();
       }
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${companyId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
   }, []);
 
-  return !companyId ? (
+  return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
         src="/elements/uploading.gif"
@@ -530,18 +549,9 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     </div>
   ) : (
     <>
-      {isExportModalOpen && (
-        <CertificateExportModal
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
-          handleApiResponse={handleExportModalApiResponse}
-          handleExport={onExport}
-          certificates={exportModalData}
-        />
-      )}
       {isEditModalOpen && editingId !== null && (
         <InputCertificateEditModal
-          companyId={companyId}
+          accountBookId={accountBookId}
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
@@ -560,7 +570,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - Anna) Upload Area */}
-        <CertificateFileUpload isDisabled={false} setFiles={setFiles} />
+        <CertificateFileUpload
+          isDisabled={false}
+          setFiles={setFiles}
+          certificateDirection={CertificateDirection.INPUT}
+        />
         <FloatingUploadPopup
           files={files}
           pauseFileUpload={pauseFileUpload}
@@ -568,7 +582,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - Anna) Tabs */}
         <Tabs
-          tabs={Object.values(InvoiceTabs)}
+          tabs={Object.values(CertificateTab)}
           tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
@@ -576,25 +590,25 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<ICertificate[]>
+        <FilterSection<ICertificateRC2Input[]>
           className="mt-2"
-          params={{ companyId }}
-          apiName={APIName.CERTIFICATE_LIST_V2}
+          params={{ accountBookId }}
+          apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
           types={[
-            InvoiceType.ALL,
-            InvoiceType.PURCHASE_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_RETURNS_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_UTILITY_ELECTRONIC_INVOICE,
-            InvoiceType.PURCHASE_SUMMARIZED_TRIPLICATE_AND_ELECTRONIC,
-            InvoiceType.PURCHASE_SUMMARIZED_DUPLICATE_CASH_REGISTER_AND_OTHER,
-            InvoiceType.PURCHASE_CUSTOMS_DUTY_PAYMENT,
-            InvoiceType.PURCHASE_CUSTOMS_DUTY_REFUND,
+            CertificateType.ALL,
+            CertificateType.INPUT_21,
+            CertificateType.INPUT_22,
+            CertificateType.INPUT_23,
+            CertificateType.INPUT_24,
+            CertificateType.INPUT_25,
+            CertificateType.INPUT_26,
+            CertificateType.INPUT_27,
+            CertificateType.INPUT_28,
+            CertificateType.INPUT_29,
           ]}
           sort={selectedSort}
           labelClassName="text-neutral-300"
@@ -606,11 +620,11 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
-              isSelectable={activeTab === InvoiceTabs.WITHOUT_VOUCHER}
+              isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
-              subtitle={`${t('certificate:LIST.INVOICE_TOTAL_PRICE')}:`}
-              totalPrice={totalInvoicePrice}
+              subtitle={`${t('certificate:LIST.INPUT_TOTAL_PRICE')}:`}
+              totalPrice={totalCertificatePrice}
               currency={currency}
               selectedCount={Object.values(selectedCertificates).length}
               totalCount={Object.values(certificates).length || 0}
@@ -641,13 +655,12 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 dateSort={dateSort}
                 amountSort={amountSort}
                 voucherSort={voucherSort}
-                invoiceNoSort={invoiceNoSort}
-                invoiceTypeSort={invoiceTypeSort}
+                certificateTypeSort={certificateTypeSort}
                 setDateSort={setDateSort}
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
-                setInvoiceNoSort={setInvoiceNoSort}
-                setInvoiceTypeSort={setInvoiceTypeSort}
+                setCertificateTypeSort={setCertificateTypeSort}
+                isExporting={isExporting}
               />
             </div>
           </>

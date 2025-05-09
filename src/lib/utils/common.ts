@@ -928,3 +928,13 @@ export const toConstantCase = (str: string): string => {
     .join('_') // Info: (20250212 - Liz) 重新用 `_` 組合
     .toUpperCase();
 };
+
+export const randomCode = (n: number = 6): string => {
+  // Info: (20250424 - Luphia) 產生 0-9 n 位數字的隨機碼
+  const digits = '0123456789';
+  let result = '';
+  for (let i = 0; i < n; i += 1) {
+    result += digits.charAt(Math.floor(Math.random() * digits.length));
+  }
+  return result;
+};

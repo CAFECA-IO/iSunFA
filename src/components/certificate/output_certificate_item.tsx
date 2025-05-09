@@ -1,16 +1,16 @@
 import React, { ReactElement } from 'react';
 import { useTranslation } from 'next-i18next';
-import { ICertificateUI } from '@/interfaces/certificate';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
+import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface OutputCertificateListIrops {
   activeSelection: boolean;
-  certificate: ICertificateUI;
+  certificate: ICertificateRC2OutputUI;
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
@@ -66,7 +66,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="w-100px text-center">
         <div className="inline-block">
           <CalendarIcon
-            timestamp={certificate.invoice?.date ?? 0}
+            timestamp={certificate.issuedDate ?? 0}
             incomplete={!!certificate.incomplete}
           />
         </div>
@@ -79,33 +79,29 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
             <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-primary">{certificate.invoice?.no ?? ''}</div>
+            <div className="text-text-neutral-primary">{certificate.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
-          {certificate.invoice?.type
-            ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.invoice?.type}`)
-            : ''}
+          {certificate.type ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.type}`) : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`w-full ${certificate.invoice?.taxRatio !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
-          {certificate.invoice?.taxRatio !== undefined
-            ? `Taxable ${certificate.invoice?.taxRatio} %`
-            : '-'}
+          {certificate.taxRate !== undefined ? `Taxable ${certificate.taxRate} %` : '-'}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
-            {certificate.invoice?.counterParty?.taxId ?? ''}
+            {certificate.salesIdNumber ?? ''}
           </div>
           <div className="w-full text-left text-text-neutral-primary">
-            {certificate.invoice?.counterParty?.name ?? ''}
+            {certificate.salesName ?? ''}
           </div>
         </div>
       </BorderCell>
@@ -120,9 +116,9 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div>Pre-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {numberWithCommas(certificate.invoice?.priceBeforeTax ?? 0)}
+              {numberWithCommas(certificate.netAmount ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.invoice?.currencyAlias ?? currencyAlias}
+                {certificate.currencyCode ?? currencyAlias}
               </span>
             </div>
           </div>
@@ -134,9 +130,9 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div>After-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
-              {numberWithCommas(certificate.invoice?.totalPrice ?? 0)}
+              {numberWithCommas(certificate.totalAmount ?? 0)}
               <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.invoice?.currencyAlias ?? currencyAlias}
+                {certificate.currencyCode ?? currencyAlias}
               </span>
             </div>
           </div>
@@ -156,9 +152,9 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
             </Link>
           )}
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-            {certificate?.uploaderUrl ? (
+            {certificate?.file?.url ? (
               <Image
-                src={certificate.uploaderUrl}
+                src={certificate.file.url}
                 alt="avatar"
                 width={14}
                 height={14}
@@ -166,10 +162,10 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               />
             ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
-                {certificate.uploader.slice(0, 2).toUpperCase()}
+                {certificate.uploaderName.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span>{certificate.uploader ?? ''}</span>
+            <span>{certificate.uploaderName ?? ''}</span>
           </div>
         </div>
       </BorderCell>

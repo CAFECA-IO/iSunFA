@@ -40,8 +40,7 @@ const StepTwoForm = ({
     declarantPersonalId,
     declarantPhoneNumber,
     agentFilingRole,
-    agentFilingRoleIdText,
-    agentFilingRoleIdNumber,
+    licenseId,
 
     filingFrequencyError,
     filingMethodError,
@@ -153,10 +152,7 @@ const StepTwoForm = ({
       handleChange('declarantPhoneNumberError')(null);
     }
 
-    if (
-      declarantFilingMethod === DECLARANT_FILING_METHOD.AGENT_FILING &&
-      (!agentFilingRoleIdText || !agentFilingRoleIdNumber)
-    ) {
+    if (declarantFilingMethod === DECLARANT_FILING_METHOD.AGENT_FILING && !licenseId) {
       handleChange('agentFilingRoleError')(
         t('dashboard:AGENT_FILING_ROLE.AGENT_FILING_ROLE_REQUIRED')
       );
@@ -350,7 +346,7 @@ const StepTwoForm = ({
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
 
-          {/* Info: (20250418 - Liz) (Declarant) Filing Method */}
+          {/* Info: (20250418 - Liz) (Declarant) Filing Method 申報人申報方式 */}
           <section className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('dashboard:DECLARANT_FILING_METHOD.DECLARANT_FILING_METHOD')}
@@ -412,25 +408,27 @@ const StepTwoForm = ({
           </section>
 
           {/* Info: (20250418 - Liz) 申報人資料 */}
-          <section className="flex items-start gap-40px">
+          <section className="flex items-start justify-between gap-40px">
             {/* Info: (20250418 - Liz) 申報人姓名 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME')}
                 <span className="text-text-state-error"> *</span>
               </h4>
-              <input
-                type="text"
-                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_NAME')}
-                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                value={declarantName}
-                onChange={(e) => handleChange('declarantName')(e.target.value)}
-              />
-              {declarantNameError && !declarantName && (
-                <p className="text-right text-sm font-medium text-text-state-error">
-                  {declarantNameError}
-                </p>
-              )}
+              <div>
+                <input
+                  type="text"
+                  placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_NAME')}
+                  className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                  value={declarantName}
+                  onChange={(e) => handleChange('declarantName')(e.target.value)}
+                />
+                {declarantNameError && !declarantName && (
+                  <p className="text-right text-sm font-medium text-text-state-error">
+                    {declarantNameError}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Info: (20250410 - Liz) 負責人身分證字號 */}
@@ -439,20 +437,22 @@ const StepTwoForm = ({
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID')}
                 <span className="text-text-state-error"> *</span>
               </h4>
-              <input
-                type="number"
-                placeholder={t(
-                  'dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_PERSONAL_ID'
+              <div>
+                <input
+                  type="text"
+                  placeholder={t(
+                    'dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_DECLARANT_PERSONAL_ID'
+                  )}
+                  className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                  value={declarantPersonalId}
+                  onChange={(e) => handleChange('declarantPersonalId')(e.target.value)}
+                />
+                {declarantPersonalIdError && !declarantPersonalId && (
+                  <p className="text-right text-sm font-medium text-text-state-error">
+                    {declarantPersonalIdError}
+                  </p>
                 )}
-                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                value={declarantPersonalId}
-                onChange={(e) => handleChange('declarantPersonalId')(e.target.value)}
-              />
-              {declarantPersonalIdError && !declarantPersonalId && (
-                <p className="text-right text-sm font-medium text-text-state-error">
-                  {declarantPersonalIdError}
-                </p>
-              )}
+              </div>
             </div>
 
             {/* Info: (20250410 - Liz) 負責人電話號碼 */}
@@ -461,18 +461,20 @@ const StepTwoForm = ({
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER')}
                 <span className="text-text-state-error"> *</span>
               </h4>
-              <input
-                type="number"
-                placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_PHONE_NUMBER')}
-                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                value={declarantPhoneNumber}
-                onChange={(e) => handleChange('declarantPhoneNumber')(e.target.value)}
-              />
-              {declarantPhoneNumberError && !declarantPhoneNumber && (
-                <p className="text-right text-sm font-medium text-text-state-error">
-                  {declarantPhoneNumberError}
-                </p>
-              )}
+              <div>
+                <input
+                  type="number"
+                  placeholder={t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.ENTER_PHONE_NUMBER')}
+                  className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                  value={declarantPhoneNumber}
+                  onChange={(e) => handleChange('declarantPhoneNumber')(e.target.value)}
+                />
+                {declarantPhoneNumberError && !declarantPhoneNumber && (
+                  <p className="text-right text-sm font-medium text-text-state-error">
+                    {declarantPhoneNumberError}
+                  </p>
+                )}
+              </div>
             </div>
           </section>
 
@@ -527,54 +529,15 @@ const StepTwoForm = ({
                   )}
                 </div>
 
+                {/* Info: (20250422 - Liz) 申報代理人證書字號或登錄字號 */}
                 <div className="flex flex-1.5 flex-col">
-                  <section className="flex justify-between">
-                    {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && (
-                      <span className="self-center text-base font-normal text-text-neutral-secondary">
-                        台財
-                      </span>
-                    )}
-
-                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`(`}</span>
-
-                    {/* Info: (20250422 - Liz) 申報代理人資料 */}
-                    <input
-                      type="text"
-                      className="w-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={agentFilingRoleIdText}
-                      onChange={(e) => handleChange('agentFilingRoleIdText')(e.target.value)}
-                    />
-
-                    <span className="self-center text-base font-normal text-text-neutral-secondary">{`)`}</span>
-
-                    {(agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER ||
-                      AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT) && (
-                      <span className="self-center text-base font-normal text-text-neutral-secondary">
-                        {`(區)`}
-                      </span>
-                    )}
-
-                    <div className="self-center text-base font-normal text-text-neutral-secondary">
-                      {agentFilingRole === AGENT_FILING_ROLE.ACCOUNTANT && (
-                        <span>台財稅登字第</span>
-                      )}
-                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER && <span>國稅字第</span>}
-                      {agentFilingRole === AGENT_FILING_ROLE.BOOKKEEPER_AND_FILING_AGENT && (
-                        <span>國稅登字第</span>
-                      )}
-                    </div>
-
-                    <input
-                      type="number"
-                      className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={agentFilingRoleIdNumber}
-                      onChange={(e) => handleChange('agentFilingRoleIdNumber')(e.target.value)}
-                    />
-
-                    <p className="self-center text-base font-normal text-text-neutral-secondary">
-                      號
-                    </p>
-                  </section>
+                  <input
+                    type="text"
+                    placeholder="請輸入證書字號或登錄字號"
+                    className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
+                    value={licenseId}
+                    onChange={(e) => handleChange('licenseId')(e.target.value)}
+                  />
 
                   {agentFilingRoleError && !isAgentFilingRolesDropdownOpen && (
                     <p className="text-right text-sm font-medium text-text-state-error">

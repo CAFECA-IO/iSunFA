@@ -114,6 +114,20 @@ export const getAccountBookInfoSchema = {
   frontend: accountBookNullSchema,
 };
 
+const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
+  id: z.string(),
+  name: z.string(),
+  taxId: z.string(),
+  taxSerialNumber: z.string(),
+  representativeName: z.string(),
+  country: countrySchema,
+  phoneNumber: z.string(),
+  address: z.string(),
+  startDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: List Account Book Info (User - Detailed)
 // ===================================================================================
@@ -124,7 +138,7 @@ export const listAccountBookInfoSchema = {
     querySchema: accountBookListQuerySchema, // Reuse list query schema
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: paginatedDataSchema(accountBookInfoSchema),
+  outputSchema: paginatedDataSchema(accountBookInfoWithTeamSchema),
   frontend: accountBookNullSchema,
 };
 
@@ -263,6 +277,7 @@ export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookRespo
 
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
 export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
+export type IAccountBookInfoWithTeam = z.infer<typeof accountBookInfoWithTeamSchema>;
 export type ICountry = z.infer<typeof countrySchema>;
 
 export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;

@@ -2,7 +2,22 @@
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "Log In with Google",
     "LOG_IN_WITH_APPLE": "Log In with Apple",
-    "LAST_LOGIN_TIME": "Last Login Time"
+    "LAST_LOGIN_TIME": "Last Login Time",
+    "LOGIN": "Login",
+    "EMAIL": "Email",
+    "ENTER_YOUR_EMAIL_ADDRESS": "Enter your email address",
+    "INVALID_EMAIL_FORMAT": "Invalid email format",
+    "SENT_EMAIL_MESSAGE": "The verification email has been sent earlier. Please check your mailbox. If you have not received the verification email, please wait until the countdown ends and try again.",
+    "S": "s",
+    "OR_LOGIN_WITH": "Or Login with",
+    "ENTER_THE_CODE": "Enter the code",
+    "VERIFICATION_CODE": "Verification code",
+    "VERIFICATION_CODE_PLACEHOLDER": "Ex: 123456",
+    "DID_NOT_GET_THE_CODE": "Did not get the code?",
+    "SENT_CODE_MESSAGE": "The verification email has been sent. Please try again later.",
+    "CONFIRM": "Confirm",
+    "RESEND_CODE": "Resend Code",
+    "BACK_TO_LOGIN": "Back to Login"
   },
 
   "DASHBOARD": {
@@ -155,6 +170,7 @@
     "WORK_TAG": "Work Tag",
     "TEAM": "Team",
     "CREATE_NEW_ACCOUNT_BOOK": "Create New Account Book",
+    "EDIT_ACCOUNT_BOOK": "Edit Account Book",
     "ENTER_NAME": "Enter Name",
     "RESPONSIBLE_PERSON": "Responsible Person",
     "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",

@@ -1,7 +1,9 @@
 {
   "LIST": {
     "INVOICE_TOTAL_PRICE": "Invoice Total Price",
-    "EXPORT_CERTIFICATES": "Export Certificates"
+    "EXPORT_CERTIFICATES": "Export Certificates",
+    "INPUT_TOTAL_PRICE": "Input Total Price",
+    "OUTPUT_TOTAL_PRICE": "Output Total Price"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "Certificate Without Voucher",
@@ -100,7 +102,22 @@
     "CERTIFICATE_BY_CUSTOMS": "Certificate of payment for business tax collected by Customs No.",
     "CHARACTERS": "14 characters",
     "ENTER_ONE_INVOICE": "Enter one invoice No as a reference",
-    "REPRESENTATIVE_INVOICE": "Representative Invoice No."
+    "REPRESENTATIVE_INVOICE": "Representative Invoice No.",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "Total of Summarized Invoices",
+    "COPIES": "Copies",
+    "ALLOWANCE_ISSUE_DATE": "(Allowance) Issue Date",
+    "DUPLICATE_INVOICE_TAX": "Tax = 0 if using Duplicate invoice",
+    "OTHER_CERTIFICATE_NO": "Other Certificate No. *",
+    "ELECTRONIC_INVOICE_INFO": "Electronic invoice information",
+    "INVOICE_DATE": "Issue Date",
+    "SELLER": "Seller",
+    "BUYER": "Buyer",
+    "SALES": "Sales",
+    "LUMP_SUM": "Lump Sum",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "Skip if using triplicate cash register invoice",
+    "INVOICE_PERIOD": "Year {{year}}, {{startMonth}} - {{endMonth}}",
+    "INPUT_INVOICE": "Input Invoice",
+    "OUTPUT_INVOICE": "Output Invoice"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
@@ -202,6 +219,7 @@
     "NEXT": "Next"
   },
   "INPUT_CERTIFICATE": {
-    "INPUT_CERTIFICATE": "Input Invoice"
+    "INPUT_CERTIFICATE": "Input Invoice",
+    "MARK_AS_SHARED_AMOUNT": "Mark as shared amount"
   }
 }

@@ -1,53 +1,7 @@
 import { z } from 'zod';
-import {
-  InputInvoiceType,
-  InvoiceTaxType,
-  InvoiceTransactionDirection,
-  InvoiceType,
-  OutputInvoiceType,
-} from '@/constants/invoice';
+import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
 import { CurrencyType } from '@/constants/currency';
 import { ICounterpartyValidator } from '@/lib/utils/zod_schema/counterparty';
-import { DeductionType } from '@/constants/deduction_type';
-
-// Info: (20250424 - Tzuhan) RC2 更新 invoice schema 並拆成兩個 schema: input 與 output
-const InvoiceBaseSchema = z.object({
-  id: z.number(),
-  inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
-  date: z.number(),
-  no: z.string(),
-  currencyAlias: z.nativeEnum(CurrencyType),
-  priceBeforeTax: z.number(),
-  taxType: z.nativeEnum(InvoiceTaxType),
-  taxRatio: z.number().nullable(),
-  taxPrice: z.number(),
-  totalPrice: z.number(),
-  type: z.union([z.nativeEnum(InputInvoiceType), z.nativeEnum(OutputInvoiceType)]),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-});
-
-export const InvoiceInputSchema = InvoiceBaseSchema.extend({
-  inputOrOutput: z.literal(InvoiceTransactionDirection.INPUT),
-  type: z.nativeEnum(InputInvoiceType),
-  deductionType: z.nativeEnum(DeductionType),
-  sales: z.object({
-    idNumber: z.string().optional(),
-    name: z.string(),
-  }),
-});
-
-export const InvoiceOutputSchema = InvoiceBaseSchema.extend({
-  inputOrOutput: z.literal(InvoiceTransactionDirection.OUTPUT),
-  type: z.nativeEnum(OutputInvoiceType),
-  buyer: z.object({
-    idNumber: z.string().optional(),
-    name: z.string(),
-  }),
-  returnOrAllowance: z.boolean().optional(),
-});
-
-export const InvoiceUnifiedSchema = z.union([InvoiceInputSchema, InvoiceOutputSchema]);
 
 /**
  * Info: (20241105 - Murky)
@@ -55,7 +9,6 @@ export const InvoiceUnifiedSchema = z.union([InvoiceInputSchema, InvoiceOutputSc
  */
 export const IInvoiceBetaValidator = z.object({
   id: z.number(),
-  isComplete: z.boolean(),
   counterParty: ICounterpartyValidator,
   inputOrOutput: z.nativeEnum(InvoiceTransactionDirection),
   date: z.number(),
@@ -63,7 +16,11 @@ export const IInvoiceBetaValidator = z.object({
   currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
   taxType: z.nativeEnum(InvoiceTaxType),
-  taxRatio: z.number(),
+  taxRatio: z
+    .number()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? 0),
   taxPrice: z.number(),
   totalPrice: z.number(),
   type: z.nativeEnum(InvoiceType),
@@ -90,7 +47,11 @@ export const invoiceEntityValidator = z.object({
   currencyAlias: z.nativeEnum(CurrencyType),
   priceBeforeTax: z.number(),
   taxType: z.nativeEnum(InvoiceTaxType),
-  taxRatio: z.number(),
+  taxRatio: z
+    .number()
+    .nullable()
+    .optional()
+    .transform((v) => v ?? 0),
   taxPrice: z.number(),
   totalPrice: z.number(),
   type: z.nativeEnum(InvoiceType),

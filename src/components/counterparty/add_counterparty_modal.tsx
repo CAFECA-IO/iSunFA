@@ -264,7 +264,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       };
 
       await addCounterpartyTrigger({
-        params: { companyId: connectedAccountBook?.id },
+        params: { accountBookId: connectedAccountBook?.id },
         body: apiData,
       });
     }

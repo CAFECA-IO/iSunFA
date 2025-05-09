@@ -506,16 +506,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     window.location.href = url;
   };
 
-  const authenticateUser = async (selectProvider: Provider, props: ILoginPageProps) => {
+  const authenticateUser = async (selectProvider: Provider, { invitation }: ILoginPageProps) => {
     try {
       setIsAuthLoading(true);
-      const response = await authSignIn(
-        selectProvider,
-        { redirect: false },
-        // Info: (20240909 - Anna) TypeScript 本身已經有型別檢查系統。因此 ESLint 不需要針對 TypeScript 檔案強制使用 prop-types。因此這裡的ESLint註解不做移除。
-        // eslint-disable-next-line react/prop-types
-        { invitation: props.invitation }
-      );
+      const response = await authSignIn(selectProvider, { redirect: false }, { invitation });
 
       if (response?.error) {
         throw new Error(response.error);

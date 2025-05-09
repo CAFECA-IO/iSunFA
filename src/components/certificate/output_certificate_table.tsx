@@ -1,16 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import OutputCertificateItem from '@/components/certificate/output_certificate_item';
-import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
-import { InvoiceTabs } from '@/constants/certificate';
+import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
+import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
 interface OutputCertificateTableProps {
-  activeTab: InvoiceTabs;
-  certificates: ICertificateUI[];
+  activeTab: CertificateTab;
+  certificates: ICertificateRC2OutputUI[];
   currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
@@ -20,13 +20,13 @@ interface OutputCertificateTableProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  invoiceNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
-  invoiceTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
+  certificateNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
+  certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
-  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
+  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
 const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
@@ -41,13 +41,13 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   dateSort,
   amountSort,
   voucherSort,
-  invoiceNoSort,
-  invoiceTypeSort,
+  certificateNoSort,
+  certificateTypeSort,
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setInvoiceNoSort,
-  setInvoiceTypeSort,
+  setCertificateNoSort,
+  setCertificateTypeSort,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -57,8 +57,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -69,8 +69,8 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -81,34 +81,34 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setInvoiceNoSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證號碼表頭
-  const displayedInvoiceNo = SortingButton({
+  const displayedCertificateNo = SortingButton({
     string: t('certificate:TABLE.INVOICE_NUMBER'),
-    sortOrder: invoiceNoSort,
-    setSortOrder: setInvoiceNoSort,
+    sortOrder: certificateNoSort,
+    setSortOrder: setCertificateNoSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceTypeSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證類型表頭
-  const displayedInvoiceType = SortingButton({
+  const displayedCertificateType = SortingButton({
     string: t('certificate:TABLE.INVOICE_TYPE'),
-    sortOrder: invoiceTypeSort,
-    setSortOrder: setInvoiceTypeSort,
+    sortOrder: certificateTypeSort,
+    setSortOrder: setCertificateTypeSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setInvoiceNoSort(null);
+      setCertificateNoSort(null);
     },
   });
 
@@ -132,10 +132,10 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
               {displayedIssuedDate}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              {displayedInvoiceNo}
+              {displayedCertificateNo}
             </div>
             <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedInvoiceType}
+              {displayedCertificateType}
             </div>
 
             <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
@@ -152,7 +152,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
-              {activeTab === InvoiceTabs.WITH_VOUCHER && displayedVoucherNumber}
+              {activeTab === CertificateTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>

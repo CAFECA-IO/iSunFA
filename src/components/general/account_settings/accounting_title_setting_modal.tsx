@@ -42,7 +42,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     success,
   } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { companyId: accountBookId }, query: queryCondition },
+    { params: { accountBookId }, query: queryCondition },
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     false,
     true
@@ -65,7 +65,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     // Info: (20241108 - Julian) 按下 Enter 鍵才執行搜尋
     if (e.key === KEYBOARD_EVENT_CODE.ENTER) {
       getAccountList({
-        params: { companyId: accountBookId },
+        params: { accountBookId },
         query: { ...queryCondition, searchKey: searchWord },
       });
     }
@@ -78,13 +78,13 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   useEffect(() => {
     // Info: (20250214 - Julian) 關鍵字為空時顯示全部
     if (searchWord === '') {
-      getAccountList({ params: { companyId: accountBookId }, query: queryCondition });
+      getAccountList({ params: { accountBookId }, query: queryCondition });
     }
   }, [searchWord]);
 
   useEffect(() => {
     if (isModalVisible) {
-      getAccountList({ params: { companyId: accountBookId } });
+      getAccountList({ params: { accountBookId } });
       // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     } else {
       // Info: (20241108 - Julian) 關閉 Modal 時重置 state
@@ -95,13 +95,13 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   }, [isModalVisible]);
 
   useEffect(() => {
-    getAccountList({ params: { companyId: accountBookId } });
+    getAccountList({ params: { accountBookId } });
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
 
   const clearSearchWord = () => {
     setSearchWord('');
-    getAccountList({ params: { companyId: accountBookId } });
+    getAccountList({ params: { accountBookId } });
     // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 

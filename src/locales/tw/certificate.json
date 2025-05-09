@@ -1,7 +1,9 @@
 {
   "LIST": {
     "INVOICE_TOTAL_PRICE": "憑證總價",
-    "EXPORT_CERTIFICATES": "匯出發票"
+    "EXPORT_CERTIFICATES": "匯出發票",
+    "INPUT_TOTAL_PRICE": "進項發票總額",
+    "OUTPUT_TOTAL_PRICE": "銷項發票總額"
   },
   "TAB": {
     "WITHOUT_VOUCHER": "未入帳的憑證",
@@ -100,7 +102,22 @@
     "CERTIFICATE_BY_CUSTOMS": "海關代徵營業稅繳納證明書號碼",
     "CHARACTERS": "14 個字符",
     "ENTER_ONE_INVOICE": "輸入一個發票號碼作為代表",
-    "REPRESENTATIVE_INVOICE": "代表發票號碼"
+    "REPRESENTATIVE_INVOICE": "代表發票號碼",
+    "TOTAL_OF_SUMMARIZED_INVOICES": "彙總發票合計",
+    "COPIES": "張",
+    "ALLOWANCE_ISSUE_DATE": "（折讓單）開立日期",
+    "DUPLICATE_INVOICE_TAX": "如果使用二聯式發票，稅額為 0",
+    "OTHER_CERTIFICATE_NO": "其他憑證編號",
+    "ELECTRONIC_INVOICE_INFO": "電子發票資訊",
+    "INVOICE_DATE": "開立時間",
+    "SELLER": "賣方",
+    "BUYER": "買方",
+    "SALES": "銷售額",
+    "LUMP_SUM": "總金額",
+    "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三聯式收銀機發票則跳過",
+    "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月",
+    "INPUT_INVOICE": "進項發票",
+    "OUTPUT_INVOICE": "銷項發票"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",
@@ -202,6 +219,7 @@
     "NEXT": "下一筆"
   },
   "INPUT_CERTIFICATE": {
-    "INPUT_CERTIFICATE": "進項憑證"
+    "INPUT_CERTIFICATE": "進項憑證",
+    "MARK_AS_SHARED_AMOUNT": "勾選表示此為彙總金額代表憑證"
   }
 }

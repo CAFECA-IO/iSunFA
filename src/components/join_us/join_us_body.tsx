@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
@@ -9,9 +9,10 @@ import {
   LinearTextSize,
   TextAlign,
 } from '@/components/landing_page_v2/linear_gradient_text';
-import JobFilterSection from '@/components/join_us/filter_section';
-import { dummyJobList, IJobUI } from '@/interfaces/job';
+import VacancyFilterSection from '@/components/join_us/filter_section';
+import { dummyVacancyList, IVacancyUI } from '@/interfaces/vacancy';
 import VacancyItem from '@/components/join_us/vacancy_item';
+import { useHiringCtx } from '@/contexts/hiring_context';
 
 enum SortOrder {
   Newest = 'newest',
@@ -20,20 +21,32 @@ enum SortOrder {
 
 const JoinUsPageBody: React.FC = () => {
   const { t } = useTranslation(['landing_page']);
+  const { favoriteVacancyIds, toggleFavoriteVacancyId } = useHiringCtx();
 
-  const defaultJobList: IJobUI[] = dummyJobList.map((job) => {
+  const defaultVacancyList: IVacancyUI[] = dummyVacancyList.map((job) => {
     return { ...job, isFavorite: false };
   });
 
   // Info: (20250402 - Julian) 初始清單
-  const [jobList, setJobList] = useState<IJobUI[]>(defaultJobList);
+  const [jobList, setVacancyList] = useState<IVacancyUI[]>(defaultVacancyList);
   // Info: (20250402 - Julian) 過濾後的清單
-  const [filteredJobList, setFilteredJobList] = useState<IJobUI[]>(defaultJobList);
+  const [filteredVacancyList, setFilteredVacancyList] = useState<IVacancyUI[]>(defaultVacancyList);
   // Info: (20250402 - Julian) 排序方式
   const [sortOrder, setSortOrder] = useState<SortOrder>(SortOrder.Newest);
 
-  const filterJobs = (type: string, location: string, keyword: string) => {
-    const newJobList = jobList.filter((job) => {
+  // Info: (20250505 - Julian) 監聽 favoriteVacancyIds 的變化
+  useEffect(() => {
+    const updatedVacancyList = jobList.map((job) => {
+      const isFavorite = favoriteVacancyIds.includes(job.id);
+      return { ...job, isFavorite };
+    });
+    setVacancyList(updatedVacancyList);
+    setFilteredVacancyList(updatedVacancyList);
+  }, [favoriteVacancyIds]);
+
+  // Info: (20250505 - Julian) 監聽 jobList 的變化
+  const filterVacancies = (type: string, location: string, keyword: string) => {
+    const newVacancyList = jobList.filter((job) => {
       // Info: (20250402 - Julian) Type filter: 不是 all 就是 我的最愛
       if (type !== 'all') {
         return job.isFavorite;
@@ -49,7 +62,7 @@ const JoinUsPageBody: React.FC = () => {
         const isMatched =
           job.title.toLowerCase().includes(keyword) ||
           job.description.toLowerCase().includes(keyword) ||
-          job.jobResponsibilities.join(' ').toLowerCase().includes(keyword) ||
+          job.responsibilities.join(' ').toLowerCase().includes(keyword) ||
           job.requirements.join(' ').toLowerCase().includes(keyword) ||
           job.extraSkills.join(' ').toLowerCase().includes(keyword);
 
@@ -59,25 +72,25 @@ const JoinUsPageBody: React.FC = () => {
       return true; // Info: (20250402 - Julian) Return all jobs
     });
 
-    setFilteredJobList(newJobList);
+    setFilteredVacancyList(newVacancyList);
   };
 
   const toggleSortOrder = () => {
     // Info: (20250402 - Julian) 切換排序方式
     setSortOrder(sortOrder === SortOrder.Newest ? SortOrder.Oldest : SortOrder.Newest);
 
-    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
-    setJobList((prev) => {
-      const sortedJobList = prev.sort((a, b) => {
+    // Info: (20250402 - Julian) 更新 jobList 和 filteredVacancyList
+    setVacancyList((prev) => {
+      const sortedVacancyList = prev.sort((a, b) => {
         if (sortOrder === SortOrder.Newest) {
           return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
         }
         return b.date - a.date; // Info: (20250402 - Julian) Sort by oldest
       });
-      return sortedJobList;
+      return sortedVacancyList;
     });
 
-    setFilteredJobList((prev) => {
+    setFilteredVacancyList((prev) => {
       const sortedFilterList = prev.sort((a, b) => {
         if (sortOrder === SortOrder.Newest) {
           return a.date - b.date; // Info: (20250402 - Julian) Sort by newest
@@ -88,39 +101,18 @@ const JoinUsPageBody: React.FC = () => {
     });
   };
 
-  const toggleFavorite = (jobId: number) => {
-    // Info: (20250402 - Julian) 更新 jobList 和 filteredJobList
-    setJobList((prev) => {
-      const newJobList = prev.map((item) => {
-        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
-        if (item.id === jobId) {
-          return { ...item, isFavorite: !item.isFavorite };
-        }
-        return item;
-      });
-      return newJobList;
-    });
+  const vacancyList = filteredVacancyList.map((job) => {
+    const toggleFavorite = () => toggleFavoriteVacancyId(job.id);
 
-    setFilteredJobList((prev) => {
-      const newFilterList = prev.map((item) => {
-        // Info: (20250402 - Julian) 找到對應的 job id，將 isFavorite 反轉
-        if (item.id === jobId) {
-          return { ...item, isFavorite: !item.isFavorite };
-        }
-        return item;
-      });
-      return newFilterList;
-    });
-  };
-
-  const vacancyList = filteredJobList.map((job) => (
-    <VacancyItem
-      key={job.id}
-      job={job}
-      isFavorite={job.isFavorite}
-      toggleFavorite={() => toggleFavorite(job.id)}
-    />
-  ));
+    return (
+      <VacancyItem
+        key={job.id}
+        vacancy={job}
+        isFavorite={job.isFavorite}
+        toggleFavorite={toggleFavorite}
+      />
+    );
+  });
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -141,7 +133,7 @@ const JoinUsPageBody: React.FC = () => {
           </div>
 
           {/* Info: (20250331 - Julian) Filter Section */}
-          <JobFilterSection filterJobs={filterJobs} />
+          <VacancyFilterSection filterVacancies={filterVacancies} />
 
           <div className="flex flex-col gap-24px">
             {/* Info: (20250331 - Julian) Sort Order */}
@@ -150,7 +142,7 @@ const JoinUsPageBody: React.FC = () => {
               <p className="text-lg font-medium text-white">
                 {t('hiring:JOIN_US_PAGE.AVAILABLE_POSITION')}{' '}
                 <span className="font-semibold text-text-brand-primary-lv3">
-                  {filteredJobList.length}
+                  {filteredVacancyList.length}
                 </span>
               </p>
               {/* Info: (20250331 - Julian) Sort Order */}
