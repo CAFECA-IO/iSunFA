@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { FiHome, FiArrowRight } from 'react-icons/fi';
-import { useTranslation } from 'next-i18next';
+import { FiHome } from 'react-icons/fi';
 import { useUserCtx } from '@/contexts/user_context';
 import { Provider } from '@/constants/provider';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -10,6 +8,63 @@ import I18n from '@/components/i18n/i18n';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import Loader from '@/components/loader/loader';
 import TermsOfServiceModal from '@/components/login/terms_of_service_modal';
+import InputEmailStep from '@/components/login/input_email_step';
+import VerifyCodeStep from '@/components/login/verify_code_step';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
+
+// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Success
+const SEND_VERIFICATION_EMAIL_RES = {
+  success: true,
+  code: '200',
+  message: 'Success',
+  data: {
+    expiredAt: '1746706335',
+    coolDown: 30,
+    coolDownAt: 1746706515,
+  },
+};
+
+// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Fail
+// const SEND_VERIFICATION_EMAIL_RES = {
+//   success: false,
+//   code: '429ISF0000',
+//   message: 'Email login registration cooldown',
+//   data: {
+//     coolDown: 180,
+//     coolDownAt: 1756727800,
+//   },
+// };
+
+// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Success
+// const VERIFY_CODE_RESULT = {
+//   success: true,
+//   code: '200',
+//   message: 'Success',
+//   data: {
+//     id: 10000001,
+//     name: 'Lisa',
+//     email: 'lisa@gmail.com',
+//     imageId: '10000000',
+//     agreementList: [],
+//     createdAt: 1725359150,
+//     updatedAt: 1725359150,
+//   },
+// };
+
+// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Fail
+const VERIFY_CODE_RESULT = {
+  success: false,
+  code: '429ISF0001',
+  message: 'Email login too many attempts',
+  data: {
+    attempts: 6,
+    maxAttempts: 5,
+    coolDown: 30,
+    coolDownAt: 1756727800,
+  },
+};
 
 export interface NewLoginPageProps {
   invitation: string;
@@ -17,10 +72,161 @@ export interface NewLoginPageProps {
 }
 
 const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
-  const { t } = useTranslation('dashboard');
   const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService } = useUserCtx();
-  const [email, setEmail] = useState<string>('');
+  const { toastHandler } = useModalContext();
 
+  const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // Info: (20250509 - Liz) 當前步驟
+  const [inputEmail, setInputEmail] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的 email
+  const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false); // Info: (20250509 - Liz) email 格式是否正確
+  const [verificationCode, setVerificationCode] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的驗證碼
+  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
+  const [isVerifyingCode, setIsVerifyingCode] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在驗證驗證碼
+  const [isResendingEmail, setIsResendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在重新寄送驗證信
+  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // Info: (20250509 - Liz) 驗證碼的有效時間倒數(例如 180 秒)
+  const [resendCountdown, setResendCountdown] = useState<number>(0); // Info: (20250509 - Liz) 重新寄送驗證信的冷卻時間倒數(例如 180 秒)
+  const [sendEmailError, setSendEmailError] = useState<string>(''); // Info: (20250509 - Liz) 寄送驗證信的錯誤訊息
+  const [verifyCodeError, setVerifyCodeError] = useState<string>(''); // Info: (20250509 - Liz) 驗證碼的錯誤訊息
+
+  // Info: (20250509 - Liz) 回到輸入 email 的步驟，並重置所有的狀態
+  const goBackToInputEmailStep = () => {
+    setStep('inputEmail');
+    setInputEmail('');
+    setVerificationCode('');
+    setVerifyCountdown(0);
+    setResendCountdown(0);
+    setIsEmailNotValid(false);
+    setIsSendingEmail(false);
+    setIsVerifyingCode(false);
+    setIsResendingEmail(false);
+    setSendEmailError('');
+    setVerifyCodeError('');
+  };
+
+  // Info: (20250509 - Liz) 當使用者輸入 email 時，更新 email 狀態、清除錯誤訊息
+  const updateInputEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputEmail(e.target.value);
+    setIsEmailNotValid(false);
+    setSendEmailError('');
+    setResendCountdown(0);
+  };
+
+  // Info: (20250508 - Liz) 使用者點擊登入按鈕後，會先進行 email 格式驗證，接著會打 API 寄送驗證信
+  const sendLoginEmail = () => {
+    const trimmedEmail = inputEmail.trim();
+    if (!trimmedEmail) return;
+
+    // Info: (20250508 - Liz) 簡單的 email 格式驗證
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail);
+    if (!isValidEmail) {
+      setIsEmailNotValid(true);
+      return;
+    }
+    setIsEmailNotValid(false);
+
+    // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+    setIsSendingEmail(true);
+    setSendEmailError('');
+    try {
+      // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+
+      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
+      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
+      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
+
+      if (!success) {
+        setSendEmailError('驗證信寄送失敗');
+        // Deprecated: (20250509 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(`寄送驗證信失敗: ${message}`);
+
+        if (coolDown) setResendCountdown(coolDown);
+        return;
+      }
+
+      if (coolDown) setVerifyCountdown(coolDown); // Info: (20250509 - Liz) 驗證碼的有效時間
+      setStep('verifyCode');
+    } catch (err) {
+      setSendEmailError('寄送驗證信失敗，請稍後再試');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // Info: (20250508 - Liz) 驗證使用者輸入的驗證碼
+  const handleVerifyCode = async () => {
+    setIsVerifyingCode(true);
+    setVerifyCodeError('');
+    try {
+      // ToDo: (20250508 - Liz) 打 API 驗證驗證碼 (VERIFY_CODE)
+
+      // Info: (20250508 - Liz) 先使用假資料 VERIFY_CODE_RESULT 來模擬 API 回傳
+      const { success, message } = VERIFY_CODE_RESULT;
+      const maxAttempts = VERIFY_CODE_RESULT.data?.maxAttempts ?? undefined;
+
+      // Deprecated: (20250509 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('success:', success);
+
+      if (!success) {
+        setVerifyCodeError('驗證碼錯誤');
+        // Deprecated: (20250509 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(`驗證碼錯誤: ${message}`);
+
+        if (maxAttempts > 0) {
+          toastHandler({
+            id: ToastId.VERIFY_CODE_ERROR,
+            type: ToastType.ERROR,
+            content: `Incorrect code. You have ${maxAttempts} more attempts remaining.`,
+            closeable: true,
+            position: ToastPosition.TOP_CENTER,
+          });
+        }
+        return;
+      }
+
+      // Deprecated: (20250508 - Liz) 暫時顯示驗證成功的提示，之後會刪除
+      // eslint-disable-next-line no-alert
+      window.alert('驗證成功');
+
+      // ToDo: (20250508 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
+    } catch (err) {
+      setVerifyCodeError('驗證失敗，請稍後再試');
+    } finally {
+      setIsVerifyingCode(false);
+    }
+  };
+
+  // Info: (20250508 - Liz) 重新寄出驗證信
+  const handleResend = async () => {
+    setVerificationCode('');
+    setIsResendingEmail(true);
+    setVerifyCodeError('');
+    try {
+      // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+
+      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
+      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
+      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
+      if (coolDown) setResendCountdown(coolDown); // Info: (20250509 - Liz) 從 API 回傳的資料中取得重新寄出驗證信的冷卻時間 coolDown
+
+      if (!success) {
+        setVerifyCodeError('重新寄送驗證信失敗');
+        // Deprecated: (20250509 - Liz)
+        // eslint-disable-next-line no-console
+        console.log(`重新寄送驗證信失敗: ${message}`);
+        return;
+      }
+
+      if (coolDown) setVerifyCountdown(coolDown); // Info: (20250509 - Liz) 驗證碼的有效時間
+    } catch (err) {
+      setVerifyCodeError('重新寄送驗證信失敗，請稍後再試');
+    } finally {
+      setIsResendingEmail(false);
+    }
+  };
+
+  // Info: (20250508 - Liz) Google 登入
   const googleAuthSignIn = () => {
     authenticateUser(Provider.GOOGLE, {
       invitation,
@@ -28,21 +234,52 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     });
   };
 
+  // Info: (20250508 - Liz) 服務條款彈窗
   const [isTermsOfServiceModalVisible, setIsTermsOfServiceModalVisible] = useState<boolean>(false);
   const closeTermsOfServiceModal = () => {
     setIsTermsOfServiceModalVisible(false);
   };
 
+  // Info: (20250508 - Liz) 當使用者登入後，顯示服務條款彈窗
   useEffect(() => {
     if (!isSignIn) return;
     setIsTermsOfServiceModalVisible(!isAgreeTermsOfService);
   }, [isSignIn, isAgreeTermsOfService]);
 
+  // Info: (20250508 - Liz) I18n 語言選單的外部點擊事件
   const {
     targetRef: globalRef,
     componentVisible: isMenuVisible,
     setComponentVisible: setIsMenuVisible,
   } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250508 - Liz) 每秒減一，直到 0（驗證碼有效時間）
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (verifyCountdown > 0) {
+      timer = setInterval(() => {
+        setVerifyCountdown((prev) => {
+          if (prev <= 1) clearInterval(timer);
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [verifyCountdown]);
+
+  // Info: (20250508 - Liz) 每秒減一，直到 0 (不能太快重新寄送驗證信，需要冷卻時間)
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => {
+          if (prev <= 1) clearInterval(timer);
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
 
   return (
     <main className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -60,57 +297,34 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       {isAuthLoading ? (
         <Loader />
       ) : (
-        <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
-          <div className="flex items-center justify-center gap-10px">
-            <Image src="/logo/isunfa_logo_new_icon.svg" alt="logo" width={38.371} height={33.997} />
-            <Image src="/logo/isunfa_text_logo.svg" alt="logo" width={74.769} height={18.506} />
-          </div>
-
-          <section className="flex flex-col gap-24px">
-            <h1 className="text-start text-4xl font-bold leading-44px text-text-brand-secondary-lv2">
-              Login
-            </h1>
-
-            <div className="flex flex-col gap-8px">
-              <span className="text-start text-xl font-bold leading-8 text-text-neutral-primary">
-                Email
-              </span>
-              <input
-                type="text"
-                placeholder="Enter your Email Address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-              />
-            </div>
-            <button
-              type="button"
-              className="flex items-center gap-8px self-center rounded-xs bg-button-surface-strong-primary px-24px py-10px hover:bg-button-surface-strong-primary-hover disabled:bg-button-surface-strong-disable"
-            >
-              <span className="text-base font-medium text-button-text-primary-solid">Login</span>
-              <FiArrowRight size={20} />
-            </button>
-          </section>
-
-          <div className="flex flex-col gap-16px">
-            <div className="flex items-center gap-24px">
-              <hr className="flex-auto border-t border-stroke-neutral-mute" />
-              <p>Or Login with</p>
-              <hr className="flex-auto border-t border-stroke-neutral-mute" />
-            </div>
-
-            <button
-              type="button"
-              onClick={googleAuthSignIn}
-              className="flex items-center justify-center gap-15px rounded-sm bg-white p-15px shadow-Dropshadow_SM"
-            >
-              <Image src="/icons/google_logo.svg" alt="google_logo" width="24" height="24"></Image>
-              <p className="text-xl font-medium text-gray-500">
-                {t('dashboard:LOGIN.LOG_IN_WITH_GOOGLE')}
-              </p>
-            </button>
-          </div>
-        </div>
+        <>
+          {step === 'inputEmail' && (
+            <InputEmailStep
+              inputEmail={inputEmail}
+              updateInputEmail={updateInputEmail}
+              isEmailNotValid={isEmailNotValid}
+              sendLoginEmail={sendLoginEmail}
+              googleAuthSignIn={googleAuthSignIn}
+              isSendingEmail={isSendingEmail}
+              sendEmailError={sendEmailError}
+              resendCountdown={resendCountdown}
+            />
+          )}
+          {step === 'verifyCode' && (
+            <VerifyCodeStep
+              verificationCode={verificationCode}
+              setVerificationCode={setVerificationCode}
+              verifyCountdown={verifyCountdown}
+              resendCountdown={resendCountdown}
+              handleVerifyCode={handleVerifyCode}
+              handleResend={handleResend}
+              isResendingEmail={isResendingEmail}
+              isVerifyingCode={isVerifyingCode}
+              verifyCodeError={verifyCodeError}
+              goBackToInputEmailStep={goBackToInputEmailStep}
+            />
+          )}
+        </>
       )}
 
       {/* // Info: (20241206 - Liz) 服務條款彈窗 */}
