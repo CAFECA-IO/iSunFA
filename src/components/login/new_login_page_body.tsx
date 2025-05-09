@@ -13,60 +13,18 @@ import VerifyCodeStep from '@/components/login/verify_code_step';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ICoolDown, IOneTimePasswordResult } from '@/interfaces/email';
+import { IUser } from '@/interfaces/user';
+import { useRouter } from 'next/router';
 
-// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Success
-const SEND_VERIFICATION_EMAIL_RES = {
-  success: true,
-  code: '200',
-  message: 'Success',
-  data: {
-    expiredAt: '1746706335',
-    coolDown: 30,
-    coolDownAt: 1746706515,
-  },
-};
+enum LOGIN_STEP {
+  INPUT_EMAIL = 'inputEmail',
+  VERIFY_CODE = 'verifyCode',
+}
 
-// Info: (20250509 - Liz) 這是用來模擬 SEND_VERIFICATION_EMAIL API 回傳的資料 Fail
-// const SEND_VERIFICATION_EMAIL_RES = {
-//   success: false,
-//   code: '429ISF0000',
-//   message: 'Email login registration cooldown',
-//   data: {
-//     coolDown: 180,
-//     coolDownAt: 1756727800,
-//   },
-// };
-
-// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Success
-// const VERIFY_CODE_RESULT = {
-//   success: true,
-//   code: '200',
-//   message: 'Success',
-//   data: {
-//     id: 10000001,
-//     name: 'Lisa',
-//     email: 'lisa@gmail.com',
-//     imageId: '10000000',
-//     agreementList: [],
-//     createdAt: 1725359150,
-//     updatedAt: 1725359150,
-//   },
-// };
-
-// Info: (20250509 - Liz) 這是用來模擬 VERIFY_CODE API 回傳的資料 Fail
-const VERIFY_CODE_RESULT = {
-  success: false,
-  code: '429ISF0001',
-  message: 'Email login too many attempts',
-  data: {
-    attempts: 6,
-    maxAttempts: 5,
-    coolDown: 30,
-    coolDownAt: 1756727800,
-  },
-};
-
-export interface NewLoginPageProps {
+interface NewLoginPageProps {
   invitation: string;
   action: string;
 }
@@ -74,22 +32,26 @@ export interface NewLoginPageProps {
 const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { isAuthLoading, authenticateUser, isSignIn, isAgreeTermsOfService } = useUserCtx();
   const { toastHandler } = useModalContext();
+  const router = useRouter();
 
-  const [step, setStep] = useState<'inputEmail' | 'verifyCode'>('inputEmail'); // Info: (20250509 - Liz) 當前步驟
+  const [step, setStep] = useState<LOGIN_STEP.INPUT_EMAIL | LOGIN_STEP.VERIFY_CODE>(
+    LOGIN_STEP.INPUT_EMAIL
+  ); // Info: (20250509 - Liz) 當前步驟
   const [inputEmail, setInputEmail] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的 email
   const [isEmailNotValid, setIsEmailNotValid] = useState<boolean>(false); // Info: (20250509 - Liz) email 格式是否正確
   const [verificationCode, setVerificationCode] = useState<string>(''); // Info: (20250509 - Liz) 使用者輸入的驗證碼
   const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在寄送驗證信，用於切換 loading 圖案與按鈕狀態
   const [isVerifyingCode, setIsVerifyingCode] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在驗證驗證碼
   const [isResendingEmail, setIsResendingEmail] = useState<boolean>(false); // Info: (20250509 - Liz) 是否正在重新寄送驗證信
-  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // Info: (20250509 - Liz) 驗證碼的有效時間倒數(例如 180 秒)
-  const [resendCountdown, setResendCountdown] = useState<number>(0); // Info: (20250509 - Liz) 重新寄送驗證信的冷卻時間倒數(例如 180 秒)
+  const [verifyCountdown, setVerifyCountdown] = useState<number>(0); // Info: (20250509 - Liz) 驗證碼的有效時間倒數 (例如 180 秒)
+  const [resendCountdown, setResendCountdown] = useState<number>(0); // Info: (20250509 - Liz) 重新寄送驗證信的冷卻時間倒數 (例如 180 秒)
   const [sendEmailError, setSendEmailError] = useState<string>(''); // Info: (20250509 - Liz) 寄送驗證信的錯誤訊息
   const [verifyCodeError, setVerifyCodeError] = useState<string>(''); // Info: (20250509 - Liz) 驗證碼的錯誤訊息
+  const [validateEmail, setValidateEmail] = useState<string>(''); // Info: (20250509 - Liz) 已通過格式驗證的 email (傳給 API 使用)
 
   // Info: (20250509 - Liz) 回到輸入 email 的步驟，並重置所有的狀態
   const goBackToInputEmailStep = () => {
-    setStep('inputEmail');
+    setStep(LOGIN_STEP.INPUT_EMAIL);
     setInputEmail('');
     setVerificationCode('');
     setVerifyCountdown(0);
@@ -110,8 +72,13 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     setResendCountdown(0);
   };
 
+  // Info: (20250509 - Liz) 寄送驗證信 API
+  const { trigger: sendVerificationEmailAPI } = APIHandler<IOneTimePasswordResult | ICoolDown>(
+    APIName.SEND_VERIFICATION_EMAIL
+  );
+
   // Info: (20250508 - Liz) 使用者點擊登入按鈕後，會先進行 email 格式驗證，接著會打 API 寄送驗證信
-  const sendLoginEmail = () => {
+  const sendLoginEmail = async () => {
     const trimmedEmail = inputEmail.trim();
     if (!trimmedEmail) return;
 
@@ -121,30 +88,35 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       setIsEmailNotValid(true);
       return;
     }
+    setValidateEmail(trimmedEmail);
     setIsEmailNotValid(false);
 
-    // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+    // Info: (20250509 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
     setIsSendingEmail(true);
     setSendEmailError('');
     try {
-      // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+      const { success, error, data } = await sendVerificationEmailAPI({
+        params: {
+          email: trimmedEmail,
+        },
+      });
 
       // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
-      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
-      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
+      // const { success, message } = SEND_VERIFICATION_EMAIL_RES;
+      const coolDown = data?.coolDown ?? undefined;
 
       if (!success) {
         setSendEmailError('驗證信寄送失敗');
         // Deprecated: (20250509 - Liz)
         // eslint-disable-next-line no-console
-        console.log(`寄送驗證信失敗: ${message}`);
+        console.log(`寄送驗證信失敗: ${error?.message}`);
 
         if (coolDown) setResendCountdown(coolDown);
         return;
       }
 
       if (coolDown) setVerifyCountdown(coolDown); // Info: (20250509 - Liz) 驗證碼的有效時間
-      setStep('verifyCode');
+      setStep(LOGIN_STEP.VERIFY_CODE);
     } catch (err) {
       setSendEmailError('寄送驗證信失敗，請稍後再試');
     } finally {
@@ -152,16 +124,21 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     }
   };
 
+  // Info: (20250509 - Liz) 驗證驗證碼 API
+  const { trigger: verifyCodeAPI } = APIHandler<IUser | ICoolDown>(APIName.VERIFY_CODE);
+
   // Info: (20250508 - Liz) 驗證使用者輸入的驗證碼
   const handleVerifyCode = async () => {
     setIsVerifyingCode(true);
     setVerifyCodeError('');
     try {
-      // ToDo: (20250508 - Liz) 打 API 驗證驗證碼 (VERIFY_CODE)
+      // Info: (20250509 - Liz) 打 API 驗證驗證碼 (VERIFY_CODE)
+      const { success, error, data } = await verifyCodeAPI({
+        params: { email: validateEmail },
+        body: { code: verificationCode },
+      });
 
-      // Info: (20250508 - Liz) 先使用假資料 VERIFY_CODE_RESULT 來模擬 API 回傳
-      const { success, message } = VERIFY_CODE_RESULT;
-      const maxAttempts = VERIFY_CODE_RESULT.data?.maxAttempts ?? undefined;
+      const maxAttempts: number = data && 'maxAttempts' in data ? (data.maxAttempts as number) : 0; // ToDo: (20250509 - Liz) 從 API 回傳的資料中取得最大嘗試次數 maxAttempts (但目前 API 還沒有這個欄位，且暫時斷言型別為 number)
 
       // Deprecated: (20250509 - Liz)
       // eslint-disable-next-line no-console
@@ -171,7 +148,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         setVerifyCodeError('驗證碼錯誤');
         // Deprecated: (20250509 - Liz)
         // eslint-disable-next-line no-console
-        console.log(`驗證碼錯誤: ${message}`);
+        console.log(`驗證碼錯誤: ${error?.message}`);
 
         if (maxAttempts > 0) {
           toastHandler({
@@ -189,7 +166,8 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       // eslint-disable-next-line no-alert
       window.alert('驗證成功');
 
-      // ToDo: (20250508 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
+      // Info: (20250509 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
+      router.push(ISUNFA_ROUTE.DASHBOARD); // Info: (20250508 - Liz) 跳轉到儀表板頁面
     } catch (err) {
       setVerifyCodeError('驗證失敗，請稍後再試');
     } finally {
@@ -203,18 +181,21 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     setIsResendingEmail(true);
     setVerifyCodeError('');
     try {
-      // ToDo: (20250508 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+      // Info: (20250509 - Liz) 打 API 寄送驗證信 (SEND_VERIFICATION_EMAIL)
+      const { success, error, data } = await sendVerificationEmailAPI({
+        params: {
+          email: validateEmail,
+        },
+      });
 
-      // Info: (20250508 - Liz) 先使用假資料 SEND_VERIFICATION_EMAIL_RES 來模擬 API 回傳
-      const { success, message } = SEND_VERIFICATION_EMAIL_RES;
-      const coolDown = SEND_VERIFICATION_EMAIL_RES.data?.coolDown ?? undefined;
+      const coolDown = data?.coolDown ?? undefined;
       if (coolDown) setResendCountdown(coolDown); // Info: (20250509 - Liz) 從 API 回傳的資料中取得重新寄出驗證信的冷卻時間 coolDown
 
       if (!success) {
         setVerifyCodeError('重新寄送驗證信失敗');
         // Deprecated: (20250509 - Liz)
         // eslint-disable-next-line no-console
-        console.log(`重新寄送驗證信失敗: ${message}`);
+        console.log(`重新寄送驗證信失敗: ${error?.message}`);
         return;
       }
 
@@ -298,7 +279,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         <Loader />
       ) : (
         <>
-          {step === 'inputEmail' && (
+          {step === LOGIN_STEP.INPUT_EMAIL && (
             <InputEmailStep
               inputEmail={inputEmail}
               updateInputEmail={updateInputEmail}
@@ -310,7 +291,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
               resendCountdown={resendCountdown}
             />
           )}
-          {step === 'verifyCode' && (
+          {step === LOGIN_STEP.VERIFY_CODE && (
             <VerifyCodeStep
               verificationCode={verificationCode}
               setVerificationCode={setVerificationCode}
@@ -327,7 +308,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         </>
       )}
 
-      {/* // Info: (20241206 - Liz) 服務條款彈窗 */}
+      {/* Info: (20241206 - Liz) 服務條款彈窗 */}
       <TermsOfServiceModal
         isModalVisible={isTermsOfServiceModalVisible}
         closeTermsOfServiceModal={closeTermsOfServiceModal}
