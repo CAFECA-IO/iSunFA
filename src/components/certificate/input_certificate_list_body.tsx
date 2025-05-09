@@ -427,6 +427,8 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<ICertificateRC2InputUI>) => {
+      // eslint-disable-next-line no-console
+      console.log('handleEditItem', certificate);
       try {
         const postOrPutAPI = certificate.id
           ? updateCertificateAPI({

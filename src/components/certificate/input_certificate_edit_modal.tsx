@@ -138,6 +138,9 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
+    // eslint-disable-next-line no-console
+    console.log('newErrors:', newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -264,8 +267,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
 
+    const { isSelected, actions, ...rest } = certificate;
+
     const updatedCertificate = {
-      ...certificate,
+      ...rest,
       ...formStateRef.current,
     };
     // ToDo: (20250429 - Anna) 等後端欄位完成，確認 isSharedAmount 正確存取後，移除 console.log
@@ -322,6 +327,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedCertificateRC2Ref.current);
+      // eslint-disable-next-line no-console
+      console.log('isSame:', isSame, formStateRef.current, savedCertificateRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -1013,10 +1020,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             <Button
               type="button"
               disabled={!hasPrev}
-              onClick={async () => {
-                await handleSave();
-                setEditingId(certificates[currentIndex - 1].id);
-              }}
+              onClick={() => setEditingId(certificates[currentIndex - 1].id)}
               variant="tertiaryOutline"
               className="px-16px py-8px"
             >
@@ -1025,10 +1029,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             </Button>
             {/* Info: (20250415 - Anna) 下一筆 */}
             <Button
-              onClick={async () => {
-                await handleSave();
-                setEditingId(certificates[currentIndex + 1].id);
-              }}
+              onClick={() => setEditingId(certificates[currentIndex + 1].id)}
               type="button"
               disabled={!hasNext}
               variant="tertiary"

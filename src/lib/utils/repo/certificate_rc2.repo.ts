@@ -337,12 +337,13 @@ export async function updateCertificateRC2Input(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
-  const { id, createdAt, file, ...rest } = data;
+  const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
+
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
       ...rest,
-      note: JSON.stringify(data.note) ?? null,
+      note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaCertificateType,
       updatedAt: now,
     },
@@ -363,12 +364,13 @@ export async function updateCertificateRC2Output(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
-  const { id, createdAt, file, ...rest } = data;
+  const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
+
   const updated = await prisma.certificateRC2.update({
     where: { id: certificateId },
     data: {
       ...rest,
-      note: JSON.stringify(data.note) ?? null,
+      note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaCertificateType,
       updatedAt: now,
     },

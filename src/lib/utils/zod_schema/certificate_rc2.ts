@@ -93,8 +93,8 @@ export const listCertificateRC2Output = {
     querySchema: listCertificateRC2QuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: paginatedDataSchema(CertificateRC2InputSchema),
-  frontend: paginatedDataSchema(CertificateRC2InputSchema),
+  outputSchema: paginatedDataSchema(CertificateRC2OutputSchema),
+  frontend: paginatedDataSchema(CertificateRC2OutputSchema),
 };
 
 export const getCertificateRC2Input = {

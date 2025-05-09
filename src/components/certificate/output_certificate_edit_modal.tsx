@@ -281,9 +281,10 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
+    const { isSelected, actions, ...rest } = certificate;
 
     const updatedCertificate = {
-      ...certificate,
+      ...rest,
       ...formStateRef.current,
     };
 
