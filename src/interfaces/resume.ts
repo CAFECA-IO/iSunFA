@@ -1,3 +1,6 @@
+import { IEducationExperience, IWorkExperience } from '@/interfaces/experience';
+import { ILanguageSkill, ICertificateSkill } from '@/interfaces/skill';
+
 export interface IPersonalInfo {
   firstName: string;
   lastName: string;
@@ -21,4 +24,14 @@ export interface IPreference {
 export interface IAttachment {
   attachments: FileList | null;
   personalWebsite: string;
+}
+
+export interface IResume {
+  personalInfo: IPersonalInfo;
+  educationList: IEducationExperience[];
+  workList: IWorkExperience[];
+  languageList: ILanguageSkill[];
+  certificateList: ICertificateSkill[];
+  preference: IPreference;
+  attachment: IAttachment;
 }

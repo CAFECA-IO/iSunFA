@@ -6,13 +6,13 @@ import VacancyDetailBody from '@/components/join_us/job_detail_body';
 import { dummyVacancyList } from '@/interfaces/vacancy';
 
 interface IVacancyDetailPageProps {
-  jobId: string;
+  vacancyId: string;
 }
 
-const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ jobId }) => {
+const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ vacancyId }) => {
   // Info: (20250407 - Julian) 取得 Data
-  const jobIdNumber = parseInt(jobId, 10);
-  const jobData = dummyVacancyList.find((job) => job.id === jobIdNumber);
+  const vacancyIdNumber = parseInt(vacancyId, 10);
+  const jobData = dummyVacancyList.find((job) => job.id === vacancyIdNumber);
 
   // Info: (20250407 - Julian) 如果沒有資料，顯示錯誤訊息
   if (!jobData) {
@@ -30,7 +30,7 @@ const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ jobId }) => {
 
   // Info: (20250507 - Julian) 取得網址
   const domain = process.env.WEB_URL;
-  const jobUrl = `${domain}/join_us/${jobId}`;
+  const jobUrl = `${domain}/join_us/${vacancyId}`;
 
   // Info: (20250507 - Julian) 標題
   const pageTitle = `${jobData.title} - iSunFA`;
@@ -54,7 +54,7 @@ const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ jobId }) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async ({ params, locale }) => {
-  if (!params || !params.jobId || typeof params.jobId !== 'string') {
+  if (!params || !params.vacancyId || typeof params.vacancyId !== 'string') {
     return {
       notFound: true,
     };
@@ -62,7 +62,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
 
   return {
     props: {
-      jobId: params.jobId,
+      vacancyId: params.vacancyId,
       ...(await serverSideTranslations(locale as string, ['landing_page_v2', 'hiring', 'common'])),
     },
   };
