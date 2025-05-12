@@ -18,7 +18,7 @@ import {
 } from '@/lib/utils/repo/email_login.repo';
 import loggerBack from '@/lib/utils/logger_back';
 import { emailVerifier } from '@/lib/utils/verifier/email.verifier';
-import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
+import { EMAIL_LOGIN_ACTION, EMAIL_LOGIN_REGISTER_COOLDOWN_IN_M } from '@/constants/email_login';
 import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
 import { handleSignInSession } from '@/lib/utils/signIn';
@@ -57,17 +57,17 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   }
   // Info: (20250429 - Luphia) 寄送一次性登入密碼
   const title = 'iSunFA 一次性登入密碼';
-  const expiredAt = new Date(emailLogin.expiredAt * 1000).toLocaleString('zh-TW', {
-    timeZone: 'Asia/Taipei',
-  });
-  const loginLink = `${process.env.NEXT_PUBLIC_DOMAIN}/api/v2/email/${email}/one_time_login?hash=${emailLogin.hash}`;
-  const data: EmailTemplateData[EmailTemplateName.ONE_TIME_PASSWORD] = {
+
+  // Info: (20250512 - Julian) 計算剩餘分鐘數
+  const remainingMins = EMAIL_LOGIN_REGISTER_COOLDOWN_IN_M.toString();
+  // const loginLink = `${process.env.NEXT_PUBLIC_DOMAIN}/api/v2/email/${email}/one_time_login?hash=${emailLogin.hash}`;
+  const data: EmailTemplateData[EmailTemplateName.VERIFICATION] = {
     receiverName: email as string,
-    loginCode: emailLogin.code,
-    loginLink,
-    expiredAt,
+    eventType: '註冊', // ToDo: (20250512 - Julian) 登入/註冊
+    verificationCode: emailLogin.code,
+    remainingMins,
   };
-  const emailResult = sendEmail(email as string, title, EmailTemplateName.ONE_TIME_PASSWORD, data);
+  const emailResult = sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
   if (!emailResult) {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
