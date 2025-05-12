@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
@@ -101,8 +102,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         taxRate: certificate.taxRate,
         taxAmount: certificate.taxAmount,
         totalAmount: certificate.totalAmount,
-        salesName: certificate.buyerName,
-        salesIdNumber: certificate.buyerIdNumber,
+        buyerName: certificate.buyerName,
+        buyerIdNumber: certificate.buyerIdNumber,
         type: certificate.type ?? CertificateType.INPUT_21,
         // Info: (20250422 - Anna)「扣抵類型」
         deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
@@ -379,6 +380,14 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
     });
   }, [formState]);
 
+  // Info: (20250512 - Anna) Debug
+    useEffect(() => {
+      if (isOpen && certificate) {
+        // eslint-disable-next-line no-console
+        console.log('Modal initialized with certificate:', certificate);
+      }
+    }, [isOpen, certificate]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -403,13 +412,10 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-
-          {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
-          {formState.type === CertificateType.INPUT_25 && certificate.isGenerated && (
+          {certificate.isGenerated && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
-                certificateType={formState.type}
                 issuedDate={dayjs
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
@@ -421,9 +427,13 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
               />
             </div>
           )}
-          {eInvoiceImageUrl && (
+          {(certificate.file?.url || eInvoiceImageUrl) && (
             <ImageZoom
-              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              imageUrl={
+                certificate.isGenerated && eInvoiceImageUrl
+                  ? eInvoiceImageUrl
+                  : certificate.file.url
+              }
               className="max-h-640px min-h-510px w-440px"
               controlPosition="bottom-right"
             />
