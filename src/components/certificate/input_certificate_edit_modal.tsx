@@ -383,6 +383,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   // Info: (20250512 - Anna) Debug
     useEffect(() => {
       if (isOpen && certificate) {
+        // Deprecated: (20250512 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Modal initialized with certificate:', certificate);
       }
