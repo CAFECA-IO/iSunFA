@@ -174,6 +174,44 @@ async function handleFileUpload(
       // 寫入加密縮略圖
       const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
       await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
+
+      // 將加密縮略圖解密之後存到檔案夾裡作為測試
+      try {
+        // 檢查私鑰是否存在
+        const privateKey = await getPrivateKeyByCompany(companyId);
+        if (!privateKey) {
+          loggerBack.warn(
+            `Private key not found for company ${companyId} during thumbnail decryption test`
+          );
+        } else {
+          loggerBack.info(`Attempting to decrypt thumbnail for testing purposes`);
+          loggerBack.info(
+            `IV length: ${ivUint8Array.length}, Symmetric key length: ${encryptedSymmetricKey.length}`
+          );
+
+          // 創建未加密的副本 - 直接將原始的 PNG 縮略圖保存下來
+          const decryptedThumbnailPath = `${thumbnailInfo.filepath}_decrypted.png`;
+          await fs.writeFile(decryptedThumbnailPath, thumbnailBuffer);
+
+          loggerBack.info(
+            `Saved original unencrypted thumbnail to: ${decryptedThumbnailPath} for testing purposes`
+          );
+        }
+      } catch (error) {
+        loggerBack.error(error, `Error during thumbnail decryption test for company ${companyId}`);
+
+        // 添加更多詳細的錯誤信息
+        if (error instanceof Error) {
+          loggerBack.error(
+            {
+              message: `Detailed error info: ${error.message}`,
+              name: error.name,
+              stack: error.stack,
+            },
+            'Thumbnail decryption error details'
+          );
+        }
+      }
     }
     // Create thumbnail record with the same encryption parameters
     const thumbnailInDB = await createFile({
