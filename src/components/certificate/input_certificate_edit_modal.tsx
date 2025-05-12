@@ -325,6 +325,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
 
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedCertificateRC2Ref.current);
+      // Deprecated: (20250512 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('isSame:', isSame, formStateRef.current, savedCertificateRC2Ref.current);
       const isValid = validateForm();
