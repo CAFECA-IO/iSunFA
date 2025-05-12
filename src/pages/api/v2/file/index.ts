@@ -184,11 +184,6 @@ async function handleFileUpload(
           `Encrypting thumbnail with NEW IV length: ${newIv.length}, values: ${[...newIv].slice(0, 5).join(',')}... (NOT reusing original IV)`
         );
 
-        // 將縮略圖單獨保存一份用於調試
-        const debugPath = `${thumbnailInfo.filepath.replace('.png', '')}_debug_before_encrypt.png`;
-        await fs.writeFile(debugPath, thumbnailBuffer);
-        loggerBack.info(`Saved pre-encryption debug copy to: ${debugPath}`);
-
         // 執行加密 - 使用全新的 IV
         const { encryptedContent, encryptedSymmetricKey: thumbnailEncryptedKey } =
           await encryptFile(
@@ -209,77 +204,6 @@ async function handleFileUpload(
         // 寫入加密縮略圖
         const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
         await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
-
-        // 嘗試獲取私鑰以測試解密（僅用於調試）
-        try {
-          const privateKey = await getPrivateKeyByCompany(companyId);
-          if (privateKey) {
-            loggerBack.info('Testing thumbnail decryption immediately after encryption');
-            try {
-              // 測試解密 - 使用創建的 IV 和對稱密鑰
-              const decryptedTest = await decryptFile(
-                encryptedContent,
-                thumbnailEncryptedKey,
-                privateKey,
-                newIv
-              );
-
-              if (decryptedTest) {
-                const testPath = `${thumbnailInfo.filepath.replace('.png', '')}_decrypt_test.png`;
-                await fs.writeFile(testPath, Buffer.from(decryptedTest));
-                loggerBack.info(`Decryption test successful! Result saved to: ${testPath}`);
-              }
-            } catch (testError) {
-              // 捕獲並記錄特定的 Cipher job failed 錯誤
-              if (testError instanceof Error) {
-                loggerBack.error(
-                  {
-                    error: testError.message,
-                    name: testError.name,
-                    stack: testError.stack,
-                  },
-                  'Immediate decryption test failed with detailed info'
-                );
-
-                // 如果發現 Cipher job failed 錯誤
-                if (
-                  testError.message.includes('Cipher job failed') ||
-                  testError.message.includes('operation-specific reason')
-                ) {
-                  loggerBack.error(
-                    'Detected WebCrypto Cipher job failure - this often occurs when IV/key parameters mismatch'
-                  );
-
-                  // 嘗試使用完全隨機的數據重新加密和解密
-                  loggerBack.info('Attempting alternative encryption with fresh parameters');
-
-                  // 重新生成全新的 IV
-                  const altIv = crypto.getRandomValues(new Uint8Array(iv.length));
-                  // 使用更小的測試數據
-                  const testData = new TextEncoder().encode('Test encryption data')
-                    .buffer as ArrayBuffer;
-
-                  try {
-                    const { encryptedContent: altEncrypted, encryptedSymmetricKey: altKey } =
-                      await encryptFile(testData, publicKey, altIv);
-
-                    const altDecrypted = await decryptFile(altEncrypted, altKey, privateKey, altIv);
-
-                    loggerBack.info(
-                      `Alternative test successful! Original: ${testData.byteLength} bytes, Decrypted: ${altDecrypted.byteLength} bytes`
-                    );
-                  } catch (altError) {
-                    loggerBack.error(altError, 'Alternative encryption/decryption also failed');
-                  }
-                }
-              } else {
-                loggerBack.error(testError, 'Immediate decryption test failed (non-Error object)');
-              }
-            }
-          }
-        } catch (testSetupError) {
-          loggerBack.error(testSetupError, 'Could not set up decryption test');
-        }
 
         // 記錄加密細節以便於調試
         loggerBack.info(
