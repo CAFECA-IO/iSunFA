@@ -41,7 +41,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
 
   // Info: (20250311 - Julian) 下載發票
   const handleDownload = async () => {
-    const imageUrl = certificate.file.url;
+    const imageUrl = certificate.file.thumbnail?.url || certificate.file.url;
     try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -103,12 +103,12 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
         </div>
         <div className="hide-scrollbar flex justify-center overflow-hidden px-4">
           <ImageZoom
-            imageUrl={certificate.file.url}
+            imageUrl={certificate.file.thumbnail?.url || certificate.file.url}
             className="max-h-700px min-h-500px min-w-600px max-w-1200px"
           />
           <Image
             ref={printRef}
-            src={certificate.file.url}
+            src={certificate.file.thumbnail?.url || certificate.file.url}
             alt="certificate"
             fill
             objectFit="contain"
@@ -116,7 +116,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
           />
           {/* <Magnifier
             className="max-h-800px min-h-500px min-w-700px max-w-1200px object-contain"
-            imageUrl={certificate.file.url}
+            imageUrl={certificate.file.thumbnail?.url || certificate.file.url.file.url}
             zoomLevelX={2}
             useNaturalSize
           /> */}

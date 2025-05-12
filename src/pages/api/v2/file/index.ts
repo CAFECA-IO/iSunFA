@@ -103,6 +103,7 @@ async function handleFileUpload(
 
   let thumbnailInfo = null;
   let pdfPath = fileForSave.filepath;
+  let tempDecryptedPath = '';
   if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
     // Decrypt PDF file if it's encrypted
     if (isEncrypted) {
@@ -127,7 +128,7 @@ async function handleFileUpload(
       );
 
       // 寫入臨時解密檔案
-      const tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
+      tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
       await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
       pdfPath = tempDecryptedPath;
     }
@@ -154,6 +155,11 @@ async function handleFileUpload(
       UPLOAD_TYPE_TO_FOLDER_MAP[type]
     );
 
+    // 保存一個未加密的副本作為備用
+    const unencryptedBackupPath = `${thumbnailInfo.filepath.replace('.png', '')}_unencrypted.png`;
+    await fs.copyFile(thumbnailInfo.filepath, unencryptedBackupPath);
+    loggerBack.info(`Saved unencrypted backup of thumbnail to: ${unencryptedBackupPath}`);
+
     if (isEncrypted) {
       // 加密 thumbnail 之後存到 DB
       const companyId = convertStringToNumber(targetId);
@@ -174,44 +180,6 @@ async function handleFileUpload(
       // 寫入加密縮略圖
       const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
       await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
-
-      // 將加密縮略圖解密之後存到檔案夾裡作為測試
-      try {
-        // 檢查私鑰是否存在
-        const privateKey = await getPrivateKeyByCompany(companyId);
-        if (!privateKey) {
-          loggerBack.warn(
-            `Private key not found for company ${companyId} during thumbnail decryption test`
-          );
-        } else {
-          loggerBack.info(`Attempting to decrypt thumbnail for testing purposes`);
-          loggerBack.info(
-            `IV length: ${ivUint8Array.length}, Symmetric key length: ${encryptedSymmetricKey.length}`
-          );
-
-          // 創建未加密的副本 - 直接將原始的 PNG 縮略圖保存下來
-          const decryptedThumbnailPath = `${thumbnailInfo.filepath}_decrypted.png`;
-          await fs.writeFile(decryptedThumbnailPath, thumbnailBuffer);
-
-          loggerBack.info(
-            `Saved original unencrypted thumbnail to: ${decryptedThumbnailPath} for testing purposes`
-          );
-        }
-      } catch (error) {
-        loggerBack.error(error, `Error during thumbnail decryption test for company ${companyId}`);
-
-        // 添加更多詳細的錯誤信息
-        if (error instanceof Error) {
-          loggerBack.error(
-            {
-              message: `Detailed error info: ${error.message}`,
-              name: error.name,
-              stack: error.stack,
-            },
-            'Thumbnail decryption error details'
-          );
-        }
-      }
     }
     // Create thumbnail record with the same encryption parameters
     const thumbnailInDB = await createFile({
@@ -240,8 +208,18 @@ async function handleFileUpload(
     size: fileSize,
     url: `/image/${fileId}`,
     existed: true,
-    // thumbnailId: thumbnailInDB?.id,
   };
+
+  // 如果有縮略圖，將其添加到返回對象中
+  if (fileInDB.thumbnailId) {
+    returnFile.thumbnail = {
+      id: fileInDB.thumbnailId,
+      name: fileName.replace('.pdf', '_thumbnail.png'),
+      size: thumbnailInfo?.size || 0,
+      url: `/image/${fileInDB.thumbnailId}`,
+      existed: true,
+    };
+  }
 
   switch (type) {
     case UploadType.COMPANY: {

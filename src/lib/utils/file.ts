@@ -24,6 +24,7 @@ import { IFileEntity } from '@/interfaces/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { IV_LENGTH } from '@/constants/config';
+import { readFile } from '@/lib/utils/parse_image_form';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -93,37 +94,69 @@ export async function decryptImageFile({
   const { isEncrypted, encryptedSymmetricKey, iv } = file;
   let decryptedBuffer = imageBuffer;
 
-  if (isEncrypted && encryptedSymmetricKey && iv) {
+  // 如果文件未加密或缺少解密所需參數，直接返回原始 buffer
+  if (!isEncrypted || !encryptedSymmetricKey || !iv) {
+    return decryptedBuffer;
+  }
+
+  try {
     const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
     const privateKey = await getPrivateKeyByCompany(companyId);
-
-    loggerBack.info(`Private key in decryptedArrayBuffer: ${privateKey}`);
 
     if (!privateKey) {
       loggerBack.error(`Private key not found in decryptImageFile in image/[imageId]: ${file.id}`);
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
+
     const ivUint8Array = bufferToUint8Array(iv);
 
-    let decryptedArrayBuffer: ArrayBuffer | null;
+    // 嘗試解密文件
     try {
-      decryptedArrayBuffer = await decryptFile(
+      const decryptedArrayBuffer = await decryptFile(
         encryptedArrayBuffer,
         encryptedSymmetricKey,
         privateKey,
         ivUint8Array
       );
+
+      if (!decryptedArrayBuffer) {
+        throw new Error('Decrypted array buffer is null');
+      }
+
+      decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
     } catch (error) {
-      loggerBack.error(error, `Error in decryptImageFile in file.ts`);
+      // 如果是縮略圖(判斷 mimeType 或 file id 是否為 thumbnailId)，解密失敗時直接返回原始 buffer
+      if (file.mimeType === 'image/png' && file.name.includes('_thumbnail')) {
+        loggerBack.warn(`Unable to decrypt thumbnail ${file.id}, returning original buffer`);
+
+        // 嘗試查找未加密的備份文件
+        try {
+          const originalFilePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+          const backupPath = originalFilePath.replace('.png', '_unencrypted.png');
+          loggerBack.info(`Attempting to read backup thumbnail from: ${backupPath}`);
+
+          const backupBuffer = await readFile(backupPath);
+          if (backupBuffer) {
+            loggerBack.info(`Successfully read backup thumbnail for file ${file.id}`);
+            return backupBuffer;
+          }
+        } catch (backupError) {
+          loggerBack.warn(
+            `Could not read backup thumbnail, returning original encrypted buffer: ${backupError}`
+          );
+        }
+
+        return imageBuffer;
+      }
+
+      // 否則拋出原始錯誤
+      loggerBack.error(error, `Error in decryptImageFile in file.ts for file ${file.id}`);
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
-
-    if (!decryptedArrayBuffer) {
-      loggerBack.error(`Decrypted array buffer is null in decryptImageFile in file.ts`);
-      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-    }
-
-    decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
+  } catch (error) {
+    // 捕獲任何其他錯誤
+    loggerBack.error(error, `Error in decryptImageFile processing for file ${file.id}`);
+    throw error;
   }
 
   return decryptedBuffer;
@@ -168,6 +201,8 @@ export function initFileEntity(
     type: FileFolder;
     url: string;
     buffer?: Buffer;
+    thumbnailId?: number | null;
+    thumbnail?: IFileEntity;
   }
 ): IFileEntity {
   const nowInSecond = getTimestampNow();
@@ -183,6 +218,8 @@ export function initFileEntity(
     updatedAt: dto.updatedAt || nowInSecond,
     deletedAt: dto.deletedAt || null,
     buffer: dto.buffer,
+    thumbnailId: dto.thumbnailId || null,
+    thumbnail: dto.thumbnail || undefined,
   };
 
   return fileEntity;

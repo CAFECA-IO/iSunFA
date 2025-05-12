@@ -62,6 +62,8 @@ export const fileEntityValidator = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
+  thumbnailId: z.number().nullable().optional(),
+  thumbnail: z.any(),
 });
 
 /**
@@ -87,6 +89,8 @@ export const IFileBetaValidator = z.object({
   size: z.number().describe('Bytes of file'),
   existed: z.boolean(),
   url: z.string(),
+  thumbnailId: z.number().nullable().optional(),
+  thumbnail: z.any(),
 });
 
 export const filePostSchema = {

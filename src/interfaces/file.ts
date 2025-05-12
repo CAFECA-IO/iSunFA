@@ -95,6 +95,19 @@ export interface IFileEntity {
    * @description file buffer can be place here if get file from local storage or other storage
    */
   buffer?: Buffer;
+
+  /**
+   * Info: (20250508 - Shirley)
+   * @description thumbnail file id (for PDF files)
+   */
+  thumbnailId?: number | null;
+
+  /**
+   * Info: (20250508 - Shirley)
+   * @description thumbnail file entity (for PDF files)
+   */
+  thumbnail?: IFileEntity;
+
   // ToDo: (20241023 - Murky) certificate
   // ToDo: (20241023 - Murky) companyImageFile
   // ToDo: (20241023 - Murky) ocrImageFile
