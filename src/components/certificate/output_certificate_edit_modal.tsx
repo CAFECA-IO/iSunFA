@@ -419,6 +419,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
+                certificateType={CertificateType.OUTPUT_35}
                 issuedDate={dayjs
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import Image from 'next/image';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'next-i18next';
@@ -416,6 +415,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
+                certificateType={CertificateType.INPUT_25}
                 issuedDate={dayjs
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
