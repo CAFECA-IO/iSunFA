@@ -9,7 +9,7 @@ interface EInvoicePreviewProps {
   certificateType?: CertificateType;
   issuedDate: string;
   invoiceNo: string;
-  buyerTaxId?: string;
+  TaxId?: string;
   netAmount: number;
   taxAmount: number;
   totalAmount: number;
@@ -22,7 +22,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
       certificateType,
       issuedDate,
       invoiceNo,
-      buyerTaxId,
+      TaxId,
       netAmount,
       taxAmount,
       totalAmount,
@@ -37,10 +37,10 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
     // Info: (20250430 - Anna) 格式35
     if (certificateType === CertificateType.OUTPUT_35) {
       seller = taxId;
-      buyer = buyerTaxId ?? '';
+      buyer = TaxId ?? '';
       // Info: (20250430 - Anna) 格式25
     } else if (certificateType === CertificateType.INPUT_25) {
-      seller = buyerTaxId ?? '';
+      seller = TaxId ?? '';
       buyer = taxId;
     }
 

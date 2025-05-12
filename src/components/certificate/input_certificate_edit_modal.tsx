@@ -101,8 +101,8 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
         taxRate: certificate.taxRate,
         taxAmount: certificate.taxAmount,
         totalAmount: certificate.totalAmount,
-        buyerName: certificate.buyerName,
-        buyerIdNumber: certificate.buyerIdNumber,
+        salesName: certificate.buyerName,
+        salesIdNumber: certificate.buyerIdNumber,
         type: certificate.type ?? CertificateType.INPUT_21,
         // Info: (20250422 - Anna)「扣抵類型」
         deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
@@ -396,7 +396,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <div className="text-xl font-bold leading-8 text-neutral-600 flex justify-center">
+        <div className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
           {t(`certificate:EDIT.INPUT_INVOICE`)}
         </div>
 
@@ -405,8 +405,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
           {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
-          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
-          {formState.type === CertificateType.INPUT_25 && (
+          {formState.type === CertificateType.INPUT_25 && certificate.isGenerated && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
@@ -415,7 +414,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
                 invoiceNo={formState.no ?? certificate.no ?? ''}
-                buyerTaxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
+                TaxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
                 netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
                 taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
                 totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
