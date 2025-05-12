@@ -62,7 +62,7 @@
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px">{{userName}}</span>
+          <span style="font-size: 14px; line-height: 20px">{{receiverName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText">您的 Email {{eventType}}驗證碼如下: </mj-text>

@@ -54,7 +54,7 @@
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{receiverName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText"

@@ -54,18 +54,18 @@
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{receiverName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText"
           >感謝您使用陽光智能會計，您已成功訂閱〔{{planName}}〕方案，<br />
           本次訂閱期間為：<span style="font-size: 14px; line-height: 20px; color: #cc8401"
-            >{{startTime}} 至 {{endTime}}</span
+            >{{startDate}} 至 {{endDate}}</span
           >
         </mj-text>
         <mj-text mj-class="mainText"
           >費用為<span style="font-size: 14px; line-height: 20px; color: #cc8401">
-            新臺幣 {{price}} 元 </span
+            新臺幣 {{amount}} 元 </span
           >整</mj-text
         >
         <mj-text mj-class="mainText">
