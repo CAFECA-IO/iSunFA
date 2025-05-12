@@ -11,9 +11,16 @@ import { pdf } from 'pdf-to-img';
  * previous implementation for backward compatibility.
  *
  * @param pdfPath Path to the PDF file
+ * @param thumbnailNameOptions Optional parameters for customizing the thumbnail filename
  * @returns Object containing path to the generated thumbnail, its size, and success status
  */
-export async function generatePDFThumbnail(pdfPath: string): Promise<{
+export async function generatePDFThumbnail(
+  pdfPath: string,
+  thumbnailNameOptions?: {
+    removeString?: string;
+    suffix?: string;
+  }
+): Promise<{
   filepath: string;
   size: number;
   success: boolean;
@@ -44,8 +51,19 @@ export async function generatePDFThumbnail(pdfPath: string): Promise<{
     }
     loggerBack.info(`First page extracted, image size: ${firstPageImage.length} bytes`);
 
-    // Create the thumbnail path with test suffix
-    const thumbnailPath = pdfPath.replace('.pdf', '_thumbnail.png');
+    // Create the thumbnail path with customization if provided
+    let baseFilename = pdfPath.replace('.pdf', '');
+
+    // Apply string removal if specified
+    if (thumbnailNameOptions?.removeString) {
+      baseFilename = baseFilename.replace(thumbnailNameOptions.removeString, '');
+      loggerBack.info(`Removed string "${thumbnailNameOptions.removeString}" from filename`);
+    }
+
+    // Apply custom suffix or default to _thumbnail
+    const suffix = thumbnailNameOptions?.suffix || '_thumbnail';
+    const thumbnailPath = `${baseFilename}${suffix}.png`;
+
     loggerBack.info(`Writing thumbnail to: ${thumbnailPath}`);
 
     // Write the image buffer to the thumbnail file

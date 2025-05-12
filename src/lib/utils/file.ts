@@ -24,7 +24,6 @@ import { IFileEntity } from '@/interfaces/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { IV_LENGTH } from '@/constants/config';
-import { readFile } from '@/lib/utils/parse_image_form';
 
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
@@ -112,6 +111,62 @@ export async function decryptImageFile({
 
     // 嘗試解密文件
     try {
+      // 特別處理縮略圖
+      if (file.mimeType === 'image/png' && file.name.includes('_thumbnail')) {
+        loggerBack.info(`Processing thumbnail decryption for file ${file.id}`);
+
+        try {
+          // 記錄解密參數以便調試
+          loggerBack.info(
+            `Thumbnail decryption params - IV length: ${ivUint8Array.length}, Symmetric key length: ${encryptedSymmetricKey.length}`
+          );
+
+          // 嘗試正常解密
+          const thumbnailDecryptedArrayBuffer = await decryptFile(
+            encryptedArrayBuffer,
+            encryptedSymmetricKey,
+            privateKey,
+            ivUint8Array
+          );
+
+          if (!thumbnailDecryptedArrayBuffer) {
+            throw new Error('Decrypted thumbnail array buffer is null');
+          }
+
+          decryptedBuffer = arrayBufferToBuffer(thumbnailDecryptedArrayBuffer);
+          loggerBack.info(`Successfully decrypted thumbnail ${file.id}`);
+
+          // 可選：將解密後的縮略圖保存到文件以便調試
+          // const originalFilePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+          // const decryptedPath = `${originalFilePath}_decrypted_test.png`;
+          // await fs.writeFile(decryptedPath, decryptedBuffer);
+          // loggerBack.info(`Saved decrypted thumbnail to: ${decryptedPath} for testing`);
+
+          return decryptedBuffer;
+        } catch (thumbnailError) {
+          // 添加更多詳細的錯誤信息
+          loggerBack.error(
+            thumbnailError,
+            `Failed to decrypt thumbnail ${file.id}, returning original buffer`
+          );
+
+          if (thumbnailError instanceof Error) {
+            loggerBack.error(
+              {
+                message: `Detailed error info: ${thumbnailError.message}`,
+                name: thumbnailError.name,
+                stack: thumbnailError.stack,
+              },
+              'Thumbnail decryption error details'
+            );
+          }
+
+          // 縮略圖解密失敗，返回原始緩衝區
+          return imageBuffer;
+        }
+      }
+
+      // 非縮略圖的正常解密流程
       const decryptedArrayBuffer = await decryptFile(
         encryptedArrayBuffer,
         encryptedSymmetricKey,
@@ -125,33 +180,14 @@ export async function decryptImageFile({
 
       decryptedBuffer = arrayBufferToBuffer(decryptedArrayBuffer);
     } catch (error) {
-      // 如果是縮略圖(判斷 mimeType 或 file id 是否為 thumbnailId)，解密失敗時直接返回原始 buffer
-      if (file.mimeType === 'image/png' && file.name.includes('_thumbnail')) {
-        loggerBack.warn(`Unable to decrypt thumbnail ${file.id}, returning original buffer`);
-
-        // 嘗試查找未加密的備份文件
-        try {
-          const originalFilePath = parseFilePathWithBaseUrlPlaceholder(file.url);
-          const backupPath = originalFilePath.replace('.png', '_unencrypted.png');
-          loggerBack.info(`Attempting to read backup thumbnail from: ${backupPath}`);
-
-          const backupBuffer = await readFile(backupPath);
-          if (backupBuffer) {
-            loggerBack.info(`Successfully read backup thumbnail for file ${file.id}`);
-            return backupBuffer;
-          }
-        } catch (backupError) {
-          loggerBack.warn(
-            `Could not read backup thumbnail, returning original encrypted buffer: ${backupError}`
-          );
-        }
-
-        return imageBuffer;
+      // 處理非縮略圖解密錯誤
+      if (!(file.mimeType === 'image/png' && file.name.includes('_thumbnail'))) {
+        loggerBack.error(error, `Error in decryptImageFile in file.ts for file ${file.id}`);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
 
-      // 否則拋出原始錯誤
-      loggerBack.error(error, `Error in decryptImageFile in file.ts for file ${file.id}`);
-      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      // 縮略圖錯誤已在上面處理過，這裡不需要重複處理
+      throw error;
     }
   } catch (error) {
     // 捕獲任何其他錯誤
