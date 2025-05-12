@@ -480,6 +480,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   }, [amountSort, voucherSort, dateSort]);
 
   useEffect(() => {
+    if (!accountBookId) return () => {};
     const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
@@ -491,7 +492,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       }
       pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
-  }, []);
+  }, [accountBookId]);
 
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">

@@ -18,7 +18,7 @@ import {
 } from '@/lib/utils/repo/email_login.repo';
 import loggerBack from '@/lib/utils/logger_back';
 import { emailVerifier } from '@/lib/utils/verifier/email.verifier';
-import { EMAIL_LOGIN_ACTION } from '@/constants/email_login';
+import { EMAIL_LOGIN_ACTION, EMAIL_LOGIN_REGISTER_COOLDOWN_IN_M } from '@/constants/email_login';
 import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
 import { handleSignInSession } from '@/lib/utils/signIn';
@@ -59,10 +59,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   const title = 'iSunFA 一次性登入密碼';
 
   // Info: (20250512 - Julian) 計算剩餘分鐘數
-  const now = new Date();
-  const expirationDate = new Date(emailLogin.expiredAt);
-  const remainingTime = expirationDate.getTime() - now.getTime();
-  const remainingMins = Math.floor(remainingTime / (1000 * 60)).toString();
+  const remainingMins = EMAIL_LOGIN_REGISTER_COOLDOWN_IN_M.toString();
   // const loginLink = `${process.env.NEXT_PUBLIC_DOMAIN}/api/v2/email/${email}/one_time_login?hash=${emailLogin.hash}`;
   const data: EmailTemplateData[EmailTemplateName.VERIFICATION] = {
     receiverName: email as string,

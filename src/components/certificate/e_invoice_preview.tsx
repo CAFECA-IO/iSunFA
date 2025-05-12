@@ -17,16 +17,7 @@ interface EInvoicePreviewProps {
 
 const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
   (
-    {
-      className,
-      certificateType,
-      issuedDate,
-      invoiceNo,
-      TaxId,
-      netAmount,
-      taxAmount,
-      totalAmount,
-    },
+    { className, certificateType, issuedDate, invoiceNo, TaxId, netAmount, taxAmount, totalAmount },
     ref
   ) => {
     const { t } = useTranslation(['certificate']);

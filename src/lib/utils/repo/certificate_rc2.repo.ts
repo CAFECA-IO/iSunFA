@@ -14,6 +14,13 @@ import { createOrderByList } from '@/lib/utils/sort';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
+import loggerBack from '@/lib/utils/logger_back';
+import { getPusherInstance } from '@/lib/utils/pusher';
+import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+
+export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
+  return `/api/v1/company/${accountBookId}/image/${fileId}`;
+}
 
 type CertificateRC2WithFullRelations = CertificateRC2 & {
   file: File;
@@ -66,7 +73,10 @@ function transformInput(
 ): z.infer<typeof CertificateRC2InputSchema> {
   const certificateRC2Input = CertificateRC2InputSchema.parse({
     ...cert,
-    file: cert.file,
+    file: {
+      ...cert.file,
+      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    },
     taxRate: cert.taxRate ?? null,
     deductionType: cert.deductionType ?? null,
     salesName: cert.salesName ?? '',
@@ -83,6 +93,7 @@ function transformInput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
+  loggerBack.info(`CertificateRC2Input.file: ${JSON.stringify(certificateRC2Input.file)}`);
   certificateRC2Input.incomplete = !isCertificateRC2Complete(certificateRC2Input);
   return certificateRC2Input;
 }
@@ -92,7 +103,10 @@ function transformOutput(
 ): z.infer<typeof CertificateRC2OutputSchema> {
   const certificateRC2Output = CertificateRC2OutputSchema.parse({
     ...cert,
-    file: cert.file,
+    file: {
+      ...cert.file,
+      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    },
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
@@ -108,6 +122,7 @@ function transformOutput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
+  loggerBack.info(`CertificateRC2Output.file: ${JSON.stringify(certificateRC2Output.file)}`);
   certificateRC2Output.incomplete = !isCertificateRC2Complete(certificateRC2Output);
   return certificateRC2Output;
 }
@@ -320,9 +335,20 @@ export async function createCertificateRC2(
     },
     include: { file: true, voucher: true, uploader: true },
   });
-  return body.direction === CertificateDirection.INPUT
-    ? transformInput(cert)
-    : transformOutput(cert);
+  const certificate =
+    body.direction === CertificateDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+
+  const pusher = getPusherInstance();
+
+  pusher.trigger(
+    `${PRIVATE_CHANNEL.CERTIFICATE}-${query.accountBookId}`,
+    CERTIFICATE_EVENT.CREATE,
+    {
+      message: JSON.stringify(certificate),
+    }
+  );
+
+  return certificate;
 }
 
 export async function updateCertificateRC2Input(
