@@ -41,7 +41,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
           <Image
-            src={data.file.url}
+            src={data.file.thumbnail?.url || data.file.url}
             alt={`Certificate ${data.name}`}
             height={136}
             width={93}
