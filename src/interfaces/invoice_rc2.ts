@@ -41,7 +41,7 @@ export interface IInvoiceRC2Base {
   description?: string;
   note?: JSON;
 
-  totalOfSummarizedCertificates?: number;
+  totalOfSummarizedInvoices?: number;
   carrierSerialNumber?: string;
   otherCertificateNo?: string;
 
