@@ -1,14 +1,14 @@
 import {
-  CertificateDirection,
-  CertificateType,
+  InvoiceDirection,
+  InvoiceType,
   TaxType,
   CurrencyCode,
   DeductionType,
   CERTIFICATE_USER_INTERACT_OPERATION,
-} from '@/constants/certificate';
+} from '@/constants/invoice_rc2';
 import { ICertificateUI } from '@/interfaces/certificate';
 
-export interface ICertificateRC2Base {
+export interface IInvoiceRC2Base {
   id: number;
   accountBookId: number;
   voucherId: number | null;
@@ -19,14 +19,14 @@ export interface ICertificateRC2Base {
     url: string;
   };
   uploaderId: number;
-  direction: CertificateDirection;
+  direction: InvoiceDirection;
   aiResultId: string;
   aiStatus: string;
   createdAt: number;
   updatedAt: number;
   deletedAt?: number | null;
 
-  type: CertificateType;
+  type: InvoiceType;
   issuedDate: number;
   no: string;
   currencyCode: CurrencyCode;
@@ -41,7 +41,7 @@ export interface ICertificateRC2Base {
   description?: string;
   note?: JSON;
 
-  totalOfSummarizedCertificates?: number;
+  totalOfSummarizedInvoices?: number;
   carrierSerialNumber?: string;
   otherCertificateNo?: string;
 
@@ -49,8 +49,8 @@ export interface ICertificateRC2Base {
   voucherNo: string | null;
 }
 
-export interface ICertificateRC2Input extends ICertificateRC2Base {
-  direction: CertificateDirection.INPUT;
+export interface IInvoiceRC2Input extends IInvoiceRC2Base {
+  direction: InvoiceDirection.INPUT;
   deductionType?: DeductionType;
   salesName?: string;
   salesIdNumber?: string;
@@ -60,13 +60,13 @@ export interface ICertificateRC2Input extends ICertificateRC2Base {
   isReturnOrAllowance?: never;
 }
 
-export interface ICertificateRC2InputUI extends ICertificateRC2Input {
+export interface IInvoiceRC2InputUI extends IInvoiceRC2Input {
   isSelected: boolean;
   actions: CERTIFICATE_USER_INTERACT_OPERATION[];
 }
 
-export interface ICertificateRC2Output extends ICertificateRC2Base {
-  direction: CertificateDirection.OUTPUT;
+export interface IInvoiceRC2Output extends IInvoiceRC2Base {
+  direction: InvoiceDirection.OUTPUT;
   buyerName?: string;
   buyerIdNumber?: string;
   isReturnOrAllowance?: boolean;
@@ -76,13 +76,13 @@ export interface ICertificateRC2Output extends ICertificateRC2Base {
   isSharedAmount?: never;
 }
 
-export interface ICertificateRC2OutputUI extends ICertificateRC2Output {
+export interface IInvoiceRC2OutputUI extends IInvoiceRC2Output {
   isSelected: boolean;
   actions: CERTIFICATE_USER_INTERACT_OPERATION[];
 }
 
 export const isClassicCertificate = (
-  certificate: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI
-): certificate is ICertificateUI => {
-  return 'invoice' in certificate && 'file' in certificate && 'name' in certificate;
+  data: ICertificateUI | IInvoiceRC2InputUI | IInvoiceRC2OutputUI
+): data is ICertificateUI => {
+  return 'invoice' in data && 'file' in data && 'name' in data;
 };

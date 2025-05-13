@@ -1,20 +1,20 @@
 import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
-import InputCertificateTable from '@/components/certificate/input_certificate_table';
+import InputInvoiceTable from '@/components/certificate/input_certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
-import { CertificateTab } from '@/constants/certificate';
+import { InvoiceTab } from '@/constants/invoice_rc2';
 import { CurrencyType } from '@/constants/currency';
-import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
+import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 
 interface InputCertificateProps {
-  activeTab: CertificateTab;
+  activeTab: InvoiceTab;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   totalCount: number;
   totalPages: number;
-  certificates: ICertificateRC2InputUI[]; // Info: (20240923 - Anna) 項目列表
+  certificates: IInvoiceRC2InputUI[]; // Info: (20240923 - Anna) 項目列表
   currencyAlias: CurrencyType;
   viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - Anna) 顯示模式
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態
@@ -69,7 +69,7 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
-        <InputCertificateTable
+        <InputInvoiceTable
           activeTab={activeTab}
           certificates={certificates}
           currencyAlias={currencyAlias}

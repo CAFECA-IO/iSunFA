@@ -1,8 +1,3 @@
-export enum CertificateSortBy {
-  CREATE_AT = 'createAt',
-  UPDATE_AT = 'updateAt',
-}
-
 /**
  * Info: (20241024 - Murky)
  * @description Operation that user can interact with certificate
@@ -23,17 +18,17 @@ export enum InvoiceTabs {
   WITH_VOUCHER = 'withVoucher',
 }
 
-export enum CertificateTab {
+export enum InvoiceTab {
   WITHOUT_VOUCHER = 'WITHOUT_VOUCHER',
   WITH_VOUCHER = 'WITH_VOUCHER',
 }
 
-export enum CertificateDirection {
+export enum InvoiceDirection {
   INPUT = 'INPUT',
   OUTPUT = 'OUTPUT',
 }
 
-export enum CertificateType {
+export enum InvoiceType {
   ALL = 'ALL',
   INPUT_20 = 'INPUT_20',
   INPUT_21 = 'INPUT_21',

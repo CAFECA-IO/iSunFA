@@ -274,7 +274,7 @@ model Company {
   vouchers                   Voucher[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
   transfers                  AccountBookTransfer[]
-  CertificateRC2             CertificateRC2[]
+  InvoiceRC2                 InvoiceRC2[]
 
   @@map("company")
 }
@@ -394,12 +394,12 @@ enum DeductionType {
   NON_DEDUCTIBLE_FIXED_ASSETS
 }
 
-enum CertificateDirection {
+enum InvoiceDirection {
   INPUT
   OUTPUT
 }
 
-enum CertificateType {
+enum InvoiceType {
   // Info: (20250429 - Tzuhan) Input 類型
   INPUT_20
   INPUT_21
@@ -432,57 +432,57 @@ enum TaxType {
   TAX_FREE
 }
 
-model CertificateRC2 {
-  id                            Int     @id @default(autoincrement())
-  accountBookId                 Int     @map("accountbook_id")
-  voucherId                     Int?     @map("voucher_id")
-  fileId                        Int     @map("file_id")
-  uploaderId                    Int     @map("uploader_id")
-  direction                     CertificateDirection @map("direction")
-  aiResultId                    String?  @default("0") @map("ai_result_id")
-  aiStatus                      String?  @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
-  createdAt                     Int     @map("created_at")
-  updatedAt                     Int     @map("updated_at")
-  deletedAt                     Int?    @map("deleted_at")
+model InvoiceRC2 {
+  id            Int              @id @default(autoincrement())
+  accountBookId Int              @map("accountbook_id")
+  voucherId     Int?             @map("voucher_id")
+  fileId        Int              @map("file_id")
+  uploaderId    Int              @map("uploader_id")
+  direction     InvoiceDirection @map("direction")
+  aiResultId    String?          @default("0") @map("ai_result_id")
+  aiStatus      String?          @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
+  createdAt     Int              @map("created_at")
+  updatedAt     Int              @map("updated_at")
+  deletedAt     Int?             @map("deleted_at")
 
   // Info: (20250429 - Tzuhan) Invoice 基本欄位
-  type                          CertificateType? @map("type")
-  issuedDate                    Int?    @map("issued_date")
-  no                            String? @map("no")
-  currencyCode                  CurrencyCode @map("currency_code")
-  taxType                       TaxType? @map("tax_type")
-  taxRate                       Int?   @map("tax_rate")
-  netAmount                     Int?    @map("net_amount")
-  taxAmount                     Int?    @map("tax_amount")
-  totalAmount                   Int?    @map("total_amount")
-  
+  type         InvoiceType? @map("type")
+  issuedDate   Int?         @map("issued_date")
+  no           String?      @map("no")
+  currencyCode CurrencyCode @map("currency_code")
+  taxType      TaxType?     @map("tax_type")
+  taxRate      Int?         @map("tax_rate")
+  netAmount    Int?         @map("net_amount")
+  taxAmount    Int?         @map("tax_amount")
+  totalAmount  Int?         @map("total_amount")
+
   // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
-  isGenerated                   Boolean @default(false) @map("is_generated")
-  incomplete                    Boolean @default(true) @map("incomplete") // Info: (20250509 - Tzuhan) 是否為不完整發票
-  description                   String? @map("description") // Info: (20250509 - Tzuhan) 發票描述
-  note                          Json? @map("note") // Info: (20250509 - Tzuhan) 可以擴充
+  isGenerated Boolean @default(false) @map("is_generated")
+  incomplete  Boolean @default(true) @map("incomplete") // Info: (20250509 - Tzuhan) 是否為不完整發票
+  description String? @map("description") // Info: (20250509 - Tzuhan) 發票描述
+  note        Json?   @map("note") // Info: (20250509 - Tzuhan) 可以擴充
 
   // Info: (20250429 - Tzuhan) Input 發票專屬欄位
-  deductionType                 DeductionType? @map("deduction_type")
-  salesName                     String? @map("sales_name")
-  salesIdNumber                 String? @map("sales_id_number")
-  isSharedAmount                Boolean? @default(false) @map("is_shared_amount") 
+  deductionType  DeductionType? @map("deduction_type")
+  salesName      String?        @map("sales_name")
+  salesIdNumber  String?        @map("sales_id_number")
+  isSharedAmount Boolean?       @default(false) @map("is_shared_amount")
 
   // Info: (20250429 - Tzuhan) Output 發票專屬欄位
-  buyerName                     String? @map("buyer_name")
-  buyerIdNumber                 String? @map("buyer_id_number")
-  isReturnOrAllowance           Boolean? @default(false) @map("return_or_allowance")
+  buyerName           String?  @map("buyer_name")
+  buyerIdNumber       String?  @map("buyer_id_number")
+  isReturnOrAllowance Boolean? @default(false) @map("return_or_allowance")
 
   // Info: (20250429 - Tzuhan) 特殊情境（匯總發票/載具）
-  totalOfSummarizedCertificates Int?   @map("total_of_summarized_invoices")
-  carrierSerialNumber           String? @map("carrier_serial_number")
-  otherCertificateNo            String? @map("other_certificate_no")
+  totalOfSummarizedInvoices Int?    @map("total_of_summarized_invoices")
+  carrierSerialNumber       String? @map("carrier_serial_number")
+  otherCertificateNo        String? @map("other_certificate_no")
 
   // Info: (20250429 - Tzuhan) 關聯
-  accountbook Company          @relation(fields: [accountBookId], references: [id])
-  file        File             @relation(fields: [fileId], references: [id])
-  uploader    User             @relation(fields: [uploaderId], references: [id])
-  voucher     Voucher?         @relation(fields: [voucherId], references: [id])
+  accountbook Company  @relation(fields: [accountBookId], references: [id])
+  file        File     @relation(fields: [fileId], references: [id])
+  uploader    User     @relation(fields: [uploaderId], references: [id])
+  voucher     Voucher? @relation(fields: [voucherId], references: [id])
 
   @@map("certificate_rc2")
 }
@@ -570,6 +570,10 @@ model File {
   createdAt             Int     @map("created_at")
   updatedAt             Int     @map("updated_at")
   deletedAt             Int?    @map("deleted_at")
+  thumbnailId           Int?    @map("thumbnail_id")
+
+  thumbnail     File?  @relation("FileToThumbnail", fields: [thumbnailId], references: [id])
+  originalFiles File[] @relation("FileToThumbnail")
 
   certificate                 Certificate?
   news                        News[]
@@ -583,7 +587,7 @@ model File {
   taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
   userImageFile               User?        @relation("user_image_file")
   teamFile                    Team?        @relation("team_image_file")
-  CertificateRC2              CertificateRC2[]
+  InvoiceRC2                  InvoiceRC2[]
 
   @@map("file")
 }
@@ -1064,7 +1068,7 @@ model User {
   accountBookTransfer AccountBookTransfer[]
   accountBook         Company[]
   teamOrder           TeamOrder[]
-  CertificateRC2      CertificateRC2[]
+  InvoiceRC2          InvoiceRC2[]
 
   @@map("user")
 }
@@ -1254,7 +1258,7 @@ model Voucher {
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
-  CertificateRC2         CertificateRC2[]
+  InvoiceRC2             InvoiceRC2[]
 
   originalVouchers AssociateVoucher[] @relation("original_voucher")
   resultVouchers   AssociateVoucher[] @relation("result_voucher")
@@ -1340,14 +1344,14 @@ model WorkRate {
 }
 
 model TeamPlan {
-  id               Int                @id @default(autoincrement())
-  type             TeamPlanType       @unique
-  planName         String             @map("plan_name")
+  id               Int               @id @default(autoincrement())
+  type             TeamPlanType      @unique
+  planName         String            @map("plan_name")
   price            Int
-  extraMemberPrice Int?               @map("extra_member_price")
+  extraMemberPrice Int?              @map("extra_member_price")
   features         TeamPlanFeature[]
-  createdAt        Int                @map("created_at")
-  updatedAt        Int                @map("updated_at")
+  createdAt        Int               @map("created_at")
+  updatedAt        Int               @map("updated_at")
 
   teamPayment      TeamPayment[]
   teamSubscription TeamSubscription[]
@@ -1505,16 +1509,16 @@ model TeamOrderDetail {
 }
 
 model TeamPayment {
-  id                Int               @id @default(autoincrement())
-  teamId            Int               @unique @map("team_id")
-  teamPlanType      TeamPlanType      @map("team_plan_type")
-  userPaymentInfoId Int?              @map("user_payment_info_id")
-  autoRenewal       Boolean           @map("auto_renewal")
-  startDate         Int               @map("start_date")
-  expiredDate       Int               @map("expired_date")
-  nextChargetDate   Int               @map("next_charge_date")
-  createdAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
-  updatedAt         Int               @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
+  id                Int          @id @default(autoincrement())
+  teamId            Int          @unique @map("team_id")
+  teamPlanType      TeamPlanType @map("team_plan_type")
+  userPaymentInfoId Int?         @map("user_payment_info_id")
+  autoRenewal       Boolean      @map("auto_renewal")
+  startDate         Int          @map("start_date")
+  expiredDate       Int          @map("expired_date")
+  nextChargetDate   Int          @map("next_charge_date")
+  createdAt         Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
+  updatedAt         Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at")
 
   team            Team             @relation(fields: [teamId], references: [id])
   teamPlan        TeamPlan         @relation(fields: [teamPlanType], references: [type], onDelete: Cascade)
