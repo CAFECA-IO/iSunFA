@@ -1595,6 +1595,7 @@ module.exports = {
       letterSpacing: {
         'tight-016': '0.16px',
         'tight-018': '0.18px',
+        'wide-1': '1px',
       },
     },
   },
