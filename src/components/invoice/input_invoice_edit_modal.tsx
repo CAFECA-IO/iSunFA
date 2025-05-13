@@ -571,8 +571,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               </div>
             )}
             {/* Info: (20240924 - Anna) Invoice Number */}
+            <div>
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              <div id="price" className="absolute -top-20"></div>
               {/* Info: (20250422 - Anna) 28 - 進項海關代徵營業稅繳納證 or 29 - 進項海關退還溢繳營業稅申報單 */}
               {formState.type === InvoiceType.INPUT_28 ||
               formState.type === InvoiceType.INPUT_29 ? (
