@@ -66,26 +66,49 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
   }, [t, toastHandler, userAuth]);
 
   return (
-    <div className="flex h-screen overflow-y-hidden">
-      <SideMenu toggleOverlay={toggleOverlay} notPrint />
+    <>
+      {/* Info: (20250512 - Liz) Desktop version (include: tablet/laptop/desktop) */}
+      <div className="hidden h-screen overflow-y-hidden tablet:flex">
+        <SideMenu toggleOverlay={toggleOverlay} notPrint />
 
-      <div className="relative flex min-w-0 flex-auto flex-col bg-surface-neutral-main-background">
-        <Header
-          isDashboard={isDashboard}
-          pageTitle={pageTitle}
-          goBackUrl={goBackUrl}
-          notPrint
-          toggleOverlay={toggleOverlay}
-        />
-        {/* // Info: (20241018 - Liz) Overlay with backdrop-blur */}
-        {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
+        <div className="relative flex min-w-0 flex-auto flex-col bg-surface-neutral-main-background">
+          <Header
+            isDashboard={isDashboard}
+            pageTitle={pageTitle}
+            goBackUrl={goBackUrl}
+            notPrint
+            toggleOverlay={toggleOverlay}
+          />
+          {/* Info: (20241018 - Liz) Overlay with backdrop-blur */}
+          {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 
-        {/* // Info: (20241018 - Liz) Content Body */}
-        <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
-          {children}
-        </main>
+          {/* Info: (20241018 - Liz) Content Body */}
+          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+
+      {/* Info: (20250512 - Liz) Mobile version */}
+      <div className="flex h-screen overflow-y-hidden tablet:hidden">
+        <div className="relative flex min-w-0 flex-auto flex-col bg-surface-neutral-main-background">
+          <Header
+            isDashboard={isDashboard}
+            pageTitle={pageTitle}
+            goBackUrl={goBackUrl}
+            notPrint
+            toggleOverlay={toggleOverlay}
+          />
+          {/* Info: (20241018 - Liz) Overlay with backdrop-blur */}
+          {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
+
+          {/* Info: (20241018 - Liz) Content Body */}
+          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
+            {children}
+          </main>
+        </div>
+      </div>
+    </>
   );
 };
 
