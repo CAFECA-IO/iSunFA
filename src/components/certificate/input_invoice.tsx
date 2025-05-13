@@ -1,14 +1,14 @@
 import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
-import InputCertificateTable from '@/components/certificate/input_certificate_table';
+import InputInvoiceTable from '@/components/certificate/input_invoice_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
 import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
-interface InputCertificateProps {
+interface InputInvoiceProps {
   activeTab: CertificateTab;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
@@ -38,7 +38,7 @@ interface InputCertificateProps {
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
-const InputCertificate: React.FC<InputCertificateProps> = ({
+const InputInvoice: React.FC<InputInvoiceProps> = ({
   activeTab,
   page,
   setPage,
@@ -69,7 +69,7 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
-        <InputCertificateTable
+        <InputInvoiceTable
           activeTab={activeTab}
           certificates={certificates}
           currencyAlias={currencyAlias}
@@ -116,4 +116,4 @@ const InputCertificate: React.FC<InputCertificateProps> = ({
   );
 };
 
-export default InputCertificate;
+export default InputInvoice;

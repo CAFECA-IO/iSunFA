@@ -6,11 +6,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
-import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
+import { FaCheck } from 'react-icons/fa6';
+import { RxCross2 } from 'react-icons/rx';
+import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
+import { DeductionType } from '@/constants/certificate';
 
-interface OutputCertificateListIrops {
+interface InputInvoiceListIrops {
   activeSelection: boolean;
-  certificate: ICertificateRC2OutputUI;
+  certificate: ICertificateRC2InputUI;
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
@@ -32,7 +35,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
   );
 };
 
-const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
+const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
   activeSelection,
   certificate,
   currencyAlias,
@@ -40,6 +43,10 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
   onEdit,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
+
+  const isDeductible =
+    certificate.deductionType === DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE ||
+    certificate.deductionType === DeductionType.DEDUCTIBLE_FIXED_ASSETS;
 
   return (
     <div
@@ -76,32 +83,62 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
           {certificate.incomplete && (
-            <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
+            <Image
+              src="/icons/hint.svg"
+              alt="Hint"
+              width={16}
+              height={16}
+              className="download-hidden min-w-16px"
+            />
           )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-primary">{certificate.no ?? ''}</div>
+            <div className="download-pb-4 text-text-neutral-primary">{certificate.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
           {certificate.type ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.type}`) : ''}
+        </div>
+      </BorderCell>
+      <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
+        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+          {/* Info: (20250421 - Anna) deductionType */}
+          {isDeductible ? (
+            <div className="flex items-center gap-2">
+              <FaCheck className="h-6 w-6 text-green-500" />
+              <span className="text-sm text-neutral-300">
+                {certificate.deductionType === DeductionType.DEDUCTIBLE_FIXED_ASSETS
+                  ? t(`certificate:TABLE.DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:TABLE.DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <RxCross2 className="h-6 w-6 text-navy-blue-400" />
+              <span className="text-sm text-neutral-300">
+                {certificate.deductionType === DeductionType.NON_DEDUCTIBLE_FIXED_ASSETS
+                  ? t(`certificate:TABLE.NON_DEDUCTIBLE_FIXED_ASSETS`)
+                  : t(`certificate:TABLE.NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE`)}
+              </span>
+            </div>
+          )}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`download-pb-4 w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.taxRate !== undefined ? `Taxable ${certificate.taxRate} %` : '-'}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="flex flex-col items-center gap-2">
+        <div className="download-pb-4 flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
-            {certificate.salesIdNumber ?? ''}
+            {certificate.buyerIdNumber ?? ''}
           </div>
           <div className="w-full text-left text-text-neutral-primary">
-            {certificate.salesName ?? ''}
+            {certificate.buyerName ?? ''}
           </div>
         </div>
       </BorderCell>
@@ -113,7 +150,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div>Pre-Tax</div>
+              <div className="download-pb-3">Pre-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
@@ -127,7 +164,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div>After-Tax</div>
+              <div className="download-pb-3">After-Tax</div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
@@ -152,7 +189,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
             </Link>
           )}
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-            {certificate?.file?.url ? (
+            {certificate?.file.url ? (
               <Image
                 src={certificate.file.url}
                 alt="avatar"
@@ -165,7 +202,7 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
                 {certificate.uploaderName.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span>{certificate.uploaderName ?? ''}</span>
+            <span className="download-pb-4">{certificate.uploaderName ?? ''}</span>
           </div>
         </div>
       </BorderCell>
@@ -173,4 +210,4 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
   );
 };
 
-export default OutputCertificateItem;
+export default InputInvoiceItem;

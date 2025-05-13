@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
-import OutputCertificateItem from '@/components/certificate/output_certificate_item';
+import OutputInvoiceItem from '@/components/certificate/output_invoice_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
@@ -8,7 +8,7 @@ import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
 import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
-interface OutputCertificateTableProps {
+interface OutputInvoiceTableProps {
   activeTab: CertificateTab;
   certificates: ICertificateRC2OutputUI[];
   currencyAlias: CurrencyType;
@@ -29,7 +29,7 @@ interface OutputCertificateTableProps {
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
-const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
+const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
@@ -160,7 +160,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
         <div className="table-row-group">
           {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
-            <OutputCertificateItem
+            <OutputInvoiceItem
               currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
@@ -175,4 +175,4 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   );
 };
 
-export default OutputCertificateTable;
+export default OutputInvoiceTable;

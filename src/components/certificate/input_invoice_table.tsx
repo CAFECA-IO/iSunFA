@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
-import InputCertificateItem from '@/components/certificate/input_certificate_item';
+import InputInvoiceItem from '@/components/certificate/input_invoice_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
@@ -8,7 +8,7 @@ import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
 import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
 
-interface InputCertificateTableProps {
+interface InputInvoiceTableProps {
   activeTab: CertificateTab;
   certificates: ICertificateRC2InputUI[];
   currencyAlias: CurrencyType;
@@ -30,7 +30,7 @@ interface InputCertificateTableProps {
   isExporting: boolean;
 }
 
-const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
+const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
@@ -163,7 +163,7 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
         <div className="table-row-group">
           {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
-            <InputCertificateItem
+            <InputInvoiceItem
               currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
@@ -178,4 +178,4 @@ const InputCertificateTable: React.FC<InputCertificateTableProps> = ({
   );
 };
 
-export default InputCertificateTable;
+export default InputInvoiceTable;

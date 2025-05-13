@@ -1,14 +1,14 @@
 import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
-import OutputCertificateTable from '@/components/certificate/output_certificate_table';
+import OutputInvoiceTable from '@/components/certificate/output_invoice_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { CertificateTab } from '@/constants/certificate';
 import { CurrencyType } from '@/constants/currency';
 import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
 
-interface OutputCertificateProps {
+interface OutputInvoiceProps {
   activeTab: CertificateTab;
   page: number;
   setPage: React.Dispatch<React.SetStateAction<number>>;
@@ -37,7 +37,7 @@ interface OutputCertificateProps {
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
-const OutputCertificate: React.FC<OutputCertificateProps> = ({
+const OutputInvoice: React.FC<OutputInvoiceProps> = ({
   activeTab,
   page,
   setPage,
@@ -67,7 +67,7 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
   return (
     <>
       {viewType === DISPLAY_LIST_VIEW_TYPE.LIST && (
-        <OutputCertificateTable
+        <OutputInvoiceTable
           activeTab={activeTab}
           certificates={certificates}
           currencyAlias={currencyAlias}
@@ -113,4 +113,4 @@ const OutputCertificate: React.FC<OutputCertificateProps> = ({
   );
 };
 
-export default OutputCertificate;
+export default OutputInvoice;

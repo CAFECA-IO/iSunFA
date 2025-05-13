@@ -29,7 +29,7 @@ import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certi
 import { CertificateDirection, CertificateType, DeductionType } from '@/constants/certificate';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
-interface InputCertificateEditModalProps {
+interface InputInvoiceEditModalProps {
   isOpen: boolean;
   accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
@@ -43,7 +43,7 @@ interface InputCertificateEditModalProps {
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
 
-const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
+const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   isOpen,
   accountBookId,
   toggleModel,
@@ -1056,4 +1056,4 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
   );
 };
 
-export default InputCertificateEditModal;
+export default InputInvoiceEditModal;
