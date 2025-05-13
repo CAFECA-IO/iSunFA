@@ -28,7 +28,7 @@ export type EmailTemplateData = {
     startDate: string;
     endDate: string;
     payStatus: string;
-    payLink: string;
+    repayLink: string;
   };
   [EmailTemplateName.SUBSCRIBE]: {
     receiverName: string;
