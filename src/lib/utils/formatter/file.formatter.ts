@@ -11,7 +11,7 @@ import { getImageUrlFromFileIdV1 } from '@/lib/utils/file';
  * @note please check fileEntityValidator for how to parse the data
  */
 export function parsePrismaFileToFileEntity(
-  dto: PrismaFile,
+  dto: PrismaFile & { thumbnail?: PrismaFile | null },
   transformUrlToActualLink = false
 ): IFileEntity {
   const { data, success, error } = fileEntityValidator.safeParse(dto);
@@ -24,9 +24,19 @@ export function parsePrismaFileToFileEntity(
     });
   }
 
+  const fileEntity: IFileEntity = {
+    ...data,
+    thumbnailId: dto.thumbnailId || null,
+  };
+
   if (transformUrlToActualLink) {
-    data.url = getImageUrlFromFileIdV1(data.id);
+    fileEntity.url = getImageUrlFromFileIdV1(fileEntity.id);
   }
 
-  return data;
+  // 處理縮略圖關係
+  if (dto.thumbnail) {
+    fileEntity.thumbnail = parsePrismaFileToFileEntity(dto.thumbnail, transformUrlToActualLink);
+  }
+
+  return fileEntity;
 }
