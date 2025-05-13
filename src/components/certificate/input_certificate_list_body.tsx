@@ -80,6 +80,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
   const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
+  const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<
     | {
         by: SortBy;
@@ -517,12 +518,17 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
     } else if (voucherSort) {
       setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+    } else if (certificateTypeSort) {
+      setSelectedSort({ by: SortBy.INVOICE_TYPE, order: certificateTypeSort });
+    } else if (certificateNoSort) {
+      setSelectedSort({ by: SortBy.INVOICE_NUMBER, order: certificateNoSort });
     } else {
       setSelectedSort(undefined);
     }
-  }, [amountSort, voucherSort, dateSort]);
+  }, [amountSort, voucherSort, dateSort, certificateTypeSort, certificateNoSort]);
 
   useEffect(() => {
+    if (!accountBookId) return () => {};
     const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
@@ -534,7 +540,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       }
       pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
     };
-  }, []);
+  }, [accountBookId]);
 
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
@@ -655,11 +661,13 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 dateSort={dateSort}
                 amountSort={amountSort}
                 voucherSort={voucherSort}
+                certificateNoSort={certificateNoSort}
                 certificateTypeSort={certificateTypeSort}
                 setDateSort={setDateSort}
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
                 setCertificateTypeSort={setCertificateTypeSort}
+                setCertificateNoSort={setCertificateNoSort}
                 isExporting={isExporting}
               />
             </div>
