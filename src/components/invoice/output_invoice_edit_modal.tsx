@@ -15,13 +15,13 @@ import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import EInvoicePreview from '@/components/invoice/e_invoice_preview';
 import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
-import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
+import TaxMenu from '@/components/invoice/invoice_tax_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
@@ -29,7 +29,7 @@ import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2
 import { InvoiceDirection, InvoiceType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
-interface OutputCertificateEditModalProps {
+interface OutputInvoiceEditModalProps {
   isOpen: boolean;
   accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
@@ -43,7 +43,7 @@ interface OutputCertificateEditModalProps {
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
 
-const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
+const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   isOpen,
   accountBookId,
   toggleModel,
@@ -56,6 +56,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   setEditingId,
 }) => {
   const selectableInvoiceType: InvoiceType[] = [
+    InvoiceType.OUTPUT_30,
     InvoiceType.OUTPUT_31,
     InvoiceType.OUTPUT_32,
     InvoiceType.OUTPUT_33,
@@ -409,8 +410,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <div className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
-          {t(`certificate:EDIT.OUTPUT_INVOICE`)}
+        <div>
+          <p className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
+            {t(`certificate:EDIT.OUTPUT_INVOICE`)}
+          </p>
+          <p className="flex justify-center text-xs font-normal leading-5 tracking-wide text-neutral-400">
+            {t(`certificate:EDIT.HEADER`)}
+          </p>
         </div>
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
@@ -611,7 +617,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                 <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
-              <div className="relative z-120 flex w-full items-center gap-2">
+              <div className="relative z-10 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
               {errors.taxAmount && (
@@ -640,6 +646,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     }
                   }}
                   labelClassName="text-neutral-300"
+                  counterpartyRole="buyer"
                 />
                 {errors.counterParty && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">
@@ -858,4 +865,4 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   );
 };
 
-export default OutputCertificateEditModal;
+export default OutputInvoiceEditModal;

@@ -28,6 +28,7 @@ interface ICounterpartyInputProps {
   flagOfSubmit?: boolean;
   className?: string;
   labelClassName?: string;
+  counterpartyRole?: 'buyer' | 'seller' | 'both';
 }
 
 export interface CounterpartyInputRef {
@@ -318,7 +319,13 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     return (
       <div className={`relative flex w-full flex-1 flex-col items-start gap-2 ${className}`}>
         <p className={`text-sm font-semibold ${props.labelClassName ?? 'text-input-text-primary'}`}>
-          {t('certificate:EDIT.COUNTERPARTY')}
+          {t(
+            props.counterpartyRole === 'seller'
+              ? 'certificate:EDIT.SELLER'
+              : props.counterpartyRole === 'buyer'
+                ? 'certificate:EDIT.BUYER'
+                : 'certificate:EDIT.COUNTERPARTY'
+          )}
         </p>
         <div className="relative w-full" ref={counterpartyMenuRef}>
           <div

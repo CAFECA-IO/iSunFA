@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { InvoiceRC2, File, InvoiceType as PrismaInvoiceType } from '@prisma/client';
+import { InvoiceRC2, File, InvoiceType as PrismaInvoiceType, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import {
   listInvoiceRC2QuerySchema,
@@ -10,17 +10,41 @@ import {
 } from '@/lib/utils/zod_schema/invoice_rc2';
 import { InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { createOrderByList } from '@/lib/utils/sort';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { SortBy, SortOrder } from '@/constants/sort';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
 }
+
+export const createOrderByList = (
+  sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]
+): Prisma.InvoiceRC2OrderByWithRelationInput[] => {
+  return sortOptions
+    .map(({ sortBy, sortOrder }) => {
+      switch (sortBy) {
+        case SortBy.DATE:
+          return [{ issuedDate: sortOrder }];
+        case SortBy.INVOICE_TYPE:
+          return [{ type: sortOrder }];
+        case SortBy.AMOUNT:
+          return [{ totalAmount: sortOrder }];
+        case SortBy.VOUCHER_NUMBER:
+          return [{ voucher: { no: sortOrder } }];
+        case SortBy.INVOICE_NUMBER:
+          // Info: (20250513 - Tzuhan) sort by `no`, fallback to `otherCertificateNo` if `no` is null
+          return [{ no: sortOrder }, { otherCertificateNo: sortOrder }];
+        default:
+          return [{ createdAt: SortOrder.DESC }];
+      }
+    })
+    .flat();
+};
 
 type InvoiceRC2WithFullRelations = InvoiceRC2 & {
   file: File;
