@@ -26,7 +26,7 @@ import DeductionTypeMenu from '@/components/invoice/invoice_deduction_type_menu'
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
-import { InvoiceDirection, InvoiceType, DeductionType } from '@/constants/invoice_rc2';
+import { InvoiceDirection, InvoiceType, DeductionType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
 interface InputInvoiceEditModalProps {
@@ -217,9 +217,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     handleInputChange('totalAmount', value + updateTaxPrice);
   };
 
-  const selectTaxHandler = (value: number | null) => {
-    handleInputChange('taxRate', value);
-    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (value ?? 0)) / 100);
+  const selectTaxHandler = (taxInfo: { taxRate: number | null; taxType: TaxType }) => {
+    handleInputChange('taxRate', taxInfo.taxRate);
+    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (taxInfo.taxRate ?? 0)) / 100);
+    handleInputChange('taxType', taxInfo.taxType);
     handleInputChange('taxAmount', updateTaxPrice);
     handleInputChange('totalAmount', (formState.netAmount ?? 0) + updateTaxPrice);
   };
@@ -346,7 +347,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       issuedDate: certificate.issuedDate,
       no: certificate.no,
       netAmount: certificate.netAmount,
-      taxType: certificate.taxType,
+      taxType: certificate.taxType ?? TaxType.TAXABLE,
       taxRate: certificate.taxRate,
       taxAmount: certificate.taxAmount,
       totalAmount: certificate.totalAmount,

@@ -26,7 +26,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
-import { InvoiceDirection, InvoiceType } from '@/constants/invoice_rc2';
+import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
 interface OutputInvoiceEditModalProps {
@@ -223,9 +223,11 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     handleInputChange('totalAmount', value + updateTaxPrice);
   };
 
-  const selectTaxHandler = (value: number | null) => {
-    handleInputChange('taxRate', value);
-    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (value ?? 0)) / 100);
+  // const selectTaxHandler = (value: number | null) => {
+  const selectTaxHandler = (taxInfo: { taxRate: number | null; taxType: TaxType }) => {
+    handleInputChange('taxRate', taxInfo.taxRate);
+    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (taxInfo.taxRate ?? 0)) / 100);
+    handleInputChange('taxType', taxInfo.taxType);
     handleInputChange('taxAmount', updateTaxPrice);
     handleInputChange('totalAmount', (formState.netAmount ?? 0) + updateTaxPrice);
   };
@@ -273,7 +275,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
         const cp2 = val2 as ICounterpartyOptional;
         return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
       }
-
       return val1 !== val2;
     });
   };
@@ -360,6 +361,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       type: certificate.type ?? InvoiceType.OUTPUT_31,
       otherCertificateNo: certificate.otherCertificateNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
+      // Info: (20250514 - Anna) 傳 taxType
+      taxType: certificate.taxType ?? TaxType.TAXABLE,
     };
 
     setFormState(newFormState);

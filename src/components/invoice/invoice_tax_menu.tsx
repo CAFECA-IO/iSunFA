@@ -1,33 +1,40 @@
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useState } from 'react';
-import { FaChevronDown, FaAngleRight } from 'react-icons/fa6';
+import { FaChevronDown /* FaAngleRight */ } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
+import { TaxType } from '@/constants/invoice_rc2';
 
 enum TaxOptions {
   TAXABLE_5 = 'TAXABLE_5',
-  ZERO_TAX_RATE = 'ZERO_TAX_RATE',
+  // Info: (20250514 - Anna) 零稅率
+  // ZERO_TAX_RATE = 'ZERO_TAX_RATE',
   TAX_FREE = 'TAX_FREE',
 }
 
-enum ZeroTaxRateOptions {
-  NONE = 'NONE',
-  THROUGH_CUSTOMS = 'THROUGH_CUSTOMS',
-  NOT_THROUGH_CUSTOMS = 'NOT_THROUGH_CUSTOMS',
-}
+// Info: (20250514 - Anna) 零稅率子選項
+// enum ZeroTaxRateOptions {
+//   NONE = 'NONE',
+//   THROUGH_CUSTOMS = 'THROUGH_CUSTOMS',
+//   NOT_THROUGH_CUSTOMS = 'NOT_THROUGH_CUSTOMS',
+// }
 
 const taxRates = {
   TAXABLE_5: 5,
-  ZERO_TAX_RATE: 0,
+  // Info: (20250514 - Anna) 零稅率
+  // ZERO_TAX_RATE: 0,
   TAX_FREE: null,
 };
 
 interface ITaxMenuProps {
-  selectTaxHandler: (value: number | null) => void;
+  // Info: (20250514 - Anna) 加上 taxType
+  // selectTaxHandler: (value: number | null) => void;
+  selectTaxHandler: (params: { taxRate: number | null; taxType: TaxType }) => void;
 }
 
 const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const [selectedTax, setSelectedTax] = useState<TaxOptions | ZeroTaxRateOptions>(
+  // Info: (20250514 - Anna)
+  const [selectedTax, setSelectedTax] = useState<TaxOptions /* | ZeroTaxRateOptions */>(
     TaxOptions.TAXABLE_5
   );
 
@@ -38,8 +45,9 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
-    targetRef: taxRatioSubMenuRef,
-    componentVisible: isTaxRatioSubMenuOpen,
+    // Info: (20250514 - Anna)
+    // targetRef: taxRatioSubMenuRef,
+    // componentVisible: isTaxRatioSubMenuOpen,
     setComponentVisible: setIsTaxRatioSubMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
@@ -57,20 +65,29 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
 
   const handleOptionClick = (option: TaxOptions, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    selectTaxHandler(taxRates[option]);
-    if (option === TaxOptions.ZERO_TAX_RATE) {
-      setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
-    } else {
-      setSelectedTax(option);
-      closeAllMenus();
-    }
-  };
-
-  const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
-    event?.stopPropagation();
+    // Info: (20250514 - Anna) 加上 taxType
+    // selectTaxHandler(taxRates[option]);
+    selectTaxHandler({
+      taxRate: taxRates[option],
+      taxType: option === TaxOptions.TAXABLE_5 ? TaxType.TAXABLE : TaxType.TAX_FREE,
+    });
+    // Info: (20250514 - Anna) 零稅率子選單
+    // if (option === TaxOptions.ZERO_TAX_RATE) {
+    //   setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
+    // } else {
+    //   setSelectedTax(option);
+    //   closeAllMenus();
+    // }
     setSelectedTax(option);
     closeAllMenus();
   };
+
+  // Info: (20250514 - Anna) 零稅率被點擊後的行為
+  // const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
+  //   event?.stopPropagation();
+  //   setSelectedTax(option);
+  //   closeAllMenus();
+  // };
 
   return (
     <div
@@ -87,7 +104,8 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
         <p>{t(`certificate:EDIT.${selectedTax}`)}</p>
         <p className="pr-2 text-neutral-300">
           {selectedTax === TaxOptions.TAXABLE_5 && <span>5%</span>}
-          {selectedTax === TaxOptions.ZERO_TAX_RATE && <span>0%</span>}
+          {/* Info: (20250514 - Anna) 零稅率UI */}
+          {/* {selectedTax === TaxOptions.ZERO_TAX_RATE && <span>0%</span>} */}
         </p>
       </div>
       <div className="flex h-20px w-20px items-center justify-center">
@@ -113,16 +131,18 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
                 <span>{t(`certificate:EDIT.${value}`)}</span>
                 <span className="pr-2 text-neutral-300">
                   {value === TaxOptions.TAXABLE_5 && <span>5%</span>}
-                  {value === TaxOptions.ZERO_TAX_RATE && <span>0%</span>}
+                  {/* Info: (20250513 - Anna) 零稅率UI */}
+                  {/* {value === TaxOptions.ZERO_TAX_RATE && <span>0%</span>} */}
                 </span>
               </p>
-              <p className="w-4">{value === TaxOptions.ZERO_TAX_RATE && <FaAngleRight />}</p>
+              {/* Info: (20250513 - Anna) 零稅率UI */}
+              {/* <p className="w-4">{value === TaxOptions.ZERO_TAX_RATE && <FaAngleRight />}</p> */}
             </li>
           ))}
         </ul>
       </div>
-      {/* Info: (20250103 - Anna) 次級選單 */}
-      {isTaxRatioSubMenuOpen && (
+      {/* Info: (20250514 - Anna) 次級選單 */}
+      {/* {isTaxRatioSubMenuOpen && (
         <div
           ref={taxRatioSubMenuRef}
           className="border-dropdown-stroke-menu/10 absolute left-full top-50px grid w-full translate-x-2 grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
@@ -139,7 +159,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
             ))}
           </ul>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
