@@ -2,11 +2,11 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import { useUserCtx } from '@/contexts/user_context';
-import { CertificateType } from '@prisma/client';
+import { InvoiceType } from '@prisma/client';
 
 interface EInvoicePreviewProps {
   className?: string;
-  certificateType?: CertificateType;
+  certificateType?: InvoiceType;
   issuedDate: string;
   invoiceNo: string;
   buyerTaxId?: string;
@@ -35,11 +35,11 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
     let seller = '';
     let buyer = '';
     // Info: (20250430 - Anna) 格式35
-    if (certificateType === CertificateType.OUTPUT_35) {
+    if (certificateType === InvoiceType.OUTPUT_35) {
       seller = taxId;
       buyer = buyerTaxId ?? '';
       // Info: (20250430 - Anna) 格式25
-    } else if (certificateType === CertificateType.INPUT_25) {
+    } else if (certificateType === InvoiceType.INPUT_25) {
       seller = buyerTaxId ?? '';
       buyer = taxId;
     }

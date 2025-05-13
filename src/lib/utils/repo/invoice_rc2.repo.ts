@@ -1,14 +1,14 @@
 import prisma from '@/client';
-import { CertificateRC2, File, CertificateType as PrismaCertificateType } from '@prisma/client';
+import { InvoiceRC2, File, InvoiceType as PrismaInvoiceType } from '@prisma/client';
 import { z } from 'zod';
 import {
-  listCertificateRC2QuerySchema,
-  CertificateRC2InputSchema,
-  CertificateRC2OutputSchema,
-  createCertificateRC2QuerySchema,
-  createCertificateRC2BodySchema,
-} from '@/lib/utils/zod_schema/certificate_rc2';
-import { CertificateDirection, CertificateTab, CertificateType } from '@/constants/certificate';
+  listInvoiceRC2QuerySchema,
+  InvoiceRC2InputSchema,
+  InvoiceRC2OutputSchema,
+  createInvoiceRC2QuerySchema,
+  createInvoiceRC2BodySchema,
+} from '@/lib/utils/zod_schema/invoice_rc2';
+import { InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { createOrderByList } from '@/lib/utils/sort';
 import { getTimestampNow } from '@/lib/utils/common';
@@ -16,23 +16,23 @@ import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_t
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { getPusherInstance } from '@/lib/utils/pusher';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
 }
 
-type CertificateRC2WithFullRelations = CertificateRC2 & {
+type InvoiceRC2WithFullRelations = InvoiceRC2 & {
   file: File;
   uploader: { id: number; name: string };
   voucher: { id: number; no: string } | null;
 };
 
-type CertificateRC2InputType = z.infer<typeof CertificateRC2InputSchema>;
-type CertificateRC2OutputType = z.infer<typeof CertificateRC2OutputSchema>;
-type CertificateRC2Type = CertificateRC2InputType | CertificateRC2OutputType;
+type InvoiceRC2InputType = z.infer<typeof InvoiceRC2InputSchema>;
+type InvoiceRC2OutputType = z.infer<typeof InvoiceRC2OutputSchema>;
+type InvoiceRC2Type = InvoiceRC2InputType | InvoiceRC2OutputType;
 
-export function isCertificateRC2Complete(cert: CertificateRC2Type): boolean {
+export function isInvoiceRC2Complete(cert: InvoiceRC2Type): boolean {
   if (
     !cert.type ||
     !cert.issuedDate ||
@@ -45,20 +45,20 @@ export function isCertificateRC2Complete(cert: CertificateRC2Type): boolean {
   ) {
     return false;
   }
-  const requiredByType: Partial<Record<CertificateType, (keyof CertificateRC2Type)[]>> = {
-    [CertificateType.INPUT_21]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_22]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_23]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_24]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_25]: ['deductionType', 'salesName', 'isSharedAmount'],
-    [CertificateType.INPUT_26]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_27]: ['deductionType', 'salesName'],
-    [CertificateType.INPUT_28]: ['deductionType'],
-    [CertificateType.INPUT_29]: ['deductionType'],
-    [CertificateType.OUTPUT_31]: ['buyerName'],
-    [CertificateType.OUTPUT_32]: ['buyerName'],
-    [CertificateType.OUTPUT_35]: ['buyerName'],
-    [CertificateType.OUTPUT_36]: ['buyerName'],
+  const requiredByType: Partial<Record<InvoiceType, (keyof InvoiceRC2Type)[]>> = {
+    [InvoiceType.INPUT_21]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_22]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_23]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_24]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_25]: ['deductionType', 'salesName', 'isSharedAmount'],
+    [InvoiceType.INPUT_26]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_27]: ['deductionType', 'salesName'],
+    [InvoiceType.INPUT_28]: ['deductionType'],
+    [InvoiceType.INPUT_29]: ['deductionType'],
+    [InvoiceType.OUTPUT_31]: ['buyerName'],
+    [InvoiceType.OUTPUT_32]: ['buyerName'],
+    [InvoiceType.OUTPUT_35]: ['buyerName'],
+    [InvoiceType.OUTPUT_36]: ['buyerName'],
   };
   const requiredFields = requiredByType[cert.type] || [];
   return requiredFields.every((key) => {
@@ -68,10 +68,8 @@ export function isCertificateRC2Complete(cert: CertificateRC2Type): boolean {
   });
 }
 
-function transformInput(
-  cert: CertificateRC2WithFullRelations
-): z.infer<typeof CertificateRC2InputSchema> {
-  const certificateRC2Input = CertificateRC2InputSchema.parse({
+function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof InvoiceRC2InputSchema> {
+  const invoiceRC2Input = InvoiceRC2InputSchema.parse({
     ...cert,
     file: {
       ...cert.file,
@@ -93,15 +91,15 @@ function transformInput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`CertificateRC2Input.file: ${JSON.stringify(certificateRC2Input.file)}`);
-  certificateRC2Input.incomplete = !isCertificateRC2Complete(certificateRC2Input);
-  return certificateRC2Input;
+  loggerBack.info(`InvoiceRC2Input.file: ${JSON.stringify(invoiceRC2Input.file)}`);
+  invoiceRC2Input.incomplete = !isInvoiceRC2Complete(invoiceRC2Input);
+  return invoiceRC2Input;
 }
 
 function transformOutput(
-  cert: CertificateRC2WithFullRelations
-): z.infer<typeof CertificateRC2OutputSchema> {
-  const certificateRC2Output = CertificateRC2OutputSchema.parse({
+  cert: InvoiceRC2WithFullRelations
+): z.infer<typeof InvoiceRC2OutputSchema> {
+  const invoiceRC2Output = InvoiceRC2OutputSchema.parse({
     ...cert,
     file: {
       ...cert.file,
@@ -122,35 +120,33 @@ function transformOutput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`CertificateRC2Output.file: ${JSON.stringify(certificateRC2Output.file)}`);
-  certificateRC2Output.incomplete = !isCertificateRC2Complete(certificateRC2Output);
-  return certificateRC2Output;
+  loggerBack.info(`InvoiceRC2Output.file: ${JSON.stringify(invoiceRC2Output.file)}`);
+  invoiceRC2Output.incomplete = !isInvoiceRC2Complete(invoiceRC2Output);
+  return invoiceRC2Output;
 }
 
-export async function findCertificateRC2ById(data: {
+export async function findInvoiceRC2ById(data: {
   userId: number;
   accountBookId: number;
-  certificateId: number;
+  invoiceId: number;
 }) {
-  const { userId, accountBookId, certificateId } = data;
+  const { userId, accountBookId, invoiceId } = data;
   await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.VIEW_CERTIFICATE,
   });
-  const cert = await prisma.certificateRC2.findUnique({
-    where: { id: certificateId, deletedAt: null },
+  const cert = await prisma.invoiceRC2.findUnique({
+    where: { id: invoiceId, deletedAt: null },
     include: { file: true, voucher: true, uploader: true },
   });
   if (!cert) return null;
-  return cert.direction === CertificateDirection.INPUT
-    ? transformInput(cert)
-    : transformOutput(cert);
+  return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
 }
 
-export async function listCertificateRC2Input(
+export async function listInvoiceRC2Input(
   userId: number,
-  query: z.infer<typeof listCertificateRC2QuerySchema>
+  query: z.infer<typeof listInvoiceRC2QuerySchema>
 ) {
   const {
     accountBookId,
@@ -173,12 +169,12 @@ export async function listCertificateRC2Input(
 
   const whereClause = {
     accountBookId,
-    direction: CertificateDirection.INPUT,
+    direction: InvoiceDirection.INPUT,
     deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
     voucherId:
-      tab === CertificateTab.WITHOUT_VOUCHER
+      tab === InvoiceTab.WITHOUT_VOUCHER
         ? null
-        : tab === CertificateTab.WITH_VOUCHER
+        : tab === InvoiceTab.WITH_VOUCHER
           ? { not: null }
           : undefined,
     type: type ?? undefined,
@@ -195,9 +191,9 @@ export async function listCertificateRC2Input(
       : undefined,
   };
 
-  const [totalCount, certificates] = await Promise.all([
-    prisma.certificateRC2.count({ where: whereClause }),
-    prisma.certificateRC2.findMany({
+  const [totalCount, invoices] = await Promise.all([
+    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.findMany({
       where: whereClause,
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -206,7 +202,7 @@ export async function listCertificateRC2Input(
     }),
   ]);
 
-  const transformed = certificates.map(transformInput);
+  const transformed = invoices.map(transformInput);
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
@@ -231,9 +227,9 @@ export async function listCertificateRC2Input(
   });
 }
 
-export async function listCertificateRC2Output(
+export async function listInvoiceRC2Output(
   userId: number,
-  query: z.infer<typeof listCertificateRC2QuerySchema>
+  query: z.infer<typeof listInvoiceRC2QuerySchema>
 ) {
   const {
     accountBookId,
@@ -256,12 +252,12 @@ export async function listCertificateRC2Output(
 
   const whereClause = {
     accountBookId,
-    direction: CertificateDirection.OUTPUT,
+    direction: InvoiceDirection.OUTPUT,
     deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
     voucherId:
-      tab === CertificateTab.WITHOUT_VOUCHER
+      tab === InvoiceTab.WITHOUT_VOUCHER
         ? null
-        : tab === CertificateTab.WITH_VOUCHER
+        : tab === InvoiceTab.WITH_VOUCHER
           ? { not: null }
           : undefined,
     type: type ?? undefined,
@@ -278,9 +274,9 @@ export async function listCertificateRC2Output(
       : undefined,
   };
 
-  const [totalCount, certificates] = await Promise.all([
-    prisma.certificateRC2.count({ where: whereClause }),
-    prisma.certificateRC2.findMany({
+  const [totalCount, invoices] = await Promise.all([
+    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.findMany({
       where: whereClause,
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -289,7 +285,7 @@ export async function listCertificateRC2Output(
     }),
   ]);
 
-  const transformed = certificates.map(transformOutput);
+  const transformed = invoices.map(transformOutput);
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
@@ -314,10 +310,10 @@ export async function listCertificateRC2Output(
   });
 }
 
-export async function createCertificateRC2(
+export async function createInvoiceRC2(
   userId: number,
-  query: z.infer<typeof createCertificateRC2QuerySchema>,
-  body: z.infer<typeof createCertificateRC2BodySchema>
+  query: z.infer<typeof createInvoiceRC2QuerySchema>,
+  body: z.infer<typeof createInvoiceRC2BodySchema>
 ) {
   await assertUserCanByAccountBook({
     userId,
@@ -325,7 +321,7 @@ export async function createCertificateRC2(
     action: TeamPermissionAction.CREATE_CERTIFICATE,
   });
   const now = getTimestampNow();
-  const cert = await prisma.certificateRC2.create({
+  const cert = await prisma.invoiceRC2.create({
     data: {
       ...body,
       accountBookId: query.accountBookId,
@@ -335,27 +331,23 @@ export async function createCertificateRC2(
     },
     include: { file: true, voucher: true, uploader: true },
   });
-  const certificate =
-    body.direction === CertificateDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+  const invoice =
+    body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
 
   const pusher = getPusherInstance();
 
-  pusher.trigger(
-    `${PRIVATE_CHANNEL.CERTIFICATE}-${query.accountBookId}`,
-    CERTIFICATE_EVENT.CREATE,
-    {
-      message: JSON.stringify(certificate),
-    }
-  );
+  pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
+    message: JSON.stringify(invoice),
+  });
 
-  return certificate;
+  return invoice;
 }
 
-export async function updateCertificateRC2Input(
+export async function updateInvoiceRC2Input(
   userId: number,
   accountBookId: number,
-  certificateId: number,
-  data: Partial<z.infer<typeof CertificateRC2InputSchema>>
+  invoiceId: number,
+  data: Partial<z.infer<typeof InvoiceRC2InputSchema>>
 ) {
   await assertUserCanByAccountBook({
     userId,
@@ -365,12 +357,12 @@ export async function updateCertificateRC2Input(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
-  const updated = await prisma.certificateRC2.update({
-    where: { id: certificateId },
+  const updated = await prisma.invoiceRC2.update({
+    where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
-      type: data.type as PrismaCertificateType,
+      type: data.type as PrismaInvoiceType,
       updatedAt: now,
     },
     include: { file: true, voucher: true, uploader: true },
@@ -378,11 +370,11 @@ export async function updateCertificateRC2Input(
   return transformInput(updated);
 }
 
-export async function updateCertificateRC2Output(
+export async function updateInvoiceRC2Output(
   userId: number,
   accountBookId: number,
-  certificateId: number,
-  data: Partial<z.infer<typeof CertificateRC2OutputSchema>>
+  invoiceId: number,
+  data: Partial<z.infer<typeof InvoiceRC2OutputSchema>>
 ) {
   await assertUserCanByAccountBook({
     userId,
@@ -392,12 +384,12 @@ export async function updateCertificateRC2Output(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
-  const updated = await prisma.certificateRC2.update({
-    where: { id: certificateId },
+  const updated = await prisma.invoiceRC2.update({
+    where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
-      type: data.type as PrismaCertificateType,
+      type: data.type as PrismaInvoiceType,
       updatedAt: now,
     },
     include: { file: true, voucher: true, uploader: true },
@@ -405,11 +397,7 @@ export async function updateCertificateRC2Output(
   return transformOutput(updated);
 }
 
-export async function deleteCertificateRC2(
-  userId: number,
-  accountBookId: number,
-  certificateIds: number[]
-) {
+export async function deleteInvoiceRC2(userId: number, accountBookId: number, invoiceds: number[]) {
   await assertUserCanByAccountBook({
     userId,
     accountBookId,
@@ -417,9 +405,9 @@ export async function deleteCertificateRC2(
   });
   const now = getTimestampNow();
 
-  const deleted = await prisma.certificateRC2.updateMany({
+  const deleted = await prisma.invoiceRC2.updateMany({
     where: {
-      id: { in: certificateIds },
+      id: { in: invoiceds },
       accountBookId, // Info: (20250509 - Tzuhan) 保險：避免誤刪其他帳本的資料
       deletedAt: null,
     },
@@ -428,6 +416,6 @@ export async function deleteCertificateRC2(
 
   return {
     success: deleted.count > 0,
-    deletedIds: deleted.count > 0 ? certificateIds : [],
+    deletedIds: deleted.count > 0 ? invoiceds : [],
   };
 }

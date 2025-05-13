@@ -12,65 +12,23 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
-import {
-  findCertificateRC2ById,
-  deleteCertificateRC2,
-  updateCertificateRC2Output,
-} from '@/lib/utils/repo/certificate_rc2.repo';
+import { createInvoiceRC2, listInvoiceRC2Input } from '@/lib/utils/repo/invoice_rc2.repo';
 
-const handleGetRequest = async (req: NextApiRequest) => {
+const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.GET_CERTIFICATE_RC2_OUTPUT, req);
-  await checkUserAuthorization(APIName.GET_CERTIFICATE_RC2_OUTPUT, req, session);
+  await checkSessionUser(session, APIName.CREATE_INVOICE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.CREATE_INVOICE_RC2_INPUT, req, session);
 
-  const { query } = checkRequestData(APIName.GET_CERTIFICATE_RC2_OUTPUT, req, session);
-  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-
-  const certificateList = await findCertificateRC2ById({
-    userId: session.userId,
-    accountBookId: query.accountBookId,
-    certificateId: query.certificateId,
-  });
-
-  const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.GET_CERTIFICATE_RC2_OUTPUT,
-    certificateList
-  );
-
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  } else {
-    payload = outputData;
-    statusMessage = STATUS_MESSAGE.SUCCESS;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
-  return { response, statusMessage };
-};
-
-const handlePutRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload = null;
-
-  await checkSessionUser(session, APIName.UPDATE_CERTIFICATE_RC2_OUTPUT, req);
-  await checkUserAuthorization(APIName.UPDATE_CERTIFICATE_RC2_OUTPUT, req, session);
-
-  const { query, body } = checkRequestData(APIName.UPDATE_CERTIFICATE_RC2_OUTPUT, req, session);
+  const { query, body } = checkRequestData(APIName.CREATE_INVOICE_RC2_INPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await updateCertificateRC2Output(
-    session.userId,
-    query.accountBookId,
-    query.certificateId,
-    body
-  );
+  const certificate = await createInvoiceRC2(session.userId, query, body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.UPDATE_CERTIFICATE_RC2_OUTPUT,
+    APIName.CREATE_INVOICE_RC2_INPUT,
     certificate
   );
 
@@ -85,25 +43,21 @@ const handlePutRequest = async (req: NextApiRequest) => {
   return { response, statusMessage };
 };
 
-const handleDeleteRequest = async (req: NextApiRequest) => {
+const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.DELETE_CERTIFICATE_RC2_OUTPUT, req);
-  await checkUserAuthorization(APIName.DELETE_CERTIFICATE_RC2_OUTPUT, req, session);
+  await checkSessionUser(session, APIName.LIST_INVOICE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.LIST_INVOICE_RC2_INPUT, req, session);
 
-  const { query, body } = checkRequestData(APIName.DELETE_CERTIFICATE_RC2_OUTPUT, req, session);
-  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  const { query } = checkRequestData(APIName.LIST_INVOICE_RC2_INPUT, req, session);
+  if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await deleteCertificateRC2(
-    session.userId,
-    query.accountBookId,
-    body.certificateIds
-  );
+  const certificateList = await listInvoiceRC2Input(session.userId, query);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.DELETE_CERTIFICATE_RC2_OUTPUT,
+    APIName.LIST_INVOICE_RC2_INPUT,
     certificateList
   );
 
@@ -132,12 +86,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
-      case HttpMethod.PUT:
-        ({ response, statusMessage } = await handlePutRequest(req));
-        ({ httpCode, result } = response);
-        break;
-      case HttpMethod.DELETE:
-        ({ response, statusMessage } = await handleDeleteRequest(req));
+      case HttpMethod.POST:
+        ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);
         break;
       default:
@@ -152,6 +102,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.DELETE_CERTIFICATE_RC2_OUTPUT, req, statusMessage);
+  await logUserAction(session, APIName.LIST_INVOICE_RC2_INPUT, req, statusMessage);
   res.status(httpCode).json(result);
 }

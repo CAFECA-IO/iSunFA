@@ -25,8 +25,8 @@ import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
-import { ICertificateRC2Output, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
-import { CertificateDirection, CertificateType } from '@/constants/certificate';
+import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
+import { InvoiceDirection, InvoiceType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
 interface OutputCertificateEditModalProps {
@@ -34,11 +34,11 @@ interface OutputCertificateEditModalProps {
   accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
-  certificate?: ICertificateRC2OutputUI;
+  certificate?: IInvoiceRC2OutputUI;
   onUpdateFilename: (certificateId: number, name: string) => void;
-  onSave: (data: Partial<ICertificateRC2Output>) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
+  onSave: (data: Partial<IInvoiceRC2Output>) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
   onDelete: (id: number) => void;
-  certificates: ICertificateRC2OutputUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
+  certificates: IInvoiceRC2OutputUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
   editingId: number; // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
@@ -55,13 +55,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   editingId,
   setEditingId,
 }) => {
-  const selectableCertificateType: CertificateType[] = [
-    CertificateType.OUTPUT_31,
-    CertificateType.OUTPUT_32,
-    CertificateType.OUTPUT_33,
-    CertificateType.OUTPUT_34,
-    CertificateType.OUTPUT_35,
-    CertificateType.OUTPUT_36,
+  const selectableInvoiceType: InvoiceType[] = [
+    InvoiceType.OUTPUT_31,
+    InvoiceType.OUTPUT_32,
+    InvoiceType.OUTPUT_33,
+    InvoiceType.OUTPUT_34,
+    InvoiceType.OUTPUT_35,
+    InvoiceType.OUTPUT_36,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
@@ -71,7 +71,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
 
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
-  const savedCertificateRC2Ref = useRef<Partial<ICertificateRC2Output>>(certificate ?? {});
+  const savedInvoiceRC2Ref = useRef<Partial<IInvoiceRC2Output>>(certificate ?? {});
 
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
@@ -91,7 +91,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     () =>
       ({
         // Info: (20250414 - Anna) 這個組件改為全為銷項
-        direction: CertificateDirection.OUTPUT,
+        direction: InvoiceDirection.OUTPUT,
         date: certificate.issuedDate,
         no: certificate.no,
         netAmount: certificate.netAmount,
@@ -100,8 +100,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         totalAmount: certificate.totalAmount,
         buyerIdNumber: certificate.buyerIdNumber,
         buyerName: certificate.buyerName,
-        type: certificate.type ?? CertificateType.INPUT_21,
-      }) as Partial<ICertificateRC2Output>
+        type: certificate.type ?? InvoiceType.INPUT_21,
+      }) as Partial<IInvoiceRC2Output>
   );
   const [errors] = useState<Record<string, string>>({});
   const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
@@ -139,9 +139,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       value:
         | string
         | number
-        | CertificateDirection
+        | InvoiceDirection
         | ICounterpartyOptional
-        | CertificateType
+        | InvoiceType
         | boolean
         | null
     ) => {
@@ -180,8 +180,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
   const {
     targetRef: invoiceTypeMenuRef,
-    componentVisible: isCertificateTypeMenuOpen,
-    setComponentVisible: setIsCertificateTypeMenuOpen,
+    componentVisible: isInvoiceTypeMenuOpen,
+    setComponentVisible: setIsInvoiceTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250415 - Anna) 建立發票前綴選單的狀態和 Ref
@@ -192,7 +192,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   const invoiceTypeMenuClickHandler = () => {
-    setIsCertificateTypeMenuOpen(!isCertificateTypeMenuOpen);
+    setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
   };
 
   // Info: (20250415 - Anna) 點擊切換發票前綴下拉狀態;
@@ -200,8 +200,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
   };
 
-  const invoiceTypeMenuOptionClickHandler = (id: CertificateType) => {
-    setIsCertificateTypeMenuOpen(false);
+  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    setIsInvoiceTypeMenuOpen(false);
     handleInputChange('type', id);
     // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
     setIsReturnOrAllowance(false);
@@ -286,16 +286,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     };
 
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
-    if (shallowEqual(savedCertificateRC2Ref.current, updatedCertificate)) return;
+    if (shallowEqual(savedInvoiceRC2Ref.current, updatedCertificate)) return;
 
-    const updatedData: Partial<ICertificateRC2Output> = {
+    const updatedData: Partial<IInvoiceRC2Output> = {
       ...certificate,
       ...updatedCertificate,
     };
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
-    savedCertificateRC2Ref.current = updatedCertificate;
+    savedInvoiceRC2Ref.current = updatedCertificate;
   }, [certificate, onSave]);
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
@@ -308,11 +308,11 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     formStateRef.current = formState;
   }, []);
 
-  // Info: (20250414 - Anna) 初始化 savedCertificateRC2Ref，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
+  // Info: (20250414 - Anna) 初始化 savedInvoiceRC2Ref，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
   useEffect(() => {
-    // Info: (20250414 - Anna) 確保 savedCertificateRC2Ref.current 被正確初始化為 certificate.invoice
+    // Info: (20250414 - Anna) 確保 savedInvoiceRC2Ref.current 被正確初始化為 certificate.invoice
     if (certificate) {
-      savedCertificateRC2Ref.current = certificate;
+      savedInvoiceRC2Ref.current = certificate;
     }
   }, [certificate]);
 
@@ -332,7 +332,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     debounceTimer.current = setTimeout(() => {
-      const isSame = shallowEqual(formStateRef.current, savedCertificateRC2Ref.current);
+      const isSame = shallowEqual(formStateRef.current, savedInvoiceRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -341,12 +341,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
   }, [formState]);
 
-  // Info: (20250415 - Anna) certificate 或 editingId 變動時，重新初始化表單狀態、formRef、savedCertificateRC2Ref、日期 等，為了做前後筆切換
+  // Info: (20250415 - Anna) certificate 或 editingId 變動時，重新初始化表單狀態、formRef、savedInvoiceRC2Ref、日期 等，為了做前後筆切換
   useEffect(() => {
     if (!certificate) return;
 
-    const newFormState: Partial<ICertificateRC2Output> = {
-      direction: CertificateDirection.OUTPUT,
+    const newFormState: Partial<IInvoiceRC2Output> = {
+      direction: InvoiceDirection.OUTPUT,
       issuedDate: certificate.issuedDate,
       no: certificate.no,
       netAmount: certificate.netAmount,
@@ -356,14 +356,14 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       buyerIdNumber: certificate.buyerIdNumber,
       buyerName: certificate.buyerName,
       isReturnOrAllowance: certificate.isReturnOrAllowance,
-      type: certificate.type ?? CertificateType.OUTPUT_31,
+      type: certificate.type ?? InvoiceType.OUTPUT_31,
       otherCertificateNo: certificate.otherCertificateNo,
       totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
     };
 
     setFormState(newFormState);
     formStateRef.current = newFormState;
-    savedCertificateRC2Ref.current = newFormState;
+    savedInvoiceRC2Ref.current = newFormState;
 
     // Info: (20250509 - Tzuhan) 同步更新日期 UI
     if (certificate.issuedDate) {
@@ -410,7 +410,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
           {/*  Info: (20250430 - Anna) e-invoice UI (格式35的時候套用) */}
           {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
-          {formState.type === CertificateType.OUTPUT_35 && (
+          {formState.type === InvoiceType.OUTPUT_35 && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
@@ -449,7 +449,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"
                     onClick={invoiceTypeMenuClickHandler}
-                    className={`group relative flex h-46px w-full cursor-pointer ${isCertificateTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                    className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     <p className="flex h-46px w-full items-center justify-between">
                       <span className="h-24px overflow-hidden">
@@ -457,15 +457,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                       </span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown
-                          className={isCertificateTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
+                          className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
                         />
                       </div>
                     </p>
                     <div
-                      className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isCertificateTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                      className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
                       <ul className="z-130 flex max-h-210px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px">
-                        {Object.values(selectableCertificateType).map((value) => (
+                        {Object.values(selectableInvoiceType).map((value) => (
                           <li
                             key={`taxable-${value}`}
                             value={value}
@@ -506,13 +506,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="relative flex w-full flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-neutral-300">
-                {formState.type === CertificateType.OUTPUT_36
+                {formState.type === InvoiceType.OUTPUT_36
                   ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
                   : t('certificate:EDIT.INVOICE_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
 
-              {formState.type === CertificateType.OUTPUT_36 ? (
+              {formState.type === InvoiceType.OUTPUT_36 ? (
                 // Info: (20250415 - Anna) 免用統一發票的UI
                 <div className="flex w-full items-center">
                   <input
@@ -609,7 +609,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
 
             {/* Info: (20240924 - Anna) CounterParty */}
-            {formState.type !== CertificateType.OUTPUT_32 && (
+            {formState.type !== InvoiceType.OUTPUT_32 && (
               <>
                 <CounterpartyInput
                   ref={counterpartyInputRef}
@@ -633,7 +633,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     {errors.counterParty}
                   </p>
                 )}
-                {formState.type === CertificateType.OUTPUT_35 && (
+                {formState.type === InvoiceType.OUTPUT_35 && (
                   <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
                     {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
                   </p>
@@ -676,7 +676,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   </p>
                 )}
               </div>
-              {formState.type !== CertificateType.OUTPUT_32 && (
+              {formState.type !== InvoiceType.OUTPUT_32 && (
                 <>
                   {/* Info: (20250414 - Anna) Tax */}
                   <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
@@ -705,7 +705,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                         <p>{currencyAliasStr}</p>
                       </div>
                     </div>
-                    {formState.type === CertificateType.OUTPUT_35 && (
+                    {formState.type === InvoiceType.OUTPUT_35 && (
                       <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
                         {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
                       </p>
@@ -767,26 +767,23 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
                   // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
                   // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                  if (
-                    formState.type === CertificateType.OUTPUT_31 &&
-                    isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', CertificateType.OUTPUT_33);
+                  if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
+                    handleInputChange('type', InvoiceType.OUTPUT_33);
                   } else if (
-                    formState.type === CertificateType.OUTPUT_33 &&
+                    formState.type === InvoiceType.OUTPUT_33 &&
                     !isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', CertificateType.OUTPUT_31);
+                    handleInputChange('type', InvoiceType.OUTPUT_31);
                   } else if (
-                    formState.type === CertificateType.OUTPUT_32 &&
+                    formState.type === InvoiceType.OUTPUT_32 &&
                     isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', CertificateType.OUTPUT_34);
+                    handleInputChange('type', InvoiceType.OUTPUT_34);
                   } else if (
-                    formState.type === CertificateType.OUTPUT_34 &&
+                    formState.type === InvoiceType.OUTPUT_34 &&
                     !isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', CertificateType.OUTPUT_32);
+                    handleInputChange('type', InvoiceType.OUTPUT_32);
                   }
                 }}
               >

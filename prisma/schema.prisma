@@ -274,7 +274,7 @@ model Company {
   vouchers                   Voucher[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
   transfers                  AccountBookTransfer[]
-  CertificateRC2             CertificateRC2[]
+  InvoiceRC2                 InvoiceRC2[]
 
   @@map("company")
 }
@@ -394,12 +394,12 @@ enum DeductionType {
   NON_DEDUCTIBLE_FIXED_ASSETS
 }
 
-enum CertificateDirection {
+enum InvoiceDirection {
   INPUT
   OUTPUT
 }
 
-enum CertificateType {
+enum InvoiceType {
   // Info: (20250429 - Tzuhan) Input 類型
   INPUT_20
   INPUT_21
@@ -432,13 +432,13 @@ enum TaxType {
   TAX_FREE
 }
 
-model CertificateRC2 {
+model InvoiceRC2 {
   id                            Int     @id @default(autoincrement())
   accountBookId                 Int     @map("accountbook_id")
   voucherId                     Int?     @map("voucher_id")
   fileId                        Int     @map("file_id")
   uploaderId                    Int     @map("uploader_id")
-  direction                     CertificateDirection @map("direction")
+  direction                     InvoiceDirection @map("direction")
   aiResultId                    String?  @default("0") @map("ai_result_id")
   aiStatus                      String?  @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
   createdAt                     Int     @map("created_at")
@@ -446,7 +446,7 @@ model CertificateRC2 {
   deletedAt                     Int?    @map("deleted_at")
 
   // Info: (20250429 - Tzuhan) Invoice 基本欄位
-  type                          CertificateType? @map("type")
+  type                          InvoiceType? @map("type")
   issuedDate                    Int?    @map("issued_date")
   no                            String? @map("no")
   currencyCode                  CurrencyCode @map("currency_code")
@@ -474,7 +474,7 @@ model CertificateRC2 {
   isReturnOrAllowance           Boolean? @default(false) @map("return_or_allowance")
 
   // Info: (20250429 - Tzuhan) 特殊情境（匯總發票/載具）
-  totalOfSummarizedCertificates Int?   @map("total_of_summarized_invoices")
+  totalOfSummarizedInvoices Int?   @map("total_of_summarized_invoices")
   carrierSerialNumber           String? @map("carrier_serial_number")
   otherCertificateNo            String? @map("other_certificate_no")
 
@@ -583,7 +583,7 @@ model File {
   taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
   userImageFile               User?        @relation("user_image_file")
   teamFile                    Team?        @relation("team_image_file")
-  CertificateRC2              CertificateRC2[]
+  InvoiceRC2                  InvoiceRC2[]
 
   @@map("file")
 }
@@ -1064,7 +1064,7 @@ model User {
   accountBookTransfer AccountBookTransfer[]
   accountBook         Company[]
   teamOrder           TeamOrder[]
-  CertificateRC2      CertificateRC2[]
+  InvoiceRC2          InvoiceRC2[]
 
   @@map("user")
 }
@@ -1254,7 +1254,7 @@ model Voucher {
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
-  CertificateRC2         CertificateRC2[]
+  InvoiceRC2             InvoiceRC2[]
 
   originalVouchers AssociateVoucher[] @relation("original_voucher")
   resultVouchers   AssociateVoucher[] @relation("result_voucher")
