@@ -96,15 +96,7 @@ export const certificateAPIPostUtils = {
 
   initFileEntity: (certificateFromPrisma: PostCertificateResponse) => {
     const fileDto = certificateFromPrisma.file;
-
-    // 暫時簡化實現，去除縮略圖處理邏輯
     const fileEntity = parsePrismaFileToFileEntity(fileDto);
-
-    // 註釋掉縮略圖處理邏輯，後續再處理
-    // if (fileDto.thumbnail) {
-    //   // 使用 thumbnail 屬性會導致 TypeScript 錯誤
-    // }
-
     return initFileEntity(fileEntity);
   },
 
@@ -238,7 +230,7 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
-    // 添加 thumbnail 信息
+    // Info: (20250513 - Shirley) 添加 thumbnail
     if (certificateEntity.file.thumbnailId && certificateEntity.file.thumbnail) {
       const thumbnailURL = certificateAPIPostUtils.transformFileURL(
         certificateEntity.file.thumbnail
@@ -252,39 +244,7 @@ export const certificateAPIPostUtils = {
       };
     }
 
-    let invoice: IInvoiceBetaOptional = {};
-
-    if (certificateEntity.invoice?.id) {
-      const counterParty: ICounterparty = {
-        id: certificateEntity.invoice.counterParty.id,
-        companyId: certificateEntity.invoice.counterParty.companyId,
-        name: certificateEntity.invoice.counterParty.name,
-        taxId: certificateEntity.invoice.counterParty.taxId,
-        type: certificateEntity.invoice.counterParty.type,
-        note: certificateEntity.invoice.counterParty.note,
-        createdAt: certificateEntity.invoice.counterParty.createdAt,
-        updatedAt: certificateEntity.invoice.counterParty.updatedAt,
-      };
-
-      invoice = {
-        id: certificateEntity.invoice.id,
-        counterParty,
-        inputOrOutput: certificateEntity.invoice.inputOrOutput,
-        date: certificateEntity.invoice.date,
-        no: certificateEntity.invoice.no,
-        currencyAlias: certificateEntity.invoice.currencyAlias,
-        priceBeforeTax: certificateEntity.invoice.priceBeforeTax,
-        taxType: certificateEntity.invoice.taxType,
-        taxRatio: certificateEntity.invoice.taxRatio,
-        taxPrice: certificateEntity.invoice.taxPrice,
-        totalPrice: certificateEntity.invoice.totalPrice,
-        type: certificateEntity.invoice.type,
-        deductible: certificateEntity.invoice.deductible,
-        createdAt: certificateEntity.invoice.createdAt,
-        updatedAt: certificateEntity.invoice.updatedAt,
-      };
-    }
-
+    const invoice: IInvoiceBetaOptional = {};
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
     const voucherNo = firstVoucher?.no || '';
