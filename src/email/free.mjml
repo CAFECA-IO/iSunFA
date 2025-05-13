@@ -87,6 +87,7 @@
               text-decoration: none;
               border-radius: 5px;
               font-size: 14px;
+              line-height: 20px;
               font-weight: 500;
               margin-right: 16px;
             "
@@ -105,6 +106,7 @@
               text-decoration: none;
               border-radius: 5px;
               font-size: 14px;
+              line-height: 20px;
               font-weight: 500;
             "
           >
