@@ -353,7 +353,7 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
       deductionType: certificate.deductionType,
       isSharedAmount: certificate.isSharedAmount,
       otherCertificateNo: certificate.otherCertificateNo,
-      totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
+      totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
     };
 
     setFormState(newFormState);
@@ -528,31 +528,31 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
                     ref={summarizedInvoiceInputRef}
                     type="number"
                     value={
-                      formState.totalOfSummarizedCertificates !== undefined
-                        ? formState.totalOfSummarizedCertificates.toString()
+                      formState.totalOfSummarizedInvoices !== undefined
+                        ? formState.totalOfSummarizedInvoices.toString()
                         : '0'
                     }
                     onChange={(e) => {
                       const inputValue = e.target.value;
                       const numberValue = parseInt(inputValue, 10);
                       if (inputValue === '') {
-                        handleInputChange('totalOfSummarizedCertificates', 0); // Info: (20250428 - Anna) 空的話直接設 0
+                        handleInputChange('totalOfSummarizedInvoices', 0); // Info: (20250428 - Anna) 空的話直接設 0
                       } else if (!Number.isNaN(numberValue)) {
-                        handleInputChange('totalOfSummarizedCertificates', numberValue);
+                        handleInputChange('totalOfSummarizedInvoices', numberValue);
                       }
                     }}
                     // Info: (20250428 - Anna) 只在值是 0 或 undefined 時全部選取
                     onFocus={() => {
                       if (
-                        formState.totalOfSummarizedCertificates === undefined ||
-                        formState.totalOfSummarizedCertificates === 0
+                        formState.totalOfSummarizedInvoices === undefined ||
+                        formState.totalOfSummarizedInvoices === 0
                       ) {
                         summarizedInvoiceInputRef.current?.select();
                       }
                     }}
                     className={`h-44px w-16 flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-right uppercase outline-none ${
-                      formState.totalOfSummarizedCertificates === 0 ||
-                      formState.totalOfSummarizedCertificates === undefined
+                      formState.totalOfSummarizedInvoices === 0 ||
+                      formState.totalOfSummarizedInvoices === undefined
                         ? 'text-neutral-300'
                         : 'text-neutral-600'
                     }`}

@@ -358,7 +358,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       isReturnOrAllowance: certificate.isReturnOrAllowance,
       type: certificate.type ?? InvoiceType.OUTPUT_31,
       otherCertificateNo: certificate.otherCertificateNo,
-      totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
+      totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
     };
 
     setFormState(newFormState);

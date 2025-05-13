@@ -44,7 +44,7 @@ const InvoiceRC2BaseSchema = z.object({
   description: z.string().nullable().optional(),
   note: z.record(z.any()).nullable().optional(),
 
-  totalOfSummarizedCertificates: z.number().nullable().optional(),
+  totalOfSummarizedInvoices: z.number().nullable().optional(),
   carrierSerialNumber: z.string().nullable().optional(),
   otherCertificateNo: z.string().nullable().optional(),
 
