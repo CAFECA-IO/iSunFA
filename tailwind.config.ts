@@ -827,17 +827,16 @@ module.exports = {
         iphone12pro: '391px',
         iphonexr: '415px',
         iphone12promax: '431px',
-
         xs: '450px', // mobile
         sm: '500px', // mobile
         md: '768px', // tablet
         lg: '1024px', // desktop
         xl: '1440px',
 
-        tablet: '768px',
+        // Info: (20250512 - Liz) iSunFA RC2 斷點設計:
+        tablet: '745px',
         laptop: '1024px', // (1024*768)
         desktop: '1440px', // (1440*900)
-
         // Info: (20241007 - Liz) iSunFA 設計稿以 1280px 為基準 (1280*800)
         screen1280: '1280px',
       },

@@ -6,6 +6,8 @@ import Profile from '@/components/beta/layout/profile';
 import CompanyBadge from '@/components/beta/layout/company_badge';
 import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { cn } from '@/lib/utils/common';
+import { FiMenu } from 'react-icons/fi';
 
 // ToDo: (20241226 - Liz) Beta 版沒有切換明暗模式功能
 const IS_MODE_SWITCH_AVAILABLE = false;
@@ -44,39 +46,65 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
   };
 
   return (
-    <header
-      className={`flex items-center gap-24px px-lv-7 pt-lv-6 screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
-    >
-      {isDashboard ? (
-        <Search toggleOverlay={toggleOverlay} />
-      ) : (
-        <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />
-      )}
+    <>
+      {/* Info: (20250512 - Liz) Desktop version (include: tablet/laptop/desktop) */}
+      <header
+        className={cn(
+          'hidden items-center gap-24px px-lv-7 pt-lv-6 tablet:flex screen1280:px-56px',
+          {
+            'print:hidden': notPrint,
+          }
+        )}
+      >
+        <section className="min-w-0 flex-auto">
+          {isDashboard ? (
+            <Search toggleOverlay={toggleOverlay} />
+          ) : (
+            <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />
+          )}
+        </section>
 
-      <section className="flex flex-none items-center gap-16px">
-        {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
+        <section className="ml-auto flex flex-none items-center gap-16px">
+          {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
 
-        <div ref={globalRef}>
-          <I18n
-            isMenuVisible={isMenuVisible}
-            setIsMenuVisible={setIsMenuVisible}
-            toggleI18nMenu={toggleI18nMenu}
+          <div ref={globalRef}>
+            <I18n
+              isMenuVisible={isMenuVisible}
+              setIsMenuVisible={setIsMenuVisible}
+              toggleI18nMenu={toggleI18nMenu}
+            />
+          </div>
+
+          <div ref={notificationRef}>
+            <Notification
+              isPanelOpen={isPanelOpen}
+              setIsPanelOpen={setIsPanelOpen}
+              toggleNotificationPanel={toggleNotificationPanel}
+            />
+          </div>
+
+          <CompanyBadge />
+
+          <Profile />
+        </section>
+      </header>
+
+      {/* Info: (20250512 - Liz) Mobile version */}
+      <header className="flex items-center bg-surface-neutral-surface-lv2 px-16px py-10px tablet:hidden">
+        <button type="button" className="p-10px">
+          <FiMenu
+            size={20}
+            className="text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-disable"
           />
-        </div>
+        </button>
 
-        <div ref={notificationRef}>
-          <Notification
-            isPanelOpen={isPanelOpen}
-            setIsPanelOpen={setIsPanelOpen}
-            toggleNotificationPanel={toggleNotificationPanel}
-          />
-        </div>
+        <section className="ml-auto flex flex-none items-center gap-16px">
+          <CompanyBadge />
 
-        <CompanyBadge />
-
-        <Profile />
-      </section>
-    </header>
+          <Profile />
+        </section>
+      </header>
+    </>
   );
 };
 

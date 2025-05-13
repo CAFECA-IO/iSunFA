@@ -23,7 +23,7 @@ const Profile = () => {
   };
 
   return (
-    <section className="relative" ref={profileRef}>
+    <section className="relative flex" ref={profileRef}>
       <button type="button" onClick={toggleDropdown} className="rounded-full">
         <Image
           src={userAvatarSrc}
@@ -36,7 +36,7 @@ const Profile = () => {
 
       {isDropdownOpen && (
         <div className="absolute right-0 top-full z-70 flex w-max translate-y-6 flex-col text-nowrap rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
-          {/* // Info: (20241014 - Liz) ===== 我的帳號 ===== */}
+          {/* Info: (20241014 - Liz) ===== 我的帳號 ===== */}
           <Link
             href={ISUNFA_ROUTE.MY_ACCOUNT_PAGE}
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
@@ -50,7 +50,7 @@ const Profile = () => {
             <p>{t('dashboard:HEADER.MY_ACCOUNT')}</p>
           </Link>
 
-          {/* // Info: (20241014 - Liz) ===== 訂閱與帳單 ===== */}
+          {/* Info: (20241014 - Liz) ===== 訂閱與帳單 ===== */}
           <Link
             href={ISUNFA_ROUTE.SUBSCRIPTIONS}
             className="flex items-center gap-12px rounded-xs px-12px py-8px hover:bg-dropdown-surface-item-hover"
@@ -59,7 +59,7 @@ const Profile = () => {
             <p>{t('dashboard:HEADER.SUBSCRIPTION_AND_BILLS')}</p>
           </Link>
 
-          {/* // Info: (20241209 - Liz) ===== 切換角色 ===== */}
+          {/* Info: (20241209 - Liz) ===== 切換角色 ===== */}
           <button
             type="button"
             onClick={switchRole}
@@ -74,7 +74,7 @@ const Profile = () => {
             <p>{t('dashboard:HEADER.SWITCH_ROLE')}</p>
           </button>
 
-          {/* // Info: (20241014 - Liz) ===== 登出 ===== */}
+          {/* Info: (20241014 - Liz) ===== 登出 ===== */}
           <button
             type="button"
             onClick={signOut}

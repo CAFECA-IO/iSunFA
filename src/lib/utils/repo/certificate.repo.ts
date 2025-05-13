@@ -144,7 +144,11 @@ export async function createCertificateWithEmptyInvoice(options: {
             voucher: true,
           },
         },
-        file: true,
+        file: {
+          include: {
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
+          },
+        },
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -185,7 +189,11 @@ export async function getOneCertificateById(
             voucher: true,
           },
         },
-        file: true,
+        file: {
+          include: {
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
+          },
+        },
         // invoices: {
         //   include: {
         //     counterParty: true,
@@ -403,7 +411,11 @@ export async function getCertificatesV2(options: {
             voucher: true,
           },
         },
-        file: true,
+        file: {
+          include: {
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
+          },
+        },
         // invoices: {
         //   include: {
         //     counterParty: true,
