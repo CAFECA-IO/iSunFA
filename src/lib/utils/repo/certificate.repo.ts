@@ -146,7 +146,7 @@ export async function createCertificateWithEmptyInvoice(options: {
         },
         file: {
           include: {
-            thumbnail: true, // 包含縮略圖關係
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
           },
         },
         // invoices: {
@@ -191,7 +191,7 @@ export async function getOneCertificateById(
         },
         file: {
           include: {
-            thumbnail: true, // 包含縮略圖關係
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
           },
         },
         // invoices: {
@@ -413,7 +413,7 @@ export async function getCertificatesV2(options: {
         },
         file: {
           include: {
-            thumbnail: true, // 包含縮略圖關係
+            thumbnail: true, // Info: (20250513 - Shirley) 包含縮圖資訊
           },
         },
         // invoices: {
