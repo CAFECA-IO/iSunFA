@@ -101,7 +101,7 @@ const Notification = ({
 
       {/* // Info: (20241011 - Liz) 通知訊息面板 */}
       {isPanelOpen && (
-        <div className="absolute right-0 top-full z-10 mt-10px flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
+        <div className="absolute right-0 top-full z-100 mt-10px flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
           <button
             type="button"
             className="flex items-center gap-4px self-end rounded-xs px-16px py-8px text-button-text-secondary hover:bg-button-surface-soft-secondary-hover disabled:text-button-text-disable"
