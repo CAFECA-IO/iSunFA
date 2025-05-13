@@ -165,7 +165,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
-  [APIName.LIST_CERTIFICATE_RC2_INPUT]: certificateListValidator,
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
@@ -323,4 +322,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_PAYMENT_METHOD_CHARGE]: nullAPISchema,
   [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: nullAPISchema,
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: nullAPISchema,
+
+  [APIName.SEND_VERIFICATION_EMAIL]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for send verification email
+  [APIName.VERIFY_CODE]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for verify code
 };

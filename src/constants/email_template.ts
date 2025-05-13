@@ -1,9 +1,10 @@
 export enum EmailTemplateName {
   INVITE = 'invite',
   PAY = 'pay',
-  PAY_ERROR = 'pay-error',
+  PAY_ERROR = 'pay_error',
   SUBSCRIBE = 'subscribe',
   FREE = 'free',
+  VERIFICATION = 'verification_code',
 }
 
 export type EmailTemplateData = {
@@ -14,22 +15,34 @@ export type EmailTemplateData = {
   };
   // Info: (20250421 - Tzuhan) 具體可傳入的資料需要再確認
   [EmailTemplateName.PAY]: {
-    teamName: string;
+    receiverName: string;
+    planName: string;
     amount: string;
-    payDate: string;
-  };
-  [EmailTemplateName.PAY_ERROR]: {
-    teamName: string;
-    failReason: string;
-    retryLink: string;
-  };
-  [EmailTemplateName.SUBSCRIBE]: {
-    teamName: string;
     startDate: string;
     endDate: string;
   };
+  [EmailTemplateName.PAY_ERROR]: {
+    receiverName: string;
+    planName: string;
+    amount: string;
+    startDate: string;
+    endDate: string;
+    payStatus: string;
+    payLink: string;
+  };
+  [EmailTemplateName.SUBSCRIBE]: {
+    receiverName: string;
+  };
   [EmailTemplateName.FREE]: {
-    teamName: string;
-    reminderDate: string;
+    receiverName: string;
+    currentPlanName: string;
+    currentDataStatus: string;
+    subscribeLink: string;
+  };
+  [EmailTemplateName.VERIFICATION]: {
+    receiverName: string;
+    eventType: string;
+    verificationCode: string;
+    remainingMins: string;
   };
 };

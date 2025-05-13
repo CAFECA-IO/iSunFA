@@ -3,21 +3,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { timestampToString } from '@/lib/utils/common';
-import { IJob } from '@/interfaces/job';
+import { IVacancy } from '@/interfaces/vacancy';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import FavoriteButton from '@/components/join_us/favorite_button';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface IVacancyItem {
-  job: IJob;
+  vacancy: IVacancy;
   isFavorite: boolean;
   toggleFavorite: () => void;
 }
 
-const VacancyItem: React.FC<IVacancyItem> = ({ job, isFavorite, toggleFavorite }) => {
+const VacancyItem: React.FC<IVacancyItem> = ({ vacancy, isFavorite, toggleFavorite }) => {
   const { t } = useTranslation(['hiring']);
 
-  const { id, title, location, date, description } = job;
+  const { id, title, location, date, description } = vacancy;
   const dateStr = timestampToString(date).dateWithSlash;
 
   return (

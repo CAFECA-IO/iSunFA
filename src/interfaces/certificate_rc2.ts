@@ -4,12 +4,20 @@ import {
   TaxType,
   CurrencyCode,
   DeductionType,
+  CERTIFICATE_USER_INTERACT_OPERATION,
 } from '@/constants/certificate';
+import { ICertificateUI } from '@/interfaces/certificate';
 
 export interface ICertificateRC2Base {
   id: number;
   accountBookId: number;
-  fileId: number;
+  voucherId: number | null;
+  file: {
+    id: number;
+    name: string;
+    size: number;
+    url: string;
+  };
   uploaderId: number;
   direction: CertificateDirection;
   aiResultId: string;
@@ -21,7 +29,7 @@ export interface ICertificateRC2Base {
   type: CertificateType;
   issuedDate: number;
   no: string;
-  currency: CurrencyCode;
+  currencyCode: CurrencyCode;
   taxType: TaxType;
   taxRate?: number;
   netAmount: number;
@@ -29,15 +37,21 @@ export interface ICertificateRC2Base {
   totalAmount: number;
 
   isGenerated: boolean;
+  incomplete: boolean;
+  description?: string;
+  note?: JSON;
 
   totalOfSummarizedCertificates?: number;
   carrierSerialNumber?: string;
   otherCertificateNo?: string;
+
+  uploaderName: string;
+  voucherNo: string | null;
 }
 
 export interface ICertificateRC2Input extends ICertificateRC2Base {
   direction: CertificateDirection.INPUT;
-  deductionCategory?: DeductionType;
+  deductionType?: DeductionType;
   salesName?: string;
   salesIdNumber?: string;
   isSharedAmount?: boolean;
@@ -46,12 +60,29 @@ export interface ICertificateRC2Input extends ICertificateRC2Base {
   isReturnOrAllowance?: never;
 }
 
+export interface ICertificateRC2InputUI extends ICertificateRC2Input {
+  isSelected: boolean;
+  actions: CERTIFICATE_USER_INTERACT_OPERATION[];
+}
+
 export interface ICertificateRC2Output extends ICertificateRC2Base {
   direction: CertificateDirection.OUTPUT;
   buyerName?: string;
   buyerIdNumber?: string;
   isReturnOrAllowance?: boolean;
-  deductionCategory?: never;
+  deductionType?: never;
   salesName?: never;
   salesIdNumber?: never;
+  isSharedAmount?: never;
 }
+
+export interface ICertificateRC2OutputUI extends ICertificateRC2Output {
+  isSelected: boolean;
+  actions: CERTIFICATE_USER_INTERACT_OPERATION[];
+}
+
+export const isClassicCertificate = (
+  certificate: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI
+): certificate is ICertificateUI => {
+  return 'invoice' in certificate && 'file' in certificate && 'name' in certificate;
+};

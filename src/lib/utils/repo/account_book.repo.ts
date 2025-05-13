@@ -30,9 +30,10 @@ import { FileFolder } from '@/constants/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { getTeamList } from '@/lib/utils/repo/team.repo';
 import { DEFAULT_MAX_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
-import { createAccountingSetting } from '@/lib/utils/repo/accounting_setting.repo';
 import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permission';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { transaction } from '@/lib/utils/repo/transaction';
+import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -211,33 +212,71 @@ export const createAccountBook = async (
         teamId = +userTeams.data[0].id;
       }
     }
-    const createdAccountBook = await prisma.company.create({
-      data: {
-        teamId,
-        userId,
-        name,
-        taxId,
-        imageFileId: file.id,
-        startDate: nowInSecond,
-        tag,
-        isPrivate: false,
-        createdAt: nowInSecond,
-        updatedAt: nowInSecond,
-      },
-      include: {
-        imageFile: true, // 如果你需要回傳 image.url
-      },
+
+    // Info: (20250506 - Shirley) Using transaction to create account book and company setting together
+    const result = await transaction(async (tx) => {
+      const createdAccountBook = await tx.company.create({
+        data: {
+          teamId,
+          userId,
+          name,
+          taxId,
+          imageFileId: file.id,
+          startDate: nowInSecond,
+          tag,
+          isPrivate: false,
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        },
+        include: {
+          imageFile: true,
+        },
+      });
+
+      const companySetting = await tx.companySetting.create({
+        data: {
+          companyId: createdAccountBook.id,
+          taxSerialNumber: '',
+          representativeName: '',
+          country: '',
+          phone: '',
+          address: '',
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        },
+      });
+
+      await tx.accountingSetting.create({
+        data: {
+          companyId: createdAccountBook.id,
+          salesTaxTaxable: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_TAXABLE,
+          salesTaxRate: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_RATE,
+          purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
+          purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
+          returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
+          currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        },
+      });
+
+      return {
+        accountBook: createdAccountBook,
+        companySetting,
+      };
     });
+
+    const { accountBook: createdAccountBook } = result;
+
     accountBook = {
       ...createdAccountBook,
       ...body,
       imageId: createdAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
     };
+
     // Info: (20250124 - Shirley) Step 4.
     const companyKeyPair = await generateKeyPair();
     await storeKeyByCompany(createdAccountBook.id, companyKeyPair);
-    // Info: (20250124 - Shirley) Step 5.
-    await createAccountingSetting(createdAccountBook.id);
   }
   return accountBook;
 };

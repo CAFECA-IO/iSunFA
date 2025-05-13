@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import useShareProcess from '@/lib/hooks/use_share_process';
 import { TbArrowBack } from 'react-icons/tb';
+import { FaLine, FaFacebookSquare } from 'react-icons/fa';
+import { FaSquareXTwitter } from 'react-icons/fa6';
 import LandingNavbar from '@/components/landing_page_v2/landing_navbar';
 import LandingFooter from '@/components/landing_page_v2/landing_footer';
 import ScrollToTopButton from '@/components/landing_page_v2/scroll_to_top';
@@ -13,42 +17,105 @@ import {
 } from '@/components/landing_page_v2/linear_gradient_text';
 import FavoriteButton from '@/components/join_us/favorite_button';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
-import { IJobDetail } from '@/interfaces/job';
+import { IVacancyDetail } from '@/interfaces/vacancy';
 import { timestampToString } from '@/lib/utils/common';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { useHiringCtx } from '@/contexts/hiring_context';
+import { haloStyle } from '@/constants/display';
+import { ShareSettings } from '@/constants/social_media';
 
-interface IJobDetailBodyProps {
-  jobData: IJobDetail;
+interface IVacancyDetailBodyProps {
+  jobData: IVacancyDetail;
 }
 
-const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
+const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   const { t } = useTranslation(['hiring', 'common']);
-
-  const { id, title, location, date, description, jobResponsibilities, requirements, extraSkills } =
+  const { id, title, location, date, description, responsibilities, requirements, extraSkills } =
     jobData;
+  const { favoriteVacancyIds, toggleFavoriteVacancyId } = useHiringCtx();
+
+  const {
+    targetRef,
+    componentVisible: isSharingOpen,
+    setComponentVisible: setSharingOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250507 - Julian) 分享路徑
+  const { share } = useShareProcess({ sharePath: `${ISUNFA_ROUTE.JOIN_US}/${id}` });
+
+  // Info: (20250507 - Julian) 社群媒體按鈕
+  const socialMedias = Object.entries(ShareSettings).map(([key, value]) => {
+    const icon = {
+      FACEBOOK: <FaFacebookSquare size={24} />,
+      TWITTER: <FaSquareXTwitter size={24} />,
+      LINE: <FaLine size={24} />,
+    }[key as keyof typeof ShareSettings];
+
+    const onClick = () => {
+      share({
+        socialMedia: key as keyof typeof ShareSettings,
+        text: 'Check out this job opportunity!',
+        size: value.size,
+      });
+    };
+
+    return (
+      <button
+        key={key}
+        type="button"
+        onClick={onClick}
+        className="text-white hover:text-surface-brand-primary-moderate"
+      >
+        {icon}
+      </button>
+    );
+  });
+
+  // Info: (20250505 - Julian) 將時間戳轉換為日期格式
   const dateString = timestampToString(date).dateWithSlash;
 
-  // ToDo: (20250407 - Julian) 這邊要改成從後端取得的資料
-  const [isFavorite, setIsFavorite] = useState<boolean>(false);
-  const toggleFavorite = () => setIsFavorite((prev) => !prev);
+  // Info: (20250505 - Julian) 在 favoriteVacancyIds 中找是否有該 vacancyId
+  const isFavorite = favoriteVacancyIds.includes(id);
 
-  const resList = jobResponsibilities.map((item) => (
-    <li key={item} className="text-lg leading-10">
+  // Info: (20250505 - Julian) 點擊後 toggle favorite
+  const toggleFavorite = () => toggleFavoriteVacancyId(id);
+  // Info: (20250505 - Julian) 點擊後 toggle share
+  const toggleShare = () => setSharingOpen(!isSharingOpen);
+
+  const resList = responsibilities.map((item) => (
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
 
   const reqList = requirements.map((item) => (
-    <li key={item} className="text-lg leading-10">
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
 
   const extraList = extraSkills.map((item) => (
-    <li key={item} className="text-lg leading-10">
+    <li key={item} className="text-sm leading-8 lg:text-lg lg:leading-10">
       {item}
     </li>
   ));
+
+  const sharingBtn = (
+    <div ref={targetRef} className="relative flex flex-col">
+      <div
+        className={`${haloStyle} ${
+          isSharingOpen
+            ? 'visible translate-y-0 opacity-100'
+            : 'invisible translate-y-10px opacity-0'
+        } absolute -top-14 flex items-center gap-12px rounded-xs px-12px py-8px transition-all duration-200 ease-in-out`}
+      >
+        {socialMedias}
+      </div>
+      <button type="button" className="p-10px hover:opacity-80" onClick={toggleShare}>
+        <Image src="/icons/share_link.svg" width={24} height={24} alt="share_icon" />
+      </button>
+    </div>
+  );
 
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
@@ -60,13 +127,13 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
 
       <main className="z-10 overflow-y-auto overflow-x-hidden">
         {/* Info: (20250407 - Julian) Job Detail */}
-        <div className="flex flex-col items-stretch gap-100px px-150px pb-100px pt-500px">
+        <div className="flex flex-col items-stretch gap-50px px-16px pb-100px pt-50px lg:gap-100px lg:px-150px lg:pt-500px">
           {/* Info: (20250407 - Julian) Job Head */}
           <div className="flex flex-col items-center">
             <LinearGradientText size={LinearTextSize.XL} align={TextAlign.CENTER}>
               {title}
             </LinearGradientText>
-            <div className="flex items-center gap-lv-5 text-xl font-semibold text-surface-brand-primary">
+            <div className="flex items-center gap-lv-5 text-base font-semibold text-surface-brand-primary lg:text-xl">
               <p>{location}</p>
               <p>{dateString}</p>
             </div>
@@ -75,20 +142,22 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
           {/* Info: (20250407 - Julian) Job Body */}
           <div className="flex flex-col gap-lv-10">
             {/* Info: (20250407 - Julian) Job Description */}
-            <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">Job Description</h2>
-              <p className="text-lg leading-10">{description}</p>
+            <div className="flex flex-col gap-10px lg:gap-40px">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
+                Job Description
+              </h2>
+              <p className="text-sm leading-8 lg:text-lg lg:leading-10">{description}</p>
             </div>
             {/* Info: (20250407 - Julian) Your Job Will Be ... */}
-            <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+            <div className="flex flex-col gap-10px lg:gap-40px">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 Your Job Will Be ...
               </h2>
               <ul className="list-inside list-disc">{resList}</ul>
             </div>
             {/* Info: (20250407 - Julian) What Makes You a Great Fit */}
             <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 What Makes You a Great Fit
               </h2>
               <ul className="flex list-inside list-disc list-image-orange-check flex-col gap-4px">
@@ -97,7 +166,7 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
             </div>
             {/* Info: (20250407 - Julian) Extra Power You Bring */}
             <div className="flex flex-col gap-40px">
-              <h2 className="text-36px font-bold text-text-brand-primary-lv3">
+              <h2 className="text-2xl font-bold text-text-brand-primary-lv3 lg:text-36px">
                 Extra Power You Bring
               </h2>
               <ul className="flex list-inside list-disc list-image-orange-plus flex-col gap-4px">
@@ -112,9 +181,7 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
               {/* Info: (20250402 - Julian) Favorite Button */}
               <FavoriteButton isActive={isFavorite} clickHandler={toggleFavorite} />
               {/* Info: (20250407 - Julian) Share Button */}
-              <button type="button" className="p-10px hover:opacity-80">
-                <Image src="/icons/share_link.svg" width={24} height={24} alt="share_icon" />
-              </button>
+              {sharingBtn}
             </div>
 
             <div className="flex items-center gap-lv-6">
@@ -143,4 +210,4 @@ const JobDetailBody: React.FC<IJobDetailBodyProps> = ({ jobData }) => {
   );
 };
 
-export default JobDetailBody;
+export default VacancyDetailBody;

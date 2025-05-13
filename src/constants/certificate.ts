@@ -24,8 +24,8 @@ export enum InvoiceTabs {
 }
 
 export enum CertificateTab {
-  WITH_VOUCHER = 'WITH_VOUCHER',
   WITHOUT_VOUCHER = 'WITHOUT_VOUCHER',
+  WITH_VOUCHER = 'WITH_VOUCHER',
 }
 
 export enum CertificateDirection {
@@ -35,6 +35,7 @@ export enum CertificateDirection {
 
 export enum CertificateType {
   ALL = 'ALL',
+  INPUT_20 = 'INPUT_20',
   INPUT_21 = 'INPUT_21',
   INPUT_22 = 'INPUT_22',
   INPUT_23 = 'INPUT_23',
@@ -44,8 +45,11 @@ export enum CertificateType {
   INPUT_27 = 'INPUT_27',
   INPUT_28 = 'INPUT_28',
   INPUT_29 = 'INPUT_29',
+  OUTPUT_30 = 'OUTPUT_30',
   OUTPUT_31 = 'OUTPUT_31',
   OUTPUT_32 = 'OUTPUT_32',
+  OUTPUT_33 = 'OUTPUT_33',
+  OUTPUT_34 = 'OUTPUT_34',
   OUTPUT_35 = 'OUTPUT_35',
   OUTPUT_36 = 'OUTPUT_36',
 }

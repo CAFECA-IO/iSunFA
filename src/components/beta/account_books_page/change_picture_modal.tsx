@@ -114,7 +114,7 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
     }
   };
 
-  // Info: (20250429 - Liz) 移除已選圖片及預覽
+  // Info: (20250429 - Liz) 移除已選圖片
   const handleRemove = () => {
     setImageSrc(null);
     setCroppedAreaPixels(null);

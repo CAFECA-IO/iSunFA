@@ -1,10 +1,11 @@
 import Head from 'next/head';
 import React from 'react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import LoginPageBody from '@/components/login/login_page_body';
+// import LoginPageBody from '@/components/login/login_page_body';
 import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { ILoginPageProps } from '@/interfaces/page_props';
+import NewLoginPageBody from '@/components/login/new_login_page_body'; // ToDo: (20250507 - Liz) 元件正在實作中
 
 const LoginPage = ({ invitation, action }: ILoginPageProps) => {
   const { t } = useTranslation('dashboard');
@@ -30,7 +31,8 @@ const LoginPage = ({ invitation, action }: ILoginPageProps) => {
       </Head>
 
       <div className="h-screen">
-        <LoginPageBody invitation={invitation} action={action} />
+        {/* <LoginPageBody invitation={invitation} action={action} /> */}
+        <NewLoginPageBody invitation={invitation} action={action} />
       </div>
     </>
   );

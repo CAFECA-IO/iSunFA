@@ -5,9 +5,6 @@ import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import { Button } from '@/components/button/button';
-import { InvoiceTransactionDirection, InvoiceType } from '@/constants/invoice';
-import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useModalContext } from '@/contexts/modal_context';
@@ -17,9 +14,10 @@ import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
-import EditableFilename from '@/components/certificate/edible_file_name';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import { IInvoiceBetaOptional } from '@/interfaces/invoice';
+import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import dayjs from 'dayjs';
+import html2canvas from 'html2canvas';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
@@ -27,17 +25,20 @@ import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
+import { ICertificateRC2Output, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
+import { CertificateDirection, CertificateType } from '@/constants/certificate';
+import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
 interface OutputCertificateEditModalProps {
   isOpen: boolean;
   accountBookId: number;
   toggleModel: () => void; // Info: (20240924 - Anna) 關閉模態框的回調函數
   currencyAlias: CurrencyType;
-  certificate?: ICertificateUI;
+  certificate?: ICertificateRC2OutputUI;
   onUpdateFilename: (certificateId: number, name: string) => void;
-  onSave: (data: ICertificate) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
+  onSave: (data: Partial<ICertificateRC2Output>) => Promise<void>; // Info: (20240924 - Anna) 保存數據的回調函數
   onDelete: (id: number) => void;
-  certificates: ICertificateUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
+  certificates: ICertificateRC2OutputUI[]; // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
   editingId: number; // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
   setEditingId: (id: number) => void; // Info: (20250415 - Anna) 前後筆切換時用
 }
@@ -48,26 +49,29 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   toggleModel,
   currencyAlias,
   certificate,
-  onUpdateFilename,
   onSave,
   onDelete,
   certificates,
   editingId,
   setEditingId,
 }) => {
-  const selectableInvoiceType: InvoiceType[] = [
-    InvoiceType.SALES_TRIPLICATE_INVOICE,
-    InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC,
-    InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE,
-    InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM,
-    InvoiceType.SALES_TRIPLICATE_CASH_REGISTER_AND_ELECTRONIC,
-    InvoiceType.SALES_NON_UNIFORM_INVOICE,
+  const selectableCertificateType: CertificateType[] = [
+    CertificateType.OUTPUT_31,
+    CertificateType.OUTPUT_32,
+    CertificateType.OUTPUT_33,
+    CertificateType.OUTPUT_34,
+    CertificateType.OUTPUT_35,
+    CertificateType.OUTPUT_36,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
 
+  // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
+  const certificateRef = useRef<HTMLDivElement>(null);
+  const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
+
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
-  const savedInvoiceRef = useRef<ICertificate['invoice']>(certificate?.invoice ?? {});
+  const savedCertificateRC2Ref = useRef<Partial<ICertificateRC2Output>>(certificate ?? {});
 
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
@@ -78,9 +82,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
   // Info: (20240924 - Anna) 不顯示模態框時返回 null
   if (!isOpen || !certificate) return null;
-  const [certificateFilename, setCertificateFilename] = useState<string>(certificate.file.name);
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.invoice?.date ?? 0,
+    startTimeStamp: certificate.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
@@ -88,17 +91,17 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     () =>
       ({
         // Info: (20250414 - Anna) 這個組件改為全為銷項
-        inputOrOutput: InvoiceTransactionDirection.OUTPUT,
-        date: certificate.invoice.date,
-        no: certificate.invoice.no,
-        priceBeforeTax: certificate.invoice.priceBeforeTax,
-        taxRatio: certificate.invoice.taxRatio,
-        taxPrice: certificate.invoice.taxPrice,
-        totalPrice: certificate.invoice.totalPrice,
-        counterParty: certificate.invoice.counterParty,
-        type: certificate.invoice.type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
-        deductible: certificate.invoice.deductible,
-      }) as IInvoiceBetaOptional
+        direction: CertificateDirection.OUTPUT,
+        date: certificate.issuedDate,
+        no: certificate.no,
+        netAmount: certificate.netAmount,
+        taxRate: certificate.taxRate,
+        taxAmount: certificate.taxAmount,
+        totalAmount: certificate.totalAmount,
+        buyerIdNumber: certificate.buyerIdNumber,
+        buyerName: certificate.buyerName,
+        type: certificate.type ?? CertificateType.INPUT_21,
+      }) as Partial<ICertificateRC2Output>
   );
   const [errors] = useState<Record<string, string>>({});
   const [isReturnOrAllowance, setIsReturnOrAllowance] = useState(false);
@@ -109,18 +112,18 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
-    const { date: selectedDate, priceBeforeTax, totalPrice, counterParty } = formStateRef.current;
+    const { issuedDate: selectedDate, netAmount, taxAmount, buyerName } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
     }
-    if (!priceBeforeTax || priceBeforeTax <= 0) {
-      newErrors.priceBeforeTax = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
+    if (!netAmount || netAmount <= 0) {
+      newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
-    if (!totalPrice || totalPrice <= 0) {
-      newErrors.totalPrice = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+    if (!taxAmount || taxAmount <= 0) {
+      newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
     }
-    if (!counterParty?.name) {
+    if (!buyerName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
@@ -136,9 +139,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       value:
         | string
         | number
-        | InvoiceTransactionDirection
+        | CertificateDirection
         | ICounterpartyOptional
-        | InvoiceType
+        | CertificateType
         | boolean
         | null
     ) => {
@@ -159,12 +162,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
       params: { accountBookId },
     });
     if (success && data) {
-      if (formState.taxRatio === undefined) {
+      if (formState.taxRate === undefined) {
         // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，所以不需再判斷 if (formState.inputOrOutput === OUTPUT)
-        handleInputChange('taxRatio', data.taxSettings.salesTax.rate * 100);
+        handleInputChange('taxRate', data.taxSettings.salesTax.rate * 100);
       }
     }
-  }, [accountBookId, formState.taxRatio]);
+  }, [accountBookId, formState.taxRate]);
 
   const listCounterparty = useCallback(async () => {
     const { success, data } = await getCounterpartyList({
@@ -177,8 +180,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
 
   const {
     targetRef: invoiceTypeMenuRef,
-    componentVisible: isInvoiceTypeMenuOpen,
-    setComponentVisible: setIsInvoiceTypeMenuOpen,
+    componentVisible: isCertificateTypeMenuOpen,
+    setComponentVisible: setIsCertificateTypeMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250415 - Anna) 建立發票前綴選單的狀態和 Ref
@@ -189,7 +192,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   } = useOuterClick<HTMLDivElement>(false);
 
   const invoiceTypeMenuClickHandler = () => {
-    setIsInvoiceTypeMenuOpen(!isInvoiceTypeMenuOpen);
+    setIsCertificateTypeMenuOpen(!isCertificateTypeMenuOpen);
   };
 
   // Info: (20250415 - Anna) 點擊切換發票前綴下拉狀態;
@@ -197,8 +200,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
   };
 
-  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
-    setIsInvoiceTypeMenuOpen(false);
+  const invoiceTypeMenuOptionClickHandler = (id: CertificateType) => {
+    setIsCertificateTypeMenuOpen(false);
     handleInputChange('type', id);
     // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
     setIsReturnOrAllowance(false);
@@ -212,38 +215,38 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     setIsInvoicePrefixMenuOpen(false);
   };
 
-  const priceBeforeTaxChangeHandler = (value: number) => {
-    handleInputChange('priceBeforeTax', value);
-    const updateTaxPrice = Math.round((value * (formState.taxRatio ?? 0)) / 100);
-    handleInputChange('taxPrice', updateTaxPrice);
-    handleInputChange('totalPrice', value + updateTaxPrice);
+  const netAmountChangeHandler = (value: number) => {
+    handleInputChange('netAmount', value);
+    const updateTaxPrice = Math.round((value * (formState.taxRate ?? 0)) / 100);
+    handleInputChange('taxAmount', updateTaxPrice);
+    handleInputChange('totalAmount', value + updateTaxPrice);
   };
 
   const selectTaxHandler = (value: number | null) => {
-    handleInputChange('taxRatio', value);
-    const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * (value ?? 0)) / 100);
-    handleInputChange('taxPrice', updateTaxPrice);
-    handleInputChange('totalPrice', (formState.priceBeforeTax ?? 0) + updateTaxPrice);
+    handleInputChange('taxRate', value);
+    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (value ?? 0)) / 100);
+    handleInputChange('taxAmount', updateTaxPrice);
+    handleInputChange('totalAmount', (formState.netAmount ?? 0) + updateTaxPrice);
   };
 
-  const totalPriceChangeHandler = (value: number) => {
-    handleInputChange('totalPrice', value);
-    const ratio = (100 + (formState.taxRatio ?? 0)) / 100;
+  const totalAmountChangeHandler = (value: number) => {
+    handleInputChange('totalAmount', value);
+    const ratio = (100 + (formState.taxRate ?? 0)) / 100;
     const updatePriceBeforeTax = Math.round(value / ratio);
-    handleInputChange('priceBeforeTax', updatePriceBeforeTax);
+    handleInputChange('netAmount', updatePriceBeforeTax);
     const updateTaxPrice = value - updatePriceBeforeTax;
-    handleInputChange('taxPrice', updateTaxPrice);
+    handleInputChange('taxAmount', updateTaxPrice);
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.invoice?.currencyAlias || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
   const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.invoice?.currencyAlias || currencyAlias).toUpperCase()}`
+    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
   );
 
   // Info: (20250416 - Anna) 發票字軌選單
-  const invoiceDate = formState.date ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
+  const invoiceDate = formState.issuedDate ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
   const invoiceTracks = getInvoiceTracksByDate(new Date(invoiceDate * 1000)); // Info: (20250416 - Anna) 秒轉毫秒
   const InvoiceNumberPrefix = [
     ...invoiceTracks.A,
@@ -275,23 +278,24 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
+    const { isSelected, actions, ...rest } = certificate;
 
-    const updatedInvoice = {
-      ...certificate.invoice,
+    const updatedCertificate = {
+      ...rest,
       ...formStateRef.current,
     };
 
     // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
-    if (shallowEqual(savedInvoiceRef.current, updatedInvoice)) return;
+    if (shallowEqual(savedCertificateRC2Ref.current, updatedCertificate)) return;
 
-    const updatedData: ICertificate = {
+    const updatedData: Partial<ICertificateRC2Output> = {
       ...certificate,
-      invoice: updatedInvoice,
+      ...updatedCertificate,
     };
     await onSave(updatedData);
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
-    savedInvoiceRef.current = updatedInvoice;
+    savedCertificateRC2Ref.current = updatedCertificate;
   }, [certificate, onSave]);
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
@@ -304,13 +308,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     formStateRef.current = formState;
   }, []);
 
-  // Info: (20250414 - Anna) 初始化 savedInvoiceRef，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
+  // Info: (20250414 - Anna) 初始化 savedCertificateRC2Ref，代表「目前已儲存的版本（上次存成功的資料）」，每次打開 modal 都會更新，用來與最新內容做 shallowEqual 比較
   useEffect(() => {
-    // Info: (20250414 - Anna) 確保 savedInvoiceRef.current 被正確初始化為 certificate.invoice
-    if (certificate?.invoice) {
-      savedInvoiceRef.current = certificate.invoice;
+    // Info: (20250414 - Anna) 確保 savedCertificateRC2Ref.current 被正確初始化為 certificate.invoice
+    if (certificate) {
+      savedCertificateRC2Ref.current = certificate;
     }
-  }, [certificate?.invoice]);
+  }, [certificate]);
 
   // Info: (20250414 - Anna) 用戶輸入新內容都同步放入formStateRef.current，用來和前面兩種舊資料內容比較
   useEffect(() => {
@@ -328,7 +332,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
     debounceTimer.current = setTimeout(() => {
-      const isSame = shallowEqual(formStateRef.current, savedInvoiceRef.current);
+      const isSame = shallowEqual(formStateRef.current, savedCertificateRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -337,62 +341,56 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     }, 1000); // Info: (20250414 - Anna) 停止輸入 1 秒才觸發
   }, [formState]);
 
-  // Info: (20250415 - Anna) certificate 或 editingId 變動時，重新初始化表單狀態、formRef、savedInvoiceRef、日期 等，為了做前後筆切換
+  // Info: (20250415 - Anna) certificate 或 editingId 變動時，重新初始化表單狀態、formRef、savedCertificateRC2Ref、日期 等，為了做前後筆切換
   useEffect(() => {
     if (!certificate) return;
 
-    const {
-      type,
-      // Info: (20250415 - Anna) 避免命名衝突，將 invoice.date 改名為 certificateDate
-      date: certificateDate,
-      no,
-      taxRatio,
-      counterParty,
-      priceBeforeTax,
-      taxPrice,
-      totalPrice,
-    } = certificate.invoice;
-
-    // Info: (20250415 - Anna) 初始化 formState
-    const newFormState: IInvoiceBetaOptional = {
-      inputOrOutput: InvoiceTransactionDirection.OUTPUT,
-      date: certificateDate,
-      no,
-      priceBeforeTax,
-      taxRatio,
-      taxPrice,
-      totalPrice,
-      counterParty,
-      type: type ?? InvoiceType.SALES_TRIPLICATE_INVOICE,
+    const newFormState: Partial<ICertificateRC2Output> = {
+      direction: CertificateDirection.OUTPUT,
+      issuedDate: certificate.issuedDate,
+      no: certificate.no,
+      netAmount: certificate.netAmount,
+      taxRate: certificate.taxRate,
+      taxAmount: certificate.taxAmount,
+      totalAmount: certificate.totalAmount,
+      buyerIdNumber: certificate.buyerIdNumber,
+      buyerName: certificate.buyerName,
+      isReturnOrAllowance: certificate.isReturnOrAllowance,
+      type: certificate.type ?? CertificateType.OUTPUT_31,
+      otherCertificateNo: certificate.otherCertificateNo,
+      totalOfSummarizedCertificates: certificate.totalOfSummarizedCertificates,
     };
 
-    // Info: (20250415 - Anna) 更新 state 與 Ref
     setFormState(newFormState);
     formStateRef.current = newFormState;
-    savedInvoiceRef.current = {
-      ...certificate.invoice,
-      ...newFormState,
-    };
+    savedCertificateRC2Ref.current = newFormState;
 
-    // Info: (20250415 - Anna) Debug 日期內容
-    if (certificateDate) {
+    // Info: (20250509 - Tzuhan) 同步更新日期 UI
+    if (certificate.issuedDate) {
       setDate({
-        startTimeStamp: certificateDate,
-        // Info: (20250415 - Anna) 補足當天結束時間（23:59:59）(24 小時 × 60 分鐘 × 60 秒 = 86400 秒，86400 - 1 = 86399 秒)
-        endTimeStamp: certificateDate + 86399,
+        startTimeStamp: certificate.issuedDate,
+        endTimeStamp: certificate.issuedDate + 86399,
       });
     }
-
-    // Info: (20250415 - Anna) 依據憑證類型判斷是否為折讓
-    if (
-      type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC ||
-      type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM
-    ) {
-      setIsReturnOrAllowance(true);
-    } else {
-      setIsReturnOrAllowance(false);
-    }
   }, [certificate, editingId]);
+
+  useEffect(() => {
+    if (!certificateRef.current) return;
+
+    html2canvas(certificateRef.current).then((canvas) => {
+      const dataUrl = canvas.toDataURL('image/png');
+      setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
+    });
+  }, [formState]);
+
+  // Info: (20250512 - Anna) Debug
+  useEffect(() => {
+    if (isOpen && certificate) {
+      // Deprecated: (20250512 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Modal initialized with certificate:', certificate);
+    }
+  }, [isOpen, certificate]);
 
   return (
     <div
@@ -411,21 +409,41 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <EditableFilename
-          certificate={certificate}
-          certificateFilename={certificateFilename}
-          setCertificateFilename={setCertificateFilename}
-          onUpdateFilename={onUpdateFilename}
-        />
+        <div className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
+          {t(`certificate:EDIT.OUTPUT_INVOICE`)}
+        </div>
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-          <ImageZoom
-            imageUrl={certificate.file.thumbnail?.url || certificate.file.url}
-            className="max-h-630px min-h-450px w-440px"
-            controlPosition="bottom-right"
-          />
+          {certificate.isGenerated && (
+            <div className="h-0 w-0 overflow-hidden">
+              <EInvoicePreview
+                ref={certificateRef}
+                certificateType={CertificateType.OUTPUT_35}
+                issuedDate={dayjs
+                  .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
+                  .format('YYYY-MM-DD')}
+                invoiceNo={formState.no ?? certificate.no ?? ''}
+                TaxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
+                netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
+                taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
+                totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
+              />
+            </div>
+          )}
+
+          {(certificate.file?.url || eInvoiceImageUrl) && (
+            <ImageZoom
+              imageUrl={
+                certificate.isGenerated && eInvoiceImageUrl
+                  ? eInvoiceImageUrl
+                  : certificate.file.url
+              }
+              className="max-h-630px min-h-450px w-440px"
+              controlPosition="bottom-right"
+            />
+          )}
           {/* Info: (20240924 - Anna) 編輯表單 */}
           {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
           <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 overflow-y-scroll pb-80px">
@@ -441,7 +459,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     ref={invoiceTypeMenuRef}
                     id="invoice-type-menu"
                     onClick={invoiceTypeMenuClickHandler}
-                    className={`group relative flex h-46px w-full cursor-pointer ${isInvoiceTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                    className={`group relative flex h-46px w-full cursor-pointer ${isCertificateTypeMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                   >
                     <p className="flex h-46px w-full items-center justify-between">
                       <span className="h-24px overflow-hidden">
@@ -449,15 +467,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                       </span>
                       <div className="flex h-20px w-20px items-center justify-center">
                         <FaChevronDown
-                          className={isInvoiceTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
+                          className={isCertificateTypeMenuOpen ? 'rotate-180' : 'rotate-0'}
                         />
                       </div>
                     </p>
                     <div
-                      className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isInvoiceTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
+                      className={`absolute left-0 top-50px grid w-full grid-cols-1 shadow-dropmenu ${isCertificateTypeMenuOpen ? 'grid-rows-1 border-dropdown-stroke-menu' : 'grid-rows-0 border-transparent'} overflow-hidden rounded-sm border transition-all duration-300 ease-in-out`}
                     >
                       <ul className="z-130 flex max-h-210px w-full flex-col items-start overflow-y-auto bg-dropdown-surface-menu-background-primary p-8px">
-                        {Object.values(selectableInvoiceType).map((value) => (
+                        {Object.values(selectableCertificateType).map((value) => (
                           <li
                             key={`taxable-${value}`}
                             value={value}
@@ -485,7 +503,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                 setFilteredPeriod={setDate}
                 type={DatePickerType.TEXT_DATE}
                 datePickerClassName="z-120"
-                datePickerHandler={(start: number) => handleInputChange('date', start)}
+                datePickerHandler={(start: number) => handleInputChange('issuedDate', start)}
               />
               {errors.date && (
                 <p className="-translate-y-1 self-start text-sm text-text-state-error">
@@ -498,11 +516,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="relative flex w-full flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-neutral-300">
-                {t('certificate:EDIT.INVOICE_NUMBER')}
+                {formState.type === CertificateType.OUTPUT_36
+                  ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
+                  : t('certificate:EDIT.INVOICE_NUMBER')}
                 <span className="text-text-state-error">*</span>
               </p>
 
-              {formState.type === InvoiceType.SALES_NON_UNIFORM_INVOICE ? (
+              {formState.type === CertificateType.OUTPUT_36 ? (
                 // Info: (20250415 - Anna) 免用統一發票的UI
                 <div className="flex w-full items-center">
                   <input
@@ -591,23 +611,29 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
               <div className="relative z-120 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
-              {errors.taxPrice && (
+              {errors.taxAmount && (
                 <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                  {errors.taxPrice}
+                  {errors.taxAmount}
                 </p>
               )}
             </div>
 
             {/* Info: (20240924 - Anna) CounterParty */}
-            {formState.type !== InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE && (
+            {formState.type !== CertificateType.OUTPUT_32 && (
               <>
                 <CounterpartyInput
                   ref={counterpartyInputRef}
-                  counterparty={formState.counterParty}
+                  counterparty={{
+                    taxId: formState.buyerIdNumber,
+                    name: formState.buyerName,
+                  }}
                   counterpartyList={counterpartyList}
                   onSelect={(cp: ICounterpartyOptional) => {
                     if (cp && cp.name) {
-                      handleInputChange('counterParty', cp);
+                      handleInputChange('buyerName', cp.name);
+                    }
+                    if (cp && cp.taxId) {
+                      handleInputChange('buyerIdNumber', cp.taxId);
                     }
                   }}
                   labelClassName="text-neutral-300"
@@ -617,12 +643,17 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     {errors.counterParty}
                   </p>
                 )}
+                {formState.type === CertificateType.OUTPUT_35 && (
+                  <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                    {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                  </p>
+                )}
               </>
             )}
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2">
+              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span className="text-text-state-error">*</span>
@@ -631,12 +662,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   <NumericInput
                     id="input-price-before-tax"
                     name="input-price-before-tax"
-                    value={formState.priceBeforeTax ?? 0}
+                    value={formState.netAmount ?? 0}
                     isDecimal
                     required
                     hasComma
                     className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                    triggerWhenChanged={priceBeforeTaxChangeHandler}
+                    triggerWhenChanged={netAmountChangeHandler}
                   />
                   <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
@@ -649,16 +680,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     <p>{currencyAliasStr}</p>
                   </div>
                 </div>
-                {errors.priceBeforeTax && (
+                {errors.netAmount && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                    {errors.priceBeforeTax}
+                    {errors.netAmount}
                   </p>
                 )}
               </div>
-              {formState.type !== InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE && (
+              {formState.type !== CertificateType.OUTPUT_32 && (
                 <>
                   {/* Info: (20250414 - Anna) Tax */}
-                  <div className="relative flex flex-1 flex-col items-start gap-2">
+                  <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
                     <p className="text-sm font-semibold text-neutral-300">
                       {t('certificate:EDIT.TAX')}
                       <span className="text-text-state-error">*</span>
@@ -667,7 +698,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                       <NumericInput
                         id="input-tax"
                         name="input-tax"
-                        value={formState.taxPrice ?? 0}
+                        value={formState.taxAmount ?? 0}
                         isDecimal
                         required
                         hasComma
@@ -684,6 +715,11 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                         <p>{currencyAliasStr}</p>
                       </div>
                     </div>
+                    {formState.type === CertificateType.OUTPUT_35 && (
+                      <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                        {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                      </p>
+                    )}
                   </div>
                 </>
               )}
@@ -701,12 +737,12 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   <NumericInput
                     id="input-total-price"
                     name="input-total-price"
-                    value={formState.totalPrice ?? 0}
+                    value={formState.totalAmount ?? 0}
                     isDecimal
                     required
                     hasComma
                     className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                    triggerWhenChanged={totalPriceChangeHandler}
+                    triggerWhenChanged={totalAmountChangeHandler}
                   />
                   <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                     <Image
@@ -719,9 +755,9 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                     <p>{currencyAliasStr}</p>
                   </div>
                 </div>
-                {errors.totalPrice && (
+                {errors.totalAmount && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                    {errors.totalPrice}
+                    {errors.totalAmount}
                   </p>
                 )}
               </div>
@@ -739,28 +775,28 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
                   setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
 
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                  // Info:Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                  // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                  // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
                   if (
-                    formState.type === InvoiceType.SALES_TRIPLICATE_INVOICE &&
+                    formState.type === CertificateType.OUTPUT_31 &&
                     isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC);
+                    handleInputChange('type', CertificateType.OUTPUT_33);
                   } else if (
-                    formState.type === InvoiceType.SALES_RETURNS_TRIPLICATE_AND_ELECTRONIC &&
+                    formState.type === CertificateType.OUTPUT_33 &&
                     !isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', InvoiceType.SALES_TRIPLICATE_INVOICE);
+                    handleInputChange('type', CertificateType.OUTPUT_31);
                   } else if (
-                    formState.type === InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE &&
+                    formState.type === CertificateType.OUTPUT_32 &&
                     isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM);
+                    handleInputChange('type', CertificateType.OUTPUT_34);
                   } else if (
-                    formState.type === InvoiceType.SALES_RETURNS_DUPLICATE_AND_NON_UNIFORM &&
+                    formState.type === CertificateType.OUTPUT_34 &&
                     !isTogglingToReturnOrAllowance
                   ) {
-                    handleInputChange('type', InvoiceType.SALES_DUPLICATE_CASH_REGISTER_INVOICE);
+                    handleInputChange('type', CertificateType.OUTPUT_32);
                   }
                 }}
               >

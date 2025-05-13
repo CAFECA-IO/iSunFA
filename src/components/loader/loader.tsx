@@ -8,11 +8,12 @@ export enum LoaderSize {
 
 interface LoaderProps {
   size?: LoaderSize;
+  notScreen?: boolean;
 }
 
-const Loader: React.FC<LoaderProps> = ({ size = LoaderSize.LARGE }) => {
+const Loader: React.FC<LoaderProps> = ({ size = LoaderSize.LARGE, notScreen }) => {
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className={`flex items-center justify-center ${notScreen ? '' : 'h-screen'}`}>
       <div
         className={`animate-spin rounded-full border-4 border-orange-400 border-t-transparent ${size}`}
       ></div>

@@ -51,7 +51,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const { connectedAccountBook } = useUserCtx();
 
   const accountBookId = connectedAccountBook?.id;
-  const currencyList = ['TWD', 'USD'];
+  const currencyList = ['TWD', 'USD', 'CNY', 'HKD', 'JPY'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
@@ -371,6 +371,7 @@ const AccountingSettingPageBody: React.FC = () => {
             const periodClickHandler = () => setCurrentTaxPeriod(period as ITaxPeriod);
             return (
               <button
+                key={period}
                 type="button"
                 onClick={periodClickHandler}
                 className="flex items-center px-12px py-8px hover:bg-dropdown-surface-item-hover"
@@ -409,7 +410,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 width={16}
                 height={16}
                 alt="currency_icon"
-                className="rounded-full"
+                className="aspect-square rounded-full object-cover"
               />
               <p>{currency}</p>
             </div>
@@ -528,7 +529,7 @@ const AccountingSettingPageBody: React.FC = () => {
                 height={16}
                 alt="currency_icon"
                 src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
-                className="rounded-full"
+                className="aspect-square rounded-full object-cover"
               />
               <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div>
               <div

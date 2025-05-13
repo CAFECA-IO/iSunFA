@@ -2,7 +2,22 @@
   "LOGIN": {
     "LOG_IN_WITH_GOOGLE": "使用 Google 登录",
     "LOG_IN_WITH_APPLE": "使用 Apple 登录",
-    "LAST_LOGIN_TIME": "上次登录时间"
+    "LAST_LOGIN_TIME": "上次登录时间",
+    "LOGIN": "登录",
+    "EMAIL": "电子邮件",
+    "ENTER_YOUR_EMAIL_ADDRESS": "输入电子邮件地址",
+    "INVALID_EMAIL_FORMAT": "电子邮件格式不正确",
+    "SENT_EMAIL_MESSAGE": "验证信稍早已寄送过了，请至您的信箱查看，若没有收到验证信，请等倒数秒数结束后再试一次",
+    "S": "秒",
+    "OR_LOGIN_WITH": "或使用以下方式登录",
+    "ENTER_THE_CODE": "输入验证码",
+    "VERIFICATION_CODE": "验证码",
+    "VERIFICATION_CODE_PLACEHOLDER": "例如: 123456",
+    "DID_NOT_GET_THE_CODE": "没有收到验证码?",
+    "SENT_CODE_MESSAGE": "验证信已寄送，请稍后再试",
+    "CONFIRM": "确认验证码",
+    "RESEND_CODE": "重新发送验证码",
+    "BACK_TO_LOGIN": "回到登录画面"
   },
 
   "DASHBOARD": {
@@ -154,7 +169,8 @@
     "TAX_ID": "统一编号",
     "WORK_TAG": "工作标签",
     "TEAM": "团队",
-    "CREATE_NEW_ACCOUNT_BOOK": "建立新帐本",
+    "CREATE_NEW_ACCOUNT_BOOK": "创建新账本",
+    "EDIT_ACCOUNT_BOOK": "编辑帐本",
     "ENTER_NAME": "输入名称",
     "RESPONSIBLE_PERSON": "负责人",
     "ENTER_RESPONSIBLE_PERSON": "输入负责人",
@@ -222,7 +238,7 @@
     "SINGLE_ENTITY_FILING": "单一法人申报",
     "CONSOLIDATED_FILING": "合并申报",
     "INDIVIDUAL_FILING": "个人申报",
-    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "单一总公司无分支机构",
+    "SINGLE_HEAD_OFFICE_WITHOUT_BRANCH_UNITS": "无分公司之单一机构",
     "HEAD_OFFICE_FILES_FOR_ALL_BRANCHES": "总公司为所有分支机构档案",
     "EACH_UNIT_FILES_SEPARATELY": "每个单位单独归档",
     "FILING_METHOD_REQUIRED": "请选择总缴种类"
@@ -239,7 +255,7 @@
   "AGENT_FILING_ROLE": {
     "ACCOUNTANT": "会计师",
     "BOOKKEEPER": "记帐士",
-    "BOOKKEEPER_AND_FILING_AGENT": "记帐士及申报代理人",
+    "BOOKKEEPER_AND_FILING_AGENT": "记帐及报税代理人",
     "I_AM": "我是...",
     "AGENT_FILING_ROLE_REQUIRED": "请填写申报人资料"
   }

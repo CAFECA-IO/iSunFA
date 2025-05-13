@@ -6,9 +6,14 @@ import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
 import { timestampToString } from '@/lib/utils/common';
+import {
+  ICertificateRC2InputUI,
+  ICertificateRC2OutputUI,
+  isClassicCertificate,
+} from '@/interfaces/certificate_rc2';
 
 interface CertificateThumbnailProps {
-  data: ICertificateUI;
+  data: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI;
   activeSelection: boolean;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onRemove: (id: number) => void;
@@ -26,6 +31,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const date = isClassicCertificate(data) ? data.invoice.date : data.issuedDate;
 
   return (
     <div
@@ -41,8 +47,8 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
           <Image
-            src={data.file.thumbnail?.url || data.file.url}
-            alt={`Certificate ${data.name}`}
+            src={data.file.url}
+            alt={`Certificate ${data.file.name}`}
             height={136}
             width={93}
             className="w-full object-cover"
@@ -51,9 +57,11 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
 
         {/* Info: (20240924 - Tzuhan) 發票號碼和日期 */}
         <div className="mt-2 text-center">
-          <div className="text-sm font-medium">{data.invoice.no}</div>
+          <div className="text-sm font-medium">
+            {isClassicCertificate(data) ? data.invoice.no : data.no}
+          </div>
           <div className="mt-1 text-xs text-text-neutral-tertiary">
-            {data.invoice.date ? timestampToString(data.invoice.date).date : data.invoice.date}
+            {date ? timestampToString(date).date : date}
           </div>
         </div>
       </div>

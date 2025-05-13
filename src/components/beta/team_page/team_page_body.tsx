@@ -19,6 +19,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -49,13 +50,9 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const isNoData = !accountBookList || accountBookList.length === 0;
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const closeDeleteModal = () => {
-    setAccountBookToDelete(undefined);
-  };
-
-  const openMemberListModal = () => {
-    setIsMemberListModalOpen(true);
-  };
+  const closeDeleteModal = () => setAccountBookToDelete(undefined);
+  const openMemberListModal = () => setIsMemberListModalOpen(true);
+  const closeAccountBookInfoModal = () => setAccountBookToEdit(undefined);
 
   // Info: (20250310 - Liz) 取得團隊帳本清單 API (list account book by team id)
   const { trigger: getAccountBookListByTeamIdAPI } = APIHandler<
@@ -164,10 +161,10 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       )}
 
       {accountBookToEdit && (
-        <TransferAccountBookModal
-          accountBookToTransfer={accountBookToEdit}
-          setAccountBookToTransfer={setAccountBookToTransfer}
-          getAccountBookListByTeamId={getAccountBookListByTeamId}
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeAccountBookInfoModal}
+          getAccountBookList={getAccountBookListByTeamId}
         />
       )}
 
