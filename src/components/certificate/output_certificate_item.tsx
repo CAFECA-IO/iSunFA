@@ -6,11 +6,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
-import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
+import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
 interface OutputCertificateListIrops {
   activeSelection: boolean;
-  certificate: ICertificateRC2OutputUI;
+  certificate: IInvoiceRC2OutputUI;
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;

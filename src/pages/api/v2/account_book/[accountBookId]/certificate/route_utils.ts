@@ -42,7 +42,7 @@ import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatt
 import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
-import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/invoice_rc2';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';

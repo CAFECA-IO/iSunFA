@@ -6,7 +6,7 @@ import { ICertificate, PostCertificateResponse } from '@/interfaces/certificate'
 import { SortBy, SortOrder } from '@/constants/sort';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
-import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/invoice_rc2';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DefaultValue } from '@/constants/default_value';
 import { Prisma } from '@prisma/client';

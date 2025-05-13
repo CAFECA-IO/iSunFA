@@ -2,7 +2,7 @@ import { type IInvoiceBetaOptional, type IInvoiceEntity } from '@/interfaces/inv
 import { IFileBeta, type IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
 import type { ICompanyEntity } from '@/interfaces/account_book';
-import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import type { IUserEntity } from '@/interfaces/user';
 import {
   Certificate as PrismaCertificate,

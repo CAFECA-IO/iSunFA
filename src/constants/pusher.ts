@@ -4,6 +4,7 @@ export enum PRIVATE_CHANNEL {
   VOUCHER = 'private-voucher',
   REPORT = 'private-report',
   ROOM = 'private-room',
+  INVOICE = 'private-invoice',
 }
 
 export enum CERTIFICATE_EVENT {
@@ -12,6 +13,12 @@ export enum CERTIFICATE_EVENT {
   UPDATE = 'certificate-update',
   ANALYSIS = 'certificate-analysis',
   DELETE = 'certificate-delete',
+}
+
+export enum INVOICE_EVENT {
+  CREATE = 'invoice-create',
+  UPDATE = 'invoice-update',
+  DELETE = 'invoice-delete',
 }
 
 export enum ROOM_EVENT {

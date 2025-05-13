@@ -11,12 +11,12 @@ import { useUserCtx } from '@/contexts/user_context';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { compressImageToTargetSize } from '@/lib/utils/image_compress';
 import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
-import { CertificateDirection, CurrencyCode } from '@/constants/certificate';
-import { ICertificateRC2Input, ICertificateRC2Output } from '@/interfaces/certificate_rc2';
+import { InvoiceDirection, CurrencyCode } from '@/constants/invoice_rc2';
+import { IInvoiceRC2Input, IInvoiceRC2Output } from '@/interfaces/invoice_rc2';
 
 interface InvoiceUploadProps {
   isDisabled: boolean;
-  certificateDirection?: CertificateDirection;
+  direction?: InvoiceDirection;
   toggleQRCode?: () => void;
   setFiles: React.Dispatch<React.SetStateAction<IFileUIBeta[]>>;
 }
@@ -25,18 +25,18 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
   isDisabled,
   toggleQRCode,
   setFiles,
-  certificateDirection,
+  direction,
 }) => {
   const { t } = useTranslation(['certificate']);
   const { connectedAccountBook } = useUserCtx();
   const [publicKey, setPublicKey] = useState<CryptoKey | null>(null);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: createCertificateAPI } = APIHandler<ICertificate>(APIName.CERTIFICATE_POST_V2);
-  const { trigger: createCertificateRC2Input } = APIHandler<ICertificateRC2Input>(
-    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  const { trigger: createInvoiceRC2Input } = APIHandler<IInvoiceRC2Input>(
+    APIName.CREATE_INVOICE_RC2_INPUT
   );
-  const { trigger: createCertificateRC2Output } = APIHandler<ICertificateRC2Output>(
-    APIName.CREATE_CERTIFICATE_RC2_OUTPUT
+  const { trigger: createInvoiceRC2Output } = APIHandler<IInvoiceRC2Output>(
+    APIName.CREATE_INVOICE_RC2_OUTPUT
   );
   const { trigger: fetchPublicKey } = APIHandler<JsonWebKey>(APIName.PUBLIC_KEY_GET);
 
@@ -150,15 +150,15 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
         // eslint-disable-next-line no-console
         console.log('InvoiceUpload fileMeta.id:', fileMeta.id);
         let successCreated: boolean;
-        let certificate: ICertificate | ICertificateRC2Input | ICertificateRC2Output | null = null;
-        if (certificateDirection) {
-          switch (certificateDirection) {
-            case CertificateDirection.INPUT: {
-              const result = await createCertificateRC2Input({
+        let certificate: ICertificate | IInvoiceRC2Input | IInvoiceRC2Output | null = null;
+        if (direction) {
+          switch (direction) {
+            case InvoiceDirection.INPUT: {
+              const result = await createInvoiceRC2Input({
                 params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
                 body: {
                   fileId: fileMeta.id,
-                  direction: CertificateDirection.INPUT,
+                  direction: InvoiceDirection.INPUT,
                   isGenerated: false,
                   currencyCode: CurrencyCode.TWD,
                 },
@@ -167,12 +167,12 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
               certificate = result.data;
               break;
             }
-            case CertificateDirection.OUTPUT: {
-              const result = await createCertificateRC2Output({
+            case InvoiceDirection.OUTPUT: {
+              const result = await createInvoiceRC2Output({
                 params: { accountBookId: connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID },
                 body: {
                   fileId: fileMeta.id,
-                  direction: CertificateDirection.OUTPUT,
+                  direction: InvoiceDirection.OUTPUT,
                   isGenerated: false,
                   currencyCode: CurrencyCode.TWD,
                 },

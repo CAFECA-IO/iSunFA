@@ -274,7 +274,7 @@ model Company {
   vouchers                   Voucher[]
   voucherSalaryRecordFolders VoucherSalaryRecordFolder[]
   transfers                  AccountBookTransfer[]
-  CertificateRC2             CertificateRC2[]
+  InvoiceRC2                 InvoiceRC2[]
 
   @@map("company")
 }
@@ -394,12 +394,12 @@ enum DeductionType {
   NON_DEDUCTIBLE_FIXED_ASSETS
 }
 
-enum CertificateDirection {
+enum InvoiceDirection {
   INPUT
   OUTPUT
 }
 
-enum CertificateType {
+enum InvoiceType {
   // Info: (20250429 - Tzuhan) Input 類型
   INPUT_20
   INPUT_21
@@ -432,29 +432,35 @@ enum TaxType {
   TAX_FREE
 }
 
-model CertificateRC2 {
-  id            Int                  @id @default(autoincrement())
-  accountBookId Int                  @map("accountbook_id")
-  voucherId     Int?                 @map("voucher_id")
-  fileId        Int                  @map("file_id")
-  uploaderId    Int                  @map("uploader_id")
-  direction     CertificateDirection @map("direction")
-  aiResultId    String?              @default("0") @map("ai_result_id")
-  aiStatus      String?              @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
-  createdAt     Int                  @map("created_at")
-  updatedAt     Int                  @map("updated_at")
-  deletedAt     Int?                 @map("deleted_at")
+model InvoiceRC2 {
+  id            Int              @id @default(autoincrement())
+  accountBookId Int              @map("accountbook_id")
+  voucherId     Int?             @map("voucher_id")
+  fileId        Int              @map("file_id")
+  uploaderId    Int              @map("uploader_id")
+  direction     InvoiceDirection @map("direction")
+  aiResultId    String?          @default("0") @map("ai_result_id")
+  aiStatus      String?          @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
+  createdAt     Int              @map("created_at")
+  updatedAt     Int              @map("updated_at")
+  deletedAt     Int?             @map("deleted_at")
 
   // Info: (20250429 - Tzuhan) Invoice 基本欄位
-  type         CertificateType? @map("type")
-  issuedDate   Int?             @map("issued_date")
-  no           String?          @map("no")
-  currencyCode CurrencyCode     @map("currency_code")
-  taxType      TaxType?         @map("tax_type")
-  taxRate      Int?             @map("tax_rate")
-  netAmount    Int?             @map("net_amount")
-  taxAmount    Int?             @map("tax_amount")
-  totalAmount  Int?             @map("total_amount")
+  type         InvoiceType? @map("type")
+  issuedDate   Int?         @map("issued_date")
+  no           String?      @map("no")
+  currencyCode CurrencyCode @map("currency_code")
+  taxType      TaxType?     @map("tax_type")
+  taxRate      Int?         @map("tax_rate")
+  netAmount    Int?         @map("net_amount")
+  taxAmount    Int?         @map("tax_amount")
+  totalAmount  Int?         @map("total_amount")
+
+  // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
+  isGenerated Boolean @default(false) @map("is_generated")
+  incomplete  Boolean @default(true) @map("incomplete") // Info: (20250509 - Tzuhan) 是否為不完整發票
+  description String? @map("description") // Info: (20250509 - Tzuhan) 發票描述
+  note        Json?   @map("note") // Info: (20250509 - Tzuhan) 可以擴充
 
   // Info: (20250429 - Tzuhan) Input 發票專屬欄位
   deductionType  DeductionType? @map("deduction_type")
@@ -468,12 +474,9 @@ model CertificateRC2 {
   isReturnOrAllowance Boolean? @default(false) @map("return_or_allowance")
 
   // Info: (20250429 - Tzuhan) 特殊情境（匯總發票/載具）
-  totalOfSummarizedCertificates Int?    @map("total_of_summarized_invoices")
-  carrierSerialNumber           String? @map("carrier_serial_number")
-  otherCertificateNo            String? @map("other_certificate_no")
-
-  // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
-  isGenerated Boolean @default(false) @map("is_generated")
+  totalOfSummarizedInvoices Int?    @map("total_of_summarized_invoices")
+  carrierSerialNumber       String? @map("carrier_serial_number")
+  otherCertificateNo        String? @map("other_certificate_no")
 
   // Info: (20250429 - Tzuhan) 關聯
   accountbook Company  @relation(fields: [accountBookId], references: [id])
@@ -575,17 +578,17 @@ model File {
 
   certificate                 Certificate?
   news                        News[]
-  companyImageFile            Company?         @relation("company_image_file")
-  kycPersonalIdFile           KYCRole?         @relation("kyc_personal_id_file")
-  kycCertificationFile        KYCRole?         @relation("kyc_certification_file")
-  ocrImageFile                Ocr?             @relation("ocr_image_file")
-  projectImageFile            Project?         @relation("project_image_file")
-  registrationCertificateFile CompanyKYC?      @relation("registration_certificate_file")
-  representativeIdCardFile    CompanyKYC?      @relation("representative_id_card_file")
-  taxCertificateFile          CompanyKYC?      @relation("tax_certificate_file")
-  userImageFile               User?            @relation("user_image_file")
-  teamFile                    Team?            @relation("team_image_file")
-  CertificateRC2              CertificateRC2[]
+  companyImageFile            Company?     @relation("company_image_file")
+  kycPersonalIdFile           KYCRole?     @relation("kyc_personal_id_file")
+  kycCertificationFile        KYCRole?     @relation("kyc_certification_file")
+  ocrImageFile                Ocr?         @relation("ocr_image_file")
+  projectImageFile            Project?     @relation("project_image_file")
+  registrationCertificateFile CompanyKYC?  @relation("registration_certificate_file")
+  representativeIdCardFile    CompanyKYC?  @relation("representative_id_card_file")
+  taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
+  userImageFile               User?        @relation("user_image_file")
+  teamFile                    Team?        @relation("team_image_file")
+  InvoiceRC2                  InvoiceRC2[]
 
   @@map("file")
 }
@@ -1066,7 +1069,7 @@ model User {
   accountBookTransfer AccountBookTransfer[]
   accountBook         Company[]
   teamOrder           TeamOrder[]
-  CertificateRC2      CertificateRC2[]
+  InvoiceRC2          InvoiceRC2[]
 
   @@map("user")
 }
@@ -1256,7 +1259,7 @@ model Voucher {
   voucherSalaryRecords   VoucherSalaryRecord[]
   voucherCertificates    VoucherCertificate[]
   invoiceVoucherJournals InvoiceVoucherJournal[]
-  CertificateRC2         CertificateRC2[]
+  InvoiceRC2             InvoiceRC2[]
 
   originalVouchers AssociateVoucher[] @relation("original_voucher")
   resultVouchers   AssociateVoucher[] @relation("result_voucher")

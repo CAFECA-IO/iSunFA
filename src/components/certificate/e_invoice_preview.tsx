@@ -2,14 +2,14 @@ import React from 'react';
 import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import { useUserCtx } from '@/contexts/user_context';
-import { CertificateType } from '@prisma/client';
+import { InvoiceType } from '@prisma/client';
 
 interface EInvoicePreviewProps {
   className?: string;
-  certificateType?: CertificateType;
+  certificateType?: InvoiceType;
   issuedDate: string;
   invoiceNo: string;
-  TaxId?: string;
+  taxId?: string;
   netAmount: number;
   taxAmount: number;
   totalAmount: number;
@@ -17,22 +17,22 @@ interface EInvoicePreviewProps {
 
 const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
   (
-    { className, certificateType, issuedDate, invoiceNo, TaxId, netAmount, taxAmount, totalAmount },
+    { className, certificateType, issuedDate, invoiceNo, taxId, netAmount, taxAmount, totalAmount },
     ref
   ) => {
     const { t } = useTranslation(['certificate']);
     const { connectedAccountBook } = useUserCtx();
-    const taxId = connectedAccountBook?.taxId ?? '';
+    const connectedAccountBookTaxId = connectedAccountBook?.taxId ?? '';
     let seller = '';
     let buyer = '';
     // Info: (20250430 - Anna) 格式35
-    if (certificateType === CertificateType.OUTPUT_35) {
-      seller = taxId;
-      buyer = TaxId ?? '';
+    if (certificateType === InvoiceType.OUTPUT_35) {
+      seller = connectedAccountBookTaxId;
+      buyer = taxId ?? '';
       // Info: (20250430 - Anna) 格式25
-    } else if (certificateType === CertificateType.INPUT_25) {
-      seller = TaxId ?? '';
-      buyer = taxId;
+    } else if (certificateType === InvoiceType.INPUT_25) {
+      seller = taxId ?? '';
+      buyer = connectedAccountBookTaxId;
     }
 
     const getInvoicePeriod = (dateStr: string) => {
