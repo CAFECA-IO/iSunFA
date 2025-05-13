@@ -98,8 +98,8 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         taxRate: certificate.taxRate,
         taxAmount: certificate.taxAmount,
         totalAmount: certificate.totalAmount,
-        salesIdNumber: certificate.salesIdNumber,
-        salesName: certificate.salesName,
+        buyerIdNumber: certificate.buyerIdNumber,
+        buyerName: certificate.buyerName,
         type: certificate.type ?? CertificateType.INPUT_21,
       }) as Partial<ICertificateRC2Output>
   );
@@ -112,7 +112,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
-    const { issuedDate: selectedDate, netAmount, taxAmount, salesName } = formStateRef.current;
+    const { issuedDate: selectedDate, netAmount, taxAmount, buyerName } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
@@ -123,7 +123,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     if (!taxAmount || taxAmount <= 0) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
     }
-    if (!salesName) {
+    if (!buyerName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
@@ -383,6 +383,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     });
   }, [formState]);
 
+  // Info: (20250512 - Anna) Debug
+  useEffect(() => {
+    if (isOpen && certificate) {
+      // Deprecated: (20250512 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Modal initialized with certificate:', certificate);
+    }
+  }, [isOpen, certificate]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -407,19 +416,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
         <div className="hide-scrollbar flex w-full items-start justify-between gap-5 overflow-y-scroll md:h-600px md:flex-row">
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
-
-          {/*  Info: (20250430 - Anna) e-invoice UI (格式35的時候套用) */}
-          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
-          {formState.type === CertificateType.OUTPUT_35 && (
+          {certificate.isGenerated && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
-                certificateType={formState.type}
+                certificateType={CertificateType.OUTPUT_35}
                 issuedDate={dayjs
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
                 invoiceNo={formState.no ?? certificate.no ?? ''}
-                buyerTaxId={formState.salesIdNumber ?? certificate.salesIdNumber ?? undefined}
+                TaxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
                 netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
                 taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
                 totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
@@ -427,9 +433,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
           )}
 
-          {eInvoiceImageUrl && (
+          {(certificate.file?.url || eInvoiceImageUrl) && (
             <ImageZoom
-              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              imageUrl={
+                certificate.isGenerated && eInvoiceImageUrl
+                  ? eInvoiceImageUrl
+                  : certificate.file.url
+              }
               className="max-h-630px min-h-450px w-440px"
               controlPosition="bottom-right"
             />
@@ -614,16 +624,16 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                 <CounterpartyInput
                   ref={counterpartyInputRef}
                   counterparty={{
-                    taxId: formState.salesIdNumber,
-                    name: formState.salesName,
+                    taxId: formState.buyerIdNumber,
+                    name: formState.buyerName,
                   }}
                   counterpartyList={counterpartyList}
                   onSelect={(cp: ICounterpartyOptional) => {
                     if (cp && cp.name) {
-                      handleInputChange('salesName', cp.name);
+                      handleInputChange('buyerName', cp.name);
                     }
                     if (cp && cp.taxId) {
-                      handleInputChange('salesIdNumber', cp.taxId);
+                      handleInputChange('buyerIdNumber', cp.taxId);
                     }
                   }}
                   labelClassName="text-neutral-300"
