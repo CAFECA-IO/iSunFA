@@ -9,7 +9,7 @@ interface EInvoicePreviewProps {
   certificateType?: InvoiceType;
   issuedDate: string;
   invoiceNo: string;
-  buyerTaxId?: string;
+  taxId?: string;
   netAmount: number;
   taxAmount: number;
   totalAmount: number;
@@ -17,31 +17,22 @@ interface EInvoicePreviewProps {
 
 const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
   (
-    {
-      className,
-      certificateType,
-      issuedDate,
-      invoiceNo,
-      buyerTaxId,
-      netAmount,
-      taxAmount,
-      totalAmount,
-    },
+    { className, certificateType, issuedDate, invoiceNo, taxId, netAmount, taxAmount, totalAmount },
     ref
   ) => {
     const { t } = useTranslation(['certificate']);
     const { connectedAccountBook } = useUserCtx();
-    const taxId = connectedAccountBook?.taxId ?? '';
+    const connectedAccountBookTaxId = connectedAccountBook?.taxId ?? '';
     let seller = '';
     let buyer = '';
     // Info: (20250430 - Anna) 格式35
     if (certificateType === InvoiceType.OUTPUT_35) {
-      seller = taxId;
-      buyer = buyerTaxId ?? '';
+      seller = connectedAccountBookTaxId;
+      buyer = taxId ?? '';
       // Info: (20250430 - Anna) 格式25
     } else if (certificateType === InvoiceType.INPUT_25) {
-      seller = buyerTaxId ?? '';
-      buyer = taxId;
+      seller = taxId ?? '';
+      buyer = connectedAccountBookTaxId;
     }
 
     const getInvoicePeriod = (dateStr: string) => {

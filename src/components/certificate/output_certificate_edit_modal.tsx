@@ -419,7 +419,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
                 invoiceNo={formState.no ?? certificate.no ?? ''}
-                buyerTaxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
+                taxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
                 netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
                 taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
                 totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
