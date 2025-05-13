@@ -396,8 +396,13 @@ const InputCertificateEditModal: React.FC<InputCertificateEditModalProps> = ({
           <IoCloseOutline size={32} />
         </button>
 
-        <div className="text-xl font-bold leading-8 text-neutral-600 flex justify-center">
-          {t(`certificate:EDIT.INPUT_INVOICE`)}
+        <div>
+          <p className="flex justify-center text-xl font-bold leading-8 text-neutral-600">
+            {t(`certificate:EDIT.INPUT_INVOICE`)}
+          </p>
+          <p className="flex justify-center text-xs font-normal leading-5 tracking-wide text-neutral-400">
+            {t(`certificate:EDIT.HEADER`)}
+          </p>
         </div>
 
         {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
