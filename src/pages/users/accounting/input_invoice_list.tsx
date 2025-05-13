@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
-import OutputCertificateListBody from '@/components/certificate/output_certificate_list_body';
+import InputInvoiceListBody from '@/components/invoice/input_invoice_list_body';
 import Layout from '@/components/beta/layout/layout';
 
 const CertificateListPage: React.FC = () => {
@@ -18,11 +18,8 @@ const CertificateListPage: React.FC = () => {
         <title>{t('certificate:TITLE.LIST')} - iSunFA</title>
       </Head>
 
-      <Layout
-        isDashboard={false}
-        pageTitle={t('certificate:OUTPUT_CERTIFICATE.OUTPUT_CERTIFICATE')}
-      >
-        <OutputCertificateListBody />
+      <Layout isDashboard={false} pageTitle={t('certificate:INPUT_CERTIFICATE.INPUT_CERTIFICATE')}>
+        <InputInvoiceListBody />
       </Layout>
     </>
   );

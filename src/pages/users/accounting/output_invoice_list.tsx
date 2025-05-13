@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
-import InputCertificateListBody from '@/components/certificate/input_certificate_list_body';
+import OutputInvoiceListBody from '@/components/invoice/output_invoice_list_body';
 import Layout from '@/components/beta/layout/layout';
 
 const CertificateListPage: React.FC = () => {
@@ -20,9 +20,9 @@ const CertificateListPage: React.FC = () => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('certificate:INPUT_CERTIFICATE.INPUT_CERTIFICATE')}
+        pageTitle={t('certificate:OUTPUT_CERTIFICATE.OUTPUT_CERTIFICATE')}
       >
-        <InputCertificateListBody />
+        <OutputInvoiceListBody />
       </Layout>
     </>
   );

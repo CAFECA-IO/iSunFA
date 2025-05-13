@@ -1,16 +1,16 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
-import InputCertificateItem from '@/components/certificate/input_certificate_item';
+import OutputInvoiceItem from '@/components/invoice/output_invoice_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
 import { InvoiceTab } from '@/constants/invoice_rc2';
 import { CurrencyType } from '@/constants/currency';
-import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
+import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
-interface InputInvoiceTableProps {
+interface OutputInvoiceTableProps {
   activeTab: InvoiceTab;
-  certificates: IInvoiceRC2InputUI[];
+  certificates: IInvoiceRC2OutputUI[];
   currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
@@ -20,17 +20,16 @@ interface InputInvoiceTableProps {
   dateSort: SortOrder | null;
   amountSort: SortOrder | null;
   voucherSort: SortOrder | null;
-  certificateNoSort: SortOrder | null;
+  certificateNoSort: SortOrder | null; // Info: (20250416 - Anna) 憑證號碼排序
   certificateTypeSort: SortOrder | null; // Info: (20250416 - Anna) 憑證類型排序
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
-  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  isExporting: boolean;
 }
 
-const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
+const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
@@ -47,9 +46,8 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setCertificateTypeSort,
   setCertificateNoSort,
-  isExporting,
+  setCertificateTypeSort,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -59,8 +57,8 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setCertificateTypeSort(null);
       setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -71,8 +69,8 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setCertificateTypeSort(null);
       setCertificateNoSort(null);
+      setCertificateTypeSort(null);
     },
   });
 
@@ -83,24 +81,12 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
+      setCertificateNoSort(null);
       setCertificateTypeSort(null);
-      setCertificateNoSort(null);
     },
   });
 
-  // Info: (20250416 - Anna) 憑證類型表頭
-  const displayedInvoiceType = SortingButton({
-    string: t('certificate:TABLE.INVOICE_TYPE'),
-    sortOrder: certificateTypeSort,
-    setSortOrder: setCertificateTypeSort,
-    handleReset: () => {
-      setDateSort(null);
-      setAmountSort(null);
-      setVoucherSort(null);
-      setCertificateNoSort(null);
-    },
-  });
-
+  // Info: (20250416 - Anna) 憑證號碼表頭
   const displayedCertificateNo = SortingButton({
     string: t('certificate:TABLE.INVOICE_NUMBER'),
     sortOrder: certificateNoSort,
@@ -110,6 +96,19 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
       setAmountSort(null);
       setVoucherSort(null);
       setCertificateTypeSort(null);
+    },
+  });
+
+  // Info: (20250416 - Anna) 憑證類型表頭
+  const displayedCertificateType = SortingButton({
+    string: t('certificate:TABLE.INVOICE_TYPE'),
+    sortOrder: certificateTypeSort,
+    setSortOrder: setCertificateTypeSort,
+    handleReset: () => {
+      setDateSort(null);
+      setAmountSort(null);
+      setVoucherSort(null);
+      setCertificateNoSort(null);
     },
   });
 
@@ -129,32 +128,27 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {isExporting ? t('certificate:TABLE.DATE') : displayedIssuedDate}
+            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {displayedIssuedDate}
             </div>
-            <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedCertificateNo}
+            <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
+              {displayedCertificateNo}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedInvoiceType}
+            <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {displayedCertificateType}
             </div>
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {t('certificate:TABLE.DEDUCTION_TYPE')}
-            </div>
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+
+            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:TABLE.TAX')}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              <div>{t('certificate:TABLE.COUNTERPARTY')}</div>
-              <div>
-                ({t('certificate:COUNTERPARTY.CLIENT')}/{t('certificate:COUNTERPARTY.SUPPLIER')})
-              </div>
+            <div className="col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {t('certificate:EDIT.BUYER')}
             </div>
-            <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
+            <div className="table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {displayedAmount}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
+              <div>{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
@@ -163,7 +157,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
         <div className="table-row-group">
           {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
-            <InputCertificateItem
+            <OutputInvoiceItem
               currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
@@ -178,4 +172,4 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
   );
 };
 
-export default InputInvoiceTable;
+export default OutputInvoiceTable;

@@ -11,7 +11,7 @@ import { RxCross2 } from 'react-icons/rx';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { DeductionType } from '@/constants/invoice_rc2';
 
-interface InputCertificateListIrops {
+interface InputInvoiceListIrops {
   activeSelection: boolean;
   certificate: IInvoiceRC2InputUI;
   currencyAlias: CurrencyType;
@@ -35,7 +35,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
   );
 };
 
-const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
+const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
   activeSelection,
   certificate,
   currencyAlias,
@@ -210,4 +210,4 @@ const InputCertificateItem: React.FC<InputCertificateListIrops> = ({
   );
 };
 
-export default InputCertificateItem;
+export default InputInvoiceItem;

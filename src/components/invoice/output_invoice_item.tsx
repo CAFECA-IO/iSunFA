@@ -8,7 +8,7 @@ import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
 import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
-interface OutputCertificateListIrops {
+interface OutputInvoiceListIrops {
   activeSelection: boolean;
   certificate: IInvoiceRC2OutputUI;
   currencyAlias: CurrencyType;
@@ -32,7 +32,7 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
   );
 };
 
-const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
+const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
   activeSelection,
   certificate,
   currencyAlias,
@@ -173,4 +173,4 @@ const OutputCertificateItem: React.FC<OutputCertificateListIrops> = ({
   );
 };
 
-export default OutputCertificateItem;
+export default OutputInvoiceItem;
