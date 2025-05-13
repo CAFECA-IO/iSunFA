@@ -383,6 +383,15 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
     });
   }, [formState]);
 
+  // Info: (20250512 - Anna) Debug
+  useEffect(() => {
+    if (isOpen && certificate) {
+      // Deprecated: (20250512 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('Modal initialized with certificate:', certificate);
+    }
+  }, [isOpen, certificate]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -414,7 +423,7 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
-                certificateType={formState.type}
+                certificateType={InvoiceType.OUTPUT_35}
                 issuedDate={dayjs
                   .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
                   .format('YYYY-MM-DD')}
@@ -427,9 +436,13 @@ const OutputCertificateEditModal: React.FC<OutputCertificateEditModalProps> = ({
             </div>
           )}
 
-          {eInvoiceImageUrl && (
+          {(certificate.file?.url || eInvoiceImageUrl) && (
             <ImageZoom
-              imageUrl={eInvoiceImageUrl ?? certificate.file.url}
+              imageUrl={
+                certificate.isGenerated && eInvoiceImageUrl
+                  ? eInvoiceImageUrl
+                  : certificate.file.url
+              }
               className="max-h-630px min-h-450px w-440px"
               controlPosition="bottom-right"
             />
