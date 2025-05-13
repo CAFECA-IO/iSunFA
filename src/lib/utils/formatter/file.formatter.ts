@@ -33,7 +33,7 @@ export function parsePrismaFileToFileEntity(
     fileEntity.url = getImageUrlFromFileIdV1(fileEntity.id);
   }
 
-  // 處理縮略圖關係
+  // Info: (20250513 - Shirley) 處理縮圖與檔案關聯
   if (dto.thumbnail) {
     fileEntity.thumbnail = parsePrismaFileToFileEntity(dto.thumbnail, transformUrlToActualLink);
   }

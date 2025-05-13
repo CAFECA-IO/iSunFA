@@ -27,6 +27,7 @@ import SelectionToolbar, {
 import OutputCertificate from '@/components/certificate/output_certificate';
 import OutputCertificateEditModal from '@/components/certificate/output_certificate_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
+// Deprecated: (20250513 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
@@ -159,6 +160,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [exportModalData, setExportModalData] = useState<IInvoiceRC2Output[]>([]);
 
+  // Deprecated: (20250513 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleExportModalApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Output[]>) => {
@@ -167,6 +169,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     []
   );
 
+  // Deprecated: (20250513 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
 
@@ -174,6 +177,7 @@ const OutputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     setIsExportModalOpen(true);
   }, []);
 
+  // Deprecated: (20250513 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const onExport = useCallback(() => {
     if (exportModalData.length > 0) {
