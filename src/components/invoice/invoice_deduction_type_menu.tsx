@@ -48,7 +48,7 @@ const DeductionTypeMenu: React.FC<IDeductionTypeMenuProps> = ({
       id="deduction-type-menu"
       ref={deductionTypeMenuRef}
       onClick={handleDeductionTypeMenuClick}
-      className={`group relative z-100 flex h-46px w-full cursor-pointer ${
+      className={`group relative z-5 flex h-46px w-full cursor-pointer ${
         isDeductionTypeMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
           : 'border-input-stroke-input text-input-text-input-filled'

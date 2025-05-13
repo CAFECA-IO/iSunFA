@@ -15,13 +15,13 @@ import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import EInvoicePreview from '@/components/invoice/e_invoice_preview';
 import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
-import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
+import TaxMenu from '@/components/invoice/invoice_tax_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
@@ -62,6 +62,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     CertificateType.OUTPUT_34,
     CertificateType.OUTPUT_35,
     CertificateType.OUTPUT_36,
+    CertificateType.OUTPUT_30,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
@@ -613,7 +614,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
-              <div className="relative z-120 flex w-full items-center gap-2">
+              <div className="relative z-10 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
               {errors.taxAmount && (
@@ -642,6 +643,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     }
                   }}
                   labelClassName="text-neutral-300"
+                  counterpartyRole="buyer"
                 />
                 {errors.counterParty && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">

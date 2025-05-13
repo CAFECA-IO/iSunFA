@@ -24,8 +24,8 @@ import FilterSection from '@/components/filter_section/filter_section';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
 } from '@/components/certificate/certificate_selection_tool_bar_new';
-import InputInvoice from '@/components/certificate/input_invoice';
-import InputInvoiceEditModal from '@/components/certificate/input_invoice_edit_modal';
+import InputInvoice from '@/components/invoice/input_invoice';
+import InputInvoiceEditModal from '@/components/invoice/input_invoice_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';

@@ -24,8 +24,8 @@ import FilterSection from '@/components/filter_section/filter_section';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
 } from '@/components/certificate/certificate_selection_tool_bar_new';
-import OutputInvoice from '@/components/certificate/output_invoice';
-import OutputInvoiceEditModal from '@/components/certificate/output_invoice_edit_modal';
+import OutputInvoice from '@/components/invoice/output_invoice';
+import OutputInvoiceEditModal from '@/components/invoice/output_invoice_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import CertificateExportModal from '@/components/certificate/certificate_export_modal';

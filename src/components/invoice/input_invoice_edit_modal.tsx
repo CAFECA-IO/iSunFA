@@ -15,14 +15,14 @@ import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import EInvoicePreview from '@/components/certificate/e_invoice_preview';
+import EInvoicePreview from '@/components/invoice/e_invoice_preview';
 import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
-import TaxMenu from '@/components/certificate/certificate_tax_menu_new';
-import DeductionTypeMenu from '@/components/certificate/certificate_deduction_type_menu';
+import TaxMenu from '@/components/invoice/invoice_tax_menu';
+import DeductionTypeMenu from '@/components/invoice/invoice_deduction_type_menu';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
@@ -65,6 +65,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     CertificateType.INPUT_27,
     CertificateType.INPUT_28,
     CertificateType.INPUT_29,
+    CertificateType.INPUT_20,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
@@ -532,7 +533,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     ref={summarizedInvoiceInputRef}
                     type="number"
                     value={
-                      formState.totalOfSummarizedCertificates !== undefined
+                      formState.totalOfSummarizedCertificates != null
                         ? formState.totalOfSummarizedCertificates.toString()
                         : '0'
                     }
@@ -593,7 +594,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                   </div>
                 </>
               ) : // Info: (20250429 - Anna) 格式26
-              formState.type === CertificateType.INPUT_25 ? (
+              formState.type === CertificateType.INPUT_26 ? (
                 <>
                   <p className="text-sm font-semibold text-neutral-300">
                     {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
@@ -817,7 +818,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
-              <div className="relative z-120 flex w-full items-center gap-2">
+              <div className="relative z-10 flex w-full items-center gap-2">
                 <TaxMenu selectTaxHandler={selectTaxHandler} />
               </div>
               {errors.taxAmount && (
@@ -853,6 +854,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 }
               }}
               labelClassName="text-neutral-300"
+              counterpartyRole="seller"
             />
             {errors.counterParty && (
               <p className="-translate-y-1 self-end text-sm text-text-state-error">

@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import Head from 'next/head';
-import OutputInvoiceListBody from '@/components/certificate/output_invoice_list_body';
+import OutputInvoiceListBody from '@/components/invoice/output_invoice_list_body';
 import Layout from '@/components/beta/layout/layout';
 
 const CertificateListPage: React.FC = () => {
