@@ -37,7 +37,8 @@ export type EmailTemplateData = {
     receiverName: string;
     currentPlanName: string;
     currentDataStatus: string;
-    subscribeLink: string;
+    repayLink: string;
+    resubscribeLink: string;
   };
   [EmailTemplateName.VERIFICATION]: {
     receiverName: string;

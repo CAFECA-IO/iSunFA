@@ -73,15 +73,45 @@
           過程不會影響任何歷史資料。</mj-text
         >
         <mj-text mj-class="mainText">
-          若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱： <br />
-          <a
-            href="{{subscribeLink}}"
-            target="_blank"
-            style="color: #1570ef; text-decoration: underline"
-          >
-            {{subscribeLink}}</a
-          >
+          若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱：
         </mj-text>
+        <mj-text align="left">
+          <a
+            href="{{repayLink}}"
+            style="
+              display: inline-block;
+              border: 1px solid #ffa502;
+              background-color: white;
+              color: #cc8401;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              font-weight: 500;
+              margin-right: 16px;
+            "
+          >
+            更新付款
+          </a>
+
+          <a
+            href="{{resubscribeLink}}"
+            style="
+              display: inline-block;
+              border: 1px solid #ffa502;
+              background-color: white;
+              color: #cc8401;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              font-weight: 500;
+            "
+          >
+            重新訂閱
+          </a>
+        </mj-text>
+
         <mj-text mj-class="mainText"
           >我們了解每一位創業者對數據的重視，因此無論您目前是否維持付費狀態，
           我們都致力保障您的資料完整與安全。如有任何問題，也歡迎您隨時與我們聯繫，我們期待在未來繼續為您提供協助。
