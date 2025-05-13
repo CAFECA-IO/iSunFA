@@ -7,7 +7,7 @@ import SelectionPanel from '@/components/certificate/certificate_selection_panel
 import { Button } from '@/components/button/button';
 import { RxCross1 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/invoice_rc2';
 // import { InvoiceType } from '@/constants/invoice';
 import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceType } from '@/constants/invoice';

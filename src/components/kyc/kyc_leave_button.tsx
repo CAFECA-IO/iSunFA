@@ -30,7 +30,7 @@ const LeaveButton = () => {
   return (
     <button type="button" onClick={leaveClickHandler}>
       <div className="rounded-xs border border-button-stroke-secondary p-10px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover">
-        <BiLeftArrowAlt className="w-4 h-4" />
+        <BiLeftArrowAlt className="h-4 w-4" />
       </div>
     </button>
   );

@@ -6,10 +6,10 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import {
   CERTIFICATE_USER_INTERACT_OPERATION,
-  CertificateDirection,
-  CertificateTab,
-  CertificateType,
-} from '@/constants/certificate';
+  InvoiceDirection,
+  InvoiceTab,
+  InvoiceType,
+} from '@/constants/invoice_rc2';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import APIHandler from '@/lib/utils/api_handler';
 import { MessageType } from '@/interfaces/message_modal';
@@ -29,14 +29,14 @@ import InputCertificateEditModal from '@/components/certificate/input_certificat
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
-import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CurrencyType } from '@/constants/currency';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { ICertificateRC2Input, ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
+import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificateListBodyProps {}
 
@@ -49,19 +49,19 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const accountBookId = connectedAccountBook?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateCertificateAPI } = APIHandler<ICertificateRC2Input>(
-    APIName.UPDATE_CERTIFICATE_RC2_INPUT
+  const { trigger: updateCertificateAPI } = APIHandler<IInvoiceRC2Input>(
+    APIName.UPDATE_INVOICE_RC2_INPUT
   );
-  const { trigger: createCertificateAPI } = APIHandler<ICertificateRC2Input>(
-    APIName.CREATE_CERTIFICATE_RC2_INPUT
+  const { trigger: createCertificateAPI } = APIHandler<IInvoiceRC2Input>(
+    APIName.CREATE_INVOICE_RC2_INPUT
   );
   const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
-    APIName.DELETE_CERTIFICATE_RC2_INPUT
+    APIName.DELETE_INVOICE_RC2_INPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
-  const [activeTab, setActiveTab] = useState<CertificateTab>(CertificateTab.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<ICertificateRC2InputUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateRC2InputUI[]>([]);
+  const [activeTab, setActiveTab] = useState<InvoiceTab>(InvoiceTab.WITHOUT_VOUCHER);
+  const [certificates, setCertificates] = useState<IInvoiceRC2InputUI[]>([]);
+  const [selectedCertificates, setSelectedCertificates] = useState<IInvoiceRC2InputUI[]>([]);
 
   const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
   const [incomplete, setIncomplete] = useState<{
@@ -235,7 +235,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   ]);
 
   const handleApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificateRC2Input[]>) => {
+    (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalCertificatePrice: number;
@@ -256,7 +256,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
           ...item,
           isSelected: false,
           actions:
-            activeTab === CertificateTab.WITHOUT_VOUCHER
+            activeTab === InvoiceTab.WITHOUT_VOUCHER
               ? [
                   CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
                   CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
@@ -301,7 +301,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const handleSelectAll = useCallback(() => {
     const ids = certificates
       .filter((certificate) => {
-        return activeTab === CertificateTab.WITHOUT_VOUCHER
+        return activeTab === InvoiceTab.WITHOUT_VOUCHER
           ? !certificate.voucherNo
           : certificate.voucherNo;
       })
@@ -384,7 +384,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const onTabClick = useCallback(
     (tab: string) => {
-      if ((tab as CertificateTab) === CertificateTab.WITHOUT_VOUCHER) {
+      if ((tab as InvoiceTab) === InvoiceTab.WITHOUT_VOUCHER) {
         setAddOperations([
           {
             operation: CERTIFICATE_USER_INTERACT_OPERATION.ADD_VOUCHER,
@@ -395,7 +395,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
       } else {
         setAddOperations([]);
       }
-      setActiveTab(tab as CertificateTab);
+      setActiveTab(tab as InvoiceTab);
       setActiveSelection(false);
     },
     [activeTab, handleAddVoucher, handleExport]
@@ -427,7 +427,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   );
 
   const handleEditItem = useCallback(
-    async (certificate: Partial<ICertificateRC2InputUI>) => {
+    async (certificate: Partial<IInvoiceRC2InputUI>) => {
       // Deprecated: (20250509 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('handleEditItem', certificate);
@@ -448,7 +448,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          let updatedData: ICertificateRC2InputUI[] = [];
+          let updatedData: IInvoiceRC2InputUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
             const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
@@ -482,7 +482,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: ICertificateRC2Input) => {
+  const handleNewCertificateComing = useCallback(async (newCertificate: IInvoiceRC2Input) => {
     setCertificates((prev) => [
       {
         ...newCertificate,
@@ -500,7 +500,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   const parseCertificateCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificateRC2Input = JSON.parse(data.message);
+      const newCertificate: IInvoiceRC2Input = JSON.parse(data.message);
       handleNewCertificateComing(newCertificate);
       setIncomplete((prev) => ({
         ...prev,
@@ -530,15 +530,15 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
   useEffect(() => {
     if (!accountBookId) return () => {};
     const pusher = getPusherInstance(userAuth?.id);
-    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
-    channel.bind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.INVOICE}-${accountBookId}`);
+    channel.bind(INVOICE_EVENT.CREATE, parseCertificateCreateEventMessage);
 
     return () => {
       if (channel) {
-        channel.unbind(CERTIFICATE_EVENT.CREATE, parseCertificateCreateEventMessage);
+        channel.unbind(INVOICE_EVENT.CREATE, parseCertificateCreateEventMessage);
         channel.unsubscribe();
       }
-      pusher.unsubscribe(`${PRIVATE_CHANNEL.CERTIFICATE}-${accountBookId}`);
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.INVOICE}-${accountBookId}`);
     };
   }, [accountBookId]);
 
@@ -579,7 +579,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         <CertificateFileUpload
           isDisabled={false}
           setFiles={setFiles}
-          certificateDirection={CertificateDirection.INPUT}
+          direction={InvoiceDirection.INPUT}
         />
         <FloatingUploadPopup
           files={files}
@@ -588,7 +588,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
         {/* Info: (20240919 - Anna) Tabs */}
         <Tabs
-          tabs={Object.values(CertificateTab)}
+          tabs={Object.values(InvoiceTab)}
           tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
           activeTab={activeTab}
           onTabClick={onTabClick}
@@ -596,25 +596,25 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
         />
 
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<ICertificateRC2Input[]>
+        <FilterSection<IInvoiceRC2Input[]>
           className="mt-2"
           params={{ accountBookId }}
-          apiName={APIName.LIST_CERTIFICATE_RC2_INPUT}
+          apiName={APIName.LIST_INVOICE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           page={page}
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
           types={[
-            CertificateType.ALL,
-            CertificateType.INPUT_21,
-            CertificateType.INPUT_22,
-            CertificateType.INPUT_23,
-            CertificateType.INPUT_24,
-            CertificateType.INPUT_25,
-            CertificateType.INPUT_26,
-            CertificateType.INPUT_27,
-            CertificateType.INPUT_28,
-            CertificateType.INPUT_29,
+            InvoiceType.ALL,
+            InvoiceType.INPUT_21,
+            InvoiceType.INPUT_22,
+            InvoiceType.INPUT_23,
+            InvoiceType.INPUT_24,
+            InvoiceType.INPUT_25,
+            InvoiceType.INPUT_26,
+            InvoiceType.INPUT_27,
+            InvoiceType.INPUT_28,
+            InvoiceType.INPUT_29,
           ]}
           sort={selectedSort}
           labelClassName="text-neutral-300"
@@ -626,7 +626,7 @@ const InputCertificateListBody: React.FC<CertificateListBodyProps> = () => {
             <SelectionToolbar
               className="mt-6"
               active={activeSelection}
-              isSelectable={activeTab === CertificateTab.WITHOUT_VOUCHER}
+              isSelectable={activeTab === InvoiceTab.WITHOUT_VOUCHER}
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.INPUT_TOTAL_PRICE')}:`}

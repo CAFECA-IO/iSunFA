@@ -1,3 +1,4 @@
+import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -12,7 +13,7 @@ import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
 import formidable from 'formidable';
 import loggerBack from '@/lib/utils/logger_back';
-import { createFile } from '@/lib/utils/repo/file.repo';
+import { createFile, putFileById } from '@/lib/utils/repo/file.repo';
 import { generateFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
 import {
   checkRequestData,
@@ -25,12 +26,20 @@ import { roomManager } from '@/lib/utils/room';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { PRIVATE_CHANNEL, ROOM_EVENT } from '@/constants/pusher';
 import { parseJsonWebKeyFromString } from '@/lib/utils/formatter/json_web_key.formatter';
-import { uint8ArrayToBuffer } from '@/lib/utils/crypto';
+import {
+  decryptFile,
+  encryptFile,
+  getPrivateKeyByCompany,
+  getPublicKeyByCompany,
+  uint8ArrayToBuffer,
+} from '@/lib/utils/crypto';
 import { getSession } from '@/lib/utils/session';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { HTTP_STATUS } from '@/constants/http';
+import { generatePDFThumbnail } from '@/lib/utils/pdf_thumbnail';
+import path from 'path';
 
 export const config = {
   api: {
@@ -92,6 +101,169 @@ async function handleFileUpload(
     throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
   }
 
+  let thumbnailInfo = null;
+  let pdfPath = fileForSave.filepath;
+  let tempDecryptedPath = '';
+  if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
+    // Info: (20250513 - Shirley) Decrypt PDF file if it's encrypted
+    if (isEncrypted) {
+      // Info: (20250513 - Shirley) 獲取公司ID和私鑰
+      const companyId = convertStringToNumber(targetId);
+      const encryptedFileBuffer = await fs.readFile(fileForSave.filepath);
+      const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
+      const privateKey = await getPrivateKeyByCompany(companyId);
+
+      if (!privateKey) {
+        throw new Error('Private key not found for decryption');
+      }
+
+      // Info: (20250513 - Shirley) 解密檔案
+      const ivUint8Array = new Uint8Array(ivBuffer);
+      const decryptedBuffer = await decryptFile(
+        arrayBuffer,
+        encryptedSymmetricKey,
+        privateKey,
+        ivUint8Array
+      );
+
+      // Info: (20250513 - Shirley) 寫入臨時解密檔案
+      tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
+      await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
+      pdfPath = tempDecryptedPath;
+    }
+
+    // Info: (20250513 - Shirley) generate PDF thumbnail
+    try {
+      thumbnailInfo = await generatePDFThumbnail(pdfPath, {
+        removeString: '_decrypted',
+        suffix: '_thumbnail',
+      });
+
+      if (!thumbnailInfo.success) {
+        loggerBack.error('Failed to generate PDF thumbnail');
+      }
+    } catch (error) {
+      loggerBack.error(error, 'Error generating PDF thumbnail');
+    }
+  }
+
+  // Info: (20250513 - Shirley) If we have a thumbnail, process it with the same encryption parameters
+  if (thumbnailInfo && thumbnailInfo.success) {
+    const thumbnailFileName = path.basename(thumbnailInfo.filepath);
+    const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
+      thumbnailFileName,
+      UPLOAD_TYPE_TO_FOLDER_MAP[type]
+    );
+
+    // Info: (20250513 - Shirley) Remove the decrypted PDF file after thumbnail generation
+    fs.unlink(tempDecryptedPath);
+    if (isEncrypted) {
+      try {
+        // Info: (20250513 - Shirley) 加密 thumbnail 之後存到 DB
+        const companyId = convertStringToNumber(targetId);
+        const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
+
+        const publicKey = await getPublicKeyByCompany(companyId);
+
+        if (!publicKey) {
+          throw new Error('Public key not found for encryption');
+        }
+
+        // Info: (20250513 - Shirley) 使用全新的 IV 參數，而非重用原始文件的 IV
+        const newIv = crypto.getRandomValues(new Uint8Array(iv.length));
+
+        // Info: (20250513 - Shirley) 執行加密 - 使用全新的 IV
+        const { encryptedContent, encryptedSymmetricKey: thumbnailEncryptedKey } =
+          await encryptFile(
+            new Uint8Array(thumbnailBuffer).buffer as ArrayBuffer,
+            publicKey,
+            newIv
+          );
+
+        // Info: (20250513 - Shirley) 驗證加密後的內容
+        if (!encryptedContent) {
+          loggerBack.error('Failed to encrypt thumbnail - encryptedContent is null or empty');
+        }
+
+        // Info: (20250513 - Shirley) 寫入加密縮略圖
+        const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
+        await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
+
+        // Info: (20250513 - Shirley) 將新的 IV 轉換為 Buffer 以存儲在數據庫中
+        const newIvBuffer = uint8ArrayToBuffer(newIv);
+
+        // Info: (20250513 - Shirley) 創建文件記錄 - 使用新的 IV 和對稱密鑰
+        const thumbnailInDB = await createFile({
+          name: thumbnailFileName,
+          size: thumbnailInfo.size,
+          mimeType: 'image/png',
+          type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+          url: thumbnailUrl,
+          isEncrypted,
+          encryptedSymmetricKey: thumbnailEncryptedKey,
+          iv: newIvBuffer,
+        });
+
+        if (thumbnailInDB && fileInDB) {
+          // Info: (20250513 - Shirley) 更新原始文件記錄，添加縮略圖 ID
+          await putFileById(fileInDB.id, {
+            thumbnailId: thumbnailInDB.id,
+          });
+          loggerBack.info(
+            `Associated thumbnail ID ${thumbnailInDB.id} with file ID ${fileInDB.id}`
+          );
+        }
+      } catch (encryptionError) {
+        // Info: (20250513 - Shirley) 記錄縮略圖加密過程中的錯誤
+        loggerBack.error(
+          encryptionError,
+          `Error during thumbnail encryption for ${thumbnailFileName}`
+        );
+
+        // Info: (20250513 - Shirley) 創建未加密的縮略圖記錄作為後備方案
+        loggerBack.info(
+          `Creating unencrypted thumbnail record as fallback due to encryption error`
+        );
+
+        const thumbnailInDB = await createFile({
+          name: thumbnailFileName,
+          size: thumbnailInfo.size,
+          mimeType: 'image/png',
+          type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+          url: thumbnailUrl,
+          isEncrypted: false, // Info: (20250513 - Shirley) 設置為未加密
+          encryptedSymmetricKey: '', // Info: (20250513 - Shirley) 加空字符串作為必需參數
+          iv: Buffer.from([]), // Info: (20250513 - Shirley) 加空 Buffer 作為必需參數
+        });
+
+        if (thumbnailInDB && fileInDB) {
+          await putFileById(fileInDB.id, {
+            thumbnailId: thumbnailInDB.id,
+          });
+        }
+      }
+    } else {
+      // Info: (20250513 - Shirley) Create unencrypted thumbnail record with the same encryption parameters
+      const thumbnailInDB = await createFile({
+        name: thumbnailFileName,
+        size: thumbnailInfo.size,
+        mimeType: 'image/png',
+        type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+        url: thumbnailUrl,
+        isEncrypted,
+        encryptedSymmetricKey,
+        iv: ivBuffer,
+      });
+
+      if (thumbnailInDB && fileInDB) {
+        // Info: (20250513 - Shirley) Update original file record with thumbnail ID
+        await putFileById(fileInDB.id, {
+          thumbnailId: thumbnailInDB.id,
+        });
+      }
+    }
+  }
+
   const fileId = fileInDB.id;
   const returnFile: IFileBeta = {
     id: fileId,
@@ -100,6 +272,17 @@ async function handleFileUpload(
     url: `/image/${fileId}`,
     existed: true,
   };
+
+  // Info: (20250513 - Shirley) 如果有縮略圖，將其添加到返回對象中
+  if (fileInDB.thumbnailId) {
+    returnFile.thumbnail = {
+      id: fileInDB.thumbnailId,
+      name: fileName.replace('.pdf', '_thumbnail.png'),
+      size: thumbnailInfo?.size || 0,
+      url: `/image/${fileInDB.thumbnailId}`,
+      existed: true,
+    };
+  }
 
   switch (type) {
     case UploadType.COMPANY: {
@@ -137,6 +320,7 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
+
   return returnFile;
 }
 

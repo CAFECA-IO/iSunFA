@@ -41,7 +41,7 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
-import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import { VoucherV2Action } from '@/constants/voucher';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';

@@ -5,7 +5,7 @@ import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import CertificateTable from '@/components/certificate/certificate_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
-import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/invoice_rc2';
 import { CurrencyType } from '@/constants/currency';
 
 interface CertificateProps {
