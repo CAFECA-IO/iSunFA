@@ -527,8 +527,12 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
               <p className="text-sm font-semibold text-neutral-300">
                 {formState.type === InvoiceType.OUTPUT_36
                   ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
-                  : t('certificate:EDIT.INVOICE_NUMBER')}
-                <span className="text-text-state-error">*</span>
+                  : formState.type === InvoiceType.OUTPUT_30
+                    ? t('certificate:EDIT.CERTIFICATE_NO')
+                    : t('certificate:EDIT.INVOICE_NUMBER')}
+                {formState.type !== InvoiceType.OUTPUT_30 && (
+                  <span className="text-text-state-error">*</span>
+                )}
               </p>
 
               {formState.type === InvoiceType.OUTPUT_36 ? (
@@ -540,7 +544,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     value={formState.no}
                     onChange={(e) => handleInputChange('no', e.target.value)}
                     className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
-                    placeholder="AB-12345678"
+                    placeholder={
+                      formState.type === InvoiceType.OUTPUT_36 ? 'AB-12345678' : '12345678'
+                    }
                   />
                 </div>
               ) : (
@@ -611,21 +617,24 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             </div>
 
             {/* Info: (20250414 - Anna) Tax Type */}
-            <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-neutral-300">
-                {t('certificate:EDIT.TAX_TYPE')}
-                <span> </span>
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div className="relative z-10 flex w-full items-center gap-2">
-                <TaxMenu selectTaxHandler={selectTaxHandler} />
-              </div>
-              {errors.taxAmount && (
-                <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                  {errors.taxAmount}
+            {/* Info: (20250513 - Anna) 其他銷項憑證 （不可申報）不適用 */}
+            {formState.type !== InvoiceType.OUTPUT_30 && (
+              <div className="flex w-full flex-col items-start gap-2">
+                <p className="text-sm font-semibold text-neutral-300">
+                  {t('certificate:EDIT.TAX_TYPE')}
+                  <span> </span>
+                  <span className="text-text-state-error">*</span>
                 </p>
-              )}
-            </div>
+                <div className="relative z-10 flex w-full items-center gap-2">
+                  <TaxMenu selectTaxHandler={selectTaxHandler} />
+                </div>
+                {errors.taxAmount && (
+                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                    {errors.taxAmount}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Info: (20240924 - Anna) CounterParty */}
             {formState.type !== InvoiceType.OUTPUT_32 && (
@@ -736,89 +745,93 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             </div>
 
             {/* Info: (20240924 - Anna) Total Price */}
-            <div className="hidden">
-              <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-                <div id="price" className="absolute -top-20"></div>
-                <p className="text-sm font-semibold text-input-text-primary">
-                  {t('certificate:EDIT.TOTAL_PRICE')}
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <div className="flex w-full items-center">
-                  <NumericInput
-                    id="input-total-price"
-                    name="input-total-price"
-                    value={formState.totalAmount ?? 0}
-                    isDecimal
-                    required
-                    hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                    triggerWhenChanged={totalAmountChangeHandler}
-                  />
-                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
-                    <Image
-                      src={currencyAliasImageSrc}
-                      width={16}
-                      height={16}
-                      alt={currencyAliasImageAlt}
-                      className="rounded-full"
-                    />
-                    <p>{currencyAliasStr}</p>
-                  </div>
-                </div>
-                {errors.totalAmount && (
-                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                    {errors.totalAmount}
+            {
+              <div className="hidden">
+                <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+                  <div id="price" className="absolute -top-20"></div>
+                  <p className="text-sm font-semibold text-input-text-primary">
+                    {t('certificate:EDIT.TOTAL_PRICE')}
+                    <span className="text-text-state-error">*</span>
                   </p>
-                )}
+                  <div className="flex w-full items-center">
+                    <NumericInput
+                      id="input-total-price"
+                      name="input-total-price"
+                      value={formState.totalAmount ?? 0}
+                      isDecimal
+                      required
+                      hasComma
+                      className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                      triggerWhenChanged={totalAmountChangeHandler}
+                    />
+                    <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                      <Image
+                        src={currencyAliasImageSrc}
+                        width={16}
+                        height={16}
+                        alt={currencyAliasImageAlt}
+                        className="rounded-full"
+                      />
+                      <p>{currencyAliasStr}</p>
+                    </div>
+                  </div>
+                  {errors.totalAmount && (
+                    <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                      {errors.totalAmount}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            }
 
             {/* Info: (20250414 - Anna) 退回或折讓checkbox */}
-            <div className="flex w-full items-center gap-2">
-              <div
-                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
-                  isReturnOrAllowance
-                    ? 'bg-checkbox-surface-selected'
-                    : 'bg-checkbox-surface-unselected'
-                }`}
-                onClick={() => {
-                  const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
-                  setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
+            {formState.type !== InvoiceType.OUTPUT_30 && (
+              <div className="flex w-full items-center gap-2">
+                <div
+                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
+                    isReturnOrAllowance
+                      ? 'bg-checkbox-surface-selected'
+                      : 'bg-checkbox-surface-unselected'
+                  }`}
+                  onClick={() => {
+                    const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
+                    setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
 
-                  // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                  // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                  if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
-                    handleInputChange('type', InvoiceType.OUTPUT_33);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_33 &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_31);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_32 &&
-                    isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_34);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_34 &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_32);
-                  }
-                }}
-              >
-                {isReturnOrAllowance && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <HiCheck className="text-neutral-white" />
-                  </div>
-                )}
+                    // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                    // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                    if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
+                      handleInputChange('type', InvoiceType.OUTPUT_33);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_33 &&
+                      !isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_31);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_32 &&
+                      isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_34);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_34 &&
+                      !isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_32);
+                    }
+                  }}
+                >
+                  {isReturnOrAllowance && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <HiCheck className="text-neutral-white" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info: (20250414 - Anna) Checkbox label */}
+                <span className="text-sm font-medium text-input-text-primary">
+                  {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
+                </span>
               </div>
-
-              {/* Info: (20250414 - Anna) Checkbox label */}
-              <span className="text-sm font-medium text-input-text-primary">
-                {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
-              </span>
-            </div>
+            )}
           </div>
         </div>
         {/* Info: (20240924 - Anna) Save 按鈕 */}
