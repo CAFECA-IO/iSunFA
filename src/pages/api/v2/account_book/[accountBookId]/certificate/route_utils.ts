@@ -230,6 +230,20 @@ export const certificateAPIPostUtils = {
       existed: true,
     };
 
+    // Info: (20250513 - Shirley) 添加 thumbnail
+    if (certificateEntity.file.thumbnailId && certificateEntity.file.thumbnail) {
+      const thumbnailURL = certificateAPIPostUtils.transformFileURL(
+        certificateEntity.file.thumbnail
+      );
+      file.thumbnail = {
+        id: certificateEntity.file.thumbnail.id,
+        name: certificateEntity.file.thumbnail.name,
+        size: certificateEntity.file.thumbnail.size,
+        url: thumbnailURL,
+        existed: true,
+      };
+    }
+
     const invoice: IInvoiceBetaOptional = {};
     const firstVoucher =
       certificateEntity.vouchers.length > 0 ? certificateEntity.vouchers[0] : null;
@@ -413,6 +427,20 @@ export const certificateAPIGetListUtils = {
       url: fileURL,
       existed: true,
     };
+
+    // 添加 thumbnail 信息
+    if (certificateEntity.file.thumbnailId && certificateEntity.file.thumbnail) {
+      const thumbnailURL = certificateAPIPostUtils.transformFileURL(
+        certificateEntity.file.thumbnail
+      );
+      file.thumbnail = {
+        id: certificateEntity.file.thumbnail.id,
+        name: certificateEntity.file.thumbnail.name,
+        size: certificateEntity.file.thumbnail.size,
+        url: thumbnailURL,
+        existed: true,
+      };
+    }
 
     let invoice: IInvoiceBetaOptional = {};
 
