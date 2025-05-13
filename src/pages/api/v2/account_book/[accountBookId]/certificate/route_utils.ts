@@ -277,7 +277,8 @@ export const certificateAPIPostUtils = {
   ) => {
     const { accountBookId } = options;
     /**
-     * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 SON.stringify(certificate as ICertificate)
+     * Info: (20250513 - Shirley)
+     * CERTIFICATE_EVENT.CREATE 傳送的資料格式為 { message: string }, 其中 string 為 JSON.stringify(certificate as ICertificate)
      */
     const pusher = getPusherInstance();
 
@@ -428,7 +429,7 @@ export const certificateAPIGetListUtils = {
       existed: true,
     };
 
-    // 添加 thumbnail 信息
+    // Info: (20250513 - Shirley) 添加 thumbnail 資訊
     if (certificateEntity.file.thumbnailId && certificateEntity.file.thumbnail) {
       const thumbnailURL = certificateAPIPostUtils.transformFileURL(
         certificateEntity.file.thumbnail

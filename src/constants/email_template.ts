@@ -11,7 +11,7 @@ export type EmailTemplateData = {
   [EmailTemplateName.INVITE]: {
     receiverName: string;
     teamName: string;
-    inviteLink: string;
+    joinLink: string;
   };
   // Info: (20250421 - Tzuhan) 具體可傳入的資料需要再確認
   [EmailTemplateName.PAY]: {
@@ -28,7 +28,7 @@ export type EmailTemplateData = {
     startDate: string;
     endDate: string;
     payStatus: string;
-    payLink: string;
+    repayLink: string;
   };
   [EmailTemplateName.SUBSCRIBE]: {
     receiverName: string;
@@ -37,7 +37,8 @@ export type EmailTemplateData = {
     receiverName: string;
     currentPlanName: string;
     currentDataStatus: string;
-    subscribeLink: string;
+    repayLink: string;
+    resubscribeLink: string;
   };
   [EmailTemplateName.VERIFICATION]: {
     receiverName: string;

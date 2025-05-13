@@ -78,11 +78,23 @@
           請您盡快確認信用卡餘額是否充足，或登入系統更新付款方式，<br />
           我們將於 24 小時後重新嘗試扣款作業。
         </mj-text>
-        <mj-text mj-class="mainText"
-          >更新付款方式:
-          <a href="{{payLink}}" target="_blank" style="color: #1570ef; text-decoration: underline">
-            {{payLink}}</a
+        <mj-text>
+          <a
+            href="{{repayLink}}"
+            style="
+              display: inline-block;
+              background-color: #ffb632;
+              color: #322000;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              line-height: 20px;
+              font-weight: 500;
+            "
           >
+            更新付款
+          </a>
         </mj-text>
         <mj-text mj-class="mainText"
           >若您對本通知內容有任何疑問，歡迎與我們聯繫，我們將竭誠為您服務。</mj-text
