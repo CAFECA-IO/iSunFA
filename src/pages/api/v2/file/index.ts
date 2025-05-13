@@ -105,20 +105,19 @@ async function handleFileUpload(
   let pdfPath = fileForSave.filepath;
   let tempDecryptedPath = '';
   if (type === UploadType.INVOICE && fileMimeType === 'application/pdf') {
-    // Decrypt PDF file if it's encrypted
+    // Info: (20250513 - Shirley) Decrypt PDF file if it's encrypted
     if (isEncrypted) {
-      // 獲取公司ID和私鑰
+      // Info: (20250513 - Shirley) 獲取公司ID和私鑰
       const companyId = convertStringToNumber(targetId);
       const encryptedFileBuffer = await fs.readFile(fileForSave.filepath);
       const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
-
-      // 獲取私鑰
       const privateKey = await getPrivateKeyByCompany(companyId);
+
       if (!privateKey) {
         throw new Error('Private key not found for decryption');
       }
 
-      // 解密檔案
+      // Info: (20250513 - Shirley) 解密檔案
       const ivUint8Array = new Uint8Array(ivBuffer);
       const decryptedBuffer = await decryptFile(
         arrayBuffer,
@@ -127,16 +126,14 @@ async function handleFileUpload(
         ivUint8Array
       );
 
-      // 寫入臨時解密檔案
+      // Info: (20250513 - Shirley) 寫入臨時解密檔案
       tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
       await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
       pdfPath = tempDecryptedPath;
     }
 
-    // Notes: generate PDF thumbnail
+    // Info: (20250513 - Shirley) generate PDF thumbnail
     try {
-      loggerBack.info(`Generating PDF thumbnail for file: ${fileForSave.filepath}`);
-      // thumbnailInfo = await generatePDFThumbnail(fileForSave.filepath);
       thumbnailInfo = await generatePDFThumbnail(pdfPath, {
         removeString: '_decrypted',
         suffix: '_thumbnail',
@@ -150,7 +147,7 @@ async function handleFileUpload(
     }
   }
 
-  // If we have a thumbnail, process it with the same encryption parameters
+  // Info: (20250513 - Shirley) If we have a thumbnail, process it with the same encryption parameters
   if (thumbnailInfo && thumbnailInfo.success) {
     const thumbnailFileName = path.basename(thumbnailInfo.filepath);
     const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
@@ -158,17 +155,13 @@ async function handleFileUpload(
       UPLOAD_TYPE_TO_FOLDER_MAP[type]
     );
 
-    // 移除未加密備份的代碼
+    // Info: (20250513 - Shirley) Remove the decrypted PDF file after thumbnail generation
+    fs.unlink(tempDecryptedPath);
     if (isEncrypted) {
       try {
-        // 加密 thumbnail 之後存到 DB
+        // Info: (20250513 - Shirley) 加密 thumbnail 之後存到 DB
         const companyId = convertStringToNumber(targetId);
         const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
-
-        // 記錄原始縮略圖信息
-        loggerBack.info(
-          `Original thumbnail info - file: ${thumbnailFileName}, size: ${thumbnailBuffer.length} bytes`
-        );
 
         const publicKey = await getPublicKeyByCompany(companyId);
 
@@ -176,15 +169,10 @@ async function handleFileUpload(
           throw new Error('Public key not found for encryption');
         }
 
-        // 使用全新的 IV 參數，而非重用原始文件的 IV
+        // Info: (20250513 - Shirley) 使用全新的 IV 參數，而非重用原始文件的 IV
         const newIv = crypto.getRandomValues(new Uint8Array(iv.length));
 
-        // 記錄新的加密參數
-        loggerBack.info(
-          `Encrypting thumbnail with NEW IV length: ${newIv.length}, values: ${[...newIv].slice(0, 5).join(',')}... (NOT reusing original IV)`
-        );
-
-        // 執行加密 - 使用全新的 IV
+        // Info: (20250513 - Shirley) 執行加密 - 使用全新的 IV
         const { encryptedContent, encryptedSymmetricKey: thumbnailEncryptedKey } =
           await encryptFile(
             new Uint8Array(thumbnailBuffer).buffer as ArrayBuffer,
@@ -192,28 +180,19 @@ async function handleFileUpload(
             newIv
           );
 
-        // 驗證加密後的內容
+        // Info: (20250513 - Shirley) 驗證加密後的內容
         if (!encryptedContent) {
           loggerBack.error('Failed to encrypt thumbnail - encryptedContent is null or empty');
-        } else {
-          loggerBack.info(
-            `Thumbnail encrypted successfully. Original size: ${thumbnailBuffer.length}, encrypted size: ${encryptedContent.byteLength}`
-          );
         }
 
-        // 寫入加密縮略圖
+        // Info: (20250513 - Shirley) 寫入加密縮略圖
         const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
         await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
 
-        // 記錄加密細節以便於調試
-        loggerBack.info(
-          `Encrypted thumbnail with fresh IV parameters. File: ${thumbnailFileName}, using new IV of length: ${newIv.length}`
-        );
-
-        // 將新的 IV 轉換為 Buffer 以存儲在數據庫中
+        // Info: (20250513 - Shirley) 將新的 IV 轉換為 Buffer 以存儲在數據庫中
         const newIvBuffer = uint8ArrayToBuffer(newIv);
 
-        // 創建文件記錄 - 使用新的 IV 和對稱密鑰
+        // Info: (20250513 - Shirley) 創建文件記錄 - 使用新的 IV 和對稱密鑰
         const thumbnailInDB = await createFile({
           name: thumbnailFileName,
           size: thumbnailInfo.size,
@@ -226,7 +205,7 @@ async function handleFileUpload(
         });
 
         if (thumbnailInDB && fileInDB) {
-          // 更新原始文件記錄，添加縮略圖 ID
+          // Info: (20250513 - Shirley) 更新原始文件記錄，添加縮略圖 ID
           await putFileById(fileInDB.id, {
             thumbnailId: thumbnailInDB.id,
           });
@@ -235,13 +214,13 @@ async function handleFileUpload(
           );
         }
       } catch (encryptionError) {
-        // 記錄縮略圖加密過程中的錯誤
+        // Info: (20250513 - Shirley) 記錄縮略圖加密過程中的錯誤
         loggerBack.error(
           encryptionError,
           `Error during thumbnail encryption for ${thumbnailFileName}`
         );
 
-        // 創建未加密的縮略圖記錄作為後備方案
+        // Info: (20250513 - Shirley) 創建未加密的縮略圖記錄作為後備方案
         loggerBack.info(
           `Creating unencrypted thumbnail record as fallback due to encryption error`
         );
@@ -252,23 +231,19 @@ async function handleFileUpload(
           mimeType: 'image/png',
           type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
           url: thumbnailUrl,
-          isEncrypted: false, // 設置為未加密
-          encryptedSymmetricKey: '', // 加空字符串作為必需參數
-          iv: Buffer.from([]), // 加空 Buffer 作為必需參數
+          isEncrypted: false, // Info: (20250513 - Shirley) 設置為未加密
+          encryptedSymmetricKey: '', // Info: (20250513 - Shirley) 加空字符串作為必需參數
+          iv: Buffer.from([]), // Info: (20250513 - Shirley) 加空 Buffer 作為必需參數
         });
 
         if (thumbnailInDB && fileInDB) {
           await putFileById(fileInDB.id, {
             thumbnailId: thumbnailInDB.id,
           });
-          loggerBack.info(
-            `Associated fallback unencrypted thumbnail ID ${thumbnailInDB.id} with file ID ${fileInDB.id}`
-          );
         }
       }
     } else {
-      // 如果未加密，使用原始創建邏輯
-      // Create thumbnail record with the same encryption parameters
+      // Info: (20250513 - Shirley) Create unencrypted thumbnail record with the same encryption parameters
       const thumbnailInDB = await createFile({
         name: thumbnailFileName,
         size: thumbnailInfo.size,
@@ -281,7 +256,7 @@ async function handleFileUpload(
       });
 
       if (thumbnailInDB && fileInDB) {
-        // Update original file record with thumbnail ID
+        // Info: (20250513 - Shirley) Update original file record with thumbnail ID
         await putFileById(fileInDB.id, {
           thumbnailId: thumbnailInDB.id,
         });
@@ -298,7 +273,7 @@ async function handleFileUpload(
     existed: true,
   };
 
-  // 如果有縮略圖，將其添加到返回對象中
+  // Info: (20250513 - Shirley) 如果有縮略圖，將其添加到返回對象中
   if (fileInDB.thumbnailId) {
     returnFile.thumbnail = {
       id: fileInDB.thumbnailId,
@@ -345,8 +320,6 @@ async function handleFileUpload(
     default:
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
-
-  loggerBack.info(`fileForSave: ${fileForSave}`);
 
   return returnFile;
 }
