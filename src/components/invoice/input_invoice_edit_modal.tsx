@@ -536,7 +536,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     ref={summarizedInvoiceInputRef}
                     type="number"
                     value={
-                      formState.totalOfSummarizedInvoices !== undefined
+                      formState.totalOfSummarizedInvoices != null
                         ? formState.totalOfSummarizedInvoices.toString()
                         : '0'
                     }
@@ -573,37 +573,37 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               </div>
             )}
             {/* Info: (20240924 - Anna) Invoice Number */}
-            <div>
-            <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-              {/* Info: (20250422 - Anna) 28 - 進項海關代徵營業稅繳納證 or 29 - 進項海關退還溢繳營業稅申報單 */}
-              {formState.type === InvoiceType.INPUT_28 ||
-              formState.type === InvoiceType.INPUT_29 ? (
-                <>
-                  <p className="text-sm font-semibold text-neutral-300">
-                    {t('certificate:EDIT.CERTIFICATE_BY_CUSTOMS')}
-                    <span> </span>
-                    <span className="text-text-state-error">*</span>
-                  </p>
+            <div className="flex w-full flex-col gap-4">
+              <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+                {/* Info: (20250422 - Anna) 28 - 進項海關代徵營業稅繳納證 or 29 - 進項海關退還溢繳營業稅申報單 */}
+                {formState.type === InvoiceType.INPUT_28 ||
+                formState.type === InvoiceType.INPUT_29 ? (
+                  <>
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.CERTIFICATE_BY_CUSTOMS')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
 
-                  <div className="flex w-full items-center">
-                    <input
-                      id="invoiceno"
-                      type="text"
-                      value={formState.no}
-                      onChange={(e) => handleInputChange('no', e.target.value)}
-                      className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
-                      placeholder={t('certificate:EDIT.CHARACTERS')}
-                    />
-                  </div>
-                </>
-              ) : // Info: (20250429 - Anna) 格式26
-              formState.type === InvoiceType.INPUT_26 ? (
-                <>
-                  <p className="text-sm font-semibold text-neutral-300">
-                    {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
-                    <span> </span>
-                    <span className="text-text-state-error">*</span>
-                  </p>
+                    <div className="flex w-full items-center">
+                      <input
+                        id="invoiceno"
+                        type="text"
+                        value={formState.no}
+                        onChange={(e) => handleInputChange('no', e.target.value)}
+                        className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                        placeholder={t('certificate:EDIT.CHARACTERS')}
+                      />
+                    </div>
+                  </>
+                ) : // Info: (20250429 - Anna) 格式26
+                formState.type === InvoiceType.INPUT_26 ? (
+                  <>
+                    <p className="text-sm font-semibold text-neutral-300">
+                      {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
+                      <span> </span>
+                      <span className="text-text-state-error">*</span>
+                    </p>
 
                     <div className="flex w-full items-center">
                       {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
@@ -621,31 +621,31 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         placeholder="AB"
                       />
 
-                    <input
-                      id="invoice-number"
-                      type="text"
-                      maxLength={8}
-                      value={formState.no?.substring(2) ?? ''}
-                      onChange={(e) => {
-                        const latestNo = formStateRef.current.no ?? '';
-                        const prefix = latestNo.substring(0, 2);
-                        handleInputChange('no', `${prefix}${e.target.value}`);
-                      }}
-                      className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
-                      placeholder={t('certificate:EDIT.ENTER_ONE_INVOICE')}
-                    />
-                  </div>
-                </>
-              ) : // Info: (20250429 - Anna) 格式22
-              formState.type === InvoiceType.INPUT_22 ? (
-                <div className="flex w-full justify-between">
-                  {/* Info: (20250429 - Anna) Invoice No. */}
-                  <div className="flex flex-col gap-2 md:w-52">
-                    <p className="text-sm font-semibold text-neutral-300">
-                      {t('certificate:EDIT.INVOICE_NUMBER')}
-                      <span> </span>
-                      <span className="text-text-state-error">*</span>
-                    </p>
+                      <input
+                        id="invoice-number"
+                        type="text"
+                        maxLength={8}
+                        value={formState.no?.substring(2) ?? ''}
+                        onChange={(e) => {
+                          const latestNo = formStateRef.current.no ?? '';
+                          const prefix = latestNo.substring(0, 2);
+                          handleInputChange('no', `${prefix}${e.target.value}`);
+                        }}
+                        className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                        placeholder={t('certificate:EDIT.ENTER_ONE_INVOICE')}
+                      />
+                    </div>
+                  </>
+                ) : // Info: (20250429 - Anna) 格式22
+                formState.type === InvoiceType.INPUT_22 ? (
+                  <div className="flex w-full justify-between">
+                    {/* Info: (20250429 - Anna) Invoice No. */}
+                    <div className="flex flex-col gap-2 md:w-52">
+                      <p className="text-sm font-semibold text-neutral-300">
+                        {t('certificate:EDIT.INVOICE_NUMBER')}
+                        <span> </span>
+                        <span className="text-text-state-error">*</span>
+                      </p>
 
                       <div className="flex items-center">
                         {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
@@ -690,31 +690,31 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         <span className="text-text-state-error">*</span>
                       </p>
 
-                    <div className="flex w-full items-center">
-                      <input
-                        id="other-certificate-no"
-                        type="text"
-                        value={formState.otherCertificateNo ?? ''}
-                        onChange={(e) => {
-                          handleInputChange('otherCertificateNo', e.target.value);
-                        }}
-                        className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
-                        placeholder="CC12345678"
-                        disabled={!!formState.no}
-                      />
+                      <div className="flex w-full items-center">
+                        <input
+                          id="other-certificate-no"
+                          type="text"
+                          value={formState.otherCertificateNo ?? ''}
+                          onChange={(e) => {
+                            handleInputChange('otherCertificateNo', e.target.value);
+                          }}
+                          className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                          placeholder="CC12345678"
+                          disabled={!!formState.no}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : // Info: (20250429 - Anna) 格式27
-              formState.type === InvoiceType.INPUT_27 ? (
-                <div className="flex w-full justify-between">
-                  {/* Info: (20250429 - Anna) Representative Invoice No. */}
-                  <div className="flex flex-col gap-2 md:w-52">
-                    <p className="text-sm font-semibold text-neutral-300">
-                      {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
-                      <span> </span>
-                      <span className="text-text-state-error">*</span>
-                    </p>
+                ) : // Info: (20250429 - Anna) 格式27
+                formState.type === InvoiceType.INPUT_27 ? (
+                  <div className="flex w-full justify-between">
+                    {/* Info: (20250429 - Anna) Representative Invoice No. */}
+                    <div className="flex flex-col gap-2 md:w-52">
+                      <p className="text-sm font-semibold text-neutral-300">
+                        {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
+                        <span> </span>
+                        <span className="text-text-state-error">*</span>
+                      </p>
 
                       <div className="flex items-center">
                         {/* Info: (20250415 - Anna) 「輸入」發票前綴 */}
@@ -796,6 +796,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                   <>
                     <p className="text-sm font-semibold text-neutral-300">
                       {t('certificate:EDIT.INVOICE_NUMBER')}
+                      <span> </span>
                       <span className="text-text-state-error">*</span>
                     </p>
                     <div className="flex w-full items-center">
@@ -876,6 +877,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               <div className="flex w-full flex-col items-start gap-2">
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:TABLE.DEDUCTION_TYPE')}
+                  <span> </span>
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="flex w-full items-center gap-2">
@@ -923,6 +925,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         formState.type === InvoiceType.INPUT_26
                       ? t('certificate:EDIT.TOTAL_OF_SALES_AMOUNT')
                       : t('certificate:EDIT.SALES_AMOUNT')}
+                  <span> </span>
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="flex w-full items-center">
@@ -955,53 +958,56 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               </div>
 
               {/* Info: (20250414 - Anna) Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
-                <p className="text-sm font-semibold text-neutral-300">
-                  {t('certificate:EDIT.TAX')}
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <div className="flex w-full items-center">
-                  <NumericInput
-                    id="input-tax"
-                    name="input-tax"
-                    value={
-                      formState.type === InvoiceType.INPUT_22 ||
-                      formState.type === InvoiceType.INPUT_27
-                        ? 0
-                        : (formState.taxAmount ?? 0)
-                    }
-                    isDecimal
-                    required
-                    hasComma
-                    disabled={
-                      formState.type === InvoiceType.INPUT_22 ||
-                      formState.type === InvoiceType.INPUT_27
-                    }
-                    className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none ${
-                      formState.type === InvoiceType.INPUT_22 ||
-                      formState.type === InvoiceType.INPUT_27
-                        ? 'text-neutral-300'
-                        : 'text-input-text-primary'
-                    }`}
-                  />
-                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
-                    <Image
-                      src={currencyAliasImageSrc}
-                      width={16}
-                      height={16}
-                      alt={currencyAliasImageAlt}
-                      className="rounded-full"
-                    />
-                    <p>{currencyAliasStr}</p>
-                  </div>
-                </div>
-                {(formState.type === InvoiceType.INPUT_22 ||
-                  formState.type === InvoiceType.INPUT_27) && (
-                  <p className="w-full text-right text-sm font-medium tracking-wide text-neutral-300">
-                    {t('certificate:EDIT.DUPLICATE_INVOICE_TAX')}
+              {formState.type !== InvoiceType.INPUT_20 && (
+                <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
+                  <p className="text-sm font-semibold text-neutral-300">
+                    {t('certificate:EDIT.TAX')}
+                    <span> </span>
+                    <span className="text-text-state-error">*</span>
                   </p>
-                )}
-              </div>
+                  <div className="flex w-full items-center">
+                    <NumericInput
+                      id="input-tax"
+                      name="input-tax"
+                      value={
+                        formState.type === InvoiceType.INPUT_22 ||
+                        formState.type === InvoiceType.INPUT_27
+                          ? 0
+                          : (formState.taxAmount ?? 0)
+                      }
+                      isDecimal
+                      required
+                      hasComma
+                      disabled={
+                        formState.type === InvoiceType.INPUT_22 ||
+                        formState.type === InvoiceType.INPUT_27
+                      }
+                      className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none ${
+                        formState.type === InvoiceType.INPUT_22 ||
+                        formState.type === InvoiceType.INPUT_27
+                          ? 'text-neutral-300'
+                          : 'text-input-text-primary'
+                      }`}
+                    />
+                    <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                      <Image
+                        src={currencyAliasImageSrc}
+                        width={16}
+                        height={16}
+                        alt={currencyAliasImageAlt}
+                        className="rounded-full"
+                      />
+                      <p>{currencyAliasStr}</p>
+                    </div>
+                  </div>
+                  {(formState.type === InvoiceType.INPUT_22 ||
+                    formState.type === InvoiceType.INPUT_27) && (
+                    <p className="w-full text-right text-sm font-medium tracking-wide text-neutral-300">
+                      {t('certificate:EDIT.DUPLICATE_INVOICE_TAX')}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
             {/* Info: (20240924 - Anna) Total Price */}
             <div className="hidden">
@@ -1009,6 +1015,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 <div id="price" className="absolute -top-20"></div>
                 <p className="text-sm font-semibold text-neutral-300">
                   {t('certificate:EDIT.TOTAL_PRICE')}
+                  <span> </span>
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="flex w-full items-center">

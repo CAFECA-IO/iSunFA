@@ -73,7 +73,7 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'invoice_management_icon',
     iconWidth: 24,
     iconHeight: 24,
-    // disabled: true,
+    disabled: true,
     subMenu: [
       {
         caption: 'INVOICE',
