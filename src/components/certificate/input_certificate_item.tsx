@@ -8,12 +8,12 @@ import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaCheck } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
-import { ICertificateRC2InputUI } from '@/interfaces/certificate_rc2';
-import { DeductionType } from '@/constants/certificate';
+import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
+import { DeductionType } from '@/constants/invoice_rc2';
 
 interface InputCertificateListIrops {
   activeSelection: boolean;
-  certificate: ICertificateRC2InputUI;
+  certificate: IInvoiceRC2InputUI;
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;

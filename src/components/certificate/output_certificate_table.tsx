@@ -4,13 +4,13 @@ import OutputCertificateItem from '@/components/certificate/output_certificate_i
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
-import { CertificateTab } from '@/constants/certificate';
+import { InvoiceTab } from '@/constants/invoice_rc2';
 import { CurrencyType } from '@/constants/currency';
-import { ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
+import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
-interface OutputCertificateTableProps {
-  activeTab: CertificateTab;
-  certificates: ICertificateRC2OutputUI[];
+interface OutputInvoiceTableProps {
+  activeTab: InvoiceTab;
+  certificates: IInvoiceRC2OutputUI[];
   currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
@@ -29,7 +29,7 @@ interface OutputCertificateTableProps {
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
 }
 
-const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
+const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
@@ -152,7 +152,7 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div>{t('certificate:TABLE.UPLOADER')}</div>
-              {activeTab === CertificateTab.WITH_VOUCHER && displayedVoucherNumber}
+              {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>
@@ -175,4 +175,4 @@ const OutputCertificateTable: React.FC<OutputCertificateTableProps> = ({
   );
 };
 
-export default OutputCertificateTable;
+export default OutputInvoiceTable;

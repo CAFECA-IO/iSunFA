@@ -2,18 +2,18 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { ICertificateUI } from '@/interfaces/certificate';
-import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/certificate';
+import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import { BsThreeDotsVertical } from 'react-icons/bs';
 import { HiCheck } from 'react-icons/hi';
 import { timestampToString } from '@/lib/utils/common';
 import {
-  ICertificateRC2InputUI,
-  ICertificateRC2OutputUI,
+  IInvoiceRC2InputUI,
+  IInvoiceRC2OutputUI,
   isClassicCertificate,
-} from '@/interfaces/certificate_rc2';
+} from '@/interfaces/invoice_rc2';
 
 interface CertificateThumbnailProps {
-  data: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI;
+  data: ICertificateUI | IInvoiceRC2InputUI | IInvoiceRC2OutputUI;
   activeSelection: boolean;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onRemove: (id: number) => void;
@@ -47,7 +47,7 @@ const CertificateThumbnail: React.FC<CertificateThumbnailProps> = ({
         <div className="flex max-h-134px min-h-134px max-w-90px items-center overflow-hidden">
           {/* Info: (20240924 - Tzuhan) 縮略圖 */}
           <Image
-            src={data.file.url}
+            src={('thumbnail' in data.file && data.file.thumbnail?.url) || data.file.url}
             alt={`Certificate ${data.file.name}`}
             height={136}
             width={93}

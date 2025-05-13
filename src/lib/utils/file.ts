@@ -97,10 +97,7 @@ export async function decryptImageFile({
     const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
     const privateKey = await getPrivateKeyByCompany(companyId);
 
-    loggerBack.info(`Private key in decryptedArrayBuffer: ${privateKey}`);
-
     if (!privateKey) {
-      loggerBack.error(`Private key not found in decryptImageFile in image/[imageId]: ${file.id}`);
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
     const ivUint8Array = bufferToUint8Array(iv);
@@ -168,6 +165,8 @@ export function initFileEntity(
     type: FileFolder;
     url: string;
     buffer?: Buffer;
+    thumbnailId?: number | null;
+    thumbnail?: IFileEntity;
   }
 ): IFileEntity {
   const nowInSecond = getTimestampNow();
@@ -183,6 +182,8 @@ export function initFileEntity(
     updatedAt: dto.updatedAt || nowInSecond,
     deletedAt: dto.deletedAt || null,
     buffer: dto.buffer,
+    thumbnailId: dto.thumbnailId || null,
+    thumbnail: dto.thumbnail || undefined,
   };
 
   return fileEntity;

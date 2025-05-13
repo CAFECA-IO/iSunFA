@@ -12,26 +12,23 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
-import {
-  createCertificateRC2,
-  listCertificateRC2Input,
-} from '@/lib/utils/repo/certificate_rc2.repo';
+import { createInvoiceRC2, listInvoiceRC2Output } from '@/lib/utils/repo/invoice_rc2.repo';
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.CREATE_CERTIFICATE_RC2_INPUT, req);
-  await checkUserAuthorization(APIName.CREATE_CERTIFICATE_RC2_INPUT, req, session);
+  await checkSessionUser(session, APIName.CREATE_INVOICE_RC2_OUTPUT, req);
+  await checkUserAuthorization(APIName.CREATE_INVOICE_RC2_OUTPUT, req, session);
 
-  const { query, body } = checkRequestData(APIName.CREATE_CERTIFICATE_RC2_INPUT, req, session);
+  const { query, body } = checkRequestData(APIName.CREATE_INVOICE_RC2_OUTPUT, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificate = await createCertificateRC2(session.userId, query, body);
+  const certificate = await createInvoiceRC2(session.userId, query, body);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.CREATE_CERTIFICATE_RC2_INPUT,
+    APIName.CREATE_INVOICE_RC2_OUTPUT,
     certificate
   );
 
@@ -51,16 +48,16 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.LIST_CERTIFICATE_RC2_INPUT, req);
-  await checkUserAuthorization(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
+  await checkSessionUser(session, APIName.LIST_INVOICE_RC2_OUTPUT, req);
+  await checkUserAuthorization(APIName.LIST_INVOICE_RC2_OUTPUT, req, session);
 
-  const { query } = checkRequestData(APIName.LIST_CERTIFICATE_RC2_INPUT, req, session);
+  const { query } = checkRequestData(APIName.LIST_INVOICE_RC2_OUTPUT, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const certificateList = await listCertificateRC2Input(session.userId, query);
+  const certificateList = await listInvoiceRC2Output(session.userId, query);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_CERTIFICATE_RC2_INPUT,
+    APIName.LIST_INVOICE_RC2_OUTPUT,
     certificateList
   );
 
@@ -105,6 +102,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.LIST_CERTIFICATE_RC2_INPUT, req, statusMessage);
+  await logUserAction(session, APIName.LIST_INVOICE_RC2_OUTPUT, req, statusMessage);
   res.status(httpCode).json(result);
 }

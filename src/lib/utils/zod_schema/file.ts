@@ -48,6 +48,16 @@ const fileOutputSchema = filePrismaSchema.transform((data) => {
   };
 });
 
+/*
+// TODO: (20250513 - Shirley) 在跟 certificate RC2 整合之後再補上明確的 type validator
+const fileThumbnailSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  size: z.number(),
+  url: z.string(),
+  existed: z.boolean(),
+});
+*/
 /**
  * Info: (20241025 - Murky)
  * @description schema for init file entity or parsed prisma file
@@ -62,6 +72,9 @@ export const fileEntityValidator = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
+  thumbnailId: z.number().nullable().optional(),
+  thumbnail: z.any(),
+  // thumbnail: z.union([fileThumbnailSchema, z.object({})]).optional(), // TODO: (20250513 - Shirley) 在跟 certificate RC2 整合之後再補上明確的 type validator
 });
 
 /**
@@ -87,6 +100,9 @@ export const IFileBetaValidator = z.object({
   size: z.number().describe('Bytes of file'),
   existed: z.boolean(),
   url: z.string(),
+  thumbnailId: z.number().nullable().optional(),
+  thumbnail: z.any(),
+  // thumbnail: z.union([fileThumbnailSchema, z.object({})]).optional(), // TODO: (20250513 - Shirley) 在跟 certificate RC2 整合之後再補上明確的 type validator
 });
 
 export const filePostSchema = {

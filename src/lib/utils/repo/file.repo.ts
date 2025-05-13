@@ -107,6 +107,9 @@ export async function findFileById(fileId: number): Promise<File | null> {
       where: {
         id: fileId,
       },
+      include: {
+        thumbnail: true,
+      },
     });
   } catch (error) {
     loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
@@ -150,6 +153,9 @@ export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
           in: fileIdList,
         },
       },
+      include: {
+        thumbnail: true,
+      },
     });
   } catch (error) {
     loggerBack.error(error, 'Error happened in listFileByIdList in file.repo.ts');
@@ -164,6 +170,9 @@ export async function findFileInDBByName(name: string): Promise<File | null> {
     file = await prisma.file.findFirst({
       where: {
         name,
+      },
+      include: {
+        thumbnail: true,
       },
     });
   } catch (error) {
