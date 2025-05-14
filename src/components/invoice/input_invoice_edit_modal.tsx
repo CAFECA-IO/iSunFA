@@ -240,10 +240,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
       }
 
-      // Todo: (20250414 - Anna) Treat null and undefined as equal
-      if (val1 == null && val2 == null) return false;
-      if ((val1 === null && val2 === undefined) || (val1 === undefined && val2 === null)) return false;
-
       return val1 !== val2;
     });
   };
