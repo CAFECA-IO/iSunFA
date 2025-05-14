@@ -452,8 +452,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
           {/*  Info: (20250430 - Anna) e-invoice UI (格式35的時候套用) */}
-          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
-          {formState.type === InvoiceType.OUTPUT_35 && (
+          {formState.type === InvoiceType.OUTPUT_35 && formState.isGenerated && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
@@ -470,7 +469,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             </div>
           )}
 
-          {(certificate.file?.url || eInvoiceImageUrl) && (
+          {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
             <ImageZoom
               imageUrl={
                 certificate.isGenerated && eInvoiceImageUrl
@@ -935,7 +934,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             )}
           </div>
         </div>
-        {/* Info: (20240924 - Anna) Save 按鈕 */}
+        {/* Info: (20240924 - Anna) Save */}
         <div className="flex items-center">
           {!certificate.voucherNo && (
             <Button

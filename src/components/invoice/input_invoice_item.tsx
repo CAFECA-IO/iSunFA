@@ -93,7 +93,12 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             />
           )}
           <div className="flex flex-col">
-            <div className="download-pb-4 text-text-neutral-primary">{certificate.no ?? ''}</div>
+            <div className="download-pb-4 text-text-neutral-primary">
+              {certificate.no ||
+                certificate.carrierSerialNumber ||
+                certificate.otherCertificateNo ||
+                ''}
+            </div>
           </div>
         </div>
       </BorderCell>
