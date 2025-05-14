@@ -894,7 +894,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       formState.type === InvoiceType.OUTPUT_33 &&
                       !isTogglingToReturnOrAllowance
                     ) {
-                      // handleInputChange('type', InvoiceType.OUTPUT_31);
                       if (originalTypeRef.current === InvoiceType.OUTPUT_31) {
                         handleInputChange('type', InvoiceType.OUTPUT_31);
                       } else if (originalTypeRef.current === InvoiceType.OUTPUT_35) {
@@ -910,7 +909,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       formState.type === InvoiceType.OUTPUT_34 &&
                       !isTogglingToReturnOrAllowance
                     ) {
-                      // handleInputChange('type', InvoiceType.OUTPUT_32);
                       if (originalTypeRef.current === InvoiceType.OUTPUT_32) {
                         handleInputChange('type', InvoiceType.OUTPUT_32);
                       } else if (originalTypeRef.current === InvoiceType.OUTPUT_36) {
