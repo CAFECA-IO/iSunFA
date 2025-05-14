@@ -1,6 +1,18 @@
 <mjml>
-  <!-- Attributes -->
   <mj-head>
+    <!-- Styles -->
+    <mj-style>
+      a { text-decoration: none !important; } .main, .main-content, .footer { max-width: 600px
+      !important; box-sizing: border-box; word-break: break-word; display: block; } .main { padding:
+      20px 40px; background-color:#F4F5F7; } .main-content { padding: 20px 40px;
+      background-color:#FFFFFF } .footer { background-color:#304872; padding:40px; }
+    </mj-style>
+    <mj-style>
+      @media (max-width: 480px) { .main { padding: 0 10px;} .main-content { padding:10px 0;
+      background-color:#FFFFFF } .footer { padding:0px 20px; } }
+    </mj-style>
+
+    <!-- Attributes -->
     <mj-attributes>
       <mj-all font-family="Barlow" />
       <mj-class
@@ -46,8 +58,8 @@
     </mj-section>
 
     <!-- Main -->
-    <mj-section background-color="#F4F5F7" padding="40px">
-      <mj-column background-color="#FFFFFF" padding="20px 40px">
+    <mj-section css-class="main">
+      <mj-column css-class="main-content">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
           >陽光智能會計付款未成功提醒</mj-text
         >
@@ -106,7 +118,7 @@
     </mj-section>
 
     <!-- Footer -->
-    <mj-section background-color="#304872" padding="40px">
+    <mj-section css-class="footer">
       <!-- 左邊區塊 -->
       <mj-column>
         <mj-text color="#FFFFFF" font-weight="700" font-size="12px" line-height="28px" padding="0"
@@ -122,7 +134,7 @@
           <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
           <a
             href="mailto:isunfahelp@isunfa.com.tw"
-            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            style="color: white; font-weight: 500; font-size: 10px"
             >isunfahelp@isunfa.com.tw</a
           ></mj-text
         >
@@ -134,9 +146,7 @@
           vertical-align="middle"
         >
           <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
-          <a
-            href="tel:+886-2-2700-1979"
-            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+          <a href="tel:+886-2-2700-1979" style="color: white; font-weight: 500; font-size: 10px"
             >+886-2-2700-1979</a
           ></mj-text
         >
@@ -157,9 +167,9 @@
       </mj-column>
 
       <!-- 右邊區塊：icon + text -->
-      <mj-column padding-top="50px">
+      <mj-column padding-top="40px">
         <mj-text align="right" padding="0">
-          <mj-text style="margin-right: 24px">
+          <mj-text style="margin-right: 40px">
             <a href="https://isunfa.tw/" target="_blank"
               ><img
                 src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
@@ -170,7 +180,7 @@
           <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
             <img
               width="20px"
-              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
+              src="https://img.icons8.com/?size=100&id=118467&format=png&color=FFFFFF"
               alt="facebook_link"
               style="margin-right: 12px"
             />
@@ -178,14 +188,14 @@
           <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
             <img
               width="20px"
-              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
+              src="https://img.icons8.com/?size=100&id=12599&format=png&color=FFFFFF"
               alt="github_link"
               style="margin-right: 12px"
           /></a>
           <a href="https://www.youtube.com/@isunfa" target="_blank"
             ><img
               width="20px"
-              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
+              src="https://img.icons8.com/?size=100&id=37326&format=png&color=FFFFFF"
               alt="youtube_link"
           /></a>
         </mj-text>
