@@ -1,6 +1,6 @@
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useState } from 'react';
-import { FaChevronDown /* FaAngleRight */ } from 'react-icons/fa6';
+import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 import { TaxType } from '@/constants/invoice_rc2';
 
@@ -96,12 +96,8 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
                 <span>{t(`certificate:EDIT.${value}`)}</span>
                 <span className="pr-2 text-neutral-300">
                   {value === TaxOptions.TAXABLE_5 && <span>5%</span>}
-                  {/* Info: (20250513 - Anna) 零稅率UI */}
-                  {/* {value === TaxOptions.ZERO_TAX_RATE && <span>0%</span>} */}
                 </span>
               </p>
-              {/* Info: (20250513 - Anna) 零稅率UI */}
-              {/* <p className="w-4">{value === TaxOptions.ZERO_TAX_RATE && <FaAngleRight />}</p> */}
             </li>
           ))}
         </ul>
