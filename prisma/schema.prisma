@@ -440,7 +440,7 @@ model InvoiceRC2 {
   uploaderId    Int              @map("uploader_id")
   direction     InvoiceDirection @map("direction")
   aiResultId    String?          @default("0") @map("ai_result_id")
-  aiStatus      String?          @default("READY") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
+  aiStatus      String?          @default("READY") @map("ai_status") // Info: (20250429 - Tzuhan) Optional: AI處理狀態
   createdAt     Int              @map("created_at")
   updatedAt     Int              @map("updated_at")
   deletedAt     Int?             @map("deleted_at")
@@ -484,7 +484,7 @@ model InvoiceRC2 {
   uploader    User     @relation(fields: [uploaderId], references: [id])
   voucher     Voucher? @relation(fields: [voucherId], references: [id])
 
-  @@map("certificate_rc2")
+  @@map("invoice_rc2")
 }
 
 model Department {

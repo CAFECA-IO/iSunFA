@@ -1,35 +1,27 @@
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { useState } from 'react';
-import { FaChevronDown, FaAngleRight } from 'react-icons/fa6';
+import { useState, useEffect } from 'react';
+import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
+import { TaxType } from '@/constants/invoice_rc2';
 
 enum TaxOptions {
   TAXABLE_5 = 'TAXABLE_5',
-  ZERO_TAX_RATE = 'ZERO_TAX_RATE',
   TAX_FREE = 'TAX_FREE',
 }
 
-enum ZeroTaxRateOptions {
-  NONE = 'NONE',
-  THROUGH_CUSTOMS = 'THROUGH_CUSTOMS',
-  NOT_THROUGH_CUSTOMS = 'NOT_THROUGH_CUSTOMS',
-}
-
-const taxRates = {
+const taxRates: Record<TaxOptions, number | undefined> = {
   TAXABLE_5: 5,
-  ZERO_TAX_RATE: 0,
-  TAX_FREE: null,
+  TAX_FREE: undefined,
 };
 
 interface ITaxMenuProps {
-  selectTaxHandler: (value: number | null) => void;
+  selectTaxHandler: (params: { taxRate: number | null; taxType: TaxType }) => void;
+  initialTaxType?: TaxType;
 }
 
-const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) => {
+const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler, initialTaxType }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const [selectedTax, setSelectedTax] = useState<TaxOptions | ZeroTaxRateOptions>(
-    TaxOptions.TAXABLE_5
-  );
+  const [selectedTax, setSelectedTax] = useState<TaxOptions>(TaxOptions.TAXABLE_5);
 
   const {
     targetRef: taxRatioMenuRef,
@@ -37,11 +29,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
     setComponentVisible: setIsTaxRatioMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const {
-    targetRef: taxRatioSubMenuRef,
-    componentVisible: isTaxRatioSubMenuOpen,
-    setComponentVisible: setIsTaxRatioSubMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  const { setComponentVisible: setIsTaxRatioSubMenuOpen } = useOuterClick<HTMLDivElement>(false);
 
   const closeAllMenus = () => {
     setIsTaxRatioMenuOpen(false);
@@ -57,20 +45,21 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
 
   const handleOptionClick = (option: TaxOptions, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    selectTaxHandler(taxRates[option]);
-    if (option === TaxOptions.ZERO_TAX_RATE) {
-      setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
-    } else {
-      setSelectedTax(option);
-      closeAllMenus();
-    }
-  };
-
-  const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
-    event?.stopPropagation();
+    selectTaxHandler({
+      taxRate: taxRates[option] ?? null,
+      taxType: option === TaxOptions.TAXABLE_5 ? TaxType.TAXABLE : TaxType.TAX_FREE,
+    });
     setSelectedTax(option);
     closeAllMenus();
   };
+
+  useEffect(() => {
+    if (initialTaxType === TaxType.TAXABLE) {
+      setSelectedTax(TaxOptions.TAXABLE_5);
+    } else if (initialTaxType === TaxType.TAX_FREE) {
+      setSelectedTax(TaxOptions.TAX_FREE);
+    }
+  }, [initialTaxType]);
 
   return (
     <div
@@ -87,7 +76,6 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
         <p>{t(`certificate:EDIT.${selectedTax}`)}</p>
         <p className="pr-2 text-neutral-300">
           {selectedTax === TaxOptions.TAXABLE_5 && <span>5%</span>}
-          {selectedTax === TaxOptions.ZERO_TAX_RATE && <span>0%</span>}
         </p>
       </div>
       <div className="flex h-20px w-20px items-center justify-center">
@@ -113,33 +101,12 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
                 <span>{t(`certificate:EDIT.${value}`)}</span>
                 <span className="pr-2 text-neutral-300">
                   {value === TaxOptions.TAXABLE_5 && <span>5%</span>}
-                  {value === TaxOptions.ZERO_TAX_RATE && <span>0%</span>}
                 </span>
               </p>
-              <p className="w-4">{value === TaxOptions.ZERO_TAX_RATE && <FaAngleRight />}</p>
             </li>
           ))}
         </ul>
       </div>
-      {/* Info: (20250103 - Anna) 次級選單 */}
-      {isTaxRatioSubMenuOpen && (
-        <div
-          ref={taxRatioSubMenuRef}
-          className="border-dropdown-stroke-menu/10 absolute left-full top-50px grid w-full translate-x-2 grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
-        >
-          <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary">
-            {Object.values(ZeroTaxRateOptions).map((value) => (
-              <li
-                key={value}
-                className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                onClick={(e) => handleZeroTaxRateOptionClick(value, e)}
-              >
-                {t(`certificate:EDIT.${value}`)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
 };

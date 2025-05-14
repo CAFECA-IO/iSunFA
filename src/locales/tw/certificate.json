@@ -24,7 +24,9 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
     "DEDUCTIBLE_FIXED_ASSETS": "固定資產",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定資產"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定資產",
+    "AFTER_TAX": "稅後",
+    "PRE_TAX": "稅前"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
@@ -101,13 +103,20 @@
     "NON_DEDUCTIBLE_FIXED_ASSETS": "不可扣抵之固定資產",
     "CERTIFICATE_BY_CUSTOMS": "海關代徵營業稅繳納證明書號碼",
     "CHARACTERS": "14 個字符",
+    "CHARACTERS_8": "8 個字符",
     "ENTER_ONE_INVOICE": "輸入一個發票號碼作為代表",
     "REPRESENTATIVE_INVOICE": "代表發票號碼",
     "TOTAL_OF_SUMMARIZED_INVOICES": "彙總發票合計",
     "COPIES": "張",
     "ALLOWANCE_ISSUE_DATE": "（折讓單）開立日期",
     "DUPLICATE_INVOICE_TAX": "如果使用二聯式發票，稅額為 0",
+    "SALES_AMOUNT_UNDER_10": "銷售額為 10 元以下，則稅額為0",
     "OTHER_CERTIFICATE_NO": "其他憑證編號",
+    "CARRIER_SERIAL_NO": "載具流水號",
+    "CERTIFICATE_NO": "憑證編號",
+    "CERTIFICATE_AMOUNT": "憑證金額",
+    "TOTAL_OF_SALES_AMOUNT": "總銷售額",
+    "SALES_AMOUNT": "銷售額",
     "ELECTRONIC_INVOICE_INFO": "電子發票資訊",
     "INVOICE_DATE": "開立時間",
     "SELLER": "賣方",
@@ -117,7 +126,9 @@
     "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三聯式收銀機發票則跳過",
     "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月",
     "INPUT_INVOICE": "進項發票",
-    "OUTPUT_INVOICE": "銷項發票"
+    "OUTPUT_INVOICE": "銷項發票",
+    "DESCRIPTION_PLACEHOLDER": "關於此憑證的簡短描述",
+    "DESCRIPTION": "描述"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",

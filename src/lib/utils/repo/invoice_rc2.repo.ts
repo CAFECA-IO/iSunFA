@@ -13,7 +13,6 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import loggerBack from '@/lib/utils/logger_back';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -115,7 +114,6 @@ function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof Invoi
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`InvoiceRC2Input.file: ${JSON.stringify(invoiceRC2Input.file)}`);
   invoiceRC2Input.incomplete = !isInvoiceRC2Complete(invoiceRC2Input);
   return invoiceRC2Input;
 }
@@ -144,7 +142,6 @@ function transformOutput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`InvoiceRC2Output.file: ${JSON.stringify(invoiceRC2Output.file)}`);
   invoiceRC2Output.incomplete = !isInvoiceRC2Complete(invoiceRC2Output);
   return invoiceRC2Output;
 }
@@ -381,12 +378,26 @@ export async function updateInvoiceRC2Input(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
+  const certForCheck: InvoiceRC2Type = {
+    ...rest,
+    direction: InvoiceDirection.INPUT,
+    uploaderId: userId,
+    uploaderName: uploaderName ?? '',
+    voucherId: rest.voucherId ?? null,
+    voucherNo: voucherNo ?? null,
+    file,
+    note: rest.note ?? {},
+  } as InvoiceRC2InputType;
+
+  const incomplete = !isInvoiceRC2Complete(certForCheck);
+
   const updated = await prisma.invoiceRC2.update({
     where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaInvoiceType,
+      incomplete,
       updatedAt: now,
     },
     include: { file: true, voucher: true, uploader: true },
@@ -408,12 +419,26 @@ export async function updateInvoiceRC2Output(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
+  const certForCheck: InvoiceRC2Type = {
+    ...rest,
+    direction: InvoiceDirection.OUTPUT,
+    uploaderId: userId,
+    uploaderName: uploaderName ?? '',
+    voucherId: rest.voucherId ?? null,
+    voucherNo: voucherNo ?? null,
+    file,
+    note: rest.note ?? {},
+  } as InvoiceRC2OutputType;
+
+  const incomplete = !isInvoiceRC2Complete(certForCheck);
+
   const updated = await prisma.invoiceRC2.update({
     where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaInvoiceType,
+      incomplete,
       updatedAt: now,
     },
     include: { file: true, voucher: true, uploader: true },

@@ -142,7 +142,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
               {t('certificate:TABLE.DEDUCTION_TYPE')}
             </div>
             <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {t('certificate:TABLE.TAX')}
+              {t('certificate:EDIT.TAX_TYPE')}
             </div>
             <div className="download-pb-4 col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:EDIT.SELLER')}
