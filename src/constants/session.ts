@@ -15,7 +15,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   roleId: 10000000,
   teams: [
     {
-      id: 1, // Info: (20250324 - Shirley) 修改為 team table 裡 owner_id === SESSION_DEVELOPER.userId 的 id
+      id: 10000000, // Info: (20250324 - Shirley) 修改為 team table 裡 owner_id === SESSION_DEVELOPER.userId 的 id
       role: TeamRole.OWNER,
     },
     {

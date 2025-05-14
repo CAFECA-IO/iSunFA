@@ -129,30 +129,60 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       netAmount,
       taxAmount,
       salesName,
+      type,
+      no,
+      otherCertificateNo,
+      carrierSerialNumber,
+      totalOfSummarizedInvoices,
     } = formStateRef.current;
 
     // Info: (20250514 - Anna) 檢查發票日期
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
     }
+
+    // Info: (20250514 - Anna) 檢查金額的淨額
     if (!netAmount || netAmount <= 0) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
+
+    // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
     if (
-      (formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
+      (type !== InvoiceType.INPUT_20 &&
+        formStateRef.current.taxRate !== undefined &&
+        (!taxAmount || taxAmount <= 0)) ||
       taxAmount == null
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
-    if (!salesName) {
+
+    // Info: (20250514 - Anna) 檢查銷售方名稱（除了 INPUT_20 以外）
+    if (type !== InvoiceType.INPUT_20 && !salesName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
-    // Deprecated: (20250509 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('newErrors:', newErrors);
+    // Info: (20250514 - Anna) 根據發票格式檢查 invoiceNo 或替代欄位
+    const needsAlternativeNo =
+      type === InvoiceType.INPUT_22 ||
+      type === InvoiceType.INPUT_25 ||
+      type === InvoiceType.INPUT_27;
+
+    if (type !== InvoiceType.INPUT_20 && (
+      (!needsAlternativeNo && !no) ||
+      (needsAlternativeNo && !no && !otherCertificateNo && !carrierSerialNumber)
+    )) {
+      newErrors.no = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
+    }
+
+    // Info: (20250514 - Anna) 格式 26 和 27 要填 totalOfSummarizedInvoices
+    if (
+      (type === InvoiceType.INPUT_26 || type === InvoiceType.INPUT_27) &&
+      (!totalOfSummarizedInvoices || totalOfSummarizedInvoices <= 0)
+    ) {
+      newErrors.totalOfSummarizedInvoices = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
+    }
 
     return Object.keys(newErrors).length === 0;
   };
