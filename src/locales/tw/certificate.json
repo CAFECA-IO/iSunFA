@@ -108,6 +108,10 @@
     "ALLOWANCE_ISSUE_DATE": "（折讓單）開立日期",
     "DUPLICATE_INVOICE_TAX": "如果使用二聯式發票，稅額為 0",
     "OTHER_CERTIFICATE_NO": "其他憑證編號",
+    "CERTIFICATE_NO": "憑證編號",
+    "CERTIFICATE_AMOUNT": "憑證金額",
+    "TOTAL_OF_SALES_AMOUNT": "總銷售額",
+    "SALES_AMOUNT": "销售额",
     "ELECTRONIC_INVOICE_INFO": "電子發票資訊",
     "INVOICE_DATE": "開立時間",
     "SELLER": "賣方",
@@ -117,7 +121,9 @@
     "SKIP_IF_TRIPLICATE_CASH_REGISTER": "如果使用三聯式收銀機發票則跳過",
     "INVOICE_PERIOD": "{{year}} 年 {{startMonth}} - {{endMonth}} 月",
     "INPUT_INVOICE": "進項發票",
-    "OUTPUT_INVOICE": "銷項發票"
+    "OUTPUT_INVOICE": "銷項發票",
+    "DESCRIPTION_PLACEHOLDER": "關於此憑證的簡短描述",
+    "DESCRIPTION": "描述"
   },
   "TYPE": {
     "TRIPLICATE": "三聯",

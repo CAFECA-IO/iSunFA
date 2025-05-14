@@ -26,7 +26,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import { HiCheck } from 'react-icons/hi';
 import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
-import { InvoiceDirection, InvoiceType } from '@/constants/invoice_rc2';
+import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 
 interface OutputInvoiceEditModalProps {
@@ -121,8 +121,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     if (!netAmount || netAmount <= 0) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
-    if (!taxAmount || taxAmount <= 0) {
-      newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+    // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
+    // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
+    if (
+      (formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
+      taxAmount == null
+    ) {
+      newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
     if (!buyerName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
@@ -215,6 +220,47 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     handleInputChange('no', `${prefix}${suffix}`);
     setIsInvoicePrefixMenuOpen(false);
   };
+  // Info: (20250414 - Anna) 處理保存
+  // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
+  const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    return !keys1.some((key) => {
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+
+      if (key === 'counterParty') {
+        const cp1 = val1 as ICounterpartyOptional;
+        const cp2 = val2 as ICounterpartyOptional;
+        return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
+      }
+      return val1 !== val2;
+    });
+  };
+  const handleSave = useCallback(async () => {
+    if (!validateForm()) return;
+    const { isSelected, actions, ...rest } = certificate;
+
+    const updatedCertificate = {
+      ...rest,
+      ...formStateRef.current,
+    };
+
+    // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
+    if (shallowEqual(savedInvoiceRC2Ref.current, updatedCertificate)) return;
+
+    const updatedData: Partial<IInvoiceRC2Output> = {
+      ...certificate,
+      ...updatedCertificate,
+    };
+    await onSave(updatedData);
+
+    // Info: (20250414 - Anna) 更新最新儲存成功的內容
+    savedInvoiceRC2Ref.current = updatedCertificate;
+  }, [certificate, onSave]);
 
   const netAmountChangeHandler = (value: number) => {
     handleInputChange('netAmount', value);
@@ -223,11 +269,32 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     handleInputChange('totalAmount', value + updateTaxPrice);
   };
 
-  const selectTaxHandler = (value: number | null) => {
-    handleInputChange('taxRate', value);
-    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (value ?? 0)) / 100);
-    handleInputChange('taxAmount', updateTaxPrice);
-    handleInputChange('totalAmount', (formState.netAmount ?? 0) + updateTaxPrice);
+  const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
+    // Info: (20250514 - Anna) 處理 null 的 taxRate (免稅)，轉為 undefined
+    const normalizedTaxRate = taxRate ?? undefined;
+
+    // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
+    setFormState((prev) => {
+      const netAmount = prev.netAmount ?? 0;
+      const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
+      const updated = {
+        ...prev,
+        taxRate: normalizedTaxRate,
+        taxType,
+        taxAmount: newTaxAmount,
+        totalAmount: netAmount + newTaxAmount,
+      };
+      formStateRef.current = updated;
+
+      // Info: (20250514 - Anna) 如果稅額變了就立即儲存
+      if (prev.taxAmount !== newTaxAmount) {
+        setTimeout(() => {
+          handleSave();
+        }, 0);
+      }
+
+      return updated;
+    });
   };
 
   const totalAmountChangeHandler = (value: number) => {
@@ -255,49 +322,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     ...invoiceTracks.C,
     ...invoiceTracks.D,
   ];
-
-  // Info: (20250414 - Anna) 處理保存
-  // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
-  const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-
-    if (keys1.length !== keys2.length) return false;
-
-    return !keys1.some((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
-
-      if (key === 'counterParty') {
-        const cp1 = val1 as ICounterpartyOptional;
-        const cp2 = val2 as ICounterpartyOptional;
-        return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
-      }
-
-      return val1 !== val2;
-    });
-  };
-  const handleSave = useCallback(async () => {
-    if (!validateForm()) return;
-    const { isSelected, actions, ...rest } = certificate;
-
-    const updatedCertificate = {
-      ...rest,
-      ...formStateRef.current,
-    };
-
-    // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
-    if (shallowEqual(savedInvoiceRC2Ref.current, updatedCertificate)) return;
-
-    const updatedData: Partial<IInvoiceRC2Output> = {
-      ...certificate,
-      ...updatedCertificate,
-    };
-    await onSave(updatedData);
-
-    // Info: (20250414 - Anna) 更新最新儲存成功的內容
-    savedInvoiceRC2Ref.current = updatedCertificate;
-  }, [certificate, onSave]);
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
   const currentIndex = certificates.findIndex((c) => c.id === editingId);
@@ -351,7 +375,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       issuedDate: certificate.issuedDate,
       no: certificate.no,
       netAmount: certificate.netAmount,
-      taxRate: certificate.taxRate,
+      taxRate: certificate.taxRate ?? undefined,
       taxAmount: certificate.taxAmount,
       totalAmount: certificate.totalAmount,
       buyerIdNumber: certificate.buyerIdNumber,
@@ -360,6 +384,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       type: certificate.type ?? InvoiceType.OUTPUT_31,
       otherCertificateNo: certificate.otherCertificateNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
+      taxType: certificate.taxType ?? TaxType.TAXABLE,
     };
 
     setFormState(newFormState);
@@ -460,6 +485,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.INVOICE_TYPE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
               <div className="flex w-full items-center gap-4">
@@ -505,6 +531,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             <div className="flex w-full flex-col items-start gap-2">
               <p className="text-sm font-semibold text-neutral-300">
                 {t('certificate:EDIT.DATE')}
+                <span> </span>
                 <span className="text-text-state-error">*</span>
               </p>
               <DatePicker
@@ -527,8 +554,15 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
               <p className="text-sm font-semibold text-neutral-300">
                 {formState.type === InvoiceType.OUTPUT_36
                   ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
-                  : t('certificate:EDIT.INVOICE_NUMBER')}
-                <span className="text-text-state-error">*</span>
+                  : formState.type === InvoiceType.OUTPUT_30
+                    ? t('certificate:EDIT.CERTIFICATE_NO')
+                    : t('certificate:EDIT.INVOICE_NUMBER')}
+                {formState.type !== InvoiceType.OUTPUT_30 && (
+                  <>
+                    <span> </span>
+                    <span className="text-text-state-error">*</span>
+                  </>
+                )}
               </p>
 
               {formState.type === InvoiceType.OUTPUT_36 ? (
@@ -540,7 +574,21 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     value={formState.no}
                     onChange={(e) => handleInputChange('no', e.target.value)}
                     className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
-                    placeholder="AB-12345678"
+                    placeholder={
+                      formState.type === InvoiceType.OUTPUT_36 ? 'AB-12345678' : '12345678'
+                    }
+                  />
+                </div>
+              ) : // Info: (20250513 - Anna) 其他銷項憑證 （不可申報）
+              formState.type === InvoiceType.OUTPUT_30 ? (
+                <div className="flex w-full items-center">
+                  <input
+                    id="invoiceno"
+                    type="text"
+                    value={formState.no}
+                    onChange={(e) => handleInputChange('no', e.target.value)}
+                    className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                    placeholder="12345678"
                   />
                 </div>
               ) : (
@@ -608,64 +656,93 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                   />
                 </div>
               )}
-            </div>
 
-            {/* Info: (20250414 - Anna) Tax Type */}
-            <div className="flex w-full flex-col items-start gap-2">
-              <p className="text-sm font-semibold text-neutral-300">
-                {t('certificate:EDIT.TAX_TYPE')}
-                <span> </span>
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div className="relative z-10 flex w-full items-center gap-2">
-                <TaxMenu selectTaxHandler={selectTaxHandler} />
-              </div>
-              {errors.taxAmount && (
-                <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                  {errors.taxAmount}
-                </p>
+              {/* Info: (20250513 - Anna) Description - 「其他銷項憑證（不可申報）」適用 */}
+              {formState.type === InvoiceType.OUTPUT_30 && (
+                <div className="relative flex w-full flex-col items-start gap-2">
+                  <p className="text-sm font-semibold text-neutral-300">
+                    {t('certificate:EDIT.DESCRIPTION')}
+                  </p>
+
+                  <div className="flex w-full items-center">
+                    <input
+                      id="description"
+                      type="text"
+                      value={formState.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
+                      placeholder={t('certificate:EDIT.DESCRIPTION_PLACEHOLDER')}
+                    />
+                  </div>
+                </div>
               )}
             </div>
 
-            {/* Info: (20240924 - Anna) CounterParty */}
-            {formState.type !== InvoiceType.OUTPUT_32 && (
-              <>
-                <CounterpartyInput
-                  ref={counterpartyInputRef}
-                  counterparty={{
-                    taxId: formState.buyerIdNumber,
-                    name: formState.buyerName,
-                  }}
-                  counterpartyList={counterpartyList}
-                  onSelect={(cp: ICounterpartyOptional) => {
-                    if (cp && cp.name) {
-                      handleInputChange('buyerName', cp.name);
-                    }
-                    if (cp && cp.taxId) {
-                      handleInputChange('buyerIdNumber', cp.taxId);
-                    }
-                  }}
-                  labelClassName="text-neutral-300"
-                  counterpartyRole="buyer"
-                />
-                {errors.counterParty && (
+            {/* Info: (20250414 - Anna) Tax Type */}
+            {/* Info: (20250513 - Anna) 其他銷項憑證 （不可申報）不適用 */}
+            {formState.type !== InvoiceType.OUTPUT_30 && (
+              <div className="flex w-full flex-col items-start gap-2">
+                <p className="text-sm font-semibold text-neutral-300">
+                  {t('certificate:EDIT.TAX_TYPE')}
+                  <span> </span>
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <div className="relative z-10 flex w-full items-center gap-2">
+                  <TaxMenu selectTaxHandler={selectTaxHandler} />
+                </div>
+                {errors.taxAmount && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                    {errors.counterParty}
+                    {errors.taxAmount}
                   </p>
                 )}
-                {formState.type === InvoiceType.OUTPUT_35 && (
-                  <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
-                    {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
-                  </p>
-                )}
-              </>
+              </div>
             )}
+
+            {/* Info: (20240924 - Anna) CounterParty */}
+            {formState.type !== InvoiceType.OUTPUT_32 &&
+              formState.type !== InvoiceType.OUTPUT_30 && (
+                <>
+                  <CounterpartyInput
+                    ref={counterpartyInputRef}
+                    counterparty={{
+                      taxId: formState.buyerIdNumber,
+                      name: formState.buyerName,
+                    }}
+                    counterpartyList={counterpartyList}
+                    onSelect={(cp: ICounterpartyOptional) => {
+                      if (cp && cp.name) {
+                        handleInputChange('buyerName', cp.name);
+                      }
+                      if (cp && cp.taxId) {
+                        handleInputChange('buyerIdNumber', cp.taxId);
+                      }
+                    }}
+                    labelClassName="text-neutral-300"
+                    counterpartyRole="buyer"
+                  />
+                  {errors.counterParty && (
+                    <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                      {errors.counterParty}
+                    </p>
+                  )}
+                  {formState.type === InvoiceType.OUTPUT_35 && (
+                    <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                      {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                    </p>
+                  )}
+                </>
+              )}
 
             <div className="flex w-full items-center gap-2">
               {/* Info: (20240924 - Anna) Price Before Tax */}
-              <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
+              <div
+                className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''} `}
+              >
                 <p className="text-sm font-semibold text-neutral-300">
-                  {t('certificate:EDIT.PRICE_BEFORE_TAX')}
+                  {formState.type === InvoiceType.OUTPUT_30
+                    ? t('certificate:EDIT.CERTIFICATE_AMOUNT')
+                    : t('certificate:EDIT.PRICE_BEFORE_TAX')}
+                  <span> </span>
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="flex w-full items-center">
@@ -696,129 +773,138 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                   </p>
                 )}
               </div>
-              {formState.type !== InvoiceType.OUTPUT_32 && (
-                <>
-                  {/* Info: (20250414 - Anna) Tax */}
-                  <div className="relative flex flex-1 flex-col items-start gap-2 md:h-122px">
-                    <p className="text-sm font-semibold text-neutral-300">
-                      {t('certificate:EDIT.TAX')}
-                      <span className="text-text-state-error">*</span>
-                    </p>
-                    <div className="flex w-full items-center">
-                      <NumericInput
-                        id="input-tax"
-                        name="input-tax"
-                        value={formState.taxAmount ?? 0}
-                        isDecimal
-                        required
-                        hasComma
-                        className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                      />
-                      <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
-                        <Image
-                          src={currencyAliasImageSrc}
-                          width={16}
-                          height={16}
-                          alt={currencyAliasImageAlt}
-                          className="rounded-full"
-                        />
-                        <p>{currencyAliasStr}</p>
-                      </div>
-                    </div>
-                    {formState.type === InvoiceType.OUTPUT_35 && (
-                      <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
-                        {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+              {formState.type !== InvoiceType.OUTPUT_32 &&
+                formState.type !== InvoiceType.OUTPUT_30 && (
+                  <>
+                    {/* Info: (20250414 - Anna) Tax */}
+                    <div
+                      className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''}`}
+                    >
+                      <p className="text-sm font-semibold text-neutral-300">
+                        {t('certificate:EDIT.TAX')}
+                        <span> </span>
+                        <span className="text-text-state-error">*</span>
                       </p>
-                    )}
-                  </div>
-                </>
-              )}
+                      <div className="flex w-full items-center">
+                        <NumericInput
+                          id="input-tax"
+                          name="input-tax"
+                          value={formState.taxAmount ?? 0}
+                          isDecimal
+                          required
+                          hasComma
+                          className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                        />
+                        <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                          <Image
+                            src={currencyAliasImageSrc}
+                            width={16}
+                            height={16}
+                            alt={currencyAliasImageAlt}
+                            className="rounded-full"
+                          />
+                          <p>{currencyAliasStr}</p>
+                        </div>
+                      </div>
+                      {formState.type === InvoiceType.OUTPUT_35 && (
+                        <p className="w-full text-right text-sm font-medium leading-5 tracking-wide text-neutral-300">
+                          {t('certificate:EDIT.SKIP_IF_TRIPLICATE_CASH_REGISTER')}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
             </div>
 
             {/* Info: (20240924 - Anna) Total Price */}
-            <div className="hidden">
-              <div className="relative flex w-full flex-1 flex-col items-start gap-2">
-                <div id="price" className="absolute -top-20"></div>
-                <p className="text-sm font-semibold text-input-text-primary">
-                  {t('certificate:EDIT.TOTAL_PRICE')}
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <div className="flex w-full items-center">
-                  <NumericInput
-                    id="input-total-price"
-                    name="input-total-price"
-                    value={formState.totalAmount ?? 0}
-                    isDecimal
-                    required
-                    hasComma
-                    className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
-                    triggerWhenChanged={totalAmountChangeHandler}
-                  />
-                  <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
-                    <Image
-                      src={currencyAliasImageSrc}
-                      width={16}
-                      height={16}
-                      alt={currencyAliasImageAlt}
-                      className="rounded-full"
-                    />
-                    <p>{currencyAliasStr}</p>
-                  </div>
-                </div>
-                {errors.totalAmount && (
-                  <p className="-translate-y-1 self-end text-sm text-text-state-error">
-                    {errors.totalAmount}
+            {
+              <div className="hidden">
+                <div className="relative flex w-full flex-1 flex-col items-start gap-2">
+                  <div id="price" className="absolute -top-20"></div>
+                  <p className="text-sm font-semibold text-input-text-primary">
+                    {t('certificate:EDIT.TOTAL_PRICE')}
+                    <span> </span>
+                    <span className="text-text-state-error">*</span>
                   </p>
-                )}
+                  <div className="flex w-full items-center">
+                    <NumericInput
+                      id="input-total-price"
+                      name="input-total-price"
+                      value={formState.totalAmount ?? 0}
+                      isDecimal
+                      required
+                      hasComma
+                      className="h-46px flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                      triggerWhenChanged={totalAmountChangeHandler}
+                    />
+                    <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                      <Image
+                        src={currencyAliasImageSrc}
+                        width={16}
+                        height={16}
+                        alt={currencyAliasImageAlt}
+                        className="rounded-full"
+                      />
+                      <p>{currencyAliasStr}</p>
+                    </div>
+                  </div>
+                  {errors.totalAmount && (
+                    <p className="-translate-y-1 self-end text-sm text-text-state-error">
+                      {errors.totalAmount}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            }
 
             {/* Info: (20250414 - Anna) 退回或折讓checkbox */}
-            <div className="flex w-full items-center gap-2">
-              <div
-                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
-                  isReturnOrAllowance
-                    ? 'bg-checkbox-surface-selected'
-                    : 'bg-checkbox-surface-unselected'
-                }`}
-                onClick={() => {
-                  const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
-                  setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
+            {formState.type !== InvoiceType.OUTPUT_30 && (
+              <div className="flex w-full items-center gap-2">
+                <div
+                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
+                    isReturnOrAllowance
+                      ? 'bg-checkbox-surface-selected'
+                      : 'bg-checkbox-surface-unselected'
+                  }`}
+                  onClick={() => {
+                    const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
+                    setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
 
-                  // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                  // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                  if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
-                    handleInputChange('type', InvoiceType.OUTPUT_33);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_33 &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_31);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_32 &&
-                    isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_34);
-                  } else if (
-                    formState.type === InvoiceType.OUTPUT_34 &&
-                    !isTogglingToReturnOrAllowance
-                  ) {
-                    handleInputChange('type', InvoiceType.OUTPUT_32);
-                  }
-                }}
-              >
-                {isReturnOrAllowance && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <HiCheck className="text-neutral-white" />
-                  </div>
-                )}
+                    // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                    // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                    if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
+                      handleInputChange('type', InvoiceType.OUTPUT_33);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_33 &&
+                      !isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_31);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_32 &&
+                      isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_34);
+                    } else if (
+                      formState.type === InvoiceType.OUTPUT_34 &&
+                      !isTogglingToReturnOrAllowance
+                    ) {
+                      handleInputChange('type', InvoiceType.OUTPUT_32);
+                    }
+                  }}
+                >
+                  {isReturnOrAllowance && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <HiCheck className="text-neutral-white" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info: (20250414 - Anna) Checkbox label */}
+                <span className="text-sm font-medium text-input-text-primary">
+                  {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
+                </span>
               </div>
-
-              {/* Info: (20250414 - Anna) Checkbox label */}
-              <span className="text-sm font-medium text-input-text-primary">
-                {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
-              </span>
-            </div>
+            )}
           </div>
         </div>
         {/* Info: (20240924 - Anna) Save 按鈕 */}
