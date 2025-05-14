@@ -124,3 +124,4 @@ SELECT
   other_certificate_no
 FROM certificate_rc2;
 
+SELECT setval(pg_get_serial_sequence('invoice_rc2', 'id'), (SELECT MAX(id) FROM invoice_rc2));
