@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils/common';
 import Search from '@/components/beta/layout/search';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
 import I18n from '@/components/i18n/i18n';
@@ -6,8 +7,7 @@ import Profile from '@/components/beta/layout/profile';
 import CompanyBadge from '@/components/beta/layout/company_badge';
 import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { cn } from '@/lib/utils/common';
-import { FiMenu } from 'react-icons/fi';
+import HeaderMobile from '@/components/beta/layout/mobile/header_mobile';
 
 // ToDo: (20241226 - Liz) Beta 版沒有切換明暗模式功能
 const IS_MODE_SWITCH_AVAILABLE = false;
@@ -90,20 +90,7 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
       </header>
 
       {/* Info: (20250512 - Liz) Mobile version */}
-      <header className="flex items-center bg-surface-neutral-surface-lv2 px-16px py-10px tablet:hidden">
-        <button type="button" className="p-10px">
-          <FiMenu
-            size={20}
-            className="text-button-text-secondary hover:text-button-text-primary-hover disabled:text-button-text-disable"
-          />
-        </button>
-
-        <section className="ml-auto flex flex-none items-center gap-16px">
-          <CompanyBadge />
-
-          <Profile />
-        </section>
-      </header>
+      <HeaderMobile />
     </>
   );
 };
