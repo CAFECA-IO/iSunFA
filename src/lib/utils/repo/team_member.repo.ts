@@ -17,6 +17,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow } from '@/lib/utils/common';
 import { EmailTemplateName } from '@/constants/email_template';
 import { transaction } from '@/lib/utils/repo/transaction';
+import { checkTeamMemberLimit } from '@/lib/utils/plan/check_plan_limit';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -33,6 +34,7 @@ export const addMembersToTeam = async (
     error.name = STATUS_CODE.PERMISSION_DENIED;
     throw error;
   }
+  await checkTeamMemberLimit(teamId, emails.length);
 
   const now = getTimestampNow();
 

@@ -19,6 +19,7 @@ import {
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { getGracePeriodInfo } from '@/lib/shared/permission';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { checkTeamCount } from '@/lib/utils/plan/check_plan_limit';
 
 export const getTeamList = async (
   userId: number,
@@ -147,17 +148,9 @@ export const createTeamWithTrial = async (
     imageFileId?: number;
   }
 ): Promise<ITeam> => {
+  // Info: (20250409 - Tzuhan) 1. 限制團隊數量
+  await checkTeamCount(userId);
   return prisma.$transaction(async (tx) => {
-    // Info: (20250409 - Tzuhan) 1. 限制團隊數量
-    const teamCount = await tx.team.count({
-      where: { ownerId: userId },
-    });
-    if (teamCount >= MAX_TEAM_LIMIT) {
-      const error = new Error(STATUS_MESSAGE.USER_TEAM_LIMIT_REACHED);
-      error.name = STATUS_CODE.USER_TEAM_LIMIT_REACHED;
-      throw error;
-    }
-
     loggerBack.info(
       `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
     );
