@@ -100,7 +100,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         no: certificate.no,
         netAmount: certificate.netAmount,
         taxType: certificate.taxType,
-        taxRate: certificate.taxRate,
+        taxRate: certificate.taxRate ?? undefined,
         taxAmount: certificate.taxAmount,
         totalAmount: certificate.totalAmount,
         salesName: certificate.salesName,
@@ -130,8 +130,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     if (!netAmount || netAmount <= 0) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
-    if (!taxAmount || taxAmount <= 0) {
-      newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_TOTAL');
+    // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
+    // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
+    if (
+      (formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
+      taxAmount == null
+    ) {
+      newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
     if (!salesName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
@@ -209,41 +214,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     setIsInvoiceTypeMenuOpen(false);
     handleInputChange('type', id);
   };
-
-  const netAmountChangeHandler = (value: number) => {
-    handleInputChange('netAmount', value);
-    const updateTaxPrice = Math.round((value * (formState.taxRate ?? 0)) / 100);
-    handleInputChange('taxAmount', updateTaxPrice);
-    handleInputChange('totalAmount', value + updateTaxPrice);
-  };
-
-  const selectTaxHandler = (taxInfo: { taxRate: number | null; taxType: TaxType }) => {
-    handleInputChange('taxRate', taxInfo.taxRate);
-    const updateTaxPrice = Math.round(((formState.netAmount ?? 0) * (taxInfo.taxRate ?? 0)) / 100);
-    handleInputChange('taxType', taxInfo.taxType);
-    handleInputChange('taxAmount', updateTaxPrice);
-    handleInputChange('totalAmount', (formState.netAmount ?? 0) + updateTaxPrice);
-  };
-  const selectDeductionTypeHandler = (value: string) => {
-    handleInputChange('deductionType', value);
-  };
-
-  const totalAmountChangeHandler = (value: number) => {
-    handleInputChange('totalAmount', value);
-    const ratio = (100 + (formState.taxRate ?? 0)) / 100;
-    const updatePriceBeforeTax = Math.round(value / ratio);
-    handleInputChange('netAmount', updatePriceBeforeTax);
-    const updateTaxPrice = value - updatePriceBeforeTax;
-    handleInputChange('taxAmount', updateTaxPrice);
-  };
-
-  // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
-  const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
-  );
-
   // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
   const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
@@ -261,6 +231,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         const cp2 = val2 as ICounterpartyOptional;
         return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
       }
+
+      // Todo: (20250414 - Anna) Treat null and undefined as equal
+      if (val1 == null && val2 == null) return false;
+      if ((val1 === null && val2 === undefined) || (val1 === undefined && val2 === null)) return false;
 
       return val1 !== val2;
     });
@@ -292,6 +266,61 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
     savedInvoiceRC2Ref.current = updatedCertificate;
   }, [certificate, onSave]);
+
+  const netAmountChangeHandler = (value: number) => {
+    handleInputChange('netAmount', value);
+    const updateTaxPrice = Math.round((value * (formState.taxRate ?? 0)) / 100);
+    handleInputChange('taxAmount', updateTaxPrice);
+    handleInputChange('totalAmount', value + updateTaxPrice);
+  };
+
+  const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
+    // Info: (20250514 - Anna) 處理 null 的 taxRate (免稅)，轉為 undefined
+    const normalizedTaxRate = taxRate ?? undefined;
+
+    // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
+    setFormState((prev) => {
+      const netAmount = prev.netAmount ?? 0;
+      const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
+      const updated = {
+        ...prev,
+        taxRate: normalizedTaxRate,
+        taxType,
+        taxAmount: newTaxAmount,
+        totalAmount: netAmount + newTaxAmount,
+      };
+      formStateRef.current = updated;
+
+      // Info: (20250514 - Anna) 如果稅額變了就立即儲存
+      if (prev.taxAmount !== newTaxAmount) {
+        setTimeout(() => {
+          handleSave();
+        }, 0);
+      }
+
+      return updated;
+    });
+  };
+
+  const selectDeductionTypeHandler = (value: string) => {
+    handleInputChange('deductionType', value);
+  };
+
+  const totalAmountChangeHandler = (value: number) => {
+    handleInputChange('totalAmount', value);
+    const ratio = (100 + (formState.taxRate ?? 0)) / 100;
+    const updatePriceBeforeTax = Math.round(value / ratio);
+    handleInputChange('netAmount', updatePriceBeforeTax);
+    const updateTaxPrice = value - updatePriceBeforeTax;
+    handleInputChange('taxAmount', updateTaxPrice);
+  };
+
+  // Info: (20241206 - Julian) currency alias setting
+  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
+  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasStr = t(
+    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
+  );
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
   const currentIndex = certificates.findIndex((c) => c.id === editingId);

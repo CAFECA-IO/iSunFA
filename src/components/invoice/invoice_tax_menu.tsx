@@ -6,35 +6,21 @@ import { TaxType } from '@/constants/invoice_rc2';
 
 enum TaxOptions {
   TAXABLE_5 = 'TAXABLE_5',
-  // Info: (20250514 - Anna) 零稅率
-  // ZERO_TAX_RATE = 'ZERO_TAX_RATE',
   TAX_FREE = 'TAX_FREE',
 }
 
-// Info: (20250514 - Anna) 零稅率子選項
-// enum ZeroTaxRateOptions {
-//   NONE = 'NONE',
-//   THROUGH_CUSTOMS = 'THROUGH_CUSTOMS',
-//   NOT_THROUGH_CUSTOMS = 'NOT_THROUGH_CUSTOMS',
-// }
-
-const taxRates = {
+const taxRates: Record<TaxOptions, number | undefined> = {
   TAXABLE_5: 5,
-  // Info: (20250514 - Anna) 零稅率
-  // ZERO_TAX_RATE: 0,
-  TAX_FREE: null,
+  TAX_FREE: undefined,
 };
 
 interface ITaxMenuProps {
-  // Info: (20250514 - Anna) 加上 taxType
-  // selectTaxHandler: (value: number | null) => void;
   selectTaxHandler: (params: { taxRate: number | null; taxType: TaxType }) => void;
 }
 
 const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
-  // Info: (20250514 - Anna)
-  const [selectedTax, setSelectedTax] = useState<TaxOptions /* | ZeroTaxRateOptions */>(
+  const [selectedTax, setSelectedTax] = useState<TaxOptions>(
     TaxOptions.TAXABLE_5
   );
 
@@ -45,9 +31,6 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
-    // Info: (20250514 - Anna)
-    // targetRef: taxRatioSubMenuRef,
-    // componentVisible: isTaxRatioSubMenuOpen,
     setComponentVisible: setIsTaxRatioSubMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
@@ -65,29 +48,13 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
 
   const handleOptionClick = (option: TaxOptions, event?: React.MouseEvent) => {
     event?.stopPropagation();
-    // Info: (20250514 - Anna) 加上 taxType
-    // selectTaxHandler(taxRates[option]);
     selectTaxHandler({
-      taxRate: taxRates[option],
+      taxRate: taxRates[option] ?? null,
       taxType: option === TaxOptions.TAXABLE_5 ? TaxType.TAXABLE : TaxType.TAX_FREE,
     });
-    // Info: (20250514 - Anna) 零稅率子選單
-    // if (option === TaxOptions.ZERO_TAX_RATE) {
-    //   setIsTaxRatioSubMenuOpen(!isTaxRatioSubMenuOpen);
-    // } else {
-    //   setSelectedTax(option);
-    //   closeAllMenus();
-    // }
     setSelectedTax(option);
     closeAllMenus();
   };
-
-  // Info: (20250514 - Anna) 零稅率被點擊後的行為
-  // const handleZeroTaxRateOptionClick = (option: ZeroTaxRateOptions, event?: React.MouseEvent) => {
-  //   event?.stopPropagation();
-  //   setSelectedTax(option);
-  //   closeAllMenus();
-  // };
 
   return (
     <div
@@ -104,8 +71,6 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
         <p>{t(`certificate:EDIT.${selectedTax}`)}</p>
         <p className="pr-2 text-neutral-300">
           {selectedTax === TaxOptions.TAXABLE_5 && <span>5%</span>}
-          {/* Info: (20250514 - Anna) 零稅率UI */}
-          {/* {selectedTax === TaxOptions.ZERO_TAX_RATE && <span>0%</span>} */}
         </p>
       </div>
       <div className="flex h-20px w-20px items-center justify-center">
@@ -141,25 +106,6 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
           ))}
         </ul>
       </div>
-      {/* Info: (20250514 - Anna) 次級選單 */}
-      {/* {isTaxRatioSubMenuOpen && (
-        <div
-          ref={taxRatioSubMenuRef}
-          className="border-dropdown-stroke-menu/10 absolute left-full top-50px grid w-full translate-x-2 grid-cols-1 overflow-hidden rounded-sm border border-l-1px bg-dropdown-surface-menu-background-secondary shadow-dropmenu"
-        >
-          <ul className="z-10 flex w-full flex-col items-start gap-2 bg-dropdown-surface-menu-background-primary">
-            {Object.values(ZeroTaxRateOptions).map((value) => (
-              <li
-                key={value}
-                className="w-full cursor-pointer px-3 py-2 text-dropdown-text-primary hover:text-dropdown-stroke-input-hover"
-                onClick={(e) => handleZeroTaxRateOptionClick(value, e)}
-              >
-                {t(`certificate:EDIT.${value}`)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )} */}
     </div>
   );
 };
