@@ -1306,8 +1306,24 @@ input[type='checkbox']:checked::before {
 
 .toast-container {
   width: max-content;
-  margin-top: 80px;
+  margin-top: 20px;
   pointer-events: none;
+}
+
+/* Info: (20250514 - Liz) custom-toastify.css 覆蓋部分 react-toastify/dist/ReactToastify.css 在 480px 螢幕寬度以下的預設樣式 */
+@media only screen and (max-width: 480px) {
+  .Toastify__toast-container {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    max-width: 90% !important;
+    padding: 0 !important;
+  }
+
+  .Toastify__toast {
+    margin: 0 auto; /* Info: (20250514 - Liz) 加這行讓單個 toast 居中 */
+  }
 }
 
 .full-height {
@@ -1339,18 +1355,6 @@ input[type='checkbox']:checked::before {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Info: (20241210 - tzuhan) Chrome, Safari, and Opera */
-}
-
-@media (max-width: 769px) {
-  .toast-container {
-    margin-bottom: 40px;
-  }
-}
-
-@media (max-width: 425px) {
-  .toast-container {
-    margin-bottom: 70px;
-  }
 }
 
 /* Info: (20241217 - Liz) 全域的 scroll bar 樣式設定 */

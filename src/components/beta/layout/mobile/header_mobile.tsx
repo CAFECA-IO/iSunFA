@@ -2,68 +2,70 @@ import { useState } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { IoCloseOutline } from 'react-icons/io5';
 import { GoArrowLeft } from 'react-icons/go';
-import { VscGlobe } from 'react-icons/vsc';
+import { VscGlobe, VscBell } from 'react-icons/vsc';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import Profile from '@/components/beta/layout/profile';
 import CompanyBadge from '@/components/beta/layout/company_badge';
-import SideMenuMobile from '@/components/beta/layout/mobile/side_menu_mobile';
+import MainMenu from '@/components/beta/layout/mobile/main_menu';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
-import Notification from '@/components/beta/layout/notification';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
+import { MenuContent } from '@/interfaces/side_menu';
+import SubMenu from '@/components/beta/layout/mobile/sub_menu';
 
-enum MenuItem {
-  SIDE_MENU = 'SideMenu',
-  NOTIFICATION = 'Notification',
-  I18N = 'I18n',
-  MODE_SWITCH = 'ModeSwitch',
-}
-
-interface HeaderMobileProps {
-  toggleOverlay: () => void;
-}
-
-const HeaderMobile = ({ toggleOverlay }: HeaderMobileProps) => {
+const HeaderMobile = () => {
   const { asPath } = useRouter();
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState<boolean>(false);
-  const [usingMenuItem, setUsingMenuItem] = useState<MenuItem>(MenuItem.SIDE_MENU);
-  const [usingMenuItemTitle, setUsingMenuItemTitle] = useState<string>('');
-  const isUsingDefaultMenuItem = usingMenuItem === MenuItem.SIDE_MENU;
+  const [usingMenuContent, setUsingMenuContent] = useState<MenuContent>(MenuContent.MAIN_MENU);
+  const [headerTitle, setHeaderTitle] = useState<string>('');
+  const [isDefaultMenuHeader, setIsDefaultMenuHeader] = useState<boolean>(true);
+  const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
 
   const openMenu = () => setIsMenuOpen(true);
-  const toggleNotificationPanel = () => setIsNotificationPanelOpen((prev) => !prev);
 
-  const goBackToDefaultMenuItem = () => {
-    setUsingMenuItem(MenuItem.SIDE_MENU);
-    setUsingMenuItemTitle('');
+  const goBackToDefaultMenuContent = () => {
+    setUsingMenuContent(MenuContent.MAIN_MENU);
+    setHeaderTitle('');
+    setIsDefaultMenuHeader(true);
+  };
+
+  const changeMenu = ({
+    menuContent,
+    headerTitle: newHeaderTitle,
+  }: {
+    menuContent: MenuContent;
+    headerTitle: string;
+  }) => {
+    if (menuContent === MenuContent.MAIN_MENU) {
+      goBackToDefaultMenuContent();
+      return;
+    }
+
+    setUsingMenuContent(menuContent);
+    setHeaderTitle(newHeaderTitle);
+    setIsDefaultMenuHeader(false);
   };
 
   const closeMenu = () => {
     setIsMenuOpen(false);
-    setUsingMenuItem(MenuItem.SIDE_MENU);
-    setUsingMenuItemTitle('');
+    goBackToDefaultMenuContent();
   };
 
   const handleBack = () => {
-    // use switch case to handle different menu items
-    switch (usingMenuItem) {
-      case MenuItem.SIDE_MENU:
-        goBackToDefaultMenuItem();
+    switch (usingMenuContent) {
+      case MenuContent.MAIN_MENU:
+        goBackToDefaultMenuContent();
         break;
-      case MenuItem.NOTIFICATION:
-        goBackToDefaultMenuItem();
+      case MenuContent.NOTIFICATION:
+        goBackToDefaultMenuContent();
         break;
-      case MenuItem.I18N:
-        goBackToDefaultMenuItem();
-        break;
-      case MenuItem.MODE_SWITCH:
-        goBackToDefaultMenuItem();
+      case MenuContent.I18N:
+        goBackToDefaultMenuContent();
         break;
       default:
-        goBackToDefaultMenuItem();
+        goBackToDefaultMenuContent();
         break;
     }
   };
@@ -84,30 +86,43 @@ const HeaderMobile = ({ toggleOverlay }: HeaderMobileProps) => {
       </section>
 
       {isMenuOpen && (
-        <div className="fixed left-0 top-0 z-40 h-full w-full bg-surface-neutral-surface-lv2">
-          {isUsingDefaultMenuItem && (
+        <div className="fixed left-0 top-0 z-40 flex h-screen w-full flex-col bg-surface-neutral-surface-lv2">
+          {/* Info: (20250514 - Liz) Menu Header */}
+          {isDefaultMenuHeader && (
             <section className="flex h-60px items-center gap-10px p-12px">
               <ModeSwitch />
 
               <button
                 type="button"
                 onClick={() => {
-                  setUsingMenuItem(MenuItem.I18N);
-                  setUsingMenuItemTitle('languages');
+                  changeMenu({
+                    menuContent: MenuContent.I18N,
+                    headerTitle: 'languages',
+                  });
                 }}
                 className="group p-10px"
               >
                 <VscGlobe
-                  size={26}
-                  className="text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
+                  size={20}
+                  className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
                 />
               </button>
 
-              <Notification
-                isPanelOpen={isNotificationPanelOpen}
-                setIsPanelOpen={setIsNotificationPanelOpen}
-                toggleNotificationPanel={toggleNotificationPanel}
-              />
+              <button
+                type="button"
+                onClick={() => {
+                  changeMenu({
+                    menuContent: MenuContent.NOTIFICATION,
+                    headerTitle: 'notification',
+                  });
+                }}
+                className="group p-10px"
+              >
+                <VscBell
+                  size={20}
+                  className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
+                />
+              </button>
 
               <button type="button" onClick={closeMenu} className="group ml-auto p-10px">
                 <IoCloseOutline
@@ -118,7 +133,7 @@ const HeaderMobile = ({ toggleOverlay }: HeaderMobileProps) => {
             </section>
           )}
 
-          {!isUsingDefaultMenuItem && (
+          {!isDefaultMenuHeader && (
             <section className="flex h-60px items-center justify-between p-12px">
               <button type="button" onClick={handleBack} className="group p-10px">
                 <GoArrowLeft
@@ -128,7 +143,7 @@ const HeaderMobile = ({ toggleOverlay }: HeaderMobileProps) => {
               </button>
 
               <h1 className="text-xs font-semibold uppercase leading-5 tracking-wide-1 text-text-neutral-tertiary">
-                {usingMenuItemTitle}
+                {headerTitle}
               </h1>
 
               <button type="button" onClick={closeMenu} className="group p-10px">
@@ -140,35 +155,63 @@ const HeaderMobile = ({ toggleOverlay }: HeaderMobileProps) => {
             </section>
           )}
 
-          {/* Info: (20250513 - Liz) Default : SIDE_MENU */}
-          {usingMenuItem === MenuItem.SIDE_MENU && <SideMenuMobile toggleOverlay={toggleOverlay} />}
+          {/* Info: (20250513 - Liz) Menu Content - Default : MAIN_MENU */}
+          <section className="flex flex-auto flex-col">
+            {usingMenuContent === MenuContent.MAIN_MENU && (
+              <MainMenu
+                setSelectedMenuOption={setSelectedMenuOption}
+                closeMenu={closeMenu}
+                changeMenu={changeMenu}
+              />
+            )}
 
-          {usingMenuItem === MenuItem.I18N && (
-            <ul className="flex flex-col gap-12px">
-              {INTERNATIONALIZATION_LIST.map((item) => (
-                <li key={item.value} onClick={closeMenu} className="flex">
+            {usingMenuContent === MenuContent.I18N && (
+              <ul className="flex flex-col gap-12px">
+                {INTERNATIONALIZATION_LIST.map((item) => (
+                  <li key={item.value} onClick={closeMenu} className="flex">
+                    <Link
+                      id={`${item.value.toUpperCase()}ButtonDesktop`}
+                      scroll={false}
+                      locale={item.value}
+                      href={asPath}
+                      className="flex flex-auto items-center justify-center gap-8px px-12px py-8px hover:bg-dropdown-surface-item-hover"
+                    >
+                      <Image
+                        src={item.flag}
+                        alt="flag"
+                        width={16}
+                        height={16}
+                        className="rounded-full"
+                      />
+                      <span className="text-sm font-medium text-dropdown-text-primary">
+                        {item.label}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {usingMenuContent === MenuContent.SUB_MENU && (
+              <SubMenu selectedMenuOption={selectedMenuOption} closeMenu={closeMenu} />
+            )}
+
+            {usingMenuContent === MenuContent.NOTIFICATION && (
+              <ul className="flex flex-col gap-12px">
+                <li className="flex">
                   <Link
-                    id={`${item.value.toUpperCase()}ButtonDesktop`}
-                    scroll={false}
-                    locale={item.value}
+                    id="notificationButtonDesktop"
                     href={asPath}
                     className="flex flex-auto items-center justify-center gap-8px px-12px py-8px hover:bg-dropdown-surface-item-hover"
                   >
-                    <Image
-                      src={item.flag}
-                      alt="flag"
-                      width={16}
-                      height={16}
-                      className="rounded-full"
-                    />
                     <span className="text-sm font-medium text-dropdown-text-primary">
-                      {item.label}
+                      Notification
                     </span>
                   </Link>
                 </li>
-              ))}
-            </ul>
-          )}
+              </ul>
+            )}
+          </section>
         </div>
       )}
     </header>

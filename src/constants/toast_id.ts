@@ -46,6 +46,7 @@ export enum ToastId {
   SUBSCRIPTION_UPDATE_ERROR = 'toast-subscription-update-error',
   SUBSCRIPTION_PAYMENT_STATUS_UNPAID = 'toast-subscription-payment-status-unpaid',
   NEED_TO_SELECT_ACCOUNT_BOOK = 'toast-need-to-select-account-book',
+  NEED_TO_SELECT_ACCOUNT_BOOK_MOBILE_VER = 'toast-need-to-select-account-book-mobile-ver',
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
   ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',

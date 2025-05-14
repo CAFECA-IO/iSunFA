@@ -90,7 +90,7 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
       </header>
 
       {/* Info: (20250512 - Liz) Mobile version */}
-      <HeaderMobile toggleOverlay={toggleOverlay} />
+      <HeaderMobile />
     </>
   );
 };
