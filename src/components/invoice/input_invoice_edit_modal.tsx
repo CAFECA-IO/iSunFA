@@ -112,6 +112,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         isSharedAmount: certificate.isSharedAmount ?? false,
         // Info: (20250429 - Anna)「其他憑證編號」
         otherCertificateNo: certificate.otherCertificateNo ?? '',
+        // Info: (20250514 - Anna)「載具流水號」
+        carrierSerialNumber: certificate.carrierSerialNumber ?? '',
       }) as Partial<IInvoiceRC2Input>
   );
   const [errors] = useState<Record<string, string>>({});
@@ -122,29 +124,65 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
-    const { issuedDate: selectedDate, netAmount, taxAmount, salesName } = formStateRef.current;
+    const {
+      issuedDate: selectedDate,
+      netAmount,
+      taxAmount,
+      salesName,
+      type,
+      no,
+      otherCertificateNo,
+      carrierSerialNumber,
+      totalOfSummarizedInvoices,
+    } = formStateRef.current;
 
+    // Info: (20250514 - Anna) 檢查發票日期
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
     }
+
+    // Info: (20250514 - Anna) 檢查金額的淨額
     if (!netAmount || netAmount <= 0) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
+
+    // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
     if (
-      (formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
+      (type !== InvoiceType.INPUT_20 &&
+        formStateRef.current.taxRate !== undefined &&
+        (!taxAmount || taxAmount <= 0)) ||
       taxAmount == null
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
-    if (!salesName) {
+
+    // Info: (20250514 - Anna) 檢查銷售方名稱（除了 INPUT_20 以外）
+    if (type !== InvoiceType.INPUT_20 && !salesName) {
       newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
-    // Deprecated: (20250509 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('newErrors:', newErrors);
+    // Info: (20250514 - Anna) 根據發票格式檢查 invoiceNo 或替代欄位
+    const needsAlternativeNo =
+      type === InvoiceType.INPUT_22 ||
+      type === InvoiceType.INPUT_25 ||
+      type === InvoiceType.INPUT_27;
+
+    if (type !== InvoiceType.INPUT_20 && (
+      (!needsAlternativeNo && !no) ||
+      (needsAlternativeNo && !no && !otherCertificateNo && !carrierSerialNumber)
+    )) {
+      newErrors.no = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
+    }
+
+    // Info: (20250514 - Anna) 格式 26 和 27 要填 totalOfSummarizedInvoices
+    if (
+      (type === InvoiceType.INPUT_26 || type === InvoiceType.INPUT_27) &&
+      (!totalOfSummarizedInvoices || totalOfSummarizedInvoices <= 0)
+    ) {
+      newErrors.totalOfSummarizedInvoices = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
+    }
 
     return Object.keys(newErrors).length === 0;
   };
@@ -231,10 +269,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         const cp2 = val2 as ICounterpartyOptional;
         return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
       }
-
-      // Todo: (20250414 - Anna) Treat null and undefined as equal
-      if (val1 == null && val2 == null) return false;
-      if ((val1 === null && val2 === undefined) || (val1 === undefined && val2 === null)) return false;
 
       return val1 !== val2;
     });
@@ -383,10 +417,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       type: certificate.type ?? InvoiceType.INPUT_21,
       salesIdNumber: certificate.salesIdNumber,
       salesName: certificate.salesName,
-      deductionType: certificate.deductionType,
+      deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
       isSharedAmount: certificate.isSharedAmount,
       otherCertificateNo: certificate.otherCertificateNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
+      carrierSerialNumber: certificate.carrierSerialNumber,
     };
 
     setFormState(newFormState);
@@ -452,8 +487,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
           {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
           {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
-          {/*  Todo: (20250430 - Anna) 要再加一個條件[ isGenerated 為 true ] */}
-          {formState.type === InvoiceType.INPUT_25 && (
+          {formState.type === InvoiceType.INPUT_25 && formState.isGenerated && (
             <div className="h-0 w-0 overflow-hidden">
               <EInvoicePreview
                 ref={certificateRef}
@@ -469,7 +503,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               />
             </div>
           )}
-          {(certificate.file?.url || eInvoiceImageUrl) && (
+          {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
             <ImageZoom
               imageUrl={
                 certificate.isGenerated && eInvoiceImageUrl
@@ -666,8 +700,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       />
                     </div>
                   </>
-                ) : // Info: (20250429 - Anna) 格式22
-                formState.type === InvoiceType.INPUT_22 ? (
+                ) : // Info: (20250429 - Anna) 格式22、格式25
+                formState.type === InvoiceType.INPUT_22 ||
+                  formState.type === InvoiceType.INPUT_25 ? (
                   <div className="flex w-full justify-between">
                     {/* Info: (20250429 - Anna) Invoice No. */}
                     <div className="flex flex-col gap-2 md:w-52">
@@ -712,27 +747,71 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     </div>
                     {/* Info: (20250429 - Anna) or */}
                     <p className="flex items-end text-neutral-400">{t('common:COMMON.OR')}</p>
-                    {/* Info: (20250429 - Anna) Other Certificate No. */}
+                    {/* Info: (20250429 - Anna) Other Certificate No.、Carrier Serial No. * */}
                     <div className="flex flex-col gap-2 md:w-52">
                       <p className="text-sm font-semibold text-neutral-300">
-                        {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
+                        {formState.type === InvoiceType.INPUT_22
+                          ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
+                          : t('certificate:EDIT.CARRIER_SERIAL_NO')}
                         <span> </span>
                         <span className="text-text-state-error">*</span>
                       </p>
+                      {formState.type === InvoiceType.INPUT_22 && (
+                        <div className="flex w-full items-center">
+                          <input
+                            id="other-certificate-no"
+                            type="text"
+                            value={formState.otherCertificateNo ?? ''}
+                            onChange={(e) => {
+                              handleInputChange('otherCertificateNo', e.target.value);
+                            }}
+                            className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                            placeholder="CC12345678"
+                            disabled={!!formState.no}
+                          />
+                        </div>
+                      )}
+                      {formState.type === InvoiceType.INPUT_25 && (
+                        <div className="flex items-center">
+                          {/* Info: (20250514 - Anna) 載具流水號前綴 */}
+                          <input
+                            id="carrier-serial-prefix"
+                            type="text"
+                            maxLength={2}
+                            value={formState.carrierSerialNumber?.substring(0, 2) ?? ''}
+                            // Info: (20250514 - Anna) 輸入「前綴」時，保留輸入框中「後綴」的值，只更新前綴
+                            onChange={(e) => {
+                              const latestNo = formStateRef.current.carrierSerialNumber ?? '';
+                              const suffix = latestNo.substring(2);
+                              handleInputChange(
+                                'carrierSerialNumber',
+                                `${e.target.value.toUpperCase()}${suffix}`
+                              );
+                            }}
+                            className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                            placeholder="BB"
+                            disabled={!!formState.no}
+                          />
 
-                      <div className="flex w-full items-center">
-                        <input
-                          id="other-certificate-no"
-                          type="text"
-                          value={formState.otherCertificateNo ?? ''}
-                          onChange={(e) => {
-                            handleInputChange('otherCertificateNo', e.target.value);
-                          }}
-                          className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
-                          placeholder="CC12345678"
-                          disabled={!!formState.no}
-                        />
-                      </div>
+                          <input
+                            id="carrier-serial-number"
+                            type="text"
+                            maxLength={8}
+                            value={formState.carrierSerialNumber?.substring(2) ?? ''}
+                            onChange={(e) => {
+                              const latestNo = formStateRef.current.carrierSerialNumber ?? '';
+                              const prefix = latestNo.substring(0, 2);
+                              handleInputChange(
+                                'carrierSerialNumber',
+                                `${prefix}${e.target.value}`
+                              );
+                            }}
+                            className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                            placeholder={t('certificate:EDIT.CHARACTERS_8')}
+                            disabled={!!formState.no}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : // Info: (20250429 - Anna) 格式27
@@ -892,7 +971,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="relative z-10 flex w-full items-center gap-2">
-                  <TaxMenu selectTaxHandler={selectTaxHandler} />
+                  <TaxMenu selectTaxHandler={selectTaxHandler} initialTaxType={formState.taxType} />
                 </div>
                 {errors.taxAmount && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">
@@ -1036,6 +1115,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       {t('certificate:EDIT.DUPLICATE_INVOICE_TAX')}
                     </p>
                   )}
+                  {formState.type === InvoiceType.INPUT_24 && (
+                    <p className="w-full text-right text-sm font-medium tracking-wide text-neutral-300">
+                      {t('certificate:EDIT.SALES_AMOUNT_UNDER_10')}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -1091,6 +1175,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       formStateRef.current.isSharedAmount ?? false
                     );
                     handleInputChange('isSharedAmount', isTogglingToSharedAmount);
+
+                    // Info: (20250514 - Anna) 勾選完存到後端
+                    setTimeout(() => {
+                      handleSave();
+                    }, 0);
                   }}
                 >
                   {formState.isSharedAmount && (
@@ -1108,7 +1197,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             )}
           </div>
         </div>
-        {/* Info: (20240924 - Anna) Save 按鈕 */}
+        {/* Info: (20240924 - Anna) Save */}
         <div className="flex items-center">
           {!certificate.voucherNo && (
             <Button
