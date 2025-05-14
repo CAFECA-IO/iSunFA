@@ -510,7 +510,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     [handleNewCertificateComing]
   );
 
-  // Todo: (20250415 - Anna) 憑證號碼和類型的排序，後端實作好後，要再來改這裡
   useEffect(() => {
     if (dateSort) {
       setSelectedSort({ by: SortBy.DATE, order: dateSort });
