@@ -67,6 +67,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
 
+  // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
+  const originalTypeRef = useRef<InvoiceType>();
+
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
   const certificateRef = useRef<HTMLDivElement>(null);
   const [eInvoiceImageUrl, setEInvoiceImageUrl] = useState<string | null>(null);
@@ -741,7 +744,10 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 <p className="text-sm font-semibold text-neutral-300">
                   {formState.type === InvoiceType.OUTPUT_30
                     ? t('certificate:EDIT.CERTIFICATE_AMOUNT')
-                    : t('certificate:EDIT.PRICE_BEFORE_TAX')}
+                    : formState.type === InvoiceType.OUTPUT_32 ||
+                        formState.type === InvoiceType.OUTPUT_34
+                      ? t('certificate:EDIT.SALES_AMOUNT')
+                      : t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span> </span>
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -774,7 +780,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 )}
               </div>
               {formState.type !== InvoiceType.OUTPUT_32 &&
-                formState.type !== InvoiceType.OUTPUT_30 && (
+                formState.type !== InvoiceType.OUTPUT_30 &&
+                formState.type !== InvoiceType.OUTPUT_34 && (
                   <>
                     {/* Info: (20250414 - Anna) Tax */}
                     <div
@@ -868,19 +875,35 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                   }`}
                   onClick={() => {
                     const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
+
+                    // Info: (20250514 - Anna) 第一次切換時記住原本的
+                    if (isTogglingToReturnOrAllowance) {
+                      originalTypeRef.current = formState.type;
+                    }
+
                     setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
 
                     // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
                     // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                    if (formState.type === InvoiceType.OUTPUT_31 && isTogglingToReturnOrAllowance) {
+                    if (
+                      (formState.type === InvoiceType.OUTPUT_31 ||
+                        formState.type === InvoiceType.OUTPUT_35) &&
+                      isTogglingToReturnOrAllowance
+                    ) {
                       handleInputChange('type', InvoiceType.OUTPUT_33);
                     } else if (
                       formState.type === InvoiceType.OUTPUT_33 &&
                       !isTogglingToReturnOrAllowance
                     ) {
-                      handleInputChange('type', InvoiceType.OUTPUT_31);
+                      // handleInputChange('type', InvoiceType.OUTPUT_31);
+                      if (originalTypeRef.current === InvoiceType.OUTPUT_31) {
+                        handleInputChange('type', InvoiceType.OUTPUT_31);
+                      } else if (originalTypeRef.current === InvoiceType.OUTPUT_35) {
+                        handleInputChange('type', InvoiceType.OUTPUT_35);
+                      }
                     } else if (
-                      formState.type === InvoiceType.OUTPUT_32 &&
+                      (formState.type === InvoiceType.OUTPUT_32 ||
+                        formState.type === InvoiceType.OUTPUT_36) &&
                       isTogglingToReturnOrAllowance
                     ) {
                       handleInputChange('type', InvoiceType.OUTPUT_34);
@@ -888,7 +911,12 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       formState.type === InvoiceType.OUTPUT_34 &&
                       !isTogglingToReturnOrAllowance
                     ) {
-                      handleInputChange('type', InvoiceType.OUTPUT_32);
+                      // handleInputChange('type', InvoiceType.OUTPUT_32);
+                      if (originalTypeRef.current === InvoiceType.OUTPUT_32) {
+                        handleInputChange('type', InvoiceType.OUTPUT_32);
+                      } else if (originalTypeRef.current === InvoiceType.OUTPUT_36) {
+                        handleInputChange('type', InvoiceType.OUTPUT_36);
+                      }
                     }
                   }}
                 >

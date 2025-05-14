@@ -383,7 +383,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       type: certificate.type ?? InvoiceType.INPUT_21,
       salesIdNumber: certificate.salesIdNumber,
       salesName: certificate.salesName,
-      deductionType: certificate.deductionType,
+      deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
       isSharedAmount: certificate.isSharedAmount,
       otherCertificateNo: certificate.otherCertificateNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
