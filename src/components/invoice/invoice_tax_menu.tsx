@@ -1,5 +1,5 @@
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { useTranslation } from 'next-i18next';
 import { TaxType } from '@/constants/invoice_rc2';
@@ -16,13 +16,12 @@ const taxRates: Record<TaxOptions, number | undefined> = {
 
 interface ITaxMenuProps {
   selectTaxHandler: (params: { taxRate: number | null; taxType: TaxType }) => void;
+  initialTaxType?: TaxType;
 }
 
-const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) => {
+const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler, initialTaxType }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const [selectedTax, setSelectedTax] = useState<TaxOptions>(
-    TaxOptions.TAXABLE_5
-  );
+  const [selectedTax, setSelectedTax] = useState<TaxOptions>(TaxOptions.TAXABLE_5);
 
   const {
     targetRef: taxRatioMenuRef,
@@ -30,9 +29,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
     setComponentVisible: setIsTaxRatioMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const {
-    setComponentVisible: setIsTaxRatioSubMenuOpen,
-  } = useOuterClick<HTMLDivElement>(false);
+  const { setComponentVisible: setIsTaxRatioSubMenuOpen } = useOuterClick<HTMLDivElement>(false);
 
   const closeAllMenus = () => {
     setIsTaxRatioMenuOpen(false);
@@ -55,6 +52,14 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler }: ITaxMenuProps) =
     setSelectedTax(option);
     closeAllMenus();
   };
+
+  useEffect(() => {
+    if (initialTaxType === TaxType.TAXABLE) {
+      setSelectedTax(TaxOptions.TAXABLE_5);
+    } else if (initialTaxType === TaxType.TAX_FREE) {
+      setSelectedTax(TaxOptions.TAX_FREE);
+    }
+  }, [initialTaxType]);
 
   return (
     <div

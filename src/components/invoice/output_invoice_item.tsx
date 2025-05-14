@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
 import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
+import { TaxType } from '@/constants/invoice_rc2';
 
 interface OutputInvoiceListIrops {
   activeSelection: boolean;
@@ -92,16 +93,20 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
         <div
           className={`w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
-          {certificate.taxRate !== undefined ? `Taxable ${certificate.taxRate} %` : '-'}
+          {certificate.taxType === TaxType.TAXABLE
+            ? `${t('certificate:EDIT.TAXABLE_5')} ${certificate.taxRate} %`
+            : certificate.taxType === TaxType.TAX_FREE
+              ? `${t('certificate:EDIT.TAX_FREE')} `
+              : '-'}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
-            {certificate.salesIdNumber ?? ''}
+            {certificate.buyerIdNumber ?? ''}
           </div>
           <div className="w-full text-left text-text-neutral-primary">
-            {certificate.salesName ?? ''}
+            {certificate.buyerName ?? ''}
           </div>
         </div>
       </BorderCell>
@@ -113,7 +118,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div>Pre-Tax</div>
+              <div className="w-full pr-1 text-center">{t(`certificate:TABLE.PRE_TAX`)}</div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
@@ -127,7 +132,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div>After-Tax</div>
+              <div className="w-full pr-1 text-center">{t(`certificate:TABLE.AFTER_TAX`)}</div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}

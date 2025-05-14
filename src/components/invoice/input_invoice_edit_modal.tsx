@@ -892,7 +892,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div className="relative z-10 flex w-full items-center gap-2">
-                  <TaxMenu selectTaxHandler={selectTaxHandler} />
+                  <TaxMenu selectTaxHandler={selectTaxHandler} initialTaxType={formState.taxType} />
                 </div>
                 {errors.taxAmount && (
                   <p className="-translate-y-1 self-end text-sm text-text-state-error">

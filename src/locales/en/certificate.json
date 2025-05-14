@@ -24,7 +24,9 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
     "DEDUCTIBLE_FIXED_ASSETS": "Fixed assets",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "Fixed assets"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "Fixed assets",
+    "AFTER_TAX": "After-Tax",
+    "PRE_TAX": "Pre-Tax"
   },
   "PAUSE": {
     "TITLE": "Do you want to cancel uploading?",

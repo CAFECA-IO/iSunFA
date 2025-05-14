@@ -24,7 +24,9 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
     "DEDUCTIBLE_FIXED_ASSETS": "固定資產",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "進貨及費用",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定資產"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "固定資產",
+    "AFTER_TAX": "稅後",
+    "PRE_TAX": "稅前"
   },
   "PAUSE": {
     "TITLE": "您確定要取消上傳嗎？",
