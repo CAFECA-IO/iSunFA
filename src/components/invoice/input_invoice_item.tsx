@@ -10,6 +10,7 @@ import { FaCheck } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { DeductionType } from '@/constants/invoice_rc2';
+import { TaxType } from '@/constants/invoice_rc2';
 
 interface InputInvoiceListIrops {
   activeSelection: boolean;
@@ -92,7 +93,12 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             />
           )}
           <div className="flex flex-col">
-            <div className="download-pb-4 text-text-neutral-primary">{certificate.no ?? ''}</div>
+            <div className="download-pb-4 text-text-neutral-primary">
+              {certificate.no ||
+                certificate.carrierSerialNumber ||
+                certificate.otherCertificateNo ||
+                ''}
+            </div>
           </div>
         </div>
       </BorderCell>
@@ -129,16 +135,20 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
         <div
           className={`download-pb-4 w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
-          {certificate.taxRate !== undefined ? `Taxable ${certificate.taxRate} %` : '-'}
+          {certificate.taxType === TaxType.TAXABLE
+            ? `${t('certificate:EDIT.TAXABLE_5')} ${certificate.taxRate} %`
+            : certificate.taxType === TaxType.TAX_FREE
+              ? `${t('certificate:EDIT.TAX_FREE')} `
+              : '-'}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
         <div className="download-pb-4 flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
-            {certificate.buyerIdNumber ?? ''}
+            {certificate.salesIdNumber ?? ''}
           </div>
           <div className="w-full text-left text-text-neutral-primary">
-            {certificate.buyerName ?? ''}
+            {certificate.salesName ?? ''}
           </div>
         </div>
       </BorderCell>
@@ -150,7 +160,9 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div className="download-pb-3">Pre-Tax</div>
+              <div className="download-pb-3 w-full pr-1 text-center">
+                {t(`certificate:TABLE.PRE_TAX`)}
+              </div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
@@ -164,7 +176,9 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div className="download-pb-3">After-Tax</div>
+              <div className="download-pb-3 w-full pr-1 text-center">
+                {t(`certificate:TABLE.AFTER_TAX`)}
+              </div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
