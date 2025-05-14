@@ -60,18 +60,29 @@
           我們誠摯地邀請您加入
           <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{teamName}}</span>
           的財務管理團隊，協助共同管理企業財務及相關營運資源。<br />
+        </mj-text>
+        <mj-text mj-class="mainText">
           作為我們信任的合作夥伴，您的參與對於強化團隊協作與提升管理效率至關重要。透過系統平台，您將能即時掌握財務概況、共同參與報表審閱、審核交易活動，並協助企業穩健運作。
         </mj-text>
 
         <mj-text mj-class="mainText">請點選以下連結完成加入程序：</mj-text>
-        <mj-text mj-class="mainText">
-          邀請連結:
+        <mj-text>
           <a
-            href="{{inviteLink}}"
-            target="_blank"
-            style="color: #1570ef; text-decoration: underline"
-            >{{inviteLink}}</a
+            href="{{joinLink}}"
+            style="
+              display: inline-block;
+              background-color: #ffb632;
+              color: #322000;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              line-height: 20px;
+              font-weight: 500;
+            "
           >
+            確認加入
+          </a>
         </mj-text>
 
         <mj-text mj-class="mainText">{{teamName}} 團隊誠摯邀請</mj-text>

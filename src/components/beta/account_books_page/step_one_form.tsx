@@ -739,7 +739,7 @@ const StepOneForm = ({
             </button>
 
             {/* ToDo: (20250430 - Liz) 測試用，等串接新 API 後就移除 */}
-            <button type="button" onClick={handleUploadCroppedImage}>
+            <button type="button" onClick={handleUploadCroppedImage} className="hidden">
               測試用照片上傳按鈕
             </button>
           </section>

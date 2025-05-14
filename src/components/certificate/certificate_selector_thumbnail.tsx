@@ -53,7 +53,12 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
           className={`relative flex h-136px w-85px items-center ${!isSelected || !isSelectable ? 'group' : ''}`}
         >
           <div className="flex h-136px w-85px items-center justify-center overflow-hidden">
-            <Image src={certificate.file.url} alt="certificate" width={85} height={136} />
+            <Image
+              src={certificate.file.thumbnail?.url || certificate.file.url}
+              alt="certificate"
+              width={85}
+              height={136}
+            />
           </div>
           <div className="absolute left-0 top-0 z-10 hidden h-full w-full bg-black/50 group-hover:block">
             {isDeletable && onDelete && (
