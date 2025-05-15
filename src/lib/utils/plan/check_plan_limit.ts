@@ -155,16 +155,23 @@ export async function checkTeamCount(userId: number) {
  */
 export async function checkTeamMemberLimit(teamId: number, addMemberCount: number) {
   const features = await getTeamPlanFeatures(teamId);
-  const limitEntry = features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
-  const match = limitEntry ? (limitEntry as string)?.match(/LIMIT_(\d+)_MEMBERS/) : null;
+  const limitEntry = features.OWNED_TEAM_MEMBER_LIMIT || features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
+  const match = limitEntry
+    ? (limitEntry as string)?.match(/LIMIT_(\d+)_MEMBERS(?:_PAID_EXTENSION)?/)
+    : null;
   const limit = match ? parseInt(match[1], 10) : Infinity;
+  loggerBack.info(
+    `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}`
+  );
 
   const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
 
-  if (memberCount + addMemberCount >= limit) {
+  if (memberCount + addMemberCount > limit) {
     const error = new Error(STATUS_MESSAGE.LIMIT_EXCEEDED_TEAM_MEMBER);
     error.name = STATUS_CODE.LIMIT_EXCEEDED_TEAM_MEMBER;
-    loggerBack.info(`目前方案限制每個團隊最多 ${limit} 位成員，請升級方案或減少人數。`);
+    loggerBack.info(
+      `團隊id: ${teamId} 現有成員人數: ${memberCount}， 新增成員人數： ${addMemberCount}, 目前方案限制每個團隊最多 ${limit} 位成員，請升級方案或減少人數。`
+    );
     throw error;
   }
 }

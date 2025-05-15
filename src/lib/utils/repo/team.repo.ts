@@ -19,7 +19,7 @@ import {
 } from '@/lib/utils/permission/assert_user_team_permission';
 import { getGracePeriodInfo } from '@/lib/shared/permission';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
-import { checkTeamCount } from '@/lib/utils/plan/check_plan_limit';
+import { checkTeamMemberLimit } from '@/lib/utils/plan/check_plan_limit';
 
 export const getTeamList = async (
   userId: number,
@@ -148,8 +148,6 @@ export const createTeamWithTrial = async (
     imageFileId?: number;
   }
 ): Promise<ITeam> => {
-  // Info: (20250409 - Tzuhan) 1. 限制團隊數量
-  await checkTeamCount(userId);
   return prisma.$transaction(async (tx) => {
     loggerBack.info(
       `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
@@ -197,6 +195,8 @@ export const createTeamWithTrial = async (
         joinedAt: nowInSeconds,
       },
     });
+
+    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0);
 
     // Info: (20250409 - Tzuhan) 4. 處理邀請成員
     if (teamData.members?.length) {
@@ -344,6 +344,8 @@ export const createTeam = async (
         joinedAt: nowInSecond,
       },
     });
+
+    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0);
 
     // Info: (20250304 - Tzuhan) 5. 遍歷 `members`，判斷 Email 是否存在於 `User`
     if (teamData.members?.length) {
