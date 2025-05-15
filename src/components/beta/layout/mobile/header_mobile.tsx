@@ -13,6 +13,7 @@ import ModeSwitch from '@/components/beta/layout/mode_switch';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
 import { MenuContent } from '@/interfaces/side_menu';
 import SubMenu from '@/components/beta/layout/mobile/sub_menu';
+import NotificationMobile from '@/components/beta/layout/mobile/notification_mobile';
 
 const HeaderMobile = () => {
   const { asPath } = useRouter();
@@ -196,21 +197,7 @@ const HeaderMobile = () => {
               <SubMenu selectedMenuOption={selectedMenuOption} closeMenu={closeMenu} />
             )}
 
-            {usingMenuContent === MenuContent.NOTIFICATION && (
-              <ul className="flex flex-col gap-12px">
-                <li className="flex">
-                  <Link
-                    id="notificationButtonDesktop"
-                    href={asPath}
-                    className="flex flex-auto items-center justify-center gap-8px px-12px py-8px hover:bg-dropdown-surface-item-hover"
-                  >
-                    <span className="text-sm font-medium text-dropdown-text-primary">
-                      Notification
-                    </span>
-                  </Link>
-                </li>
-              </ul>
-            )}
+            {usingMenuContent === MenuContent.NOTIFICATION && <NotificationMobile />}
           </section>
         </div>
       )}

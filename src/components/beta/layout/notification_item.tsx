@@ -1,15 +1,15 @@
-import { NotificationType } from '@/constants/notification';
+import { INotification, NOTIFICATION_TYPE } from '@/constants/notification';
 import { useTranslation } from 'next-i18next';
 
 type NotificationItemProps = {
-  notification: NotificationType;
+  notification: INotification;
   onMarkAsRead: (id: string) => void;
 };
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
   const { t } = useTranslation(['dashboard']);
 
-  if (notification.type === 'text') {
+  if (notification.type === NOTIFICATION_TYPE.GENERAL) {
     return (
       <button
         type="button"
@@ -21,7 +21,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
     );
   }
 
-  if (notification.type === 'button') {
+  if (notification.type === NOTIFICATION_TYPE.INVITATION) {
     return (
       <div
         className={`flex flex-col gap-16px bg-surface-neutral-surface-lv2 p-12px font-medium text-text-neutral-primary hover:bg-surface-neutral-surface-lv1`}

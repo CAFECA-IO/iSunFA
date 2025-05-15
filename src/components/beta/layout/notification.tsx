@@ -1,41 +1,41 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { FiBell, FiCheckCircle } from 'react-icons/fi';
 import NotificationItem from '@/components/beta/layout/notification_item';
-import { NotificationType } from '@/constants/notification';
+import { INotification, NOTIFICATION_TYPE } from '@/constants/notification';
 import { useTranslation } from 'next-i18next';
 
-const FAKE_NOTIFICATIONS: NotificationType[] = [
+const FAKE_NOTIFICATIONS: INotification[] = [
   {
     id: '1',
     content:
       'This is a test notification, in order to test whether the notification message panel is successfully displayed.',
     isRead: false,
-    type: 'text',
+    type: NOTIFICATION_TYPE.GENERAL,
   },
   {
     id: '2',
     content: 'Hello! Welcome to iSunFA!',
     isRead: false,
-    type: 'text',
+    type: NOTIFICATION_TYPE.GENERAL,
   },
   {
     id: '3',
     content: 'This is a test notification which is already read. So its color is gray.',
     isRead: true,
-    type: 'text',
+    type: NOTIFICATION_TYPE.GENERAL,
   },
   {
     id: '4',
     content: 'Example Team',
     isRead: false,
-    type: 'button',
+    type: NOTIFICATION_TYPE.INVITATION,
   },
   {
     id: '5',
     content:
       'This is a test notification, in order to test whether the notification message panel is successfully displayed.',
     isRead: false,
-    type: 'text',
+    type: NOTIFICATION_TYPE.GENERAL,
   },
 ];
 
