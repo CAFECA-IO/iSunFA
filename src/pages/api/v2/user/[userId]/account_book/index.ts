@@ -110,6 +110,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
   const accountBook = await createAccountBook(userId, body);
+  loggerBack.info(`Created accountBook: ${JSON.stringify(accountBook)}`);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_ACCOUNT_BOOK,

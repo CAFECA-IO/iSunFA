@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
-import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION, ACCOUNT_BOOK_ROLE } from '@/interfaces/account_book';
+import {
+  WORK_TAG,
+  ACCOUNT_BOOK_UPDATE_ACTION,
+  ACCOUNT_BOOK_ROLE,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
+} from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { LocaleKey } from '@/constants/normal_setting';
@@ -32,6 +40,24 @@ export const accountBookSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   isPrivate: z.boolean().optional(),
+
+  // Info: (20250515 - Shirley) RC2 fields
+  responsiblePerson: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
+  contactPerson: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  newAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -155,6 +181,21 @@ const accountBookCreateBodySchema = z.object({
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
+  responsiblePerson: z.string(),
+  taxSerialNumber: z.string(),
+  contactPerson: z.string(),
+  phoneNumber: z.string(),
+  city: z.string(),
+  district: z.string(),
+  enteredAddress: z.string(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 export const accountBookCreateSchema = {
