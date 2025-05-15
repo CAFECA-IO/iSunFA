@@ -1,5 +1,6 @@
 import { INotification, NOTIFICATION_TYPE } from '@/interfaces/notification';
 import { useTranslation } from 'next-i18next';
+import { cn } from '@/lib/utils/common';
 
 type NotificationItemProps = {
   notification: INotification;
@@ -8,25 +9,31 @@ type NotificationItemProps = {
 
 const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps) => {
   const { t } = useTranslation(['dashboard']);
+  const { id, content, isRead, type, teamName } = notification;
 
-  if (notification.type === NOTIFICATION_TYPE.GENERAL) {
+  if (type === NOTIFICATION_TYPE.GENERAL) {
     return (
-      <button
-        type="button"
-        onMouseEnter={() => onMarkAsRead(notification.id)}
-        className={`bg-surface-neutral-surface-lv2 p-12px text-left font-medium text-text-neutral-primary hover:bg-surface-neutral-surface-lv1 hover:text-text-neutral-link ${notification.isRead ? 'text-text-neutral-tertiary' : ''}`}
-      >
-        {notification.content}
-      </button>
+      <section className="p-12px">
+        <button
+          type="button"
+          onMouseEnter={() => onMarkAsRead(id)}
+          className={cn('line-clamp-3 text-start text-base font-medium text-text-neutral-primary', {
+            'text-text-neutral-tertiary': isRead,
+            'hover:bg-surface-neutral-surface-lv1 hover:text-text-neutral-link': !isRead,
+          })}
+        >
+          {content}
+        </button>
+      </section>
     );
   }
 
-  if (notification.type === NOTIFICATION_TYPE.INVITATION) {
+  if (type === NOTIFICATION_TYPE.INVITATION) {
     return (
       <div
         className={`flex flex-col gap-16px bg-surface-neutral-surface-lv2 p-12px font-medium text-text-neutral-primary hover:bg-surface-neutral-surface-lv1`}
       >
-        <p>{`${t('dashboard:HEADER.YOU_HAVE_A_TEAM_INVITATION_FROM')} “ ${notification.content} ”`}</p>
+        {`${content} ${teamName}`}
 
         <div className="flex items-center justify-center gap-15px">
           <button
