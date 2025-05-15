@@ -78,9 +78,9 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
   const features = await getTeamPlanFeatures(teamId);
   const maxSize =
     features.STORAGE === 'STORAGE_10GB'
-      ? // ? 10 * 1024 ** 3
-        1 * 1024 ** 2 // 測試用：限制為 1MB
-      : features.STORAGE === 'STORAGE_50GB'
+      ? 10 * 1024 ** 3
+      : // ?1 * 1024 ** 2 // Info: (20250515 - tzuhan) 測試用：限制為 1MB
+        features.STORAGE === 'STORAGE_50GB'
         ? 50 * 1024 ** 3
         : features.STORAGE === 'STORAGE_200GB'
           ? 200 * 1024 ** 3
