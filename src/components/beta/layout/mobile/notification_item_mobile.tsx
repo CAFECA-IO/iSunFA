@@ -36,7 +36,7 @@ const NotificationItemMobile = ({ notification }: NotificationItemMobileProps) =
   }
 
   return (
-    <section className="border-2 border-pink-500 p-12px">
+    <section className="p-12px">
       <button
         type="button"
         className={cn('line-clamp-3 text-start text-base font-medium text-text-neutral-primary', {

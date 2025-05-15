@@ -157,7 +157,7 @@ const HeaderMobile = () => {
           )}
 
           {/* Info: (20250513 - Liz) Menu Content - Default : MAIN_MENU */}
-          <section className="flex flex-auto flex-col">
+          <section className="flex min-h-0 flex-auto flex-col">
             {usingMenuContent === MenuContent.MAIN_MENU && (
               <MainMenu
                 setSelectedMenuOption={setSelectedMenuOption}
