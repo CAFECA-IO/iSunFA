@@ -78,7 +78,8 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
   const features = await getTeamPlanFeatures(teamId);
   const maxSize =
     features.STORAGE === 'STORAGE_10GB'
-      ? 10 * 1024 ** 3
+      ? // ? 10 * 1024 ** 3
+        1 * 1024 ** 2 // 測試用：限制為 1MB
       : features.STORAGE === 'STORAGE_50GB'
         ? 50 * 1024 ** 3
         : features.STORAGE === 'STORAGE_200GB'
@@ -157,11 +158,14 @@ export async function checkTeamMemberLimit(teamId: number, addMemberCount: numbe
   const features = await getTeamPlanFeatures(teamId);
   const limitEntry = features.OWNED_TEAM_MEMBER_LIMIT || features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
   const match = limitEntry
-    ? (limitEntry as string)?.match(/LIMIT_(\d+)_MEMBERS(?:_PAID_EXTENSION)?/)
+    ? (limitEntry as string).match(/LIMIT_(\d+)_MEMBER(?:S)?(?:_PAID_EXTENSION)?/)
     : null;
+
   const limit = match ? parseInt(match[1], 10) : Infinity;
+  const isPaidExtension = limitEntry?.includes('_PAID_EXTENSION') ?? false;
+
   loggerBack.info(
-    `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}`
+    `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}, isPaidExtension: ${isPaidExtension}`
   );
 
   const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
