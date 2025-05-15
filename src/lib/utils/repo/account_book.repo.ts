@@ -34,6 +34,7 @@ import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permissio
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
+import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -197,8 +198,8 @@ export const createAccountBook = async (
     if (teamId) {
       const hasPermission = await isEligibleToCreateAccountBookInTeam(userId, teamId);
       if (!hasPermission) {
-        const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_LIMIT_REACHED);
-        error.name = STATUS_CODE.ACCOUNT_BOOK_LIMIT_REACHED;
+        const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+        error.name = STATUS_CODE.PERMISSION_DENIED;
         throw error;
       }
     } else {
@@ -212,6 +213,7 @@ export const createAccountBook = async (
         teamId = +userTeams.data[0].id;
       }
     }
+    await checkAccountBookLimit(teamId);
 
     // Info: (20250506 - Shirley) Using transaction to create account book and company setting together
     const result = await transaction(async (tx) => {
