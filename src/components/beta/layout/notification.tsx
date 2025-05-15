@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { FiBell, FiCheckCircle } from 'react-icons/fi';
 import NotificationItem from '@/components/beta/layout/notification_item';
-import { INotification, NOTIFICATION_TYPE } from '@/constants/notification';
+import { INotification, NOTIFICATION_TYPE } from '@/interfaces/notification';
 import { useTranslation } from 'next-i18next';
 
 const FAKE_NOTIFICATIONS: INotification[] = [

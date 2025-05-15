@@ -1,5 +1,5 @@
 import { FiCheckCircle } from 'react-icons/fi';
-import { INotification, NOTIFICATION_TYPE } from '@/constants/notification';
+import { INotification, NOTIFICATION_TYPE } from '@/interfaces/notification';
 import NotificationItemMobile from '@/components/beta/layout/mobile/notification_item_mobile';
 
 const FAKE_NOTIFICATIONS: INotification[] = [

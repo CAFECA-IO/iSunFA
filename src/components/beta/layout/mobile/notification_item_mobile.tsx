@@ -1,4 +1,4 @@
-import { INotification, NOTIFICATION_TYPE } from '@/constants/notification';
+import { INotification, NOTIFICATION_TYPE } from '@/interfaces/notification';
 import { cn } from '@/lib/utils/common';
 
 interface NotificationItemMobileProps {
