@@ -26,6 +26,13 @@ import {
 } from '@prisma/client';
 import { getCompanyWithSettingById } from '@/lib/utils/repo/company.repo';
 
+// Info: (20250516 - Shirley) 定義 CompanyAddress 介面
+interface CompanyAddress {
+  city?: string;
+  district?: string;
+  enteredAddress?: string;
+}
+
 export default class Report401Generator extends ReportGenerator {
   constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.REPORT_401;
@@ -315,7 +322,12 @@ export default class Report401Generator extends ReportGenerator {
       businessName: companyKYC?.legalName ?? company?.name ?? '',
       personInCharge: companySetting?.representativeName ?? '',
       taxSerialNumber: companySetting?.taxSerialNumber || '', // TODO (20240808 - Jacky): Implement this field in next sprint
-      businessAddress: companySetting?.address ?? '',
+      businessAddress:
+        typeof companySetting?.address === 'string'
+          ? ((JSON.parse(companySetting.address as string) as CompanyAddress)?.enteredAddress ?? '')
+          : typeof companySetting?.address === 'object' && companySetting?.address !== null
+            ? ((companySetting.address as CompanyAddress)?.enteredAddress ?? '')
+            : '',
       currentYear: ROCStartDate.year.toString(),
       startMonth: ROCStartDate.month.toString(),
       endMonth: ROCEndDate.month.toString(),

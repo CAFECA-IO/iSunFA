@@ -109,7 +109,56 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const accountBook = await createAccountBook(userId, body);
+
+  // Info: (20250516 - Shirley) 從請求體中提取所有必要欄位
+  const {
+    name,
+    taxId,
+    tag,
+    teamId,
+    fileId: fileIdFromBody,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
+
+  // Info: (20250516 - Shirley) 將所有欄位傳遞給 createAccountBook 函數
+  const accountBook = await createAccountBook(userId, {
+    name,
+    taxId,
+    tag,
+    teamId,
+    fileId: fileIdFromBody,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  });
+
+  loggerBack.info(`Created accountBook: ${JSON.stringify(accountBook)}`);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_ACCOUNT_BOOK,
@@ -154,6 +203,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     const err = error as Error;
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    loggerBack.error(`Error in ${apiName}: ${err.message}`);
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
   await logUserAction(session, apiName, req, statusMessage);
