@@ -129,7 +129,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       issuedDate: selectedDate,
       netAmount,
       taxAmount,
-      // salesName,
       type,
       no,
       otherCertificateNo,
