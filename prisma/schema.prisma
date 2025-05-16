@@ -1711,7 +1711,7 @@ model Notification {
   @@map("notification")
 }
 
-// Hiring related models
+// Info: (20250516 - Julian) Hiring related models
 model JobPosting {
   id          Int                @id @default(autoincrement())
   title       String
