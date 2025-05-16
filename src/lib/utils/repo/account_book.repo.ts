@@ -1,4 +1,5 @@
-import prisma, { File } from '@prisma/client';
+import prisma from '@/client';
+import { File } from '@prisma/client';
 import {
   TeamRole,
   LeaveStatus,
