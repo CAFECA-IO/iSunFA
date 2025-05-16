@@ -1,8 +1,10 @@
 import { Dispatch, SetStateAction, useState } from 'react';
-import { FiBell, FiCheckCircle } from 'react-icons/fi';
+import { FiCheckCircle } from 'react-icons/fi';
+import { PiBell } from 'react-icons/pi';
 import NotificationItem from '@/components/beta/layout/notification_item';
 import { useTranslation } from 'next-i18next';
 import { FAKE_NOTIFICATIONS } from '@/constants/notification';
+import { INotification } from '@/interfaces/notification';
 
 interface NotificationProps {
   isPanelOpen: boolean;
@@ -16,13 +18,13 @@ const Notification = ({
   toggleNotificationPanel = () => setIsPanelOpen((prev) => !prev),
 }: NotificationProps) => {
   const { t } = useTranslation(['dashboard']);
-  const [notifications, setNotifications] = useState(FAKE_NOTIFICATIONS);
-  // ToDo: (20241225 - Liz) 等 API 可以使用後就改用 notifications 來判斷
+
+  const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
   const isNoData = notifications.length === 0;
 
-  // ToDo: (20241225 - Liz) 打開面板時打 API 取得通知 (搭配 useEffect)
+  // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fetchNotifications = () => {
+  const getNotifications = () => {
     // setNotifications(); // 將取得的通知資料設定到 state
   };
 
@@ -47,23 +49,27 @@ const Notification = ({
         prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
       );
     } catch (error) {
-      // ToDo: (20241225 - Liz) 處理錯誤
-      // console.error(`Failed to mark notification ${notificationId} as read`, error);
+      // Deprecated: (20250516 - Liz)
+      // eslint-disable-next-line no-console
+      console.log(`Failed to mark notification ${notificationId} as read`, error);
     }
   };
 
   return (
     <section className="relative">
-      {/* // Info: (20241011 - Liz) 通知鈴鐺 icon */}
+      {/* Info: (20241011 - Liz) 通知鈴鐺 icon */}
       <button
         type="button"
         onClick={toggleNotificationPanel}
-        className="p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
+        className="relative p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
-        <FiBell size={24} className="cursor-pointer" />
+        <PiBell size={20} className="cursor-pointer" />
+        {!isNoData && (
+          <span className="absolute right-11px top-11px h-8px w-8px rounded-full border border-avatar-stroke-primary bg-surface-state-error"></span>
+        )}
       </button>
 
-      {/* // Info: (20241011 - Liz) 通知訊息面板 */}
+      {/* Info: (20241011 - Liz) 通知訊息面板 */}
       {isPanelOpen && (
         <div className="absolute right-0 top-full z-100 mt-10px flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2 px-24px py-12px shadow-Dropshadow_M">
           <button
