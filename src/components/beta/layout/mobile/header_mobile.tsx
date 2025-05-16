@@ -7,7 +7,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import Profile from '@/components/beta/layout/profile';
-import CompanyBadge from '@/components/beta/layout/company_badge';
+import AccountBookBadge from '@/components/beta/layout/account_book_badge';
 import MainMenu from '@/components/beta/layout/mobile/main_menu';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
@@ -89,7 +89,7 @@ const HeaderMobile = () => {
       </button>
 
       <section className="ml-auto flex flex-none items-center gap-16px">
-        <CompanyBadge />
+        <AccountBookBadge />
 
         <Profile />
       </section>
