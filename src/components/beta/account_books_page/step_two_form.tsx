@@ -6,11 +6,10 @@ import { useTranslation } from 'next-i18next';
 import {
   FILING_FREQUENCY_OPTIONS,
   FILING_METHOD_OPTIONS,
-  DECLARANT_FILING_METHOD,
-  AGENT_FILING_ROLE,
   Step2FormState,
   Step2FormAction,
 } from '@/constants/account_book';
+import { DECLARANT_FILING_METHOD, AGENT_FILING_ROLE } from '@/interfaces/account_book';
 
 interface StepTwoBusinessTaxSettingProps {
   closeAccountBookInfoModal: () => void;

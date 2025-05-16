@@ -1,43 +1,8 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { FiBell, FiCheckCircle } from 'react-icons/fi';
 import NotificationItem from '@/components/beta/layout/notification_item';
-import { NotificationType } from '@/constants/notification';
 import { useTranslation } from 'next-i18next';
-
-const FAKE_NOTIFICATIONS: NotificationType[] = [
-  {
-    id: '1',
-    content:
-      'This is a test notification, in order to test whether the notification message panel is successfully displayed.',
-    isRead: false,
-    type: 'text',
-  },
-  {
-    id: '2',
-    content: 'Hello! Welcome to iSunFA!',
-    isRead: false,
-    type: 'text',
-  },
-  {
-    id: '3',
-    content: 'This is a test notification which is already read. So its color is gray.',
-    isRead: true,
-    type: 'text',
-  },
-  {
-    id: '4',
-    content: 'Example Team',
-    isRead: false,
-    type: 'button',
-  },
-  {
-    id: '5',
-    content:
-      'This is a test notification, in order to test whether the notification message panel is successfully displayed.',
-    isRead: false,
-    type: 'text',
-  },
-];
+import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 
 interface NotificationProps {
   isPanelOpen: boolean;
@@ -53,8 +18,7 @@ const Notification = ({
   const { t } = useTranslation(['dashboard']);
   const [notifications, setNotifications] = useState(FAKE_NOTIFICATIONS);
   // ToDo: (20241225 - Liz) 等 API 可以使用後就改用 notifications 來判斷
-  // const isNoData = notifications.length === 0;
-  const isNoData = true;
+  const isNoData = notifications.length === 0;
 
   // ToDo: (20241225 - Liz) 打開面板時打 API 取得通知 (搭配 useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -110,14 +74,15 @@ const Notification = ({
             <span className="text-sm font-medium">{t('dashboard:HEADER.MARK_AS_ALL_READ')}</span>
           </button>
 
-          {!isNoData &&
-            notifications.map((notification) => (
+          <section className="max-h-60vh overflow-y-auto">
+            {notifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
                 onMarkAsRead={onMarkAsRead}
               />
             ))}
+          </section>
 
           {isNoData && (
             <p className="p-12px text-center text-base font-medium text-text-neutral-tertiary">
