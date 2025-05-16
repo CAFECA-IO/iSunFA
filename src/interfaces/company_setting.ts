@@ -24,15 +24,15 @@ export interface IAccountBookInfo {
         district: string;
         enteredAddress: string;
       }
-    | string; // 支援新舊格式
+    | string; // Info: (20250516 - Shirley) 支援新舊格式
   createdAt: number;
   updatedAt: number;
 
-  // Info: (20250717 - Shirley) RC2 新增欄位
+  // Info: (20250516 - Shirley) RC2 新增欄位
   contactPerson?: string;
-  city?: string; // 已包含在 address 中，但單獨提供方便使用
-  district?: string; // 已包含在 address 中，但單獨提供方便使用
-  enteredAddress?: string; // 已包含在 address 中，但單獨提供方便使用
+  city?: string; // Info: (20250516 - Shirley) 已包含在 address 中，但單獨提供方便使用
+  district?: string; // Info: (20250516 - Shirley) 已包含在 address 中，但單獨提供方便使用
+  enteredAddress?: string; // Info: (20250516 - Shirley) 已包含在 address 中，但單獨提供方便使用
   filingFrequency?: FILING_FREQUENCY;
   filingMethod?: FILING_METHOD;
   declarantFilingMethod?: DECLARANT_FILING_METHOD;
