@@ -26,7 +26,7 @@ import {
 } from '@prisma/client';
 import { getCompanyWithSettingById } from '@/lib/utils/repo/company.repo';
 
-// 定義 CompanyAddress 介面
+// Info: (20250516 - Shirley) 定義 CompanyAddress 介面
 interface CompanyAddress {
   city?: string;
   district?: string;
