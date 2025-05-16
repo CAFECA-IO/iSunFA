@@ -610,17 +610,19 @@ model File {
 
   certificate                 Certificate?
   news                        News[]
-  companyImageFile            Company?     @relation("company_image_file")
-  kycPersonalIdFile           KYCRole?     @relation("kyc_personal_id_file")
-  kycCertificationFile        KYCRole?     @relation("kyc_certification_file")
-  ocrImageFile                Ocr?         @relation("ocr_image_file")
-  projectImageFile            Project?     @relation("project_image_file")
-  registrationCertificateFile CompanyKYC?  @relation("registration_certificate_file")
-  representativeIdCardFile    CompanyKYC?  @relation("representative_id_card_file")
-  taxCertificateFile          CompanyKYC?  @relation("tax_certificate_file")
-  userImageFile               User?        @relation("user_image_file")
-  teamFile                    Team?        @relation("team_image_file")
+  companyImageFile            Company?                 @relation("company_image_file")
+  kycPersonalIdFile           KYCRole?                 @relation("kyc_personal_id_file")
+  kycCertificationFile        KYCRole?                 @relation("kyc_certification_file")
+  ocrImageFile                Ocr?                     @relation("ocr_image_file")
+  projectImageFile            Project?                 @relation("project_image_file")
+  registrationCertificateFile CompanyKYC?              @relation("registration_certificate_file")
+  representativeIdCardFile    CompanyKYC?              @relation("representative_id_card_file")
+  taxCertificateFile          CompanyKYC?              @relation("tax_certificate_file")
+  userImageFile               User?                    @relation("user_image_file")
+  teamFile                    Team?                    @relation("team_image_file")
   InvoiceRC2                  InvoiceRC2[]
+  resumeCertificateFile       ResumeCertificateSkills? @relation("resume_certificate_file")
+  resumeAttachMentFile        Resume?                  @relation("resume_attachment_file")
 
   @@map("file")
 }
@@ -1707,4 +1709,158 @@ model Notification {
   team        Team?            @relation(fields: [teamId], references: [id])
 
   @@map("notification")
+}
+
+// Info: (20250516 - Julian) Hiring related models
+model JobPosting {
+  id          Int                @id @default(autoincrement())
+  title       String
+  location    String
+  description String
+  isOpen      Boolean            @default(true) @map("is_open")
+  createdAt   Int                @map("created_at")
+  updatedAt   Int                @map("updated_at")
+  issuedAt    Int                @map("issued_at")
+
+  details     JobPostingDetail[] @relation("job_posting_to_details")
+
+  @@map("job_posting")
+}
+
+enum JobDetailType {
+  RESPONSIBILITY // Info: (20250516 - Julian) 職責
+  REQUIREMENT   // Info: (20250516 - Julian) 要求
+  EXTRA_SKILL  // Info: (20250516 - Julian) 額外技能
+}
+
+model JobPostingDetail {
+   id            Int           @id @default(autoincrement())
+   jobPostingId  Int           @map("job_posting_id")
+   JobDetailType JobDetailType @map("job_detail_type")
+   value         String
+   order         Int
+
+   posting       JobPosting    @relation("job_posting_to_details", fields: [jobPostingId], references: [id], onDelete: Cascade)
+
+   @@map("job_posting_detail")
+}
+
+enum JobDiscoverySource {
+  FROM104
+  FACEBOOK
+  LINKEDIN
+  OFFCIAL_WEBSITE
+  OTHERS
+}
+
+
+model Resume {
+  id                         Int                          @id @default(autoincrement())
+  firstName                  String                       @map("first_name")
+  lastName                   String                       @map("last_name")
+  phoneNumber                String                       @map("phone_number")
+  email                      String
+  address                    String
+  isRelatedCompany           Boolean                      @map("is_related_company")
+  isWorkingISunCloud         Boolean                      @map("is_working_i_sun_cloud")
+  hasCriminalRecord          Boolean                      @map("has_criminal_record")
+  whereLearnAboutJob         JobDiscoverySource           @map("where_learn_about_job")
+
+  preferredEmploymentTypes   String[]                     @map("preferred_employment_types")
+  preferredShifts            String[]                     @map("preferred_shifts")
+  preferredLocationTypes     String[]                     @map("preferred_location_types")
+  preferredStartDate         String                       @map("preferred_start_date")
+  preferredSalaryExpectation String                       @map("preferred_salary_expectation")
+
+  attachmentFileId           Int?                         @unique @map("attachment_file_id")
+  personalWebsiteUrl         String?                      @map("personal_website_url")
+
+  createdAt                  Int                          @map("created_at")
+  updatedAt                  Int                          @map("updated_at")
+
+  educationExperiences       ResumeEducationExperiences[] @relation("resume_to_education_experiences")
+  workExperiences            ResumeWorkExperiences[]      @relation("resume_to_work_experiences")
+  languageSkills             ResumeLanguageSkills[]       @relation("resume_to_language_skills")
+  certificateSkills          ResumeCertificateSkills[]    @relation("resume_to_certificate_skills")
+  attachmentFile             File?                        @relation("resume_attachment_file", fields: [attachmentFileId], references: [id])
+
+   @@map("resume")
+}
+
+enum Degree {
+  ELEMENTARY   // Info: (20250516 - Julian) 國小
+  JUNIOR       // Info: (20250516 - Julian) 國中
+  HIGH         // Info: (20250516 - Julian) 高中
+  BACHELOR     // Info: (20250516 - Julian) 大學
+  MASTER       // Info: (20250516 - Julian) 碩士
+  PROFESSIONAL // Info: (20250516 - Julian) 專科
+}
+
+enum SchoolStatus {
+  GRADUATED // Info: (20250516 - Julian) 畢業
+  IN_SCHOOL // Info: (20250516 - Julian) 在學中
+  DROPOUT   // Info: (20250516 - Julian) 休學
+}
+
+model ResumeEducationExperiences {
+  id                         Int     @id @default(autoincrement())
+  resumeId                   Int     @map("resume_id")
+  degree                     Degree
+  schoolName                 String  @map("school_name")
+  department                 String
+  startDate                  Int     @map("start_date")
+  endDate                    Int     @map("end_date")
+  status                     SchoolStatus
+
+  resume                     Resume  @relation("resume_to_education_experiences", fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("resume_education_experiences")
+}
+
+model ResumeWorkExperiences {
+  id                         Int     @id @default(autoincrement())
+  resumeId                   Int     @map("resume_id")
+  companyName                String  @map("company_name")
+  position                   String
+  startDate                  Int     @map("start_date")
+  endDate                    Int     @map("end_date")
+  description                String?
+  leavingReason              String? @map("leaving_reason")
+
+  resume                     Resume  @relation("resume_to_work_experiences", fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("resume_work_experiences")
+}
+
+enum Proficiency {
+  ELEMENTARY    // Info: (20250516 - Julian) 初學者
+  LIMITED       // Info: (20250516 - Julian) 有限的
+  PROFESSIONAL  // Info: (20250516 - Julian) 專業的
+  NATIVE        // Info: (20250516 - Julian) 母語者
+}
+
+model ResumeLanguageSkills {
+  id                         Int     @id @default(autoincrement())
+  resumeId                   Int     @map("resume_id")
+  language                   String
+  proficiency                Proficiency
+
+  resume                     Resume  @relation("resume_to_language_skills", fields: [resumeId], references: [id], onDelete: Cascade)
+
+  @@map("resume_language_skills")
+}
+
+model ResumeCertificateSkills {
+  id                         Int     @id @default(autoincrement())
+  resumeId                   Int     @map("resume_id")
+  name                       String
+  issuingOrganization        String  @map("issuing_organization")
+  issueDate                  Int     @map("issue_date")
+  expirationDate             Int     @map("expiration_date")
+  fileId                     Int     @unique @map("file_id")
+
+  resume                     Resume  @relation("resume_to_certificate_skills", fields: [resumeId], references: [id], onDelete: Cascade)
+  file                       File    @relation("resume_certificate_file", fields: [fileId], references: [id])
+
+  @@map("resume_certificate_skills")
 }
