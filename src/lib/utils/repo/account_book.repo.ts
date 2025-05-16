@@ -467,6 +467,13 @@ export const listAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
+      // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+      companySettings: {
+        where: {
+          deletedAt: null,
+        },
+        take: 1,
+      },
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -481,8 +488,18 @@ export const listAccountBookByUserId = async (
       const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
+      // Info: (20250717 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      const setting = book.companySettings?.[0] || {};
+      const address = setting.address
+        ? typeof setting.address === 'string'
+          ? JSON.parse(setting.address)
+          : setting.address
+        : { city: '', district: '', enteredAddress: '' };
+
       return {
         id: book.id,
+        teamId: book.teamId,
+        userId: book.userId,
         imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
         name: book.name,
         taxId: book.taxId,
@@ -491,6 +508,26 @@ export const listAccountBookByUserId = async (
         updatedAt: book.updatedAt,
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG,
+
+        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        representativeName: setting.representativeName || '',
+        taxSerialNumber: setting.taxSerialNumber || '',
+        contactPerson: setting.contactPerson || '',
+        phoneNumber: setting.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+
+        // Info: (20250717 - Shirley) 添加選填欄位
+        filingFrequency: setting.filingFrequency as FILING_FREQUENCY,
+        filingMethod: setting.filingMethod as FILING_METHOD,
+        declarantFilingMethod: setting.declarantFilingMethod as DECLARANT_FILING_METHOD,
+        declarantName: setting.declarantName,
+        declarantPersonalId: setting.declarantPersonalId,
+        declarantPhoneNumber: setting.declarantPhoneNumber,
+        agentFilingRole: setting.agentFilingRole as AGENT_FILING_ROLE,
+        licenseId: setting.licenseId,
+
         team: book.team
           ? {
               id: book.team.id,
@@ -516,7 +553,7 @@ export const listAccountBookByUserId = async (
               gracePeriodEndAt,
             }
           : null,
-        isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
+        isTransferring: book.isTransferring,
       } as IAccountBookWithTeam;
     }),
     page,
