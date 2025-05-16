@@ -1,4 +1,2 @@
 -- AlterTable
-ALTER TABLE "team_subscription" ADD COLUMN     "max_members" INTEGER NOT NULL DEFAULT 3,
-ALTER COLUMN "created_at" SET DEFAULT EXTRACT(EPOCH FROM NOW())::int,
-ALTER COLUMN "updated_at" SET DEFAULT EXTRACT(EPOCH FROM NOW())::int;
+ALTER TABLE "team_subscription" ADD COLUMN     "max_members" INTEGER NOT NULL DEFAULT 3;
