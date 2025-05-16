@@ -1102,6 +1102,7 @@ model User {
   accountBook         Company[]
   teamOrder           TeamOrder[]
   InvoiceRC2          InvoiceRC2[]
+  Notification        Notification[]
 
   @@map("user")
 }
@@ -1432,6 +1433,7 @@ model Team {
   pendingMembers InviteTeamMember[]
   fromTeamId     AccountBookTransfer[] @relation("fromTeamId")
   toTeamId       AccountBookTransfer[] @relation("toTeamId")
+  Notification   Notification[]
 
   @@map("team")
 }
@@ -1644,7 +1646,7 @@ model AccountBookTransfer {
   @@map("accountBook_transfer")
 }
 
-model emailJob {
+model EmailJob {
   id        Int    @id @default(autoincrement())
   title     String
   receiver  String
@@ -1670,4 +1672,39 @@ model emailLogin {
   updatedAt Int     @map("updated_at")
 
   @@map("email_login")
+}
+
+enum NotificationType {
+  GENERAL
+  INVITATION
+  ACCOUNT_BOOK
+  INVOICE
+  VOUCHER
+  PAYMENT
+  SUBSCRIPTION
+  TEAM_MEMBER
+  TEAM_INVITATION
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  userId      Int              @map("user_id")
+  teamId      Int?             @map("team_id") // Info: (20250516 - Tzuhan) optional 關聯，用於 team-based 通知
+  type        NotificationType
+  event       String           // Info: (20250516 - Tzuhan) 事件動作類型，如 TRANSFER / CANCEL / UPDATED
+  title       String           // Info: (20250516 - Tzuhan) 顯示在通知列表上的標題
+  message     String           // Info: (20250516 - Tzuhan) 內容預覽（部分可從 content 推導）
+  content     Json             // Info: (20250516 - Tzuhan) 儲存詳細資料（如 accountBookId、operatorName…）
+  imageUrl    String?          @map("image_url") // Info: (20250516 - Tzuhan) 圖片網址（操作者或團隊頭像）
+  actionUrl   String?          @map("action_url") // Info: (20250516 - Tzuhan) 點擊通知後跳轉的前端路由
+  read        Boolean          @default(false)
+  priority    Int              @default(1) // Info: (20250516 - Tzuhan) 1=Normal, 2=High
+  createdAt   Int              @map("created_at")
+  updatedAt   Int              @map("updated_at")
+  deletedAt   Int?             @map("deleted_at")
+
+  user        User             @relation(fields: [userId], references: [id])
+  team        Team?            @relation(fields: [teamId], references: [id])
+
+  @@map("notification")
 }

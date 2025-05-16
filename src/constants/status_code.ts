@@ -109,6 +109,10 @@ enum ErrorCode {
   EMAIL_LOGIN_REGISTRATION_COOLDOWN = '429ISF0000',
   EMAIL_LOGIN_TOO_MANY_ATTEMPTS = '429ISF0001',
   NOT_YET_IMPLEMENTED = '501ISF0000',
+  SUBSCRIPTION_NOT_FOUND = '404ISF0033',
+  LIMIT_EXCEEDED_STORAGE = '403ISF0024',
+  LIMIT_EXCEEDED_TEAM_MEMBER = '403ISF0025',
+  FILE_NOT_FOUND = '404ISF0034',
 }
 
 enum SuccessMessage {
@@ -222,6 +226,10 @@ enum ErrorMessage {
   EMAIL_LOGIN_REGISTRATION_COOLDOWN = 'Email login registration cooldown',
   EMAIL_LOGIN_TOO_MANY_ATTEMPTS = 'Email login too many attempts',
   NOT_YET_IMPLEMENTED = 'Not yet implemented',
+  SUBSCRIPTION_NOT_FOUND = 'Subscription not found',
+  LIMIT_EXCEEDED_STORAGE = 'Limit exceeded storage',
+  LIMIT_EXCEEDED_TEAM_MEMBER = 'Limit exceeded team member',
+  FILE_NOT_FOUND = 'File not found',
 }
 
 export const STATUS_MESSAGE = {

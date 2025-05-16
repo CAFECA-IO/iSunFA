@@ -16,6 +16,8 @@ import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { checkStorageLimit } from '@/lib/utils/plan/check_plan_limit';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -336,12 +338,25 @@ export async function createInvoiceRC2(
   query: z.infer<typeof createInvoiceRC2QuerySchema>,
   body: z.infer<typeof createInvoiceRC2BodySchema>
 ) {
-  await assertUserCanByAccountBook({
+  const can = await assertUserCanByAccountBook({
     userId,
     accountBookId: query.accountBookId,
     action: TeamPermissionAction.CREATE_CERTIFICATE,
   });
+
+  const file = await prisma.file.findUnique({
+    where: { id: body.fileId },
+  });
+  if (!file) {
+    const error = new Error(STATUS_MESSAGE.FILE_NOT_FOUND);
+    error.name = STATUS_CODE.LIMIT_EXCEEDED_STORAGE;
+    throw error;
+  }
+
+  await checkStorageLimit(can.teamId, file?.size ?? 0);
+
   const now = getTimestampNow();
+
   const cert = await prisma.invoiceRC2.create({
     data: {
       ...body,
