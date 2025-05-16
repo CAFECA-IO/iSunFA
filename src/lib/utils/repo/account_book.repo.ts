@@ -490,7 +490,6 @@ export const listAccountBookByUserId = async (
 
       // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
-      loggerBack.info(`SettingInListAccountBookByUser: ${JSON.stringify(setting)}`);
       const address = setting.address
         ? typeof setting.address === 'string'
           ? JSON.parse(setting.address)
@@ -520,14 +519,14 @@ export const listAccountBookByUserId = async (
         enteredAddress: address.enteredAddress || '',
 
         // Info: (20250717 - Shirley) 添加選填欄位
-        filingFrequency: setting.filingFrequency || undefined,
-        filingMethod: setting.filingMethod || undefined,
-        declarantFilingMethod: setting.declarantFilingMethod || undefined,
-        declarantName: setting.declarantName || undefined,
-        declarantPersonalId: setting.declarantPersonalId || undefined,
-        declarantPhoneNumber: setting.declarantPhoneNumber || undefined,
-        agentFilingRole: setting.agentFilingRole || undefined,
-        licenseId: setting.licenseId || undefined,
+        filingFrequency: setting.filingFrequency,
+        filingMethod: setting.filingMethod,
+        declarantFilingMethod: setting.declarantFilingMethod,
+        declarantName: setting.declarantName,
+        declarantPersonalId: setting.declarantPersonalId,
+        declarantPhoneNumber: setting.declarantPhoneNumber,
+        agentFilingRole: setting.agentFilingRole,
+        licenseId: setting.licenseId,
 
         team: book.team
           ? {
@@ -563,8 +562,6 @@ export const listAccountBookByUserId = async (
     pageSize,
     sort: sortOption,
   });
-
-  loggerBack.info(`AccountBookList: ${JSON.stringify(result)}`);
 
   return result;
 };
@@ -717,14 +714,14 @@ export const listAccountBooksByTeamId = async (
         enteredAddress: address.enteredAddress || '',
 
         // Info: (20250516 - Shirley) 添加選填欄位
-        filingFrequency: setting.filingFrequency || undefined,
-        filingMethod: setting.filingMethod || undefined,
-        declarantFilingMethod: setting.declarantFilingMethod || undefined,
-        declarantName: setting.declarantName || undefined,
-        declarantPersonalId: setting.declarantPersonalId || undefined,
-        declarantPhoneNumber: setting.declarantPhoneNumber || undefined,
-        agentFilingRole: setting.agentFilingRole || undefined,
-        licenseId: setting.licenseId || undefined,
+        filingFrequency: setting.filingFrequency,
+        filingMethod: setting.filingMethod,
+        declarantFilingMethod: setting.declarantFilingMethod,
+        declarantName: setting.declarantName,
+        declarantPersonalId: setting.declarantPersonalId,
+        declarantPhoneNumber: setting.declarantPhoneNumber,
+        agentFilingRole: setting.agentFilingRole,
+        licenseId: setting.licenseId,
 
         team: book.team
           ? {

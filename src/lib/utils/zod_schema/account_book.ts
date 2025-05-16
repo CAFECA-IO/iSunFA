@@ -40,8 +40,9 @@ export const accountBookSchema = z.object({
   createdAt: z.number(),
   updatedAt: z.number(),
   isPrivate: z.boolean().optional(),
+});
 
-  // Info: (20250515 - Shirley) RC2 fields
+export const accountBookDetailSchema = accountBookSchema.extend({
   representativeName: z.string().default(''),
   taxSerialNumber: z.string().default(''),
   contactPerson: z.string().default(''),
@@ -50,17 +51,22 @@ export const accountBookSchema = z.object({
   district: z.string().default(''),
   enteredAddress: z.string().default(''),
 
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
-  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
-  declarantName: z.string().optional(),
-  declarantPersonalId: z.string().optional(),
-  declarantPhoneNumber: z.string().optional(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
-  licenseId: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
+  declarantName: z.string().nullable(),
+  declarantPersonalId: z.string().nullable(),
+  declarantPhoneNumber: z.string().nullable(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
+  licenseId: z.string().nullable(),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
+  team: TeamSchema,
+  isTransferring: z.boolean(),
+});
+
+export const accountBookDetailWithTeamSchema = accountBookDetailSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
@@ -111,7 +117,7 @@ export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
   userId: zodStringToNumber,
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookDetailWithTeamSchema);
 
 export const accountBookListSchema = {
   input: {
@@ -167,18 +173,18 @@ const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
   updatedAt: z.number(),
 
   // Info: (20250717 - Shirley) 新增 RC2 欄位
-  contactPerson: z.string().optional(),
-  city: z.string().optional(),
-  district: z.string().optional(),
-  enteredAddress: z.string().optional(),
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
-  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
-  declarantName: z.string().optional(),
-  declarantPersonalId: z.string().optional(),
-  declarantPhoneNumber: z.string().optional(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
-  licenseId: z.string().optional(),
+  contactPerson: z.string().nullable(),
+  city: z.string().nullable(),
+  district: z.string().nullable(),
+  enteredAddress: z.string().nullable(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
+  declarantName: z.string().nullable(),
+  declarantPersonalId: z.string().nullable(),
+  declarantPhoneNumber: z.string().nullable(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
+  licenseId: z.string().nullable(),
 });
 
 // ===================================================================================
@@ -231,7 +237,7 @@ export const accountBookCreateSchema = {
     querySchema: accountBookCreateQuerySchema,
     bodySchema: accountBookCreateBodySchema,
   },
-  outputSchema: accountBookSchema.nullable(),
+  outputSchema: accountBookDetailSchema.nullable(),
   frontend: nullSchema,
 };
 
@@ -246,7 +252,7 @@ const updateAccountBookBodySchema = z.object({
 
 const updateAccountBookResponseSchema = z.object({
   teamId: z.number().optional().default(0),
-  company: accountBookSchema,
+  company: accountBookDetailSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
   accountBookRole: z.nativeEnum(ACCOUNT_BOOK_ROLE), // Info: (20250422 - Shirley) 改為 `accountBookRole`
