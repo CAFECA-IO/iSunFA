@@ -26,7 +26,7 @@ export const CreateNotificationSchema = z.object({
   userId: z.number().int(),
   teamId: z.number().int().optional(),
   type: z.nativeEnum(NotificationType),
-  event: z.string().min(1), // e.g. 'TRANSFER', 'CANCEL'
+  event: z.string().min(1), // Info: (20250516 - Tzuhan) e.g. 'TRANSFER', 'CANCEL'
   title: z.string().min(1),
   message: z.string().min(1),
   content: NotificationContentSchema,
@@ -65,7 +65,7 @@ export const BulkCreateNotificationSchema = z.object({
   sendEmail: z.boolean().optional(),
 });
 
-// Zod Schema Definitions
+// Info: (20250516 - Tzuhan) Zod Schema Definitions
 
 export const listNotificationSchema = z.array(
   z.object({
