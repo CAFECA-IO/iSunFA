@@ -5,7 +5,7 @@ import { ICertificateUI } from '@/interfaces/certificate';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
-import { InvoiceTabs } from '@/constants/certificate';
+import { InvoiceTabs } from '@/constants/invoice_rc2';
 import { CurrencyType } from '@/constants/currency';
 
 interface CertificateTableProps {

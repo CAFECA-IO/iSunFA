@@ -10,6 +10,8 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import { SEARCH_KEYWORDS } from '@/constants/search';
 import { ISearchKeyword } from '@/interfaces/search';
+import { cn } from '@/lib/utils/common';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
 
 interface SearchProps {
   toggleOverlay: () => void;
@@ -17,7 +19,9 @@ interface SearchProps {
 
 const Search = ({ toggleOverlay }: SearchProps) => {
   const { t } = useTranslation('dashboard');
-  const [inputValue, setInputValue] = useState('');
+  const { isSideMenuOpen } = useDashboardCtx();
+  const [inputValue, setInputValue] = useState<string>('');
+
   const [searchResults, setSearchResults] = useState<ISearchKeyword[]>([]);
   const router = useRouter();
   const { connectedAccountBook } = useUserCtx();
@@ -82,11 +86,11 @@ const Search = ({ toggleOverlay }: SearchProps) => {
   };
 
   return (
-    <div className="relative flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+    <div className="relative flex min-w-0 flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
       <input
         type="text"
         placeholder={t('dashboard:HEADER.SEARCH')}
-        className="grow rounded-l-sm bg-transparent px-12px py-10px outline-none"
+        className="min-w-0 grow rounded-l-sm bg-transparent px-12px py-10px outline-none"
         onChange={handleSearch}
         value={inputValue}
       />
@@ -103,7 +107,14 @@ const Search = ({ toggleOverlay }: SearchProps) => {
 
       {/* Info: (20241226 - Liz) 搜尋結果下拉式選單 */}
       {hasSearchResults && (
-        <div className="absolute inset-x-0 top-full z-10 mt-10px flex max-h-300px flex-col overflow-y-auto rounded-sm bg-input-surface-input-background p-12px shadow-Dropshadow_M">
+        <div
+          className={cn(
+            'absolute inset-x-0 top-full z-10 mt-10px flex max-h-300px flex-col overflow-y-auto rounded-sm bg-input-surface-input-background p-12px shadow-Dropshadow_M',
+            {
+              'min-w-300px': isSideMenuOpen,
+            }
+          )}
+        >
           {searchResults.map((item) => (
             <button
               key={item.label}

@@ -1,0 +1,188 @@
+<mjml>
+  <mj-head>
+    <!-- Styles -->
+    <mj-style>
+      a { text-decoration: none !important; } .main, .main-content, .footer { max-width: 600px
+      !important; box-sizing: border-box; word-break: break-word; display: block; } .main { padding:
+      20px 40px; background-color:#F4F5F7; } .main-content { padding: 20px 40px;
+      background-color:#FFFFFF } .footer { background-color:#304872; padding:40px; }
+    </mj-style>
+    <mj-style>
+      @media (max-width: 480px) { .main { padding: 0 10px;} .main-content { padding:10px 0;
+      background-color:#FFFFFF } .footer { padding:0px 20px; } }
+    </mj-style>
+
+    <!-- Attributes -->
+    <mj-attributes>
+      <mj-all font-family="Barlow" />
+      <mj-class
+        name="text10"
+        color="#FFFFFF"
+        font-weight="500"
+        font-size="10px"
+        line-height="20px"
+        padding-top="0"
+        padding-bottom="16px"
+      />
+      <mj-class
+        name="mainText"
+        color="#27354E"
+        font-weight="600"
+        font-size="12px"
+        line-height="20px"
+        letter-spacing="1%"
+      />
+      <mj-class
+        name="highlightText"
+        color="#CC8401"
+        font-weight="600"
+        font-size="16px"
+        line-height="20px"
+        letter-spacing="4px"
+      />
+      <mj-class
+        name="footnoteText"
+        color="#7F8A9D"
+        font-weight="300"
+        font-size="10px"
+        line-height="20px"
+        letter-spacing="1%"
+        align="center"
+      />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body>
+    <!-- Header -->
+    <mj-section background-color="#304872" padding="10px 20px">
+      <mj-column>
+        <mj-image
+          src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
+          alt="isunfa_logo"
+          width="80px"
+          align="left"
+        ></mj-image>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main -->
+    <mj-section css-class="main">
+      <mj-column css-class="main-content">
+        <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
+          >Email {{eventType}}驗證碼</mj-text
+        >
+
+        <mj-text mj-class="mainText">
+          親愛的
+          <span style="font-size: 14px; line-height: 20px">{{receiverName}}</span>
+          您好,
+        </mj-text>
+        <mj-text mj-class="mainText">您的 Email {{eventType}}驗證碼如下: </mj-text>
+        <mj-text mj-class="highlightText">{{verificationCode}}</mj-text>
+
+        <mj-text mj-class="mainText">
+          驗證碼將於{{remainingMins}}分鐘後失效，請盡快在驗證頁完成驗證。<br />請確認此電子郵件帳號沒有交由他人使用，並小心保管。
+        </mj-text>
+        <mj-text mj-class="mainText">
+          如您尚未進行任何{{eventType}}活動，請盡速與客服聯繫。
+        </mj-text>
+
+        <mj-text mj-class="footnoteText"> ※此封郵件為系統信件，請勿直接回覆 </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section css-class="footer">
+      <!-- 左邊區塊 -->
+      <mj-column>
+        <mj-text color="#FFFFFF" font-weight="700" font-size="12px" line-height="28px" padding="0"
+          >Contact Us</mj-text
+        >
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
+          <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
+          <a
+            href="mailto:isunfahelp@isunfa.com.tw"
+            style="color: white; font-weight: 500; font-size: 10px"
+            >isunfahelp@isunfa.com.tw</a
+          ></mj-text
+        >
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
+          <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
+          <a href="tel:+886-2-2700-1979" style="color: white; font-weight: 500; font-size: 10px"
+            >+886-2-2700-1979</a
+          ></mj-text
+        >
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
+          <span
+            ><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service
+            Hours :
+          </span>
+          <br />
+          <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
+        </mj-text>
+      </mj-column>
+
+      <!-- 右邊區塊：icon + text -->
+      <mj-column padding-top="40px">
+        <mj-text align="right" padding="0">
+          <mj-text style="margin-right: 40px">
+            <a href="https://isunfa.tw/" target="_blank"
+              ><img
+                src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
+                alt="isunfa_logo"
+                width="80px"
+            /></a>
+          </mj-text>
+          <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
+            <img
+              width="20px"
+              src="https://img.icons8.com/?size=100&id=118467&format=png&color=FFFFFF"
+              alt="facebook_link"
+              style="margin-right: 12px"
+            />
+          </a>
+          <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
+            <img
+              width="20px"
+              src="https://img.icons8.com/?size=100&id=12599&format=png&color=FFFFFF"
+              alt="github_link"
+              style="margin-right: 12px"
+          /></a>
+          <a href="https://www.youtube.com/@isunfa" target="_blank"
+            ><img
+              width="20px"
+              src="https://img.icons8.com/?size=100&id=37326&format=png&color=FFFFFF"
+              alt="youtube_link"
+          /></a>
+        </mj-text>
+        <mj-text
+          color="#FFFFFF"
+          font-size="10px"
+          padding="0"
+          font-weight="400"
+          align="right"
+          padding-top="16px"
+          >iSunFA @ 2024. All rights reserved.</mj-text
+        >
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

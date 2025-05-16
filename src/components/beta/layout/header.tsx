@@ -1,11 +1,13 @@
+import { cn } from '@/lib/utils/common';
 import Search from '@/components/beta/layout/search';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
 import I18n from '@/components/i18n/i18n';
 import Notification from '@/components/beta/layout/notification';
 import Profile from '@/components/beta/layout/profile';
-import CompanyBadge from '@/components/beta/layout/company_badge';
+import AccountBookBadge from '@/components/beta/layout/account_book_badge';
 import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import HeaderMobile from '@/components/beta/layout/mobile/header_mobile';
 
 // ToDo: (20241226 - Liz) Beta 版沒有切換明暗模式功能
 const IS_MODE_SWITCH_AVAILABLE = false;
@@ -44,39 +46,52 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
   };
 
   return (
-    <header
-      className={`flex items-center gap-24px px-lv-7 pt-lv-6 screen1280:px-56px ${notPrint ? 'print:hidden' : ''}`}
-    >
-      {isDashboard ? (
-        <Search toggleOverlay={toggleOverlay} />
-      ) : (
-        <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />
-      )}
+    <>
+      {/* Info: (20250512 - Liz) Desktop version (include: tablet/laptop/desktop) */}
+      <header
+        className={cn(
+          'hidden items-center gap-24px px-lv-7 pt-lv-6 tablet:flex screen1280:px-56px',
+          {
+            'print:hidden': notPrint,
+          }
+        )}
+      >
+        <section className="min-w-0 flex-auto">
+          {isDashboard ? (
+            <Search toggleOverlay={toggleOverlay} />
+          ) : (
+            <PageTitle pageTitle={pageTitle} goBackUrl={goBackUrl} />
+          )}
+        </section>
 
-      <section className="flex flex-none items-center gap-16px">
-        {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
+        <section className="ml-auto flex flex-none items-center gap-16px">
+          {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
 
-        <div ref={globalRef}>
-          <I18n
-            isMenuVisible={isMenuVisible}
-            setIsMenuVisible={setIsMenuVisible}
-            toggleI18nMenu={toggleI18nMenu}
-          />
-        </div>
+          <div ref={globalRef}>
+            <I18n
+              isMenuVisible={isMenuVisible}
+              setIsMenuVisible={setIsMenuVisible}
+              toggleI18nMenu={toggleI18nMenu}
+            />
+          </div>
 
-        <div ref={notificationRef}>
-          <Notification
-            isPanelOpen={isPanelOpen}
-            setIsPanelOpen={setIsPanelOpen}
-            toggleNotificationPanel={toggleNotificationPanel}
-          />
-        </div>
+          <div ref={notificationRef}>
+            <Notification
+              isPanelOpen={isPanelOpen}
+              setIsPanelOpen={setIsPanelOpen}
+              toggleNotificationPanel={toggleNotificationPanel}
+            />
+          </div>
 
-        <CompanyBadge />
+          <AccountBookBadge />
 
-        <Profile />
-      </section>
-    </header>
+          <Profile />
+        </section>
+      </header>
+
+      {/* Info: (20250512 - Liz) Mobile version */}
+      <HeaderMobile />
+    </>
   );
 };
 

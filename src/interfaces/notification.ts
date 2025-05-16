@@ -1,68 +1,63 @@
-export enum NotificationLevel {
-  DEBUG = 1,
-  NORMAL = 2,
-  IMPORTANT = 3,
-  URGENT = 4,
-}
-
 export interface INotification {
   id: string;
-  title: string;
-  content: string;
-  level: NotificationLevel;
+  content: string | JSX.Element;
   isRead: boolean;
-  public: boolean;
-  createdAt: number;
-  expiration: number;
+  type: NOTIFICATION_TYPE;
+  teamName?: string; // Info: (20250515 - Liz) 團隊邀請的團隊名稱
 }
 
-export const DUMMY_NOTIFICATION_LIST: INotification[] = [
-  {
-    id: 'l1hgsras',
-    title:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    content:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    level: NotificationLevel.URGENT,
-    isRead: false,
-    public: true,
-    createdAt: 1717634352,
-    expiration: 9999999999999,
-  },
-  {
-    id: 'gj5dfg',
-    title:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    content:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    level: NotificationLevel.URGENT,
-    isRead: true,
-    public: true,
-    createdAt: 1714955952,
-    expiration: 9999999999999,
-  },
-  {
-    id: 'jndfg9x',
-    title:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    content:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    level: NotificationLevel.URGENT,
-    isRead: false,
-    public: true,
-    createdAt: 1712363952,
-    expiration: 1717634352,
-  },
-  {
-    id: 'moskdjnf',
-    title:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    content:
-      'Sint et veniam commodi eaque nesciunt adipisci ea illo. Velit fugit eum dolorum rerum quibusdam quos voluptatem......',
-    level: NotificationLevel.URGENT,
-    isRead: false,
-    public: true,
-    createdAt: 1702363952,
-    expiration: 9999999999999,
-  },
-];
+export enum NOTIFICATION_TYPE {
+  GENERAL = 'general', // Info: (20250515 - Liz) 一般通知
+  INVITATION = 'invitation', // Info: (20250515 - Liz) 團隊邀請通知
+}
+
+export enum NotificationType {
+  GENERAL = 'GENERAL',
+  INVITATION = 'INVITATION',
+  ACCOUNT_BOOK = 'ACCOUNT_BOOK',
+  INVOICE = 'INVOICE',
+  CERTIFICATE = 'CERTIFICATE',
+  PAYMENT = 'PAYMENT',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+  TEAM_MEMBER = 'TEAM_MEMBER',
+  TEAM_INVITATION = 'TEAM_INVITATION',
+}
+
+export interface INotificationRC2 {
+  id: number;
+  userId: number;
+  teamId?: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  content: Record<string, string | number | boolean>;
+  actionUrl?: string;
+  imageUrl?: string;
+  read: boolean;
+  priority: number;
+  createdAt: number;
+  updatedAt: number;
+  deletedAt?: number | null;
+}
+
+export interface ICreateNotification {
+  userId: number;
+  teamId?: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  content: Record<string, string | number | boolean>;
+  actionUrl?: string;
+  imageUrl?: string;
+  priority?: number;
+  pushPusher?: boolean;
+  sendEmail?: boolean;
+  email?: {
+    receiver: string;
+    template: string;
+  };
+}
+
+export interface IBulkCreateNotification extends Omit<ICreateNotification, 'userId' | 'email'> {
+  userEmailMap: { userId: number; email: string }[];
+}

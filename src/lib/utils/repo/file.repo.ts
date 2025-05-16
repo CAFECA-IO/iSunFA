@@ -114,6 +114,24 @@ export async function findFileById(fileId: number): Promise<File | null> {
   return file;
 }
 
+export async function findFileWithThumbnailById(fileId: number): Promise<File | null> {
+  let file: File | null = null;
+
+  try {
+    file = await prisma.file.findFirst({
+      where: {
+        id: fileId,
+      },
+      include: {
+        thumbnail: true,
+      },
+    });
+  } catch (error) {
+    loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
+  }
+  return file;
+}
+
 export async function putFileById(fileId: number, options: Partial<File>): Promise<File | null> {
   const nowInSecond = getTimestampNow();
 
@@ -150,6 +168,9 @@ export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
           in: fileIdList,
         },
       },
+      include: {
+        thumbnail: true,
+      },
     });
   } catch (error) {
     loggerBack.error(error, 'Error happened in listFileByIdList in file.repo.ts');
@@ -164,6 +185,9 @@ export async function findFileInDBByName(name: string): Promise<File | null> {
     file = await prisma.file.findFirst({
       where: {
         name,
+      },
+      include: {
+        thumbnail: true,
       },
     });
   } catch (error) {

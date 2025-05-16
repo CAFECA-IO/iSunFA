@@ -38,16 +38,16 @@ export enum APIName {
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
-  LIST_CERTIFICATE_RC2_INPUT = 'LIST_CERTIFICATE_RC2_INPUT',
-  CREATE_CERTIFICATE_RC2_INPUT = 'CREATE_CERTIFICATE_RC2_INPUT',
-  GET_CERTIFICATE_RC2_INPUT = 'GET_CERTIFICATE_RC2_INPUT',
-  UPDATE_CERTIFICATE_RC2_INPUT = 'UPDATE_CERTIFICATE_RC2_INPUT',
-  DELETE_CERTIFICATE_RC2_INPUT = 'DELETE_CERTIFICATE_RC2_INPUT',
-  LIST_CERTIFICATE_RC2_OUTPUT = 'LIST_CERTIFICATE_RC2_OUTPUT',
-  CREATE_CERTIFICATE_RC2_OUTPUT = 'CREATE_CERTIFICATE_RC2_OUTPUT',
-  GET_CERTIFICATE_RC2_OUTPUT = 'GET_CERTIFICATE_RC2_OUTPUT',
-  UPDATE_CERTIFICATE_RC2_OUTPUT = 'UPDATE_CERTIFICATE_RC2_OUTPUT',
-  DELETE_CERTIFICATE_RC2_OUTPUT = 'DELETE_CERTIFICATE_RC2_OUTPUT',
+  LIST_INVOICE_RC2_INPUT = 'LIST_INVOICE_RC2_INPUT',
+  CREATE_INVOICE_RC2_INPUT = 'CREATE_INVOICE_RC2_INPUT',
+  GET_INVOICE_RC2_INPUT = 'GET_INVOICE_RC2_INPUT',
+  UPDATE_INVOICE_RC2_INPUT = 'UPDATE_INVOICE_RC2_INPUT',
+  DELETE_INVOICE_RC2_INPUT = 'DELETE_INVOICE_RC2_INPUT',
+  LIST_INVOICE_RC2_OUTPUT = 'LIST_INVOICE_RC2_OUTPUT',
+  CREATE_INVOICE_RC2_OUTPUT = 'CREATE_INVOICE_RC2_OUTPUT',
+  GET_INVOICE_RC2_OUTPUT = 'GET_INVOICE_RC2_OUTPUT',
+  UPDATE_INVOICE_RC2_OUTPUT = 'UPDATE_INVOICE_RC2_OUTPUT',
+  DELETE_INVOICE_RC2_OUTPUT = 'DELETE_INVOICE_RC2_OUTPUT',
   CERTIFICATE_LIST_V2 = 'CERTIFICATE_LIST_V2', // Deprecated: (20250424 - Tzuhan) remove in the future
   CERTIFICATE_GET_V2 = 'CERTIFICATE_GET_V2',
   CERTIFICATE_POST_V2 = 'CERTIFICATE_POST_V2',
@@ -168,6 +168,9 @@ export enum APIName {
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
   SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
   VERIFY_CODE = 'VERIFY_CODE',
+  LIST_NOTIFICATION = 'LIST_NOTIFICATION',
+  GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
+  READ_NOTIFICATION = 'READ_NOTIFICATION',
 }
 
 export enum APIPath {
@@ -182,16 +185,16 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
-  LIST_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/input`,
-  CREATE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/input`,
-  GET_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
-  DELETE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
-  UPDATE_CERTIFICATE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/input`,
-  CREATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/output`,
-  GET_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
-  DELETE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
-  UPDATE_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/:certificateId/output`,
-  LIST_CERTIFICATE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/certificate/output`,
+  LIST_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
+  CREATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
+  GET_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
+  DELETE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
+  UPDATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
+  CREATE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/output`,
+  GET_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
+  DELETE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
+  UPDATE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
+  LIST_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/output`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`,
   CERTIFICATE_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,
@@ -313,6 +316,9 @@ export enum APIPath {
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
   SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
   VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
+  LIST_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification`,
+  GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
+  READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
 }
 
 const createConfig = ({
@@ -644,55 +650,55 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST_V2,
   }),
-  [APIName.LIST_CERTIFICATE_RC2_INPUT]: createConfig({
-    name: APIName.LIST_CERTIFICATE_RC2_INPUT,
+  [APIName.LIST_INVOICE_RC2_INPUT]: createConfig({
+    name: APIName.LIST_INVOICE_RC2_INPUT,
     method: HttpMethod.GET,
-    path: APIPath.LIST_CERTIFICATE_RC2_INPUT,
+    path: APIPath.LIST_INVOICE_RC2_INPUT,
   }),
-  [APIName.CREATE_CERTIFICATE_RC2_INPUT]: createConfig({
-    name: APIName.CREATE_CERTIFICATE_RC2_INPUT,
+  [APIName.CREATE_INVOICE_RC2_INPUT]: createConfig({
+    name: APIName.CREATE_INVOICE_RC2_INPUT,
     method: HttpMethod.POST,
-    path: APIPath.CREATE_CERTIFICATE_RC2_INPUT,
+    path: APIPath.CREATE_INVOICE_RC2_INPUT,
   }),
-  [APIName.GET_CERTIFICATE_RC2_INPUT]: createConfig({
-    name: APIName.GET_CERTIFICATE_RC2_INPUT,
+  [APIName.GET_INVOICE_RC2_INPUT]: createConfig({
+    name: APIName.GET_INVOICE_RC2_INPUT,
     method: HttpMethod.GET,
-    path: APIPath.GET_CERTIFICATE_RC2_INPUT,
+    path: APIPath.GET_INVOICE_RC2_INPUT,
   }),
-  [APIName.DELETE_CERTIFICATE_RC2_INPUT]: createConfig({
-    name: APIName.DELETE_CERTIFICATE_RC2_INPUT,
+  [APIName.DELETE_INVOICE_RC2_INPUT]: createConfig({
+    name: APIName.DELETE_INVOICE_RC2_INPUT,
     method: HttpMethod.DELETE,
-    path: APIPath.DELETE_CERTIFICATE_RC2_INPUT,
+    path: APIPath.DELETE_INVOICE_RC2_INPUT,
   }),
-  [APIName.UPDATE_CERTIFICATE_RC2_INPUT]: createConfig({
-    name: APIName.UPDATE_CERTIFICATE_RC2_INPUT,
+  [APIName.UPDATE_INVOICE_RC2_INPUT]: createConfig({
+    name: APIName.UPDATE_INVOICE_RC2_INPUT,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_CERTIFICATE_RC2_INPUT,
+    path: APIPath.UPDATE_INVOICE_RC2_INPUT,
   }),
-  [APIName.LIST_CERTIFICATE_RC2_OUTPUT]: createConfig({
-    name: APIName.LIST_CERTIFICATE_RC2_OUTPUT,
+  [APIName.LIST_INVOICE_RC2_OUTPUT]: createConfig({
+    name: APIName.LIST_INVOICE_RC2_OUTPUT,
     method: HttpMethod.GET,
-    path: APIPath.LIST_CERTIFICATE_RC2_OUTPUT,
+    path: APIPath.LIST_INVOICE_RC2_OUTPUT,
   }),
-  [APIName.CREATE_CERTIFICATE_RC2_OUTPUT]: createConfig({
-    name: APIName.CREATE_CERTIFICATE_RC2_OUTPUT,
+  [APIName.CREATE_INVOICE_RC2_OUTPUT]: createConfig({
+    name: APIName.CREATE_INVOICE_RC2_OUTPUT,
     method: HttpMethod.POST,
-    path: APIPath.CREATE_CERTIFICATE_RC2_OUTPUT,
+    path: APIPath.CREATE_INVOICE_RC2_OUTPUT,
   }),
-  [APIName.GET_CERTIFICATE_RC2_OUTPUT]: createConfig({
-    name: APIName.GET_CERTIFICATE_RC2_OUTPUT,
+  [APIName.GET_INVOICE_RC2_OUTPUT]: createConfig({
+    name: APIName.GET_INVOICE_RC2_OUTPUT,
     method: HttpMethod.GET,
-    path: APIPath.GET_CERTIFICATE_RC2_OUTPUT,
+    path: APIPath.GET_INVOICE_RC2_OUTPUT,
   }),
-  [APIName.DELETE_CERTIFICATE_RC2_OUTPUT]: createConfig({
-    name: APIName.DELETE_CERTIFICATE_RC2_OUTPUT,
+  [APIName.DELETE_INVOICE_RC2_OUTPUT]: createConfig({
+    name: APIName.DELETE_INVOICE_RC2_OUTPUT,
     method: HttpMethod.DELETE,
-    path: APIPath.DELETE_CERTIFICATE_RC2_OUTPUT,
+    path: APIPath.DELETE_INVOICE_RC2_OUTPUT,
   }),
-  [APIName.UPDATE_CERTIFICATE_RC2_OUTPUT]: createConfig({
-    name: APIName.UPDATE_CERTIFICATE_RC2_OUTPUT,
+  [APIName.UPDATE_INVOICE_RC2_OUTPUT]: createConfig({
+    name: APIName.UPDATE_INVOICE_RC2_OUTPUT,
     method: HttpMethod.PUT,
-    path: APIPath.UPDATE_CERTIFICATE_RC2_OUTPUT,
+    path: APIPath.UPDATE_INVOICE_RC2_OUTPUT,
   }),
   [APIName.CERTIFICATE_GET_V2]: createConfig({
     name: APIName.CERTIFICATE_GET_V2,
@@ -1025,5 +1031,20 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VERIFY_CODE,
     method: HttpMethod.POST,
     path: APIPath.VERIFY_CODE,
+  }),
+  [APIName.LIST_NOTIFICATION]: createConfig({
+    name: APIName.LIST_NOTIFICATION,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_NOTIFICATION,
+  }),
+  [APIName.GET_NOTIFICATION_BY_ID]: createConfig({
+    name: APIName.GET_NOTIFICATION_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_NOTIFICATION_BY_ID,
+  }),
+  [APIName.READ_NOTIFICATION]: createConfig({
+    name: APIName.READ_NOTIFICATION,
+    method: HttpMethod.PATCH,
+    path: APIPath.READ_NOTIFICATION,
   }),
 };

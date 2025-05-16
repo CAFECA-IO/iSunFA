@@ -7,10 +7,10 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { ICertificateRC2InputUI, ICertificateRC2OutputUI } from '@/interfaces/certificate_rc2';
+import { IInvoiceRC2InputUI, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
 interface EditableFilenameProps {
-  certificate: ICertificateUI | ICertificateRC2InputUI | ICertificateRC2OutputUI;
+  certificate: ICertificateUI | IInvoiceRC2InputUI | IInvoiceRC2OutputUI;
   certificateFilename: string;
   setCertificateFilename: (name: string) => void;
   onUpdateFilename: (certificateId: number, name: string) => void;

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useDashboardCtx } from '@/contexts/dashboard_context';
+import { cn } from '@/lib/utils/common';
 
 interface ModeProps {
   handleModeSwitch: () => void;
@@ -62,14 +64,19 @@ const DarkMode: React.FC<ModeProps> = ({ handleModeSwitch }) => {
 };
 
 const ModeSwitch = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isSideMenuOpen } = useDashboardCtx();
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   const handleModeSwitch = () => {
     setIsDarkMode((prev) => !prev);
   };
 
   return (
-    <div>
+    <div
+      className={cn('', {
+        'tablet:hidden laptop:block': isSideMenuOpen,
+      })}
+    >
       {isDarkMode ? (
         <DarkMode handleModeSwitch={handleModeSwitch} />
       ) : (

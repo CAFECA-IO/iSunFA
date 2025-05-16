@@ -129,18 +129,23 @@ import {
   listAccountBookInfoSchema,
 } from '@/lib/utils/zod_schema/account_book';
 import {
-  createCertificateRC2Input,
-  createCertificateRC2Output,
-  deleteCertificateRC2Input,
-  deleteCertificateRC2Output,
-  getCertificateRC2Input,
-  getCertificateRC2Output,
-  listCertificateRC2Input,
-  listCertificateRC2Output,
-  updateCertificateRC2Input,
-  updateCertificateRC2Output,
-} from '@/lib/utils/zod_schema/certificate_rc2';
+  createInvoiceRC2Input,
+  createInvoiceRC2Output,
+  deleteInvoiceRC2Input,
+  deleteInvoiceRC2Output,
+  getInvoiceRC2Input,
+  getInvoiceRC2Output,
+  listInvoiceRC2Input,
+  listInvoiceRC2Output,
+  updateInvoiceRC2Input,
+  updateInvoiceRC2Output,
+} from '@/lib/utils/zod_schema/invoice_rc2';
 import { publicKeyGetSchema } from '@/lib/utils/zod_schema/public_key';
+import {
+  getNotificationByIdSchema,
+  listNotificationByUserIdSchema,
+  readNotificationSchema,
+} from '@/lib/utils/zod_schema/notification';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -218,16 +223,16 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
-  [APIName.LIST_CERTIFICATE_RC2_INPUT]: listCertificateRC2Input,
-  [APIName.CREATE_CERTIFICATE_RC2_INPUT]: createCertificateRC2Input,
-  [APIName.GET_CERTIFICATE_RC2_INPUT]: getCertificateRC2Input,
-  [APIName.UPDATE_CERTIFICATE_RC2_INPUT]: updateCertificateRC2Input,
-  [APIName.DELETE_CERTIFICATE_RC2_INPUT]: deleteCertificateRC2Input,
-  [APIName.LIST_CERTIFICATE_RC2_OUTPUT]: listCertificateRC2Output,
-  [APIName.CREATE_CERTIFICATE_RC2_OUTPUT]: createCertificateRC2Output,
-  [APIName.GET_CERTIFICATE_RC2_OUTPUT]: getCertificateRC2Output,
-  [APIName.UPDATE_CERTIFICATE_RC2_OUTPUT]: updateCertificateRC2Output,
-  [APIName.DELETE_CERTIFICATE_RC2_OUTPUT]: deleteCertificateRC2Output,
+  [APIName.LIST_INVOICE_RC2_INPUT]: listInvoiceRC2Input,
+  [APIName.CREATE_INVOICE_RC2_INPUT]: createInvoiceRC2Input,
+  [APIName.GET_INVOICE_RC2_INPUT]: getInvoiceRC2Input,
+  [APIName.UPDATE_INVOICE_RC2_INPUT]: updateInvoiceRC2Input,
+  [APIName.DELETE_INVOICE_RC2_INPUT]: deleteInvoiceRC2Input,
+  [APIName.LIST_INVOICE_RC2_OUTPUT]: listInvoiceRC2Output,
+  [APIName.CREATE_INVOICE_RC2_OUTPUT]: createInvoiceRC2Output,
+  [APIName.GET_INVOICE_RC2_OUTPUT]: getInvoiceRC2Output,
+  [APIName.UPDATE_INVOICE_RC2_OUTPUT]: updateInvoiceRC2Output,
+  [APIName.DELETE_INVOICE_RC2_OUTPUT]: deleteInvoiceRC2Output,
 
   [APIName.CERTIFICATE_POST_V2]: certificatePostSchema,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneSchema,
@@ -325,4 +330,8 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.SEND_VERIFICATION_EMAIL]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for send verification email
   [APIName.VERIFY_CODE]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for verify code
+
+  [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
+  [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
+  [APIName.READ_NOTIFICATION]: readNotificationSchema,
 };

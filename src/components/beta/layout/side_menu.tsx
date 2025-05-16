@@ -73,7 +73,6 @@ const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'invoice_management_icon',
     iconWidth: 24,
     iconHeight: 24,
-    disabled: true,
     subMenu: [
       {
         caption: 'INVOICE',
@@ -81,13 +80,13 @@ const MENU_CONFIG: TMenuOption[] = [
           {
             type: SubMenuOptionType.LINK,
             title: 'INPUT_INVOICE',
-            link: ISUNFA_ROUTE.INPUT_CERTIFICATE_LIST,
+            link: ISUNFA_ROUTE.INPUT_INVOICE_LIST,
             needToConnectAccountBook: true,
           },
           {
             type: SubMenuOptionType.LINK,
             title: 'OUTPUT_INVOICE',
-            link: ISUNFA_ROUTE.OUTPUT_CERTIFICATE_LIST,
+            link: ISUNFA_ROUTE.OUTPUT_INVOICE_LIST,
             needToConnectAccountBook: true,
           },
         ],
@@ -121,17 +120,6 @@ const MENU_CONFIG: TMenuOption[] = [
             type: SubMenuOptionType.LINK,
             title: 'PAYABLE_RECEIVABLE_LIST',
             link: ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-      {
-        caption: 'CERTIFICATES',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'UPLOAD_CERTIFICATE',
-            link: ISUNFA_ROUTE.CERTIFICATE_LIST,
             needToConnectAccountBook: true,
           },
         ],

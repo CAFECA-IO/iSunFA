@@ -7,7 +7,7 @@ import {
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { InvoiceTabs } from '@/constants/certificate'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
+import { InvoiceTabs } from '@/constants/invoice_rc2'; // Info: (20241023 - tzuhan) @Murky, 這裡要改成 SORT_BY （已經定義好）
 import { IFileBetaValidator } from '@/lib/utils/zod_schema/file';
 import {
   IInvoiceBetaValidator,

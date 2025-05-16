@@ -1,8 +1,18 @@
 <mjml>
-  <mj-raw>
-    <!-- Attributes -->
-  </mj-raw>
   <mj-head>
+    <!-- Styles -->
+    <mj-style>
+      a { text-decoration: none !important; } .main, .main-content, .footer { max-width: 600px
+      !important; box-sizing: border-box; word-break: break-word; display: block; } .main { padding:
+      20px 40px; background-color:#F4F5F7; } .main-content { padding: 20px 40px;
+      background-color:#FFFFFF } .footer { background-color:#304872; padding:40px; }
+    </mj-style>
+    <mj-style>
+      @media (max-width: 480px) { .main { padding: 0 10px;} .main-content { padding:10px 0;
+      background-color:#FFFFFF } .footer { padding:0px 20px; } }
+    </mj-style>
+
+    <!-- Attributes -->
     <mj-attributes>
       <mj-all font-family="Barlow" />
       <mj-class
@@ -35,9 +45,7 @@
   </mj-head>
 
   <mj-body>
-    <mj-raw>
-      <!-- Header -->
-    </mj-raw>
+    <!-- Header -->
     <mj-section background-color="#304872" padding="10px 20px">
       <mj-column>
         <mj-image
@@ -49,18 +57,16 @@
       </mj-column>
     </mj-section>
 
-    <mj-raw>
-      <!-- Main -->
-    </mj-raw>
-    <mj-section background-color="#F4F5F7" padding="40px">
-      <mj-column background-color="#FFFFFF" padding="20px 40px">
+    <!-- Main -->
+    <mj-section css-class="main">
+      <mj-column css-class="main-content">
         <mj-text font-size="18px" line-height="28px" font-weight="600" color="#FFA502"
           >陽光智能會計已調整為免費版</mj-text
         >
 
         <mj-text mj-class="mainText">
           親愛的
-          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{userName}}</span>
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{receiverName}}</span>
           您好,
         </mj-text>
         <mj-text mj-class="mainText">
@@ -69,7 +75,8 @@
           無需擔心遺失或損毀。
         </mj-text>
         <mj-text mj-class="mainText"
-          >目前方案： <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{currentPlanName}}</span
+          >目前方案：
+          <span style="font-size: 14px; line-height: 20px; color: #cc8401">{{currentPlanName}}</span
           ><br />
           帳戶資料狀態：<span style="font-size: 14px; line-height: 20px; color: #2d7e58"
             >{{currentDataStatus}}</span
@@ -78,15 +85,47 @@
           過程不會影響任何歷史資料。</mj-text
         >
         <mj-text mj-class="mainText">
-          若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱： <br />
-          <a
-            href={{subscribeLink}}
-            target="_blank"
-            style="color: #1570ef; text-decoration: underline"
-          >
-            {{subscribeLink}}</a
-          >
+          若您希望繼續使用完整功能，請登入系統更新付款方式或重新啟用訂閱：
         </mj-text>
+        <mj-text align="left">
+          <a
+            href="{{repayLink}}"
+            style="
+              display: inline-block;
+              border: 1px solid #ffa502;
+              background-color: white;
+              color: #cc8401;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              line-height: 20px;
+              font-weight: 500;
+              margin-right: 16px;
+            "
+          >
+            更新付款
+          </a>
+
+          <a
+            href="{{resubscribeLink}}"
+            style="
+              display: inline-block;
+              border: 1px solid #ffa502;
+              background-color: white;
+              color: #cc8401;
+              padding: 8px 16px;
+              text-decoration: none;
+              border-radius: 5px;
+              font-size: 14px;
+              line-height: 20px;
+              font-weight: 500;
+            "
+          >
+            重新訂閱
+          </a>
+        </mj-text>
+
         <mj-text mj-class="mainText"
           >我們了解每一位創業者對數據的重視，因此無論您目前是否維持付費狀態，
           我們都致力保障您的資料完整與安全。如有任何問題，也歡迎您隨時與我們聯繫，我們期待在未來繼續為您提供協助。
@@ -100,47 +139,59 @@
       </mj-column>
     </mj-section>
 
-    <mj-raw>
-      <!-- Footer -->
-    </mj-raw>
-    <mj-section background-color="#304872" padding="40px">
+    <!-- Footer -->
+    <mj-section css-class="footer">
       <!-- 左邊區塊 -->
       <mj-column>
-        <mj-text
-          color="#FFFFFF"
-          font-weight="700"
-          font-size="12px"
-          line-height="28px"
-          padding-top="0"
+        <mj-text color="#FFFFFF" font-weight="700" font-size="12px" line-height="28px" padding="0"
           >Contact Us</mj-text
         >
-        <mj-text mj-class="text10" align="left" vertical-align="middle">
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
           <img width="10px" src="https://isunfa.tw/email/mail_inbox.png?w=32&q=75" />
           <a
             href="mailto:isunfahelp@isunfa.com.tw"
-            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+            style="color: white; font-weight: 500; font-size: 10px"
             >isunfahelp@isunfa.com.tw</a
           ></mj-text
         >
-        <mj-text mj-class="text10" align="left" vertical-align="middle">
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
           <img width="10px" src="https://isunfa.tw/email/phone_ringing.png?w=32&q=75" />
-          <a
-            href="tel:+886-2-2700-1979"
-            style="color: white; font-weight: 500; font-size: 10px; text-decoration: none"
+          <a href="tel:+886-2-2700-1979" style="color: white; font-weight: 500; font-size: 10px"
             >+886-2-2700-1979</a
           ></mj-text
         >
-        <mj-text mj-class="text10" align="left" vertical-align="middle">
-          <span><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service Hours : </span>
+        <mj-text
+          mj-class="text10"
+          padding="0"
+          padding-bottom="8px"
+          align="left"
+          vertical-align="middle"
+        >
+          <span
+            ><img width="10px" src="https://isunfa.tw/email/alarm_clock.png?w=32&q=75" /> Service
+            Hours :
+          </span>
           <br />
           <span style="margin-left: 12px"> Mon to Fri, 09:00 AM - 06:00 PM.</span>
         </mj-text>
       </mj-column>
 
       <!-- 右邊區塊：icon + text -->
-      <mj-column padding-top="50px">
-        <mj-text align="center" padding="0">
-          <mj-text style="margin-right: 24px">
+      <mj-column padding-top="40px">
+        <mj-text align="right" padding="0">
+          <mj-text style="margin-right: 40px">
             <a href="https://isunfa.tw/" target="_blank"
               ><img
                 src="https://isunfa.tw/email/isunfa_logo.png?w=32&q=75"
@@ -151,7 +202,7 @@
           <a href="https://www.facebook.com/profile.php?id=61555435381112" target="_blank">
             <img
               width="20px"
-              src="https://img.icons8.com/m_rounded/512/FFFFFF/facebook-new.png"
+              src="https://img.icons8.com/?size=100&id=118467&format=png&color=FFFFFF"
               alt="facebook_link"
               style="margin-right: 12px"
             />
@@ -159,18 +210,24 @@
           <a href="https://github.com/CAFECA-IO/iSunFA" target="_blank">
             <img
               width="20px"
-              src="https://img.icons8.com/ios11/512/FFFFFF/github.png"
+              src="https://img.icons8.com/?size=100&id=12599&format=png&color=FFFFFF"
               alt="github_link"
               style="margin-right: 12px"
           /></a>
           <a href="https://www.youtube.com/@isunfa" target="_blank"
             ><img
               width="20px"
-              src="https://img.icons8.com/ios11/512/FFFFFF/youtube-play.png"
+              src="https://img.icons8.com/?size=100&id=37326&format=png&color=FFFFFF"
               alt="youtube_link"
           /></a>
         </mj-text>
-        <mj-text color="#FFFFFF" font-size="10px" font-weight="400" align="right" padding-top="16px"
+        <mj-text
+          color="#FFFFFF"
+          font-size="10px"
+          padding="0"
+          font-weight="400"
+          align="right"
+          padding-top="16px"
           >iSunFA @ 2024. All rights reserved.</mj-text
         >
       </mj-column>

@@ -1,10 +1,9 @@
 import { getUnixTime } from 'date-fns';
-import nodemailer from 'nodemailer';
-import { compileTemplate } from '@/lib/email/template';
 import { EmailTemplateName, EmailTemplateData } from '@/constants/email_template';
 import loggerBack from '@/lib/utils/logger_back';
-import { emailJob } from '@prisma/client';
+import { EmailJob } from '@prisma/client';
 import prisma from '@/client';
+import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 
 export async function sendEmailJobs() {
   const jobs = await prisma.emailJob.findMany({
@@ -15,27 +14,14 @@ export async function sendEmailJobs() {
   const now = getUnixTime(new Date());
 
   await Promise.allSettled(
-    jobs.map(async (job: emailJob) => {
+    jobs.map(async (job: EmailJob) => {
       try {
-        const html = compileTemplate({
-          templateName: job.template as EmailTemplateName,
-          data: job.data as EmailTemplateData[EmailTemplateName],
-        });
-
-        const transporter = nodemailer.createTransport({
-          service: process.env.MAIL_SERVICE,
-          auth: {
-            user: process.env.MAIL_CLIENT_ID,
-            pass: process.env.MAIL_CLIENT_PASSWORD,
-          },
-        });
-
-        await transporter.sendMail({
-          from: `"iSunFA" <${process.env.MAIL_CLIENT_ID}>`,
-          to: job.receiver,
-          subject: job.title,
-          html,
-        });
+        await sendEmail(
+          job.receiver,
+          job.title,
+          job.template as EmailTemplateName,
+          job.data as EmailTemplateData[EmailTemplateName]
+        );
 
         await prisma.emailJob.update({
           where: { id: job.id },

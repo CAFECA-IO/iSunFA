@@ -115,7 +115,7 @@ const ContactInfoForm = ({
             ></Image>
             <p className="w-36px">{data[ContactInfoKeys.AREA_CODE]}</p>
             <div>
-              <BsChevronDown className="h-4 w-4"/>
+              <BsChevronDown className="h-4 w-4" />
             </div>
             {/* Info: (20240718 - Liz) Dropmenu */}
             <div

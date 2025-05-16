@@ -34,6 +34,8 @@ export enum SortBy {
   CREATED_AT = 'CreatedAt',
   UPDATED_AT = 'UpdatedAt',
   JOINED_AT = 'JoinedAt',
+  INVOICE_NUMBER = 'InvoiceNo',
+  INVOICE_TYPE = 'certificateType',
 
   /**
    * Info: (20241104 - Murky)
