@@ -76,22 +76,19 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
       {/* Info: (20240924 - Anna) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
-          {certificate.incomplete && (
-            <Image src="/icons/hint.svg" alt="Hint" width={16} height={16} className="min-w-16px" />
-          )}
           <div className="flex flex-col">
-            <div className="text-text-neutral-primary">{certificate.no ?? ''}</div>
+            <div className="download-pb-4 text-text-neutral-primary">{certificate.no ?? ''}</div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div className="download-pb-4 hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
           {certificate.type ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.type}`) : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`download-pb-4 w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.taxType === TaxType.TAXABLE
             ? `${t('certificate:EDIT.TAXABLE_5')} ${certificate.taxRate} %`
@@ -101,7 +98,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="flex flex-col items-center gap-2">
+        <div className="download-pb-4 flex flex-col items-center gap-2">
           <div className="w-full text-left text-text-neutral-tertiary">
             {certificate.buyerIdNumber ?? ''}
           </div>
@@ -118,7 +115,9 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div className="w-full pr-1 text-center">{t(`certificate:TABLE.PRE_TAX`)}</div>
+              <div className="download-pb-3 w-full pr-1 text-center">
+                {t(`certificate:TABLE.PRE_TAX`)}
+              </div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
@@ -132,7 +131,9 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div className="w-full pr-1 text-center">{t(`certificate:TABLE.AFTER_TAX`)}</div>
+              <div className="download-pb-3 w-full pr-1 text-center">
+                {t(`certificate:TABLE.AFTER_TAX`)}
+              </div>
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
@@ -170,7 +171,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
                 {certificate.uploaderName.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span>{certificate.uploaderName ?? ''}</span>
+            <span className="download-pb-4">{certificate.uploaderName ?? ''}</span>
           </div>
         </div>
       </BorderCell>

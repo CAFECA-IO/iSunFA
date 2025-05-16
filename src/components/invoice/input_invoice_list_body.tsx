@@ -247,7 +247,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
         };
         setTotalCertificatePrice(note.totalCertificatePrice);
         setIncomplete(note.incomplete);
-        setTotalPages(resData.totalPages);
+        setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
         setPage(resData.page);
         setCurrency(note.currency as CurrencyType);
