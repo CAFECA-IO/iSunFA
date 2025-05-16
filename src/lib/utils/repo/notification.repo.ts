@@ -1,0 +1,176 @@
+import prisma from '@/client';
+import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { getPusherInstance } from '@/lib/utils/pusher';
+import { NotificationType } from '@prisma/client';
+
+export async function listNotifications(userId: number) {
+  return prisma.notification.findMany({
+    where: {
+      userId,
+      deletedAt: null,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+export async function getNotificationById(userId: number, id: number) {
+  return prisma.notification.findFirst({
+    where: {
+      id,
+      userId,
+      deletedAt: null,
+    },
+  });
+}
+
+export async function markNotificationAsRead(userId: number, id: number) {
+  return prisma.notification.updateMany({
+    where: {
+      id,
+      userId,
+      deletedAt: null,
+    },
+    data: {
+      read: true,
+      updatedAt: Math.floor(Date.now() / 1000),
+    },
+  });
+}
+
+type CreateNotificationParams = {
+  userId: number;
+  teamId?: number;
+  type: NotificationType;
+  event:
+    | 'TRANSFER'
+    | 'CANCEL'
+    | 'UPDATED'
+    | 'EXPIRED'
+    | 'REVIEWED'
+    | 'REJECTED'
+    | 'APPROVED'
+    | 'RENEWED'
+    | 'CANCELLED'
+    | 'COMPLETED'
+    | 'EXPIRED'
+    | 'DELETED';
+  title: string;
+  message: string;
+  content: Record<string, string | number | boolean>;
+  actionUrl?: string;
+  imageUrl?: string;
+  priority?: number;
+  pushPusher?: boolean;
+  sendEmail?: boolean;
+  email?: {
+    receiver: string;
+    template: string;
+  };
+};
+
+type CreateManyNotificationParams = Omit<CreateNotificationParams, 'userId' | 'email'> & {
+  userEmailMap: { userId: number; email: string }[];
+};
+
+export async function createNotification(params: CreateNotificationParams) {
+  const now = Math.floor(Date.now() / 1000);
+  const notification = await prisma.notification.create({
+    data: {
+      userId: params.userId,
+      teamId: params.teamId,
+      type: params.type,
+      event: params.event as string,
+      title: params.title,
+      message: params.message,
+      content: params.content,
+      actionUrl: params.actionUrl,
+      imageUrl: params.imageUrl,
+      priority: params.priority ?? 1,
+      read: false,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
+
+  if (params.pushPusher) {
+    const pusher = getPusherInstance();
+    await pusher.trigger(
+      `${PRIVATE_CHANNEL.USER}-${params.userId}`,
+      NOTIFICATION_EVENT.NEW,
+      notification
+    );
+  }
+
+  if (params.sendEmail && params.email) {
+    await prisma.emailJob.create({
+      data: {
+        title: params.title,
+        receiver: params.email.receiver,
+        template: params.email.template,
+        data: {
+          ...params.content,
+          title: params.title,
+          message: params.message,
+        },
+        createdAt: now,
+        updatedAt: now,
+      },
+    });
+  }
+
+  return notification;
+}
+
+export async function createNotificationsBulk(params: CreateManyNotificationParams) {
+  const now = Math.floor(Date.now() / 1000);
+
+  const notifications = params.userEmailMap.map(({ userId }) => ({
+    userId,
+    teamId: params.teamId,
+    type: params.type,
+    event: params.event,
+    title: params.title,
+    message: params.message,
+    content: params.content,
+    actionUrl: params.actionUrl,
+    imageUrl: params.imageUrl,
+    priority: params.priority ?? 1,
+    read: false,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  await prisma.notification.createMany({ data: notifications });
+
+  if (params.pushPusher) {
+    const pusher = getPusherInstance();
+    const pushEvents = params.userEmailMap.map(({ userId }) => {
+      return pusher.trigger(`${PRIVATE_CHANNEL.USER}-${userId}`, NOTIFICATION_EVENT.NEW, {
+        ...notifications[0],
+        userId,
+      });
+    });
+    await Promise.all(pushEvents);
+  }
+
+  if (params.sendEmail) {
+    const emails = params.userEmailMap.map(({ email }) => ({
+      title: params.title,
+      receiver: email,
+      template: 'accountbook_transfer_notice', // ToDo: (202516 - Tzuhan) 要請前端幫忙處理
+      data: {
+        ...params.content,
+        title: params.title,
+        message: params.message,
+      },
+      status: 'PENDING',
+      retry: 0,
+      maxRetry: 3,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    await prisma.emailJob.createMany({ data: emails });
+  }
+}

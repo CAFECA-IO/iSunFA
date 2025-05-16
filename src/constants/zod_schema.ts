@@ -141,6 +141,11 @@ import {
   updateInvoiceRC2Output,
 } from '@/lib/utils/zod_schema/invoice_rc2';
 import { publicKeyGetSchema } from '@/lib/utils/zod_schema/public_key';
+import {
+  getNotificationByIdSchema,
+  listNotificationByUserIdSchema,
+  readNotificationSchema,
+} from '@/lib/utils/zod_schema/notification';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -325,4 +330,8 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.SEND_VERIFICATION_EMAIL]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for send verification email
   [APIName.VERIFY_CODE]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for verify code
+
+  [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
+  [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
+  [APIName.READ_NOTIFICATION]: readNotificationSchema,
 };
