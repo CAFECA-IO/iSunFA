@@ -15,6 +15,10 @@ import {
   IAccountBookWithTeam,
   WORK_TAG,
   ACCOUNT_BOOK_ROLE,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -162,11 +166,45 @@ export const createAccountBook = async (
     tag: WORK_TAG;
     taxId: string;
     teamId: number;
+    representativeName?: string;
+    taxSerialNumber?: string;
+    contactPerson?: string;
+    phoneNumber?: string;
+    city?: string;
+    district?: string;
+    enteredAddress?: string;
+    filingFrequency?: FILING_FREQUENCY;
+    filingMethod?: FILING_METHOD;
+    declarantFilingMethod?: DECLARANT_FILING_METHOD;
+    declarantName?: string;
+    declarantPersonalId?: string;
+    declarantPhoneNumber?: string;
+    agentFilingRole?: AGENT_FILING_ROLE;
+    licenseId?: string;
   }
 ): Promise<IAccountBook | null> => {
   let accountBook: IAccountBook | null = null;
   let { teamId } = body;
-  const { taxId, name, tag } = body;
+  const {
+    taxId,
+    name,
+    tag,
+    representativeName = '',
+    taxSerialNumber = '',
+    contactPerson = '',
+    phoneNumber = '',
+    city = '',
+    district = '',
+    enteredAddress = '',
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
   loggerBack.info(`User ${userId} is creating a new AccountBook in Team ${teamId}`);
 
   // Info: (20250124 - Shirley) Step 1.
@@ -233,14 +271,31 @@ export const createAccountBook = async (
         },
       });
 
+      // Info: (20250515 - Shirley) 使用 JSON 格式的地址
+      const addressJson = {
+        city: city || '',
+        district: district || '',
+        enteredAddress: enteredAddress || '',
+      };
+
       const companySetting = await tx.companySetting.create({
         data: {
           companyId: createdAccountBook.id,
-          taxSerialNumber: '',
-          representativeName: '',
+          taxSerialNumber: taxSerialNumber || '',
+          representativeName: representativeName || '',
           country: '',
-          phone: '',
-          address: '',
+          phone: phoneNumber || '',
+          address: addressJson,
+          countryCode: 'tw',
+          contactPerson: contactPerson || '',
+          filingFrequency,
+          filingMethod,
+          declarantFilingMethod,
+          declarantName,
+          declarantPersonalId,
+          declarantPhoneNumber,
+          agentFilingRole,
+          licenseId,
           createdAt: nowInSecond,
           updatedAt: nowInSecond,
         },

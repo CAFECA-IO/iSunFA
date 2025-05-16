@@ -12,7 +12,13 @@ export interface IAccountBookInfo {
   country: LocaleKey;
   countryCode: LocaleKey;
   phone: string;
-  address: string;
+  address:
+    | {
+        city: string;
+        district: string;
+        enteredAddress: string;
+      }
+    | string; // 支援新舊格式
   createdAt: number;
   updatedAt: number;
 }

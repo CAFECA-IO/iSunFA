@@ -168,7 +168,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
       representativeName: companySetting.representativeName || '',
       country,
       phoneNumber: companySetting.phone || '',
-      address: companySetting.address || '',
+      // address: {
+      //   city: (companySetting.address as { city: string })?.city || '',
+      //   district: (companySetting.address as { district: string })?.district || '',
+      //   enteredAddress:
+      //     (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      // },
+      address: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
       startDate: company.startDate,
       createdAt: company.createdAt,
       updatedAt: company.updatedAt,
@@ -382,7 +388,13 @@ const handlePutRequest = async (req: NextApiRequest) => {
       representativeName: updatedSetting.representativeName || '',
       country,
       phoneNumber: updatedSetting.phone || '',
-      address: updatedSetting.address || '',
+      // address: {
+      //   city: (updatedSetting.address as { city: string })?.city || '',
+      //   district: (updatedSetting.address as { district: string })?.district || '',
+      //   enteredAddress:
+      //     (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+      // },
+      address: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
       startDate: updatedCompany.startDate,
       createdAt: updatedCompany.createdAt,
       updatedAt: updatedCompany.updatedAt,

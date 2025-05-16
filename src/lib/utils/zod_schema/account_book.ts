@@ -42,7 +42,7 @@ export const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(),
 
   // Info: (20250515 - Shirley) RC2 fields
-  responsiblePerson: z.string().optional(),
+  representativeName: z.string().optional(),
   taxSerialNumber: z.string().optional(),
   contactPerson: z.string().optional(),
   phoneNumber: z.string().optional(),
@@ -181,13 +181,13 @@ const accountBookCreateBodySchema = z.object({
   taxId: z.string(),
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
-  responsiblePerson: z.string(),
+  representativeName: z.string(),
   taxSerialNumber: z.string(),
   contactPerson: z.string(),
   phoneNumber: z.string(),
-  city: z.string(),
-  district: z.string(),
-  enteredAddress: z.string(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
   filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
   filingMethod: z.nativeEnum(FILING_METHOD).optional(),
   declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
@@ -245,7 +245,13 @@ export const updateAccountBookInfoBodySchema = z.object({
   representativeName: z.string().optional(),
   country: z.nativeEnum(LocaleKey).optional(),
   phoneNumber: z.string().optional(),
-  address: z.string().optional(),
+  address: z
+    .object({
+      city: z.string(),
+      district: z.string(),
+      enteredAddress: z.string(),
+    })
+    .optional(),
   startDate: z.number().optional(),
 });
 
