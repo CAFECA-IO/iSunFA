@@ -68,12 +68,12 @@ const DashboardBody = () => {
       <MyAccountBookList />
 
       <div className="flex flex-wrap gap-24px">
-        <section className="flex flex-auto flex-col gap-24px">
+        <section className="flex min-w-0 flex-auto flex-col gap-24px">
           <TodayTodoList todayTodoList={todayTodoList} />
           <LatestNews />
         </section>
 
-        <section className="flex flex-auto">
+        <section className="flex min-w-0 flex-auto">
           <PendingTask getTodoList={getTodoList} />
         </section>
       </div>
