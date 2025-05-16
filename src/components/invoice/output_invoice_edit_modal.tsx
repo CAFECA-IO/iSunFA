@@ -116,7 +116,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Info: (20250416 - Anna) 不用formState，改用 formStateRef.current（由 handleInputChange 寫入，總是最新值），避免 useState 非同步更新問題
-    const { issuedDate: selectedDate, netAmount, taxAmount, buyerName } = formStateRef.current;
+    const { issuedDate: selectedDate, netAmount, taxAmount, type } = formStateRef.current;
 
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
@@ -127,13 +127,11 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
     if (
-      (formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
-      taxAmount == null
+      type === InvoiceType.OUTPUT_31 &&
+      ((formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmount <= 0)) ||
+        taxAmount == null)
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
-    }
-    if (!buyerName) {
-      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
     return Object.keys(newErrors).length === 0;
@@ -240,6 +238,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
         const cp2 = val2 as ICounterpartyOptional;
         return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
       }
+
       return val1 !== val2;
     });
   };
@@ -267,6 +266,19 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
   const netAmountChangeHandler = (value: number) => {
     handleInputChange('netAmount', value);
+
+    // Info : (20250516 - Anna) 格式 32、格式 34、格式 30、格式 36，稅額永遠為 0
+    if (
+      formStateRef.current.type === InvoiceType.OUTPUT_32 ||
+      formStateRef.current.type === InvoiceType.OUTPUT_34 ||
+      formStateRef.current.type === InvoiceType.OUTPUT_30 ||
+      formStateRef.current.type === InvoiceType.OUTPUT_36
+    ) {
+      handleInputChange('taxAmount', 0);
+      handleInputChange('totalAmount', value);
+      return;
+    }
+
     const updateTaxPrice = Math.round((value * (formState.taxRate ?? 0)) / 100);
     handleInputChange('taxAmount', updateTaxPrice);
     handleInputChange('totalAmount', value + updateTaxPrice);
@@ -389,6 +401,24 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
       taxType: certificate.taxType ?? TaxType.TAXABLE,
     };
+
+    // Info: (20250516 - Anna) 預設格式 31、33、36 為應稅（如果沒有設定稅率）
+    // Info: (20250516 - Anna) 補算格式 31、33、36 的稅額與總額（如果沒有）
+    if (
+      (newFormState.type === InvoiceType.OUTPUT_31 ||
+        newFormState.type === InvoiceType.OUTPUT_33 ||
+        newFormState.type === InvoiceType.OUTPUT_36) &&
+      newFormState.taxRate == null
+    ) {
+      newFormState.taxRate = 5;
+      newFormState.taxType = TaxType.TAXABLE;
+
+      if (newFormState.netAmount != null) {
+        const computedTax = Math.round((newFormState.netAmount * 5) / 100);
+        newFormState.taxAmount = computedTax;
+        newFormState.totalAmount = newFormState.netAmount + computedTax;
+      }
+    }
 
     setFormState(newFormState);
     formStateRef.current = newFormState;
@@ -554,7 +584,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             <div className="relative flex w-full flex-col items-start gap-2">
               <div id="price" className="absolute -top-20"></div>
               <p className="text-sm font-semibold text-neutral-300">
-                {formState.type === InvoiceType.OUTPUT_36
+                {formState.type === InvoiceType.OUTPUT_36 ||
+                formState.type === InvoiceType.OUTPUT_34
                   ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
                   : formState.type === InvoiceType.OUTPUT_30
                     ? t('certificate:EDIT.CERTIFICATE_NO')
@@ -567,17 +598,21 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 )}
               </p>
 
-              {formState.type === InvoiceType.OUTPUT_36 ? (
+              {formState.type === InvoiceType.OUTPUT_36 ||
+              formState.type === InvoiceType.OUTPUT_34 ? (
                 // Info: (20250415 - Anna) 免用統一發票的UI
                 <div className="flex w-full items-center">
                   <input
                     id="invoiceno"
                     type="text"
                     value={formState.no}
-                    onChange={(e) => handleInputChange('no', e.target.value)}
+                    onChange={(e) => handleInputChange('otherCertificateNo', e.target.value)}
                     className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                     placeholder={
-                      formState.type === InvoiceType.OUTPUT_36 ? 'AB-12345678' : '12345678'
+                      formState.type === InvoiceType.OUTPUT_36 ||
+                      formState.type === InvoiceType.OUTPUT_34
+                        ? 'AB-12345678'
+                        : '12345678'
                     }
                   />
                 </div>
@@ -744,7 +779,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                   {formState.type === InvoiceType.OUTPUT_30
                     ? t('certificate:EDIT.CERTIFICATE_AMOUNT')
                     : formState.type === InvoiceType.OUTPUT_32 ||
-                        formState.type === InvoiceType.OUTPUT_34
+                        formState.type === InvoiceType.OUTPUT_36
                       ? t('certificate:EDIT.SALES_AMOUNT')
                       : t('certificate:EDIT.PRICE_BEFORE_TAX')}
                   <span> </span>
@@ -780,7 +815,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
               </div>
               {formState.type !== InvoiceType.OUTPUT_32 &&
                 formState.type !== InvoiceType.OUTPUT_30 &&
-                formState.type !== InvoiceType.OUTPUT_34 && (
+                formState.type !== InvoiceType.OUTPUT_34 &&
+                formState.type !== InvoiceType.OUTPUT_36 && (
                   <>
                     {/* Info: (20250414 - Anna) Tax */}
                     <div
@@ -788,8 +824,12 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     >
                       <p className="text-sm font-semibold text-neutral-300">
                         {t('certificate:EDIT.TAX')}
-                        <span> </span>
-                        <span className="text-text-state-error">*</span>
+                        {formState.type !== InvoiceType.OUTPUT_35 && (
+                          <>
+                            <span> </span>
+                            <span className="text-text-state-error">*</span>
+                          </>
+                        )}
                       </p>
                       <div className="flex w-full items-center">
                         <NumericInput
@@ -864,72 +904,147 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             }
 
             {/* Info: (20250414 - Anna) 退回或折讓checkbox */}
-            {formState.type !== InvoiceType.OUTPUT_30 && (
-              <div className="flex w-full items-center gap-2">
-                <div
-                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
-                    isReturnOrAllowance
-                      ? 'bg-checkbox-surface-selected'
-                      : 'bg-checkbox-surface-unselected'
-                  }`}
-                  onClick={() => {
-                    const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
+            {formState.type !== InvoiceType.OUTPUT_30 &&
+              formState.type !== InvoiceType.OUTPUT_33 &&
+              formState.type !== InvoiceType.OUTPUT_34 && (
+                <div className="flex w-full items-center gap-2">
+                  <div
+                    className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected ${
+                      isReturnOrAllowance
+                        ? 'bg-checkbox-surface-selected'
+                        : 'bg-checkbox-surface-unselected'
+                    }`}
+                    onClick={() => {
+                      const isTogglingToReturnOrAllowance = !isReturnOrAllowance;
 
-                    // Info: (20250514 - Anna) 第一次切換時記住原本的
-                    if (isTogglingToReturnOrAllowance) {
-                      originalTypeRef.current = formState.type;
-                    }
-
-                    setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
-
-                    // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
-                    // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
-                    if (
-                      (formState.type === InvoiceType.OUTPUT_31 ||
-                        formState.type === InvoiceType.OUTPUT_35) &&
-                      isTogglingToReturnOrAllowance
-                    ) {
-                      handleInputChange('type', InvoiceType.OUTPUT_33);
-                    } else if (
-                      formState.type === InvoiceType.OUTPUT_33 &&
-                      !isTogglingToReturnOrAllowance
-                    ) {
-                      if (originalTypeRef.current === InvoiceType.OUTPUT_31) {
-                        handleInputChange('type', InvoiceType.OUTPUT_31);
-                      } else if (originalTypeRef.current === InvoiceType.OUTPUT_35) {
-                        handleInputChange('type', InvoiceType.OUTPUT_35);
+                      // Info: (20250514 - Anna) 第一次切換時記住原本的
+                      if (isTogglingToReturnOrAllowance) {
+                        originalTypeRef.current = formState.type;
                       }
-                    } else if (
-                      (formState.type === InvoiceType.OUTPUT_32 ||
-                        formState.type === InvoiceType.OUTPUT_36) &&
-                      isTogglingToReturnOrAllowance
-                    ) {
-                      handleInputChange('type', InvoiceType.OUTPUT_34);
-                    } else if (
-                      formState.type === InvoiceType.OUTPUT_34 &&
-                      !isTogglingToReturnOrAllowance
-                    ) {
-                      if (originalTypeRef.current === InvoiceType.OUTPUT_32) {
-                        handleInputChange('type', InvoiceType.OUTPUT_32);
-                      } else if (originalTypeRef.current === InvoiceType.OUTPUT_36) {
-                        handleInputChange('type', InvoiceType.OUTPUT_36);
+
+                      setIsReturnOrAllowance(isTogglingToReturnOrAllowance);
+
+                      // Info: (20250414 - Anna) 如果選擇的是「銷項三聯式發票」且要轉為退回折讓，就自動轉換為「銷項三聯式發票退回或折讓證明單」
+                      // Info: (20250414 - Anna) 如果選擇的是「銷項二聯式發票」且要轉為退回折讓，就自動轉換為「銷項二聯式發票退回或折讓證明單」
+                      if (
+                        (formState.type === InvoiceType.OUTPUT_31 ||
+                          formState.type === InvoiceType.OUTPUT_35) &&
+                        isTogglingToReturnOrAllowance
+                      ) {
+                        // Info: (20250516 - Anna) 在格式 31、35 勾選「退回或折讓」就：
+                        // Info: (20250516 - Anna) 更換發票類型為 OUTPUT_33
+                        const newType = InvoiceType.OUTPUT_33;
+
+                        // Info: (20250516 - Anna) 更新 formStateRef.current 與 formState
+                        const newForm = {
+                          ...formStateRef.current,
+                          type: newType,
+                        };
+                        formStateRef.current = newForm;
+                        setFormState(newForm);
+
+                        // Info: (20250516 - Anna) 清空上次儲存(savedInvoiceRC2Ref.current)，讓 shallowEqual 檢查失效（強制觸發儲存）
+                        savedInvoiceRC2Ref.current = {};
+
+                        // Info: (20250516 - Anna) 觸發儲存
+                        setTimeout(() => {
+                          handleSave();
+                        }, 0);
+                      } else if (
+                        formState.type === InvoiceType.OUTPUT_33 &&
+                        !isTogglingToReturnOrAllowance
+                      ) {
+                        if (originalTypeRef.current === InvoiceType.OUTPUT_31) {
+                          // Info: (20250514 - Anna) 如果原本是 OUTPUT_31，就切換回 OUTPUT_31
+                          const newType = InvoiceType.OUTPUT_31;
+                          const newForm = {
+                            ...formStateRef.current,
+                            type: newType,
+                          };
+                          formStateRef.current = newForm;
+                          setFormState(newForm);
+                          savedInvoiceRC2Ref.current = {};
+                          setTimeout(() => {
+                            handleSave();
+                          }, 0);
+                        } else if (originalTypeRef.current === InvoiceType.OUTPUT_35) {
+                          // Info: (20250514 - Anna) 如果原本是 OUTPUT_35，就切換回 OUTPUT_35
+                          const newType = InvoiceType.OUTPUT_35;
+                          const newForm = {
+                            ...formStateRef.current,
+                            type: newType,
+                          };
+                          formStateRef.current = newForm;
+                          setFormState(newForm);
+                          savedInvoiceRC2Ref.current = {};
+                          setTimeout(() => {
+                            handleSave();
+                          }, 0);
+                        }
+                      } else if (
+                        (formState.type === InvoiceType.OUTPUT_32 ||
+                          formState.type === InvoiceType.OUTPUT_36) &&
+                        isTogglingToReturnOrAllowance
+                      ) {
+                        // Info: (20250516 - Anna) 在格式 32、36 勾選「退回或折讓」就更換發票類型為 OUTPUT_34
+                        const newType = InvoiceType.OUTPUT_34;
+                        const newForm = {
+                          ...formStateRef.current,
+                          type: newType,
+                        };
+                        formStateRef.current = newForm;
+                        setFormState(newForm);
+                        savedInvoiceRC2Ref.current = {};
+                        setTimeout(() => {
+                          handleSave();
+                        }, 0);
+                      } else if (
+                        formState.type === InvoiceType.OUTPUT_34 &&
+                        !isTogglingToReturnOrAllowance
+                      ) {
+                        if (originalTypeRef.current === InvoiceType.OUTPUT_32) {
+                          // Info: (20250514 - Anna) 如果原本是 OUTPUT_32，就切換回 OUTPUT_32
+                          const newType = InvoiceType.OUTPUT_32;
+                          const newForm = {
+                            ...formStateRef.current,
+                            type: newType,
+                          };
+                          formStateRef.current = newForm;
+                          setFormState(newForm);
+                          savedInvoiceRC2Ref.current = {};
+                          setTimeout(() => {
+                            handleSave();
+                          }, 0);
+                        } else if (originalTypeRef.current === InvoiceType.OUTPUT_36) {
+                          // Info: (20250514 - Anna) 如果原本是 OUTPUT_36，就切換回 OUTPUT_36
+                          const newType = InvoiceType.OUTPUT_36;
+                          const newForm = {
+                            ...formStateRef.current,
+                            type: newType,
+                          };
+                          formStateRef.current = newForm;
+                          setFormState(newForm);
+                          savedInvoiceRC2Ref.current = {};
+                          setTimeout(() => {
+                            handleSave();
+                          }, 0);
+                        }
                       }
-                    }
-                  }}
-                >
-                  {isReturnOrAllowance && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <HiCheck className="text-neutral-white" />
-                    </div>
-                  )}
+                    }}
+                  >
+                    {isReturnOrAllowance && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <HiCheck className="text-neutral-white" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info: (20250414 - Anna) Checkbox label */}
+                  <span className="text-sm font-medium text-input-text-primary">
+                    {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
+                  </span>
                 </div>
-
-                {/* Info: (20250414 - Anna) Checkbox label */}
-                <span className="text-sm font-medium text-input-text-primary">
-                  {t('certificate:OUTPUT_CERTIFICATE.MARK_RETURN_OR_ALLOWANCE')}
-                </span>
-              </div>
-            )}
+              )}
           </div>
         </div>
         {/* Info: (20240924 - Anna) Save */}

@@ -34,6 +34,7 @@ interface OutputInvoiceProps {
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  isExporting: boolean;
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
@@ -63,6 +64,7 @@ const OutputInvoice: React.FC<OutputInvoiceProps> = ({
   setVoucherSort,
   setCertificateNoSort,
   setCertificateTypeSort,
+  isExporting,
 }) => {
   return (
     <>
@@ -86,6 +88,7 @@ const OutputInvoice: React.FC<OutputInvoiceProps> = ({
           setVoucherSort={setVoucherSort}
           setCertificateNoSort={setCertificateNoSort}
           setCertificateTypeSort={setCertificateTypeSort}
+          isExporting={isExporting}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
