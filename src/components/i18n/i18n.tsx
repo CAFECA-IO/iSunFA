@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { VscGlobe } from 'react-icons/vsc';
+import { PiGlobe } from 'react-icons/pi';
 import { Dispatch, SetStateAction } from 'react';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
 
@@ -26,7 +26,7 @@ const I18n = ({
         onClick={toggleI18nMenu}
         className="p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
-        <VscGlobe size={26} />
+        <PiGlobe size={20} />
       </button>
 
       {/* Info: (20250513 - Liz) I18n Menu */}

@@ -22,7 +22,7 @@ import {
   updateCompanySettingByCompanyId,
 } from '@/lib/utils/repo/company_setting.repo';
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
@@ -30,6 +30,12 @@ import { TeamRole } from '@/interfaces/team';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
+import {
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
+} from '@/interfaces/account_book';
 
 interface IResponse {
   statusMessage: string;
@@ -168,10 +174,38 @@ const handleGetRequest = async (req: NextApiRequest) => {
       representativeName: companySetting.representativeName || '',
       country,
       phoneNumber: companySetting.phone || '',
-      address: companySetting.address || '',
+      // address: {
+      //   city: (companySetting.address as { city: string })?.city || '',
+      //   district: (companySetting.address as { district: string })?.district || '',
+      //   enteredAddress:
+      //     (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      // },
+      address: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
       startDate: company.startDate,
       createdAt: company.createdAt,
       updatedAt: company.updatedAt,
+
+      // Info: (20250717 - Shirley) 添加 RC2 欄位
+      contactPerson: companySetting.contactPerson || '',
+      city: (companySetting.address as { city: string })?.city || '',
+      district: (companySetting.address as { district: string })?.district || '',
+      enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      filingFrequency: companySetting.filingFrequency
+        ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
+        : undefined,
+      filingMethod: companySetting.filingMethod
+        ? (companySetting.filingMethod.toString() as FILING_METHOD)
+        : undefined,
+      declarantFilingMethod: companySetting.declarantFilingMethod
+        ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+        : undefined,
+      declarantName: companySetting.declarantName || '',
+      declarantPersonalId: companySetting.declarantPersonalId || '',
+      declarantPhoneNumber: companySetting.declarantPhoneNumber || '',
+      agentFilingRole: companySetting.agentFilingRole
+        ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+        : undefined,
+      licenseId: companySetting.licenseId || '',
     };
 
     // Info: (20250421 - Shirley) Validate output data
@@ -293,11 +327,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
     }
 
     // Info: (20250410 - Shirley) 記錄更新前的狀態
-    loggerError({
-      userId,
-      errorType: 'info',
-      errorMessage: `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}, startDate: ${company.startDate}`,
-    });
+    loggerBack.info(
+      `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}, startDate: ${company.startDate}`
+    );
 
     // Info: (20250410 - Shirley) 更新公司設定
     const updatedSetting = await updateCompanySettingByCompanyId({
@@ -307,10 +339,21 @@ const handlePutRequest = async (req: NextApiRequest) => {
         representativeName: updateData.representativeName,
         country: updateData.country,
         phone: updateData.phoneNumber,
-        address: updateData.address,
+        city: updateData.city,
+        district: updateData.district,
+        enteredAddress: updateData.enteredAddress,
         companyName: updateData.name,
         companyTaxId: updateData.taxId,
         companyStartDate: updateData.startDate,
+        contactPerson: updateData.contactPerson,
+        filingFrequency: updateData.filingFrequency,
+        filingMethod: updateData.filingMethod,
+        declarantFilingMethod: updateData.declarantFilingMethod,
+        declarantName: updateData.declarantName,
+        declarantPersonalId: updateData.declarantPersonalId,
+        declarantPhoneNumber: updateData.declarantPhoneNumber,
+        agentFilingRole: updateData.agentFilingRole,
+        licenseId: updateData.licenseId,
       },
     });
 
@@ -325,11 +368,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
     }
 
     // Info: (20250410 - Shirley) 記錄更新後的狀態
-    loggerError({
-      userId,
-      errorType: 'info',
-      errorMessage: `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`,
-    });
+    loggerBack.info(
+      `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`
+    );
 
     // Info: (20250410 - Shirley) 獲取更新後的帳本信息
     const updatedCompany = await getCompanyById(+accountBookId);
@@ -382,10 +423,38 @@ const handlePutRequest = async (req: NextApiRequest) => {
       representativeName: updatedSetting.representativeName || '',
       country,
       phoneNumber: updatedSetting.phone || '',
-      address: updatedSetting.address || '',
+      // address: {
+      //   city: (updatedSetting.address as { city: string })?.city || '',
+      //   district: (updatedSetting.address as { district: string })?.district || '',
+      //   enteredAddress:
+      //     (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+      // },
+      address: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
       startDate: updatedCompany.startDate,
       createdAt: updatedCompany.createdAt,
       updatedAt: updatedCompany.updatedAt,
+
+      // Info: (20250717 - Shirley) 添加 RC2 欄位
+      contactPerson: updatedSetting.contactPerson || '',
+      city: (updatedSetting.address as { city: string })?.city || '',
+      district: (updatedSetting.address as { district: string })?.district || '',
+      enteredAddress: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+      filingFrequency: updatedSetting.filingFrequency
+        ? (updatedSetting.filingFrequency.toString() as FILING_FREQUENCY)
+        : undefined,
+      filingMethod: updatedSetting.filingMethod
+        ? (updatedSetting.filingMethod.toString() as FILING_METHOD)
+        : undefined,
+      declarantFilingMethod: updatedSetting.declarantFilingMethod
+        ? (updatedSetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+        : undefined,
+      declarantName: updatedSetting.declarantName || '',
+      declarantPersonalId: updatedSetting.declarantPersonalId || '',
+      declarantPhoneNumber: updatedSetting.declarantPhoneNumber || '',
+      agentFilingRole: updatedSetting.agentFilingRole
+        ? (updatedSetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+        : undefined,
+      licenseId: updatedSetting.licenseId || '',
     };
 
     // Info: (20250421 - Shirley) Validate output data

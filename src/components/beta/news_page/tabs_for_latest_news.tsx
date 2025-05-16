@@ -4,6 +4,7 @@ import { TbDatabaseSmile } from 'react-icons/tb';
 import { FiUserCheck } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { NewsType } from '@/constants/news';
+import { cn } from '@/lib/utils/common';
 
 interface TabsProps {
   activeTab: SetStateAction<NewsType>;
@@ -30,19 +31,31 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
   };
 
   return (
-    <div className={`flex justify-between ${isPageStyle ? 'gap-40px' : ''}`}>
+    <div
+      className={cn('flex justify-between', {
+        'gap-40px': isPageStyle,
+        'gap-8px': !isPageStyle,
+      })}
+    >
       {TABS_ICON.map((tab) => (
         <button
           key={tab.name}
           type="button"
           onClick={() => handleTabClick(tab.name)}
-          className={`flex ${isPageStyle ? 'flex-auto' : ''} items-center justify-center gap-8px border-b-2 px-12px py-8px ${tab.name === activeTab ? 'border-b-tabs-stroke-active text-tabs-text-active' : 'border-b-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover'}`}
+          className={cn(
+            'flex min-w-0 flex-auto items-center justify-center gap-8px border-b-2 px-12px py-8px',
+            {
+              'border-b-tabs-stroke-active text-tabs-text-active': tab.name === activeTab,
+              'border-b-tabs-stroke-default text-tabs-text-default hover:border-tabs-stroke-hover hover:text-tabs-text-hover':
+                tab.name !== activeTab,
+            }
+          )}
         >
           {tab.icon}
 
-          <p className="text-base font-medium">
+          <span className="hidden text-base font-medium tablet:block">
             {t(`dashboard:DASHBOARD.${tab.name.toUpperCase()}`)}
-          </p>
+          </span>
         </button>
       ))}
     </div>

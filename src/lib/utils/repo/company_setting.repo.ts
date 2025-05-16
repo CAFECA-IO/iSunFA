@@ -18,7 +18,7 @@ export async function createCompanySetting(companyId: number) {
         representativeName: '',
         country: '',
         phone: '',
-        address: '',
+        address: { city: '', district: '', enteredAddress: '' },
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
       },
@@ -67,6 +67,23 @@ export async function updateCompanySettingByCompanyId(options: {
   const nowInSecond = getTimestampNow();
 
   try {
+    // Info: (20250516 - Shirley) 構建 address 欄位（支援新舊格式）
+    const addressData = {
+      city:
+        data.city ||
+        (data.address && typeof data.address === 'object' ? data.address.city : '') ||
+        '',
+      district:
+        data.district ||
+        (data.address && typeof data.address === 'object' ? data.address.district : '') ||
+        '',
+      enteredAddress:
+        data.enteredAddress ||
+        (data.address && typeof data.address === 'object' ? data.address.enteredAddress : '') ||
+        (typeof data.address === 'string' ? data.address : '') ||
+        '',
+    };
+
     companySetting = await prisma.companySetting.update({
       where: {
         companyId,
@@ -77,7 +94,16 @@ export async function updateCompanySettingByCompanyId(options: {
         country: data.country,
         countryCode: data.country,
         phone: data.phone,
-        address: data.address,
+        address: addressData, // Info: (20250516 - Shirley) 使用構建好的地址物件
+        contactPerson: data.contactPerson,
+        filingFrequency: data.filingFrequency,
+        filingMethod: data.filingMethod,
+        declarantFilingMethod: data.declarantFilingMethod,
+        declarantName: data.declarantName,
+        declarantPersonalId: data.declarantPersonalId,
+        declarantPhoneNumber: data.declarantPhoneNumber,
+        agentFilingRole: data.agentFilingRole,
+        licenseId: data.licenseId,
         updatedAt: nowInSecond,
         company: {
           update: {
@@ -114,7 +140,14 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
         representativeName: data.representativeName,
         country: data.country,
         phone: data.phone,
-        address: data.address,
+        address:
+          typeof data.address === 'string'
+            ? data.address
+            : {
+                city: data.address?.city || '',
+                district: data.address?.district || '',
+                enteredAddress: data.address?.enteredAddress || '',
+              },
         updatedAt: nowInSecond,
         company: {
           update: {

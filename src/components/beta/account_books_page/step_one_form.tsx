@@ -37,7 +37,7 @@ const StepOneForm = ({
   const {
     imageId,
     companyName,
-    responsiblePerson,
+    representativeName,
     taxId,
     taxSerialNumber,
     contactPerson,
@@ -126,7 +126,7 @@ const StepOneForm = ({
       handleChange('companyNameError')(null);
     }
 
-    if (!responsiblePerson) {
+    if (!representativeName) {
       handleChange('responsiblePersonError')(
         t('dashboard:ACCOUNT_BOOK_INFO_MODAL.PLEASE_ENTER_RESPONSIBLE_PERSON')
       );
@@ -347,10 +347,10 @@ const StepOneForm = ({
                       type="text"
                       placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_RESPONSIBLE_PERSON')}
                       className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={responsiblePerson}
-                      onChange={(e) => handleChange('responsiblePerson')(e.target.value)}
+                      value={representativeName}
+                      onChange={(e) => handleChange('representativeName')(e.target.value)}
                     />
-                    {responsiblePersonError && !responsiblePerson && (
+                    {responsiblePersonError && !representativeName && (
                       <p className="text-right text-sm font-medium text-text-state-error">
                         {responsiblePersonError}
                       </p>
@@ -428,7 +428,7 @@ const StepOneForm = ({
                   type="text"
                   placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_CONTACT_PERSON')}
                   className="min-w-0 flex-auto bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
-                  value={isSameAsResponsiblePerson ? responsiblePerson : contactPerson}
+                  value={isSameAsResponsiblePerson ? representativeName : contactPerson}
                   onChange={(e) => handleChange('contactPerson')(e.target.value)}
                 />
                 <button
@@ -725,7 +725,7 @@ const StepOneForm = ({
               onClick={closeAccountBookInfoModal}
               className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
             >
-              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CANCEL')}
+              {t('dashboard:COMMON.CANCEL')}
             </button>
 
             {/* Info: (20250418 - Liz) 進入第二步驟的商業稅設定 */}

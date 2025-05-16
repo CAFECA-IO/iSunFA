@@ -223,7 +223,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
           representativeName: setting.representativeName || '',
           country,
           phoneNumber: setting.phone || '',
-          address: setting.address || '',
           startDate: company.startDate,
           createdAt: company.createdAt,
           updatedAt: company.updatedAt,

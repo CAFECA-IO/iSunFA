@@ -119,6 +119,7 @@ export interface ITeamSubscription {
   userId: number;
   teamId: number;
   planType: TPlanType;
+  maxMembers: number;
   startDate: number;
   expiredDate: number;
   createdAt: number;

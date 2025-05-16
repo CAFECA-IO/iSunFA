@@ -15,6 +15,10 @@ import {
   IAccountBookWithTeam,
   WORK_TAG,
   ACCOUNT_BOOK_ROLE,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -25,7 +29,7 @@ import { convertTeamRoleCanDo, getGracePeriodInfo } from '@/lib/shared/permissio
 import { createOrderByList } from '@/lib/utils/sort';
 import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
-import { createFile } from '@/lib/utils/repo/file.repo';
+import { createFile, findFileById } from '@/lib/utils/repo/file.repo';
 import { FileFolder } from '@/constants/file';
 import { getTimestampNow } from '@/lib/utils/common';
 import { getTeamList } from '@/lib/utils/repo/team.repo';
@@ -34,6 +38,7 @@ import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permissio
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
+import { File } from '@prisma/client';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -155,6 +160,13 @@ export const getAccountBookByNameAndTeamId = async (
   return result;
 };
 
+/**
+ * Info: (20250515 - Shirley) 創建帳本
+ * @param userId 用戶ID
+ * @param body 帳本基本資料，包含姓名、標籤、統一編號等
+ * @param body.fileId 選填，文件ID。如果提供則使用該文件作為帳本圖示，否則自動生成圖示
+ * @returns 創建的帳本資訊或null
+ */
 export const createAccountBook = async (
   userId: number,
   body: {
@@ -162,11 +174,47 @@ export const createAccountBook = async (
     tag: WORK_TAG;
     taxId: string;
     teamId: number;
+    fileId?: number;
+    representativeName?: string;
+    taxSerialNumber?: string;
+    contactPerson?: string;
+    phoneNumber?: string;
+    city?: string;
+    district?: string;
+    enteredAddress?: string;
+    filingFrequency?: FILING_FREQUENCY;
+    filingMethod?: FILING_METHOD;
+    declarantFilingMethod?: DECLARANT_FILING_METHOD;
+    declarantName?: string;
+    declarantPersonalId?: string;
+    declarantPhoneNumber?: string;
+    agentFilingRole?: AGENT_FILING_ROLE;
+    licenseId?: string;
   }
 ): Promise<IAccountBook | null> => {
   let accountBook: IAccountBook | null = null;
   let { teamId } = body;
-  const { taxId, name, tag } = body;
+  const {
+    taxId,
+    name,
+    tag,
+    fileId,
+    representativeName = '',
+    taxSerialNumber = '',
+    contactPerson = '',
+    phoneNumber = '',
+    city = '',
+    district = '',
+    enteredAddress = '',
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
   loggerBack.info(`User ${userId} is creating a new AccountBook in Team ${teamId}`);
 
   // Info: (20250124 - Shirley) Step 1.
@@ -177,23 +225,59 @@ export const createAccountBook = async (
     throw error;
   } else {
     // Info: (20250124 - Shirley) Step 2.
-    const companyIcon = await generateIcon(name);
     const nowInSecond = getTimestampNow();
-    const imageName = name + '_icon' + nowInSecond;
-    const file = await createFile({
-      name: imageName,
-      size: companyIcon.size,
-      mimeType: companyIcon.mimeType,
-      type: FileFolder.TMP,
-      url: companyIcon.iconUrl,
-      isEncrypted: false,
-      encryptedSymmetricKey: '',
-    });
+    let file: File | null = null;
+
+    // Info: (20250515 - Shirley) 如果提供了 fileId，則使用該文件作為圖像
+    if (fileId) {
+      const sourceFile = await findFileById(fileId);
+      if (!sourceFile) {
+        const error = new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+        error.name = STATUS_CODE.RESOURCE_NOT_FOUND;
+        throw error;
+      }
+
+      // Info: (20250516 - Shirley) 創建文件副本，避免唯一約束衝突 (workaround)
+      // TODO: (20250516 - Shirley) 需要創建一個單純上傳 file 的 API，不需指定類型 team/company 跟綁定的 id
+      // 因為在 Prisma schema 中 Company 模型可能將 image_file_id 設為唯一欄位
+      // 所以我們需要為每個帳本創建獨立的文件記錄
+      const clonedFileName = `${name}_icon_${nowInSecond}`;
+      file = await createFile({
+        name: clonedFileName,
+        size: sourceFile.size,
+        mimeType: sourceFile.mimeType,
+        type: sourceFile.type as FileFolder,
+        url: sourceFile.url,
+        isEncrypted: sourceFile.isEncrypted,
+        encryptedSymmetricKey: sourceFile.encryptedSymmetricKey,
+        iv: sourceFile.iv,
+      });
+
+      loggerBack.info(
+        `Created a copy of file ID ${fileId} for account book icon: ${clonedFileName}`
+      );
+    } else {
+      // Info: (20250515 - Shirley) 如果沒有提供 fileId，則自動生成一個圖像
+      const companyIcon = await generateIcon(name);
+      const imageName = name + '_icon' + nowInSecond;
+      file = await createFile({
+        name: imageName,
+        size: companyIcon.size,
+        mimeType: companyIcon.mimeType,
+        type: FileFolder.TMP,
+        url: companyIcon.iconUrl,
+        isEncrypted: false,
+        encryptedSymmetricKey: '',
+      });
+      loggerBack.info(`Generated new icon for account book: ${imageName}`);
+    }
+
     if (!file) {
       const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
       throw error;
     }
+
     if (teamId) {
       const hasPermission = await isEligibleToCreateAccountBookInTeam(userId, teamId);
       if (!hasPermission) {
@@ -233,14 +317,31 @@ export const createAccountBook = async (
         },
       });
 
+      // Info: (20250515 - Shirley) 使用 JSON 格式的地址
+      const addressJson = {
+        city: city || '',
+        district: district || '',
+        enteredAddress: enteredAddress || '',
+      };
+
       const companySetting = await tx.companySetting.create({
         data: {
           companyId: createdAccountBook.id,
-          taxSerialNumber: '',
-          representativeName: '',
+          taxSerialNumber: taxSerialNumber || '',
+          representativeName: representativeName || '',
           country: '',
-          phone: '',
-          address: '',
+          phone: phoneNumber || '',
+          address: addressJson,
+          countryCode: 'tw',
+          contactPerson: contactPerson || '',
+          filingFrequency,
+          filingMethod,
+          declarantFilingMethod,
+          declarantName,
+          declarantPersonalId,
+          declarantPhoneNumber,
+          agentFilingRole,
+          licenseId,
           createdAt: nowInSecond,
           updatedAt: nowInSecond,
         },
@@ -366,6 +467,13 @@ export const listAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
+      // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+      companySettings: {
+        where: {
+          deletedAt: null,
+        },
+        take: 1,
+      },
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -373,15 +481,25 @@ export const listAccountBookByUserId = async (
   });
 
   // Info: (20250337 - Tzuhan) 格式化回傳數據
-  return toPaginatedData({
+  const result = toPaginatedData({
     data: accountBooks.map((book) => {
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
       const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
+      // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      const setting = book.companySettings?.[0] || {};
+      const address = setting.address
+        ? typeof setting.address === 'string'
+          ? JSON.parse(setting.address)
+          : setting.address
+        : { city: '', district: '', enteredAddress: '' };
+
       return {
         id: book.id,
+        teamId: book.teamId,
+        userId: book.userId,
         imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
         name: book.name,
         taxId: book.taxId,
@@ -390,6 +508,26 @@ export const listAccountBookByUserId = async (
         updatedAt: book.updatedAt,
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG,
+
+        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        representativeName: setting.representativeName || '',
+        taxSerialNumber: setting.taxSerialNumber || '',
+        contactPerson: setting.contactPerson || '',
+        phoneNumber: setting.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+
+        // Info: (20250717 - Shirley) 添加選填欄位
+        filingFrequency: setting.filingFrequency,
+        filingMethod: setting.filingMethod,
+        declarantFilingMethod: setting.declarantFilingMethod,
+        declarantName: setting.declarantName,
+        declarantPersonalId: setting.declarantPersonalId,
+        declarantPhoneNumber: setting.declarantPhoneNumber,
+        agentFilingRole: setting.agentFilingRole,
+        licenseId: setting.licenseId,
+
         team: book.team
           ? {
               id: book.team.id,
@@ -415,7 +553,7 @@ export const listAccountBookByUserId = async (
               gracePeriodEndAt,
             }
           : null,
-        isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
+        isTransferring: book.isTransferring,
       } as IAccountBookWithTeam;
     }),
     page,
@@ -424,6 +562,8 @@ export const listAccountBookByUserId = async (
     pageSize,
     sort: sortOption,
   });
+
+  return result;
 };
 
 export const listAccountBooksByTeamId = async (
@@ -521,6 +661,13 @@ export const listAccountBooksByTeamId = async (
           },
         },
         imageFile: { select: { id: true, url: true } },
+        // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+        companySettings: {
+          where: {
+            deletedAt: null,
+          },
+          take: 1,
+        },
       },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -536,8 +683,18 @@ export const listAccountBooksByTeamId = async (
       const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
+      // Info: (20250717 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      const setting = book.companySettings?.[0] || {};
+      const address = setting.address
+        ? typeof setting.address === 'string'
+          ? JSON.parse(setting.address)
+          : setting.address
+        : { city: '', district: '', enteredAddress: '' };
+
       return {
         id: book.id,
+        teamId: book.teamId,
+        userId: book.userId,
         imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
         name: book.name,
         taxId: book.taxId,
@@ -546,6 +703,26 @@ export const listAccountBooksByTeamId = async (
         updatedAt: book.updatedAt,
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG, // ✅ (20250324 - Tzuhan) 直接取用 tag
+
+        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        representativeName: setting.representativeName || '',
+        taxSerialNumber: setting.taxSerialNumber || '',
+        contactPerson: setting.contactPerson || '',
+        phoneNumber: setting.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+
+        // Info: (20250516 - Shirley) 添加選填欄位
+        filingFrequency: setting.filingFrequency,
+        filingMethod: setting.filingMethod,
+        declarantFilingMethod: setting.declarantFilingMethod,
+        declarantName: setting.declarantName,
+        declarantPersonalId: setting.declarantPersonalId,
+        declarantPhoneNumber: setting.declarantPhoneNumber,
+        agentFilingRole: setting.agentFilingRole,
+        licenseId: setting.licenseId,
+
         team: book.team
           ? {
               id: book.team.id,
@@ -571,7 +748,7 @@ export const listAccountBooksByTeamId = async (
               gracePeriodEndAt,
             }
           : null,
-        isTransferring: false, // ToDo: (20250306 - Tzuhan) 待DB新增欄位後更新成正確值
+        isTransferring: book.isTransferring,
       } as IAccountBookWithTeam;
     }),
     page,

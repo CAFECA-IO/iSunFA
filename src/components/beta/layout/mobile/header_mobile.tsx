@@ -2,18 +2,20 @@ import { useState } from 'react';
 import { FiMenu } from 'react-icons/fi';
 import { IoCloseOutline } from 'react-icons/io5';
 import { GoArrowLeft } from 'react-icons/go';
-import { VscGlobe, VscBell } from 'react-icons/vsc';
+import { PiGlobe, PiBell } from 'react-icons/pi';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
 import Profile from '@/components/beta/layout/profile';
-import CompanyBadge from '@/components/beta/layout/company_badge';
+import AccountBookBadge from '@/components/beta/layout/account_book_badge';
 import MainMenu from '@/components/beta/layout/mobile/main_menu';
 import ModeSwitch from '@/components/beta/layout/mode_switch';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
 import { MenuContent } from '@/interfaces/side_menu';
 import SubMenu from '@/components/beta/layout/mobile/sub_menu';
 import NotificationMobile from '@/components/beta/layout/mobile/notification_mobile';
+import { INotification } from '@/interfaces/notification';
+import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 
 const HeaderMobile = () => {
   const { asPath } = useRouter();
@@ -23,6 +25,10 @@ const HeaderMobile = () => {
   const [headerTitle, setHeaderTitle] = useState<string>('');
   const [isDefaultMenuHeader, setIsDefaultMenuHeader] = useState<boolean>(true);
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
+  // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
+  const hasUnreadNotifications = notifications.some((notification) => !notification.isRead);
 
   const openMenu = () => setIsMenuOpen(true);
 
@@ -71,6 +77,8 @@ const HeaderMobile = () => {
     }
   };
 
+  // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
+
   return (
     <header className="flex items-center bg-surface-neutral-surface-lv2 px-16px py-10px tablet:hidden">
       <button type="button" className="p-10px" onClick={openMenu}>
@@ -81,7 +89,7 @@ const HeaderMobile = () => {
       </button>
 
       <section className="ml-auto flex flex-none items-center gap-16px">
-        <CompanyBadge />
+        <AccountBookBadge />
 
         <Profile />
       </section>
@@ -90,40 +98,45 @@ const HeaderMobile = () => {
         <div className="fixed left-0 top-0 z-40 flex h-screen w-full flex-col bg-surface-neutral-surface-lv2">
           {/* Info: (20250514 - Liz) Menu Header */}
           {isDefaultMenuHeader && (
-            <section className="flex h-60px items-center gap-10px p-12px">
+            <section className="flex h-60px items-center gap-12px p-12px">
               <ModeSwitch />
 
-              <button
-                type="button"
-                onClick={() => {
-                  changeMenu({
-                    menuContent: MenuContent.I18N,
-                    headerTitle: 'languages',
-                  });
-                }}
-                className="group p-10px"
-              >
-                <VscGlobe
-                  size={20}
-                  className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
-                />
-              </button>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    changeMenu({
+                      menuContent: MenuContent.I18N,
+                      headerTitle: 'languages',
+                    });
+                  }}
+                  className="group p-10px"
+                >
+                  <PiGlobe
+                    size={20}
+                    className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
+                  />
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  changeMenu({
-                    menuContent: MenuContent.NOTIFICATION,
-                    headerTitle: 'notification',
-                  });
-                }}
-                className="group p-10px"
-              >
-                <VscBell
-                  size={20}
-                  className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
-                />
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    changeMenu({
+                      menuContent: MenuContent.NOTIFICATION,
+                      headerTitle: 'notification',
+                    });
+                  }}
+                  className="group relative p-10px"
+                >
+                  <PiBell
+                    size={20}
+                    className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
+                  />
+                  {hasUnreadNotifications && (
+                    <span className="absolute right-11px top-11px h-8px w-8px rounded-full border border-avatar-stroke-primary bg-surface-state-error"></span>
+                  )}
+                </button>
+              </div>
 
               <button type="button" onClick={closeMenu} className="group ml-auto p-10px">
                 <IoCloseOutline
@@ -197,7 +210,9 @@ const HeaderMobile = () => {
               <SubMenu selectedMenuOption={selectedMenuOption} closeMenu={closeMenu} />
             )}
 
-            {usingMenuContent === MenuContent.NOTIFICATION && <NotificationMobile />}
+            {usingMenuContent === MenuContent.NOTIFICATION && (
+              <NotificationMobile notifications={notifications} />
+            )}
           </section>
         </div>
       )}

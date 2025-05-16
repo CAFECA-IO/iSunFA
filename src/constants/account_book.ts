@@ -30,7 +30,7 @@ export const FILING_METHOD_OPTIONS = [
 export interface Step1FormState {
   imageId: string;
   companyName: string;
-  responsiblePerson: string;
+  representativeName: string;
   taxId: string;
   taxSerialNumber: string;
   contactPerson: string;
@@ -57,7 +57,7 @@ export interface Step1FormState {
 export const initialStep1FormState: Step1FormState = {
   imageId: '',
   companyName: '',
-  responsiblePerson: '',
+  representativeName: '',
   taxId: '',
   taxSerialNumber: '',
   contactPerson: '',
@@ -145,6 +145,9 @@ export type Step2FormState = {
   isFilingMethodDropdownOpen: boolean;
   isDeclarantFilingMethodDropdownOpen: boolean;
   isAgentFilingRolesDropdownOpen: boolean;
+
+  // Info: (20250516 - Liz) 是否跳過驗證
+  isValidationSkipped: boolean;
 };
 
 export type Step2FormAction =
@@ -180,6 +183,8 @@ export const initialStep2FormState: Step2FormState = {
   isFilingMethodDropdownOpen: false,
   isDeclarantFilingMethodDropdownOpen: false,
   isAgentFilingRolesDropdownOpen: false,
+
+  isValidationSkipped: false,
 };
 
 export const step2FormReducer = (
