@@ -162,7 +162,6 @@ const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
   representativeName: z.string(),
   country: countrySchema,
   phoneNumber: z.string(),
-  // address: z.string(),
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),

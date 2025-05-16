@@ -481,7 +481,7 @@ export const listAccountBookByUserId = async (
   });
 
   // Info: (20250337 - Tzuhan) 格式化回傳數據
-  return toPaginatedData({
+  const result = toPaginatedData({
     data: accountBooks.map((book) => {
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
@@ -562,6 +562,10 @@ export const listAccountBookByUserId = async (
     pageSize,
     sort: sortOption,
   });
+
+  loggerBack.info(`AccountBookList: ${JSON.stringify(result)}`);
+
+  return result;
 };
 
 export const listAccountBooksByTeamId = async (

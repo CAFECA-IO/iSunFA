@@ -346,7 +346,6 @@ model CompanySetting {
   country            String
   phone              String
   address            Json   @default("{\"city\": \"\", \"district\": \"\", \"enteredAddress\": \"\"}")
-  // TODO: 需改為 Json，整理格式為{city: '',district: '', enteredAddress: ''}，並將原本的文字放到 enteredAddress
   countryCode        String @default("tw") @map("country_code")
 
   contactPerson         String?                @map("contact_person")
