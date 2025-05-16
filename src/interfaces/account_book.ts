@@ -63,7 +63,7 @@ export interface IAccountBook {
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
   // ToDo: (20250515 - Liz) RC2 新增表單欄位
-  // responsiblePerson: string; // Info: (20250423 - Liz) 負責人姓名
+  // representativeName: string; // Info: (20250423 - Liz) 負責人姓名
   // taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
   // contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
   // phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
