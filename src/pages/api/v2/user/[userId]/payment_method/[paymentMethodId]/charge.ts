@@ -123,7 +123,12 @@ export const handlePostRequest = async (req: NextApiRequest) => {
           resultData.teamInvoice = teamInvoice;
 
           // Info: (20250330 - Luphia) 根據扣款的結果建立 team_subscription 並儲存
-          const teamSubscriptionData = await generateTeamSubscription(userId, teamId, teamPlanType);
+          const teamSubscriptionData = await generateTeamSubscription(
+            userId,
+            teamId,
+            teamPlanType,
+            teamOrder
+          );
           let teamSubscription: ITeamSubscription;
           if (teamSubscriptionData.id) {
             teamSubscription = await updateTeamSubscription(teamSubscriptionData, tx);
