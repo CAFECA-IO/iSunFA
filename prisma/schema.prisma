@@ -316,6 +316,28 @@ model CompanyKYC {
   @@map("company_kyc")
 }
 
+enum FilingFrequency {
+  BIMONTHLY_FILING
+  MONTHLY_FILING
+}
+
+enum FilingMethod {
+  SINGLE_ENTITY_FILING
+  CONSOLIDATED_FILING
+  INDIVIDUAL_FILING
+}
+
+enum DeclarantFilingMethod {
+  SELF_FILING
+  AGENT_FILING
+}
+
+enum AgentFilingRole {
+  ACCOUNTANT
+  BOOKKEEPER
+  BOOKKEEPER_AND_FILING_AGENT
+}
+
 model CompanySetting {
   id                 Int    @id @default(autoincrement())
   companyId          Int    @unique @map("company_id")
@@ -323,11 +345,22 @@ model CompanySetting {
   representativeName String @map("representative_name")
   country            String
   phone              String
-  address            String
+  address            Json   @default("{\"city\": \"\", \"district\": \"\", \"enteredAddress\": \"\"}")
   countryCode        String @default("tw") @map("country_code")
-  createdAt          Int    @map("created_at")
-  updatedAt          Int    @map("updated_at")
-  deletedAt          Int?   @map("deleted_at")
+
+  contactPerson         String?                @map("contact_person")
+  filingFrequency       FilingFrequency?       @map("filing_frequency")
+  filingMethod          FilingMethod?          @map("filing_method")
+  declarantFilingMethod DeclarantFilingMethod? @map("declarant_filing_method")
+  declarantName         String?                @map("declarant_name")
+  declarantPersonalId   String?                @map("declarant_personal_id")
+  declarantPhoneNumber  String?                @map("declarant_phone_number")
+  agentFilingRole       AgentFilingRole?       @map("agent_filing_role")
+  licenseId             String?                @map("license_id")
+
+  createdAt Int  @map("created_at")
+  updatedAt Int  @map("updated_at")
+  deletedAt Int? @map("deleted_at")
 
   company Company @relation(fields: [companyId], references: [id])
 
@@ -1462,6 +1495,7 @@ model TeamSubscription {
   id          Int          @id @default(autoincrement())
   teamId      Int          @map("team_id")
   planType    TeamPlanType @default(TRIAL) @map("plan_type")
+  maxMembers  Int          @default(3) @map("max_members")
   startDate   Int          @map("start_date")
   expiredDate Int          @map("expired_date")
   createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")

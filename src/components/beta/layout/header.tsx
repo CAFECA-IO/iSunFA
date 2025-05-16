@@ -4,7 +4,7 @@ import ModeSwitch from '@/components/beta/layout/mode_switch';
 import I18n from '@/components/i18n/i18n';
 import Notification from '@/components/beta/layout/notification';
 import Profile from '@/components/beta/layout/profile';
-import CompanyBadge from '@/components/beta/layout/company_badge';
+import AccountBookBadge from '@/components/beta/layout/account_book_badge';
 import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import HeaderMobile from '@/components/beta/layout/mobile/header_mobile';
@@ -83,7 +83,7 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
             />
           </div>
 
-          <CompanyBadge />
+          <AccountBookBadge />
 
           <Profile />
         </section>

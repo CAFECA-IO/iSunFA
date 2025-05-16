@@ -68,6 +68,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     InvoiceType.INPUT_29,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
+
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
@@ -128,7 +129,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       issuedDate: selectedDate,
       netAmount,
       taxAmount,
-      salesName,
       type,
       no,
       otherCertificateNo,
@@ -146,21 +146,19 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
 
-    // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20 以外）
+    // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20、INPUT_22 、INPUT_24、INPUT_27 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
     if (
       (type !== InvoiceType.INPUT_20 &&
+        type !== InvoiceType.INPUT_22 &&
+        type !== InvoiceType.INPUT_24 &&
+        type !== InvoiceType.INPUT_27 &&
         formStateRef.current.taxRate !== undefined &&
         (!taxAmount || taxAmount <= 0)) ||
       taxAmount == null
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
-    }
-
-    // Info: (20250514 - Anna) 檢查銷售方名稱（除了 INPUT_20 以外）
-    if (type !== InvoiceType.INPUT_20 && !salesName) {
-      newErrors.counterParty = t('certificate:ERROR.REQUIRED_COUNTERPARTY_NAME'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_COUNTERPARTY');
     }
 
     // Info: (20250514 - Anna) 根據發票格式檢查 invoiceNo 或替代欄位
@@ -169,10 +167,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       type === InvoiceType.INPUT_25 ||
       type === InvoiceType.INPUT_27;
 
-    if (type !== InvoiceType.INPUT_20 && (
-      (!needsAlternativeNo && !no) ||
-      (needsAlternativeNo && !no && !otherCertificateNo && !carrierSerialNumber)
-    )) {
+    if (
+      type !== InvoiceType.INPUT_20 &&
+      ((!needsAlternativeNo && !no) ||
+        (needsAlternativeNo && !no && !otherCertificateNo && !carrierSerialNumber))
+    ) {
       newErrors.no = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
 
@@ -193,6 +192,50 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   // Info: (20250428 - Anna) 用來操作 input（focus 或 select）
   const summarizedInvoiceInputRef = useRef<HTMLInputElement>(null);
 
+  // Info: (20250414 - Anna) 處理保存
+  // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
+  const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) return false;
+
+    return !keys1.some((key) => {
+      const val1 = obj1[key];
+      const val2 = obj2[key];
+
+      if (key === 'counterParty') {
+        const cp1 = val1 as ICounterpartyOptional;
+        const cp2 = val2 as ICounterpartyOptional;
+        return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
+      }
+
+      return val1 !== val2;
+    });
+  };
+  const handleSave = useCallback(async () => {
+    if (!validateForm()) return;
+
+    const { isSelected, actions, ...rest } = certificate;
+
+    const updatedCertificate = {
+      ...rest,
+      ...formStateRef.current,
+    };
+
+    // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
+    if (shallowEqual(savedInvoiceRC2Ref.current, updatedCertificate)) return;
+
+    const updatedData: Partial<IInvoiceRC2Input> = {
+      ...certificate,
+      ...updatedCertificate,
+    };
+    await onSave(updatedData);
+
+    // Info: (20250414 - Anna) 更新最新儲存成功的內容
+    savedInvoiceRC2Ref.current = updatedCertificate;
+  }, [certificate, onSave]);
+
   const handleInputChange = useCallback(
     (
       field: keyof typeof formState,
@@ -210,6 +253,12 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
       setFormState((prev) => {
         const updated = { ...prev, [field]: value };
+
+        // Info: (20250416 - Anna) 格式20，設為不可扣抵
+        if (field === 'type' && value === InvoiceType.INPUT_20) {
+          updated.deductionType = DeductionType.NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE;
+          updated.taxType = TaxType.TAX_FREE;
+        }
         formStateRef.current = updated; // Info: (20250416 - Anna) 同步更新 Ref
         return updated;
       });
@@ -252,58 +301,16 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     setIsInvoiceTypeMenuOpen(false);
     handleInputChange('type', id);
   };
-  // Info: (20250414 - Anna) 處理保存
-  // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
-  const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-
-    if (keys1.length !== keys2.length) return false;
-
-    return !keys1.some((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
-
-      if (key === 'counterParty') {
-        const cp1 = val1 as ICounterpartyOptional;
-        const cp2 = val2 as ICounterpartyOptional;
-        return cp1?.name !== cp2?.name || cp1?.taxId !== cp2?.taxId;
-      }
-
-      return val1 !== val2;
-    });
-  };
-  const handleSave = useCallback(async () => {
-    if (!validateForm()) return;
-
-    const { isSelected, actions, ...rest } = certificate;
-
-    const updatedCertificate = {
-      ...rest,
-      ...formStateRef.current,
-    };
-    // ToDo: (20250429 - Anna) 等後端欄位完成，確認 isSharedAmount 正確存取後，移除 console.log
-    // eslint-disable-next-line no-console
-    console.log('傳到後端的 isSharedAmount(formStateRef):', formStateRef.current.isSharedAmount);
-    // eslint-disable-next-line no-console
-    console.log('傳到後端的 isSharedAmount(updatedInvoice):', updatedCertificate.isSharedAmount);
-
-    // Info: (20250414 - Anna) 如果資料完全沒變，就不打 API
-    if (shallowEqual(savedInvoiceRC2Ref.current, updatedCertificate)) return;
-
-    const updatedData: Partial<IInvoiceRC2Input> = {
-      ...certificate,
-      ...updatedCertificate,
-    };
-    await onSave(updatedData);
-
-    // Info: (20250414 - Anna) 更新最新儲存成功的內容
-    savedInvoiceRC2Ref.current = updatedCertificate;
-  }, [certificate, onSave]);
 
   const netAmountChangeHandler = (value: number) => {
     handleInputChange('netAmount', value);
-    const updateTaxPrice = Math.round((value * (formState.taxRate ?? 0)) / 100);
+    const updateTaxPrice =
+      // Info: (20250415  - Anna) 格式22、格式24 、格式20 稅額為 0
+      formState.type === InvoiceType.INPUT_22 ||
+      formState.type === InvoiceType.INPUT_24 ||
+      formState.type === InvoiceType.INPUT_20
+        ? 0
+        : Math.round((value * (formState.taxRate ?? 0)) / 100);
     handleInputChange('taxAmount', updateTaxPrice);
     handleInputChange('totalAmount', value + updateTaxPrice);
   };
@@ -423,6 +430,18 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
       carrierSerialNumber: certificate.carrierSerialNumber,
     };
+
+    // Info: (20250516 - Anna) 補算格式28、格式29 的稅額和總額（如果沒有的話）
+    if (
+      (newFormState.type === InvoiceType.INPUT_28 || newFormState.type === InvoiceType.INPUT_29) &&
+      newFormState.taxAmount == null &&
+      newFormState.taxRate != null &&
+      newFormState.netAmount != null
+    ) {
+      const computedTax = Math.round((newFormState.netAmount * newFormState.taxRate) / 100);
+      newFormState.taxAmount = computedTax;
+      newFormState.totalAmount = newFormState.netAmount + computedTax;
+    }
 
     setFormState(newFormState);
     formStateRef.current = newFormState;
@@ -726,7 +745,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           }}
                           className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                           placeholder="AB"
-                          disabled={!!formState.otherCertificateNo}
+                          disabled={
+                            !!formState.otherCertificateNo ||
+                            !!formState.carrierSerialNumber?.trim().length
+                          }
                         />
 
                         <input
@@ -741,7 +763,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           }}
                           className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
                           placeholder="12345678"
-                          disabled={!!formState.otherCertificateNo}
+                          disabled={
+                            !!formState.otherCertificateNo ||
+                            !!formState.carrierSerialNumber?.trim().length
+                          }
                         />
                       </div>
                     </div>
@@ -996,26 +1021,29 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             )}
 
             {/* Info: (20240924 - Anna) CounterParty */}
-            {formState.type !== InvoiceType.INPUT_20 && (
-              <CounterpartyInput
-                ref={counterpartyInputRef}
-                counterparty={{
-                  taxId: formState.salesIdNumber,
-                  name: formState.salesName,
-                }}
-                counterpartyList={counterpartyList}
-                onSelect={(cp: ICounterpartyOptional) => {
-                  if (cp && cp.name) {
-                    handleInputChange('salesName', cp.name);
-                  }
-                  if (cp && cp.taxId) {
-                    handleInputChange('salesIdNumber', cp.taxId);
-                  }
-                }}
-                labelClassName="text-neutral-300"
-                counterpartyRole="seller"
-              />
-            )}
+            {formState.type !== InvoiceType.INPUT_20 &&
+              formState.type !== InvoiceType.INPUT_26 &&
+              formState.type !== InvoiceType.INPUT_27 &&
+              formState.type !== InvoiceType.INPUT_28 && (
+                <CounterpartyInput
+                  ref={counterpartyInputRef}
+                  counterparty={{
+                    taxId: formState.salesIdNumber,
+                    name: formState.salesName,
+                  }}
+                  counterpartyList={counterpartyList}
+                  onSelect={(cp: ICounterpartyOptional) => {
+                    if (cp && cp.name) {
+                      handleInputChange('salesName', cp.name);
+                    }
+                    if (cp && cp.taxId) {
+                      handleInputChange('salesIdNumber', cp.taxId);
+                    }
+                  }}
+                  labelClassName="text-neutral-300"
+                  counterpartyRole="seller"
+                />
+              )}
             {errors.counterParty && (
               <p className="-translate-y-1 self-end text-sm text-text-state-error">
                 {errors.counterParty}
@@ -1071,32 +1099,57 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 <div className="relative flex flex-1 flex-col items-start gap-2 md:h-105px">
                   <p className="text-sm font-semibold text-neutral-300">
                     {t('certificate:EDIT.TAX')}
-                    <span> </span>
-                    <span className="text-text-state-error">*</span>
+                    {formState.type !== InvoiceType.INPUT_22 &&
+                      formState.type !== InvoiceType.INPUT_24 && (
+                        <>
+                          <span> </span>
+                          <span className="text-text-state-error">*</span>
+                        </>
+                      )}
                   </p>
                   <div className="flex w-full items-center">
                     <NumericInput
                       id="input-tax"
                       name="input-tax"
                       value={
-                        formState.type === InvoiceType.INPUT_22 ||
-                        formState.type === InvoiceType.INPUT_27
-                          ? 0
-                          : (formState.taxAmount ?? 0)
+                        formState.type === InvoiceType.INPUT_22 ? 0 : (formState.taxAmount ?? 0)
                       }
                       isDecimal
                       required
                       hasComma
-                      disabled={
-                        formState.type === InvoiceType.INPUT_22 ||
-                        formState.type === InvoiceType.INPUT_27
-                      }
+                      disabled={formState.type === InvoiceType.INPUT_22}
                       className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none ${
-                        formState.type === InvoiceType.INPUT_22 ||
-                        formState.type === InvoiceType.INPUT_27
+                        formState.type === InvoiceType.INPUT_22
                           ? 'text-neutral-300'
                           : 'text-input-text-primary'
                       }`}
+                      // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
+                      // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
+                      triggerWhenChanged={(value: number) => {
+                        if (value === (formStateRef.current.taxAmount ?? 0)) return;
+
+                        // Info: (20250516 - Anna) 更新 taxAmount 欄位
+                        handleInputChange('taxAmount', value);
+
+                        // Info: (20250516 - Anna) 最新的稅額 + 原本的淨額，算出總金額，更新 totalAmount 欄位。
+                        const updatedTotal = (formStateRef.current.netAmount ?? 0) + value;
+                        handleInputChange('totalAmount', updatedTotal);
+
+                        // Info: (20250516 - Anna) 如果前一次的 debounce timer 還沒觸發，就清掉，避免多次呼叫 handleSave()
+                        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+                        // Info: (20250516 - Anna) 設一個新的 timer，如果現在的資料與上一次儲存的不同， 1 秒後觸發儲存
+                        debounceTimer.current = setTimeout(() => {
+                          const isSame = shallowEqual(
+                            formStateRef.current,
+                            savedInvoiceRC2Ref.current
+                          );
+                          const isValid = validateForm();
+                          if (!isSame && isValid) {
+                            handleSave();
+                          }
+                        }, 1000);
+                      }}
                     />
                     <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                       <Image

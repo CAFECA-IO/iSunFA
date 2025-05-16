@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
@@ -38,11 +38,15 @@ import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upl
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface CertificateListBodyProps {}
 
 const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const { t } = useTranslation(['certificate']);
+  const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250418 - Anna) 引用下載範圍
+
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
   const accountBookId = connectedAccountBook?.id;
@@ -158,16 +162,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     [certificates]
   );
 
-  const [exportModalData, setExportModalData] = useState<IInvoiceRC2Output[]>([]);
-
-  // Deprecated: (20250513 - Luphia) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleExportModalApiResponse = useCallback(
-    (resData: IPaginatedData<IInvoiceRC2Output[]>) => {
-      setExportModalData(resData.data);
-    },
-    []
-  );
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   // Deprecated: (20250513 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -177,15 +172,66 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     setIsExportModalOpen(true);
   }, []);
 
-  // Deprecated: (20250513 - Luphia) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onExport = useCallback(() => {
-    if (exportModalData.length > 0) {
-      exportModalData.forEach((item) => {
-        handleDownloadItem(item.id);
-      });
+  // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
+  const waitForNextFrame = () => {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve(true));
+    });
+  };
+
+  // Info: (20250418 - Anna) 匯出憑證表格
+  const handleDownload = async () => {
+    setIsExporting(true);
+
+    // Info: (20250506 - Anna) 等待畫面進入「isExporting=true」的狀態
+    await waitForNextFrame();
+
+    if (!downloadRef.current) return;
+
+    // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
+    downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
+      el.classList.remove('h-54px');
+    });
+
+    // Info: (20250401 - Anna) 插入修正樣式
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .download-pb-4 {
+      padding-bottom: 16px;
     }
-  }, [exportModalData]);
+      .download-pb-3 {
+      padding-bottom: 12px;
+    }
+      .download-hidden {
+      display: none;
+    }
+  `;
+
+    document.head.appendChild(style);
+
+    const canvas = await html2canvas(downloadRef.current, {
+      scale: 2, // Info: (20250418 - Anna) 增加解析度
+      useCORS: true, // Info: (20250418 - Anna) 若有使用圖片，允許跨域圖片
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+
+    // Info: (20250327 - Anna) jsPDF 是類別，但命名為小寫，需關閉 eslint new-cap
+    // eslint-disable-next-line new-cap
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+    style.remove();
+    pdf.save('output-certificates.pdf');
+
+    // Info: (20250506 - Anna) 匯出後還原畫面
+    setIsExporting(false);
+  };
 
   const [exportOperations] = useState<ISelectionToolBarOperation[]>([
     {
@@ -208,7 +254,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
         };
         setTotalCertificatePrice(note.totalCertificatePrice);
         setIncomplete(note.incomplete);
-        setTotalPages(resData.totalPages);
+        setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
         setPage(resData.page);
         setCurrency(note.currency as CurrencyType);
@@ -603,34 +649,38 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
               addOperations={addOperations}
               exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
+              onDownload={handleDownload}
             />
-            <OutputInvoice
-              activeTab={activeTab}
-              page={page}
-              setPage={setPage}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              certificates={Object.values(certificates)}
-              currencyAlias={currency}
-              viewType={viewType}
-              activeSelection={activeSelection}
-              handleSelect={handleSelect}
-              handleSelectAll={handleSelectAll}
-              isSelectedAll={isSelectedAll}
-              onDownload={handleDownloadItem}
-              onRemove={handleDeleteItem}
-              onEdit={openEditModalHandler}
-              dateSort={dateSort}
-              amountSort={amountSort}
-              voucherSort={voucherSort}
-              certificateNoSort={certificateNoSort}
-              certificateTypeSort={certificateTypeSort}
-              setDateSort={setDateSort}
-              setAmountSort={setAmountSort}
-              setVoucherSort={setVoucherSort}
-              setCertificateNoSort={setCertificateNoSort}
-              setCertificateTypeSort={setCertificateTypeSort}
-            />
+            <div ref={downloadRef} className="download-page">
+              <OutputInvoice
+                activeTab={activeTab}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                certificates={Object.values(certificates)}
+                currencyAlias={currency}
+                viewType={viewType}
+                activeSelection={activeSelection}
+                handleSelect={handleSelect}
+                handleSelectAll={handleSelectAll}
+                isSelectedAll={isSelectedAll}
+                onDownload={handleDownloadItem}
+                onRemove={handleDeleteItem}
+                onEdit={openEditModalHandler}
+                dateSort={dateSort}
+                amountSort={amountSort}
+                voucherSort={voucherSort}
+                certificateNoSort={certificateNoSort}
+                certificateTypeSort={certificateTypeSort}
+                setDateSort={setDateSort}
+                setAmountSort={setAmountSort}
+                setVoucherSort={setVoucherSort}
+                setCertificateNoSort={setCertificateNoSort}
+                setCertificateTypeSort={setCertificateTypeSort}
+                isExporting={isExporting}
+              />
+            </div>
           </>
         ) : (
           <div className="flex flex-auto items-center justify-center">
