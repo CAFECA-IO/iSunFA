@@ -488,8 +488,9 @@ export const listAccountBookByUserId = async (
       const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
-      // Info: (20250717 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
+      loggerBack.info(`SettingInListAccountBookByUser: ${JSON.stringify(setting)}`);
       const address = setting.address
         ? typeof setting.address === 'string'
           ? JSON.parse(setting.address)
@@ -519,14 +520,14 @@ export const listAccountBookByUserId = async (
         enteredAddress: address.enteredAddress || '',
 
         // Info: (20250717 - Shirley) 添加選填欄位
-        filingFrequency: setting.filingFrequency as FILING_FREQUENCY,
-        filingMethod: setting.filingMethod as FILING_METHOD,
-        declarantFilingMethod: setting.declarantFilingMethod as DECLARANT_FILING_METHOD,
-        declarantName: setting.declarantName,
-        declarantPersonalId: setting.declarantPersonalId,
-        declarantPhoneNumber: setting.declarantPhoneNumber,
-        agentFilingRole: setting.agentFilingRole as AGENT_FILING_ROLE,
-        licenseId: setting.licenseId,
+        filingFrequency: setting.filingFrequency || undefined,
+        filingMethod: setting.filingMethod || undefined,
+        declarantFilingMethod: setting.declarantFilingMethod || undefined,
+        declarantName: setting.declarantName || undefined,
+        declarantPersonalId: setting.declarantPersonalId || undefined,
+        declarantPhoneNumber: setting.declarantPhoneNumber || undefined,
+        agentFilingRole: setting.agentFilingRole || undefined,
+        licenseId: setting.licenseId || undefined,
 
         team: book.team
           ? {
@@ -715,15 +716,15 @@ export const listAccountBooksByTeamId = async (
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
 
-        // Info: (20250717 - Shirley) 添加選填欄位
-        filingFrequency: setting.filingFrequency as FILING_FREQUENCY,
-        filingMethod: setting.filingMethod as FILING_METHOD,
-        declarantFilingMethod: setting.declarantFilingMethod as DECLARANT_FILING_METHOD,
-        declarantName: setting.declarantName,
-        declarantPersonalId: setting.declarantPersonalId,
-        declarantPhoneNumber: setting.declarantPhoneNumber,
-        agentFilingRole: setting.agentFilingRole as AGENT_FILING_ROLE,
-        licenseId: setting.licenseId,
+        // Info: (20250516 - Shirley) 添加選填欄位
+        filingFrequency: setting.filingFrequency || undefined,
+        filingMethod: setting.filingMethod || undefined,
+        declarantFilingMethod: setting.declarantFilingMethod || undefined,
+        declarantName: setting.declarantName || undefined,
+        declarantPersonalId: setting.declarantPersonalId || undefined,
+        declarantPhoneNumber: setting.declarantPhoneNumber || undefined,
+        agentFilingRole: setting.agentFilingRole || undefined,
+        licenseId: setting.licenseId || undefined,
 
         team: book.team
           ? {
