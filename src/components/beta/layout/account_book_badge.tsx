@@ -3,7 +3,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
 
-const CompanyBadge = () => {
+const AccountBookBadge = () => {
   const { connectedAccountBook } = useUserCtx();
 
   return (
@@ -29,4 +29,4 @@ const CompanyBadge = () => {
   );
 };
 
-export default CompanyBadge;
+export default AccountBookBadge;

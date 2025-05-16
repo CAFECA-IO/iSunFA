@@ -11,6 +11,9 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   const { t } = useTranslation(['dashboard']);
   const { id, content, isRead, type, teamName } = notification;
 
+  // ToDo: (20250516 - Liz) 打 API 接受團隊邀請
+  // ToDo: (20250516 - Liz) 打 API 拒絕團隊邀請
+
   if (type === NOTIFICATION_TYPE.GENERAL) {
     return (
       <section className="p-12px">

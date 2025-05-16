@@ -83,15 +83,6 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
       {/* Info: (20240924 - Anna) Invoice Information */}
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
-          {certificate.incomplete && (
-            <Image
-              src="/icons/hint.svg"
-              alt="Hint"
-              width={16}
-              height={16}
-              className="download-hidden min-w-16px"
-            />
-          )}
           <div className="flex flex-col">
             <div className="download-pb-4 text-text-neutral-primary">
               {certificate.no ||

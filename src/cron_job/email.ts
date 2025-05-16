@@ -1,7 +1,7 @@
 import { getUnixTime } from 'date-fns';
 import { EmailTemplateName, EmailTemplateData } from '@/constants/email_template';
 import loggerBack from '@/lib/utils/logger_back';
-import { emailJob } from '@prisma/client';
+import { EmailJob } from '@prisma/client';
 import prisma from '@/client';
 import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 
@@ -14,7 +14,7 @@ export async function sendEmailJobs() {
   const now = getUnixTime(new Date());
 
   await Promise.allSettled(
-    jobs.map(async (job: emailJob) => {
+    jobs.map(async (job: EmailJob) => {
       try {
         await sendEmail(
           job.receiver,

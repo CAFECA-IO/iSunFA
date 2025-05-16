@@ -105,11 +105,11 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
       {/* Info: (20240919 - Anna) 分頁組件 */}
       <div className="flex justify-center">
         <Pagination
+          totalPages={totalPages}
+          currentPage={page}
+          setCurrentPage={setPage}
           className="mt-4"
           totalCount={totalCount}
-          currentPage={page}
-          totalPages={totalPages}
-          setCurrentPage={setPage}
         />
       </div>
     </>

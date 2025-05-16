@@ -165,4 +165,8 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.SEND_VERIFICATION_EMAIL]: [AuthFunctionsKeysNew.user],
   [APIName.VERIFY_CODE]: [AuthFunctionsKeysNew.user],
+
+  [APIName.LIST_NOTIFICATION]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_NOTIFICATION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.READ_NOTIFICATION]: [AuthFunctionsKeysNew.user],
 };

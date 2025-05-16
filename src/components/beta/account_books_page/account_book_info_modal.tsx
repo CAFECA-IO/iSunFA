@@ -59,7 +59,7 @@ const AccountBookInfoModal = ({
   // ToDo: (20250421 - Liz) 等新版的建立帳本 API 實作後再改
   const {
     companyName,
-    // responsiblePerson,
+    // representativeName,
     taxId,
     // taxSerialNumber,
     // phoneNumber,

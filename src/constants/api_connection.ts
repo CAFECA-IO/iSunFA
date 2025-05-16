@@ -168,6 +168,9 @@ export enum APIName {
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
   SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
   VERIFY_CODE = 'VERIFY_CODE',
+  LIST_NOTIFICATION = 'LIST_NOTIFICATION',
+  GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
+  READ_NOTIFICATION = 'READ_NOTIFICATION',
 }
 
 export enum APIPath {
@@ -313,6 +316,9 @@ export enum APIPath {
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
   SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
   VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
+  LIST_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification`,
+  GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
+  READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
 }
 
 const createConfig = ({
@@ -1025,5 +1031,20 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VERIFY_CODE,
     method: HttpMethod.POST,
     path: APIPath.VERIFY_CODE,
+  }),
+  [APIName.LIST_NOTIFICATION]: createConfig({
+    name: APIName.LIST_NOTIFICATION,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_NOTIFICATION,
+  }),
+  [APIName.GET_NOTIFICATION_BY_ID]: createConfig({
+    name: APIName.GET_NOTIFICATION_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_NOTIFICATION_BY_ID,
+  }),
+  [APIName.READ_NOTIFICATION]: createConfig({
+    name: APIName.READ_NOTIFICATION,
+    method: HttpMethod.PATCH,
+    path: APIPath.READ_NOTIFICATION,
   }),
 };
