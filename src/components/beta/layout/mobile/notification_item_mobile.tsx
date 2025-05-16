@@ -6,6 +6,10 @@ interface NotificationItemMobileProps {
   notification: INotification;
 }
 
+// ToDo: (20250516 - Liz) 打 API 接受團隊邀請
+// ToDo: (20250516 - Liz) 打 API 拒絕團隊邀請
+// ToDo: (20250516 - Liz) 打 API 更新通知為已讀
+
 const NotificationItemMobile = ({ notification }: NotificationItemMobileProps) => {
   const { t } = useTranslation(['dashboard']);
 

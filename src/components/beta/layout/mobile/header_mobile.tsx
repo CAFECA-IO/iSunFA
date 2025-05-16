@@ -14,6 +14,8 @@ import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
 import { MenuContent } from '@/interfaces/side_menu';
 import SubMenu from '@/components/beta/layout/mobile/sub_menu';
 import NotificationMobile from '@/components/beta/layout/mobile/notification_mobile';
+import { INotification } from '@/interfaces/notification';
+import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 
 const HeaderMobile = () => {
   const { asPath } = useRouter();
@@ -25,7 +27,8 @@ const HeaderMobile = () => {
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
   // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [hasNotification, setHasNotification] = useState<boolean>(true);
+  const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
+  const hasUnreadNotifications = notifications.some((notification) => !notification.isRead);
 
   const openMenu = () => setIsMenuOpen(true);
 
@@ -129,7 +132,7 @@ const HeaderMobile = () => {
                     size={20}
                     className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover group-disabled:text-button-text-disable"
                   />
-                  {hasNotification && (
+                  {hasUnreadNotifications && (
                     <span className="absolute right-11px top-11px h-8px w-8px rounded-full border border-avatar-stroke-primary bg-surface-state-error"></span>
                   )}
                 </button>
@@ -207,7 +210,9 @@ const HeaderMobile = () => {
               <SubMenu selectedMenuOption={selectedMenuOption} closeMenu={closeMenu} />
             )}
 
-            {usingMenuContent === MenuContent.NOTIFICATION && <NotificationMobile />}
+            {usingMenuContent === MenuContent.NOTIFICATION && (
+              <NotificationMobile notifications={notifications} />
+            )}
           </section>
         </div>
       )}

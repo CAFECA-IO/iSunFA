@@ -21,6 +21,7 @@ const Notification = ({
 
   const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
   const isNoData = notifications.length === 0;
+  const hasUnreadNotifications = notifications.some((notification) => !notification.isRead);
 
   // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -64,7 +65,7 @@ const Notification = ({
         className="relative p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         <PiBell size={20} className="cursor-pointer" />
-        {!isNoData && (
+        {hasUnreadNotifications && (
           <span className="absolute right-11px top-11px h-8px w-8px rounded-full border border-avatar-stroke-primary bg-surface-state-error"></span>
         )}
       </button>
