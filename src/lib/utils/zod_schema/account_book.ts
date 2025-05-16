@@ -77,6 +77,20 @@ const accountBookInfoSchema = z.object({
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
+
+  // Info: (20250717 - Shirley) 新增 RC2 欄位
+  contactPerson: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 // ===================================================================================
@@ -148,10 +162,24 @@ const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
   representativeName: z.string(),
   country: countrySchema,
   phoneNumber: z.string(),
-  address: z.string(),
+  // address: z.string(),
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
+
+  // Info: (20250717 - Shirley) 新增 RC2 欄位
+  contactPerson: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 // ===================================================================================
@@ -254,6 +282,20 @@ export const updateAccountBookInfoBodySchema = z.object({
     })
     .optional(),
   startDate: z.number().optional(),
+
+  // Info: (20250717 - Shirley) 新增 RC2 欄位
+  contactPerson: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 // Info: (20250410 - Shirley) 定義更新帳本信息的 schema
