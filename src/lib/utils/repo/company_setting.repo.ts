@@ -67,7 +67,7 @@ export async function updateCompanySettingByCompanyId(options: {
   const nowInSecond = getTimestampNow();
 
   try {
-    // 構建 address 欄位（支援新舊格式）
+    // Info: (20250516 - Shirley) 構建 address 欄位（支援新舊格式）
     const addressData = {
       city:
         data.city ||
@@ -94,7 +94,7 @@ export async function updateCompanySettingByCompanyId(options: {
         country: data.country,
         countryCode: data.country,
         phone: data.phone,
-        address: addressData, // 使用構建好的地址物件
+        address: addressData, // Info: (20250516 - Shirley) 使用構建好的地址物件
         contactPerson: data.contactPerson,
         filingFrequency: data.filingFrequency,
         filingMethod: data.filingMethod,
