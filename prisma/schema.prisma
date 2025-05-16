@@ -1493,6 +1493,7 @@ model TeamSubscription {
   id          Int          @id @default(autoincrement())
   teamId      Int          @map("team_id")
   planType    TeamPlanType @default(TRIAL) @map("plan_type")
+  maxMembers  Int          @default(3) @map("max_members")
   startDate   Int          @map("start_date")
   expiredDate Int          @map("expired_date")
   createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at")
