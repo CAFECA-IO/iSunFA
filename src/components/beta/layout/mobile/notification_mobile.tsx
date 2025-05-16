@@ -1,9 +1,13 @@
 import { FiCheckCircle } from 'react-icons/fi';
-import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 import NotificationItemMobile from '@/components/beta/layout/mobile/notification_item_mobile';
 import { useTranslation } from 'next-i18next';
+import { INotification } from '@/interfaces/notification';
 
-const NotificationMobile = () => {
+interface NotificationMobileProps {
+  notifications: INotification[];
+}
+
+const NotificationMobile = ({ notifications }: NotificationMobileProps) => {
   const { t } = useTranslation(['dashboard']);
 
   return (
@@ -17,12 +21,12 @@ const NotificationMobile = () => {
       </button>
 
       <section className="overflow-y-auto">
-        {FAKE_NOTIFICATIONS.map((notification) => (
+        {notifications.map((notification) => (
           <NotificationItemMobile key={notification.id} notification={notification} />
         ))}
       </section>
 
-      {FAKE_NOTIFICATIONS.length === 0 && (
+      {notifications.length === 0 && (
         <div className="flex items-center justify-center p-12px">
           <span className="text-base font-medium text-text-neutral-tertiary">
             {t('dashboard:HEADER.NO_NEW_NOTIFICATIONS')}

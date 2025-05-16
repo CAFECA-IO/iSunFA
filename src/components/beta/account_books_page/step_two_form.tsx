@@ -54,6 +54,7 @@ const StepTwoForm = ({
     isFilingMethodDropdownOpen,
     isDeclarantFilingMethodDropdownOpen,
     isAgentFilingRolesDropdownOpen,
+    isValidationSkipped,
   } = step2FormState;
 
   const handleChange =
@@ -97,6 +98,8 @@ const StepTwoForm = ({
 
   // Info: (20250422 - Liz) 驗證必填欄位
   const validateRequiredFields = () => {
+    if (isValidationSkipped) return true; // Info: (20250516 - Liz) 跳過驗證
+
     let isValid = true;
 
     if (!filingFrequency) {
@@ -163,6 +166,18 @@ const StepTwoForm = ({
     return isValid;
   };
 
+  // Info: (20250516 - Liz) 跳過驗證
+  const skipValidation = () => {
+    handleChange('isValidationSkipped')(true);
+    handleChange('filingFrequencyError')(null);
+    handleChange('filingMethodError')(null);
+    handleChange('declarantFilingMethodError')(null);
+    handleChange('declarantNameError')(null);
+    handleChange('declarantPersonalIdError')(null);
+    handleChange('declarantPhoneNumberError')(null);
+    handleChange('agentFilingRoleError')(null);
+  };
+
   // Info: (20250421 - Liz) 打 API 建立帳本(原為公司)
   const onClickSubmit = async () => {
     const success = validateRequiredFields(); // Info: (20250422 - Liz) 驗證必填欄位
@@ -206,11 +221,11 @@ const StepTwoForm = ({
             <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
           </section>
 
-          {/* Info: (20250418 - Liz) Filing Frequency */}
+          {/* Info: (20250418 - Liz) Filing Frequency 申報頻率 */}
           <section className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('dashboard:FILING_FREQUENCY.FILING_FREQUENCY')}
-              <span className="text-text-state-error"> *</span>
+              {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
             </h4>
 
             <div className="relative flex flex-col">
@@ -270,11 +285,11 @@ const StepTwoForm = ({
             </div>
           </section>
 
-          {/* Info: (20250418 - Liz) Filing Method */}
+          {/* Info: (20250418 - Liz) Filing Method 總繳種類 */}
           <section className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('dashboard:FILING_METHOD.FILING_METHOD')}
-              <span className="text-text-state-error"> *</span>
+              {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
             </h4>
 
             <div className="relative flex flex-col">
@@ -334,7 +349,7 @@ const StepTwoForm = ({
             </div>
           </section>
 
-          {/* Info: (20250418 - Liz) Divider - Declarant */}
+          {/* Info: (20250418 - Liz) Divider - Declarant 申報人 (代理人) */}
           <section className="flex items-center gap-16px">
             <div className="flex items-center gap-8px">
               <Image src="/icons/user_icon.svg" width={16} height={16} alt="user_icon" />
@@ -349,7 +364,7 @@ const StepTwoForm = ({
           <section className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
               {t('dashboard:DECLARANT_FILING_METHOD.DECLARANT_FILING_METHOD')}
-              <span className="text-text-state-error"> *</span>
+              {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
             </h4>
 
             <div className="relative flex flex-col">
@@ -412,7 +427,7 @@ const StepTwoForm = ({
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_NAME')}
-                <span className="text-text-state-error"> *</span>
+                {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
               </h4>
               <div>
                 <input
@@ -430,11 +445,11 @@ const StepTwoForm = ({
               </div>
             </div>
 
-            {/* Info: (20250410 - Liz) 負責人身分證字號 */}
+            {/* Info: (20250410 - Liz) 申報人身分證字號 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.DECLARANT_PERSONAL_ID')}
-                <span className="text-text-state-error"> *</span>
+                {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
               </h4>
               <div>
                 <input
@@ -454,11 +469,11 @@ const StepTwoForm = ({
               </div>
             </div>
 
-            {/* Info: (20250410 - Liz) 負責人電話號碼 */}
+            {/* Info: (20250410 - Liz) 申報人電話號碼 */}
             <div className="flex w-250px flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
                 {t('dashboard:STEP_TWO_BUSINESS_TAX_SETTING.PHONE_NUMBER')}
-                <span className="text-text-state-error"> *</span>
+                {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
               </h4>
               <div>
                 <input
@@ -482,7 +497,7 @@ const StepTwoForm = ({
             <div className="flex flex-col gap-8px">
               <h4 className="font-semibold text-input-text-primary">
                 {t('dashboard:AGENT_FILING_ROLE.I_AM')}
-                <span className="text-text-state-error"> *</span>
+                {!isValidationSkipped && <span className="text-text-state-error"> *</span>}
               </h4>
 
               <section className="flex items-start gap-40px">
@@ -548,13 +563,16 @@ const StepTwoForm = ({
             </div>
           )}
 
-          <section className="flex justify-end gap-12px">
+          <section className="flex items-center justify-end gap-12px">
             <button
               type="button"
-              onClick={closeAccountBookInfoModal}
-              className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:text-button-text-disable"
+              disabled={isValidationSkipped}
+              onClick={skipValidation}
+              className="rounded-xs px-16px py-8px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid disabled:pointer-events-none disabled:text-button-text-disable"
             >
-              {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CANCEL')}
+              {isValidationSkipped
+                ? t('dashboard:ACCOUNT_BOOK_INFO_MODAL.SKIPPED')
+                : t('dashboard:ACCOUNT_BOOK_INFO_MODAL.SKIP')}
             </button>
 
             <button
