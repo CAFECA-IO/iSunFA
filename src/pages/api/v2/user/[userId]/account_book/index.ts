@@ -110,7 +110,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
-  // 從請求體中提取所有必要欄位
+  // Info: (20250516 - Shirley) 從請求體中提取所有必要欄位
   const {
     name,
     taxId,
@@ -134,7 +134,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     licenseId,
   } = body;
 
-  // 將所有欄位傳遞給 createAccountBook 函數
+  // Info: (20250516 - Shirley) 將所有欄位傳遞給 createAccountBook 函數
   const accountBook = await createAccountBook(userId, {
     name,
     taxId,
