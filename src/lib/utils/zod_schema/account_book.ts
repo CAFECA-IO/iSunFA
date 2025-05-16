@@ -42,14 +42,14 @@ export const accountBookSchema = z.object({
   isPrivate: z.boolean().optional(),
 
   // Info: (20250515 - Shirley) RC2 fields
-  representativeName: z.string().optional(),
-  taxSerialNumber: z.string().optional(),
-  contactPerson: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  city: z.string().optional(),
-  district: z.string().optional(),
-  enteredAddress: z.string().optional(),
-  newAddress: z.string().optional(),
+  representativeName: z.string().default(''),
+  taxSerialNumber: z.string().default(''),
+  contactPerson: z.string().default(''),
+  phoneNumber: z.string().default(''),
+  city: z.string().default(''),
+  district: z.string().default(''),
+  enteredAddress: z.string().default(''),
+
   filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
   filingMethod: z.nativeEnum(FILING_METHOD).optional(),
   declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
