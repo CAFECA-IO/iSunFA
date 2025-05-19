@@ -46,7 +46,7 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
     number: asset.assetNumber,
     note: asset.note ?? '',
     status: 'normal',
-    accountBookId: accountBookId ?? '', // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    accountBookId,
   }));
   const temporaryAssetListByCompany: IAssetPostOutput[] = temporaryAssetList[accountBookId] ?? [];
 
@@ -114,7 +114,6 @@ const AssetSection: React.FC<IAssetSectionProps> = ({
         const deleteHandler = () => {
           // Info: (20241025 - Julian) trigger API to delete asset
           trigger({ params: { accountBookId, assetId: asset.id } });
-          // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
         };
 
         return (

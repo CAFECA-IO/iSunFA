@@ -250,7 +250,7 @@ const VoucherEditingPageBody: React.FC<{
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
     const analysisResult = await getAIResult({
-      params: { accountBookId, resultId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+      params: { accountBookId, resultId },
       query: { reason: 'voucher' },
     });
 
@@ -657,9 +657,7 @@ const VoucherEditingPageBody: React.FC<{
     } else {
       // Info: (20241119 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
       deleteVoucher({ params: { accountBookId, voucherId } });
-      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       createNewVoucher({ params: { accountBookId }, body });
-      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     }
   };
 
