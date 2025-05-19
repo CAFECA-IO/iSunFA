@@ -59,15 +59,6 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   declarantPhoneNumber: z.string().nullable().default(null),
   agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
   licenseId: z.string().nullable().default(null),
-
-  // filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().optional(),
-  // filingMethod: z.nativeEnum(FILING_METHOD).nullable().optional(),
-  // declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().optional(),
-  // declarantName: z.string().nullable().optional(),
-  // declarantPersonalId: z.string().nullable().optional(),
-  // declarantPhoneNumber: z.string().nullable().optional(),
-  // agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().optional(),
-  // licenseId: z.string().nullable().optional(),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -269,6 +260,26 @@ export const accountBookCreateSchema = {
 const updateAccountBookBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
+  // Info: (20250518 - Shirley) 添加支持修改帳本基本欄位
+  name: z.string().optional(),
+  taxId: z.string().optional(),
+  teamId: z.number().optional(),
+  // Info: (20250518 - Shirley) 添加支持修改 CompanySetting 欄位
+  representativeName: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
+  contactPerson: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
+  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
+  declarantName: z.string().optional(),
+  declarantPersonalId: z.string().optional(),
+  declarantPhoneNumber: z.string().optional(),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
+  licenseId: z.string().optional(),
 });
 
 const updateAccountBookResponseSchema = z.object({

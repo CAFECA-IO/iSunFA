@@ -5,6 +5,8 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { LeaveStatus } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { createAddress, parseAddress } from '@/lib/utils/address';
+import { Prisma } from '@prisma/client';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -67,22 +69,20 @@ export async function updateCompanySettingByCompanyId(options: {
   const nowInSecond = getTimestampNow();
 
   try {
-    // Info: (20250516 - Shirley) 構建 address 欄位（支援新舊格式）
-    const addressData = {
-      city:
-        data.city ||
-        (data.address && typeof data.address === 'object' ? data.address.city : '') ||
-        '',
-      district:
-        data.district ||
-        (data.address && typeof data.address === 'object' ? data.address.district : '') ||
-        '',
-      enteredAddress:
-        data.enteredAddress ||
-        (data.address && typeof data.address === 'object' ? data.address.enteredAddress : '') ||
-        (typeof data.address === 'string' ? data.address : '') ||
-        '',
-    };
+    // Info: (20250516 - Shirley) 使用地址工具函數構建 address 欄位
+    const addressData = createAddress(
+      data.city || '',
+      data.district || '',
+      data.enteredAddress || (typeof data.address === 'string' ? data.address : '')
+    );
+
+    // 如果有現有的 data.address 對象，則合併數據
+    if (data.address && typeof data.address === 'object') {
+      const existingAddress = parseAddress(data.address);
+      addressData.city = addressData.city || existingAddress.city;
+      addressData.district = addressData.district || existingAddress.district;
+      addressData.enteredAddress = addressData.enteredAddress || existingAddress.enteredAddress;
+    }
 
     companySetting = await prisma.companySetting.update({
       where: {
@@ -94,7 +94,7 @@ export async function updateCompanySettingByCompanyId(options: {
         country: data.country,
         countryCode: data.country,
         phone: data.phone,
-        address: addressData, // Info: (20250516 - Shirley) 使用構建好的地址物件
+        address: addressData as Prisma.InputJsonValue,
         contactPerson: data.contactPerson,
         filingFrequency: data.filingFrequency,
         filingMethod: data.filingMethod,
@@ -133,6 +133,16 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
   const nowInSecond = getTimestampNow();
 
   try {
+    // Info: (20250716 - Shirley) 使用地址工具函數處理地址數據
+    const addressValue =
+      typeof data.address === 'string'
+        ? data.address
+        : createAddress(
+            data.address?.city || '',
+            data.address?.district || '',
+            data.address?.enteredAddress || ''
+          );
+
     companySetting = await prisma.companySetting.update({
       where: { id },
       data: {
@@ -140,14 +150,7 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
         representativeName: data.representativeName,
         country: data.country,
         phone: data.phone,
-        address:
-          typeof data.address === 'string'
-            ? data.address
-            : {
-                city: data.address?.city || '',
-                district: data.address?.district || '',
-                enteredAddress: data.address?.enteredAddress || '',
-              },
+        address: addressValue as Prisma.InputJsonValue,
         updatedAt: nowInSecond,
         company: {
           update: {

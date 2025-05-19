@@ -1,6 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
+import {
+  ACCOUNT_BOOK_UPDATE_ACTION,
+  IAccountBook,
+  IAccountBookEntity,
+} from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
@@ -55,22 +59,44 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   const { userId, teams } = session;
   const accountBookId = Number(req.query.accountBookId);
-  const { action, tag } = body;
+  const {
+    action,
+    tag,
+    // Info: (20250518 - Shirley) 新增支援更多欄位
+    name,
+    taxId,
+    teamId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
 
   // Info: (20250418 - Shirley) 獲取帳本所屬的團隊ID
-  const teamId = await getAccountBookTeamId(accountBookId);
+  const currentTeamId = await getAccountBookTeamId(accountBookId);
 
-  if (!teamId) {
+  if (!currentTeamId) {
     loggerBack.warn(`Account book ${accountBookId} not found or doesn't belong to any team`);
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
   // Info: (20250418 - Shirley) 從 session 中獲取用戶在團隊中的角色
-  const teamInfo = teams?.find((team) => team.id === teamId);
+  const teamInfo = teams?.find((team) => team.id === currentTeamId);
 
   if (!teamInfo) {
     loggerBack.warn(
-      `User ${userId} is not in the team ${teamId} that owns account book ${accountBookId}`
+      `User ${userId} is not in the team ${currentTeamId} that owns account book ${accountBookId}`
     );
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
@@ -82,28 +108,61 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let payload: IAccountBook | null = null;
   let canDo = false;
 
-  switch (action) {
-    // Info: (20250310 - Shirley) Update account book tag
-    case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG: {
-      canDo = convertTeamRoleCanDo({
-        teamRole,
-        canDo: TeamPermissionAction.MODIFY_TAG,
-      }).can;
+  // Info: (20250518 - Shirley) 檢查是否為修改標籤操作，如果不是則檢查修改帳本詳情的權限
+  if (action === ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG) {
+    canDo = convertTeamRoleCanDo({
+      teamRole,
+      canDo: TeamPermissionAction.MODIFY_TAG,
+    }).can;
 
-      if (!canDo) {
-        loggerBack.warn(
-          `User ${userId} with role ${teamRole} doesn't have permission to update tag of account book ${accountBookId}`
-        );
-        throw new Error(STATUS_MESSAGE.FORBIDDEN);
-      }
-
-      payload = await updateAccountBook(userId, accountBookId, { tag });
-      statusMessage = STATUS_MESSAGE.SUCCESS;
-      break;
+    if (!canDo) {
+      loggerBack.warn(
+        `User ${userId} with role ${teamRole} doesn't have permission to update tag of account book ${accountBookId}`
+      );
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
-    default:
-      statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
-      break;
+
+    payload = await updateAccountBook(userId, accountBookId, { tag });
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  } else if (action === ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_DETAILS) {
+    // Info: (20250518 - Shirley) 檢查修改帳本詳情的權限
+    canDo = convertTeamRoleCanDo({
+      teamRole,
+      canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+    }).can;
+
+    if (!canDo) {
+      loggerBack.warn(
+        `User ${userId} with role ${teamRole} doesn't have permission to update details of account book ${accountBookId}`
+      );
+      throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    }
+
+    // Info: (20250518 - Shirley) 將所有可能的更新欄位傳遞給 updateAccountBook 函數
+    payload = await updateAccountBook(userId, accountBookId, {
+      name,
+      tag,
+      taxId,
+      teamId,
+      representativeName,
+      taxSerialNumber,
+      contactPerson,
+      phoneNumber,
+      city,
+      district,
+      enteredAddress,
+      filingFrequency,
+      filingMethod,
+      declarantFilingMethod,
+      declarantName,
+      declarantPersonalId,
+      declarantPhoneNumber,
+      agentFilingRole,
+      licenseId,
+    });
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  } else {
+    statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
   }
 
   // Info: (20250310 - Shirley) Validate output data, will throw INVALID_OUTPUT_DATA error if invalid
@@ -117,7 +176,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBookEntity | null = null;
 
   await checkSessionUser(session, APIName.DELETE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.DELETE_ACCOUNT_BOOK, req, session);

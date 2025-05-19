@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { File } from '@prisma/client';
+import { File, Prisma } from '@prisma/client';
 import {
   TeamRole,
   LeaveStatus,
@@ -20,7 +20,7 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
-  IAccountBookSimple,
+  IAccountBookEntity,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -41,6 +41,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
+import { mergeAddress, parseAddress } from '@/lib/utils/address';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -113,6 +114,12 @@ export async function isEligibleToCreateAccountBookInTeam(
   return canDo.can;
 }
 
+// Info: (20250720 - Shirley) 處理枚舉類型轉換的輔助函數
+function convertEnumValue<T>(value: unknown): T | null {
+  if (value === null || value === undefined) return null;
+  return value as unknown as T;
+}
+
 export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
   let result: IAccountBook | null = null;
   const accountBook = await prisma.company.findUnique({
@@ -122,13 +129,44 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
     },
     include: {
       imageFile: true, // Info: (20250327 - Tzuhan) 這裡才會拿到 imageFile.url
+      companySettings: {
+        where: {
+          OR: [{ deletedAt: 0 }, { deletedAt: null }],
+        },
+      },
     },
   });
+
   if (accountBook) {
+    // 處理 companySetting 數據
+    const setting = accountBook.companySettings?.[0] || {};
+    const address = parseAddress(setting.address);
+
     result = {
       ...accountBook,
       imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
       tag: accountBook.tag as WORK_TAG,
+
+      // 添加 CompanySetting 欄位
+      representativeName: setting.representativeName || '',
+      taxSerialNumber: setting.taxSerialNumber || '',
+      contactPerson: setting.contactPerson || '',
+      phoneNumber: setting.phone || '',
+      city: address.city || '',
+      district: address.district || '',
+      enteredAddress: address.enteredAddress || '',
+
+      // 添加選填欄位，使用轉換函數處理枚舉類型
+      filingFrequency: convertEnumValue<FILING_FREQUENCY>(setting.filingFrequency),
+      filingMethod: convertEnumValue<FILING_METHOD>(setting.filingMethod),
+      declarantFilingMethod: convertEnumValue<DECLARANT_FILING_METHOD>(
+        setting.declarantFilingMethod
+      ),
+      declarantName: setting.declarantName,
+      declarantPersonalId: setting.declarantPersonalId,
+      declarantPhoneNumber: setting.declarantPhoneNumber,
+      agentFilingRole: convertEnumValue<AGENT_FILING_ROLE>(setting.agentFilingRole),
+      licenseId: setting.licenseId,
     };
   }
   return result;
@@ -137,8 +175,8 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
 export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
-): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const accountBook = await prisma.company.findFirst({
     where: {
       taxId,
@@ -193,8 +231,8 @@ export const createAccountBook = async (
     agentFilingRole?: AGENT_FILING_ROLE;
     licenseId?: string;
   }
-): Promise<IAccountBook | null> => {
-  let accountBook: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let accountBook: IAccountBookEntity | null = null;
   let { teamId } = body;
   const {
     taxId,
@@ -585,7 +623,7 @@ export const listSimpleAccountBookByUserId = async (
     searchQuery?: string;
     sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
   }
-): Promise<IPaginatedOptions<IAccountBookSimple[]>> => {
+): Promise<IPaginatedOptions<IAccountBookEntity[]>> => {
   const {
     page = 1,
     pageSize = 10,
@@ -1242,6 +1280,12 @@ export async function getAccountBookForUserWithTeam(
       },
       include: {
         imageFile: true,
+        companySettings: {
+          where: {
+            deletedAt: null,
+          },
+          take: 1,
+        },
       },
     });
 
@@ -1282,6 +1326,10 @@ export async function getAccountBookForUserWithTeam(
       gracePeriodEndAt,
     };
 
+    // Info: (20250720 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+    const setting = accountBook.companySettings?.[0] || {};
+    const address = parseAddress(setting.address);
+
     return {
       id: accountBook.id,
       userId: accountBook.userId,
@@ -1291,11 +1339,31 @@ export async function getAccountBookForUserWithTeam(
       startDate: accountBook.startDate,
       createdAt: accountBook.createdAt,
       updatedAt: accountBook.updatedAt,
-      isPrivate: accountBook.isPrivate ?? false,
       teamId,
       tag: WORK_TAG.ALL,
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
+
+      // Info: (20250720 - Shirley) 添加 CompanySetting 欄位
+      representativeName: setting.representativeName || '',
+      taxSerialNumber: setting.taxSerialNumber || '',
+      contactPerson: setting.contactPerson || '',
+      phoneNumber: setting.phone || '',
+      city: address.city || '',
+      district: address.district || '',
+      enteredAddress: address.enteredAddress || '',
+
+      // Info: (20250720 - Shirley) 添加選填欄位
+      filingFrequency: convertEnumValue<FILING_FREQUENCY>(setting.filingFrequency),
+      filingMethod: convertEnumValue<FILING_METHOD>(setting.filingMethod),
+      declarantFilingMethod: convertEnumValue<DECLARANT_FILING_METHOD>(
+        setting.declarantFilingMethod
+      ),
+      declarantName: setting.declarantName,
+      declarantPersonalId: setting.declarantPersonalId,
+      declarantPhoneNumber: setting.declarantPhoneNumber,
+      agentFilingRole: convertEnumValue<AGENT_FILING_ROLE>(setting.agentFilingRole),
+      licenseId: setting.licenseId,
     };
   } catch (error) {
     loggerBack.error({
@@ -1345,6 +1413,12 @@ export async function findUserAccountBook(
       },
       include: {
         imageFile: true,
+        companySettings: {
+          where: {
+            deletedAt: null,
+          },
+          take: 1,
+        },
         team: {
           include: {
             members: {
@@ -1416,6 +1490,10 @@ export async function findUserAccountBook(
       gracePeriodEndAt,
     };
 
+    // Info: (20250720 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+    const setting = accountBook.companySettings?.[0] || {};
+    const address = parseAddress(setting.address);
+
     return {
       id: accountBook.id,
       userId: accountBook.userId,
@@ -1425,11 +1503,31 @@ export async function findUserAccountBook(
       startDate: accountBook.startDate,
       createdAt: accountBook.createdAt,
       updatedAt: accountBook.updatedAt,
-      isPrivate: accountBook.isPrivate ?? false,
       teamId: team.id,
       tag: WORK_TAG.ALL,
       team: teamInfo,
       isTransferring: accountBook.isTransferring ?? false,
+
+      // Info: (20250720 - Shirley) 添加 CompanySetting 欄位
+      representativeName: setting.representativeName || '',
+      taxSerialNumber: setting.taxSerialNumber || '',
+      contactPerson: setting.contactPerson || '',
+      phoneNumber: setting.phone || '',
+      city: address.city || '',
+      district: address.district || '',
+      enteredAddress: address.enteredAddress || '',
+
+      // Info: (20250720 - Shirley) 添加選填欄位
+      filingFrequency: convertEnumValue<FILING_FREQUENCY>(setting.filingFrequency),
+      filingMethod: convertEnumValue<FILING_METHOD>(setting.filingMethod),
+      declarantFilingMethod: convertEnumValue<DECLARANT_FILING_METHOD>(
+        setting.declarantFilingMethod
+      ),
+      declarantName: setting.declarantName,
+      declarantPersonalId: setting.declarantPersonalId,
+      declarantPhoneNumber: setting.declarantPhoneNumber,
+      agentFilingRole: convertEnumValue<AGENT_FILING_ROLE>(setting.agentFilingRole),
+      licenseId: setting.licenseId,
     };
   } catch (error) {
     loggerBack.error({
@@ -1451,10 +1549,46 @@ export const updateAccountBook = async (
     tag?: WORK_TAG;
     taxId?: string;
     teamId?: number;
+    // 添加 CompanySetting 相關欄位
+    representativeName?: string;
+    taxSerialNumber?: string;
+    contactPerson?: string;
+    phoneNumber?: string;
+    city?: string;
+    district?: string;
+    enteredAddress?: string;
+    filingFrequency?: FILING_FREQUENCY;
+    filingMethod?: FILING_METHOD;
+    declarantFilingMethod?: DECLARANT_FILING_METHOD;
+    declarantName?: string;
+    declarantPersonalId?: string;
+    declarantPhoneNumber?: string;
+    agentFilingRole?: AGENT_FILING_ROLE;
+    licenseId?: string;
   }
 ): Promise<IAccountBook | null> => {
   let result: IAccountBook | null = null;
-  const { name, tag, taxId, teamId } = body;
+  const {
+    name,
+    tag,
+    taxId,
+    teamId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
 
   loggerBack.info(
     `User ${userId} is updating account book ${accountBookId} with data: ${JSON.stringify({
@@ -1462,6 +1596,21 @@ export const updateAccountBook = async (
       tag,
       taxId,
       teamId,
+      representativeName,
+      taxSerialNumber,
+      contactPerson,
+      phoneNumber,
+      city,
+      district,
+      enteredAddress,
+      filingFrequency,
+      filingMethod,
+      declarantFilingMethod,
+      declarantName,
+      declarantPersonalId,
+      declarantPhoneNumber,
+      agentFilingRole,
+      licenseId,
     })}`
   );
 
@@ -1479,24 +1628,127 @@ export const updateAccountBook = async (
   }
 
   try {
-    const updatedAccountBook = await prisma.company.update({
-      where: { id: accountBookId },
-      data: {
-        name,
-        tag, // Info: (20250418 - Shirley) tag 是 Tag 枚舉類型，與 WORK_TAG 枚舉相匹配
-        taxId,
-        teamId,
-        updatedAt: getTimestampNow(),
-      },
-      include: {
-        imageFile: true,
-      },
+    // 使用 transaction 來同時更新 company 和 companySetting 表
+    const nowInSecond = getTimestampNow();
+
+    // 獲取現有的 companySetting，如果不存在則創建一個
+    const companySetting = await prisma.companySetting.findFirst({
+      where: { companyId: accountBookId },
     });
+
+    const hasCompanySettingFields =
+      representativeName !== undefined ||
+      taxSerialNumber !== undefined ||
+      contactPerson !== undefined ||
+      phoneNumber !== undefined ||
+      city !== undefined ||
+      district !== undefined ||
+      enteredAddress !== undefined ||
+      filingFrequency !== undefined ||
+      filingMethod !== undefined ||
+      declarantFilingMethod !== undefined ||
+      declarantName !== undefined ||
+      declarantPersonalId !== undefined ||
+      declarantPhoneNumber !== undefined ||
+      agentFilingRole !== undefined ||
+      licenseId !== undefined;
+
+    const updatedData = await transaction(async (tx) => {
+      // 1. 更新 company 表
+      const updatedAccountBook = await tx.company.update({
+        where: { id: accountBookId },
+        data: {
+          name,
+          tag,
+          taxId,
+          teamId,
+          updatedAt: nowInSecond,
+        },
+        include: {
+          imageFile: true,
+        },
+      });
+
+      // 2. 如果有 companySetting 相關欄位需要更新，則更新 companySetting 表
+      let updatedSetting = null;
+      if (hasCompanySettingFields) {
+        // 構建地址對象，使用地址工具函數處理
+        const addressData = mergeAddress(companySetting?.address, city, district, enteredAddress);
+
+        if (companySetting) {
+          // 更新現有的 companySetting
+          updatedSetting = await tx.companySetting.update({
+            where: { companyId: accountBookId },
+            data: {
+              taxSerialNumber:
+                taxSerialNumber !== undefined ? taxSerialNumber : companySetting.taxSerialNumber,
+              representativeName:
+                representativeName !== undefined
+                  ? representativeName
+                  : companySetting.representativeName,
+              phone: phoneNumber !== undefined ? phoneNumber : companySetting.phone,
+              address: addressData as Prisma.InputJsonValue,
+              contactPerson:
+                contactPerson !== undefined ? contactPerson : companySetting.contactPerson,
+              filingFrequency:
+                filingFrequency !== undefined ? filingFrequency : companySetting.filingFrequency,
+              filingMethod: filingMethod !== undefined ? filingMethod : companySetting.filingMethod,
+              declarantFilingMethod:
+                declarantFilingMethod !== undefined
+                  ? declarantFilingMethod
+                  : companySetting.declarantFilingMethod,
+              declarantName:
+                declarantName !== undefined ? declarantName : companySetting.declarantName,
+              declarantPersonalId:
+                declarantPersonalId !== undefined
+                  ? declarantPersonalId
+                  : companySetting.declarantPersonalId,
+              declarantPhoneNumber:
+                declarantPhoneNumber !== undefined
+                  ? declarantPhoneNumber
+                  : companySetting.declarantPhoneNumber,
+              agentFilingRole:
+                agentFilingRole !== undefined ? agentFilingRole : companySetting.agentFilingRole,
+              licenseId: licenseId !== undefined ? licenseId : companySetting.licenseId,
+              updatedAt: nowInSecond,
+            },
+          });
+        } else {
+          // 創建新的 companySetting
+          updatedSetting = await tx.companySetting.create({
+            data: {
+              companyId: accountBookId,
+              taxSerialNumber: taxSerialNumber || '',
+              representativeName: representativeName || '',
+              country: '',
+              phone: phoneNumber || '',
+              address: addressData as Prisma.InputJsonValue,
+              countryCode: 'tw',
+              contactPerson: contactPerson || '',
+              filingFrequency,
+              filingMethod,
+              declarantFilingMethod,
+              declarantName,
+              declarantPersonalId,
+              declarantPhoneNumber,
+              agentFilingRole,
+              licenseId,
+              createdAt: nowInSecond,
+              updatedAt: nowInSecond,
+            },
+          });
+        }
+      }
+
+      return { updatedAccountBook, updatedSetting };
+    });
+
+    const { updatedAccountBook, updatedSetting } = updatedData;
 
     if (updatedAccountBook) {
       const imageUrl = updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg';
 
-      // Info: (20250411 - Shirley) 創建標準 accountBookSchema 格式的 company 對象
+      // 創建標準 accountBookSchema 格式的 company 對象
       const companyWithImageId = {
         id: updatedAccountBook.id,
         teamId: updatedAccountBook.teamId,
@@ -1511,12 +1763,33 @@ export const updateAccountBook = async (
         isPrivate: updatedAccountBook.isPrivate ?? false,
       };
 
-      // Info: (20250411 - Shirley) 根據 updateAccountBookResponseSchema 結構組織返回數據
+      // 獲取 companySetting 數據，如果存在
+      const setting = updatedSetting || companySetting;
+      // 使用地址工具函數解析地址數據
+      const address = parseAddress(setting?.address);
+
+      // 根據 updateAccountBookResponseSchema 結構組織返回數據
       result = {
         ...updatedAccountBook,
         teamId: updatedAccountBook.teamId,
         imageId: imageUrl,
         tag: updatedAccountBook.tag as WORK_TAG,
+        // 添加 CompanySetting 欄位
+        representativeName: setting?.representativeName || '',
+        taxSerialNumber: setting?.taxSerialNumber || '',
+        contactPerson: setting?.contactPerson || '',
+        phoneNumber: setting?.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+        filingFrequency: setting?.filingFrequency || null,
+        filingMethod: setting?.filingMethod || null,
+        declarantFilingMethod: setting?.declarantFilingMethod || null,
+        declarantName: setting?.declarantName || null,
+        declarantPersonalId: setting?.declarantPersonalId || null,
+        declarantPhoneNumber: setting?.declarantPhoneNumber || null,
+        agentFilingRole: setting?.agentFilingRole || null,
+        licenseId: setting?.licenseId || null,
         company: companyWithImageId,
         order: 1,
         accountBookRole: ACCOUNT_BOOK_ROLE.COMPANY,
@@ -1573,6 +1846,22 @@ export const deleteAccountBook = async (accountBookId: number): Promise<IAccount
       ...updatedAccountBook,
       imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
       tag: updatedAccountBook.tag as WORK_TAG,
+      // 添加必要的欄位
+      representativeName: '',
+      taxSerialNumber: '',
+      contactPerson: '',
+      phoneNumber: '',
+      city: '',
+      district: '',
+      enteredAddress: '',
+      filingFrequency: null,
+      filingMethod: null,
+      declarantFilingMethod: null,
+      declarantName: null,
+      declarantPersonalId: null,
+      declarantPhoneNumber: null,
+      agentFilingRole: null,
+      licenseId: null,
     };
   }
   return result;

@@ -9,19 +9,19 @@ import { IConnectAccountBookQueryParams } from '@/lib/utils/zod_schema/account_b
 import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBookEntity, WORK_TAG } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IResponse {
   statusMessage: string;
-  payload: IAccountBook | null;
+  payload: IAccountBookEntity | null;
 }
 
 const handleGetRequest: IHandleRequest<
   APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
-  IAccountBook | null
+  IAccountBookEntity | null
 > = async ({ query, session }) => {
   const { accountBookId } = query as IConnectAccountBookQueryParams;
   const userId = session?.userId;
@@ -62,7 +62,7 @@ const handleGetRequest: IHandleRequest<
     return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
   }
 
-  const result: IAccountBook = {
+  const result: IAccountBookEntity = {
     id: company.id,
     userId: company.userId || 555,
     imageId: company.imageFile?.url || '',
@@ -71,7 +71,6 @@ const handleGetRequest: IHandleRequest<
     startDate: company.startDate,
     createdAt: company.createdAt,
     updatedAt: company.updatedAt,
-    isPrivate: company.isPrivate,
     teamId: company.teamId,
     tag: company.tag as WORK_TAG,
   };
