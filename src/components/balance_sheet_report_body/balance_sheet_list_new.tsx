@@ -267,7 +267,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
+      <div className="-mt-40 flex h-screen flex-col items-center justify-center">
         <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
@@ -307,7 +307,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       </div>
     </div>
   ) : (
-    <div className="ml-10">
+    <div>
       <PieChart data={curAssetLiabilityRatio} />
     </div>
   );
@@ -315,7 +315,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="flex w-300px items-center justify-center">
       <div
-        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white ml-4 tablet:ml-0"
         style={{
           width: '232px',
           height: '232px',
@@ -325,7 +325,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       </div>
     </div>
   ) : (
-    <div className="ml-10">
+    <div>
       <PieChart data={preAssetLiabilityRatio} />
     </div>
   );
@@ -537,7 +537,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           />
           <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
         </div>
-        <div className="ml-auto flex items-center gap-24px">
+        <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
           <DownloadButton onClick={downloadFn} />
           <PrintButton onClick={printFn} disabled={!isChinese} />
         </div>
@@ -568,41 +568,47 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               buttonType="default"
             />
           </div>
-          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p className="text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         {!isSummaryCollapsed && (
-          <table className="relative z-1 w-full border-collapse bg-white">
-            <thead>
-              <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.CODE_NUMBER')}
-                </th>
-                <th
-                  className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
-                >
-                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {curDate}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {preDate}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForSummary(reportFinancial.general)}
-            </tbody>
-          </table>
+          <div className="hide-scrollbar overflow-x-auto">
+            <div className="min-w-900px">
+              <table className="relative z-1 w-full border-collapse bg-white">
+                <thead>
+                  <tr className="print:hidden">
+                    <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.CODE_NUMBER')}
+                    </th>
+                    <th
+                      className={`w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold`}
+                    >
+                      {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {curDate}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {preDate}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportFinancial &&
+                    reportFinancial.general &&
+                    Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+                    rowsForSummary(reportFinancial.general)}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </section>
     </div>
@@ -617,39 +623,45 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p className="text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         {!isDetailCollapsed && (
-          <table className="w-full border-collapse bg-white">
-            <thead>
-              <tr className="print:hidden">
-                <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.CODE_NUMBER')}
-                </th>
-                <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {curDate}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-                <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {preDate}
-                </th>
-                <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportFinancial &&
-                reportFinancial.general &&
-                Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
-                rowsForDetail(reportFinancial.details)}
-            </tbody>
-          </table>
+          <div className="hide-scrollbar overflow-x-auto">
+            <div className="min-w-900px">
+              <table className="w-full border-collapse bg-white">
+                <thead>
+                  <tr className="print:hidden">
+                    <th className="w-50px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.CODE_NUMBER')}
+                    </th>
+                    <th className="w-800px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {curDate}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                    <th className="w-120px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {preDate}
+                    </th>
+                    <th className="w-60px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      %
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reportFinancial &&
+                    reportFinancial.general &&
+                    Object.prototype.hasOwnProperty.call(reportFinancial, 'general') &&
+                    rowsForDetail(reportFinancial.details)}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </section>
     </div>
@@ -663,14 +675,16 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <div className="mx-3 flex flex-col space-y-10">
           <div className="flex flex-col space-y-0">
             <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
-            <div className="flex items-center justify-between">
+            <div className="hide-scrollbar flex items-center justify-between overflow-x-auto">
               <ul className="space-y-2">
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
+                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-200px">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -679,14 +693,16 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           </div>
           <div className="flex flex-col space-y-0">
             <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
-            <div className="flex items-center justify-between">
+            <div className="hide-scrollbar flex items-center justify-between overflow-x-auto">
               <ul className="space-y-2">
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="w-200px">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
+                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-200px">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -708,7 +724,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   );
   const AssetItem = (
     <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
-      <section className="mx-1 mb-6 text-text-neutral-secondary">
+      <section className="hide-scrollbar mx-1 mb-6 overflow-x-auto text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ASSET_DISTRIBUTION_CHART')}</p>
         </div>
@@ -722,7 +738,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
+                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-auto">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -759,7 +777,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="text-sm">{t(`reports:ACCOUNTING_ACCOUNT.${label}`)}</span>
+                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-auto">
+                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                    </span>
                   </li>
                 ))}
               </ul>
