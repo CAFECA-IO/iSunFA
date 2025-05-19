@@ -43,7 +43,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
     { params: { accountBookId }, query: queryCondition },
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+
     false,
     true
   );
@@ -85,7 +85,6 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   useEffect(() => {
     if (isModalVisible) {
       getAccountList({ params: { accountBookId } });
-      // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
     } else {
       // Info: (20241108 - Julian) 關閉 Modal 時重置 state
       setSearchWord('');
@@ -96,13 +95,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   useEffect(() => {
     getAccountList({ params: { accountBookId } });
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   }, [isRecallApi]);
 
   const clearSearchWord = () => {
     setSearchWord('');
     getAccountList({ params: { accountBookId } });
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const isDisplayModal = isModalVisible ? (
