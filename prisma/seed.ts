@@ -1,6 +1,7 @@
 import { PrismaClient, Tag } from '@prisma/client';
 // import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
+import teams from '@/seed_json/team.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
 // import admins from '@/seed_json/admin.json';
@@ -105,6 +106,12 @@ async function createUser() {
 async function createAccount() {
   await prisma.account.createMany({
     data: accounts,
+  });
+}
+
+async function createTeam() {
+  await prisma.team.createMany({
+    data: teams,
   });
 }
 
@@ -374,6 +381,8 @@ async function createTPlan() {
 async function main() {
   try {
     await createFile();
+    await createUser();
+    await createTeam();
     await createCompany();
     await new Promise((resolve) => {
       setTimeout(resolve, 3000);
@@ -381,7 +390,6 @@ async function main() {
     await new Promise((resolve) => {
       setTimeout(resolve, 3000);
     });
-    await createUser();
     await createCounterparty();
     await createUserActionLog();
     await createAccountingSetting();
