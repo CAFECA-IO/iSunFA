@@ -1,8 +1,14 @@
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { PendingTaskIconName, TaskTitle } from '@/interfaces/pending_task';
+import { cn } from '@/lib/utils/common';
 
-const TaskType = ({ iconName, title }: { iconName: PendingTaskIconName; title: TaskTitle }) => {
+interface TaskTypeProps {
+  iconName: PendingTaskIconName;
+  title: TaskTitle;
+  alwaysNeedTitle?: boolean;
+}
+const TaskType = ({ iconName, title, alwaysNeedTitle }: TaskTypeProps) => {
   const { t } = useTranslation('dashboard');
 
   return (
@@ -12,9 +18,13 @@ const TaskType = ({ iconName, title }: { iconName: PendingTaskIconName; title: T
         alt={'pending_task_type_icon'}
         width={22}
         height={22}
-        className="h-22px w-22px"
+        className="h-22px w-22px flex-none"
       ></Image>
-      <h4 className="text-xs font-semibold text-text-neutral-primary">
+      <h4
+        className={cn('hidden text-xs font-semibold text-text-neutral-primary tablet:block', {
+          block: alwaysNeedTitle,
+        })}
+      >
         {t(`dashboard:DASHBOARD.${title}`)}
       </h4>
     </div>
