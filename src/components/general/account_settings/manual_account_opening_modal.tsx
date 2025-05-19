@@ -220,7 +220,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     };
     // Info: (20250102 - Julian) POST API
     createNewVoucher({ params: { accountBookId }, body });
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitDisabled =

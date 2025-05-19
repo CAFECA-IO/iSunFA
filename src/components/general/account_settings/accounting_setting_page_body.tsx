@@ -17,6 +17,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
 
 type ITaxTypeForFrontend =
   | number
@@ -44,11 +45,17 @@ const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
 
   const {
-    accountingTitleSettingModalVisibilityHandler,
+    // accountingTitleSettingModalVisibilityHandler,
     manualAccountOpeningModalVisibilityHandler,
   } = useGlobalCtx();
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
+
+  const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
+    useState<boolean>(false);
+
+  const openAccountingTitleSettingModal = () => setIsAccountingTitleSettingModalVisible(true);
+  const closeAccountingTitleSettingModal = () => setIsAccountingTitleSettingModalVisible(false);
 
   const accountBookId = connectedAccountBook?.id;
   const currencyList = ['TWD', 'USD', 'CNY', 'HKD', 'JPY'];
@@ -640,7 +647,7 @@ const AccountingSettingPageBody: React.FC = () => {
               <button
                 type="button"
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
-                onClick={accountingTitleSettingModalVisibilityHandler}
+                onClick={openAccountingTitleSettingModal}
               >
                 {t('settings:ACCOUNTING.VIEW_ALL_ACCOUNTING')}
               </button>
@@ -690,6 +697,14 @@ const AccountingSettingPageBody: React.FC = () => {
           {t('settings:ACCOUNTING.SAVE_BTN')}
         </Button>
       </div>
+
+      {/* Info: (20250519 - Liz) 會計科目設定 Modal */}
+      {isAccountingTitleSettingModalVisible && (
+        <AccountingTitleSettingModal
+          isModalVisible={isAccountingTitleSettingModalVisible}
+          modalVisibilityHandler={closeAccountingTitleSettingModal}
+        />
+      )}
     </div>
   );
 };

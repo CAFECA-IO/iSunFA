@@ -23,7 +23,6 @@ const AssetListPageBody: React.FC = () => {
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { accountBookId };
-  // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
