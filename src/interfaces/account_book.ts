@@ -48,6 +48,19 @@ export enum AGENT_FILING_ROLE {
   BOOKKEEPER_AND_FILING_AGENT = 'BOOKKEEPER_AND_FILING_AGENT',
 }
 
+export interface IAccountBookSimple {
+  id: number;
+  teamId: number;
+  userId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
 export interface IAccountBook {
   id: number;
@@ -62,7 +75,7 @@ export interface IAccountBook {
   updatedAt: number;
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
-  // ToDo: (20250515 - Liz) RC2 新增表單欄位
+  // // ToDo: (20250515 - Liz) RC2 新增表單欄位
   // representativeName: string; // Info: (20250423 - Liz) 負責人姓名
   // taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
   // contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
@@ -71,7 +84,7 @@ export interface IAccountBook {
   // district: string; // Info: (20250423 - Liz) 行政區
   // enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
 
-  // ToDo: (20250515 - Liz) 以下欄位為選填
+  // // ToDo: (20250515 - Liz) 以下欄位為選填
   // filingFrequency?: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
   // filingMethod?: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
   // declarantFilingMethod?: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式

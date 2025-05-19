@@ -164,7 +164,6 @@ export enum APIName {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK_OEN',
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
   SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
   VERIFY_CODE = 'VERIFY_CODE',
@@ -312,7 +311,6 @@ export enum APIPath {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
   SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
   VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
@@ -1011,11 +1009,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DISCONNECT_ACCOUNT_BOOK,
     method: HttpMethod.GET,
     path: APIPath.DISCONNECT_ACCOUNT_BOOK,
-  }),
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: createConfig({
-    name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-    method: HttpMethod.GET,
-    path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
   }),
   [APIName.ACCOUNT_BOOK_PUT_ICON]: createConfig({
     name: APIName.ACCOUNT_BOOK_PUT_ICON,

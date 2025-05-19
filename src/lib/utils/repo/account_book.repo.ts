@@ -20,6 +20,7 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
+  IAccountBookSimple,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -529,6 +530,163 @@ export const listAccountBookByUserId = async (
         declarantPhoneNumber: setting.declarantPhoneNumber,
         agentFilingRole: setting.agentFilingRole,
         licenseId: setting.licenseId,
+
+        team: book.team
+          ? {
+              id: book.team.id,
+              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+              role: teamRole,
+              name: { value: book.team.name, editable: teamRole !== TeamRole.VIEWER },
+              about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
+              profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
+              planType: {
+                value: book.team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER,
+                editable: false,
+              },
+              totalMembers: book.team.members.length || 0,
+              totalAccountBooks: book.team.accountBook.length || 0,
+              bankAccount: {
+                value: book.team.bankInfo
+                  ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
+                  : '',
+                editable: false,
+              },
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
+            }
+          : null,
+        isTransferring: book.isTransferring,
+      } as IAccountBookWithTeam;
+    }),
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+    totalCount,
+    pageSize,
+    sort: sortOption,
+  });
+
+  return result;
+};
+
+/**
+ * Info: (20250715 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 companySetting 資料）
+ * @param userId 用戶ID
+ * @param queryParams 查詢參數，包含分頁、排序、搜索等選項
+ * @returns 分頁後的帳本列表
+ */
+export const listSimpleAccountBookByUserId = async (
+  userId: number,
+  queryParams: {
+    page?: number;
+    pageSize?: number;
+    startDate?: number;
+    endDate?: number;
+    searchQuery?: string;
+    sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+  }
+): Promise<IPaginatedOptions<IAccountBookSimple[]>> => {
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  // Info: (20250715 - Shirley) 查詢用戶所屬的所有團隊
+  const userTeams = await prisma.teamMember.findMany({
+    where: {
+      userId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: { teamId: true },
+  });
+
+  const teamIds = userTeams.map((team) => team.teamId);
+
+  if (teamIds.length === 0) {
+    return toPaginatedData({
+      data: [],
+      page,
+      totalPages: 0,
+      totalCount: 0,
+      pageSize,
+      sort: sortOption,
+    });
+  }
+
+  // Info: (20250715 - Shirley) 查詢團隊內的所有帳本總數
+  const totalCount = await prisma.company.count({
+    where: {
+      teamId: { in: teamIds },
+      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+      createdAt: { gte: startDate, lte: endDate },
+      AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+    },
+  });
+
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250715 - Shirley) 取得帳本基本資訊，包含所屬團隊
+  const accountBooks = await prisma.company.findMany({
+    where: {
+      teamId: { in: teamIds },
+      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+      createdAt: { gte: startDate, lte: endDate },
+      AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+    },
+    include: {
+      team: {
+        include: {
+          members: {
+            where: { status: LeaveStatus.IN_TEAM },
+            select: { id: true, userId: true, role: true },
+          },
+          accountBook: true,
+          subscriptions: {
+            where: {
+              startDate: {
+                lte: nowInSecond,
+              },
+              expiredDate: {
+                gt: nowInSecond,
+              },
+            },
+            include: { plan: true },
+          },
+          imageFile: { select: { id: true, url: true } },
+        },
+      },
+      imageFile: { select: { id: true, url: true } },
+      // 不包含 companySettings 資料
+    },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: createOrderByList(sortOption),
+  });
+
+  // Info: (20250715 - Shirley) 格式化回傳數據
+  const result = toPaginatedData({
+    data: accountBooks.map((book) => {
+      const teamMember = book.team?.members.find((member) => member.userId === userId);
+      const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
+      const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+
+      return {
+        id: book.id,
+        teamId: book.teamId,
+        userId: book.userId,
+        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: book.name,
+        taxId: book.taxId,
+        startDate: book.startDate,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+        isPrivate: book.isPrivate ?? false,
+        tag: book.tag as WORK_TAG,
 
         team: book.team
           ? {

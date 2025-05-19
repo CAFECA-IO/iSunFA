@@ -14,8 +14,12 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
-import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import {
+  createAccountBook,
+  listAccountBookByUserId,
+  listSimpleAccountBookByUserId,
+} from '@/lib/utils/repo/account_book.repo';
+import { IAccountBook, IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
@@ -24,7 +28,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IAccountBookWithTeam[]> | null = null;
+  let payload: IPaginatedData<IAccountBookSimple[] | IAccountBookWithTeam[]> | null = null;
 
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req);
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
@@ -35,6 +39,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
+
+  const { simple } = query;
 
   let hasAnyTeamViewPermission = false;
 
@@ -65,10 +71,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<IAccountBookWithTeam[]> = await listAccountBookByUserId(
-    userId,
-    query
-  );
+
+  let options: IPaginatedOptions<IAccountBookSimple[] | IAccountBookWithTeam[]> | null = null;
+
+  if (simple) {
+    options = await listSimpleAccountBookByUserId(userId, query);
+  } else {
+    options = await listAccountBookByUserId(userId, query);
+  }
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,

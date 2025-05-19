@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToBoolean, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import {
   WORK_TAG,
   ACCOUNT_BOOK_UPDATE_ACTION,
@@ -51,14 +51,23 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   district: z.string().default(''),
   enteredAddress: z.string().default(''),
 
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
-  declarantName: z.string().nullable(),
-  declarantPersonalId: z.string().nullable(),
-  declarantPhoneNumber: z.string().nullable(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
-  licenseId: z.string().nullable(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().default(null),
+  declarantName: z.string().nullable().default(null),
+  declarantPersonalId: z.string().nullable().default(null),
+  declarantPhoneNumber: z.string().nullable().default(null),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
+  licenseId: z.string().nullable().default(null),
+
+  // filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().optional(),
+  // filingMethod: z.nativeEnum(FILING_METHOD).nullable().optional(),
+  // declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().optional(),
+  // declarantName: z.string().nullable().optional(),
+  // declarantPersonalId: z.string().nullable().optional(),
+  // declarantPhoneNumber: z.string().nullable().optional(),
+  // agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().optional(),
+  // licenseId: z.string().nullable().optional(),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -115,6 +124,7 @@ const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
 export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
   userId: zodStringToNumber,
+  simple: zodStringToBoolean.optional(),
 });
 
 const accountBookListResponseSchema = paginatedDataSchema(accountBookDetailWithTeamSchema);
@@ -124,7 +134,11 @@ export const accountBookListSchema = {
     querySchema: accountBookListQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: accountBookListResponseSchema,
+  // outputSchema: accountBookListResponseSchema,
+  outputSchema: z.union([
+    paginatedDataSchema(accountBookDetailWithTeamSchema),
+    paginatedDataSchema(accountBookSchema),
+  ]),
   frontend: accountBookNullSchema,
 };
 
@@ -138,6 +152,10 @@ export const listAccountBooksByTeamIdSchema = {
     bodySchema: nullSchema,
   },
   outputSchema: accountBookListResponseSchema,
+  // outputSchema: z.union([
+  //   paginatedDataSchema(accountBookDetailWithTeamSchema),
+  //   paginatedDataSchema(accountBookSchema),
+  // ]),
   frontend: accountBookListResponseSchema,
 };
 
@@ -191,15 +209,18 @@ const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
 // Info: (20250422 - Shirley) API Schema: List Account Book Info (User - Detailed)
 // ===================================================================================
 
-// Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
-export const listAccountBookInfoSchema = {
-  input: {
-    querySchema: accountBookListQuerySchema, // Reuse list query schema
-    bodySchema: accountBookNullSchema,
-  },
-  outputSchema: paginatedDataSchema(accountBookInfoWithTeamSchema),
-  frontend: accountBookNullSchema,
-};
+// // Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
+// export const listAccountBookInfoSchema = {
+//   input: {
+//     querySchema: accountBookListQuerySchema, // Reuse list query schema
+//     bodySchema: accountBookNullSchema,
+//   },
+//   outputSchema: z.union([
+//     paginatedDataSchema(accountBookInfoWithTeamSchema),
+//     paginatedDataSchema(accountBookSchema),
+//   ]),
+//   frontend: accountBookNullSchema,
+// };
 
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: Create Account Book (User)
