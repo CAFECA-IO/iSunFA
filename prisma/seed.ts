@@ -2,6 +2,7 @@ import { PrismaClient, Tag } from '@prisma/client';
 // import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import teams from '@/seed_json/team.json';
+import country from '@/seed_json/country.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
 // import admins from '@/seed_json/admin.json';
@@ -31,7 +32,7 @@ import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
 import salaryRecords from '@/seed_json/salary_record.json';
 import voucherSalaryRecordFolder from '@/seed_json/voucher_salary_record_folder.json';
-import file from '@/seed_json/file.json';
+import files from '@/seed_json/file.json';
 import assets from '@/seed_json/asset.json';
 import assetVouchers from '@/seed_json/asset_voucher.json';
 import counterpartys from '@/seed_json/counterparty.json';
@@ -50,16 +51,23 @@ import event from '@/seed_json/event.json';
 
 const prisma = new PrismaClient();
 async function createFile() {
-  const files = file.map((f) => {
+  const data = files.map((f) => {
     return {
       ...f,
       iv: Buffer.from(f.iv, 'base64'),
     };
   });
   await prisma.file.createMany({
-    data: files,
+    data,
   });
 }
+
+async function createCountry() {
+  await prisma.country.createMany({
+    data: country,
+  });
+}
+
 async function createSalaryRecord() {
   await prisma.salaryRecord.createMany({
     data: salaryRecords,
@@ -381,6 +389,7 @@ async function createTPlan() {
 async function main() {
   try {
     await createFile();
+    await createCountry();
     await createUser();
     await createTeam();
     await createCompany();
