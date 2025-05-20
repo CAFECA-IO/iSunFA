@@ -274,6 +274,9 @@ export const updateAccountBookInfoBodySchema = z.object({
     .optional(),
   startDate: z.number().optional(),
 
+  // Info: (20250731 - Shirley) 新增 tag 欄位
+  tag: z.nativeEnum(WORK_TAG).optional(),
+
   // Info: (20250517 - Shirley) 新增 RC2 欄位
   contactPerson: z.string().optional(),
   city: z.string().optional(),

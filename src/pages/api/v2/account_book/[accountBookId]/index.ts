@@ -244,6 +244,27 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
       const updateData = body as IUpdateAccountBookInfoBody;
 
+      // Info: (20250515 - Shirley) 檢查是否有修改標籤權限
+      const canModifyTag =
+        updateData.tag !== undefined &&
+        convertTeamRoleCanDo({
+          teamRole,
+          canDo: TeamPermissionAction.MODIFY_TAG,
+        }).can;
+
+      if (updateData.tag !== undefined && !canModifyTag) {
+        loggerBack.warn(
+          `User ${userId} with role ${teamRole} doesn't have permission to update tag of account book ${accountBookId}`
+        );
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
+
+      // Info: (20250731 - Shirley) 若有 tag 且有權限，更新 tag
+      if (updateData.tag !== undefined && canModifyTag) {
+        await updateAccountBook(userId, accountBookId, { tag: updateData.tag });
+        loggerBack.info(`Updated account book ${accountBookId} tag to ${updateData.tag}`);
+      }
+
       // Info: (20250515 - Shirley) 更新公司設定
       const updatedSetting = await updateCompanySettingByCompanyId({
         companyId: accountBookId,
