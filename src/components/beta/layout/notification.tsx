@@ -1,10 +1,13 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
 import { PiBell } from 'react-icons/pi';
 import NotificationItem from '@/components/beta/layout/notification_item';
 import { useTranslation } from 'next-i18next';
-import { FAKE_NOTIFICATIONS } from '@/constants/notification';
-import { INotification } from '@/interfaces/notification';
+// import { FAKE_NOTIFICATIONS } from '@/constants/notification';
+import { INotificationRC2 } from '@/interfaces/notification';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface NotificationProps {
   isPanelOpen: boolean;
@@ -18,15 +21,25 @@ const Notification = ({
   toggleNotificationPanel = () => setIsPanelOpen((prev) => !prev),
 }: NotificationProps) => {
   const { t } = useTranslation(['dashboard']);
+  const userCtx = useUserCtx();
+  const { userAuth } = userCtx;
 
-  const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
+  const { trigger: listNotifications } = APIHandler<INotificationRC2[]>(APIName.LIST_NOTIFICATION);
+
+  const [notifications, setNotifications] = useState<INotificationRC2[]>([]);
   const isNoData = notifications.length === 0;
-  const hasUnreadNotifications = notifications.some((notification) => !notification.isRead);
+  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
 
   // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getNotifications = () => {
-    // setNotifications(); // 將取得的通知資料設定到 state
+  const getNotifications = async () => {
+    if (!userAuth) return;
+    const { success, data } = await listNotifications({
+      params: { userId: userAuth.id },
+    });
+    if (success && data) {
+      setNotifications(data);
+    }
   };
 
   // ToDo: (20241225 - Liz) 打 API 更新通知為已讀
@@ -34,10 +47,10 @@ const Notification = ({
   const readNotificationAPI = () => {};
 
   // Info: (20241225 - Liz) 標記通知為已讀
-  const onMarkAsRead = async (notificationId: string) => {
+  const onMarkAsRead = async (notificationId: number) => {
     const notificationIndex = notifications.findIndex((n) => n.id === notificationId);
     // Info: (20241225 - Liz) 如果通知不存在或已讀，則不執行任何操作
-    if (notificationIndex === -1 || notifications[notificationIndex].isRead) {
+    if (notificationIndex === -1 || notifications[notificationIndex].read) {
       return;
     }
 
@@ -55,6 +68,12 @@ const Notification = ({
       console.log(`Failed to mark notification ${notificationId} as read`, error);
     }
   };
+
+  useEffect(() => {
+    if (isPanelOpen) {
+      getNotifications();
+    }
+  }, [isPanelOpen]);
 
   return (
     <section className="relative">
