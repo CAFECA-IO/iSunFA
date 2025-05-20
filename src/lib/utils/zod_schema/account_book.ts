@@ -97,9 +97,7 @@ export const accountBookListSchema = {
     querySchema: accountBookListQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  // outputSchema: accountBookListResponseSchema,
-  outputSchema: paginatedDataSchema(accountBookDetailWithTeamSchema),
-
+  outputSchema: accountBookListResponseSchema,
   frontend: accountBookNullSchema,
 };
 
@@ -119,11 +117,7 @@ export const listAccountBooksByTeamIdSchema = {
     querySchema: listByTeamIdQuerySchema,
     bodySchema: nullSchema,
   },
-  // outputSchema: accountBookListResponseSchema,
-  outputSchema: z.union([
-    paginatedDataSchema(accountBookDetailWithTeamSchema),
-    paginatedDataSchema(accountBookSchema),
-  ]),
+  outputSchema: accountBookListResponseSchema,
   frontend: accountBookListResponseSchema,
 };
 
