@@ -177,7 +177,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   // Info: (20241024 - Anna) 檢查報表數據和載入狀態
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
+      <div className="-mt-40 flex h-screen flex-col items-center justify-center">
         <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="mb-0 text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
@@ -434,7 +434,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-        <div className="ml-auto flex items-center gap-24px">
+        <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
           <DownloadButton onClick={downloadFn} />
           {/* Info: (20241021 - Anna) 列印按鈕：只有中文可用 */}
           <PrintButton onClick={printFn} disabled={!isChinese} />
@@ -451,7 +451,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p className="text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         {!isSummaryCollapsed &&
           reportFinancial &&
@@ -469,7 +471,9 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p className="text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         {!isDetailCollapsed &&
           reportFinancial &&

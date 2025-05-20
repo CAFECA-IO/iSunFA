@@ -156,7 +156,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
       {isModalVisible && (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50">
           <div className="flex max-h-90vh justify-center overflow-hidden rounded-lg">
-            <div className="hide-scrollbar relative max-h-90vh w-1000px max-w-9/10 overflow-y-auto rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6">
+            <div className="hide-scrollbar relative max-h-90vh w-1000px max-w-9/10 overflow-y-auto rounded-lg border border-stroke-neutral-quaternary bg-neutral-50 p-6 tablet:max-w-1000px">
               <div className="flex items-center justify-center">
                 <h5 className="text-xl font-bold text-neutral-600">
                   {/* Info: (20241107 - Anna) 使用從父層傳入的科目名稱 */}

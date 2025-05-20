@@ -723,8 +723,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   );
   const AssetItem = (
-    <div id="4" className={`relative overflow-y-hidden print:break-before-page`}>
-      <section className="hide-scrollbar mx-1 mb-6 overflow-x-auto text-text-neutral-secondary">
+    <div id="4" className={`hide-scrollbar relative overflow-y-hidden print:break-before-page`}>
+      <section className="mx-1 mb-6 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ASSET_DISTRIBUTION_CHART')}</p>
         </div>
@@ -738,7 +738,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-auto">
+                    <span className="w-100px text-sm tablet:w-auto">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
@@ -777,7 +777,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-auto">
+                    <span className="w-100px text-sm tablet:w-auto">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>

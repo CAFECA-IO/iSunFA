@@ -51,7 +51,7 @@ const ItemDetail = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">
+          <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
             <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>

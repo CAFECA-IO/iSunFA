@@ -35,7 +35,7 @@ const FilterBar = ({ printFn, isChinese }: FilterBarProps) => {
   const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-      <div className="ml-auto flex items-center gap-24px">
+      <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
         <DownloadButton onClick={exportVoucherModalVisibilityHandler} disabled />
         <PrintButton onClick={printFn} disabled={!isChinese} />
       </div>
@@ -47,7 +47,7 @@ const NoData = () => {
   const { t } = useTranslation('reports');
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center">
+    <div className="-mt-40 flex h-screen flex-col items-center justify-center">
       <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
       <div>
         <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
@@ -276,7 +276,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p className="font-bold leading-5">
+          <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
             <span className="pl-10">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
@@ -340,8 +340,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
             </p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p className="font-bold leading-5">
-            {' '}
+          <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
             <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>

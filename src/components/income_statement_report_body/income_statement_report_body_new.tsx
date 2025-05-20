@@ -14,6 +14,9 @@ const IncomeStatementPageBody = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
+        <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
+          {t('reports:REPORTS.COMPREHENSIVE_INCOME_STATEMENT')}
+        </p>
         {/* Info: (20241017 - Anna) 日期篩選器和語言選擇 */}
         <div className="flex flex-col max-md:flex-col md:flex-row md:items-center md:gap-10">
           {/* Info: (20241017 - Anna)日期篩選器 */}
