@@ -2,8 +2,7 @@ import Head from 'next/head';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
-import { FiHome } from 'react-icons/fi';
-import { TbLogout } from 'react-icons/tb';
+import { TbHome, TbLogout } from 'react-icons/tb';
 import { HiPlus } from 'react-icons/hi2';
 import Link from 'next/link';
 import I18n from '@/components/i18n/i18n';
@@ -120,7 +119,7 @@ const SelectRolePage = () => {
           </div>
 
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-            <FiHome size={22} />
+            <TbHome size={20} />
           </Link>
         </div>
 
