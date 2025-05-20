@@ -297,7 +297,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const displayedCurALRChart = isNoDataForCurALR ? (
     <div className="flex w-300px items-center justify-center">
       <div
-        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
+        className="ml-8 flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white tablet:ml-0"
         style={{
           width: '232px',
           height: '232px',
@@ -315,7 +315,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="flex w-300px items-center justify-center">
       <div
-        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white ml-4 tablet:ml-0"
+        className="ml-8 flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white tablet:ml-0"
         style={{
           width: '232px',
           height: '232px',
@@ -682,7 +682,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-200px">
+                    <span className="w-100px text-sm tablet:w-200px">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
@@ -700,7 +700,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
                     ></span>
-                    <span className="inline-block w-100px overflow-x-auto text-sm tablet:w-200px">
+                    <span className="w-100px text-sm tablet:w-200px">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
