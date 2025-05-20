@@ -82,7 +82,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
               </p>
             </button>
 
-            {/* // Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
+            {/* Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
             {IS_APPLE_LOGIN_ENABLED && (
               <button
                 type="button"

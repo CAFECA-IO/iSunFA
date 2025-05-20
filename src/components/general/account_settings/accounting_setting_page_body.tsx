@@ -44,10 +44,7 @@ enum TaxPeriod {
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
 
-  const {
-    // accountingTitleSettingModalVisibilityHandler,
-    manualAccountOpeningModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { manualAccountOpeningModalVisibilityHandler } = useGlobalCtx();
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
 
