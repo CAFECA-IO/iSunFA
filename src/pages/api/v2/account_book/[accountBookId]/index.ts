@@ -1,6 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
+import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  DECLARANT_FILING_METHOD,
+  AGENT_FILING_ROLE,
+} from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
@@ -22,6 +27,17 @@ import {
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import {
+  IGetAccountBookResponse,
+  IUpdateAccountBookInfoBody,
+} from '@/lib/utils/zod_schema/account_book';
+import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import {
+  getCompanySettingByCompanyId,
+  createCompanySetting,
+  updateCompanySettingByCompanyId,
+} from '@/lib/utils/repo/company_setting.repo';
+import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 
 /**
  * Info: (20250310 - Shirley) Handle PUT request
@@ -31,8 +47,7 @@ import { TeamRole } from '@/interfaces/team';
  * 3. Check user authorization -> FORBIDDEN
  * 4. Process account book update based on action type
  *    - UPDATE_TAG: Update account book tag
- *    - SET_TO_TOP: Set account book to top
- *    - UPDATE_VISIBILITY: Update account book visibility
+ *    - UPDATE_INFO: Update account book details (taxSerialNumber, representativeName, etc.)
  * 5. Validate output data -> INVALID_OUTPUT_DATA
  */
 const handlePutRequest = async (req: NextApiRequest) => {
@@ -55,7 +70,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   const { userId, teams } = session;
   const accountBookId = Number(req.query.accountBookId);
-  const { action, tag } = body;
+  const { action } = body;
 
   // Info: (20250418 - Shirley) 獲取帳本所屬的團隊ID
   const teamId = await getAccountBookTeamId(accountBookId);
@@ -79,7 +94,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   loggerBack.info(`User ${userId} with role ${teamRole} is updating account book ${accountBookId}`);
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBook | IGetAccountBookResponse | null = null;
   let canDo = false;
 
   switch (action) {
@@ -97,8 +112,156 @@ const handlePutRequest = async (req: NextApiRequest) => {
         throw new Error(STATUS_MESSAGE.FORBIDDEN);
       }
 
+      const { tag } = body;
       payload = await updateAccountBook(userId, accountBookId, { tag });
       statusMessage = STATUS_MESSAGE.SUCCESS;
+      break;
+    }
+    // Info: (20250515 - Shirley) Update account book details (from info.ts)
+    case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO: {
+      // Info: (20250515 - Shirley) 檢查用戶是否有修改帳本權限
+      canDo = convertTeamRoleCanDo({
+        teamRole,
+        canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+      }).can;
+
+      if (!canDo) {
+        loggerBack.warn(
+          `User ${userId} with role ${teamRole} doesn't have permission to modify account book ${accountBookId}`
+        );
+        throw new Error(STATUS_MESSAGE.FORBIDDEN);
+      }
+
+      // Info: (20250515 - Shirley) 獲取帳本信息
+      const company = await getCompanyById(accountBookId);
+      if (!company) {
+        loggerBack.warn(`Account book ${accountBookId} not found`);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
+
+      // Info: (20250515 - Shirley) 獲取公司設定
+      let companySetting = await getCompanySettingByCompanyId(accountBookId);
+      if (!companySetting) {
+        // Info: (20250515 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
+        companySetting = await createCompanySetting(accountBookId);
+        if (!companySetting) {
+          loggerBack.warn(`Cannot create company setting for accountBookId: ${accountBookId}`);
+          throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+        }
+      }
+
+      // Info: (20250515 - Shirley) 記錄更新前的狀態
+      loggerBack.info(
+        `Updating account book ${accountBookId}: Previous values - country: ${companySetting.country}, countryCode: ${companySetting.countryCode}, startDate: ${company.startDate}`
+      );
+
+      const updateData = body as IUpdateAccountBookInfoBody;
+
+      // Info: (20250515 - Shirley) 更新公司設定
+      const updatedSetting = await updateCompanySettingByCompanyId({
+        companyId: accountBookId,
+        data: {
+          taxSerialNumber: updateData.taxSerialNumber,
+          representativeName: updateData.representativeName,
+          country: updateData.country,
+          phone: updateData.phoneNumber,
+          city: updateData.city,
+          district: updateData.district,
+          enteredAddress: updateData.enteredAddress,
+          companyName: updateData.name,
+          companyTaxId: updateData.taxId,
+          companyStartDate: updateData.startDate,
+          contactPerson: updateData.contactPerson,
+          filingFrequency: updateData.filingFrequency,
+          filingMethod: updateData.filingMethod,
+          declarantFilingMethod: updateData.declarantFilingMethod,
+          declarantName: updateData.declarantName,
+          declarantPersonalId: updateData.declarantPersonalId,
+          declarantPhoneNumber: updateData.declarantPhoneNumber,
+          agentFilingRole: updateData.agentFilingRole,
+          licenseId: updateData.licenseId,
+        },
+      });
+
+      if (!updatedSetting) {
+        loggerBack.warn(`Failed to update company setting for accountBookId: ${accountBookId}`);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
+
+      // Info: (20250515 - Shirley) 記錄更新後的狀態
+      loggerBack.info(
+        `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`
+      );
+
+      // Info: (20250515 - Shirley) 獲取更新後的帳本信息
+      const updatedCompany = await getCompanyById(accountBookId);
+      if (!updatedCompany) {
+        loggerBack.warn(`Failed to get updated company for accountBookId: ${accountBookId}`);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
+
+      // Info: (20250515 - Shirley) 獲取國家資訊
+      const countryCode = updatedSetting.countryCode || 'tw';
+      const countryLocaleKey = updatedSetting.country || 'tw';
+
+      let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
+      if (!dbCountry) {
+        dbCountry = await getCountryByCode(countryCode);
+      }
+
+      // Info: (20250515 - Shirley) 構建國家資訊
+      const country = dbCountry
+        ? {
+            id: String(dbCountry.id),
+            code: dbCountry.code,
+            name: dbCountry.name,
+            localeKey: dbCountry.localeKey,
+            currencyCode: dbCountry.currencyCode,
+            phoneCode: dbCountry.phoneCode,
+            phoneExample: dbCountry.phoneExample,
+          }
+        : {
+            id: String(updatedSetting.id),
+            code: countryCode,
+            name: 'Taiwan',
+            localeKey: countryLocaleKey,
+            currencyCode: 'TWD',
+            phoneCode: '+886',
+            phoneExample: '0902345678',
+          };
+
+      // Info: (20250515 - Shirley) 構建回應資料
+      const accountBookData: IGetAccountBookResponse = {
+        id: String(accountBookId),
+        name: updatedCompany.name,
+        taxId: updatedCompany.taxId,
+        taxSerialNumber: updatedSetting.taxSerialNumber || '',
+        representativeName: updatedSetting.representativeName || '',
+        country,
+        phoneNumber: updatedSetting.phone || '',
+        address: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+        startDate: updatedCompany.startDate,
+        createdAt: updatedCompany.createdAt,
+        updatedAt: updatedCompany.updatedAt,
+
+        // Info: (20250515 - Shirley) 添加 RC2 欄位
+        contactPerson: updatedSetting.contactPerson || '',
+        city: (updatedSetting.address as { city: string })?.city || '',
+        district: (updatedSetting.address as { district: string })?.district || '',
+        enteredAddress:
+          (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+        filingFrequency: updatedSetting.filingFrequency as FILING_FREQUENCY,
+        filingMethod: updatedSetting.filingMethod as FILING_METHOD,
+        declarantFilingMethod: updatedSetting.declarantFilingMethod as DECLARANT_FILING_METHOD,
+        declarantName: updatedSetting.declarantName,
+        declarantPersonalId: updatedSetting.declarantPersonalId,
+        declarantPhoneNumber: updatedSetting.declarantPhoneNumber,
+        agentFilingRole: updatedSetting.agentFilingRole as AGENT_FILING_ROLE,
+        licenseId: updatedSetting.licenseId,
+      };
+
+      payload = accountBookData;
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
       break;
     }
     default:

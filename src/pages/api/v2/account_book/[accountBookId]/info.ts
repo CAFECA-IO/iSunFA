@@ -192,20 +192,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
       enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
       filingFrequency: companySetting.filingFrequency
         ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
-        : undefined,
+        : null,
       filingMethod: companySetting.filingMethod
         ? (companySetting.filingMethod.toString() as FILING_METHOD)
-        : undefined,
+        : null,
       declarantFilingMethod: companySetting.declarantFilingMethod
         ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
-        : undefined,
-      declarantName: companySetting.declarantName || '',
-      declarantPersonalId: companySetting.declarantPersonalId || '',
-      declarantPhoneNumber: companySetting.declarantPhoneNumber || '',
+        : null,
+      declarantName: companySetting.declarantName || null,
+      declarantPersonalId: companySetting.declarantPersonalId || null,
+      declarantPhoneNumber: companySetting.declarantPhoneNumber || null,
       agentFilingRole: companySetting.agentFilingRole
         ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
-        : undefined,
-      licenseId: companySetting.licenseId || '',
+        : null,
+      licenseId: companySetting.licenseId || null,
     };
 
     // Info: (20250421 - Shirley) Validate output data
@@ -423,12 +423,6 @@ const handlePutRequest = async (req: NextApiRequest) => {
       representativeName: updatedSetting.representativeName || '',
       country,
       phoneNumber: updatedSetting.phone || '',
-      // address: {
-      //   city: (updatedSetting.address as { city: string })?.city || '',
-      //   district: (updatedSetting.address as { district: string })?.district || '',
-      //   enteredAddress:
-      //     (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
-      // },
       address: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
       startDate: updatedCompany.startDate,
       createdAt: updatedCompany.createdAt,
@@ -441,20 +435,20 @@ const handlePutRequest = async (req: NextApiRequest) => {
       enteredAddress: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
       filingFrequency: updatedSetting.filingFrequency
         ? (updatedSetting.filingFrequency.toString() as FILING_FREQUENCY)
-        : undefined,
+        : null,
       filingMethod: updatedSetting.filingMethod
         ? (updatedSetting.filingMethod.toString() as FILING_METHOD)
-        : undefined,
+        : null,
       declarantFilingMethod: updatedSetting.declarantFilingMethod
         ? (updatedSetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
-        : undefined,
-      declarantName: updatedSetting.declarantName || '',
-      declarantPersonalId: updatedSetting.declarantPersonalId || '',
-      declarantPhoneNumber: updatedSetting.declarantPhoneNumber || '',
+        : null,
+      declarantName: updatedSetting.declarantName || null,
+      declarantPersonalId: updatedSetting.declarantPersonalId || null,
+      declarantPhoneNumber: updatedSetting.declarantPhoneNumber || null,
       agentFilingRole: updatedSetting.agentFilingRole
         ? (updatedSetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
-        : undefined,
-      licenseId: updatedSetting.licenseId || '',
+        : null,
+      licenseId: updatedSetting.licenseId || null,
     };
 
     // Info: (20250421 - Shirley) Validate output data

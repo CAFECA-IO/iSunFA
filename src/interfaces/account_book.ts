@@ -20,6 +20,7 @@ export enum WORK_TAG {
 
 export enum ACCOUNT_BOOK_UPDATE_ACTION {
   UPDATE_TAG = 'updateTag',
+  UPDATE_INFO = 'updateInfo',
 }
 
 // Info: (20250418 - Liz) 申報頻率
