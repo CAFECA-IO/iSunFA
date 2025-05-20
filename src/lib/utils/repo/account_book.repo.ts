@@ -42,6 +42,7 @@ import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
 import { createNotificationsBulk } from '@/lib/utils/repo/notification.repo';
 import { NotificationEvent, NotificationType } from '@/interfaces/notification';
+import { EmailTemplateName } from '@/constants/email_template';
 
 const buildAccountBookTransferNotification = async (
   userId: number,
@@ -154,6 +155,7 @@ const buildAccountBookTransferNotification = async (
   ].map(({ recipients, message }) => ({
     userEmailMap: recipients,
     teamId: toTeamId,
+    template: EmailTemplateName.INVITE, // ToDo : (20250520 - Tzuhan) 需要前端提供
     type: NotificationType.ACCOUNT_BOOK,
     event,
     title: '帳本轉移通知',
@@ -164,228 +166,6 @@ const buildAccountBookTransferNotification = async (
     pushPusher: true,
     sendEmail: true,
   }));
-};
-
-const getTransferNotificationPayload = async (
-  accountBookId: number,
-  userId: number,
-  fromTeamId: number,
-  toTeamId: number
-) => {
-  const accountBook = await prisma.company.findFirst({ where: { id: accountBookId } });
-  if (!accountBook) throw new Error(STATUS_MESSAGE.ACCOUNT_BOOK_NOT_FOUND);
-
-  const [fromTeam, toTeam] = await Promise.all([
-    prisma.team.findUnique({
-      where: { id: fromTeamId },
-      include: {
-        members: {
-          where: { userId },
-          select: { user: { select: { id: true, name: true, email: true, imageFile: true } } },
-        },
-      },
-    }),
-    prisma.team.findUnique({
-      where: { id: toTeamId },
-      include: {
-        members: {
-          where: { status: LeaveStatus.IN_TEAM, role: { in: [TeamRole.OWNER, TeamRole.ADMIN] } },
-          select: { user: { select: { id: true, name: true, email: true } } },
-        },
-      },
-    }),
-  ]);
-
-  if (!fromTeam || !toTeam || !fromTeam.members.length) {
-    throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND);
-  }
-
-  const operator = fromTeam.members[0].user;
-  const toTeamRecipients = toTeam.members.map((m) => ({
-    userId: m.user.id,
-    email: m.user.email ?? '',
-  }));
-  const fromTeamRecipients = fromTeam.members.map((m) => ({
-    userId: m.user.id,
-    email: m.user.email ?? '',
-  }));
-
-  return {
-    accountBook,
-    toTeamRecipients,
-    fromTeamRecipients,
-    operator,
-    fromTeamName: fromTeam.name,
-    toTeamName: toTeam.name,
-    imageUrl: operator.imageFile?.url,
-    actionUrl: `/team/${toTeamId}/account_book/${accountBookId}`,
-  };
-};
-
-export const sendTransferAccountBookNotification = async (data: {
-  accountBookId: number;
-  userId: number;
-  fromTeamId: number;
-  toTeamId: number;
-  event: NotificationEvent;
-}): Promise<void> => {
-  const { accountBookId, userId, fromTeamId, toTeamId, event } = data;
-  const {
-    toTeamRecipients,
-    fromTeamRecipients,
-    operator,
-    accountBook: book,
-    fromTeamName,
-    toTeamName,
-    imageUrl,
-    actionUrl,
-  } = await getTransferNotificationPayload(accountBookId, userId, fromTeamId, toTeamId);
-
-  switch (event) {
-    case NotificationEvent.TRANSFER:
-      await createNotificationsBulk({
-        userEmailMap: toTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '帳本轉移請求通知',
-        message: `帳本 ${book.name} 請求轉移至 ${toTeamName} 團隊`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      await createNotificationsBulk({
-        userEmailMap: toTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '帳本轉移請求已發送',
-        message: `帳本 ${book.name} 請求轉移至 ${toTeamName} 團隊`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      break;
-    case NotificationEvent.APPROVED:
-      await createNotificationsBulk({
-        userEmailMap: [...fromTeamRecipients, ...toTeamRecipients],
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '帳本成功轉移通知',
-        message: `帳本 ${book.name} 已成功轉移至 ${toTeamName} 團隊`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      break;
-    case NotificationEvent.REJECTED:
-      await createNotificationsBulk({
-        userEmailMap: fromTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '已拒絕帳本轉移請求通知',
-        message: `帳本 ${book.name} 請求轉移至 ${toTeamName} 團隊已被拒絕`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      await createNotificationsBulk({
-        userEmailMap: toTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '已拒絕帳本轉移請求通知',
-        message: `已拒絕帳帳本 ${book.name} 請求轉移至 ${toTeamName} 團隊`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      break;
-    case NotificationEvent.CANCELLED:
-      await createNotificationsBulk({
-        userEmailMap: toTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '帳本轉移取消通知',
-        message: `原本團隊已取消帳本 ${book.name} 轉移至 ${toTeamName} 的請求`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      await createNotificationsBulk({
-        userEmailMap: fromTeamRecipients,
-        teamId: toTeamId,
-        type: NotificationType.ACCOUNT_BOOK,
-        event,
-        title: '帳本轉移取消通知',
-        message: `已取消帳本 ${book.name} 轉移至 ${toTeamName} 團隊的請求`,
-        content: {
-          ledgerId: book.id,
-          ledgerName: book.name,
-          fromTeamName,
-          toTeamName,
-          operatorName: operator.name,
-        },
-        actionUrl,
-        imageUrl,
-        pushPusher: true,
-        sendEmail: true,
-      });
-      break;
-    default:
-      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-  }
 };
 
 /**
@@ -1198,14 +978,6 @@ export const requestTransferAccountBook = async (
     prisma.company.update({ where: { id: accountBookId }, data: { isTransferring: true } }),
   ]);
 
-  await sendTransferAccountBookNotification({
-    userId,
-    fromTeamId,
-    toTeamId,
-    accountBookId,
-    event: NotificationEvent.TRANSFER,
-  });
-
   const notifications = await buildAccountBookTransferNotification(
     userId,
     accountBookId,
@@ -1273,13 +1045,14 @@ export const cancelTransferAccountBook = async (
     }),
   ]);
 
-  await sendTransferAccountBookNotification({
+  const notifications = await buildAccountBookTransferNotification(
     userId,
-    fromTeamId: transfer.fromTeamId,
-    toTeamId: transfer.toTeamId,
     accountBookId,
-    event: NotificationEvent.CANCEL,
-  });
+    transfer.fromTeamId,
+    transfer.toTeamId,
+    NotificationEvent.CANCEL
+  );
+  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
 };
 
 // Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
@@ -1337,13 +1110,14 @@ export const acceptTransferAccountBook = async (
     }),
   ]);
 
-  await sendTransferAccountBookNotification({
+  const notifications = await buildAccountBookTransferNotification(
     userId,
-    fromTeamId: transfer.fromTeamId,
-    toTeamId: transfer.toTeamId,
     accountBookId,
-    event: NotificationEvent.APPROVED,
-  });
+    transfer.fromTeamId,
+    transfer.toTeamId,
+    NotificationEvent.APPROVED
+  );
+  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
 };
 
 // Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
@@ -1388,6 +1162,15 @@ export const declineTransferAccountBook = async (
       data: { isTransferring: false },
     }),
   ]);
+
+  const notifications = await buildAccountBookTransferNotification(
+    userId,
+    accountBookId,
+    transfer.fromTeamId,
+    transfer.toTeamId,
+    NotificationEvent.DELETED
+  );
+  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
 };
 
 /**
