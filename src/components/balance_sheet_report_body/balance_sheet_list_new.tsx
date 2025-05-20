@@ -297,7 +297,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const displayedCurALRChart = isNoDataForCurALR ? (
     <div className="flex w-300px items-center justify-center">
       <div
-        className="ml-8 flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white tablet:ml-0"
+        className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
         style={{
           width: '232px',
           height: '232px',
@@ -315,7 +315,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   const displayedPreALRChart = isNoDataForPreALR ? (
     <div className="flex w-300px items-center justify-center">
       <div
-        className="ml-8 flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white tablet:ml-0"
+        className="ml-5 flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white sm:ml-0"
         style={{
           width: '232px',
           height: '232px',
@@ -672,7 +672,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ASSET_LIABILITY_RATIO')}</p>
         </div>
-        <div className="mx-3 flex flex-col space-y-10">
+        <div className="mx-3 mr-0 flex flex-col space-y-10 sm:mr-3">
           <div className="flex flex-col space-y-0">
             <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="hide-scrollbar flex items-center justify-between overflow-x-auto">
@@ -680,15 +680,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 {curAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]} `}
                     ></span>
-                    <span className="w-100px text-sm tablet:w-200px">
+                    <span className="w-100px text-sm lg:w-200px">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
                 ))}
               </ul>
-              {displayedCurALRChart}
+              <div className="-ml-1 lg:ml-0">{displayedCurALRChart}</div>
             </div>
           </div>
           <div className="flex flex-col space-y-0">
@@ -698,15 +698,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 {preAssetLiabilityRatioLabels.map((label, index) => (
                   <li key={label} className="flex items-center">
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]}`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full text-xs ${ASSETS_LIABILITIES_EQUITY_COLOR[index % ASSETS_LIABILITIES_EQUITY_COLOR.length]} `}
                     ></span>
-                    <span className="w-100px text-sm tablet:w-200px">
+                    <span className="w-100px text-sm lg:w-200px">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
                 ))}
               </ul>
-              {displayedPreALRChart}
+              <div className="-ml-3 sm:-ml-1 lg:ml-0">{displayedPreALRChart}</div>
             </div>
           </div>
         </div>
@@ -738,7 +738,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="w-100px text-sm tablet:w-auto">
+                    <span className="w-100px text-sm lg:w-auto">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
@@ -777,7 +777,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
                     ></span>
-                    <span className="w-100px text-sm tablet:w-auto">
+                    <span className="w-100px text-sm lg:w-auto">
                       {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
                     </span>
                   </li>
@@ -824,16 +824,18 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
-          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
+          <p className="flex items-center text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_DAYS')}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
-              <th className="w-300px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+              <th className="w-1/3 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-1/3 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+              <th className="w-1/3 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>
@@ -848,16 +850,18 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         </table>
         <div className="mb-16px mt-32px flex justify-between font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.INVENTORY_TURNOVER_DAYS')}</p>
-          <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
+          <p className="flex items-center text-xs font-semibold leading-5">
+            {t('reports:REPORTS.UNIT_DAYS')}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
             <tr>
-              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
-              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+              <th className="w-1/3 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+              <th className="w-1/3 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: curYear })}
               </th>
-              <th className="w-300px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
+              <th className="w-1/3 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-end text-sm font-semibold">
                 {t('reports:REPORTS.YEAR_TEMPLATE', { year: preYear })}
               </th>
             </tr>

@@ -278,7 +278,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           </div>
             <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-10">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -342,7 +341,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           </div>
           <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isDetailCollapsed && (
@@ -639,9 +637,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(
-                      2
-                    )}%
+                    {revenueToRD.ratio.curRatio.toFixed(2)}%
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end">
                     {revenueToRD.ratio.preRatio.toFixed(2)}%

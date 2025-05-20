@@ -208,72 +208,76 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     // Info: (20250213 - Anna) 先去除重複，確保相同 `code` 只顯示一次
     const uniqueData = Array.from(new Map(data.map((item) => [item.code, item])).values());
     return (
-      <table className="relative z-1 w-full border-collapse bg-white">
-        <thead>
-          <tr className="print:hidden">
-            <th className="w-125px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-              {t('reports:REPORTS.CODE_NUMBER')}
-            </th>
-            <th className="w-540px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-              {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-            </th>
-            <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-              {curDate.from} {t('reports:COMMON.TO')} {curDate.to}
-            </th>
-            <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-              {preDate.from} {t('reports:COMMON.TO')} {preDate.to}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {uniqueData
-            // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
-            .filter(
-              (value) =>
-                !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
-            )
-            .map((value) => {
-              if (!value.code) {
-                return (
-                  <tr key={value.code}>
-                    <td
-                      colSpan={6}
-                      className="border border-stroke-neutral-quaternary p-10px font-bold"
-                    >
-                      {value.name}
-                    </td>
-                  </tr>
-                );
-              }
-              return (
-                <tr key={value.code}>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {value.code}
-                  </td>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
-                  </td>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                    {
-                      value.curPeriodAmount === 0
-                        ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
-                        : value.curPeriodAmount < 0
-                          ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
-                          : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
-                    }
-                  </td>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                    {value.prePeriodAmount === 0
-                      ? '-'
-                      : value.prePeriodAmount < 0
-                        ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
-                        : value.prePeriodAmount.toLocaleString()}
-                  </td>
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px">
+          <table className="relative z-1 w-full border-collapse bg-white">
+            <thead>
+              <tr className="print:hidden">
+                <th className="w-125px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.CODE_NUMBER')}
+                </th>
+                <th className="w-540px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                </th>
+                <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {curDate.from} {t('reports:COMMON.TO')} {curDate.to}
+                </th>
+                <th className="w-285px whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                  {preDate.from} {t('reports:COMMON.TO')} {preDate.to}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {uniqueData
+                // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
+                .filter(
+                  (value) =>
+                    !(Number(value.curPeriodAmount) === 0 && Number(value.prePeriodAmount) === 0)
+                )
+                .map((value) => {
+                  if (!value.code) {
+                    return (
+                      <tr key={value.code}>
+                        <td
+                          colSpan={6}
+                          className="border border-stroke-neutral-quaternary p-10px font-bold"
+                        >
+                          {value.name}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return (
+                    <tr key={value.code}>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {value.code}
+                      </td>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
+                      </td>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                        {
+                          value.curPeriodAmount === 0
+                            ? '-' // Info: (20241021 - Anna) 如果是 0，顯示 "-"
+                            : value.curPeriodAmount < 0
+                              ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})` // Info:(20241021 - Anna) 負數，顯示括號和千分位
+                              : value.curPeriodAmount.toLocaleString() // Info:(20241021 - Anna) 正數，顯示千分位
+                        }
+                      </td>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+                        {value.prePeriodAmount === 0
+                          ? '-'
+                          : value.prePeriodAmount < 0
+                            ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
+                            : value.prePeriodAmount.toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     );
   };
 
@@ -410,21 +414,23 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       );
 
     return (
-      <div className="mt-4">
-        <table className="w-full border-collapse bg-white">
-          <thead>
-            <tr className="bg-surface-brand-primary-50">
-              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
-              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
-                {t('reports:REPORTS.YEAR_TEMPLATE', { year: currentYear })}
-              </th>
-              <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
-                {t('reports:REPORTS.YEAR_TEMPLATE', { year: previousYear })}
-              </th>
-            </tr>
-          </thead>
-          {displayedTableBody}
-        </table>
+      <div className="hide-scrollbar mt-4 overflow-x-auto">
+        <div className="min-w-900px">
+          <table className="w-full border-collapse bg-white">
+            <thead>
+              <tr className="bg-surface-brand-primary-50">
+                <th className="w-300px border border-stroke-neutral-quaternary p-10px text-left text-xxs font-semibold leading-5 text-text-neutral-secondary"></th>
+                <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+                  {t('reports:REPORTS.YEAR_TEMPLATE', { year: currentYear })}
+                </th>
+                <th className="w-300px border border-stroke-neutral-quaternary p-10px text-center text-sm font-semibold leading-5 text-text-neutral-secondary">
+                  {t('reports:REPORTS.YEAR_TEMPLATE', { year: previousYear })}
+                </th>
+              </tr>
+            </thead>
+            {displayedTableBody}
+          </table>
+        </div>
       </div>
     );
   };
@@ -446,7 +452,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary items-center">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
@@ -466,7 +472,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     <div id="2" className="relative overflow-hidden">
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="relative -z-10"></div>
-        <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary items-center">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
@@ -509,16 +515,16 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <div className="mb-16 flex">
-              <div className="mt-18px w-3/5">
+            <div className="mb-16 flex flex-col lg:flex-row">
+              <div className="mt-18px w-full lg:w-3/5">
                 <LineChart data={lineChartData} labels={lineChartLabels} />
               </div>
-              <div className="mt-18px w-2/5 pl-8">
-                <p className="mb-1 text-sm">
+              <div className="mt-18px w-full lg:w-2/5 lg:pl-8">
+                <p className="mb-1 text-xs iphonese:text-sm">
                   <span className="mr-1">A.</span>
                   <span>{t('reports:REPORTS.PBT_DA_TAXES_PAID')}</span>
                 </p>
-                <p className="text-sm">
+                <p className="text-xs iphonese:text-sm">
                   <span className="mr-1">B.</span>
                   <span>{t('reports:REPORTS.OPERATION_CASH_FLOW')}</span>
                 </p>
@@ -527,161 +533,165 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <div className="mb-1 mt-2 flex justify-between font-semibold text-surface-brand-secondary">
               <p>{t('reports:REPORTS.CHART_SOURCE')}</p>
             </div>
-            <table className="relative w-full border-collapse bg-white">
-              <thead>
-                <tr className="text-xxs">
-                  <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
-                  {lineChartLabels?.map((label) => (
-                    <th
-                      key={label}
-                      className="w-170px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold"
-                    >
-                      {label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
-                    A
-                  </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
-                    (year) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-10px font-semibold"
-                      ></td>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t('reports:REPORTS.PBT')}
-                  </td>
-                  {Object.entries(
-                    reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
-                  ).map(([year, value]) => (
-                    <td
-                      key={year}
-                      className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
-                    >
-                      {value === 0
-                        ? '-'
-                        : value < 0
-                          ? `(${Math.abs(value).toLocaleString()})`
-                          : value.toLocaleString()}
-                    </td>
-                  ))}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t('reports:REPORTS.DA')}
-                  </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
-                    (year) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
-                      >
-                        {
-                          reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
-                            year
-                          ] === 0
-                            ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
-                            : reportFinancial.otherInfo.operatingStabilized
-                                  .amortizationDepreciation[year] < 0
-                              ? `(${Math.abs(
-                                  reportFinancial.otherInfo.operatingStabilized
-                                    .amortizationDepreciation[year]
-                                ).toLocaleString()})` // Info: (20241021 - Anna) 負數用括號並加千分位
-                              : reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
-                                  year
-                                ].toLocaleString() // Info: (20241021 - Anna) 正數顯示千分位
-                        }
+            <div className="hide-scrollbar overflow-x-auto">
+              <div className="min-w-900px">
+                <table className="relative w-full border-collapse bg-white">
+                  <thead>
+                    <tr className="text-xxs">
+                      <th className="w-1/6 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold"></th>
+                      {lineChartLabels?.map((label) => (
+                        <th
+                          key={label}
+                          className="w-170px border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold"
+                        >
+                          {label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
+                        A
                       </td>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t('reports:REPORTS.INCOME_TAXES_PAID')}
-                  </td>
-                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
-                    ([year, value]) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
-                      >
-                        {value === 0
-                          ? '-'
-                          : value < 0
-                            ? `(${Math.abs(value).toLocaleString()})`
-                            : value.toLocaleString()}
+                      {Object.keys(
+                        reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                      ).map((year) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-10px font-semibold"
+                        ></td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t('reports:REPORTS.PBT')}
                       </td>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
-                    B
-                  </td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
-                    (year) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-10px font-semibold"
-                      ></td>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t('reports:REPORTS.CASH_FROM_OPERATING')}
-                  </td>
-                  {Object.entries(
-                    reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
-                  ).map(([year, value]) => (
-                    <td
-                      key={year}
-                      className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
-                    >
-                      {value === 0
-                        ? '-'
-                        : value < 0
-                          ? `(${Math.abs(value).toLocaleString()})`
-                          : value.toLocaleString()}
-                    </td>
-                  ))}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px"></td>
-                  {Object.keys(reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax).map(
-                    (year) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-20px"
-                      ></td>
-                    )
-                  )}
-                </tr>
-                <tr>
-                  <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-                    {t('reports:REPORTS.RATIO_A_B')}
-                  </td>
-                  {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
-                    ([year, value]) => (
-                      <td
-                        key={year}
-                        className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
-                      >
-                        {value.toFixed(2)}
+                      {Object.entries(
+                        reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                      ).map(([year, value]) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
+                        >
+                          {value === 0
+                            ? '-'
+                            : value < 0
+                              ? `(${Math.abs(value).toLocaleString()})`
+                              : value.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t('reports:REPORTS.DA')}
                       </td>
-                    )
-                  )}
-                </tr>
-              </tbody>
-            </table>
+                      {Object.keys(
+                        reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                      ).map((year) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
+                        >
+                          {
+                            reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                              year
+                            ] === 0
+                              ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
+                              : reportFinancial.otherInfo.operatingStabilized
+                                    .amortizationDepreciation[year] < 0
+                                ? `(${Math.abs(
+                                    reportFinancial.otherInfo.operatingStabilized
+                                      .amortizationDepreciation[year]
+                                  ).toLocaleString()})` // Info: (20241021 - Anna) 負數用括號並加千分位
+                                : reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
+                                    year
+                                  ].toLocaleString() // Info: (20241021 - Anna) 正數顯示千分位
+                          }
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t('reports:REPORTS.INCOME_TAXES_PAID')}
+                      </td>
+                      {Object.entries(reportFinancial.otherInfo.operatingStabilized.tax).map(
+                        ([year, value]) => (
+                          <td
+                            key={year}
+                            className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
+                          >
+                            {value === 0
+                              ? '-'
+                              : value < 0
+                                ? `(${Math.abs(value).toLocaleString()})`
+                                : value.toLocaleString()}
+                          </td>
+                        )
+                      )}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm font-semibold">
+                        B
+                      </td>
+                      {Object.keys(
+                        reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                      ).map((year) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-10px font-semibold"
+                        ></td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t('reports:REPORTS.CASH_FROM_OPERATING')}
+                      </td>
+                      {Object.entries(
+                        reportFinancial.otherInfo.operatingStabilized.operatingIncomeCashFlow
+                      ).map(([year, value]) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
+                        >
+                          {value === 0
+                            ? '-'
+                            : value < 0
+                              ? `(${Math.abs(value).toLocaleString()})`
+                              : value.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px"></td>
+                      {Object.keys(
+                        reportFinancial.otherInfo.operatingStabilized.beforeIncomeTax
+                      ).map((year) => (
+                        <td
+                          key={year}
+                          className="border border-stroke-neutral-quaternary p-20px"
+                        ></td>
+                      ))}
+                    </tr>
+                    <tr>
+                      <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+                        {t('reports:REPORTS.RATIO_A_B')}
+                      </td>
+                      {Object.entries(reportFinancial.otherInfo.operatingStabilized.ratio).map(
+                        ([year, value]) => (
+                          <td
+                            key={year}
+                            className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
+                          >
+                            {value.toFixed(2)}
+                          </td>
+                        )
+                      )}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </>
         ) : null}
       </section>
@@ -697,8 +707,8 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             )}
           </p>
         </div>
-        <div className="mx-1 mt-8 flex items-end justify-between">
-          <div className="w-1/2">
+        <div className="mx-1 mt-8 flex flex-col items-end justify-between lg:flex-row">
+          <div className="w-full lg:w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
                 src="/icons/bar_chart_icon.svg"
@@ -717,7 +727,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               labels={curBarChartLabels.map((label) => t(`reports:REPORTS.${label}`))}
             />
           </div>
-          <div className="w-1/2">
+          <div className="w-full lg:w-1/2">
             <div className="relative mb-0 flex items-center pb-1">
               <Image
                 src="/icons/bar_chart_icon.svg"
