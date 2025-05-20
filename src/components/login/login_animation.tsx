@@ -62,7 +62,7 @@ const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
             <p className="text-64px font-bold text-surface-brand-primary">{username}</p>
           </div>
 
-          <div className="z-10 flex animate-fade-in-out flex-col border-2 border-violet-400 text-center tablet:hidden">
+          <div className="z-10 flex animate-fade-in-out flex-col text-center tablet:hidden">
             <p className="text-2xl font-bold text-surface-brand-secondary">Welcome</p>
             <p className="text-36px font-bold text-surface-brand-primary">{username}</p>
           </div>
