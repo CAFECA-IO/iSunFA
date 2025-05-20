@@ -23,6 +23,7 @@
     "CREDIT": "贷方",
     "DEBIT": "借方",
     "TRIAL_BALANCE_PERIOD": "试算表期间",
+    "TRIAL_BALANCE": "试算表",
     "ITEM_SUMMARY_FORMAT": "项目汇总格式",
     "DETAILED_CLASSIFICATION_FORMAT": "细项分类格式",
     "ACCOUNTING_ITEMS": "会计项目",

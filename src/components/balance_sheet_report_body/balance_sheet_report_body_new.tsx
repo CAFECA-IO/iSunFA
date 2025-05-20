@@ -213,7 +213,7 @@ const BalanceSheetPageBody = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
-      <div className="flex w-full flex-col items-stretch gap-40px">
+      <div className="flex w-full flex-col items-stretch gap-32px tablet:gap-40px">
         <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
           {t('reports:REPORTS.BALANCE_SHEET')}
         </p>
@@ -228,7 +228,7 @@ const BalanceSheetPageBody = () => {
               period={selectedDate} // Info: (20241212 - Anna) 使用單日期狀態
               setFilteredPeriod={setSelectedDate}
               type={DatePickerType.TEXT_DATE} // Info: (20241212 - Anna) 設定為單日期選擇器
-              btnClassName="mt-2 tablet:mt-28px"
+              btnClassName="mt-2 tablet:mt-14px md:mt-28px"
             />
           </div>
           {/* Info: (20250103 - Anna) 先用全域的語言選擇替代 */}

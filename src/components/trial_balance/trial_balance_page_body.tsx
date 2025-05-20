@@ -15,20 +15,22 @@ const TrialBalancePageBody = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       {/* Info: (20240920 - Julian) Voucher List */}
-      <div className="flex w-full flex-col items-stretch gap-40px">
+      <div className="flex w-full flex-col items-stretch gap-32px tablet:gap-40px">
+        <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
+          {t('reports:REPORTS.TRIAL_BALANCE')}
+        </p>
         {/* Info: (20241015 - Anna) 日期篩選器 */}
         <div className="flex min-w-250px flex-1 flex-col space-y-0">
-          <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
+          <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-neutral-300 max-md:max-w-full">
             {t('reports:REPORTS.TRIAL_BALANCE_PERIOD')}
           </div>
           <DatePicker
             period={selectedDateRange}
             setFilteredPeriod={setSelectedDateRange}
             type={DatePickerType.TEXT_PERIOD}
-            btnClassName="mt-2"
+            btnClassName="mt-2 tablet:mt-14px md:mt-28px"
           />
         </div>
-        <hr className="break-before-page" />
         {/* Info: (20240920 - Julian) Voucher List */}
         <TrialBalanceList selectedDateRange={selectedDateRange} />
       </div>

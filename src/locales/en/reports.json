@@ -23,6 +23,7 @@
     "CREDIT": "Credit",
     "DEBIT": "Debit",
     "TRIAL_BALANCE_PERIOD": "Trial Balance Period",
+    "TRIAL_BALANCE": "Trial Balance",
     "ITEM_SUMMARY_FORMAT": "Item summary format",
     "DETAILED_CLASSIFICATION_FORMAT": "Detailed classification format",
     "ACCOUNTING_ITEMS": "Accounting items",

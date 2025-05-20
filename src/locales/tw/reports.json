@@ -23,6 +23,7 @@
     "DEBIT": "借方",
     "CREDIT": "貸方",
     "TRIAL_BALANCE_PERIOD": "試算表期間",
+    "TRIAL_BALANCE": "試算表",
     "ITEM_SUMMARY_FORMAT": "項目彙總格式",
     "DETAILED_CLASSIFICATION_FORMAT": "細項分類格式",
     "ACCOUNTING_ITEMS": "會計項目",

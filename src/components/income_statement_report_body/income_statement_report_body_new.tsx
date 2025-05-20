@@ -13,7 +13,7 @@ const IncomeStatementPageBody = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
-      <div className="hide-scrollbar flex w-full flex-col items-stretch gap-40px overflow-x-auto">
+      <div className="hide-scrollbar flex w-full flex-col items-stretch gap-32px overflow-x-auto tablet:gap-40px">
         <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
           {t('reports:REPORTS.COMPREHENSIVE_INCOME_STATEMENT')}
         </p>
@@ -28,7 +28,7 @@ const IncomeStatementPageBody = () => {
               period={selectedDateRange}
               setFilteredPeriod={setSelectedDateRange}
               type={DatePickerType.TEXT_PERIOD}
-              btnClassName="mt-2 tablet:mt-28px"
+              btnClassName="mt-2 tablet:mt-14px md:mt-28px"
             />
           </div>
           {/* Info: (20250103 - Anna) 先用全域的語言選擇替代 */}
