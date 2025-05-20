@@ -110,7 +110,7 @@ const CreateRolePage = () => {
               alt="default_introduction"
               width={734.92}
               height={356.48}
-              className="absolute right-0 top-140px z-0"
+              className="absolute right-0 top-140px z-0 hidden tablet:block"
             ></Image>
           )}
 
@@ -120,7 +120,7 @@ const CreateRolePage = () => {
               alt="individual"
               width={480.11}
               height={614.51}
-              className="absolute right-74px top-30px z-0"
+              className="absolute right-74px top-30px z-0 hidden tablet:block"
             ></Image>
           )}
 
@@ -130,7 +130,7 @@ const CreateRolePage = () => {
               alt="accounting_firms_bg"
               width={470.026}
               height={617.913}
-              className="absolute right-110px top-30px z-0"
+              className="absolute right-110px top-30px z-0 hidden tablet:block"
             ></Image>
           )}
 
@@ -140,7 +140,7 @@ const CreateRolePage = () => {
               alt="enterprise_bg"
               width={660}
               height={660}
-              className="absolute right-0 top-0 z-0"
+              className="absolute right-0 top-0 z-0 hidden tablet:block"
             ></Image>
           )}
 
