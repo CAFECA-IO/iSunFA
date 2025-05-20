@@ -1,7 +1,8 @@
 import prisma from '@/client';
 import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { NotificationType, NotificationEvent } from '@/interfaces/notification';
 import { getPusherInstance } from '@/lib/utils/pusher';
-import { NotificationType } from '@prisma/client';
+import { NotificationType as PrismaNotificationType } from '@prisma/client';
 
 export async function listNotifications(userId: number) {
   return prisma.notification.findMany({
@@ -43,19 +44,7 @@ type CreateNotificationParams = {
   userId: number;
   teamId?: number;
   type: NotificationType;
-  event:
-    | 'TRANSFER'
-    | 'CANCEL'
-    | 'UPDATED'
-    | 'EXPIRED'
-    | 'REVIEWED'
-    | 'REJECTED'
-    | 'APPROVED'
-    | 'RENEWED'
-    | 'CANCELLED'
-    | 'COMPLETED'
-    | 'EXPIRED'
-    | 'DELETED';
+  event: NotificationEvent;
   title: string;
   message: string;
   content: Record<string, string | number | boolean>;
@@ -80,7 +69,7 @@ export async function createNotification(params: CreateNotificationParams) {
     data: {
       userId: params.userId,
       teamId: params.teamId,
-      type: params.type,
+      type: params.type as PrismaNotificationType,
       event: params.event as string,
       title: params.title,
       message: params.message,
@@ -129,7 +118,7 @@ export async function createNotificationsBulk(params: CreateManyNotificationPara
   const notifications = params.userEmailMap.map(({ userId }) => ({
     userId,
     teamId: params.teamId,
-    type: params.type,
+    type: params.type as PrismaNotificationType,
     event: params.event,
     title: params.title,
     message: params.message,
