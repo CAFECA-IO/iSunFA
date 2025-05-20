@@ -60,51 +60,54 @@ const ItemSummary = ({
             <p className="font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p className="font-bold leading-5">
+          <p className="text-xs font-semibold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
-          <table className="relative z-1 w-full border-collapse bg-white">
-            <thead>
-              <tr>
-                <th className="w-1/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.CODE_NUMBER')}
-                </th>
-                <th className="w-5/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
-                  {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                </th>
-                <th className="w-2/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
-                  {!isSummaryCollapsed && financialReport && financialReport.company && (
-                    <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
-                    </p>
-                  )}
-                </th>
-                <th className="w-1/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                  %
-                </th>
-                <th
-                  className="w-2/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold"
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  {financialReport && financialReport.company && (
-                    <p className="text-center font-barlow font-semibold leading-5">
-                      {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
-                    </p>
-                  )}
-                </th>
-                <th className="w-1/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                  %
-                </th>
-              </tr>
-            </thead>
+          <div className="hide-scrollbar overflow-x-auto">
+            <div className="min-w-900px">
+              <table className="relative z-1 w-full border-collapse bg-white">
+                <thead>
+                  <tr>
+                    <th className="w-1/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.CODE_NUMBER')}
+                    </th>
+                    <th className="w-5/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left text-sm font-semibold">
+                      {t('reports:REPORTS.ACCOUNTING_ITEMS')}
+                    </th>
+                    <th className="w-2/12 whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold">
+                      {!isSummaryCollapsed && financialReport && financialReport.company && (
+                        <p className="text-center font-barlow font-semibold leading-5">
+                          {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
+                        </p>
+                      )}
+                    </th>
+                    <th className="w-1/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
+                      %
+                    </th>
+                    <th
+                      className="w-2/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center text-sm font-semibold"
+                      style={{ whiteSpace: 'nowrap' }}
+                    >
+                      {financialReport && financialReport.company && (
+                        <p className="text-center font-barlow font-semibold leading-5">
+                          {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
+                        </p>
+                      )}
+                    </th>
+                    <th className="w-1/12 border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
+                      %
+                    </th>
+                  </tr>
+                </thead>
 
-            <tbody>
-              <Rows flattenAccounts={flattenGeneralAccounts} />
-            </tbody>
-          </table>
+                <tbody>
+                  <Rows flattenAccounts={flattenGeneralAccounts} />
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </section>
     </div>
