@@ -215,7 +215,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </div>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -292,7 +291,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -368,7 +366,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -463,7 +460,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </div>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         {!isDetailCollapsed && (
@@ -545,7 +541,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -625,7 +620,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -705,7 +699,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -783,7 +776,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </p>
           <p className="text-xs font-bold leading-5">
             <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-            <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
           </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
