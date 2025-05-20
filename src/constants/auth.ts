@@ -152,6 +152,7 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.PUT_TEAM_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 

@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import { IAccountBook, ACCOUNT_BOOK_UPDATE_ACTION,
+import {
+  IAccountBook,
+  ACCOUNT_BOOK_UPDATE_ACTION,
   FILING_FREQUENCY,
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
@@ -16,7 +18,7 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
-import loggerBack from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
@@ -29,7 +31,9 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
 import {
   IGetAccountBookResponse,
+  IGetAccountBookQueryParams,
   IUpdateAccountBookInfoBody,
+  ICountry,
 } from '@/lib/utils/zod_schema/account_book';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
@@ -38,6 +42,7 @@ import {
   updateCompanySettingByCompanyId,
 } from '@/lib/utils/repo/company_setting.repo';
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
+import { DefaultValue } from '@/constants/default_value';
 
 /**
  * Info: (20250310 - Shirley) Handle PUT request
@@ -343,6 +348,192 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   return { response, statusMessage };
 };
 
+/**
+ * Info: (20250524 - Shirley) 處理 GET 請求，獲取帳本詳細資訊
+ * 如果沒有 company_setting 記錄，則創建一個空白記錄
+ */
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IGetAccountBookResponse | null = null;
+
+  try {
+    await checkSessionUser(session, APIName.GET_ACCOUNT_BOOK_BY_ID, req);
+    await checkUserAuthorization(APIName.GET_ACCOUNT_BOOK_BY_ID, req, session);
+
+    // Info: (20250421 - Shirley) Validate request data
+    const { query } = checkRequestData(APIName.GET_ACCOUNT_BOOK_BY_ID, req, session);
+    if (query === null) {
+      throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    }
+
+    const { accountBookId } = query as IGetAccountBookQueryParams;
+
+    // Info: (20250326 - Shirley) 根據 accountBookId 獲取公司資訊
+    const company = await getCompanyById(+accountBookId);
+    if (!company) {
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    // Info: (20250326 - Shirley) 獲取帳本所屬的團隊
+    const { teamId } = company;
+    if (!teamId) {
+      loggerError({
+        userId,
+        errorType: 'get account book info failed',
+        errorMessage: `Account book ${accountBookId} does not belong to any team`,
+      });
+      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    // Info: (20250326 - Shirley) 檢查用戶是否有權限查看此帳本
+    // Info: (20250326 - Shirley) 從 session 中獲取團隊信息
+    const teamInfo = session.teams?.find((team) => team.id === teamId);
+
+    // Info: (20250326 - Shirley) 如果用戶不在團隊中，則拒絕訪問
+    if (!teamInfo) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} is not a member of team ${teamId}`,
+      });
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    // Info: (20250326 - Shirley) 根據帳本是否為私有來檢查不同的權限
+    const userRole = teamInfo.role as TeamRole;
+
+    // Info: (20250326 - Shirley) 帳本不分公開跟私有，團隊成員都可查看
+    const canViewResult = convertTeamRoleCanDo({
+      teamRole: userRole,
+      canDo: TeamPermissionAction.VIEW_PUBLIC_ACCOUNT_BOOK,
+    });
+
+    if (!canViewResult.can) {
+      loggerError({
+        userId,
+        errorType: 'permission denied',
+        errorMessage: `User ${userId} with role ${userRole} does not have permission to view account book ${accountBookId}`,
+      });
+      statusMessage = STATUS_MESSAGE.FORBIDDEN;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    let companySetting = await getCompanySettingByCompanyId(+accountBookId);
+
+    // Info: (20250326 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
+    if (!companySetting) {
+      companySetting = await createCompanySetting(+accountBookId);
+      if (!companySetting) {
+        loggerError({
+          userId,
+          errorType: 'create empty company setting failed',
+          errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
+        });
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
+    }
+
+    // Info: (20250326 - Shirley) 獲取國家資訊
+    const countryCode = companySetting.countryCode || 'tw';
+    const countryLocaleKey = companySetting.country || 'tw';
+
+    // Info: (20250326 - Shirley) 首先嘗試通過 localeKey 獲取國家資訊，如果沒有再嘗試通過 code 獲取
+    let dbCountry = await getCountryByLocaleKey(countryLocaleKey);
+
+    if (!dbCountry) {
+      dbCountry = await getCountryByCode(countryCode);
+    }
+
+    // Info: (20250326 - Shirley) 構建國家資訊
+    const country: ICountry = dbCountry
+      ? {
+          id: String(dbCountry.id),
+          code: dbCountry.code,
+          name: dbCountry.name,
+          localeKey: dbCountry.localeKey,
+          currencyCode: dbCountry.currencyCode,
+          phoneCode: dbCountry.phoneCode,
+          phoneExample: dbCountry.phoneExample,
+        }
+      : {
+          id: String(companySetting.id),
+          code: countryCode,
+          name: 'Taiwan', // Info: (20250326 - Shirley) 預設為台灣
+          localeKey: countryLocaleKey,
+          currencyCode: 'TWD', // Info: (20250326 - Shirley) 預設貨幣代碼
+          phoneCode: '+886', // Info: (20250326 - Shirley) 預設電話國碼
+          phoneExample: '0902345678', // Info: (20250326 - Shirley) 預設電話範例
+        };
+
+    // Info: (20250326 - Shirley) 構建回應資料
+    const accountBookData: IGetAccountBookResponse = {
+      id: String(accountBookId),
+      name: company.name,
+      taxId: company.taxId,
+      taxSerialNumber: companySetting.taxSerialNumber || '',
+      representativeName: companySetting.representativeName || '',
+      country,
+      phoneNumber: companySetting.phone || '',
+      address: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      startDate: company.startDate,
+      createdAt: company.createdAt,
+      updatedAt: company.updatedAt,
+
+      // Info: (20250717 - Shirley) 添加 RC2 欄位
+      contactPerson: companySetting.contactPerson || '',
+      city: (companySetting.address as { city: string })?.city || '',
+      district: (companySetting.address as { district: string })?.district || '',
+      enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      filingFrequency: companySetting.filingFrequency
+        ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
+        : null,
+      filingMethod: companySetting.filingMethod
+        ? (companySetting.filingMethod.toString() as FILING_METHOD)
+        : null,
+      declarantFilingMethod: companySetting.declarantFilingMethod
+        ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+        : null,
+      declarantName: companySetting.declarantName || null,
+      declarantPersonalId: companySetting.declarantPersonalId || null,
+      declarantPhoneNumber: companySetting.declarantPhoneNumber || null,
+      agentFilingRole: companySetting.agentFilingRole
+        ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+        : null,
+      licenseId: companySetting.licenseId || null,
+    };
+
+    // Info: (20250421 - Shirley) Validate output data
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.GET_ACCOUNT_BOOK_BY_ID,
+      accountBookData
+    );
+
+    if (!isOutputDataValid) {
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      return { response: formatApiResponse(statusMessage, null), statusMessage };
+    }
+
+    statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    payload = outputData;
+
+    return { response: formatApiResponse(statusMessage, payload), statusMessage };
+  } catch (error) {
+    loggerError({
+      userId: session.userId || DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get account book info failed',
+      errorMessage: (error as Error).message,
+    });
+    statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    return { response: formatApiResponse(statusMessage, null), statusMessage };
+  }
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const method = req.method || HttpMethod.GET;
   let name = APIName.UPDATE_ACCOUNT_BOOK;
@@ -353,6 +544,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const session = await getSession(req);
   try {
     switch (method) {
+      case HttpMethod.GET:
+        name = APIName.GET_ACCOUNT_BOOK_BY_ID;
+        ({ response, statusMessage } = await handleGetRequest(req));
+        ({ httpCode, result } = response);
+        break;
       case HttpMethod.PUT:
         name = APIName.UPDATE_ACCOUNT_BOOK;
         ({ response, statusMessage } = await handlePutRequest(req));

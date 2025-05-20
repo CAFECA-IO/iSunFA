@@ -315,6 +315,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
   [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,

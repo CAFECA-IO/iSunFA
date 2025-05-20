@@ -170,6 +170,7 @@ export enum APIName {
   LIST_NOTIFICATION = 'LIST_NOTIFICATION',
   GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
   READ_NOTIFICATION = 'READ_NOTIFICATION',
+  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
 }
 
 export enum APIPath {
@@ -317,6 +318,7 @@ export enum APIPath {
   LIST_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification`,
   GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
   READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
+  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
 }
 
 const createConfig = ({
@@ -1039,5 +1041,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.READ_NOTIFICATION,
     method: HttpMethod.PATCH,
     path: APIPath.READ_NOTIFICATION,
+  }),
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
   }),
 };

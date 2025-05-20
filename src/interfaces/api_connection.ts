@@ -143,7 +143,8 @@ export type IAPIName =
   | 'VERIFY_CODE'
   | 'LIST_NOTIFICATION'
   | 'GET_NOTIFICATION_BY_ID'
-  | 'READ_NOTIFICATION';
+  | 'READ_NOTIFICATION'
+  | 'GET_ACCOUNT_BOOK_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
