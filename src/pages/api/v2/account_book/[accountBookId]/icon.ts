@@ -8,7 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
-import { IAccountBookEntity } from '@/interfaces/account_book';
+import { IAccountBook } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
@@ -109,17 +109,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IAccountBookEntity | null }>;
+  ) => Promise<{ statusMessage: string; payload: IAccountBook | null }>;
 } = {
   PUT: (req) => withRequestValidation(APIName.ACCOUNT_BOOK_PUT_ICON, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBookEntity | null>>
+  res: NextApiResponse<IResponseData<IAccountBook | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookEntity | null = null;
+  let payload: IAccountBook | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -133,10 +133,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IAccountBookEntity | null>(
-      statusMessage,
-      payload
-    );
+    const { httpCode, result } = formatApiResponse<IAccountBook | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

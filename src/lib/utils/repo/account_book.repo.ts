@@ -175,8 +175,8 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
 export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
-): Promise<IAccountBookEntity | null> => {
-  let result: IAccountBookEntity | null = null;
+): Promise<IAccountBook | null> => {
+  let result: IAccountBook | null = null;
   const accountBook = await prisma.company.findFirst({
     where: {
       taxId,
@@ -231,8 +231,8 @@ export const createAccountBook = async (
     agentFilingRole?: AGENT_FILING_ROLE;
     licenseId?: string;
   }
-): Promise<IAccountBookEntity | null> => {
-  let accountBook: IAccountBookEntity | null = null;
+): Promise<IAccountBook | null> => {
+  let accountBook: IAccountBook | null = null;
   let { teamId } = body;
   const {
     taxId,

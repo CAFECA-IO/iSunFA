@@ -9,19 +9,19 @@ import { IConnectAccountBookQueryParams } from '@/lib/utils/zod_schema/account_b
 import { getSession, setSession } from '@/lib/utils/session';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import { IAccountBookEntity, WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBook, WORK_TAG } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface IResponse {
   statusMessage: string;
-  payload: IAccountBookEntity | null;
+  payload: IAccountBook | null;
 }
 
 const handleGetRequest: IHandleRequest<
   APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
-  IAccountBookEntity | null
+  IAccountBook | null
 > = async ({ query, session }) => {
   const { accountBookId } = query as IConnectAccountBookQueryParams;
   const userId = session?.userId;
@@ -62,7 +62,7 @@ const handleGetRequest: IHandleRequest<
     return { statusMessage: STATUS_MESSAGE.FORBIDDEN, payload: null };
   }
 
-  const result: IAccountBookEntity = {
+  const result: IAccountBook = {
     id: company.id,
     userId: company.userId || 555,
     imageId: company.imageFile?.url || '',

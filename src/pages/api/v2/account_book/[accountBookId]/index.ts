@@ -1,10 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
-import {
-  ACCOUNT_BOOK_UPDATE_ACTION,
-  IAccountBook,
-  IAccountBookEntity,
-} from '@/interfaces/account_book';
+import { ACCOUNT_BOOK_UPDATE_ACTION, IAccountBook } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
@@ -176,7 +172,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBookEntity | null = null;
+  let payload: IAccountBook | null = null;
 
   await checkSessionUser(session, APIName.DELETE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.DELETE_ACCOUNT_BOOK, req, session);

@@ -1,8 +1,21 @@
 import prisma from '@/client';
-import { WORK_TAG } from '@/interfaces/account_book';
+import {
+  AGENT_FILING_ROLE,
+  DECLARANT_FILING_METHOD,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  WORK_TAG,
+} from '@/interfaces/account_book';
 import { ITodoAccountBook } from '@/interfaces/todo';
 import { getTimestampNow, timestampInMilliSeconds, timestampInSeconds } from '@/lib/utils/common';
+import { parseAddress } from '@/lib/utils/address';
 import { Prisma } from '@prisma/client';
+
+// 處理枚舉類型轉換的輔助函數
+function convertEnumValue<T>(value: unknown): T | null {
+  if (value === null || value === undefined) return null;
+  return value as unknown as T;
+}
 
 // Info: (20250408 - Tzuhan) 統一 Utility: 從 note 中解析 startTime / endTime
 export function splitStartEndTimeInNote(note: string | null): {
@@ -32,7 +45,14 @@ export function convertToTodoAccountBook(
       userTodoCompanies: {
         include: {
           company: {
-            include: { imageFile: true };
+            include: {
+              imageFile: true;
+              companySettings?: {
+                where: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }];
+                };
+              };
+            };
           };
         };
       };
@@ -52,21 +72,37 @@ export function convertToTodoAccountBook(
           ...company,
           imageId: company.imageFile?.url ?? '',
           tag: company.tag as WORK_TAG,
-          representativeName: '',
-          taxSerialNumber: '',
-          contactPerson: '',
-          phoneNumber: '',
-          city: '',
-          district: '',
-          enteredAddress: '',
-          filingFrequency: null,
-          filingMethod: null,
-          declarantFilingMethod: null,
-          declarantName: null,
-          declarantPersonalId: null,
-          declarantPhoneNumber: null,
-          agentFilingRole: null,
-          licenseId: null,
+
+          // 從 companySettings 獲取數據或使用默認值
+          representativeName: company.companySettings?.[0]?.representativeName || '',
+          taxSerialNumber: company.companySettings?.[0]?.taxSerialNumber || '',
+          contactPerson: company.companySettings?.[0]?.contactPerson || '',
+          phoneNumber: company.companySettings?.[0]?.phone || '',
+
+          // 處理地址數據
+          ...(company.companySettings?.[0]?.address
+            ? parseAddress(company.companySettings[0].address)
+            : {
+                city: '',
+                district: '',
+                enteredAddress: '',
+              }),
+
+          // 處理選填欄位
+          filingFrequency: convertEnumValue<FILING_FREQUENCY>(
+            company.companySettings?.[0]?.filingFrequency
+          ),
+          filingMethod: convertEnumValue<FILING_METHOD>(company.companySettings?.[0]?.filingMethod),
+          declarantFilingMethod: convertEnumValue<DECLARANT_FILING_METHOD>(
+            company.companySettings?.[0]?.declarantFilingMethod
+          ),
+          declarantName: company.companySettings?.[0]?.declarantName || null,
+          declarantPersonalId: company.companySettings?.[0]?.declarantPersonalId || null,
+          declarantPhoneNumber: company.companySettings?.[0]?.declarantPhoneNumber || null,
+          agentFilingRole: convertEnumValue<AGENT_FILING_ROLE>(
+            company.companySettings?.[0]?.agentFilingRole
+          ),
+          licenseId: company.companySettings?.[0]?.licenseId || null,
         }
       : null,
   };
@@ -78,7 +114,16 @@ export async function getTodoById(id: number): Promise<ITodoAccountBook | null> 
     include: {
       userTodoCompanies: {
         include: {
-          company: { include: { imageFile: true } },
+          company: {
+            include: {
+              imageFile: true,
+              companySettings: {
+                where: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }],
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -149,7 +194,16 @@ async function listTodo(userId: number) {
     include: {
       userTodoCompanies: {
         include: {
-          company: { include: { imageFile: true } },
+          company: {
+            include: {
+              imageFile: true,
+              companySettings: {
+                where: {
+                  OR: [{ deletedAt: 0 }, { deletedAt: null }],
+                },
+              },
+            },
+          },
         },
       },
     },

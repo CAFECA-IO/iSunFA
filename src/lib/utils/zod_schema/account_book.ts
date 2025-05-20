@@ -61,7 +61,7 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   licenseId: z.string().nullable().default(null),
 });
 
-export const accountBookWithTeamSchema = accountBookSchema.extend({
+export const accountBookWithTeamSchema = accountBookDetailSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });

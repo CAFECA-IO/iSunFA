@@ -89,7 +89,11 @@ const methodHandlers: {
     payload: IStatusInfo | null;
   }>;
 } = {
-  GET: (req) => withRequestValidation(APIName.STATUS_INFO_GET, req, handleGetRequest),
+  GET: (req) =>
+    withRequestValidation(APIName.STATUS_INFO_GET, req, handleGetRequest) as Promise<{
+      statusMessage: string;
+      payload: IStatusInfo | null;
+    }>,
 };
 
 export default async function handler(
