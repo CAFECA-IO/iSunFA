@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { TbHome } from 'react-icons/tb';
 import Link from 'next/link';
 import { useUserCtx } from '@/contexts/user_context';
@@ -6,12 +6,12 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import I18n from '@/components/i18n/i18n';
 
-const LoginAnimation = ({
-  setIsAnimationShowing,
-}: {
-  setIsAnimationShowing: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
-  const [switchTitle, setSwitchTitle] = useState(false);
+interface ILoginAnimationProps {
+  setIsAnimationShowing: Dispatch<SetStateAction<boolean>>;
+}
+
+const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
+  const [switchTitle, setSwitchTitle] = useState<boolean>(false);
   const { username } = useUserCtx();
 
   // Info: (20250520 - Liz) I18n 語言選單的外部點擊事件
@@ -56,18 +56,25 @@ const LoginAnimation = ({
 
       {/* Info: (20240925 - Liz) 根據 switchTitle 狀態顯示 Title */}
       {!switchTitle && (
-        <div className="z-10 flex animate-fade-in-out">
-          <p className="text-64px font-bold text-surface-brand-secondary">Welcome,&nbsp;</p>
-          <p className="text-64px font-bold text-surface-brand-primary">{username}</p>
-        </div>
+        <>
+          <div className="z-10 hidden animate-fade-in-out tablet:flex">
+            <p className="text-64px font-bold text-surface-brand-secondary">Welcome,&nbsp;</p>
+            <p className="text-64px font-bold text-surface-brand-primary">{username}</p>
+          </div>
+
+          <div className="z-10 flex animate-fade-in-out flex-col border-2 border-violet-400 text-center tablet:hidden">
+            <p className="text-2xl font-bold text-surface-brand-secondary">Welcome</p>
+            <p className="text-36px font-bold text-surface-brand-primary">{username}</p>
+          </div>
+        </>
       )}
 
       {switchTitle && (
         <div className="z-10 flex flex-col items-center gap-24px">
-          <p className="animate-fade-in-1 text-64px font-bold text-surface-brand-primary">
+          <p className="animate-fade-in-1 text-36px font-bold text-surface-brand-primary tablet:text-64px">
             iSunFA World
           </p>
-          <p className="animate-fade-in-2 text-xl font-bold text-stroke-neutral-mute opacity-0">
+          <p className="animate-fade-in-2 text-sm font-bold text-stroke-neutral-mute opacity-0 tablet:text-xl">
             Redirecting to the role selection page...
           </p>
         </div>

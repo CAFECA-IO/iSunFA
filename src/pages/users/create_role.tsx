@@ -27,9 +27,7 @@ const CreateRolePage = () => {
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const togglePreviewModal = () => {
-    setIsPreviewModalVisible((prev) => !prev);
-  };
+  const togglePreviewModal = () => setIsPreviewModalVisible((prev) => !prev);
 
   useEffect(() => {
     const fetchAndComputeRoles = async () => {
