@@ -151,6 +151,7 @@ export enum APIName {
   DECLINE_TRANSFER_ACCOUNT_BOOK = 'DECLINE_TRANSFER_ACCOUNT_BOOK',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = 'LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER = 'UPDATE_MEMBER',
@@ -293,6 +294,7 @@ export enum APIPath {
   DECLINE_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/decline`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`, // Info: (20250520 - Shirley) 新增此 API name 來區分 API response，但實際上是 endpoint 跟 LIST_ACCOUNT_BOOK_BY_USER_ID，但需要加上 query simple = true
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
 
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
@@ -953,6 +955,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
     name: APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
+  }),
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
+    name: APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID,
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
   }),

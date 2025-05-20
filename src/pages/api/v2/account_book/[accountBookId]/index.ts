@@ -7,11 +7,12 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
+  ACCOUNT_BOOK_ROLE,
+  WORK_TAG,
 } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
-  checkOutputDataValid,
   checkRequestData,
   checkSessionUser,
   checkUserAuthorization,
@@ -33,7 +34,7 @@ import {
   IGetAccountBookResponse,
   IGetAccountBookQueryParams,
   IUpdateAccountBookInfoBody,
-  ICountry,
+  IUpdateAccountBookResponse,
 } from '@/lib/utils/zod_schema/account_book';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
@@ -99,7 +100,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
   loggerBack.info(`User ${userId} with role ${teamRole} is updating account book ${accountBookId}`);
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | IGetAccountBookResponse | null = null;
+  // Info: (20250510 - Shirley) 不同的 action 需要返回不同格式的數據
+  // UPDATE_TAG 需要返回 IUpdateAccountBookResponse 格式
+  // UPDATE_INFO 需要返回 IGetAccountBookResponse 格式
+  let payload: IUpdateAccountBookResponse | IGetAccountBookResponse | null = null;
   let canDo = false;
 
   switch (action) {
@@ -118,10 +122,88 @@ const handlePutRequest = async (req: NextApiRequest) => {
       }
 
       const { tag } = body;
-      payload = await updateAccountBook(userId, accountBookId, { tag });
+      const updatedAccountBook = await updateAccountBook(userId, accountBookId, { tag });
+
+      if (!updatedAccountBook) {
+        loggerBack.error(`Failed to update account book ${accountBookId} tag to ${tag}`);
+        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
+
+      const company = await getCompanyById(+accountBookId);
+
+      if (!company) {
+        loggerBack.warn(`Account book ${accountBookId} not found`);
+        throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+      }
+
+      let companySetting = await getCompanySettingByCompanyId(accountBookId);
+
+      if (!companySetting) {
+        companySetting = await createCompanySetting(+accountBookId);
+        if (!companySetting) {
+          loggerError({
+            userId,
+            errorType: 'create empty company setting failed',
+            errorMessage: `Cannot create company setting for accountBookId: ${accountBookId}`,
+          });
+          statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+          return { response: formatApiResponse(statusMessage, null), statusMessage };
+        }
+      }
+
+      // Info: (20250510 - Shirley) 確保返回符合 updateAccountBook schema 的格式
+      payload = {
+        teamId,
+        company: {
+          id: accountBookId,
+          name: company.name,
+          taxId: company.taxId,
+          imageId: String(company.imageFileId || ''),
+          teamId,
+          userId: company.userId,
+          tag: company.tag as WORK_TAG,
+          startDate: company.startDate,
+          createdAt: company.createdAt,
+          updatedAt: company.updatedAt,
+          isPrivate: company.isPrivate,
+
+          // 從 companySetting 獲取的欄位
+          taxSerialNumber: companySetting.taxSerialNumber || '',
+          representativeName: companySetting.representativeName || '',
+          contactPerson: companySetting.contactPerson || '',
+          phoneNumber: companySetting.phone || '',
+          city: (companySetting.address as { city: string })?.city || '',
+          district: (companySetting.address as { district: string })?.district || '',
+          enteredAddress:
+            (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+
+          // RC2 欄位
+          filingFrequency: companySetting.filingFrequency
+            ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
+            : null,
+          filingMethod: companySetting.filingMethod
+            ? (companySetting.filingMethod.toString() as FILING_METHOD)
+            : null,
+          declarantFilingMethod: companySetting.declarantFilingMethod
+            ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+            : null,
+          declarantName: companySetting.declarantName || null,
+          declarantPersonalId: companySetting.declarantPersonalId || null,
+          declarantPhoneNumber: companySetting.declarantPhoneNumber || null,
+          agentFilingRole: companySetting.agentFilingRole
+            ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+            : null,
+          licenseId: companySetting.licenseId || null,
+        },
+        tag: updatedAccountBook.tag,
+        order: 0, // 默認值
+        accountBookRole: ACCOUNT_BOOK_ROLE.BOOKKEEPER, // 由於對應的關係是完全不同的概念，直接使用默認值 BOOKKEEPER
+      };
+
       statusMessage = STATUS_MESSAGE.SUCCESS;
       break;
     }
+
     // Info: (20250515 - Shirley) Update account book details (from info.ts)
     case ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO: {
       // Info: (20250515 - Shirley) 檢查用戶是否有修改帳本權限
@@ -215,67 +297,130 @@ const handlePutRequest = async (req: NextApiRequest) => {
       }
 
       // Info: (20250515 - Shirley) 構建國家資訊
-      const country = dbCountry
-        ? {
-            id: String(dbCountry.id),
-            code: dbCountry.code,
-            name: dbCountry.name,
-            localeKey: dbCountry.localeKey,
-            currencyCode: dbCountry.currencyCode,
-            phoneCode: dbCountry.phoneCode,
-            phoneExample: dbCountry.phoneExample,
-          }
-        : {
-            id: String(updatedSetting.id),
-            code: countryCode,
-            name: 'Taiwan',
-            localeKey: countryLocaleKey,
-            currencyCode: 'TWD',
-            phoneCode: '+886',
-            phoneExample: '0902345678',
-          };
+      // const country: ICountry = dbCountry
+      //   ? {
+      //       id: String(dbCountry.id),
+      //       code: dbCountry.code,
+      //       name: dbCountry.name,
+      //       localeKey: dbCountry.localeKey,
+      //       currencyCode: dbCountry.currencyCode,
+      //       phoneCode: dbCountry.phoneCode,
+      //       phoneExample: dbCountry.phoneExample,
+      //     }
+      //   : {
+      //       id: String(updatedSetting.id),
+      //       code: countryCode,
+      //       name: 'Taiwan',
+      //       localeKey: countryLocaleKey,
+      //       currencyCode: 'TWD',
+      //       phoneCode: '+886',
+      //       phoneExample: '0902345678',
+      //     };
 
-      // Info: (20250515 - Shirley) 構建回應資料
+      // Info: (20250509 - Shirley) 根據 getAccountBookInfoResponse 格式返回資料
       const accountBookData: IGetAccountBookResponse = {
-        id: String(accountBookId),
+        id: accountBookId,
         name: updatedCompany.name,
         taxId: updatedCompany.taxId,
-        taxSerialNumber: updatedSetting.taxSerialNumber || '',
-        representativeName: updatedSetting.representativeName || '',
-        country,
-        phoneNumber: updatedSetting.phone || '',
-        address: (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+        imageId: String(updatedCompany.imageFileId || ''),
+        teamId,
+        userId: updatedCompany.userId,
+        tag: updatedCompany.tag as WORK_TAG,
         startDate: updatedCompany.startDate,
         createdAt: updatedCompany.createdAt,
         updatedAt: updatedCompany.updatedAt,
+        isPrivate: updatedCompany.isPrivate,
 
-        // Info: (20250515 - Shirley) 添加 RC2 欄位
+        // 從 companySetting 獲取的欄位
+        taxSerialNumber: updatedSetting.taxSerialNumber || '',
+        representativeName: updatedSetting.representativeName || '',
         contactPerson: updatedSetting.contactPerson || '',
+        phoneNumber: updatedSetting.phone || '',
         city: (updatedSetting.address as { city: string })?.city || '',
         district: (updatedSetting.address as { district: string })?.district || '',
         enteredAddress:
           (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
-        filingFrequency: updatedSetting.filingFrequency as FILING_FREQUENCY,
-        filingMethod: updatedSetting.filingMethod as FILING_METHOD,
-        declarantFilingMethod: updatedSetting.declarantFilingMethod as DECLARANT_FILING_METHOD,
-        declarantName: updatedSetting.declarantName,
-        declarantPersonalId: updatedSetting.declarantPersonalId,
-        declarantPhoneNumber: updatedSetting.declarantPhoneNumber,
-        agentFilingRole: updatedSetting.agentFilingRole as AGENT_FILING_ROLE,
-        licenseId: updatedSetting.licenseId,
+
+        // RC2 欄位
+        filingFrequency: updatedSetting.filingFrequency
+          ? (updatedSetting.filingFrequency.toString() as FILING_FREQUENCY)
+          : null,
+        filingMethod: updatedSetting.filingMethod
+          ? (updatedSetting.filingMethod.toString() as FILING_METHOD)
+          : null,
+        declarantFilingMethod: updatedSetting.declarantFilingMethod
+          ? (updatedSetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+          : null,
+        declarantName: updatedSetting.declarantName || null,
+        declarantPersonalId: updatedSetting.declarantPersonalId || null,
+        declarantPhoneNumber: updatedSetting.declarantPhoneNumber || null,
+        agentFilingRole: updatedSetting.agentFilingRole
+          ? (updatedSetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+          : null,
+        licenseId: updatedSetting.licenseId || null,
       };
 
       payload = accountBookData;
       statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
       break;
     }
+
     default:
       statusMessage = STATUS_MESSAGE.INVALID_INPUT_TYPE;
       break;
   }
 
-  // Info: (20250310 - Shirley) Validate output data, will throw INVALID_OUTPUT_DATA error if invalid
-  const validatedPayload = payload ? checkOutputDataValid(apiName, payload) : null;
+  // Info: (20250510 - Shirley) 根據不同的 action 類型使用不同的 API 進行輸出數據驗證
+  let validatedPayload = null;
+  if (payload) {
+    if (action === ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO) {
+      // Info: (20250509 - Shirley) 對於 UPDATE_INFO 操作，使用 UPDATE_ACCOUNT_BOOK_INFO API 的 schema 進行驗證
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.UPDATE_ACCOUNT_BOOK_INFO,
+        payload
+      );
+      if (isOutputDataValid) {
+        validatedPayload = outputData;
+      } else {
+        loggerBack.error(`Invalid output data for UPDATE_INFO: ${JSON.stringify(payload)}`);
+        loggerBack.error(
+          `Validation error details: \n${JSON.stringify(
+            {
+              payload,
+              errorType: 'validate_output_data',
+            },
+            null,
+            2
+          )}`
+        );
+        statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+        validatedPayload = null;
+      }
+    } else {
+      // Info: (20250510 - Shirley) 對於其他操作，使用 UPDATE_ACCOUNT_BOOK API 的 schema 進行驗證
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.UPDATE_ACCOUNT_BOOK,
+        payload
+      );
+      if (isOutputDataValid) {
+        validatedPayload = outputData;
+      } else {
+        loggerBack.error(`Invalid output data for ${action}: ${JSON.stringify(payload)}`);
+        loggerBack.error(
+          `Validation error details: \n${JSON.stringify(
+            {
+              payload,
+              errorType: 'validate_output_data',
+            },
+            null,
+            2
+          )}`
+        );
+        statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+        validatedPayload = null;
+      }
+    }
+  }
 
   const response = formatApiResponse(statusMessage, validatedPayload);
   return { response, statusMessage };
@@ -451,45 +596,50 @@ const handleGetRequest = async (req: NextApiRequest) => {
     }
 
     // Info: (20250326 - Shirley) 構建國家資訊
-    const country: ICountry = dbCountry
-      ? {
-          id: String(dbCountry.id),
-          code: dbCountry.code,
-          name: dbCountry.name,
-          localeKey: dbCountry.localeKey,
-          currencyCode: dbCountry.currencyCode,
-          phoneCode: dbCountry.phoneCode,
-          phoneExample: dbCountry.phoneExample,
-        }
-      : {
-          id: String(companySetting.id),
-          code: countryCode,
-          name: 'Taiwan', // Info: (20250326 - Shirley) 預設為台灣
-          localeKey: countryLocaleKey,
-          currencyCode: 'TWD', // Info: (20250326 - Shirley) 預設貨幣代碼
-          phoneCode: '+886', // Info: (20250326 - Shirley) 預設電話國碼
-          phoneExample: '0902345678', // Info: (20250326 - Shirley) 預設電話範例
-        };
+    // const country: ICountry = dbCountry
+    //   ? {
+    //       id: String(dbCountry.id),
+    //       code: dbCountry.code,
+    //       name: dbCountry.name,
+    //       localeKey: dbCountry.localeKey,
+    //       currencyCode: dbCountry.currencyCode,
+    //       phoneCode: dbCountry.phoneCode,
+    //       phoneExample: dbCountry.phoneExample,
+    //     }
+    //   : {
+    //       id: String(companySetting.id),
+    //       code: countryCode,
+    //       name: 'Taiwan', // Info: (20250326 - Shirley) 預設為台灣
+    //       localeKey: countryLocaleKey,
+    //       currencyCode: 'TWD', // Info: (20250326 - Shirley) 預設貨幣代碼
+    //       phoneCode: '+886', // Info: (20250326 - Shirley) 預設電話國碼
+    //       phoneExample: '0902345678', // Info: (20250326 - Shirley) 預設電話範例
+    //     };
 
     // Info: (20250326 - Shirley) 構建回應資料
     const accountBookData: IGetAccountBookResponse = {
-      id: String(accountBookId),
+      id: accountBookId,
       name: company.name,
       taxId: company.taxId,
-      taxSerialNumber: companySetting.taxSerialNumber || '',
-      representativeName: companySetting.representativeName || '',
-      country,
-      phoneNumber: companySetting.phone || '',
-      address: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      imageId: String(company.imageFileId || ''),
+      teamId,
+      userId: company.userId,
+      tag: company.tag as WORK_TAG,
       startDate: company.startDate,
       createdAt: company.createdAt,
       updatedAt: company.updatedAt,
+      isPrivate: company.isPrivate,
 
-      // Info: (20250717 - Shirley) 添加 RC2 欄位
+      // 從 companySetting 獲取的欄位
+      taxSerialNumber: companySetting.taxSerialNumber || '',
+      representativeName: companySetting.representativeName || '',
       contactPerson: companySetting.contactPerson || '',
+      phoneNumber: companySetting.phone || '',
       city: (companySetting.address as { city: string })?.city || '',
       district: (companySetting.address as { district: string })?.district || '',
       enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+
+      // RC2 欄位
       filingFrequency: companySetting.filingFrequency
         ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
         : null,

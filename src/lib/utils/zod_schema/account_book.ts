@@ -80,42 +80,6 @@ export const accountBookDetailWithTeamSchema = accountBookDetailSchema.extend({
   isTransferring: z.boolean(),
 });
 
-const accountBookInfoSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  taxId: z.string(),
-  taxSerialNumber: z.string(),
-  representativeName: z.string(),
-  country: countrySchema,
-  phoneNumber: z.string(),
-  address: z.string(),
-  startDate: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
-  contactPerson: z.string().optional(),
-  city: z.string().optional(),
-  district: z.string().optional(),
-  enteredAddress: z.string().optional(),
-  // filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
-  // filingMethod: z.nativeEnum(FILING_METHOD).optional(),
-  // declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
-  // declarantName: z.string().optional(),
-  // declarantPersonalId: z.string().optional(),
-  // declarantPhoneNumber: z.string().optional(),
-  // agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
-  // licenseId: z.string().optional(),
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().default(null),
-  declarantName: z.string().nullable().default(null),
-  declarantPersonalId: z.string().nullable().default(null),
-  declarantPhoneNumber: z.string().nullable().default(null),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
-  licenseId: z.string().nullable().default(null),
-});
-
 // ===================================================================================
 // Info: (20250422 - Shirley) 通用查詢參數 / 輔助 Schema (Common Query Params / Helpers)
 // ===================================================================================
@@ -143,13 +107,18 @@ export const accountBookListSchema = {
     bodySchema: accountBookNullSchema,
   },
   // outputSchema: accountBookListResponseSchema,
-  outputSchema: z.union([
-    paginatedDataSchema(accountBookDetailWithTeamSchema),
-    paginatedDataSchema(accountBookSchema),
-  ]),
+  outputSchema: paginatedDataSchema(accountBookDetailWithTeamSchema),
+
   frontend: accountBookNullSchema,
 };
 
+export const accountBookListSimpleSchema = {
+  input: {
+    querySchema: accountBookListQuerySchema,
+    bodySchema: accountBookNullSchema,
+  },
+  outputSchema: paginatedDataSchema(accountBookSchema),
+};
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: List Account Books (Team)
 // ===================================================================================
@@ -159,11 +128,11 @@ export const listAccountBooksByTeamIdSchema = {
     querySchema: listByTeamIdQuerySchema,
     bodySchema: nullSchema,
   },
-  outputSchema: accountBookListResponseSchema,
-  // outputSchema: z.union([
-  //   paginatedDataSchema(accountBookDetailWithTeamSchema),
-  //   paginatedDataSchema(accountBookSchema),
-  // ]),
+  // outputSchema: accountBookListResponseSchema,
+  outputSchema: z.union([
+    paginatedDataSchema(accountBookDetailWithTeamSchema),
+    paginatedDataSchema(accountBookSchema),
+  ]),
   frontend: accountBookListResponseSchema,
 };
 
@@ -175,43 +144,17 @@ const getAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
-const getAccountBookResponseSchema = z.union([accountBookInfoSchema, z.null()]);
+// Info: (20250519 - Shirley) 將 accountBookInfoSchema 修改為使用 accountBookDetailSchema
+const getAccountBookResponseSchema = accountBookDetailSchema;
 
 export const getAccountBookInfoSchema = {
   input: {
     querySchema: getAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: getAccountBookResponseSchema,
+  outputSchema: getAccountBookResponseSchema.nullable(),
   frontend: accountBookNullSchema,
 };
-
-const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
-  id: z.string(),
-  name: z.string(),
-  taxId: z.string(),
-  taxSerialNumber: z.string(),
-  representativeName: z.string(),
-  country: countrySchema,
-  phoneNumber: z.string(),
-  startDate: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
-  contactPerson: z.string().nullable(),
-  city: z.string().nullable(),
-  district: z.string().nullable(),
-  enteredAddress: z.string().nullable(),
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
-  declarantName: z.string().nullable(),
-  declarantPersonalId: z.string().nullable(),
-  declarantPhoneNumber: z.string().nullable(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
-  licenseId: z.string().nullable(),
-});
 
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: List Account Book Info (User - Detailed)
@@ -346,7 +289,7 @@ export const updateAccountBookInfoBodySchema = z.object({
     .optional(),
   startDate: z.number().optional(),
 
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
+  // Info: (20250517 - Shirley) 新增 RC2 欄位
   contactPerson: z.string().optional(),
   city: z.string().optional(),
   district: z.string().optional(),
@@ -429,8 +372,11 @@ export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQu
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
 
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
-export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
-export type IAccountBookInfoWithTeam = z.infer<typeof accountBookInfoWithTeamSchema>;
+// Info: (20250519 - Shirley) 更新 IGetAccountBookResponse 的類型，使用 accountBookDetailSchema
+export type IGetAccountBookResponse = z.infer<typeof accountBookDetailSchema>;
+// Info: (20250519 - Shirley) 不再需要 IAccountBookInfoWithTeam，改為使用 accountBookDetailWithTeamSchema
+export type IAccountBookInfoWithTeam = z.infer<typeof accountBookDetailWithTeamSchema>;
 export type ICountry = z.infer<typeof countrySchema>;
 
 export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;
+export type IUpdateAccountBookResponse = z.infer<typeof updateAccountBookResponseSchema>;

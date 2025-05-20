@@ -76,12 +76,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   if (simple) {
     options = await listSimpleAccountBookByUserId(userId, query);
+    loggerBack.info(
+      `List simple account book by userId: ${userId} with query: ${JSON.stringify(query)}, options: ${JSON.stringify(options)}`
+    );
   } else {
     options = await listAccountBookByUserId(userId, query);
   }
 
+  // Info: (20250515 - Shirley) 根據 simple 參數選擇不同的 API 名稱來驗證輸出數據
+  const apiNameForValidation = simple
+    ? APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID
+    : APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
+
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    apiNameForValidation,
     toPaginatedData(options)
   );
 
@@ -90,7 +98,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   } else {
     payload = outputData;
     loggerBack.info(
-      `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId}`
+      `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId} with format: ${simple ? 'simple' : 'detailed'}`
     );
   }
 

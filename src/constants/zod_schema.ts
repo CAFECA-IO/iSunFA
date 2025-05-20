@@ -126,6 +126,7 @@ import {
   listAccountBooksByTeamIdSchema,
   deleteAccountBookSchema,
   disconnectAccountBookSchema,
+  accountBookListSimpleSchema,
 } from '@/lib/utils/zod_schema/account_book';
 import {
   createInvoiceRC2Input,
@@ -313,6 +314,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSimpleSchema,
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
   [APIName.GET_ACCOUNT_BOOK_BY_ID]: getAccountBookInfoSchema,
