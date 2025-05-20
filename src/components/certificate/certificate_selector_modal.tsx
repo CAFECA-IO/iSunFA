@@ -97,7 +97,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
         </p>
         <FilterSection
           apiName={APIName.CERTIFICATE_LIST_V2}
-          params={{ accountBookId }} // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+          params={{ accountBookId }}
           page={1}
           pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
           tab={InvoiceTabs.WITHOUT_VOUCHER}

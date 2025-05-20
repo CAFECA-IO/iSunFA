@@ -59,15 +59,6 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   declarantPhoneNumber: z.string().nullable().default(null),
   agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
   licenseId: z.string().nullable().default(null),
-
-  // filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().optional(),
-  // filingMethod: z.nativeEnum(FILING_METHOD).nullable().optional(),
-  // declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().optional(),
-  // declarantName: z.string().nullable().optional(),
-  // declarantPersonalId: z.string().nullable().optional(),
-  // declarantPhoneNumber: z.string().nullable().optional(),
-  // agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().optional(),
-  // licenseId: z.string().nullable().optional(),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -187,8 +178,8 @@ const accountBookCreateBodySchema = z.object({
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
   fileId: z.number().int().optional(),
-  representativeName: z.string(),
-  taxSerialNumber: z.string(),
+  representativeName: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
   contactPerson: z.string().optional(),
   phoneNumber: z.string().optional(),
   city: z.string().optional(),

@@ -38,7 +38,7 @@ const News = ({ news }: NewsProps) => {
   const formattedDate = formatTimestamp(news.createdAt * 1000);
 
   return (
-    <div className="flex items-center gap-16px rounded-xs border-2 bg-surface-neutral-surface-lv2 p-8px">
+    <div className="flex items-center gap-16px rounded-xs bg-surface-neutral-surface-lv2 p-8px">
       <p className="flex-none text-sm font-normal text-text-neutral-tertiary">{formattedDate}</p>
 
       <p className="min-w-0 flex-auto truncate text-base font-semibold text-text-neutral-primary">
@@ -74,7 +74,7 @@ const NewsList = ({ newsList, isPageStyle }: NewsListProps) => {
 
   return (
     <section
-      className={cn('flex flex-auto flex-col', {
+      className={cn('flex min-w-0 flex-auto flex-col', {
         'gap-8px': isPageStyle,
         'gap-24px': !isPageStyle,
       })}

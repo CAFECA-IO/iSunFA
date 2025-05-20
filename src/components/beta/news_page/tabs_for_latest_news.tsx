@@ -17,9 +17,9 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
   const { t } = useTranslation('dashboard');
 
   const TABS_ICON = [
-    { name: NewsType.FINANCIAL, icon: <RiCoinsFill size={20} /> },
-    { name: NewsType.SYSTEM, icon: <TbDatabaseSmile size={20} /> },
-    { name: NewsType.MATCH, icon: <FiUserCheck size={20} /> },
+    { name: NewsType.FINANCIAL, icon: <RiCoinsFill size={20} className="flex-none" /> },
+    { name: NewsType.SYSTEM, icon: <TbDatabaseSmile size={20} className="flex-none" /> },
+    { name: NewsType.MATCH, icon: <FiUserCheck size={20} className="flex-none" /> },
   ];
 
   const handleTabClick = (tabName: NewsType) => {
@@ -53,7 +53,7 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
         >
           {tab.icon}
 
-          <span className="hidden text-base font-medium tablet:block">
+          <span className="hidden font-medium tablet:block laptop:text-xs screen1280:text-base">
             {t(`dashboard:DASHBOARD.${tab.name.toUpperCase()}`)}
           </span>
         </button>
