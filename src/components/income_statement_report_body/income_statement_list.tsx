@@ -29,7 +29,7 @@ interface FilterBarProps {
 const FilterBar = ({ printFn, isChinese, downloadFn }: FilterBarProps) => {
   return (
     <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-      <div className="ml-auto flex items-center gap-24px">
+      <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
         <DownloadButton onClick={downloadFn} />
         <PrintButton onClick={() => printFn()} disabled={!isChinese} />
       </div>

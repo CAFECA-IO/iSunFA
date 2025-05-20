@@ -519,7 +519,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   if (!hasFetchedOnce && !isLoading) {
     // Info: (20241105 - Anna) 如果尚未成功請求過 API 且沒有加載
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
+      <div className="-mt-40 flex h-screen flex-col items-center justify-center">
         <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
@@ -540,131 +540,141 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     <div className="flex flex-col" ref={printRef}>
       {displayedSelectArea}
       {/* Info: (20250116 - Anna) print:max-w-a4-width */}
-      <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:max-w-a4-width">
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
-          <div className="table-row h-60px print:text-xxs">
-            <div
-              className={`hidden border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
-            >
-              <div className="flex items-center justify-center">
-                <input type="checkbox" className={checkboxStyle} />
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px">
+          <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:max-w-a4-width">
+            <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
+              <div className="table-row h-60px print:text-xxs">
+                <div
+                  className={`hidden border-b border-stroke-neutral-quaternary text-center align-middle print:hidden`}
+                >
+                  <div className="flex items-center justify-center">
+                    <input type="checkbox" className={checkboxStyle} />
+                  </div>
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-55px */}
+                <div
+                  className={`table-cell w-70px whitespace-nowrap border-b border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-55px print:bg-neutral-50`}
+                >
+                  <span className="print:hidden">{t('reports:REPORTS.CODE')}</span>
+                  <span className="hidden print:inline">
+                    {t('reports:REPORTS.SUBJECT')}
+                    <br />
+                    {t('reports:REPORTS.NUMBER')}
+                  </span>
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-150px */}
+                <div
+                  className={`table-cell border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-150px print:bg-neutral-50`}
+                >
+                  <span className="print:hidden">
+                    {t('reports:REPORT.ACCOUNTING')}
+                    {t('reports:REPORT.SUBJECT')}
+                  </span>
+                  <span className="hidden print:inline">
+                    {t('reports:REPORT.ACCOUNTING')}
+                    <br />
+                    {t('reports:REPORT.SUBJECT')}
+                  </span>
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedBeginningDebit}
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedBeginningCredit}
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedMidtermDebit}
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedMidtermCredit}
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedEndingDebit}
+                </div>
+                {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {displayedEndingCredit}
+                </div>
               </div>
             </div>
-            {/* Info: (20250116 - Anna) print:max-w-55px */}
-            <div
-              className={`table-cell w-70px whitespace-nowrap border-b border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-55px print:bg-neutral-50`}
-            >
-              <span className="print:hidden">{t('reports:REPORTS.CODE')}</span>
-              <span className="hidden print:inline">
-                {t('reports:REPORTS.SUBJECT')}
-                <br />
-                {t('reports:REPORTS.NUMBER')}
-              </span>
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-150px */}
-            <div
-              className={`table-cell border-b border-l border-stroke-neutral-quaternary text-center align-middle text-text-neutral-tertiary print:max-w-150px print:bg-neutral-50`}
-            >
-              <span className="print:hidden">
-                {t('reports:REPORT.ACCOUNTING')}
-                {t('reports:REPORT.SUBJECT')}
-              </span>
-              <span className="hidden print:inline">
-                {t('reports:REPORT.ACCOUNTING')}
-                <br />
-                {t('reports:REPORT.SUBJECT')}
-              </span>
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedBeginningDebit}
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-green text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedBeginningCredit}
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedMidtermDebit}
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedMidtermCredit}
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedEndingDebit}
-            </div>
-            {/* Info: (20250116 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-b border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink text-center align-middle text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {displayedEndingCredit}
-            </div>
+
+            <div className="table-row-group text-sm">{displayedAccountList}</div>
           </div>
         </div>
-
-        <div className="table-row-group text-sm">{displayedAccountList}</div>
       </div>
+
       <div className="h-px w-full bg-divider-stroke-lv-4"></div>
       {/* Info: (20241018 - Anna) Total開始 */}
-      <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-secondary print:max-w-a4-width">
-          <div className="table-row h-60px print:text-xxs">
-            <div
-              className={`col-span-3 table-cell border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
-            >
-              {t('reports:TAX_REPORT.TOTAL')}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.beginningDebitAmount ?? 0)}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.beginningCreditAmount ?? 0)}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.midtermDebitAmount ?? 0)}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.midtermCreditAmount ?? 0)}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.endingDebitAmount ?? 0)}
-            </div>
-            {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
-            <div
-              className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
-            >
-              {formatNumber(totalData?.endingCreditAmount ?? 0)}
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px">
+          <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
+            <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-secondary print:max-w-a4-width">
+              <div className="table-row h-60px print:text-xxs">
+                <div
+                  className={`col-span-3 table-cell border-stroke-neutral-quaternary text-center align-middle font-medium print:bg-neutral-50`}
+                >
+                  {t('reports:TAX_REPORT.TOTAL')}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.beginningDebitAmount ?? 0)}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.beginningCreditAmount ?? 0)}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.midtermDebitAmount ?? 0)}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.midtermCreditAmount ?? 0)}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.endingDebitAmount ?? 0)}
+                </div>
+                {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
+                <div
+                  className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
+                >
+                  {formatNumber(totalData?.endingCreditAmount ?? 0)}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       {/* Info: (20241018 - Anna) Total結束 */}
       <div className="mx-auto print:hidden">
         <Pagination

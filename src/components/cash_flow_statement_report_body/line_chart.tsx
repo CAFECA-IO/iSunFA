@@ -46,6 +46,8 @@ const LineChart: React.FC<LineChartProps> = ({ data, labels }) => {
     });
 
     setChartOptions({
+      responsive: true, // Info: (20250520 - Anna) 讓圖表根據外層容器的寬度動態縮放
+      maintainAspectRatio: false, // Info: (20250520 - Anna) 允許定義高度
       plugins: {
         legend: {
           display: false,
@@ -74,7 +76,11 @@ const LineChart: React.FC<LineChartProps> = ({ data, labels }) => {
     });
   }, [data, labels]);
 
-  return <Line data={chartData} options={chartOptions} />;
+  return (
+    <div className="w-full">
+      <Line data={chartData} options={chartOptions} />
+    </div>
+  );
 };
 
 export default LineChart;
