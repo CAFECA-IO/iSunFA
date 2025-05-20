@@ -28,22 +28,25 @@ const DonutChart = ({
   };
 
   return (
-    <Doughnut
-      data={data}
-      options={{
-        responsive: true,
-        plugins: {
-          legend: {
-            display: false, // Info: (20241018 - Liz) Disable the default legend
+    <div className="h-120px w-120px tablet:w-100px screen1280:w-180px">
+      <Doughnut
+        data={data}
+        options={{
+          responsive: true,
+          maintainAspectRatio: false, // Info: (20250519 - Liz) 讓圖表填滿容器
+          plugins: {
+            legend: {
+              display: false, // Info: (20241018 - Liz) Disable the default legend
+            },
+            tooltip: {
+              // Info: (20241018 - Liz) 可以設定 tooltip 的顯示內容或者關閉
+              // enabled: false,
+            },
           },
-          tooltip: {
-            // Info: (20241018 - Liz) 可以設定 tooltip 的顯示內容或者關閉
-            // enabled: false,
-          },
-        },
-        cutout: '20%', // Info: (20241018 - Liz) This creates the donut hole
-      }}
-    />
+          cutout: '20%', // Info: (20241018 - Liz) This creates the donut hole
+        }}
+      />
+    </div>
   );
 };
 

@@ -286,11 +286,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
     const addParams = { accountBookId };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     // Info: (20241028 - Julian) 更新資產需 assetId
     const updateParams = { accountBookId, assetId: assetData?.id };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     if (inputAmount > 1) {
       // Info: (20241210 - Julian) 若數量大於 1，則使用 createAssetBulk API
