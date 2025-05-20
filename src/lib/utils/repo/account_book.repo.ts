@@ -470,7 +470,7 @@ export const listAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
-      // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+      // Info: (20250517 - Shirley) 添加 companySettings 以獲取更多欄位
       companySettings: {
         where: {
           deletedAt: null,
@@ -512,7 +512,7 @@ export const listAccountBookByUserId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG,
 
-        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
@@ -521,7 +521,7 @@ export const listAccountBookByUserId = async (
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
 
-        // Info: (20250717 - Shirley) 添加選填欄位
+        // Info: (20250517 - Shirley) 添加選填欄位
         filingFrequency: setting.filingFrequency,
         filingMethod: setting.filingMethod,
         declarantFilingMethod: setting.declarantFilingMethod,
@@ -570,7 +570,7 @@ export const listAccountBookByUserId = async (
 };
 
 /**
- * Info: (20250715 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 companySetting 資料）
+ * Info: (20250515 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 companySetting 資料）
  * @param userId 用戶ID
  * @param queryParams 查詢參數，包含分頁、排序、搜索等選項
  * @returns 分頁後的帳本列表
@@ -595,7 +595,7 @@ export const listSimpleAccountBookByUserId = async (
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
 
-  // Info: (20250715 - Shirley) 查詢用戶所屬的所有團隊
+  // Info: (20250515 - Shirley) 查詢用戶所屬的所有團隊
   const userTeams = await prisma.teamMember.findMany({
     where: {
       userId,
@@ -617,7 +617,7 @@ export const listSimpleAccountBookByUserId = async (
     });
   }
 
-  // Info: (20250715 - Shirley) 查詢團隊內的所有帳本總數
+  // Info: (20250515 - Shirley) 查詢團隊內的所有帳本總數
   const totalCount = await prisma.company.count({
     where: {
       teamId: { in: teamIds },
@@ -629,7 +629,7 @@ export const listSimpleAccountBookByUserId = async (
 
   const nowInSecond = getTimestampNow();
 
-  // Info: (20250715 - Shirley) 取得帳本基本資訊，包含所屬團隊
+  // Info: (20250515 - Shirley) 取得帳本基本資訊，包含所屬團隊
   const accountBooks = await prisma.company.findMany({
     where: {
       teamId: { in: teamIds },
@@ -667,7 +667,7 @@ export const listSimpleAccountBookByUserId = async (
     orderBy: createOrderByList(sortOption),
   });
 
-  // Info: (20250715 - Shirley) 格式化回傳數據
+  // Info: (20250515 - Shirley) 格式化回傳數據
   const result = toPaginatedData({
     data: accountBooks.map((book) => {
       const teamMember = book.team?.members.find((member) => member.userId === userId);
@@ -821,7 +821,7 @@ export const listAccountBooksByTeamId = async (
           },
         },
         imageFile: { select: { id: true, url: true } },
-        // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+        // Info: (20250517 - Shirley) 添加 companySettings 以獲取更多欄位
         companySettings: {
           where: {
             deletedAt: null,
@@ -843,7 +843,7 @@ export const listAccountBooksByTeamId = async (
       const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
-      // Info: (20250717 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      // Info: (20250517 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
@@ -864,7 +864,7 @@ export const listAccountBooksByTeamId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG, // ✅ (20250324 - Tzuhan) 直接取用 tag
 
-        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
