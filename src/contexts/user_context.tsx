@@ -331,7 +331,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   //   teamId,
   // }: {
   //   teams: IStatusInfo['teams'];
-  //   teamId: IAccountBookSimple['teamId'] | null;
+  //   teamId: IAccountBook['teamId'] | null;
   // }) => {
   //   const team = teams?.find((t) => t.id === teamId) ?? null;
   //   setTeam(team);
