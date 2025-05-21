@@ -14,7 +14,7 @@ export default async function handler(
 ) {
   const method = req.method || HttpMethod.GET;
 
-  // 將請求重定向到新的 API 端點
+  // Info: (20250521 - Shirley) 將請求重定向到新的 API 端點
   if (method === HttpMethod.GET || method === HttpMethod.PUT) {
     const { accountBookId } = req.query;
     res.redirect(301, `/api/v2/account_book/${accountBookId}`);
