@@ -334,7 +334,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   });
 
   const displayedSelectArea = (
-    <div className="flex items-center justify-between">
+    <div className="hidden items-center justify-between tablet:flex">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
       <div className="flex items-center gap-16px">
         <Toggle
@@ -420,63 +420,72 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     );
   });
 
+  const displayedTable = (
+    <div className={`table overflow-hidden rounded-lg tablet:shadow-Dropshadow_XS ${bottomColor}`}>
+      {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
+      <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-row">
+          <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
+            <span className="mx-auto table h-16px w-16px table-fixed">
+              <div
+                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                onClick={checkAllHandler}
+              >
+                {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
+              </div>
+            </span>
+          </div>
+          <div
+            className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
+          >
+            {displayedDate}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {t('journal:VOUCHER.VOUCHER_NO')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
+            {t('journal:VOUCHER.NOTE')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
+            {t('journal:VOUCHER.ACCOUNTING')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {displayedDebit}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {displayedCredit}
+          </div>
+          <div
+            className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-120px border-b border-stroke-neutral-quaternary`}
+          >
+            {t('journal:VOUCHER.ISSUER')}
+          </div>
+        </div>
+      </div>
+
+      {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
+      <div className="table-row-group">{displayedVoucherList}</div>
+
+      {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
+      <div className="table-footer-group h-20px"></div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-lv-4">
       {displayedSelectArea}
 
-      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
+      <p className="text-xs font-semibold uppercase text-text-neutral-tertiary tablet:ml-auto">
         {t('journal:VOUCHER.CURRENCY')}: TWD
       </p>
 
-      {/* Info: (20240920 - Julian) Table */}
-      <div className={`table overflow-hidden rounded-lg ${bottomColor}`}>
-        {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
-              <span className="mx-auto table h-16px w-16px table-fixed">
-                <div
-                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-                  onClick={checkAllHandler}
-                >
-                  {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
-                </div>
-              </span>
-            </div>
-            <div
-              className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
-            >
-              {displayedDate}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {t('journal:VOUCHER.VOUCHER_NO')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
-              {t('journal:VOUCHER.NOTE')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
-              {t('journal:VOUCHER.ACCOUNTING')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {displayedDebit}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {displayedCredit}
-            </div>
-            <div
-              className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-120px border-b border-stroke-neutral-quaternary`}
-            >
-              {t('journal:VOUCHER.ISSUER')}
-            </div>
-          </div>
-        </div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedVoucherList}</div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
-        <div className="table-footer-group h-20px"></div>
+      {/* Info: (20250521 - Julian) Table for mobile */}
+      <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
+        <div className="w-max">{displayedTable}</div>
       </div>
+
+      {/* Info: (20250521 - Julian) Table for desktop */}
+      {displayedTable}
     </div>
   );
 };

@@ -190,11 +190,15 @@ const VoucherListPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div className="relative flex flex-col items-center gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250521 - Julian) Page Title for mobile */}
+      <div className="block w-full text-left text-base font-semibold text-text-neutral-secondary tablet:hidden">
+        {t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')}
+      </div>
       {/* Info: (20240920 - Julian) Add New Voucher button */}
-      <div className="ml-auto">
+      <div className="w-full tablet:ml-auto tablet:w-fit">
         <Link href={ISUNFA_ROUTE.ADD_NEW_VOUCHER}>
-          <Button type="button">
+          <Button type="button" className="w-full">
             <LuPlus />
             <p>{t('journal:VOUCHER.ADD_NEW_VOUCHER')}</p>
           </Button>
@@ -211,35 +215,33 @@ const VoucherListPageBody: React.FC = () => {
           counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
         {/* Info: (20241022 - Julian) Filter Section */}
-        <FilterSection<IVoucherBeta[]>
-          params={params}
-          apiName={APIName.VOUCHER_LIST_V2}
-          onApiResponse={handleApiResponse}
-          page={page}
-          pageSize={DEFAULT_PAGE_LIMIT}
-          tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
-          types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
-          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
-          dateSort={dateSort}
-          otherSorts={otherSorts} // Info: (20241104 - Murky) 可以用哪些sort 請參考 VoucherListAllSortOptions, 在 src/lib/utils/zod_schema/voucher.ts
-          */
-          sort={selectedSort}
-          hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
-          flagOfRefresh={flagOfRefreshVoucherList}
-          // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
-          onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
-            setSelectedStartDate(startDate);
-            setSelectedEndDate(endDate);
-            setSelectedType(type);
-            setKeyword(passKeyword);
-          }}
-          // Info: (20250324 - Anna) 流程6:傳初始值
-          initialStartDate={queryStartDate}
-          initialEndDate={queryEndDate}
-          initialType={queryType}
-          initialKeyword={queryKeyword}
-          initialPage={queryPage}
-        />
+        <div className="hidden tablet:block">
+          <FilterSection<IVoucherBeta[]>
+            params={params}
+            apiName={APIName.VOUCHER_LIST_V2}
+            onApiResponse={handleApiResponse}
+            page={page}
+            pageSize={DEFAULT_PAGE_LIMIT}
+            tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
+            types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
+            sort={selectedSort}
+            hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
+            flagOfRefresh={flagOfRefreshVoucherList}
+            // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
+            onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
+              setSelectedStartDate(startDate);
+              setSelectedEndDate(endDate);
+              setSelectedType(type);
+              setKeyword(passKeyword);
+            }}
+            // Info: (20250324 - Anna) 流程6:傳初始值
+            initialStartDate={queryStartDate}
+            initialEndDate={queryEndDate}
+            initialType={queryType}
+            initialKeyword={queryKeyword}
+            initialPage={queryPage}
+          />
+        </div>
         {/* Info: (20240920 - Julian) Voucher List */}
         {displayVoucherList}
         {/* Info: (20240920 - Julian) Pagination */}
