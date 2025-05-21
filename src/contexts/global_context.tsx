@@ -28,6 +28,7 @@ import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_m
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
 import ManualAccountOpeningModal from '@/components/general/account_settings/manual_account_opening_modal';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
+import FilterSideMenu from '@/components/filter_sidemenu/filter_sidemenu';
 
 interface IGlobalContext {
   width: number;
@@ -81,6 +82,9 @@ interface IGlobalContext {
 
   isManualAccountOpeningModalVisible: boolean;
   manualAccountOpeningModalVisibilityHandler: () => void;
+
+  isFilterSideMenuVisible: boolean;
+  filterSideMenuVisibilityHandler: () => void;
 }
 
 export interface IGlobalProvider {
@@ -150,6 +154,8 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const [isManualAccountOpeningModalVisible, setIsManualAccountOpeningModalVisible] =
     useState(false);
+
+  const [isFilterSideMenuVisible, setIsFilterSideMenuVisible] = useState(false);
 
   const { width, height } = windowSize;
 
@@ -247,6 +253,10 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsManualAccountOpeningModalVisible(!isManualAccountOpeningModalVisible);
   };
 
+  const filterSideMenuVisibilityHandler = () => {
+    setIsFilterSideMenuVisible(!isFilterSideMenuVisible);
+  };
+
   useEffect(() => {
     if (!isSignIn) return;
 
@@ -339,6 +349,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
+
+      isFilterSideMenuVisible,
+      filterSideMenuVisibilityHandler,
     }),
     [
       width,
@@ -385,6 +398,9 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
+
+      isFilterSideMenuVisible,
+      filterSideMenuVisibilityHandler,
     ]
   );
 
@@ -479,6 +495,12 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       <ManualAccountOpeningModal
         isModalVisible={isManualAccountOpeningModalVisible}
         modalVisibilityHandler={manualAccountOpeningModalVisibilityHandler}
+      />
+
+      {/* Info: (20250521 - Julian) Filter menu for mobile */}
+      <FilterSideMenu
+        isModalVisible={isFilterSideMenuVisible}
+        modalVisibleHandler={filterSideMenuVisibilityHandler}
       />
 
       {children}

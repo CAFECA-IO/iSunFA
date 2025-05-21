@@ -98,11 +98,15 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   setSelectedAccountTitle,
   setIsRecallApi,
 }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+
+  // Info: (20250521 - Julian) 如果翻譯名稱不存在，則使用原本的名稱
+  const nameKey = `reports:ACCOUNTING_ACCOUNT.${titleAccount.name}`;
+  const translatedName = i18n.exists(nameKey) ? t(nameKey) : titleAccount.name;
 
   const {
     trigger: deleteAccount,
@@ -201,7 +205,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
             <Image src="/icons/caret.svg" width={16} height={16} alt="caret_icon" />
           </div>
           <p>{titleAccount.code}</p>
-          <p className="truncate">{titleAccount.name}</p>
+          <p className="truncate">{translatedName}</p>
         </div>
         {/* Info: (20241111 - Julian) 新增按鈕 */}
         {addButton}

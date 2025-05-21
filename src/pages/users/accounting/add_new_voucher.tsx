@@ -76,6 +76,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'certificate',
       'filter_section_type',
       'search',
+      'reports',
     ])),
     locale,
   },
