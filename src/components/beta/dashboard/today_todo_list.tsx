@@ -6,7 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoAccountBook } from '@/interfaces/todo';
 import { IPaginatedData } from '@/interfaces/pagination';
 
@@ -37,7 +37,7 @@ interface TodayTodoListProps {
 }
 
 const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
-  const [accountBookList, setAccountBookList] = useState<IAccountBook[]>([]);
+  const [accountBookList, setAccountBookList] = useState<IAccountBookSimple[]>([]);
 
   // Info: (20241122 - Liz) 判斷是否有帳本清單
   const isToDoListLink = accountBookList.length > 0;

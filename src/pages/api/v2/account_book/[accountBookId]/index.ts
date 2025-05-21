@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import {
-  IAccountBook,
   ACCOUNT_BOOK_UPDATE_ACTION,
   FILING_FREQUENCY,
   FILING_METHOD,
@@ -33,6 +32,7 @@ import {
   IGetAccountBookResponse,
   IGetAccountBookQueryParams,
   IUpdateAccountBookInfoBody,
+  IAccountBookEntity,
 } from '@/lib/utils/zod_schema/account_book';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
@@ -458,7 +458,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBookEntity | null = null;
 
   await checkSessionUser(session, APIName.DELETE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.DELETE_ACCOUNT_BOOK, req, session);

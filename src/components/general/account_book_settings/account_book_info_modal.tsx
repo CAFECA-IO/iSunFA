@@ -61,7 +61,7 @@ const AccountBookInfoModal = ({
   );
 
   // Info: (20250416 - Liz) 刪除帳本 API
-  // const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
+  // const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBookSimple>(APIName.DELETE_ACCOUNT_BOOK);
 
   const closeAccountBookInfoModal = () => {
     setIsAccountBookListModalOpen(false);

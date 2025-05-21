@@ -19,7 +19,7 @@ import {
   listAccountBookByUserId,
   listSimpleAccountBookByUserId,
 } from '@/lib/utils/repo/account_book.repo';
-import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
@@ -111,7 +111,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBookEntity | null = null;
   await checkSessionUser(session, APIName.CREATE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.CREATE_ACCOUNT_BOOK, req, session);
 

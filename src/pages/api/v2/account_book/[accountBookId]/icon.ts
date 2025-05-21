@@ -8,10 +8,10 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
 import { Company, File } from '@prisma/client';
-import { IAccountBook } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 /**
  * Info: (20250423 - Shirley) Handle PUT request for account book icon
@@ -109,17 +109,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IAccountBook | null }>;
+  ) => Promise<{ statusMessage: string; payload: IAccountBookEntity | null }>;
 } = {
   PUT: (req) => withRequestValidation(APIName.ACCOUNT_BOOK_PUT_ICON, req, handlePutRequest),
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IAccountBook | null>>
+  res: NextApiResponse<IResponseData<IAccountBookEntity | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBookEntity | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -133,7 +133,10 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IAccountBook | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<IAccountBookEntity | null>(
+      statusMessage,
+      payload
+    );
     res.status(httpCode).json(result);
   }
 }

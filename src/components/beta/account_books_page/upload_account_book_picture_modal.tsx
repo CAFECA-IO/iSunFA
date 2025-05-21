@@ -1,7 +1,7 @@
 import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { IoCloseOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
-import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { APIName } from '@/constants/api_connection';
@@ -26,7 +26,7 @@ const UploadAccountBookPictureModal = ({
   const { connectedAccountBook, connectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
+  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBookSimple>(
     APIName.ACCOUNT_BOOK_PUT_ICON
   );
 

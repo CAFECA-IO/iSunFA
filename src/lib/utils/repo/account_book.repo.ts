@@ -12,7 +12,6 @@ import { z } from 'zod';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import {
-  IAccountBook,
   IAccountBookWithTeam,
   WORK_TAG,
   ACCOUNT_BOOK_ROLE,
@@ -40,7 +39,10 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
-import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
+import {
+  IAccountBookEntity,
+  IAccountBookWithTeamEntity,
+} from '@/lib/utils/zod_schema/account_book';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -113,8 +115,8 @@ export async function isEligibleToCreateAccountBookInTeam(
   return canDo.can;
 }
 
-export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+export const getAccountBookById = async (id: number): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const accountBook = await prisma.company.findUnique({
     where: {
       id,
@@ -137,8 +139,8 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
 export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
-): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const accountBook = await prisma.company.findFirst({
     where: {
       taxId,
@@ -193,8 +195,8 @@ export const createAccountBook = async (
     agentFilingRole?: AGENT_FILING_ROLE;
     licenseId?: string;
   }
-): Promise<IAccountBook | null> => {
-  let accountBook: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let accountBook: IAccountBookEntity | null = null;
   let { teamId } = body;
   const {
     taxId,
@@ -1180,19 +1182,19 @@ export const declineTransferAccountBook = async (
 };
 
 /**
- * Info: (20250329 - Shirley) This function fetches complete IAccountBookWithTeam data in one query
+ * Info: (20250329 - Shirley) This function fetches complete IAccountBookWithTeamEntitydata in one query
  * for the status_info API. It retrieves the account book, user role, team info, and other necessary data
  * using Prisma's relation capabilities to minimize database queries.
  * @param userId The ID of the user
  * @param companyId The ID of the company/account book
  * @param teamId The ID of the team the account book belongs to
- * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
 export async function getAccountBookForUserWithTeam(
   userId: number,
   companyId: number,
   teamId: number
-): Promise<IAccountBookWithTeam | null> {
+): Promise<IAccountBookWithTeamEntity | null> {
   if (userId <= 0 || companyId <= 0 || teamId <= 0) {
     return null;
   }
@@ -1316,13 +1318,13 @@ export async function getAccountBookForUserWithTeam(
  * @param userId The ID of the user
  * @param companyId The ID of the company/account book
  * @param teamIds Optional array of team IDs to search within (if known)
- * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
 export async function findUserAccountBook(
   userId: number,
   companyId: number,
   teamIds?: number[]
-): Promise<IAccountBookWithTeam | null> {
+): Promise<IAccountBookWithTeamEntity | null> {
   if (userId <= 0 || companyId <= 0) return null;
 
   const nowInSecond = getTimestampNow();
@@ -1452,8 +1454,8 @@ export const updateAccountBook = async (
     taxId?: string;
     teamId?: number;
   }
-): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const { name, tag, taxId, teamId } = body;
 
   loggerBack.info(
@@ -1520,7 +1522,7 @@ export const updateAccountBook = async (
         company: companyWithImageId,
         order: 1,
         accountBookRole: ACCOUNT_BOOK_ROLE.COMPANY,
-      } as IAccountBook & {
+      } as IAccountBookEntity & {
         company: typeof companyWithImageId;
         order: number;
         accountBookRole: ACCOUNT_BOOK_ROLE;
@@ -1541,8 +1543,10 @@ export const updateAccountBook = async (
   return result;
 };
 
-export const deleteAccountBook = async (accountBookId: number): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+export const deleteAccountBook = async (
+  accountBookId: number
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
 
   const accountBook = await prisma.company.findFirst({
     where: {

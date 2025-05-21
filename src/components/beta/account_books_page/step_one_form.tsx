@@ -6,7 +6,7 @@ import { FiEdit2 } from 'react-icons/fi';
 import { cn } from '@/lib/utils/common';
 import Image from 'next/image';
 import { cityDistrictMap, CityList } from '@/constants/city_district';
-import { IAccountBook, IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBookSimple, IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 import { Step1FormAction, Step1FormState } from '@/constants/account_book';
 import { ITeam } from '@/interfaces/team';
 import ChangePictureModal from '@/components/beta/account_books_page/change_picture_modal';
@@ -67,7 +67,7 @@ const StepOneForm = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
+  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBookSimple>(
     APIName.ACCOUNT_BOOK_PUT_ICON
   );
 
