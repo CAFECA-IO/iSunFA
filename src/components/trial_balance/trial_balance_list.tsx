@@ -480,28 +480,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
   };
 
   const displayedSelectArea = (
-    <div className="flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-      {/* Info: (20241101 - Anna) 幣別 */}
-      <div className="mr-42px flex w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary">
-        <RiCoinsLine />
-        <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
+    <div className="flex flex-col print:hidden">
+      <div className="flex items-center justify-between px-px max-md:flex-wrap">
+        {/* Info: (20241101 - Anna) 幣別(md以上) */}
+        <div className="mr-42px hidden w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary md:flex">
+          <RiCoinsLine />
+          <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
+        </div>
+        {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
+        <div className="flex items-center gap-4">
+          <Toggle
+            id="subAccounts-toggle"
+            initialToggleState={subAccountsToggle}
+            getToggledState={subAccountsToggleHandler}
+            toggleStateFromParent={subAccountsToggle}
+          />
+          <span className="font-normal text-switch-text-primary">
+            {t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
+          </span>
+        </div>
+        {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
+        <div className="ml-auto flex items-center gap-8px md:gap-16px">
+          <DownloadButton onClick={handleDownload} />
+          <PrintButton onClick={handlePrint} disabled={false} />
+        </div>
       </div>
-      {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
-      <div className="flex items-center gap-4">
-        <Toggle
-          id="subAccounts-toggle"
-          initialToggleState={subAccountsToggle}
-          getToggledState={subAccountsToggleHandler}
-          toggleStateFromParent={subAccountsToggle}
-        />
-        <span className="font-normal text-switch-text-primary">
-          {t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
-        </span>
-      </div>
-      {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
-      <div className="ml-auto flex items-center gap-16px">
-        <DownloadButton onClick={handleDownload} />
-        <PrintButton onClick={handlePrint} disabled={false} />
+      {/* Info: (20250520 - Anna) 幣別(md以下) */}
+      <div className="mt-32px flex w-full justify-end md:hidden">
+        <div className="flex w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary">
+          <RiCoinsLine />
+          <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
+        </div>
       </div>
     </div>
   );
@@ -540,7 +549,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     <div className="flex flex-col" ref={printRef}>
       {displayedSelectArea}
       {/* Info: (20250116 - Anna) print:max-w-a4-width */}
-      <div className="hide-scrollbar overflow-x-auto">
+      <div className="hide-scrollbar overflow-x-auto print:-mt-32px">
         <div className="min-w-900px">
           <div className="mb-4 mt-10 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:max-w-a4-width">
             <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm font-medium">
@@ -624,7 +633,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       <div className="h-px w-full bg-divider-stroke-lv-4"></div>
       {/* Info: (20241018 - Anna) Total開始 */}
       <div className="hide-scrollbar overflow-x-auto">
-        <div className="min-w-900px">
+        <div className="min-w-900px print:min-w-0">
           <div className="mb-10 mt-4 table w-full overflow-hidden rounded-b-lg">
             <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-secondary print:max-w-a4-width">
               <div className="table-row h-60px print:text-xxs">
