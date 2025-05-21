@@ -147,7 +147,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         }
       }
 
-      // Info: (20250731 - Shirley) 返回符合 IGetAccountBookResponse 格式的資料
+      // Info: (20250521 - Shirley) 返回符合 IGetAccountBookResponse 格式的資料
       payload = {
         id: accountBookId,
         name: company.name,
@@ -155,13 +155,13 @@ const handlePutRequest = async (req: NextApiRequest) => {
         imageId: String(company.imageFileId || ''),
         teamId,
         userId: company.userId,
-        tag: updatedAccountBook.tag as WORK_TAG, // 使用更新後的標籤
+        tag: updatedAccountBook.tag as WORK_TAG, // Info: (20250521 - Shirley) 使用更新後的標籤
         startDate: company.startDate,
         createdAt: company.createdAt,
         updatedAt: company.updatedAt,
         isPrivate: company.isPrivate,
 
-        // 從 companySetting 獲取的欄位
+        // Info: (20250521 - Shirley) 從 companySetting 獲取的欄位
         taxSerialNumber: companySetting.taxSerialNumber || '',
         representativeName: companySetting.representativeName || '',
         contactPerson: companySetting.contactPerson || '',
@@ -171,7 +171,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         enteredAddress:
           (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
 
-        // RC2 欄位
+        // Info: (20250521 - Shirley) RC2 欄位
         filingFrequency: companySetting.filingFrequency
           ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
           : null,
@@ -258,7 +258,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
       // Info: (20250731 - Shirley) 準備更新數據，只包含請求中實際提供的欄位
       const updateSettingData: Record<string, unknown> = {};
 
-      // 只有當請求中包含該欄位時才更新，並且映射到正確的欄位名稱
+      // Info: (20250521 - Shirley) 只有當請求中包含該欄位時才更新，並且映射到正確的欄位名稱
       if (updateData.taxSerialNumber !== undefined) {
         updateSettingData.taxSerialNumber = updateData.taxSerialNumber;
       }
@@ -269,7 +269,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         updateSettingData.country = updateData.country;
       }
       if (updateData.phoneNumber !== undefined) {
-        updateSettingData.phone = updateData.phoneNumber; // 注意：phone 而非 phoneNumber
+        updateSettingData.phone = updateData.phoneNumber; // Info: (20250521 - Shirley) 注意：phone 而非 phoneNumber
       }
       if (updateData.city !== undefined) {
         updateSettingData.city = updateData.city;
@@ -281,13 +281,13 @@ const handlePutRequest = async (req: NextApiRequest) => {
         updateSettingData.enteredAddress = updateData.enteredAddress;
       }
       if (updateData.name !== undefined) {
-        updateSettingData.companyName = updateData.name; // 注意：companyName 而非 name
+        updateSettingData.companyName = updateData.name; // Info: (20250521 - Shirley) 注意：companyName 而非 name
       }
       if (updateData.taxId !== undefined) {
-        updateSettingData.companyTaxId = updateData.taxId; // 注意：companyTaxId 而非 taxId
+        updateSettingData.companyTaxId = updateData.taxId; // Info: (20250521 - Shirley) 注意：companyTaxId 而非 taxId
       }
       if (updateData.startDate !== undefined) {
-        updateSettingData.companyStartDate = updateData.startDate; // 注意：companyStartDate 而非 startDate
+        updateSettingData.companyStartDate = updateData.startDate; // Info: (20250521 - Shirley) 注意：companyStartDate 而非 startDate
       }
       if (updateData.contactPerson !== undefined) {
         updateSettingData.contactPerson = updateData.contactPerson;
@@ -384,7 +384,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         updatedAt: updatedCompany.updatedAt,
         isPrivate: updatedCompany.isPrivate,
 
-        // 從 companySetting 獲取的欄位
+        // Info: (20250521 - Shirley) 從 companySetting 獲取的欄位
         taxSerialNumber: updatedSetting.taxSerialNumber || '',
         representativeName: updatedSetting.representativeName || '',
         contactPerson: updatedSetting.contactPerson || '',
@@ -394,7 +394,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         enteredAddress:
           (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
 
-        // RC2 欄位
+        // Info: (20250521 - Shirley) RC2 欄位
         filingFrequency: updatedSetting.filingFrequency
           ? (updatedSetting.filingFrequency.toString() as FILING_FREQUENCY)
           : null,
@@ -426,7 +426,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   // Info: (20250731 - Shirley) 統一使用 GET_ACCOUNT_BOOK_BY_ID API 的 schema 進行輸出數據驗證
   let validatedPayload = null;
   if (payload) {
-    // 無論哪種 action，都使用 GET_ACCOUNT_BOOK_BY_ID API 的 schema 進行驗證
+    // Info: (20250521 - Shirley) 無論哪種 action，都使用 GET_ACCOUNT_BOOK_BY_ID API 的 schema 進行驗證
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.GET_ACCOUNT_BOOK_BY_ID,
       payload
@@ -658,7 +658,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       updatedAt: company.updatedAt,
       isPrivate: company.isPrivate,
 
-      // 從 companySetting 獲取的欄位
+      // Info: (20250521 - Shirley) 從 companySetting 獲取的欄位
       taxSerialNumber: companySetting.taxSerialNumber || '',
       representativeName: companySetting.representativeName || '',
       contactPerson: companySetting.contactPerson || '',
@@ -667,7 +667,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       district: (companySetting.address as { district: string })?.district || '',
       enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
 
-      // RC2 欄位
+      // Info: (20250521 - Shirley) RC2 欄位
       filingFrequency: companySetting.filingFrequency
         ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
         : null,
