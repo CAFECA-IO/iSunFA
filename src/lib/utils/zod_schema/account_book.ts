@@ -66,7 +66,7 @@ export const accountBookWithTeamSchema = accountBookSchema.extend({
   isTransferring: z.boolean(),
 });
 
-export const accountBookDetailWithTeamSchema = accountBookInfoSchema.extend({
+export const accountBookInfoWithTeamSchema = accountBookInfoSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
 });
@@ -90,7 +90,7 @@ export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
   simple: zodStringToBoolean.optional(),
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookDetailWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookInfoWithTeamSchema);
 
 export const accountBookListSchema = {
   input: {
@@ -129,7 +129,6 @@ const getAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
-// Info: (20250519 - Shirley) 將 accountBookInfoSchema 修改為使用 accountBookDetailSchema
 const getAccountBookResponseSchema = accountBookInfoSchema;
 
 export const getAccountBookInfoSchema = {
@@ -345,8 +344,7 @@ export const disconnectAccountBookSchema = {
 
 export type IAccountBookEntity = z.infer<typeof accountBookSchema>;
 export type IAccountBookWithTeamEntity = z.infer<typeof accountBookWithTeamSchema>;
-// Info: (20250519 - Shirley) 不再需要 IAccountBookInfoWithTeam，改為使用 accountBookDetailWithTeamSchema
-export type IAccountBookInfoWithTeamEntity = z.infer<typeof accountBookDetailWithTeamSchema>;
+export type IAccountBookInfoWithTeamEntity = z.infer<typeof accountBookInfoWithTeamSchema>;
 
 export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
 export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
@@ -355,7 +353,6 @@ export type IConnectAccountBookQueryParams = z.infer<typeof connectAccountBookQu
 export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookResponseSchema>;
 
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
-// Info: (20250519 - Shirley) 更新 IGetAccountBookResponse 的類型，使用 accountBookDetailSchema
 export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
 
 export type ICountry = z.infer<typeof countrySchema>;
