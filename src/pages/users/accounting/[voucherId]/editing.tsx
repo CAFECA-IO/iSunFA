@@ -88,6 +88,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'certificate',
         'filter_section_type',
         'search',
+        'reports',
       ])),
     },
   };
