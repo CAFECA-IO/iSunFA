@@ -51,14 +51,14 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   district: z.string().default(''),
   enteredAddress: z.string().default(''),
 
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
-  declarantName: z.string().nullable(),
-  declarantPersonalId: z.string().nullable(),
-  declarantPhoneNumber: z.string().nullable(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
-  licenseId: z.string().nullable(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().default(null),
+  declarantName: z.string().nullable().default(null),
+  declarantPersonalId: z.string().nullable().default(null),
+  declarantPhoneNumber: z.string().nullable().default(null),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
+  licenseId: z.string().nullable().default(null),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -215,8 +215,8 @@ const accountBookCreateBodySchema = z.object({
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
   fileId: z.number().int().optional(),
-  representativeName: z.string(),
-  taxSerialNumber: z.string(),
+  representativeName: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
   contactPerson: z.string().optional(),
   phoneNumber: z.string().optional(),
   city: z.string().optional(),

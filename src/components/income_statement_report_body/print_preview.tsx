@@ -202,7 +202,6 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -295,9 +294,6 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">
-                          {t('reports:REPORTS.EPS_UNIT')}
-                        </span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>

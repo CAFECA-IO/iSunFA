@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FiHome } from 'react-icons/fi';
+import { TbHome } from 'react-icons/tb';
 import { useUserCtx } from '@/contexts/user_context';
 import { Provider } from '@/constants/provider';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -135,7 +135,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         body: { code: verificationCode },
       });
 
-      const maxAttempts: number = data && 'maxAttempts' in data ? (data.maxAttempts as number) : 0; // ToDo: (20250509 - Liz) 從 API 回傳的資料中取得最大嘗試次數 maxAttempts (但目前 API 還沒有這個欄位，且暫時斷言型別為 number)
+      const maxAttempts: number = data && 'maxAttempts' in data ? data.maxAttempts : 0;
 
       if (!success) {
         setVerifyCodeError('驗證碼錯誤');
@@ -255,12 +255,15 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     <main className="relative flex h-screen flex-col items-center justify-center text-center">
       <div className="absolute inset-0 z-0 h-full w-full bg-login_bg bg-cover bg-center bg-no-repeat blur-md"></div>
 
-      <section className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
+      <section className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-12px text-button-text-secondary">
         <div ref={globalRef}>
           <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
         </div>
-        <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
-          <FiHome size={22} />
+        <Link
+          href={ISUNFA_ROUTE.LANDING_PAGE}
+          className="p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
+        >
+          <TbHome size={20} />
         </Link>
       </section>
 

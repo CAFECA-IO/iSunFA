@@ -4,7 +4,7 @@ import Image from 'next/image';
 const NoData = () => {
   const { t } = useTranslation('reports');
   return (
-    <div className="flex h-screen flex-col items-center justify-center">
+    <div className="-mt-40 flex h-screen flex-col items-center justify-center">
       <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
       <div>
         <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
