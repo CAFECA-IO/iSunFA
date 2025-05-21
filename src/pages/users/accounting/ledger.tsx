@@ -32,7 +32,7 @@ const LedgerPage = () => {
       {/* Info: (20241017 - Anna) Body */}
       <Layout isDashboard={false} pageTitle={t('journal:VOUCHER.LEDGER')}>
         {/* Info: (20241017 - Anna) 拿掉w-screen */}
-        <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
+        <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out hide-scrollbar">
           <LedgerPageBody />
         </main>
       </Layout>

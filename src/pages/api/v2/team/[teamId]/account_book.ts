@@ -12,14 +12,14 @@ import { IPaginatedOptions } from '@/interfaces/pagination';
 import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
-import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { listAccountBooksByTeamId } from '@/lib/utils/repo/account_book.repo';
+import { IAccountBookInfoWithTeamEntity } from '@/lib/utils/zod_schema/account_book';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedOptions<IAccountBookWithTeam[]> | null = null;
+  let payload: IPaginatedOptions<IAccountBookInfoWithTeamEntity[]> | null = null;
 
   // Info: (20250226 - Tzuhan) 驗證使用者是否登入
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID, req);

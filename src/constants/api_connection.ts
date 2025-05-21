@@ -151,6 +151,7 @@ export enum APIName {
   DECLINE_TRANSFER_ACCOUNT_BOOK = 'DECLINE_TRANSFER_ACCOUNT_BOOK',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = 'LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER = 'UPDATE_MEMBER',
@@ -164,13 +165,13 @@ export enum APIName {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK_OEN',
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
   SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
   VERIFY_CODE = 'VERIFY_CODE',
   LIST_NOTIFICATION = 'LIST_NOTIFICATION',
   GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
   READ_NOTIFICATION = 'READ_NOTIFICATION',
+  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
 }
 
 export enum APIPath {
@@ -293,6 +294,7 @@ export enum APIPath {
   DECLINE_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/decline`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`, // Info: (20250520 - Shirley) 新增此 API name 來區分 API response，但實際上是 endpoint 跟 LIST_ACCOUNT_BOOK_BY_USER_ID，但需要加上 query simple = true
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
 
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
@@ -312,13 +314,13 @@ export enum APIPath {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
   SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
   VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
   LIST_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification`,
   GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
   READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
+  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
 }
 
 const createConfig = ({
@@ -956,6 +958,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
   }),
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
+    name: APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
+  }),
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: createConfig({
     name: APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
     method: HttpMethod.GET,
@@ -1012,11 +1019,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.DISCONNECT_ACCOUNT_BOOK,
   }),
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: createConfig({
-    name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-    method: HttpMethod.GET,
-    path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-  }),
   [APIName.ACCOUNT_BOOK_PUT_ICON]: createConfig({
     name: APIName.ACCOUNT_BOOK_PUT_ICON,
     method: HttpMethod.PUT,
@@ -1046,5 +1048,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.READ_NOTIFICATION,
     method: HttpMethod.PATCH,
     path: APIPath.READ_NOTIFICATION,
+  }),
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
   }),
 };
