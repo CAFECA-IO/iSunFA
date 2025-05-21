@@ -1,3 +1,4 @@
+// Deprecated: (20250520 - Liz) 此元件已棄用，但先保留以備未來可以參考 Apple 登入的部分
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -82,7 +83,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
               </p>
             </button>
 
-            {/* // Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
+            {/* Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
             {IS_APPLE_LOGIN_ENABLED && (
               <button
                 type="button"

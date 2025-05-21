@@ -18,6 +18,8 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { EmailTemplateName } from '@/constants/email_template';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { checkTeamMemberLimit } from '@/lib/utils/plan/check_plan_limit';
+import { NotificationEvent, NotificationType } from '@/interfaces/notification';
+import { createNotificationsBulk } from './notification.repo';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -50,7 +52,10 @@ export const addMembersToTeam = async (
   const unregisteredEmails = emails.filter((email) => !existingUserEmails.has(email));
 
   const team = await prisma.team.findUnique({ where: { id: teamId } });
-  const inviter = await prisma.user.findUnique({ where: { id: userId } });
+  const inviter = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { imageFile: true },
+  });
 
   await transaction(async (tx) => {
     const inactiveMembers = await tx.teamMember.findMany({
@@ -94,7 +99,7 @@ export const addMembersToTeam = async (
         data: usersToAdd.map((user) => ({
           teamId,
           email: user.email!,
-          status: InviteStatus.COMPLETED,
+          status: InviteStatus.PENDING,
           createdAt: now,
           completedAt: now,
           note: JSON.stringify({
@@ -122,23 +127,35 @@ export const addMembersToTeam = async (
 
     // Info: (20250421 - tzuhan) 寫入 emailJob
     const inviteLinkBase = `${process.env.NEXTAUTH_URL}/users/login`;
-    const allRecipients = [...existingUserEmails, ...unregisteredEmails];
-    await tx.emailJob.createMany({
-      data: allRecipients.map((email) => ({
-        title: `${inviter?.name || '有人'} 邀請您加入 ${team?.name || '某團隊'}`,
-        receiver: email,
-        template: EmailTemplateName.INVITE,
-        data: {
-          inviterName: inviter?.name || '有人',
-          teamName: team?.name || '某團隊',
-          inviteLink: `${inviteLinkBase}`,
-        },
-        status: 'PENDING',
-        retry: 0,
-        maxRetry: 3,
-        createdAt: now,
-        updatedAt: now,
+
+    const userEmailMap = [
+      ...existingUsers.map((user) => ({
+        userId: user.id,
+        email: user.email!,
       })),
+      ...unregisteredEmails.map((email) => ({
+        userId: undefined,
+        email,
+      })),
+    ];
+
+    await createNotificationsBulk({
+      userEmailMap,
+      template: EmailTemplateName.INVITE,
+      teamId,
+      type: NotificationType.TEAM_INVITATION,
+      event: NotificationEvent.COMPLETED,
+      title: '加入團隊通知',
+      message: `${inviter?.name ?? '某人'} 邀請您加入團隊「${team?.name ?? ''}」`,
+      content: {
+        inviterName: inviter?.name || '有人',
+        teamName: team?.name || '某團隊',
+        inviteLink: `${inviteLinkBase}`,
+      },
+      actionUrl: `/team/${teamId}`,
+      imageUrl: inviter?.imageFile?.url,
+      pushPusher: true,
+      sendEmail: true,
     });
   });
 

@@ -10,6 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import { useHotkeys } from 'react-hotkeys-hook';
+import { TbArrowBackUp } from 'react-icons/tb';
 
 interface IAccountSelectorModalProps {
   toggleModal: () => void;
@@ -45,6 +46,9 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [accountList, setAccountList] = useState<IAccount[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  // Info: (20250521 - Anna) rightPart 顯示狀態
+  const [isRightPartVisible, setIsRightPartVisible] = useState(false);
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
@@ -179,8 +183,11 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
     }
   });
 
+  // Info: (20250521 - Anna) 左側科目類別
   const leftPart = (
-    <div className="flex h-480px w-330px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5">
+    <div
+      className={`hide-scrollbar h-300px w-270px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 tablet:flex tablet:h-480px tablet:w-330px ${isRightPartVisible ? 'hidden' : 'flex'}`}
+    >
       {accountTypeList.map((acc, index) => {
         // Info: (20250306 - Julian) 判斷是否被選中
         const isSelected = selectedCategory === acc;
@@ -193,6 +200,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
           // Info: (20250305 - Julian) 切換選擇狀態，再點一次即取消選擇
           if (selectedCategory === acc) setSelectedCategory('');
           else setSelectedCategory(acc);
+          setIsRightPartVisible(true);
         };
 
         const text =
@@ -224,8 +232,11 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
     </div>
   );
 
+  // Info: (20250521 - Anna) 右側會計科目
   const rightPart = (
-    <div className="flex h-480px w-400px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5">
+    <div
+      className={`h-300px w-270px flex-col gap-lv-4 overflow-y-auto px-lv-3 py-lv-5 tablet:flex tablet:h-480px tablet:w-400px ${isRightPartVisible ? 'flex' : 'hidden'} `}
+    >
       {filteredAccountList.length > 0 ? (
         filteredAccountList.map((account, index) => {
           // Info: (20250306 - Julian) 動態存入 ref
@@ -259,9 +270,19 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex h-720px flex-col items-stretch rounded-sm bg-surface-neutral-surface-lv2 shadow-lg">
+      <div className="relative flex h-500px max-w-9/10 flex-col items-stretch rounded-sm bg-surface-neutral-surface-lv2 shadow-lg tablet:h-720px">
         {/* Info: (20250305 - Julian) Header */}
         <div className="relative flex flex-col items-center gap-4px px-20px py-16px">
+          {/* Info: (20250521 - Anna) 返回按鈕 */}
+          <button
+            type="button"
+            onClick={() => setIsRightPartVisible(false)}
+            className={`absolute left-20px text-icon-surface-single-color-primary tablet:hidden ${isRightPartVisible ? 'flex' : 'hidden'}`}
+          >
+            <TbArrowBackUp size={24} />
+          </button>
+
+          {/* Info: (20250520 - Anna) 關閉按鈕 */}
           <button
             type="button"
             onClick={toggleModal}
@@ -276,6 +297,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             {t('journal:ACCOUNT_SELECTOR_MODAL.SUB_TITLE')}
           </p>
         </div>
+
         {/* Info: (20250305 - Julian) Body */}
         <div className="flex flex-col gap-lv-5 p-10px">
           {/* Info: (20250305 - Julian) Search bar */}
@@ -292,7 +314,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             <FiSearch size={20} className="text-icon-surface-single-color-primary" />
           </div>
           {/* Info: (20250305 - Julian) Account list */}
-          <div className="flex w-full divide-x divide-divider-stroke-lv-4">
+          <div className="flex w-full divide-divider-stroke-lv-4 tablet:divide-x">
             {/* Info: (20250305 - Julian) Account Type Title */}
             {leftPart}
             {/* Info: (20250305 - Julian) Sub Account List */}
@@ -300,7 +322,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
           </div>
         </div>
         {/* Info: (20250305 - Julian) Buttons */}
-        <div className="ml-auto flex items-center px-20px py-16px">
+        <div className="ml-auto hidden items-center px-20px py-16px tablet:flex">
           <Button type="button" size="medium" variant="tertiaryOutlineGrey" onClick={toggleModal}>
             <RxCross2 size={16} />
             <p>{t('common:COMMON.CLOSE')}</p>

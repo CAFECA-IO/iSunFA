@@ -61,17 +61,26 @@ const LedgerItem = React.memo(
     const displayedVoucherNo =
       voucherType === VoucherType.RECEIVE ? (
         <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-error px-8px py-4px print:origin-left print:scale-75">
-          <FaDownload size={14} className="text-surface-state-error-dark" />
+          {/* Info: (20250521 - Anna) icon (laptop以下) */}
+          <FaDownload size={8} className="text-surface-state-error-dark laptop:hidden" />
+          {/* Info: (20250521 - Anna) icon (laptop以上) */}
+          <FaDownload size={12} className="hidden text-surface-state-error-dark laptop:inline" />
           <p className="text-text-state-error-solid">{voucherNumber}</p>
         </div>
       ) : voucherType === VoucherType.EXPENSE ? (
         <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-success px-8px py-4px print:origin-left print:scale-75">
-          <FaUpload size={14} className="text-surface-state-success-dark" />
+          {/* Info: (20250521 - Anna) icon (laptop以下) */}
+          <FaUpload size={8} className="text-surface-state-success-dark laptop:hidden" />
+          {/* Info: (20250521 - Anna) icon (laptop以上) */}
+          <FaUpload size={12} className="hidden text-surface-state-success-dark laptop:inline" />
           <p className="text-text-state-success-solid">{voucherNumber}</p>
         </div>
       ) : (
         <div className="relative flex w-fit items-center gap-4px rounded-full bg-badge-surface-soft-secondary px-8px py-4px print:origin-left print:scale-75">
-          <FiRepeat size={14} className="text-navy-blue-400" />
+          {/* Info: (20250521 - Anna) icon (laptop以下) */}
+          <FiRepeat size={8} className="text-navy-blue-400 laptop:hidden" />
+          {/* Info: (20250521 - Anna) icon (laptop以上) */}
+          <FiRepeat size={12} className="hidden text-navy-blue-400 laptop:inline" />
           <p className="text-badge-text-secondary-solid">{voucherNumber}</p>
         </div>
       );

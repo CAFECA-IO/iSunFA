@@ -1,7 +1,8 @@
 import prisma from '@/client';
 import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { NotificationType, NotificationEvent } from '@/interfaces/notification';
 import { getPusherInstance } from '@/lib/utils/pusher';
-import { NotificationType } from '@prisma/client';
+import { NotificationType as PrismaNotificationType } from '@prisma/client';
 
 export async function listNotifications(userId: number) {
   return prisma.notification.findMany({
@@ -41,21 +42,11 @@ export async function markNotificationAsRead(userId: number, id: number) {
 
 type CreateNotificationParams = {
   userId: number;
+  email?: string;
+  template: string;
   teamId?: number;
   type: NotificationType;
-  event:
-    | 'TRANSFER'
-    | 'CANCEL'
-    | 'UPDATED'
-    | 'EXPIRED'
-    | 'REVIEWED'
-    | 'REJECTED'
-    | 'APPROVED'
-    | 'RENEWED'
-    | 'CANCELLED'
-    | 'COMPLETED'
-    | 'EXPIRED'
-    | 'DELETED';
+  event: NotificationEvent;
   title: string;
   message: string;
   content: Record<string, string | number | boolean>;
@@ -64,14 +55,10 @@ type CreateNotificationParams = {
   priority?: number;
   pushPusher?: boolean;
   sendEmail?: boolean;
-  email?: {
-    receiver: string;
-    template: string;
-  };
 };
 
 type CreateManyNotificationParams = Omit<CreateNotificationParams, 'userId' | 'email'> & {
-  userEmailMap: { userId: number; email: string }[];
+  userEmailMap: { userId?: number; email: string }[];
 };
 
 export async function createNotification(params: CreateNotificationParams) {
@@ -80,7 +67,7 @@ export async function createNotification(params: CreateNotificationParams) {
     data: {
       userId: params.userId,
       teamId: params.teamId,
-      type: params.type,
+      type: params.type as PrismaNotificationType,
       event: params.event as string,
       title: params.title,
       message: params.message,
@@ -107,8 +94,8 @@ export async function createNotification(params: CreateNotificationParams) {
     await prisma.emailJob.create({
       data: {
         title: params.title,
-        receiver: params.email.receiver,
-        template: params.email.template,
+        receiver: params.email,
+        template: params.template,
         data: {
           ...params.content,
           title: params.title,
@@ -126,21 +113,23 @@ export async function createNotification(params: CreateNotificationParams) {
 export async function createNotificationsBulk(params: CreateManyNotificationParams) {
   const now = Math.floor(Date.now() / 1000);
 
-  const notifications = params.userEmailMap.map(({ userId }) => ({
-    userId,
-    teamId: params.teamId,
-    type: params.type,
-    event: params.event,
-    title: params.title,
-    message: params.message,
-    content: params.content,
-    actionUrl: params.actionUrl,
-    imageUrl: params.imageUrl,
-    priority: params.priority ?? 1,
-    read: false,
-    createdAt: now,
-    updatedAt: now,
-  }));
+  const notifications = params.userEmailMap
+    .filter(({ userId }) => !!userId)
+    .map(({ userId }) => ({
+      userId: userId!,
+      teamId: params.teamId,
+      type: params.type as PrismaNotificationType,
+      event: params.event,
+      title: params.title,
+      message: params.message,
+      content: params.content,
+      actionUrl: params.actionUrl,
+      imageUrl: params.imageUrl,
+      priority: params.priority ?? 1,
+      read: false,
+      createdAt: now,
+      updatedAt: now,
+    }));
 
   await prisma.notification.createMany({ data: notifications });
 
@@ -159,7 +148,7 @@ export async function createNotificationsBulk(params: CreateManyNotificationPara
     const emails = params.userEmailMap.map(({ email }) => ({
       title: params.title,
       receiver: email,
-      template: 'accountbook_transfer_notice', // ToDo: (202516 - Tzuhan) 要請前端幫忙處理
+      template: params.template, // ToDo: (202516 - Tzuhan) 要請前端幫忙處理
       data: {
         ...params.content,
         title: params.title,

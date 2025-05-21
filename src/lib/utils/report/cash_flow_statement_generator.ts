@@ -763,7 +763,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const preOtherInvest =
       -1 * (totalInvestCashFlow.prePeriodAmount + prePPEInvest + preStrategyInvest);
 
-    const labels = ['不動產、廠房、設備的收支項目', '策略性投資項目', '其他'];
+    const labels = ['不動產', '策略性投資項目', '其他'];
 
     const curYearString = currentYear.toString();
     const preYearString = (currentYear - 1).toString();
