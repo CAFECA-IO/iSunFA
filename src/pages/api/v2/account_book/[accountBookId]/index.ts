@@ -7,7 +7,6 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
-  ACCOUNT_BOOK_ROLE,
   WORK_TAG,
 } from '@/interfaces/account_book';
 import { formatApiResponse } from '@/lib/utils/common';
@@ -34,7 +33,6 @@ import {
   IGetAccountBookResponse,
   IGetAccountBookQueryParams,
   IUpdateAccountBookInfoBody,
-  IUpdateAccountBookResponse,
 } from '@/lib/utils/zod_schema/account_book';
 import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
@@ -100,10 +98,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
   loggerBack.info(`User ${userId} with role ${teamRole} is updating account book ${accountBookId}`);
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  // Info: (20250510 - Shirley) 不同的 action 需要返回不同格式的數據
-  // UPDATE_TAG 需要返回 IUpdateAccountBookResponse 格式
-  // UPDATE_INFO 需要返回 IGetAccountBookResponse 格式
-  let payload: IUpdateAccountBookResponse | IGetAccountBookResponse | null = null;
+  // Info: (20250731 - Shirley) 統一所有 action 都返回 IGetAccountBookResponse 格式的數據
+  let payload: IGetAccountBookResponse | null = null;
   let canDo = false;
 
   switch (action) {
@@ -151,53 +147,47 @@ const handlePutRequest = async (req: NextApiRequest) => {
         }
       }
 
-      // Info: (20250510 - Shirley) 確保返回符合 updateAccountBook schema 的格式
+      // Info: (20250731 - Shirley) 返回符合 IGetAccountBookResponse 格式的資料
       payload = {
+        id: accountBookId,
+        name: company.name,
+        taxId: company.taxId,
+        imageId: String(company.imageFileId || ''),
         teamId,
-        company: {
-          id: accountBookId,
-          name: company.name,
-          taxId: company.taxId,
-          imageId: String(company.imageFileId || ''),
-          teamId,
-          userId: company.userId,
-          tag: company.tag as WORK_TAG,
-          startDate: company.startDate,
-          createdAt: company.createdAt,
-          updatedAt: company.updatedAt,
-          isPrivate: company.isPrivate,
+        userId: company.userId,
+        tag: updatedAccountBook.tag as WORK_TAG, // 使用更新後的標籤
+        startDate: company.startDate,
+        createdAt: company.createdAt,
+        updatedAt: company.updatedAt,
+        isPrivate: company.isPrivate,
 
-          // 從 companySetting 獲取的欄位
-          taxSerialNumber: companySetting.taxSerialNumber || '',
-          representativeName: companySetting.representativeName || '',
-          contactPerson: companySetting.contactPerson || '',
-          phoneNumber: companySetting.phone || '',
-          city: (companySetting.address as { city: string })?.city || '',
-          district: (companySetting.address as { district: string })?.district || '',
-          enteredAddress:
-            (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+        // 從 companySetting 獲取的欄位
+        taxSerialNumber: companySetting.taxSerialNumber || '',
+        representativeName: companySetting.representativeName || '',
+        contactPerson: companySetting.contactPerson || '',
+        phoneNumber: companySetting.phone || '',
+        city: (companySetting.address as { city: string })?.city || '',
+        district: (companySetting.address as { district: string })?.district || '',
+        enteredAddress:
+          (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
 
-          // RC2 欄位
-          filingFrequency: companySetting.filingFrequency
-            ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
-            : null,
-          filingMethod: companySetting.filingMethod
-            ? (companySetting.filingMethod.toString() as FILING_METHOD)
-            : null,
-          declarantFilingMethod: companySetting.declarantFilingMethod
-            ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
-            : null,
-          declarantName: companySetting.declarantName || null,
-          declarantPersonalId: companySetting.declarantPersonalId || null,
-          declarantPhoneNumber: companySetting.declarantPhoneNumber || null,
-          agentFilingRole: companySetting.agentFilingRole
-            ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
-            : null,
-          licenseId: companySetting.licenseId || null,
-        },
-        tag: updatedAccountBook.tag,
-        order: 0, // 默認值
-        accountBookRole: ACCOUNT_BOOK_ROLE.BOOKKEEPER, // 由於對應的關係是完全不同的概念，直接使用默認值 BOOKKEEPER
+        // RC2 欄位
+        filingFrequency: companySetting.filingFrequency
+          ? (companySetting.filingFrequency.toString() as FILING_FREQUENCY)
+          : null,
+        filingMethod: companySetting.filingMethod
+          ? (companySetting.filingMethod.toString() as FILING_METHOD)
+          : null,
+        declarantFilingMethod: companySetting.declarantFilingMethod
+          ? (companySetting.declarantFilingMethod.toString() as DECLARANT_FILING_METHOD)
+          : null,
+        declarantName: companySetting.declarantName || null,
+        declarantPersonalId: companySetting.declarantPersonalId || null,
+        declarantPhoneNumber: companySetting.declarantPhoneNumber || null,
+        agentFilingRole: companySetting.agentFilingRole
+          ? (companySetting.agentFilingRole.toString() as AGENT_FILING_ROLE)
+          : null,
+        licenseId: companySetting.licenseId || null,
       };
 
       statusMessage = STATUS_MESSAGE.SUCCESS;
@@ -391,55 +381,30 @@ const handlePutRequest = async (req: NextApiRequest) => {
       break;
   }
 
-  // Info: (20250510 - Shirley) 根據不同的 action 類型使用不同的 API 進行輸出數據驗證
+  // Info: (20250731 - Shirley) 統一使用 GET_ACCOUNT_BOOK_BY_ID API 的 schema 進行輸出數據驗證
   let validatedPayload = null;
   if (payload) {
-    if (action === ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO) {
-      // Info: (20250509 - Shirley) 對於 UPDATE_INFO 操作，使用 UPDATE_ACCOUNT_BOOK_INFO API 的 schema 進行驗證
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.UPDATE_ACCOUNT_BOOK_INFO,
-        payload
-      );
-      if (isOutputDataValid) {
-        validatedPayload = outputData;
-      } else {
-        loggerBack.error(`Invalid output data for UPDATE_INFO: ${JSON.stringify(payload)}`);
-        loggerBack.error(
-          `Validation error details: \n${JSON.stringify(
-            {
-              payload,
-              errorType: 'validate_output_data',
-            },
-            null,
-            2
-          )}`
-        );
-        statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-        validatedPayload = null;
-      }
+    // 無論哪種 action，都使用 GET_ACCOUNT_BOOK_BY_ID API 的 schema 進行驗證
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.GET_ACCOUNT_BOOK_BY_ID,
+      payload
+    );
+    if (isOutputDataValid) {
+      validatedPayload = outputData;
     } else {
-      // Info: (20250510 - Shirley) 對於其他操作，使用 UPDATE_ACCOUNT_BOOK API 的 schema 進行驗證
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.UPDATE_ACCOUNT_BOOK,
-        payload
+      loggerBack.error(`Invalid output data for ${action}: ${JSON.stringify(payload)}`);
+      loggerBack.error(
+        `Validation error details: \n${JSON.stringify(
+          {
+            payload,
+            errorType: 'validate_output_data',
+          },
+          null,
+          2
+        )}`
       );
-      if (isOutputDataValid) {
-        validatedPayload = outputData;
-      } else {
-        loggerBack.error(`Invalid output data for ${action}: ${JSON.stringify(payload)}`);
-        loggerBack.error(
-          `Validation error details: \n${JSON.stringify(
-            {
-              payload,
-              errorType: 'validate_output_data',
-            },
-            null,
-            2
-          )}`
-        );
-        statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-        validatedPayload = null;
-      }
+      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      validatedPayload = null;
     }
   }
 
