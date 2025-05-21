@@ -28,7 +28,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   selectedEndAccountNo,
 }) => {
   const { connectedAccountBook } = useUserCtx();
-  const companyId = connectedAccountBook?.id;
+  const accountBookId = connectedAccountBook?.id;
   const { t } = useTranslation(['journal', 'date_picker', 'reports']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
@@ -93,7 +93,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
     try {
       // Info: (20241218 - Anna) 使用 fetch 直接調用 API，處理非 JSON 格式的回應、解析 headers
       // Info: (20241218 - Anna) 因為 APIHandler 將所有回應解析為 JSON，當遇到非 JSON 內容（ 如csv ），會SyntaxError，導致 response.data 為 null。
-      const response = await fetch(`/api/v2/company/${companyId}/ledger/export`, {
+      const response = await fetch(`/api/v2/account_book/${accountBookId}/ledger/export`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   };
 
   const displayedSelectArea = (
-    <div className="ml-auto flex items-center gap-24px print:hidden">
+    <div className="ml-auto flex items-center gap-16px laptop:gap-24px print:hidden">
       {/* Info: (20241004 - Anna) Export button */}
       <DownloadButton onClick={handleDownload} disabled={false} />
       {/* Info: (20241004 - Anna) PrintButton */}
@@ -144,7 +144,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
     );
   } else if (!loading && (!ledgerItemsData || ledgerItemsData.length === 0)) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
+      <div className="-mt-40 flex h-screen flex-col items-center justify-center">
         <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
         <div>
           <p className="text-neutral-300">{t('reports:REPORT.NO_DATA_AVAILABLE')}</p>
@@ -183,84 +183,91 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   });
 
   return (
-    <div className="flex flex-col" ref={printRef}>
+    <div className="flex flex-col text-xs tablet:text-sm" ref={printRef}>
       {/* Info: (20240920 - Julian) export & select button */}
       {displayedSelectArea}
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px print:min-w-0">
+          <div className="mb-4 mt-10 table w-full table-fixed overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
+            {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
+            <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-xs text-text-neutral-tertiary tablet:text-sm">
+              <div className="table-row h-60px">
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+                >
+                  {t('journal:VOUCHER.VOUCHER_DATE')}
+                </div>
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+                >
+                  {t('reports:REPORTS.CODE')}
+                </div>
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:hidden print:bg-neutral-50`}
+                >
+                  {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
+                </div>
+                <div
+                  className={`table-cell whitespace-nowrap ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+                >
+                  {t('journal:VOUCHER.VOUCHER_NO')}
+                </div>
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
+                >
+                  {t('journal:VOUCHER.NOTE')}
+                </div>
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+                >
+                  {t('journal:JOURNAL.DEBIT')}
+                </div>
 
-      <div className="mb-4 mt-10 table w-full table-fixed overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 print:mt-0 print:bg-neutral-50">
-        {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row h-60px">
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
-            >
-              {t('journal:VOUCHER.VOUCHER_DATE')}
-            </div>
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
-            >
-              {t('reports:REPORTS.CODE')}
-            </div>
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:hidden print:bg-neutral-50`}
-            >
-              {t('journal:VOUCHER_LINE_BLOCK.ACCOUNTING')}
-            </div>
-            <div
-              className={`table-cell whitespace-nowrap ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
-            >
-              {t('journal:VOUCHER.VOUCHER_NO')}
-            </div>
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} whitespace-nowrap print:bg-neutral-50`}
-            >
-              {t('journal:VOUCHER.NOTE')}
-            </div>
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
-            >
-              {t('journal:JOURNAL.DEBIT')}
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
+                >
+                  {t('journal:JOURNAL.CREDIT')}
+                </div>
+
+                <div
+                  className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')} print:bg-neutral-50`}
+                >
+                  {t('journal:VOUCHER.BALANCE')}
+                </div>
+              </div>
             </div>
 
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles} print:bg-neutral-50`}
-            >
-              {t('journal:JOURNAL.CREDIT')}
-            </div>
-
-            <div
-              className={`table-cell ${tableCellStyles} ${sideBorderStyles.replace('border-r', '')} print:bg-neutral-50`}
-            >
-              {t('journal:VOUCHER.BALANCE')}
-            </div>
+            {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
+            <div className="table-row-group">{displayedLedgerList}</div>
           </div>
         </div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedLedgerList}</div>
       </div>
 
       <div className="h-px w-full bg-divider-stroke-lv-4"></div>
 
       {/* Info: (20241009 - Anna) 加總數字的表格 */}
-      <div
-        className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2 text-text-neutral-tertiary print:bg-neutral-50"
-        // Info: (20241206 - Anna) 避免行內換頁
-        style={{ pageBreakInside: 'avoid' }}
-      >
-        {/* Info: (20241009 - Anna) 表格內容 */}
-        <div className="col-span-1"></div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
-          {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-          {formatNumber(total.totalDebitAmount)}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
-          {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
-        </div>
-        <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-          {formatNumber(total.totalCreditAmount)}
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px print:min-w-0">
+          <div
+            className="mb-10 mt-4 grid h-70px grid-cols-9 overflow-hidden rounded-b-lg bg-surface-neutral-surface-lv2 text-text-neutral-tertiary print:bg-neutral-50"
+            // Info: (20241206 - Anna) 避免行內換頁
+            style={{ pageBreakInside: 'avoid' }}
+          >
+            {/* Info: (20241009 - Anna) 表格內容 */}
+            <div className="col-span-1"></div>
+            <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
+              {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
+            </div>
+            <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
+              {formatNumber(total.totalDebitAmount)}
+            </div>
+            <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
+              {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
+            </div>
+            <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
+              {formatNumber(total.totalCreditAmount)}
+            </div>
+          </div>
         </div>
       </div>
     </div>

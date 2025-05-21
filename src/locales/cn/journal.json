@@ -199,6 +199,7 @@
     "DELETED_REVERSE_VOUCHER_2": "传票生成的反转分录"
   },
   "LEDGER": {
+    "LEDGER": "分类帐",
     "LEDGER_PERIOD": "分类帐期间",
     "LABEL_TYPE": "分类帐类型",
     "GENERAL": "总分类帐",

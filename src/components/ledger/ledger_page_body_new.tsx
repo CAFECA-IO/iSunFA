@@ -217,7 +217,10 @@ const LedgerPageBody = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
-      <div className="flex w-full flex-col items-stretch gap-40px">
+      <div className="flex w-full flex-col items-stretch gap-32px tablet:gap-40px">
+        <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
+          {t('journal:LEDGER.LEDGER')}
+        </p>
         <div>
           <p className="mb-8px mt-18px text-sm font-semibold text-neutral-300">
             {t('journal:LEDGER.LEDGER_PERIOD')}&nbsp;
@@ -235,7 +238,7 @@ const LedgerPageBody = () => {
             {t('journal:LEDGER.LABEL_TYPE')}&nbsp;
             <span className="text-text-state-error">*</span>
           </p>
-          <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:flex-row md:items-baseline md:justify-between">
+          <div className="flex w-1/3 flex-col items-start gap-x-60px gap-y-24px md:items-baseline md:justify-between lg:flex-row">
             <label
               htmlFor="input-general-detailed"
               className="flex items-center gap-8px whitespace-nowrap text-checkbox-text-primary"
@@ -283,7 +286,8 @@ const LedgerPageBody = () => {
           <p className="mt-18px text-sm font-semibold text-neutral-300">
             {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
           </p>
-          <div className="flex w-full space-x-4">
+          {/* Info: (20250521 - Anna) 會計科目篩選(laptop以上) */}
+          <div className="hidden w-full space-x-4 laptop:flex">
             {/* Info: (20241015 - Anna) From 篩選 */}
             <div className="flex w-1/2 items-center">
               <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
@@ -385,6 +389,114 @@ const LedgerPageBody = () => {
               </div>
             </div>
           </div>
+
+          {/* Info: (20250521 - Anna) 會計科目篩選(laptop以下) */}
+          <div className="mt-2 w-full flex-col laptop:hidden">
+            {/* Info: (20241015 - Anna) From 篩選 */}
+            <div className="w-full flex-col items-center">
+              <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
+              <div className="flex">
+                <div
+                  className={`flex w-3/10 flex-col gap-8px lg:w-200px`}
+                  // Info: (20250311 - Anna) 點擊打開彈窗
+                  onClick={() => {
+                    setIsStartAccountSelectorOpen(true);
+                  }}
+                >
+                  <p className="text-sm font-semibold text-input-text-primary"></p>
+                  <div
+                    className={`relative flex h-44px items-center justify-between rounded-bl-sm rounded-tl-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-sm hover:cursor-pointer`}
+                  >
+                    <p className="flex-1 truncate text-input-text-input-placeholder">
+                      {selectedStartCategory
+                        ? t(
+                            `filter_section_type:FILTER_SECTION_TYPE.${selectedStartCategory.toUpperCase()}`
+                          )
+                        : '選擇科目類別'}
+                    </p>
+                    <div className="flex h-20px w-20px items-center justify-center">
+                      <FaAngleDown />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`flex w-7/10 flex-col gap-8px`}
+                  // Info: (20250311 - Anna) 點擊打開彈窗
+                  onClick={() => {
+                    setIsStartAccountSelectorOpen(true);
+                  }}
+                >
+                  <p className="text-sm font-semibold text-input-text-primary"></p>
+                  <div
+                    className={`relative flex h-44px items-center justify-between rounded-br-sm rounded-tr-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-sm hover:cursor-pointer`}
+                  >
+                    <p className="flex-1 truncate text-input-text-input-placeholder">
+                      {selectedStartAccountNo
+                        ? t(
+                            `filter_section_type:FILTER_SECTION_TYPE.${selectedStartAccountNo.toUpperCase()}`
+                          )
+                        : '選擇會計科目'}
+                    </p>
+                    <div className="flex h-20px w-20px items-center justify-center">
+                      <IoBookOutline size={20} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Info: (20241015 - Anna) To 篩選 */}
+            <div className="w-full flex-col items-center">
+              <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.TO')}</span>
+              <div className="flex">
+                <div
+                  className={`flex w-3/10 flex-col gap-8px lg:w-200px`} // Info: (20250311 - Anna) 點擊打開彈窗
+                  onClick={() => {
+                    setIsEndAccountSelectorOpen(true);
+                  }}
+                >
+                  <p className="text-sm font-semibold text-input-text-primary"></p>
+                  <div
+                    className={`relative flex h-44px items-center justify-between rounded-bl-sm rounded-tl-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-sm hover:cursor-pointer`}
+                  >
+                    <p className="flex-1 truncate text-input-text-input-placeholder">
+                      {selectedEndCategory
+                        ? t(
+                            `filter_section_type:FILTER_SECTION_TYPE.${selectedEndCategory.toUpperCase()}`
+                          )
+                        : '選擇科目類別'}
+                    </p>
+                    <div className="flex h-20px w-20px items-center justify-center">
+                      <FaAngleDown />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`flex w-7/10 flex-col gap-8px`}
+                  // Info: (20250311 - Anna) 點擊打開彈窗
+                  onClick={() => {
+                    setIsEndAccountSelectorOpen(true);
+                  }}
+                >
+                  <p className="text-sm font-semibold text-input-text-primary"></p>
+                  <div
+                    className={`relative flex h-44px items-center justify-between rounded-br-sm rounded-tr-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-sm hover:cursor-pointer`}
+                  >
+                    <p className="flex-1 truncate text-input-text-input-placeholder">
+                      {selectedEndAccountNo
+                        ? t(
+                            `filter_section_type:FILTER_SECTION_TYPE.${selectedEndAccountNo.toUpperCase()}`
+                          )
+                        : '選擇會計科目'}
+                    </p>
+                    <div className="flex h-20px w-20px items-center justify-center">
+                      <IoBookOutline size={20} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Info: (20250311 - Anna) 加入 AccountTitleSelector 彈窗 */}
@@ -401,7 +513,11 @@ const LedgerPageBody = () => {
           />
         )}
 
-        <div className="h-px w-full bg-neutral-100"></div>
+        {/* Info: (20250521 - Anna) 有選擇日期再顯示分隔線 */}
+        {selectedDateRange.startTimeStamp > 0 && selectedDateRange.endTimeStamp > 0 && (
+          <div className="hidden h-px w-full bg-neutral-100 tablet:block"></div>
+        )}
+
         <LedgerList
           ledgerData={ledgerData} // Info: (20241118 - Anna) 如果 ledgerData 是 undefined，傳遞 null
           loading={!!isLoading} // Info: (20241118 - Anna) 使用 !! 確保 loading 是 boolean
@@ -411,12 +527,14 @@ const LedgerPageBody = () => {
           selectedEndAccountNo={selectedEndAccountNo}
         />
         {/* Info: (20250312 - Anna) 分頁 UI */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-          totalCount={totalCount}
-        />
+        {selectedDateRange.startTimeStamp > 0 && selectedDateRange.endTimeStamp > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            setCurrentPage={setCurrentPage}
+            totalCount={totalCount}
+          />
+        )}
       </div>
     </div>
   );
