@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-// import { MdOutlineFileDownload } from 'react-icons/md';
+import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
+import { VscSettings } from 'react-icons/vsc';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
-// import { useGlobalCtx } from '@/contexts/global_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { IVoucherUI } from '@/interfaces/voucher';
 import { MessageType } from '@/interfaces/message_modal';
@@ -56,7 +57,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { refreshVoucherListHandler } = useAccountingCtx();
-  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  const { exportVoucherModalVisibilityHandler, filterSideMenuVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241022 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
@@ -333,10 +334,39 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     },
   });
 
+  const downloadBtn = (
+    <>
+      {/* Info: (20250521 - Julian) for desktop */}
+      <div className="hidden tablet:block">
+        <Button
+          type="button"
+          variant="tertiaryOutline"
+          className={isCheckBoxOpen ? 'hidden' : 'flex'}
+          onClick={exportVoucherModalVisibilityHandler}
+        >
+          <MdOutlineFileDownload />
+          <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
+        </Button>
+      </div>
+      {/* Info: (20250521 - Julian) for mobile */}
+      <div className="block tablet:hidden">
+        <Button
+          type="button"
+          variant="tertiaryOutline"
+          className={isCheckBoxOpen ? 'hidden' : 'flex'}
+          size="smallSquare"
+          onClick={exportVoucherModalVisibilityHandler}
+        >
+          <MdOutlineFileDownload size={16} />
+        </Button>
+      </div>
+    </>
+  );
+
   const displayedSelectArea = (
-    <div className="hidden items-center justify-between tablet:flex">
+    <div className="flex items-center justify-between">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
-      <div className="flex items-center gap-16px">
+      <div className="hidden items-center gap-16px tablet:flex">
         <Toggle
           id="hide-reversals-toggle"
           initialToggleState={isHideReversals}
@@ -351,19 +381,19 @@ const VoucherList: React.FC<IVoucherListProps> = ({
           {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
         </div>
       </div>
+      {/* Info: (20250521 - Julian) Filter button */}
+      <button
+        type="button"
+        onClick={filterSideMenuVisibilityHandler}
+        className="block p-10px text-button-text-secondary tablet:hidden"
+      >
+        <VscSettings size={24} />
+      </button>
 
       {/* Info: (20250107 - Julian) export & select button */}
-      <div className="flex h-50px items-center gap-24px">
+      <div className="ml-auto flex h-50px items-center gap-lv-3 tablet:gap-24px">
         {/* Info: (20240920 - Julian) Export Voucher button */}
-        {/* <Button
-          type="button"
-          variant="tertiaryOutline"
-          className={isCheckBoxOpen ? 'hidden' : 'flex'}
-          onClick={exportVoucherModalVisibilityHandler}
-        >
-          <MdOutlineFileDownload />
-          <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
-        </Button> */}
+        {downloadBtn}
         {/* Info: (20240920 - Julian) Delete button */}
         <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
           <Button
@@ -485,7 +515,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       </div>
 
       {/* Info: (20250521 - Julian) Table for desktop */}
-      {displayedTable}
+      <div className="hidden tablet:block">{displayedTable}</div>
     </div>
   );
 };
