@@ -19,16 +19,17 @@ import {
   listAccountBookByUserId,
   listSimpleAccountBookByUserId,
 } from '@/lib/utils/repo/account_book.repo';
-import { IAccountBook, IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IAccountBookSimple[] | IAccountBookWithTeam[]> | null = null;
+  let payload: IPaginatedData<IAccountBookEntity[] | IAccountBookWithTeam[]> | null = null;
 
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req);
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
@@ -72,7 +73,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
 
-  let options: IPaginatedOptions<IAccountBookSimple[] | IAccountBookWithTeam[]> | null = null;
+  let options: IPaginatedOptions<IAccountBookEntity[] | IAccountBookWithTeam[]> | null = null;
 
   if (simple) {
     options = await listSimpleAccountBookByUserId(userId, query);

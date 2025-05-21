@@ -255,30 +255,72 @@ const handlePutRequest = async (req: NextApiRequest) => {
         loggerBack.info(`Updated account book ${accountBookId} tag to ${updateData.tag}`);
       }
 
-      // Info: (20250515 - Shirley) 更新公司設定
+      // Info: (20250731 - Shirley) 準備更新數據，只包含請求中實際提供的欄位
+      const updateSettingData: Record<string, unknown> = {};
+
+      // 只有當請求中包含該欄位時才更新，並且映射到正確的欄位名稱
+      if (updateData.taxSerialNumber !== undefined) {
+        updateSettingData.taxSerialNumber = updateData.taxSerialNumber;
+      }
+      if (updateData.representativeName !== undefined) {
+        updateSettingData.representativeName = updateData.representativeName;
+      }
+      if (updateData.country !== undefined) {
+        updateSettingData.country = updateData.country;
+      }
+      if (updateData.phoneNumber !== undefined) {
+        updateSettingData.phone = updateData.phoneNumber; // 注意：phone 而非 phoneNumber
+      }
+      if (updateData.city !== undefined) {
+        updateSettingData.city = updateData.city;
+      }
+      if (updateData.district !== undefined) {
+        updateSettingData.district = updateData.district;
+      }
+      if (updateData.enteredAddress !== undefined) {
+        updateSettingData.enteredAddress = updateData.enteredAddress;
+      }
+      if (updateData.name !== undefined) {
+        updateSettingData.companyName = updateData.name; // 注意：companyName 而非 name
+      }
+      if (updateData.taxId !== undefined) {
+        updateSettingData.companyTaxId = updateData.taxId; // 注意：companyTaxId 而非 taxId
+      }
+      if (updateData.startDate !== undefined) {
+        updateSettingData.companyStartDate = updateData.startDate; // 注意：companyStartDate 而非 startDate
+      }
+      if (updateData.contactPerson !== undefined) {
+        updateSettingData.contactPerson = updateData.contactPerson;
+      }
+      if (updateData.filingFrequency !== undefined) {
+        updateSettingData.filingFrequency = updateData.filingFrequency;
+      }
+      if (updateData.filingMethod !== undefined) {
+        updateSettingData.filingMethod = updateData.filingMethod;
+      }
+      if (updateData.declarantFilingMethod !== undefined) {
+        updateSettingData.declarantFilingMethod = updateData.declarantFilingMethod;
+      }
+      if (updateData.declarantName !== undefined) {
+        updateSettingData.declarantName = updateData.declarantName;
+      }
+      if (updateData.declarantPersonalId !== undefined) {
+        updateSettingData.declarantPersonalId = updateData.declarantPersonalId;
+      }
+      if (updateData.declarantPhoneNumber !== undefined) {
+        updateSettingData.declarantPhoneNumber = updateData.declarantPhoneNumber;
+      }
+      if (updateData.agentFilingRole !== undefined) {
+        updateSettingData.agentFilingRole = updateData.agentFilingRole;
+      }
+      if (updateData.licenseId !== undefined) {
+        updateSettingData.licenseId = updateData.licenseId;
+      }
+
+      // Info: (20250731 - Shirley) 更新公司設定，只更新請求中包含的欄位
       const updatedSetting = await updateCompanySettingByCompanyId({
         companyId: accountBookId,
-        data: {
-          taxSerialNumber: updateData.taxSerialNumber,
-          representativeName: updateData.representativeName,
-          country: updateData.country,
-          phone: updateData.phoneNumber,
-          city: updateData.city,
-          district: updateData.district,
-          enteredAddress: updateData.enteredAddress,
-          companyName: updateData.name,
-          companyTaxId: updateData.taxId,
-          companyStartDate: updateData.startDate,
-          contactPerson: updateData.contactPerson,
-          filingFrequency: updateData.filingFrequency,
-          filingMethod: updateData.filingMethod,
-          declarantFilingMethod: updateData.declarantFilingMethod,
-          declarantName: updateData.declarantName,
-          declarantPersonalId: updateData.declarantPersonalId,
-          declarantPhoneNumber: updateData.declarantPhoneNumber,
-          agentFilingRole: updateData.agentFilingRole,
-          licenseId: updateData.licenseId,
-        },
+        data: updateSettingData,
       });
 
       if (!updatedSetting) {

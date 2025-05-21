@@ -49,6 +49,7 @@ export enum AGENT_FILING_ROLE {
   BOOKKEEPER_AND_FILING_AGENT = 'BOOKKEEPER_AND_FILING_AGENT',
 }
 
+/* Info: (20250521 - Shirley) 給前端對照的簡易帳本資訊，對應 `IAccountBookEntity` comes from `accountBookSchema`
 export interface IAccountBookSimple {
   id: number;
   teamId: number;
@@ -61,6 +62,7 @@ export interface IAccountBookSimple {
   createdAt: number;
   updatedAt: number;
 }
+*/
 
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
 export interface IAccountBook {
@@ -96,6 +98,41 @@ export interface IAccountBook {
 
   // agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
   // licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
+}
+
+export interface IAccountBookV2 {
+  id: number;
+  teamId: number;
+  userId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+  isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
+
+  // ToDo: (20250515 - Liz) RC2 新增表單欄位
+  representativeName: string; // Info: (20250423 - Liz) 負責人姓名
+  taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
+  contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
+  phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
+  city: string; // Info: (20250423 - Liz) 縣市
+  district: string; // Info: (20250423 - Liz) 行政區
+  enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
+
+  // ToDo: (20250515 - Liz) 以下欄位為選填
+  filingFrequency?: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
+  filingMethod?: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
+  declarantFilingMethod?: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
+
+  declarantName?: string; // Info: (20250423 - Liz) 申報人姓名
+  declarantPersonalId?: string; // Info: (20250423 - Liz) 申報人身分證字號
+  declarantPhoneNumber?: string; // Info: (20250423 - Liz) 申報人電話號碼
+
+  agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
+  licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
 }
 
 export interface IAccountBookWithTeam extends IAccountBook {

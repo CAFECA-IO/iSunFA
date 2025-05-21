@@ -20,7 +20,6 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
-  IAccountBookSimple,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -41,6 +40,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 /**
  * Info: (20250402 - Shirley) 檢查團隊的帳本數量是否超過限制
@@ -585,7 +585,7 @@ export const listSimpleAccountBookByUserId = async (
     searchQuery?: string;
     sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
   }
-): Promise<IPaginatedOptions<IAccountBookSimple[]>> => {
+): Promise<IPaginatedOptions<IAccountBookEntity[]>> => {
   const {
     page = 1,
     pageSize = 10,

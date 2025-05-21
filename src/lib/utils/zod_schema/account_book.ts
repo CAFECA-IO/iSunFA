@@ -343,6 +343,7 @@ export const disconnectAccountBookSchema = {
   frontend: nullSchema,
 };
 
+export type IAccountBookEntity = z.infer<typeof accountBookSchema>;
 export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
 export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
 
