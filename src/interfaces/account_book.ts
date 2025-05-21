@@ -53,7 +53,7 @@ export enum AGENT_FILING_ROLE {
  * Info: (20250521 - Shirley)
  * 為了解耦，區分前端跟後端使用的 interface，為新的 IAccountBook 除去 RC2 的欄位的樣子
  * 對應後端的 IAccountBookEntity
- * 適用於 TODO, status_info 等不需要帳本詳細資訊的 API
+ * 適用於 connect, TODO, status_info 等不需要帳本詳細資訊的 API
  */
 export interface IAccountBook {
   id: number;
