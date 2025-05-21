@@ -12,7 +12,6 @@ import { z } from 'zod';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import {
-  IAccountBook,
   IAccountBookWithTeam,
   WORK_TAG,
   ACCOUNT_BOOK_ROLE,
@@ -40,6 +39,10 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { checkAccountBookLimit } from '@/lib/utils/plan/check_plan_limit';
+import {
+  IAccountBookEntity,
+  IAccountBookWithTeamEntity,
+} from '@/lib/utils/zod_schema/account_book';
 import { createNotificationsBulk } from '@/lib/utils/repo/notification.repo';
 import { NotificationEvent, NotificationType } from '@/interfaces/notification';
 import { EmailTemplateName } from '@/constants/email_template';
@@ -239,8 +242,8 @@ export async function isEligibleToCreateAccountBookInTeam(
   return canDo.can;
 }
 
-export const getAccountBookById = async (id: number): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+export const getAccountBookById = async (id: number): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const accountBook = await prisma.company.findUnique({
     where: {
       id,
@@ -263,8 +266,8 @@ export const getAccountBookById = async (id: number): Promise<IAccountBook | nul
 export const getAccountBookByNameAndTeamId = async (
   teamId: number,
   taxId: string
-): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const accountBook = await prisma.company.findFirst({
     where: {
       taxId,
@@ -319,8 +322,8 @@ export const createAccountBook = async (
     agentFilingRole?: AGENT_FILING_ROLE;
     licenseId?: string;
   }
-): Promise<IAccountBook | null> => {
-  let accountBook: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let accountBook: IAccountBookEntity | null = null;
   let { teamId } = body;
   const {
     taxId,
@@ -596,7 +599,7 @@ export const listAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
-      // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+      // Info: (20250517 - Shirley) 添加 companySettings 以獲取更多欄位
       companySettings: {
         where: {
           deletedAt: null,
@@ -638,7 +641,7 @@ export const listAccountBookByUserId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG,
 
-        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
@@ -647,7 +650,7 @@ export const listAccountBookByUserId = async (
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
 
-        // Info: (20250717 - Shirley) 添加選填欄位
+        // Info: (20250517 - Shirley) 添加選填欄位
         filingFrequency: setting.filingFrequency,
         filingMethod: setting.filingMethod,
         declarantFilingMethod: setting.declarantFilingMethod,
@@ -656,6 +659,163 @@ export const listAccountBookByUserId = async (
         declarantPhoneNumber: setting.declarantPhoneNumber,
         agentFilingRole: setting.agentFilingRole,
         licenseId: setting.licenseId,
+
+        team: book.team
+          ? {
+              id: book.team.id,
+              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+              role: teamRole,
+              name: { value: book.team.name, editable: teamRole !== TeamRole.VIEWER },
+              about: { value: book.team.about ?? '', editable: teamRole !== TeamRole.VIEWER },
+              profile: { value: book.team.profile ?? '', editable: teamRole !== TeamRole.VIEWER },
+              planType: {
+                value: book.team.subscriptions[0]?.plan.type ?? TPlanType.BEGINNER,
+                editable: false,
+              },
+              totalMembers: book.team.members.length || 0,
+              totalAccountBooks: book.team.accountBook.length || 0,
+              bankAccount: {
+                value: book.team.bankInfo
+                  ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
+                  : '',
+                editable: false,
+              },
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
+            }
+          : null,
+        isTransferring: book.isTransferring,
+      } as IAccountBookWithTeam;
+    }),
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+    totalCount,
+    pageSize,
+    sort: sortOption,
+  });
+
+  return result;
+};
+
+/**
+ * Info: (20250515 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 companySetting 資料）
+ * @param userId 用戶ID
+ * @param queryParams 查詢參數，包含分頁、排序、搜索等選項
+ * @returns 分頁後的帳本列表
+ */
+export const listSimpleAccountBookByUserId = async (
+  userId: number,
+  queryParams: {
+    page?: number;
+    pageSize?: number;
+    startDate?: number;
+    endDate?: number;
+    searchQuery?: string;
+    sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+  }
+): Promise<IPaginatedOptions<IAccountBookEntity[]>> => {
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  // Info: (20250515 - Shirley) 查詢用戶所屬的所有團隊
+  const userTeams = await prisma.teamMember.findMany({
+    where: {
+      userId,
+      status: LeaveStatus.IN_TEAM,
+    },
+    select: { teamId: true },
+  });
+
+  const teamIds = userTeams.map((team) => team.teamId);
+
+  if (teamIds.length === 0) {
+    return toPaginatedData({
+      data: [],
+      page,
+      totalPages: 0,
+      totalCount: 0,
+      pageSize,
+      sort: sortOption,
+    });
+  }
+
+  // Info: (20250515 - Shirley) 查詢團隊內的所有帳本總數
+  const totalCount = await prisma.company.count({
+    where: {
+      teamId: { in: teamIds },
+      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+      createdAt: { gte: startDate, lte: endDate },
+      AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+    },
+  });
+
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250515 - Shirley) 取得帳本基本資訊，包含所屬團隊
+  const accountBooks = await prisma.company.findMany({
+    where: {
+      teamId: { in: teamIds },
+      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+      createdAt: { gte: startDate, lte: endDate },
+      AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+    },
+    include: {
+      team: {
+        include: {
+          members: {
+            where: { status: LeaveStatus.IN_TEAM },
+            select: { id: true, userId: true, role: true },
+          },
+          accountBook: true,
+          subscriptions: {
+            where: {
+              startDate: {
+                lte: nowInSecond,
+              },
+              expiredDate: {
+                gt: nowInSecond,
+              },
+            },
+            include: { plan: true },
+          },
+          imageFile: { select: { id: true, url: true } },
+        },
+      },
+      imageFile: { select: { id: true, url: true } },
+      // Info: (20250521 - Shirley) 不包含 companySettings 資料
+    },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: createOrderByList(sortOption),
+  });
+
+  // Info: (20250515 - Shirley) 格式化回傳數據
+  const result = toPaginatedData({
+    data: accountBooks.map((book) => {
+      const teamMember = book.team?.members.find((member) => member.userId === userId);
+      const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
+      const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+
+      return {
+        id: book.id,
+        teamId: book.teamId,
+        userId: book.userId,
+        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: book.name,
+        taxId: book.taxId,
+        startDate: book.startDate,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+        isPrivate: book.isPrivate ?? false,
+        tag: book.tag as WORK_TAG,
 
         team: book.team
           ? {
@@ -772,7 +932,7 @@ export const listAccountBooksByTeamId = async (
           include: {
             members: {
               where: { status: LeaveStatus.IN_TEAM },
-              select: { id: true, userId: true, role: true }, // ✅ 取得 accountBookRole
+              select: { id: true, userId: true, role: true }, // Info: (20250521 - Shirley) ✅ 取得 accountBookRole
             },
             accountBook: true,
             subscriptions: {
@@ -790,7 +950,7 @@ export const listAccountBooksByTeamId = async (
           },
         },
         imageFile: { select: { id: true, url: true } },
-        // Info: (20250717 - Shirley) 添加 companySettings 以獲取更多欄位
+        // Info: (20250517 - Shirley) 添加 companySettings 以獲取更多欄位
         companySettings: {
           where: {
             deletedAt: null,
@@ -806,13 +966,13 @@ export const listAccountBooksByTeamId = async (
 
   return toPaginatedData({
     data: accountBooks.map((book) => {
-      // ✅ (20250324 - Tzuhan) 修正 teamRole 取得方式
+      // Info: (20250324 - Tzuhan) 修正 teamRole 取得方式
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
       const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
-      // Info: (20250717 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      // Info: (20250517 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
@@ -833,7 +993,7 @@ export const listAccountBooksByTeamId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG, // ✅ (20250324 - Tzuhan) 直接取用 tag
 
-        // Info: (20250717 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
@@ -1174,19 +1334,19 @@ export const declineTransferAccountBook = async (
 };
 
 /**
- * Info: (20250329 - Shirley) This function fetches complete IAccountBookWithTeam data in one query
+ * Info: (20250329 - Shirley) This function fetches complete IAccountBookWithTeamEntitydata in one query
  * for the status_info API. It retrieves the account book, user role, team info, and other necessary data
  * using Prisma's relation capabilities to minimize database queries.
  * @param userId The ID of the user
  * @param companyId The ID of the company/account book
  * @param teamId The ID of the team the account book belongs to
- * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
 export async function getAccountBookForUserWithTeam(
   userId: number,
   companyId: number,
   teamId: number
-): Promise<IAccountBookWithTeam | null> {
+): Promise<IAccountBookWithTeamEntity | null> {
   if (userId <= 0 || companyId <= 0 || teamId <= 0) {
     return null;
   }
@@ -1310,13 +1470,13 @@ export async function getAccountBookForUserWithTeam(
  * @param userId The ID of the user
  * @param companyId The ID of the company/account book
  * @param teamIds Optional array of team IDs to search within (if known)
- * @returns A promise resolving to IAccountBookWithTeam object or null if not found
+ * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
 export async function findUserAccountBook(
   userId: number,
   companyId: number,
   teamIds?: number[]
-): Promise<IAccountBookWithTeam | null> {
+): Promise<IAccountBookWithTeamEntity | null> {
   if (userId <= 0 || companyId <= 0) return null;
 
   const nowInSecond = getTimestampNow();
@@ -1446,8 +1606,8 @@ export const updateAccountBook = async (
     taxId?: string;
     teamId?: number;
   }
-): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
   const { name, tag, taxId, teamId } = body;
 
   loggerBack.info(
@@ -1514,7 +1674,7 @@ export const updateAccountBook = async (
         company: companyWithImageId,
         order: 1,
         accountBookRole: ACCOUNT_BOOK_ROLE.COMPANY,
-      } as IAccountBook & {
+      } as IAccountBookEntity & {
         company: typeof companyWithImageId;
         order: number;
         accountBookRole: ACCOUNT_BOOK_ROLE;
@@ -1535,8 +1695,10 @@ export const updateAccountBook = async (
   return result;
 };
 
-export const deleteAccountBook = async (accountBookId: number): Promise<IAccountBook | null> => {
-  let result: IAccountBook | null = null;
+export const deleteAccountBook = async (
+  accountBookId: number
+): Promise<IAccountBookEntity | null> => {
+  let result: IAccountBookEntity | null = null;
 
   const accountBook = await prisma.company.findFirst({
     where: {

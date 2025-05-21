@@ -1,4 +1,4 @@
-import { IAccountBook } from '@/interfaces/account_book';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 export interface ITodo {
   id: number;
@@ -13,6 +13,6 @@ export interface ITodo {
 }
 
 export interface ITodoAccountBook extends ITodo {
-  company: IAccountBook | null;
+  company: IAccountBookEntity | null;
 }
 // ToDo: (20250306 - Liz) 這個 interface 預計改成 ITodoAccountBook
