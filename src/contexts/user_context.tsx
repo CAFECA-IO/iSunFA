@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { WORK_TAG, IAccountBookSimple } from '@/interfaces/account_book';
+import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -47,7 +47,7 @@ interface UserContextType {
     teamId: number;
   }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  connectedAccountBook: IAccountBookSimple | null;
+  connectedAccountBook: IAccountBook | null;
   team: ITeam | null;
   teamRole: TeamRole | null;
   connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
@@ -136,8 +136,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [, setUsername, usernameRef] = useStateRef<string | null>(null);
 
   const [, setSelectedRole, selectedRoleRef] = useStateRef<string | null>(null);
-  const [, setConnectedAccountBook, connectedAccountBookRef] =
-    useStateRef<IAccountBookSimple | null>(null);
+  const [, setConnectedAccountBook, connectedAccountBookRef] = useStateRef<IAccountBook | null>(
+    null
+  );
   const [, setTeam, teamRef] = useStateRef<ITeam | null>(null); // Info: (20250325 - Liz) 已連結帳本的所屬團隊
   const [, setIsSignInError, isSignInErrorRef] = useStateRef(false);
   const [, setErrorCode, errorCodeRef] = useStateRef<string | null>(null);
@@ -162,12 +163,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250422 - Liz) 此 api 會再改版
-  const { trigger: createAccountBookAPI } = APIHandler<IAccountBookSimple>(
-    APIName.CREATE_ACCOUNT_BOOK
-  );
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_ACCOUNT_BOOK);
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
-  const { trigger: connectAccountBookAPI } = APIHandler<IAccountBookSimple>(
+  const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
   // Info: (20250422 - Liz) 取消連結帳本 API
@@ -176,14 +175,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }>(APIName.DISCONNECT_ACCOUNT_BOOK);
 
   // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookSimple>(
-    APIName.UPDATE_ACCOUNT_BOOK
-  );
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
 
   // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
-  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBookSimple>(
-    APIName.DELETE_ACCOUNT_BOOK
-  );
+  const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
   const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);

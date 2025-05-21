@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoAccountBook } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -28,7 +28,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
   const [endTimeStamp, setEndTimeStamp] = useState<number | undefined>(todoToUpdate.endTime);
   const [note, setNote] = useState(todoToUpdate.note);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [accountBook, setAccountBook] = useState<IAccountBookSimple | null>(todoToUpdate?.company);
+  const [accountBook, setAccountBook] = useState<IAccountBook | null>(todoToUpdate?.company);
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
   const [noDataForTodoName, setNoDataForTodoName] = useState(false);
   const [noDataForStartTime, setNoDataForStartTime] = useState(false);

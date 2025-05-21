@@ -4,7 +4,7 @@ import { Button } from '@/components/button/button';
 import APIHandler from '@/lib/utils/api_handler';
 import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
-import { IAccountBookSimple } from '@/interfaces/account_book';
+import { IAccountBook } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
@@ -28,7 +28,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
     error: updateTeamError,
     code: updateTeamCode,
     success: updateTeamSuccess,
-  } = APIHandler<IAccountBookSimple>(APIName.UPDATE_ACCOUNT_BOOK); // Info: (20250423 - Shirley) rename company to account book✅ @Julian
+  } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK); // Info: (20250423 - Shirley) rename company to account book✅ @Julian
 
   const saveClickHandler = async () => {
     if (companyName && connectedAccountBook && companyName !== connectedAccountBook.name) {

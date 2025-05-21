@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoAdd } from 'react-icons/io5';
 import { useUserCtx } from '@/contexts/user_context';
-import { IAccountBookSimple, IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoAccountBook } from '@/interfaces/todo';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
@@ -15,7 +15,7 @@ interface CreateTodoModalProps {
   toggleModal: () => void;
   getTodoList?: () => Promise<void>;
   defaultTodoName?: string;
-  defaultAccountBook?: IAccountBookSimple;
+  defaultAccountBook?: IAccountBook;
 }
 
 const CreateTodoModal = ({
@@ -34,7 +34,7 @@ const CreateTodoModal = ({
   const [endTimeStamp, setEndTimeStamp] = useState<number>();
   const [note, setNote] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [accountBook, setAccountBook] = useState<IAccountBookSimple | undefined>(
+  const [accountBook, setAccountBook] = useState<IAccountBook | undefined>(
     defaultAccountBook || undefined
   );
 

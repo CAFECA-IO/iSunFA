@@ -55,7 +55,7 @@ export enum AGENT_FILING_ROLE {
  * 對應後端的 IAccountBookEntity
  * 適用於 TODO, status_info 等不需要帳本詳細資訊的 API
  */
-export interface IAccountBookSimple {
+export interface IAccountBook {
   id: number;
   teamId: number;
   userId: number;
@@ -73,7 +73,7 @@ export interface IAccountBookSimple {
  * 適用於 call API `LIST_ACCOUNT_BOOK_BY_USER_ID,LIST_ACCOUNT_BOOK_BY_TEAM_ID,UPDATE_ACCOUNT_BOOK,CREATE_ACCOUNT_BOOK` 的畫面
  */
 // Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
-export interface IAccountBook {
+export interface IAccountBookInfo {
   id: number;
   teamId: number;
   userId: number;
@@ -112,7 +112,7 @@ export interface IAccountBook {
  * Info: (20250521 - Shirley)
  * 對應後端的 IAccountBookInfoWithTeamEntity
  */
-export interface IAccountBookWithTeam extends IAccountBook {
+export interface IAccountBookWithTeam extends IAccountBookInfo {
   team: ITeam;
   isTransferring: boolean;
 }
