@@ -31,8 +31,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   setIsRecallApi,
   clearSearchWord,
 }) => {
-  const { t } = useTranslation('common');
-
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
 
@@ -74,6 +73,12 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   // Info: (20250212 - Julian) 會計科目列表
   const accountList = accountTitleList?.data ?? [];
+
+  // Info: (20250521 - Julian) 如果翻譯名稱不存在，則使用原本的名稱
+  const getTranslatedName = (name: string) => {
+    const nameKey = `reports:ACCOUNTING_ACCOUNT.${name}`;
+    return i18n.exists(nameKey) ? t(nameKey) : name;
+  };
 
   // Info: (20250212 - Julian) Category 輸入狀態
   const {
@@ -118,7 +123,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       </p>
     );
   const subcategoryString = selectSubcategory
-    ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
+    ? `${selectSubcategory?.code} ${getTranslatedName(selectSubcategory?.name)}`
     : t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
@@ -304,7 +309,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       filteredAccountList
         .filter((title) => !title.code.includes('-'))
         .map((title) => {
+          const translatedName = getTranslatedName(title.name);
           const subcategoryClickHandler = () => setSelectSubcategory(title);
+
           return (
             <div
               key={title.id}
@@ -312,7 +319,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
               className="flex items-center gap-4px px-12px py-8px hover:bg-drag-n-drop-surface-hover"
             >
               <p className="text-sm text-dropdown-text-primary">{title.code}</p>
-              <p className="text-xs text-dropdown-text-secondary">{title.name}</p>
+              <p className="text-xs text-dropdown-text-secondary">{translatedName}</p>
             </div>
           );
         })
