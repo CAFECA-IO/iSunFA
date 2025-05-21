@@ -789,7 +789,7 @@ export const listSimpleAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
-      // 不包含 companySettings 資料
+      // Info: (20250521 - Shirley) 不包含 companySettings 資料
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -932,7 +932,7 @@ export const listAccountBooksByTeamId = async (
           include: {
             members: {
               where: { status: LeaveStatus.IN_TEAM },
-              select: { id: true, userId: true, role: true }, // ✅ 取得 accountBookRole
+              select: { id: true, userId: true, role: true }, // Info: (20250521 - Shirley) ✅ 取得 accountBookRole
             },
             accountBook: true,
             subscriptions: {
@@ -966,7 +966,7 @@ export const listAccountBooksByTeamId = async (
 
   return toPaginatedData({
     data: accountBooks.map((book) => {
-      // ✅ (20250324 - Tzuhan) 修正 teamRole 取得方式
+      // Info: (20250324 - Tzuhan) 修正 teamRole 取得方式
       const teamMember = book.team?.members.find((member) => member.userId === userId);
       const teamRole = (teamMember?.role ?? TeamRole.VIEWER) as TeamRole;
       const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
