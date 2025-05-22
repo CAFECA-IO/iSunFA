@@ -3,22 +3,6 @@ import { RoleName } from '@/constants/role';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import RoleCard from '@/components/beta/create_role/role_card';
 
-// Info: (20241007 - Liz) 每個角色對應的圖片
-const ROLES_IMAGE = [
-  {
-    roleName: RoleName.INDIVIDUAL,
-    imageSrc: '/images/individual_image.svg',
-  },
-  {
-    roleName: RoleName.ACCOUNTING_FIRMS,
-    imageSrc: '/images/accounting_firms_image.svg',
-  },
-  {
-    roleName: RoleName.ENTERPRISE,
-    imageSrc: '/images/enterprise_image.svg',
-  },
-];
-
 interface RoleCardsProps {
   uncreatedRoles: RoleName[];
   displayedRole: RoleName | undefined;
@@ -90,7 +74,7 @@ const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCard
   };
 
   return (
-    <main className="relative">
+    <main className="relative hidden tablet:block">
       {/* Info: (20250207 - Liz) 左側按鈕 */}
       {canScrollLeft && (
         <button
@@ -107,21 +91,15 @@ const RoleCards = ({ uncreatedRoles, displayedRole, setDisplayedRole }: RoleCard
         ref={containerRef}
         className="hide-scrollbar mx-60px flex max-w-fit gap-20px overflow-x-auto"
       >
-        {uncreatedRoles.map((uncreatedRole, index) => {
-          const imageSrc =
-            ROLES_IMAGE.find((rolesImage) => rolesImage.roleName === uncreatedRole)?.imageSrc ?? '';
-
-          return (
-            <RoleCard
-              key={uncreatedRole}
-              uncreatedRole={uncreatedRole}
-              imageSrc={imageSrc}
-              displayedRole={displayedRole}
-              setDisplayedRole={setDisplayedRole}
-              isDisabled={disabledCards.includes(index)}
-            />
-          );
-        })}
+        {uncreatedRoles.map((uncreatedRole, index) => (
+          <RoleCard
+            key={uncreatedRole}
+            uncreatedRole={uncreatedRole}
+            displayedRole={displayedRole}
+            setDisplayedRole={setDisplayedRole}
+            isDisabled={disabledCards.includes(index)}
+          />
+        ))}
       </section>
 
       {/* Info: (20250207 - Liz) 右側按鈕 */}

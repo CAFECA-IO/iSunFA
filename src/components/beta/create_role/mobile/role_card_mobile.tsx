@@ -4,19 +4,17 @@ import { useTranslation } from 'next-i18next';
 import { RoleName, ROLES_IMAGE } from '@/constants/role';
 import { cn } from '@/lib/utils/common';
 
-interface RoleCardProps {
+interface RoleCardMobileProps {
   uncreatedRole: RoleName;
-  isDisabled: boolean;
   displayedRole: RoleName | undefined;
   setDisplayedRole: Dispatch<SetStateAction<RoleName | undefined>>;
 }
 
-const RoleCard = ({
+const RoleCardMobile = ({
   uncreatedRole,
-  isDisabled,
   displayedRole,
   setDisplayedRole,
-}: RoleCardProps) => {
+}: RoleCardMobileProps) => {
   const { t } = useTranslation('dashboard');
   const isRoleSelected = displayedRole === uncreatedRole;
   const imageSrc = ROLES_IMAGE[uncreatedRole];
@@ -27,14 +25,13 @@ const RoleCard = ({
   };
 
   return (
-    <main className="px-60px pb-56px pt-36px">
+    <main className="px-60px pb-56px pt-36px tablet:hidden">
       <div className="skew-x-20 rounded-sm bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
         <button
           type="button"
           onClick={handleClick}
-          disabled={isDisabled}
           className={cn(
-            'relative flex h-120px w-360px items-center rounded-xs text-text-neutral-primary disabled:pointer-events-none disabled:opacity-50',
+            'relative flex h-60px w-160px items-center rounded-xs text-text-neutral-primary disabled:pointer-events-none disabled:opacity-50 screen1280:w-360px',
             {
               'border-2 border-stroke-brand-primary bg-surface-brand-primary-30': isRoleSelected,
               'hover:bg-surface-brand-primary-10': !isRoleSelected,
@@ -42,10 +39,13 @@ const RoleCard = ({
           )}
         >
           <span
-            className={cn('w-300px -skew-x-20 pl-100px text-center font-bold', {
-              'text-28px': isAccountingFirms,
-              'text-32px': !isAccountingFirms,
-            })}
+            className={cn(
+              '-skew-x-20 pl-40px text-center font-bold screen1280:w-300px screen1280:pl-100px',
+              {
+                'pl-100px laptop:text-lg screen1280:text-28px': isAccountingFirms,
+                'laptop:text-xl screen1280:text-32px': !isAccountingFirms,
+              }
+            )}
           >
             {t(`dashboard:ROLE.${uncreatedRole}`)}
           </span>
@@ -54,7 +54,7 @@ const RoleCard = ({
             alt="role_image"
             width={48}
             height={48}
-            className={cn('absolute -left-50px -top-30px w-160px -skew-x-20 rounded-full', {
+            className={cn('absolute -left-50px -top-10px w-80px -skew-x-20 rounded-full', {
               'border-4 border-stroke-brand-primary': displayedRole === uncreatedRole,
             })}
           />
@@ -64,4 +64,4 @@ const RoleCard = ({
   );
 };
 
-export default RoleCard;
+export default RoleCardMobile;

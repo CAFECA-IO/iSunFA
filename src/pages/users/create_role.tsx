@@ -5,6 +5,7 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Introduction from '@/components/beta/create_role/introduction';
 import RoleCards from '@/components/beta/create_role/role_cards';
+import RoleCardsMobile from '@/components/beta/create_role/mobile/role_cards_mobile';
 import PreviewModal from '@/components/beta/create_role/preview_modal';
 import { useUserCtx } from '@/contexts/user_context';
 import { RoleName } from '@/constants/role';
@@ -19,15 +20,14 @@ const CreateRolePage = () => {
   const { t } = useTranslation(['dashboard']);
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
 
-  // Info: (20241108 - Liz) 畫面顯示的角色
-  const [displayedRole, setDisplayedRole] = useState<RoleName | undefined>(undefined);
-  const [uncreatedRoles, setUncreatedRoles] = useState<RoleName[]>([]);
-  const [isPreviewModalVisible, setIsPreviewModalVisible] = useState<boolean>(false);
-  const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false);
+  const [displayedRole, setDisplayedRole] = useState<RoleName | undefined>(undefined); // Info: (20250522 - Liz) 目前畫面顯示的角色(用於介紹)
+  const [uncreatedRoles, setUncreatedRoles] = useState<RoleName[]>([]); // Info: (20250522 - Liz) 使用者尚未建立的角色
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
+  const [isAbleToGoBack, setIsAbleToGoBack] = useState<boolean>(false); // Info: (20250522 - Liz) 是否能回到選擇角色頁面
   const [isAnimationShowing, setIsAnimationShowing] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const togglePreviewModal = () => setIsPreviewModalVisible((prev) => !prev);
+  const togglePreviewModal = () => setIsPreviewModalOpen((prev) => !prev);
 
   useEffect(() => {
     const fetchAndComputeRoles = async () => {
@@ -154,8 +154,15 @@ const CreateRolePage = () => {
             setDisplayedRole={setDisplayedRole}
           />
 
+          {/* Info: (20250522 - Liz) 切換角色介紹按鈕 - 手機版 */}
+          <RoleCardsMobile
+            uncreatedRoles={uncreatedRoles}
+            displayedRole={displayedRole}
+            setDisplayedRole={setDisplayedRole}
+          />
+
           {/* Info: (20250329 - Liz) Modal */}
-          {isPreviewModalVisible && <PreviewModal togglePreviewModal={togglePreviewModal} />}
+          {isPreviewModalOpen && <PreviewModal togglePreviewModal={togglePreviewModal} />}
         </main>
       )}
     </>
