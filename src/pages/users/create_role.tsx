@@ -15,10 +15,12 @@ import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import LoginAnimation from '@/components/login/login_animation';
 import { findUnusedRoles } from '@/lib/utils/role';
+import { useRouter } from 'next/router';
 
 const CreateRolePage = () => {
   const { t } = useTranslation(['dashboard']);
   const { getSystemRoleList, getUserRoleList } = useUserCtx();
+  const router = useRouter();
 
   const [displayedRole, setDisplayedRole] = useState<RoleName | undefined>(undefined); // Info: (20250522 - Liz) 目前畫面顯示的角色(用於介紹)
   const [uncreatedRoles, setUncreatedRoles] = useState<RoleName[]>([]); // Info: (20250522 - Liz) 使用者尚未建立的角色
@@ -39,18 +41,30 @@ const CreateRolePage = () => {
         const systemRoles = await getSystemRoleList();
         const userRoles = await getUserRoleList();
 
-        if (!userRoles || userRoles.length === 0) {
+        if (!systemRoles || !userRoles) {
+          // Deprecated: (20241122 - Liz)
+          // eslint-disable-next-line no-console
+          console.log('取得系統角色失敗或取得使用者角色失敗');
+          return;
+        }
+
+        // Info: (20250522 - Liz) Case 1: 使用者尚未建立任何角色 => 顯示動畫
+        if (userRoles.length === 0) {
           setIsAnimationShowing(true);
         }
 
-        if (systemRoles && userRoles) {
-          const unusedRoles = findUnusedRoles(systemRoles, userRoles);
-          setUncreatedRoles(unusedRoles);
+        // Info: (20250522 - Liz) Case 2: 計算尚未建立的角色
+        const unusedRoles = findUnusedRoles(systemRoles, userRoles);
+        setUncreatedRoles(unusedRoles);
+
+        // Info: (20250522 - Liz) Case 3: 如果所有角色都已建立，自動導向選擇角色頁面
+        if (unusedRoles.length === 0) {
+          router.push(ISUNFA_ROUTE.SELECT_ROLE);
+          return;
         }
 
-        if (userRoles && userRoles.length > 0) {
-          setIsAbleToGoBack(true);
-        }
+        // Info: (20250522 - Liz) Case 4: 可顯示返回選擇角色頁面按鈕
+        setIsAbleToGoBack(true);
       } catch (error) {
         // Deprecated: (20241108 - Liz)
         // eslint-disable-next-line no-console
@@ -61,7 +75,7 @@ const CreateRolePage = () => {
     };
 
     fetchAndComputeRoles();
-  }, [getSystemRoleList, getUserRoleList]);
+  }, [getSystemRoleList, getUserRoleList, router]);
 
   return (
     <>
