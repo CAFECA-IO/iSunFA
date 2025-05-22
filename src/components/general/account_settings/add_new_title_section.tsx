@@ -105,7 +105,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const formTitle =
-    formType === TitleFormType.add
+    formType === TitleFormType.ADD
       ? t('settings:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
       : t('settings:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
 
@@ -245,9 +245,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setSelectCategory(selectedAccountTitle.type);
       setSelectSubcategory(selectedAccountTitle);
       // Info: (20241113 - Julian) 如果是新增，則名稱為空；如果是編輯，則名稱為原本的名稱
-      setTitleName(formType === TitleFormType.add ? '' : selectedAccountTitle.name);
+      setTitleName(formType === TitleFormType.ADD ? '' : selectedAccountTitle.name);
       // Info: (20241113 - Julian) 如果是新增，則代碼為空；如果是編輯，則代碼為原本的代碼
-      setTitleCode(formType === TitleFormType.add ? '-' : selectedAccountTitle.code);
+      setTitleCode(formType === TitleFormType.ADD ? '-' : selectedAccountTitle.code);
       // Info: (20241113 - Julian) 如果是新增，則備註為空；如果是編輯，則備註為原本的備註
       // ToDo: (20241113 - Julian) IAcount 的 note 欄位還沒有實作
       setTitleNote(selectedAccountTitle.note ?? ''); // Info: (20250120 - Shirley) @Julian 已串上後端實作的 note 功能
@@ -383,7 +383,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   };
 
   const submitBtn =
-    formType === TitleFormType.add ? (
+    formType === TitleFormType.ADD ? (
       // ToDo: (20241113 - Julian) Create API
       <Button
         type="button"
@@ -406,7 +406,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
 
   return (
-    <div className="flex h-550px flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
+    <div className="flex h-350px flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS tablet:h-500px">
       {/* Info: (20241112 - Julian) Title */}
       <div className="flex items-center gap-8px">
         <Image src="/icons/add_accounting_title.svg" width={16} height={16} alt="add_icon" />
