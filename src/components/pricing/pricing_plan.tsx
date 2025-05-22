@@ -88,7 +88,11 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
       >
         {buttonText}
       </LandingButton>
-      <ul className="mt-6 min-h-300px space-y-2 text-left text-gray-300">
+      <ul
+        className={`mt-6 space-y-2 text-left text-gray-300 ${
+          isChinese ? 'min-h-300px' : 'min-h-400px'
+        }`}
+      >
         {features.map((feature, index) => (
           <li key={`feature-${index + 1}`} className="flex items-start gap-2">
             {feature.icon && (
@@ -111,7 +115,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
           </span>
           <span
             className={`text-xs font-medium leading-5 text-text-neutral-tertiary ${
-              isChinese ? 'min-h-270px' : 'min-h-420px'
+              isChinese ? 'min-h-270px' : 'min-h-550px'
             }`}
           >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
@@ -125,7 +129,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
           </span>
           <span
             className={`whitespace-pre-line text-xs font-medium leading-5 text-text-neutral-tertiary ${
-              isChinese ? 'min-h-270px' : 'min-h-420px'
+              isChinese ? 'min-h-270px' : 'min-h-550px'
             }`}
           >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}

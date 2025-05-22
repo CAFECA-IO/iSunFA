@@ -204,7 +204,7 @@ const SubscriptionPlan = ({
 
   return (
     <section
-      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
+      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
     >
       {isShowSelected && (
         <Image
@@ -323,7 +323,7 @@ const SubscriptionPlan = ({
           </span>
           <span
             className={`text-xs font-medium leading-5 text-text-neutral-tertiary ${
-              isChinese ? 'min-h-270px' : 'min-h-420px'
+              isChinese ? 'min-h-270px' : 'min-h-550px'
             }`}
           >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
@@ -337,7 +337,7 @@ const SubscriptionPlan = ({
           </span>
           <span
             className={`${
-              isChinese ? 'min-h-270px' : 'min-h-420px'
+              isChinese ? 'min-h-270px' : 'min-h-550px'
             } whitespace-pre-line text-xs font-medium leading-5 text-text-neutral-tertiary`}
           >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
