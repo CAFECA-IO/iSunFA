@@ -150,8 +150,10 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.PUT_TEAM_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 
@@ -161,7 +163,6 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.SEND_VERIFICATION_EMAIL]: [AuthFunctionsKeysNew.user],
   [APIName.VERIFY_CODE]: [AuthFunctionsKeysNew.user],

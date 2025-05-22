@@ -1,15 +1,16 @@
-import { IAccountBook, ICompanyEntity, WORK_TAG } from '@/interfaces/account_book';
+import { ICompanyEntity, WORK_TAG } from '@/interfaces/account_book';
 import { Company, File, Company as PrismaCompany } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { accountBookEntityValidator } from '@/lib/utils/zod_schema/company';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 export async function formatCompanyList(
   companyList: (Company & {
     imageFile: File;
   })[]
-): Promise<IAccountBook[]> {
-  const formattedCompanyList: IAccountBook[] = companyList.map((company) => {
-    const formattedCompany: IAccountBook = {
+): Promise<IAccountBookEntity[]> {
+  const formattedCompanyList: IAccountBookEntity[] = companyList.map((company) => {
+    const formattedCompany: IAccountBookEntity = {
       ...company,
       tag: company.tag as WORK_TAG,
       imageId: company.imageFile.name,
@@ -24,9 +25,9 @@ export function formatCompany(
   company: Company & {
     imageFile: File | null;
   }
-): IAccountBook {
+): IAccountBookEntity {
   // Info: (20240830 - Murky) To Emily and Jacky - , File update down below ,it suppose to image name
-  const formattedCompany: IAccountBook = {
+  const formattedCompany: IAccountBookEntity = {
     ...company,
     tag: company.tag as WORK_TAG,
     imageId: company?.imageFile?.url || '',

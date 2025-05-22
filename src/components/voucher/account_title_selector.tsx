@@ -35,7 +35,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   toggleModal,
   accountSelectedHandler,
 }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
 
   // Info: (20250306 - Julian) 搜尋欄 ref
@@ -254,6 +254,10 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             toggleModal();
           };
 
+          // Info: (20250521 - Julian) 如果沒有翻譯，則顯示原本的名稱
+          const nameKey = `reports:ACCOUNTING_ACCOUNT.${account.name}`;
+          const translatedName = i18n.exists(nameKey) ? t(nameKey) : account.name;
+
           return (
             <button
               key={account.id}
@@ -262,7 +266,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
               className="px-12px py-8px text-left text-tabs-text-default outline-tabs-text-active hover:text-tabs-text-hover focus:outline-dashed"
               onClick={clickHandler}
             >
-              {account.code} - {account.name}
+              {account.code} - {translatedName}
             </button>
           );
         })
@@ -334,7 +338,7 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   accountIsNull,
   className = '',
 }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'reports']);
 
   // Info: (20241121 - Julian) 會計科目 input ref
   const accountRef = useRef<HTMLButtonElement>(null);

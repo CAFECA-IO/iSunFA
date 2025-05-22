@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
+import { nullSchema, zodStringToBoolean, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 import {
   WORK_TAG,
   ACCOUNT_BOOK_UPDATE_ACTION,
@@ -35,14 +35,14 @@ export const accountBookSchema = z.object({
   imageId: z.string(),
   name: z.string(),
   taxId: z.string(),
-  tag: z.nativeEnum(WORK_TAG), // Info: (2025) 新增 `tag`，對應 `IAccountBook`
+  tag: z.nativeEnum(WORK_TAG),
   startDate: z.number(),
   createdAt: z.number(),
   updatedAt: z.number(),
   isPrivate: z.boolean().optional(),
 });
 
-export const accountBookDetailSchema = accountBookSchema.extend({
+export const accountBookInfoSchema = accountBookSchema.extend({
   representativeName: z.string().default(''),
   taxSerialNumber: z.string().default(''),
   contactPerson: z.string().default(''),
@@ -51,14 +51,14 @@ export const accountBookDetailSchema = accountBookSchema.extend({
   district: z.string().default(''),
   enteredAddress: z.string().default(''),
 
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
-  declarantName: z.string().nullable(),
-  declarantPersonalId: z.string().nullable(),
-  declarantPhoneNumber: z.string().nullable(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
-  licenseId: z.string().nullable(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().default(null),
+  declarantName: z.string().nullable().default(null),
+  declarantPersonalId: z.string().nullable().default(null),
+  declarantPhoneNumber: z.string().nullable().default(null),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
+  licenseId: z.string().nullable().default(null),
 });
 
 export const accountBookWithTeamSchema = accountBookSchema.extend({
@@ -66,37 +66,9 @@ export const accountBookWithTeamSchema = accountBookSchema.extend({
   isTransferring: z.boolean(),
 });
 
-export const accountBookDetailWithTeamSchema = accountBookDetailSchema.extend({
+export const accountBookInfoWithTeamSchema = accountBookInfoSchema.extend({
   team: TeamSchema,
   isTransferring: z.boolean(),
-});
-
-const accountBookInfoSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  taxId: z.string(),
-  taxSerialNumber: z.string(),
-  representativeName: z.string(),
-  country: countrySchema,
-  phoneNumber: z.string(),
-  address: z.string(),
-  startDate: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
-  contactPerson: z.string().optional(),
-  city: z.string().optional(),
-  district: z.string().optional(),
-  enteredAddress: z.string().optional(),
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).optional(),
-  filingMethod: z.nativeEnum(FILING_METHOD).optional(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).optional(),
-  declarantName: z.string().optional(),
-  declarantPersonalId: z.string().optional(),
-  declarantPhoneNumber: z.string().optional(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).optional(),
-  licenseId: z.string().optional(),
 });
 
 // ===================================================================================
@@ -115,9 +87,10 @@ const accountBookNullSchema = z.union([z.object({}), z.string()]);
 
 export const accountBookListQuerySchema = paginatedDataQuerySchema.extend({
   userId: zodStringToNumber,
+  simple: zodStringToBoolean.optional(),
 });
 
-const accountBookListResponseSchema = paginatedDataSchema(accountBookDetailWithTeamSchema);
+const accountBookListResponseSchema = paginatedDataSchema(accountBookInfoWithTeamSchema);
 
 export const accountBookListSchema = {
   input: {
@@ -128,6 +101,13 @@ export const accountBookListSchema = {
   frontend: accountBookNullSchema,
 };
 
+export const accountBookListSimpleSchema = {
+  input: {
+    querySchema: accountBookListQuerySchema,
+    bodySchema: accountBookNullSchema,
+  },
+  outputSchema: paginatedDataSchema(accountBookSchema),
+};
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: List Account Books (Team)
 // ===================================================================================
@@ -149,57 +129,33 @@ const getAccountBookQuerySchema = z.object({
   accountBookId: zodStringToNumber,
 });
 
-const getAccountBookResponseSchema = z.union([accountBookInfoSchema, z.null()]);
+const getAccountBookResponseSchema = accountBookInfoSchema;
 
 export const getAccountBookInfoSchema = {
   input: {
     querySchema: getAccountBookQuerySchema,
     bodySchema: accountBookNullSchema,
   },
-  outputSchema: getAccountBookResponseSchema,
+  outputSchema: getAccountBookResponseSchema.nullable(),
   frontend: accountBookNullSchema,
 };
-
-const accountBookInfoWithTeamSchema = accountBookWithTeamSchema.extend({
-  id: z.string(),
-  name: z.string(),
-  taxId: z.string(),
-  taxSerialNumber: z.string(),
-  representativeName: z.string(),
-  country: countrySchema,
-  phoneNumber: z.string(),
-  startDate: z.number(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
-  contactPerson: z.string().nullable(),
-  city: z.string().nullable(),
-  district: z.string().nullable(),
-  enteredAddress: z.string().nullable(),
-  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable(),
-  filingMethod: z.nativeEnum(FILING_METHOD).nullable(),
-  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable(),
-  declarantName: z.string().nullable(),
-  declarantPersonalId: z.string().nullable(),
-  declarantPhoneNumber: z.string().nullable(),
-  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable(),
-  licenseId: z.string().nullable(),
-});
 
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: List Account Book Info (User - Detailed)
 // ===================================================================================
 
-// Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
-export const listAccountBookInfoSchema = {
-  input: {
-    querySchema: accountBookListQuerySchema, // Reuse list query schema
-    bodySchema: accountBookNullSchema,
-  },
-  outputSchema: paginatedDataSchema(accountBookInfoWithTeamSchema),
-  frontend: accountBookNullSchema,
-};
+// // Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
+// export const listAccountBookInfoSchema = {
+//   input: {
+//     querySchema: accountBookListQuerySchema, // Reuse list query schema
+//     bodySchema: accountBookNullSchema,
+//   },
+//   outputSchema: z.union([
+//     paginatedDataSchema(accountBookInfoWithTeamSchema),
+//     paginatedDataSchema(accountBookSchema),
+//   ]),
+//   frontend: accountBookNullSchema,
+// };
 
 // ===================================================================================
 // Info: (20250422 - Shirley) API Schema: Create Account Book (User)
@@ -215,8 +171,8 @@ const accountBookCreateBodySchema = z.object({
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
   fileId: z.number().int().optional(),
-  representativeName: z.string(),
-  taxSerialNumber: z.string(),
+  representativeName: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
   contactPerson: z.string().optional(),
   phoneNumber: z.string().optional(),
   city: z.string().optional(),
@@ -237,7 +193,7 @@ export const accountBookCreateSchema = {
     querySchema: accountBookCreateQuerySchema,
     bodySchema: accountBookCreateBodySchema,
   },
-  outputSchema: accountBookDetailSchema.nullable(),
+  outputSchema: accountBookInfoSchema.nullable(),
   frontend: nullSchema,
 };
 
@@ -248,11 +204,30 @@ export const accountBookCreateSchema = {
 const updateAccountBookBodySchema = z.object({
   action: z.nativeEnum(ACCOUNT_BOOK_UPDATE_ACTION),
   tag: z.nativeEnum(WORK_TAG).optional(),
+  name: z.string().optional(),
+  taxId: z.string().optional(),
+  taxSerialNumber: z.string().optional(),
+  representativeName: z.string().optional(),
+  country: z.nativeEnum(LocaleKey).optional(),
+  phoneNumber: z.string().optional(),
+  startDate: z.number().optional(),
+  contactPerson: z.string().optional(),
+  city: z.string().optional(),
+  district: z.string().optional(),
+  enteredAddress: z.string().optional(),
+  filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
+  filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
+  declarantFilingMethod: z.nativeEnum(DECLARANT_FILING_METHOD).nullable().default(null),
+  declarantName: z.string().nullable().default(null),
+  declarantPersonalId: z.string().nullable().default(null),
+  declarantPhoneNumber: z.string().nullable().default(null),
+  agentFilingRole: z.nativeEnum(AGENT_FILING_ROLE).nullable().default(null),
+  licenseId: z.string().nullable().default(null),
 });
 
 const updateAccountBookResponseSchema = z.object({
   teamId: z.number().optional().default(0),
-  company: accountBookDetailSchema,
+  company: accountBookInfoSchema,
   tag: z.nativeEnum(WORK_TAG),
   order: z.number().int(),
   accountBookRole: z.nativeEnum(ACCOUNT_BOOK_ROLE), // Info: (20250422 - Shirley) 改為 `accountBookRole`
@@ -288,7 +263,10 @@ export const updateAccountBookInfoBodySchema = z.object({
     .optional(),
   startDate: z.number().optional(),
 
-  // Info: (20250717 - Shirley) 新增 RC2 欄位
+  // Info: (20250731 - Shirley) 新增 tag 欄位
+  tag: z.nativeEnum(WORK_TAG).optional(),
+
+  // Info: (20250517 - Shirley) 新增 RC2 欄位
   contactPerson: z.string().optional(),
   city: z.string().optional(),
   district: z.string().optional(),
@@ -364,6 +342,10 @@ export const disconnectAccountBookSchema = {
   frontend: nullSchema,
 };
 
+export type IAccountBookEntity = z.infer<typeof accountBookSchema>;
+export type IAccountBookWithTeamEntity = z.infer<typeof accountBookWithTeamSchema>;
+export type IAccountBookInfoWithTeamEntity = z.infer<typeof accountBookInfoWithTeamSchema>;
+
 export type IAccountBookListQueryParams = z.infer<typeof accountBookListQuerySchema>;
 export type IAccountBookListResponse = z.infer<typeof accountBookListResponseSchema>;
 
@@ -372,7 +354,8 @@ export type IConnectAccountBookResponse = z.infer<typeof connectAccountBookRespo
 
 export type IGetAccountBookQueryParams = z.infer<typeof getAccountBookQuerySchema>;
 export type IGetAccountBookResponse = z.infer<typeof accountBookInfoSchema>;
-export type IAccountBookInfoWithTeam = z.infer<typeof accountBookInfoWithTeamSchema>;
+
 export type ICountry = z.infer<typeof countrySchema>;
 
 export type IUpdateAccountBookInfoBody = z.infer<typeof updateAccountBookInfoBodySchema>;
+export type IUpdateAccountBookResponse = z.infer<typeof updateAccountBookResponseSchema>;

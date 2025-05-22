@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
@@ -121,33 +121,36 @@ const AccountingSettingPageBody: React.FC = () => {
   const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
   const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
 
-  const getAccountData = async () => {
-    // Info: (20250425 - Julian) GET API
-    const { data, success } = await getAccountSetting({ params: { accountBookId } });
+  // Info: (20250520 - Julian) call API after get connectedAccountBook
+  const getAccountData = useCallback(async () => {
+    if (accountBookId) {
+      // Info: (20250425 - Julian) GET API
+      const { data, success } = await getAccountSetting({ params: { accountBookId } });
 
-    // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
-    if (success && data) {
-      const { salesTax, purchaseTax, returnPeriodicity } = data.taxSettings;
+      // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
+      if (success && data) {
+        const { salesTax, purchaseTax, returnPeriodicity } = data.taxSettings;
 
-      const salesTaxRate = salesTax.taxable
-        ? salesTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
-          ? TaxTypeForFrontend.ZERO_TAX
-          : salesTax.rate
-        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+        const salesTaxRate = salesTax.taxable
+          ? salesTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+            ? TaxTypeForFrontend.ZERO_TAX
+            : salesTax.rate
+          : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
 
-      const purchaseTaxRate = purchaseTax.taxable
-        ? purchaseTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
-          ? TaxTypeForFrontend.ZERO_TAX
-          : purchaseTax.rate
-        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+        const purchaseTaxRate = purchaseTax.taxable
+          ? purchaseTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+            ? TaxTypeForFrontend.ZERO_TAX
+            : purchaseTax.rate
+          : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
 
-      setAccountSettingId(data.id); // Info: (20250425 - Julian) 取得會計 ID
-      setCurrentSalesTax(salesTaxRate);
-      setCurrentPurchaseTax(purchaseTaxRate);
-      setCurrentTaxPeriod(returnPeriodicity as ITaxPeriod);
-      setCurrentCurrency(data.currency);
+        setAccountSettingId(data.id); // Info: (20250425 - Julian) 取得會計 ID
+        setCurrentSalesTax(salesTaxRate);
+        setCurrentPurchaseTax(purchaseTaxRate);
+        setCurrentTaxPeriod(returnPeriodicity as ITaxPeriod);
+        setCurrentCurrency(data.currency);
+      }
     }
-  };
+  }, [connectedAccountBook]);
 
   const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -202,7 +205,7 @@ const AccountingSettingPageBody: React.FC = () => {
   // Info: (20250425 - Julian) 取得會計設定資料
   useEffect(() => {
     getAccountData();
-  }, []);
+  }, [getAccountData]);
 
   // Info: (20250425 - Julian) 更新資料
   useEffect(() => {
@@ -232,6 +235,9 @@ const AccountingSettingPageBody: React.FC = () => {
 
   // Info: (20241113 - Julian) 文字顯示設定
   const showTaxStr = (taxRate: ITaxTypeForFrontend) => {
+    // Info: (20250520 - Julian) 轉換稅率為百分比字串
+    const taxStr = typeof taxRate === 'number' ? taxRate * 100 : taxRate.toString();
+
     switch (taxRate) {
       case TaxTypeForFrontend.ZERO_TAX:
         return (
@@ -269,7 +275,7 @@ const AccountingSettingPageBody: React.FC = () => {
             <p className="text-input-text-input-filled">
               {t('settings:ACCOUNTING.TAX_OPTION_TAXABLE')}
             </p>
-            <p className="text-input-text-input-placeholder">{taxRate}%</p>
+            <p className="text-input-text-input-placeholder">{taxStr}%</p>
           </div>
         );
     }
@@ -280,7 +286,7 @@ const AccountingSettingPageBody: React.FC = () => {
     dropdownVisible: boolean,
     setTaxState: React.Dispatch<React.SetStateAction<ITaxTypeForFrontend>>
   ) => {
-    const fivePercentClickHandler = () => setTaxState(5);
+    const fivePercentClickHandler = () => setTaxState(0.05);
     const zeroTaxClickHandler = () => setTaxState('zeroTax');
     //  const zeroTaxThroughCustomsClickHandler = () => setTaxState('zeroTaxThroughCustoms');
     //  const zeroTaxNotThroughCustomsClickHandler = () => setTaxState('zeroTaxNotThroughCustoms');

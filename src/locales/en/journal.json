@@ -199,6 +199,7 @@
     "DELETED_REVERSE_VOUCHER_2": "Reverse voucher (Delete)"
   },
   "LEDGER": {
+    "LEDGER": "Ledger",
     "LEDGER_PERIOD": "Ledger Period",
     "LABEL_TYPE": "Label Type",
     "GENERAL": "General",

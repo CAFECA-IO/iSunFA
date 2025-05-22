@@ -199,6 +199,7 @@
     "DELETED_REVERSE_VOUCHER_2": "傳票生成的反轉分錄"
   },
   "LEDGER": {
+    "LEDGER": "分類帳",
     "LEDGER_PERIOD": "分類帳期間",
     "LABEL_TYPE": "分類帳類型",
     "GENERAL": "總分類帳",
