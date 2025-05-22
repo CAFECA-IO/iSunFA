@@ -359,7 +359,7 @@ export const createAccountBook = async (
     const nowInSecond = getTimestampNow();
     let file: File | null = null;
 
-    // Info: (20250515 - Shirley) 如果提供了 fileId，則使用該文件作為圖像
+    // 如果提供了 fileId，則直接使用該文件作為圖像
     if (fileId) {
       const sourceFile = await findFileById(fileId);
       if (!sourceFile) {
@@ -368,27 +368,11 @@ export const createAccountBook = async (
         throw error;
       }
 
-      // Info: (20250516 - Shirley) 創建文件副本，避免唯一約束衝突 (workaround)
-      // TODO: (20250516 - Shirley) 需要創建一個單純上傳 file 的 API，不需指定類型 team/company 跟綁定的 id
-      // 因為在 Prisma schema 中 Company 模型可能將 image_file_id 設為唯一欄位
-      // 所以我們需要為每個帳本創建獨立的文件記錄
-      const clonedFileName = `${name}_icon_${nowInSecond}`;
-      file = await createFile({
-        name: clonedFileName,
-        size: sourceFile.size,
-        mimeType: sourceFile.mimeType,
-        type: sourceFile.type as FileFolder,
-        url: sourceFile.url,
-        isEncrypted: sourceFile.isEncrypted,
-        encryptedSymmetricKey: sourceFile.encryptedSymmetricKey,
-        iv: sourceFile.iv,
-      });
-
-      loggerBack.info(
-        `Created a copy of file ID ${fileId} for account book icon: ${clonedFileName}`
-      );
+      // 直接使用上傳的文件，不再創建副本
+      file = sourceFile;
+      loggerBack.info(`Using existing file ID ${fileId} for account book icon`);
     } else {
-      // Info: (20250515 - Shirley) 如果沒有提供 fileId，則自動生成一個圖像
+      // 如果沒有提供 fileId，則自動生成一個圖像（保留原有邏輯）
       const companyIcon = await generateIcon(name);
       const imageName = name + '_icon' + nowInSecond;
       file = await createFile({
