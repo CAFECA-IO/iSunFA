@@ -116,7 +116,7 @@ const InputEmailStep = ({
 
           <button
             type="button"
-            // disabled // ToDo: (20250520 - Liz) 目前不支援 Apple 登入
+            disabled // ToDo: (20250520 - Liz) 目前不支援 Apple 登入
             className="flex items-center justify-center gap-15px rounded-sm bg-black p-15px shadow-Dropshadow_SM disabled:hidden"
           >
             <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
@@ -137,7 +137,7 @@ const InputEmailStep = ({
           </button>
           <button
             type="button"
-            // disabled // ToDo: (20250520 - Liz) 目前不支援 Apple 登入
+            disabled // ToDo: (20250520 - Liz) 目前不支援 Apple 登入
             className="rounded-full bg-black p-15px shadow-thirdPartyLoginBtn disabled:hidden"
           >
             <Image src="/icons/apple_logo.svg" alt="apple_logo" width="24" height="24"></Image>
