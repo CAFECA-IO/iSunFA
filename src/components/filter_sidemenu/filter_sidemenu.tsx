@@ -1,18 +1,25 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
-import { FiSearch } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
+import SearchInput from '@/components/filter_section/search_input';
 
 interface IFilterSideMenuProps {
   isModalVisible: boolean;
   modalVisibleHandler: () => void;
+
+  // Info: (20250521 - Julian) 搜尋欄 state
+  searchState?: {
+    searchQuery: string | undefined;
+    setSearchQuery: Dispatch<SetStateAction<string | undefined>>;
+  };
 }
 
 const FilterSideMenu: React.FC<IFilterSideMenuProps> = ({
   isModalVisible,
   modalVisibleHandler,
+  searchState,
 }) => {
   const typeDropdownMenu = (
     <div className="flex flex-col items-start gap-8px">
@@ -50,15 +57,11 @@ const FilterSideMenu: React.FC<IFilterSideMenuProps> = ({
   //   </div>
   // );
 
-  const searchInput = (
-    <div className="flex items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-icon-surface-single-color-primary">
-      <input
-        type="text"
-        className="flex-1 bg-transparent outline-none placeholder:font-medium placeholder:text-input-text-input-placeholder"
-        placeholder="Search"
-      />
-      <FiSearch size={20} />
-    </div>
+  const searchInput = searchState && (
+    <SearchInput
+      searchQuery={searchState.searchQuery}
+      onSearchChange={searchState.setSearchQuery}
+    />
   );
 
   return (

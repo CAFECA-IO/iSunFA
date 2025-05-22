@@ -265,7 +265,14 @@ const VoucherListPageBody: React.FC = () => {
       </div>
 
       {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
-      <FilterSideMenu isModalVisible={isShowSideMenu} modalVisibleHandler={toggleSideMenu} />
+      <FilterSideMenu
+        isModalVisible={isShowSideMenu}
+        modalVisibleHandler={toggleSideMenu}
+        searchState={{
+          searchQuery: keyword,
+          setSearchQuery: setKeyword,
+        }}
+      />
     </div>
   );
 };
