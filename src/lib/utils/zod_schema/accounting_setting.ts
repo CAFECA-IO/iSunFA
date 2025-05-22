@@ -84,7 +84,7 @@ export const accountingSettingOutputSchema = z
       // Info: (20250425 - Shirley) Normalize and restrict returnPeriodicity to only accept 'Monthly' or 'Weekly'
       returnPeriodicity: returnPeriodicitySchema,
     }),
-    currency: z.string(),
+    currency: z.string().default(CurrencyType.TWD),
     shortcutList: z.array(
       z.object({
         action: z.object({
