@@ -291,7 +291,7 @@ async function handleFileUpload(
     };
   }
 
-  // 只有在指定了 type 和 targetId 的情況下才執行實體關聯
+  // Info: (20250522 - Shirley) 只有在指定了 type 和 targetId 的情況下才執行實體關聯
   if (type && targetId) {
     switch (type) {
       case UploadType.COMPANY: {
@@ -368,14 +368,14 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.FILE_UPLOAD, req, session);
 
   const { query } = checkRequestData(APIName.FILE_UPLOAD, req, session);
-  // type 和 targetId 都是可選的
+  // Info: (20250522 - Shirley) type 和 targetId 都是可選的
   const type = query?.type as UploadType | undefined;
   const targetId = query?.targetId;
 
-  // 只有當同時提供 type 和 targetId 時才進行權限檢查
+  // Info: (20250522 - Shirley) 只有當同時提供 type 和 targetId 時才進行權限檢查
   if (type && targetId) {
     if (type === UploadType.TEAM) {
-      // 現有的團隊權限檢查
+      // Info: (20250522 - Shirley) 現有的團隊權限檢查
       const userTeam = teams?.find((team) => team.id === +targetId);
       if (!userTeam) {
         loggerBack.warn(`User is not in team ${targetId}`);
@@ -395,7 +395,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
         return { response: formatApiResponse(statusMessage, null), statusMessage };
       }
     } else if (type === UploadType.COMPANY) {
-      // 現有的公司權限檢查
+      // Info: (20250522 - Shirley) 現有的公司權限檢查
       const company = await getCompanyById(+targetId);
       if (!company) {
         statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
@@ -431,7 +431,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   try {
-    // 確保傳遞給 parseForm 的是有效的 FileFolder 類型
+    // Info: (20250522 - Shirley) 確保傳遞給 parseForm 的是有效的 FileFolder 類型
     const folder = type ? UPLOAD_TYPE_TO_FOLDER_MAP[type] || FileFolder.TMP : FileFolder.TMP;
     const parsedForm = await parseForm(req, folder);
     const { files, fields } = parsedForm;
