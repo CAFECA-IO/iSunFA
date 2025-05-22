@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
 import { FiSearch } from 'react-icons/fi';
+import { TbArrowBackUp } from 'react-icons/tb';
 import { useUserCtx } from '@/contexts/user_context';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
@@ -12,6 +13,7 @@ import AccountTitleSection from '@/components/general/account_settings/account_t
 import AddNewTitleSection from '@/components/general/account_settings/add_new_title_section';
 import { TitleFormType } from '@/constants/accounting_setting';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import { Button } from '@/components/button/button';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -52,12 +54,19 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
 
   const [searchWord, setSearchWord] = useState<string>('');
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
-  const [formType, setFormType] = useState<TitleFormType>(TitleFormType.add);
+  const [formType, setFormType] = useState<TitleFormType>(TitleFormType.ADD);
   const [selectedAccountTitle, setSelectedAccountTitle] = useState<IAccount | null>(null);
   const [isRecallApi, setIsRecallApi] = useState<boolean>(false);
 
+  // Info: (20250522 - Julian) 手機版用來控制是否顯示 Add New Title Section
+  const isShowForm = selectedAccountTitle !== null;
+
   const changeSearchWordHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchWord(e.target.value);
+  };
+
+  const goBackHandler = () => {
+    setSelectedAccountTitle(null);
   };
 
   // Info: (20250214 - Julian) 按鍵事件
@@ -88,7 +97,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     } else {
       // Info: (20241108 - Julian) 關閉 Modal 時重置 state
       setSearchWord('');
-      setFormType(TitleFormType.add);
+      setFormType(TitleFormType.ADD);
       setSelectedAccountTitle(null);
     }
   }, [isModalVisible]);
@@ -102,22 +111,52 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     getAccountList({ params: { accountBookId } });
   };
 
+  const leftPart = (
+    <AccountTitleSection
+      accountTitleList={filteredAccountList}
+      isLoading={isLoading ?? true}
+      setFormType={setFormType}
+      setSelectedAccountTitle={setSelectedAccountTitle}
+      setIsRecallApi={setIsRecallApi}
+    />
+  );
+
+  const rightPart = (
+    <AddNewTitleSection
+      formType={formType}
+      selectedAccountTitle={selectedAccountTitle}
+      isRecallApi={isRecallApi}
+      setIsRecallApi={setIsRecallApi}
+      clearSearchWord={clearSearchWord}
+    />
+  );
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative mx-auto flex w-90vw flex-col items-stretch gap-y-24px rounded-lg bg-card-surface-primary p-40px shadow-lg shadow-black/80 lg:w-720px">
-        {/* Info: (20241108 - Julian) Title */}
-        <h1 className="text-center text-xl font-bold text-text-neutral-primary">
-          {t('settings:ACCOUNTING_SETTING_MODAL.MODAL_TITLE')}
-        </h1>
+      <div className="mx-auto flex w-90vw flex-col items-stretch gap-y-lv-6 rounded-lg bg-card-surface-primary px-lv-5 py-lv-4 shadow-lg shadow-black/80 tablet:gap-y-24px tablet:p-40px lg:w-720px">
+        <div className="relative flex flex-col">
+          {/* Info: (20241108 - Julian) Title */}
+          <h1 className="text-center text-xl font-bold text-text-neutral-primary">
+            {t('settings:ACCOUNTING_SETTING_MODAL.MODAL_TITLE')}
+          </h1>
+          {/* Info: (20241108 - Julian) Close button */}
+          <button
+            type="button"
+            className="absolute right-0 text-icon-surface-single-color-primary"
+            onClick={modalVisibilityHandler}
+          >
+            <RxCross2 size={20} />
+          </button>
+        </div>
 
-        {/* Info: (20241108 - Julian) Close button */}
-        <button
-          type="button"
-          className="absolute right-40px text-icon-surface-single-color-primary"
-          onClick={modalVisibilityHandler}
-        >
-          <RxCross2 size={20} />
-        </button>
+        {/* Info: (20250522 - Julian) back btn for mobile */}
+        {isShowForm && (
+          <div className="block tablet:hidden">
+            <Button variant="tertiaryOutline" size="smallSquare" onClick={goBackHandler}>
+              <TbArrowBackUp size={20} />
+            </Button>
+          </div>
+        )}
 
         {/* Info: (20241108 - Julian) Search */}
         <div className="flex flex-col items-start gap-8px">
@@ -138,8 +177,8 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
           </div>
         </div>
 
-        {/* Info: (20241108 - Julian) Modal Body */}
-        <div className="grid grid-cols-2 gap-24px">
+        {/* Info: (20241108 - Julian) Modal Body for desktop */}
+        <div className="hidden grid-cols-2 gap-24px tablet:grid">
           {/* Info: (20241108 - Julian) Left: Account Title Section */}
           {success === false ? (
             <div className="flex flex-col items-center justify-center gap-lv-4 rounded-sm bg-surface-brand-primary-5 shadow-Dropshadow_XS">
@@ -150,23 +189,14 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
               </div>
             </div>
           ) : (
-            <AccountTitleSection
-              accountTitleList={filteredAccountList}
-              isLoading={isLoading ?? true}
-              setFormType={setFormType}
-              setSelectedAccountTitle={setSelectedAccountTitle}
-              setIsRecallApi={setIsRecallApi}
-            />
+            leftPart
           )}
           {/* Info: (20241108 - Julian) Right: Add New Title Section */}
-          <AddNewTitleSection
-            formType={formType}
-            selectedAccountTitle={selectedAccountTitle}
-            isRecallApi={isRecallApi}
-            setIsRecallApi={setIsRecallApi}
-            clearSearchWord={clearSearchWord}
-          />
+          {rightPart}
         </div>
+
+        {/* Info: (20250522 - Julian) Modal Body for mobile */}
+        <div className="block tablet:hidden">{isShowForm ? rightPart : leftPart}</div>
       </div>
     </div>
   ) : null;
