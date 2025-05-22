@@ -359,7 +359,7 @@ export const createAccountBook = async (
     const nowInSecond = getTimestampNow();
     let file: File | null = null;
 
-    // 如果提供了 fileId，則直接使用該文件作為圖像
+    // Info: (20250522 - Shirley) 如果提供了 fileId，則直接使用該文件作為圖像
     if (fileId) {
       const sourceFile = await findFileById(fileId);
       if (!sourceFile) {
@@ -368,11 +368,11 @@ export const createAccountBook = async (
         throw error;
       }
 
-      // 直接使用上傳的文件，不再創建副本
+      // Info: (20250522 - Shirley) 直接使用上傳的文件，不再創建副本
       file = sourceFile;
       loggerBack.info(`Using existing file ID ${fileId} for account book icon`);
     } else {
-      // 如果沒有提供 fileId，則自動生成一個圖像（保留原有邏輯）
+      // Info: (20250522 - Shirley) 如果沒有提供 fileId，則自動生成一個圖像（保留原有邏輯）
       const companyIcon = await generateIcon(name);
       const imageName = name + '_icon' + nowInSecond;
       file = await createFile({
@@ -975,7 +975,7 @@ export const listAccountBooksByTeamId = async (
         createdAt: book.createdAt,
         updatedAt: book.updatedAt,
         isPrivate: book.isPrivate ?? false,
-        tag: book.tag as WORK_TAG, // ✅ (20250324 - Tzuhan) 直接取用 tag
+        tag: book.tag as WORK_TAG, // Info: (20250324 - Tzuhan) 直接取用 tag
 
         // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
         representativeName: setting.representativeName || '',
@@ -1492,7 +1492,7 @@ export async function findUserAccountBook(
             subscriptions: {
               where: {
                 startDate: { lte: nowInSecond },
-                expiredDate: { gt: nowInSecond - THREE_DAYS }, // 保留寬限期
+                expiredDate: { gt: nowInSecond - THREE_DAYS }, // Info: (20250522 - Shirley) 保留寬限期
               },
               orderBy: { expiredDate: SortOrder.DESC },
               take: 1,
