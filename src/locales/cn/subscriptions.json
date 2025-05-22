@@ -84,7 +84,7 @@
     "FREE_TRIAL": "免费试用",
     "CONTINUOUS_AUDIT": "持续审计",
     "EARLY_ACCESS": "优先体验",
-    "TAX_REPORTING": "税务申报",
+    "AI_MODEL_ASSISTANCE": "人工智能模型辅助 (注)",
     "ENTERPRISE_SUPPORT": "支持",
     "NOTE": "注"
   },
@@ -109,9 +109,9 @@
     "EDIT_UNLIMITED": "可编制传票，数量不限",
     "AUTO_EMBED_DISCLOSURE": "支持持续审计，可嵌入网页展示自动更新的财务披露信息",
     "LATEST_FEATURES_FIRST": "优先体验最新功能",
-    "SUPPORTED_REGIONS_EXPANDING": "提供台湾税务申报服务（持续扩展支持地区）（注）",
+    "META_LLAMA": "\n* Meta Llama3.2-Vision 11B（即将推出）\n* Llamm3.2-FFM 11B（即将推出）\n* Llama3.3-FFM 70B（即将推出）\n",
     "TURN_KEY_AND_MCP": "Turn Key Solution、Model Context Protocol, MCP（即将推出）",
-    "NOTE_DES": "适用于企业版税务申报功能的公司：仅限资本额 3000 万以下、营业额 1 亿以下且员工人数不超过 100 人的企业"
+    "NOTE_DES": "Meta Llama3.2-Vision 11B 适合自动识别与处理发票、报表扫描件、手写记帐单据等图像型会计资料。\n* Llama 3.2-FFM 11B 繁体中文优化模型，针对金融与财务管理优化，适用于财务报表生成、预测、审计支持、财务摘要撰写。\n* Llama 3.3-FFM 70B 更大规模的繁体中文优化模型，精度更高，特别适合复杂的会计分析、策略建议、自动化审核，能整合多源数据实现 ESG 报告生成，进行高层级决策建议与异常侦测。"
   },
 
   "ERROR": {
