@@ -63,6 +63,11 @@ interface PlanProps {
 
 const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonText, onClick }) => {
   const { t } = useTranslation(['pricing', 'subscriptions']);
+
+  // Info: (20250522 - Anna) 用語言判斷 min-h 為多少
+  const { i18n } = useTranslation();
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
+
   return (
     <Card>
       <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
@@ -85,7 +90,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
       </LandingButton>
       <ul className="mt-6 min-h-300px space-y-2 text-left text-gray-300">
         {features.map((feature, index) => (
-          <li key={`feature-${index + 1}`} className="flex items-center gap-2">
+          <li key={`feature-${index + 1}`} className="flex items-start gap-2">
             {feature.icon && (
               <Image
                 src={feature.icon}
@@ -95,7 +100,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
                 className="inline-block min-w-16px"
               />
             )}
-            <p className="text-xs">{feature.description}</p>
+            <p className="whitespace-pre-line text-xs">{feature.description}</p>
           </li>
         ))}
       </ul>
@@ -104,7 +109,11 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
             {t('subscriptions:PLANS_FEATURES_NAME.FREE_TRIAL')}
           </span>
-          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+          <span
+            className={`text-xs font-medium leading-5 text-text-neutral-tertiary ${
+              isChinese ? 'min-h-270px' : 'min-h-420px'
+            }`}
+          >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
           </span>
         </p>
@@ -114,7 +123,11 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
             {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
           </span>
-          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+          <span
+            className={`whitespace-pre-line text-xs font-medium leading-5 text-text-neutral-tertiary ${
+              isChinese ? 'min-h-270px' : 'min-h-420px'
+            }`}
+          >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
           </span>
         </p>
