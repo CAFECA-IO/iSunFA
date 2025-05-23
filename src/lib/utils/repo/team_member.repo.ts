@@ -130,8 +130,8 @@ export const addMembersToTeam = async (
       userEmailMap,
       template: EmailTemplateName.INVITE,
       teamId,
-      type: NotificationType.TEAM_INVITATION,
-      event: NotificationEvent.COMPLETED,
+      type: NotificationType.INVITATION,
+      event: NotificationEvent.INVITED,
       title: '加入團隊通知',
       message: `${inviter?.name ?? '某人'} 邀請您加入團隊「${team?.name ?? ''}」`,
       content: {

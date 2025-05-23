@@ -228,6 +228,48 @@ export const teamSchemas = {
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
   },
+  acceptInvitation: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({
+        teamId: zodStringToNumber,
+        email: z.string().email(),
+      }),
+    },
+    outputSchema: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+    frontend: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+  },
+  declineInvitation: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({
+        teamId: zodStringToNumber,
+        email: z.string().email(),
+      }),
+    },
+    outputSchema: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+    frontend: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+  },
   leaveTeam: {
     input: {
       querySchema: getByTeamIdSchema,

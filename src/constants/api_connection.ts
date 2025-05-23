@@ -137,7 +137,7 @@ export enum APIName {
   GET_TEAM_BY_ID = 'GET_TEAM_BY_ID',
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = 'LIST_ACCOUNT_BOOK_BY_TEAM_ID',
   LIST_MEMBER_BY_TEAM_ID = 'LIST_MEMBER_BY_TEAM_ID',
-  ADD_MEMBER_TO_TEAM = 'ADD_MEMBER_TO_TEAM',
+  INVITE_MEMBER_TO_TEAM = 'INVITE_MEMBER_TO_TEAM',
   LIST_TEAM_SUBSCRIPTION = 'LIST_TEAM_SUBSCRIPTION',
   GET_SUBSCRIPTION_BY_TEAM_ID = 'GET_SUBSCRIPTION_BY_TEAM_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
@@ -172,6 +172,8 @@ export enum APIName {
   GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
   READ_NOTIFICATION = 'READ_NOTIFICATION',
   GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  ACCEPT_TEAM_INVITATION = 'ACCEPT_TEAM_INVITATION',
+  DECLINE_TEAM_INVITATION = 'DECLINE_TEAM_INVITATION',
 }
 
 export enum APIPath {
@@ -280,7 +282,9 @@ export enum APIPath {
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
-  ADD_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
+  INVITE_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
+  ACCEPT_TEAM_INVITATION = `${apiPrefixV2}/team/:teamId/invitation/accept`,
+  DECLINE_TEAM_INVITATION = `${apiPrefixV2}/team/:teamId/invitation/decline`,
   LIST_TEAM_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
   GET_SUBSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId`,
   UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
@@ -883,10 +887,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LIST_MEMBER_BY_TEAM_ID,
   }),
-  [APIName.ADD_MEMBER_TO_TEAM]: createConfig({
-    name: APIName.ADD_MEMBER_TO_TEAM,
+  [APIName.INVITE_MEMBER_TO_TEAM]: createConfig({
+    name: APIName.INVITE_MEMBER_TO_TEAM,
     method: HttpMethod.PUT,
-    path: APIPath.ADD_MEMBER_TO_TEAM,
+    path: APIPath.INVITE_MEMBER_TO_TEAM,
   }),
   [APIName.LIST_TEAM_SUBSCRIPTION]: createConfig({
     name: APIName.LIST_TEAM_SUBSCRIPTION,
@@ -1053,5 +1057,15 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_ACCOUNT_BOOK_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.ACCEPT_TEAM_INVITATION]: createConfig({
+    name: APIName.ACCEPT_TEAM_INVITATION,
+    method: HttpMethod.POST,
+    path: APIPath.ACCEPT_TEAM_INVITATION,
+  }),
+  [APIName.DECLINE_TEAM_INVITATION]: createConfig({
+    name: APIName.DECLINE_TEAM_INVITATION,
+    method: HttpMethod.POST,
+    path: APIPath.DECLINE_TEAM_INVITATION,
   }),
 };

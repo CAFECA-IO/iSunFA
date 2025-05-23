@@ -113,8 +113,8 @@ const buildAccountBookTransferNotification = async (
   }));
 
   const content = {
-    ledgerId: accountBook.id,
-    ledgerName: accountBook.name,
+    accountBookId: accountBook.id,
+    accountBookName: accountBook.name,
     fromTeamName: fromTeam.name,
     toTeamName: toTeam.name,
     operatorName: operator.name,
@@ -1194,7 +1194,7 @@ export const cancelTransferAccountBook = async (
     accountBookId,
     transfer.fromTeamId,
     transfer.toTeamId,
-    NotificationEvent.CANCEL
+    NotificationEvent.CANCELLED
   );
   await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
 };
