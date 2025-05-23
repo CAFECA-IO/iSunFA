@@ -48,7 +48,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
         onClick={toggleMenuHandler}
       >
-        <p className="flex-1 truncate text-input-text-input-placeholder">
+        <p className="flex-1 truncate font-medium text-input-text-input-placeholder">
           {selectedValue
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}

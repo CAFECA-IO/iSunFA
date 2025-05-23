@@ -28,6 +28,11 @@ const SubscriptionPlan = ({
   bordered,
 }: SubscriptionPlanProps) => {
   const { t } = useTranslation(['subscriptions']);
+
+  // Info: (20250522 - Anna) 用語言判斷 min-h 為多少
+  const { i18n } = useTranslation();
+  const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
+
   const { toastHandler } = useModalContext();
 
   const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
@@ -217,7 +222,7 @@ const SubscriptionPlan = ({
         </h2>
         {plan.price > 0 ? (
           <div>
-            <p>
+            <p className="whitespace-nowrap">
               <span className="text-44px font-bold text-text-brand-secondary-lv2">
                 $ {plan.price.toLocaleString('zh-TW')}
               </span>
@@ -257,7 +262,7 @@ const SubscriptionPlan = ({
       {/* Info: (20250421 - Julian) 這裡的按鈕是用來選擇方案的，當前選擇的方案會 disable */}
       {btnContent}
 
-      <ul className="flex min-h-350px flex-col gap-4px text-xs">
+      <ul className="flex min-h-300px flex-col gap-4px text-xs">
         {(isProfessional || isTrial) && (
           <li className="flex items-start gap-4px">
             <Image src="/icons/yellow_star.svg" alt="yellow_star" width={16} height={16} />
@@ -301,8 +306,10 @@ const SubscriptionPlan = ({
                   ))}
                 </ul>
               ) : (
-                <p className="font-semibold text-text-support-baby">
-                  {t(`subscriptions:PLANS_FEATURES_VALUE.${feature.value.toUpperCase()}`)}
+                <p className="whitespace-pre-line font-semibold text-text-support-baby">
+                  {t(
+                    `subscriptions:PLANS_FEATURES_VALUE.${feature.value.toUpperCase()}`
+                  ).trimStart()}
                 </p>
               )}
             </div>
@@ -314,7 +321,11 @@ const SubscriptionPlan = ({
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
             {t('subscriptions:PLANS_FEATURES_NAME.FREE_TRIAL')}
           </span>
-          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+          <span
+            className={`text-xs font-medium leading-5 text-text-neutral-tertiary ${
+              isChinese ? 'min-h-270px' : 'min-h-550px'
+            }`}
+          >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.30_DAYS_ON_TEAM_CREATION')}`}
           </span>
         </p>
@@ -324,7 +335,11 @@ const SubscriptionPlan = ({
           <span className="text-xs font-semibold leading-5 text-text-brand-primary-lv1">
             {t('subscriptions:PLANS_FEATURES_NAME.NOTE')}
           </span>
-          <span className="min-h-100px text-xs font-medium leading-5 text-text-neutral-tertiary">
+          <span
+            className={`${
+              isChinese ? 'min-h-270px' : 'min-h-550px'
+            } whitespace-pre-line text-xs font-medium leading-5 text-text-neutral-tertiary`}
+          >
             {`* ${t('subscriptions:PLANS_FEATURES_VALUE.NOTE_DES')}`}
           </span>
         </p>

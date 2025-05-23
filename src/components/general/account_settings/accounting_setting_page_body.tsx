@@ -431,7 +431,10 @@ const AccountingSettingPageBody: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center gap-40px p-40px">
+    <div className="flex flex-col items-center gap-40px tablet:p-40px">
+      <div className="block w-full text-left text-base font-bold text-text-neutral-secondary tablet:hidden">
+        {t('settings:ACCOUNTING.TITLE')}
+      </div>
       {/* Info: (20241106 - Julian) ===== 稅務設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 稅務設定標題 ===== */}
@@ -443,7 +446,7 @@ const AccountingSettingPageBody: React.FC = () => {
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20241106 - Julian) ===== 稅務設定內容 ===== */}
-        <div className="grid grid-cols-2 gap-x-40px gap-y-24px">
+        <div className="grid grid-cols-1 gap-x-40px gap-y-24px tablet:grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 銷售稅 ===== */}
           <div ref={salesTaxRef} className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">{t('settings:ACCOUNTING.TAX_SALES')}</p>
@@ -524,7 +527,7 @@ const AccountingSettingPageBody: React.FC = () => {
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
 
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-1 tablet:grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 貨幣下拉選單 ===== */}
           <div
             ref={currencyMenuRef}
@@ -695,7 +698,7 @@ const AccountingSettingPageBody: React.FC = () => {
       </div>
 
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
-      <div className="ml-auto flex items-center">
+      <div className="order-4 ml-auto flex items-center">
         <Button type="button" variant="tertiary" disabled={saveDisabled} onClick={saveClickHandler}>
           {t('settings:ACCOUNTING.SAVE_BTN')}
         </Button>

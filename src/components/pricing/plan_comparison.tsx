@@ -26,7 +26,7 @@ const PlanComparison: React.FC = () => {
     'TECH_ADVANTAGE',
     'CONTINUOUS_AUDIT',
     'EARLY_ACCESS',
-    'TAX_REPORTING',
+    'AI_MODEL_ASSISTANCE',
     'ENTERPRISE_SUPPORT',
     'UNSUBSCRIBE',
   ];
