@@ -231,10 +231,7 @@ export const teamSchemas = {
   acceptInvitation: {
     input: {
       querySchema: getByTeamIdSchema,
-      bodySchema: z.object({
-        teamId: zodStringToNumber,
-        email: z.string().email(),
-      }),
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: z.object({
       teamId: z.number(),
@@ -252,10 +249,7 @@ export const teamSchemas = {
   declineInvitation: {
     input: {
       querySchema: getByTeamIdSchema,
-      bodySchema: z.object({
-        teamId: zodStringToNumber,
-        email: z.string().email(),
-      }),
+      bodySchema: z.object({}).optional(),
     },
     outputSchema: z.object({
       teamId: z.number(),

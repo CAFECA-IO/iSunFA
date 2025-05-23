@@ -1060,12 +1060,12 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
   }),
   [APIName.ACCEPT_TEAM_INVITATION]: createConfig({
     name: APIName.ACCEPT_TEAM_INVITATION,
-    method: HttpMethod.POST,
+    method: HttpMethod.GET,
     path: APIPath.ACCEPT_TEAM_INVITATION,
   }),
   [APIName.DECLINE_TEAM_INVITATION]: createConfig({
     name: APIName.DECLINE_TEAM_INVITATION,
-    method: HttpMethod.POST,
+    method: HttpMethod.GET,
     path: APIPath.DECLINE_TEAM_INVITATION,
   }),
 };

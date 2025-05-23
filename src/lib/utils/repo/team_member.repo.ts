@@ -608,3 +608,77 @@ export const getExistingUsersInTeam = async (
 
   return existingUsers.map((user) => user.id);
 };
+
+export const acceptTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  const now = getTimestampNow();
+
+  await prisma.$transaction([
+    prisma.teamMember.create({
+      data: {
+        teamId,
+        userId,
+        role: TeamRole.EDITOR, // 預設角色
+        joinedAt: now,
+      },
+    }),
+    prisma.inviteTeamMember.update({
+      where: { id: invitation.id },
+      data: {
+        status: InviteStatus.COMPLETED,
+        completedAt: now,
+      },
+    }),
+  ]);
+};
+
+export const declineTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  await prisma.inviteTeamMember.update({
+    where: { id: invitation.id },
+    data: {
+      status: InviteStatus.DECLINED,
+      declinedAt: getTimestampNow(),
+    },
+  });
+};
