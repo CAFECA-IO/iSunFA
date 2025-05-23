@@ -32,6 +32,8 @@ const CounterpartyPageBody = () => {
   const { trigger: getCounterpartyList } = APIHandler<IPaginatedData<ICounterparty[]>>(
     APIName.COUNTERPARTY_LIST
   );
+  const [totalCount, setTotalCount] = useState(0);
+
   const fetchCounterpartyData = async () => {
     if (!connectedAccountBook?.id) {
       return;
@@ -51,6 +53,7 @@ const CounterpartyPageBody = () => {
 
       if (responseData && Array.isArray(responseData.data)) {
         setCounterparties(responseData.data);
+        setTotalCount(responseData.totalCount || 0);
       } else {
         // Deprecate: (20241118 - Anna) debug
         // eslint-disable-next-line no-console
@@ -81,16 +84,23 @@ const CounterpartyPageBody = () => {
   return (
     <div className="relative flex min-h-screen flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
-        <div className="flex items-center gap-10">
-          <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
+          {t('settings:NORMAL.CLIENT_SUPPLIER_SETTINGS')}
+        </p>
+        <div className="flex flex-col items-center gap-6 laptop:flex-row laptop:gap-10">
+          <SearchInput
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            className="w-full laptop:w-5/6"
+          />
           <Button
             type="button"
             variant="tertiary"
-            className="hidden items-center gap-4px px-4 py-8px md:flex"
+            className="h-44px w-full min-w-140px items-center gap-4px px-4 py-8px laptop:flex laptop:w-1/6"
             onClick={addCounterPartyModalVisibilityHandler}
           >
             <MdPersonAddAlt1 size={24} />
-            {t('settings:NORMAL.ADD_NEW_CLIENT_SUPPLIER')}
+            <span className="laptop:text-sm">{t('settings:NORMAL.ADD_NEW_CLIENT_SUPPLIER')}</span>
           </Button>
         </div>
         {/* Info: (20241112 - Anna) 傳入 API 資料到 CounterpartyList */}
@@ -98,6 +108,7 @@ const CounterpartyPageBody = () => {
           searchQuery={searchQuery}
           counterparties={counterparties}
           handleSave={handleSave}
+          totalCount={totalCount}
         />
       </div>
     </div>

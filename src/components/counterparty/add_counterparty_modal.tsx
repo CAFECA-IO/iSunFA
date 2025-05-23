@@ -13,6 +13,9 @@ import { useUserCtx } from '@/contexts/user_context';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -27,6 +30,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
   taxId,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
+  const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>('');
   const [inputTaxId, setInputTaxId] = useState<string>('');
@@ -276,6 +280,12 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       // eslint-disable-next-line no-console
       console.log('Counterparty created successfully.');
       onSave(data);
+      toastHandler({
+        id: ToastId.ADD_COUNTERPARTY_SUCCESS,
+        type: ToastType.SUCCESS,
+        content: t('certificate:COUNTERPARTY.SUCCESS'),
+        closeable: true,
+      });
       modalVisibilityHandler();
     } else if (error) {
       // Info: (20250121 - Anna) 確認 error 的實際結構
