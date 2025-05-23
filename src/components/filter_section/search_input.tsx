@@ -6,12 +6,17 @@ import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 interface SearchInputProps {
   searchQuery: string | undefined;
   onSearchChange: (query: string) => void;
+  className?: string;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({ searchQuery, onSearchChange }) => {
+const SearchInput: React.FC<SearchInputProps> = ({
+  searchQuery,
+  onSearchChange,
+  className = '',
+}) => {
   const { t } = useTranslation(['search']);
   return (
-    <div className="flex min-w-250px flex-1.5 flex-col">
+    <div className={`flex min-w-250px flex-1.5 flex-col ${className}`}>
       <div className="relative flex-1 text-sm font-medium">
         <input
           type="text"

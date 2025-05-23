@@ -5,17 +5,20 @@ import Pagination from '@/components/pagination/pagination';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { ICounterparty } from '@/interfaces/counterparty';
+import Image from 'next/image';
 
 interface CounterpartyListProps {
   counterparties: ICounterparty[];
   searchQuery: string; // Info: (20241106 - Anna) 接收來自上層的搜尋關鍵字
   handleSave: () => void; // Info: (20241118 - Anna) 新增 handleSave 屬性
+  totalCount: number;
 }
 
 const CounterpartyList: React.FC<CounterpartyListProps> = ({
   counterparties,
   searchQuery,
   handleSave,
+  totalCount,
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
 
@@ -61,46 +64,53 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
 
   if (!filteredCounterparties.length) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <p className="text-neutral-300">{t('certificate:COUNTERPARTY.NO_DATA_AVAILABLE')}</p>
+      <div className="-mt-40 flex h-screen flex-col items-center justify-center">
+        <Image src="/images/empty.svg" alt="No data image" width={120} height={135} />
+        <div>
+          <p className="text-neutral-300">{t('certificate:COUNTERPARTY.NO_DATA_AVAILABLE')}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col">
-      <div className="mb-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
-        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row h-60px">
-            <div
-              className={`table-cell w-225px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
-            >
-              {t('common:COMMON.PARTNER_S_NAME')}
+      <div className="hide-scrollbar overflow-x-auto">
+        <div className="min-w-900px">
+          <div className="mb-4 table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2 shadow-Dropshadow_XS">
+            <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+              <div className="table-row h-60px">
+                <div
+                  className={`table-cell w-225px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+                >
+                  {t('common:COMMON.PARTNER_S_NAME')}
+                </div>
+                <div
+                  className={`table-cell w-100px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+                >
+                  {t('common:COMMON.TAX_ID')}
+                </div>
+                <div
+                  className={`table-cell w-140px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+                >
+                  {displayedType}
+                </div>
+                <div
+                  className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
+                >
+                  {t('certificate:COUNTERPARTY.NOTE')}
+                </div>
+                <div
+                  className={`table-cell w-100px border-b border-stroke-neutral-quaternary text-center align-middle`}
+                >
+                  {t('common:COMMON.OPERATIONS')}
+                </div>
+              </div>
             </div>
-            <div
-              className={`table-cell w-100px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
-            >
-              {t('common:COMMON.TAX_ID')}
-            </div>
-            <div
-              className={`table-cell w-140px border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
-            >
-              {displayedType}
-            </div>
-            <div
-              className={`table-cell border-b border-r border-stroke-neutral-quaternary text-center align-middle`}
-            >
-              {t('certificate:COUNTERPARTY.NOTE')}
-            </div>
-            <div
-              className={`table-cell w-100px border-b border-stroke-neutral-quaternary text-center align-middle`}
-            >
-              {t('common:COMMON.OPERATIONS')}
-            </div>
+
+            <div className="table-row-group bg-neutral-white">{displayedCounterPartyList}</div>
           </div>
         </div>
-
-        <div className="table-row-group bg-neutral-white">{displayedCounterPartyList}</div>
       </div>
 
       <div className="mx-auto mt-10">
@@ -108,6 +118,7 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
+          totalCount={totalCount}
         />
       </div>
     </div>
