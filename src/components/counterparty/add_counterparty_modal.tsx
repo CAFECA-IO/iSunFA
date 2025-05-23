@@ -94,9 +94,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     (type) => {
       const accountClickHandler = () => {
         setInputType(type);
-        // Deprecate: (20241118 - Anna) debug
-        // eslint-disable-next-line no-console
-        console.log('Selected Type:', type); // Info: (20241113 - Anna) 確認選擇的類型是否正確
         setTypeMenuOpen(false);
       };
 
@@ -276,9 +273,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   useEffect(() => {
     if (success && data) {
-      // Deprecated: (20250122 - Shirley) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Counterparty created successfully.');
       onSave(data);
       toastHandler({
         id: ToastId.ADD_COUNTERPARTY_SUCCESS,

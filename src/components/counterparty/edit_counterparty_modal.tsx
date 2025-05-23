@@ -178,7 +178,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   const deleteCounterpartyHandler = () => {
     messageModalDataHandler({
       title: t('certificate:COUNTERPARTY.REMOVE_COUNTERPARTY'),
-      // content: t('certificate:COUNTERPARTY.CHECK_REMOVE_COUNTERPARTY', { counterparty: inputName }),
       content: (
         <Trans
           i18nKey="certificate:COUNTERPARTY.CHECK_REMOVE_COUNTERPARTY"
