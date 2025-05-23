@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TbHome } from 'react-icons/tb';
 import Link from 'next/link';
 import { useUserCtx } from '@/contexts/user_context';
@@ -7,10 +7,10 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import I18n from '@/components/i18n/i18n';
 
 interface ILoginAnimationProps {
-  setIsAnimationShowing: Dispatch<SetStateAction<boolean>>;
+  onFinished: () => void;
 }
 
-const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
+const LoginAnimation = ({ onFinished }: ILoginAnimationProps) => {
   const [switchTitle, setSwitchTitle] = useState<boolean>(false);
   const { username } = useUserCtx();
 
@@ -29,14 +29,14 @@ const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
 
     // Info: (20241001 - Liz) 6 秒後關閉動畫
     const closeAnimation = setTimeout(() => {
-      setIsAnimationShowing(false);
+      onFinished(); // Info: (20250523 - Liz) 通知動畫播放完畢
     }, 6000);
 
     return () => {
       clearTimeout(titleTimer);
       clearTimeout(closeAnimation);
     };
-  }, [setIsAnimationShowing]);
+  }, [onFinished]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">

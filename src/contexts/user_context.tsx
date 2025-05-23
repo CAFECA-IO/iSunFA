@@ -578,9 +578,11 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20241025 - Liz) 取得使用者建立的所有角色
   const getUserRoleList = async () => {
+    if (!userAuthRef.current) return null;
+
     try {
       const { data: userRoleList, success } = await userRoleListAPI({
-        params: { userId: userAuthRef.current?.id },
+        params: { userId: userAuthRef.current.id },
       });
 
       if (success && userRoleList) {
