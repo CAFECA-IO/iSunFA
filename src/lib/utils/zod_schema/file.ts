@@ -3,8 +3,8 @@ import { FileFolder, UploadType } from '@/constants/file';
 import { nullSchema, zodStringToNumber } from '@/lib/utils/zod_schema/common';
 
 const filePostQuerySchema = z.object({
-  type: z.nativeEnum(UploadType),
-  targetId: z.string(),
+  type: z.nativeEnum(UploadType).optional(),
+  targetId: z.string().optional(),
 });
 
 const fileGetQuerySchema = z.object({

@@ -1,4 +1,4 @@
 export enum TitleFormType {
-  add = 'add',
-  edit = 'edit',
+  ADD = 'add',
+  EDIT = 'edit',
 }

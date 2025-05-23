@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 import FilterSection from '@/components/filter_section/filter_section';
+import FilterSideMenu from '@/components/filter_sidemenu/filter_sidemenu';
 import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
@@ -19,7 +21,7 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { VoucherTabs } from '@/constants/voucher';
 import { ToastType } from '@/interfaces/toastify';
-import { useRouter } from 'next/router';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 const VoucherListPageBody: React.FC = () => {
   const router = useRouter();
@@ -27,6 +29,13 @@ const VoucherListPageBody: React.FC = () => {
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
   const { flagOfRefreshVoucherList } = useAccountingCtx();
+
+  // Info: (20250522 - Julian) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const [activeTab, setActiveTab] = useState<VoucherTabs>(VoucherTabs.UPLOADED);
   // Info: (20250324 - Anna) 預設是從 URL 中取得的 page，若無則為 1
@@ -163,6 +172,7 @@ const VoucherListPageBody: React.FC = () => {
 
   const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
   const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -182,6 +192,7 @@ const VoucherListPageBody: React.FC = () => {
         selectedType={selectedType}
         keyword={keyword}
         currentPage={page}
+        toggleSideMenu={toggleSideMenu} // Info: (20250522 - Julian) 手機版 filter 的開關
       />
     ) : (
       <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
@@ -190,7 +201,7 @@ const VoucherListPageBody: React.FC = () => {
     );
 
   return (
-    <div className="relative flex flex-col items-center gap-lv-6 tablet:gap-40px">
+    <div ref={sideMenuRef} className="relative flex flex-col items-center gap-lv-6 tablet:gap-40px">
       {/* Info: (20250521 - Julian) Page Title for mobile */}
       <div className="block w-full text-left text-base font-semibold text-text-neutral-secondary tablet:hidden">
         {t('journal:VOUCHER.VOUCHER_LIST_PAGE_TITLE')}
@@ -205,7 +216,7 @@ const VoucherListPageBody: React.FC = () => {
         </Link>
       </div>
       {/* Info: (20240920 - Julian) Voucher List */}
-      <div className="flex w-full flex-col items-stretch gap-40px">
+      <div className="flex w-full flex-col items-stretch gap-18px tablet:gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
           tabs={Object.values(VoucherTabs)}
@@ -252,6 +263,16 @@ const VoucherListPageBody: React.FC = () => {
           totalCount={totalCount}
         />
       </div>
+
+      {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
+      <FilterSideMenu
+        isModalVisible={isShowSideMenu}
+        modalVisibleHandler={toggleSideMenu}
+        searchState={{
+          searchQuery: keyword,
+          setSearchQuery: setKeyword,
+        }}
+      />
     </div>
   );
 };
