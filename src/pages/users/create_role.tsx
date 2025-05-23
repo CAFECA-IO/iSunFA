@@ -52,18 +52,12 @@ const CreateRolePage = () => {
         if (!systemRoles || !userRoles) {
           // Deprecated: (20250522 - Liz)
           // eslint-disable-next-line no-console
-          console.log('取得系統角色失敗或取得使用者角色失敗');
-
-          setStatus(RolePageStatus.ERROR);
+          console.log('取得系統角色或取得使用者角色尚未成功');
           return;
         }
 
         // Info: (20250522 - Liz) Case 1: 使用者尚未建立任何角色 => 顯示動畫
         if (userRoles.length === 0) {
-          // Deprecated: (20250522 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('使用者尚未建立任何角色');
-
           setUncreatedRoles(systemRoles);
           setStatus(RolePageStatus.SHOW_ANIMATION);
           return;
@@ -99,6 +93,8 @@ const CreateRolePage = () => {
       router.push(ISUNFA_ROUTE.SELECT_ROLE);
     }
   }, [router, status]);
+
+  if (status === RolePageStatus.REDIRECT) return null; // Info: (20250523 - Liz) 防止 redirect 前畫面先 render
 
   if (status === RolePageStatus.LOADING) return <Loader />;
 

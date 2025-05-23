@@ -114,20 +114,26 @@ const SelectRolePage = () => {
         {/* Info: (20241009 - Liz) User Roles */}
         {isLoading && <SkeletonList count={4} />}
         {!isLoading && (
-          <section className="flex items-center justify-center gap-40px">
-            {userRoleList.map((userRole) => (
-              <UserRole key={userRole.id} userRole={userRole} lastLoginAt={userRole.lastLoginAt} />
-            ))}
+          <main className="hide-scrollbar overflow-x-auto">
+            <section className="flex min-w-max items-center gap-40px px-16px py-50px">
+              {userRoleList.map((userRole) => (
+                <UserRole
+                  key={userRole.id}
+                  userRole={userRole}
+                  lastLoginAt={userRole.lastLoginAt}
+                />
+              ))}
 
-            {isAbleToCreateRole && (
-              <Link
-                href={ISUNFA_ROUTE.CREATE_ROLE}
-                className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
-              >
-                <HiPlus size={64} />
-              </Link>
-            )}
-          </section>
+              {isAbleToCreateRole && (
+                <Link
+                  href={ISUNFA_ROUTE.CREATE_ROLE}
+                  className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+                >
+                  <HiPlus size={64} />
+                </Link>
+              )}
+            </section>
+          </main>
         )}
       </div>
     </>
