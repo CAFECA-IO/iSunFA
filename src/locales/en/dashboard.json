@@ -87,6 +87,7 @@
     "SELECT_YOUR_ROLE": "Select Your Role",
     "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
     "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
+    "ROLE_DATA_NOT_FOUND": "Unable to retrieve role data, please try again later",
 
     "COMMON_FUNCTIONS": "Common Functions",
     "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "Voucher Management, Journal Entry Management, Accounts Receivable & Payable Management, Financial Statements, Trial Balance, General Ledger",

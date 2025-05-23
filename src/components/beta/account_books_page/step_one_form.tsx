@@ -1,7 +1,6 @@
 import { Dispatch, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import { IoCloseOutline, IoChevronDown, IoChevronUp } from 'react-icons/io5';
-import { FaArrowRightLong } from 'react-icons/fa6';
+import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { FiEdit2 } from 'react-icons/fi';
 import { cn } from '@/lib/utils/common';
 import Image from 'next/image';
@@ -18,19 +17,19 @@ import APIHandler from '@/lib/utils/api_handler';
 
 interface StepOneFormProps {
   teamList: ITeam[];
-  handleNext: () => void;
   closeAccountBookInfoModal: () => void;
   step1FormState: Step1FormState;
   step1FormDispatch: Dispatch<Step1FormAction>;
   accountBookToEdit?: IAccountBookWithTeam;
+  handleSubmit: () => Promise<void>;
 }
 const StepOneForm = ({
   teamList,
-  handleNext,
   closeAccountBookInfoModal,
   step1FormState,
   step1FormDispatch,
   accountBookToEdit,
+  handleSubmit,
 }: StepOneFormProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
 
@@ -168,11 +167,12 @@ const StepOneForm = ({
     return isValid;
   };
 
-  const onClickNext = () => {
+  const onClickSubmit = () => {
     const isValid = validateRequiredFields();
     if (!isValid) return;
-    // Info: (20250418 - Liz) 驗證通過後進入第二步驟
-    handleNext();
+
+    // Info: (20250523 - Liz) 送出表單資料
+    handleSubmit();
   };
 
   const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -728,14 +728,14 @@ const StepOneForm = ({
               {t('dashboard:COMMON.CANCEL')}
             </button>
 
-            {/* Info: (20250418 - Liz) 進入第二步驟的商業稅設定 */}
+            {/* Info: (20250523 - Liz) 送出表單 */}
             <button
               type="button"
-              onClick={onClickNext}
+              onClick={onClickSubmit}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
-              <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.NEXT')}</span>
-              <FaArrowRightLong size={16} />
+              <span>{t('dashboard:COMMON.SAVE')}</span>
+              <IoSaveOutline size={16} />
             </button>
 
             {/* ToDo: (20250430 - Liz) 測試用，等串接新 API 後就移除 */}

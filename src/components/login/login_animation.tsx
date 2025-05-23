@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TbHome } from 'react-icons/tb';
 import Link from 'next/link';
 import { useUserCtx } from '@/contexts/user_context';
@@ -7,18 +7,18 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import I18n from '@/components/i18n/i18n';
 
 interface ILoginAnimationProps {
-  setIsAnimationShowing: Dispatch<SetStateAction<boolean>>;
+  onFinished: () => void;
 }
 
-const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
+const LoginAnimation = ({ onFinished }: ILoginAnimationProps) => {
   const [switchTitle, setSwitchTitle] = useState<boolean>(false);
   const { username } = useUserCtx();
 
   // Info: (20250520 - Liz) I18n 語言選單的外部點擊事件
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   useEffect(() => {
@@ -29,14 +29,14 @@ const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
 
     // Info: (20241001 - Liz) 6 秒後關閉動畫
     const closeAnimation = setTimeout(() => {
-      setIsAnimationShowing(false);
+      onFinished(); // Info: (20250523 - Liz) 通知動畫播放完畢
     }, 6000);
 
     return () => {
       clearTimeout(titleTimer);
       clearTimeout(closeAnimation);
     };
-  }, [setIsAnimationShowing]);
+  }, [onFinished]);
 
   return (
     <div className="relative flex h-screen flex-col items-center justify-center text-center">
@@ -44,7 +44,7 @@ const LoginAnimation = ({ setIsAnimationShowing }: ILoginAnimationProps) => {
 
       <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-12px">
         <div ref={globalRef}>
-          <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         </div>
         <Link
           href={ISUNFA_ROUTE.LANDING_PAGE}

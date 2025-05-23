@@ -23,8 +23,8 @@ interface HeaderProps {
 const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: HeaderProps) => {
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
@@ -36,12 +36,12 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
   // Info: (20241213 - Liz) 點擊 I18n 按鈕可以開關 I18n 選單，並且預設會先關閉通知選單。(會這樣設計是因為 useOuterClick 的 ref 會互相干擾)
   const toggleI18nMenu = () => {
     setIsPanelOpen(false);
-    setIsMenuVisible((prev) => !prev);
+    setIsMenuOpen((prev) => !prev);
   };
 
   // Info: (20241213 - Liz) 點擊通知按鈕可以開關通知選單，並且預設會先關閉 I18n 選單。
   const toggleNotificationPanel = () => {
-    setIsMenuVisible(false);
+    setIsMenuOpen(false);
     setIsPanelOpen((prev) => !prev);
   };
 
@@ -69,8 +69,8 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
 
           <div ref={globalRef}>
             <I18n
-              isMenuVisible={isMenuVisible}
-              setIsMenuVisible={setIsMenuVisible}
+              isMenuOpen={isMenuOpen}
+              setIsMenuOpen={setIsMenuOpen}
               toggleI18nMenu={toggleI18nMenu}
             />
           </div>
