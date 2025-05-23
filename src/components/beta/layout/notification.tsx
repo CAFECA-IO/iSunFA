@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
 import { PiBell } from 'react-icons/pi';
 import NotificationItem from '@/components/beta/layout/notification_item';
@@ -69,18 +69,19 @@ const Notification = ({
     }
   };
 
-  useEffect(() => {
-    if (isPanelOpen) {
+  const handleOpenPanel = () => {
+    if (!isPanelOpen) {
       getNotifications();
     }
-  }, [isPanelOpen]);
+    toggleNotificationPanel();
+  };
 
   return (
     <section className="relative">
       {/* Info: (20241011 - Liz) 通知鈴鐺 icon */}
       <button
         type="button"
-        onClick={toggleNotificationPanel}
+        onClick={handleOpenPanel}
         className="relative p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         <PiBell size={20} className="cursor-pointer" />

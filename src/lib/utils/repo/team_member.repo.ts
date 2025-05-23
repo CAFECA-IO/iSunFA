@@ -82,29 +82,16 @@ export const addMembersToTeam = async (
       });
     }
 
-    const usersToAdd = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
-
-    if (usersToAdd.length > 0) {
-      await tx.teamMember.createMany({
-        data: usersToAdd.map((user) => ({
-          teamId,
-          userId: user.id,
-          role: TeamRole.EDITOR,
-          joinedAt: now,
-        })),
-        skipDuplicates: true,
-      });
-
+    const usersToInvite = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
+    if (usersToInvite.length > 0) {
       await tx.inviteTeamMember.createMany({
-        data: usersToAdd.map((user) => ({
+        data: usersToInvite.map((user) => ({
           teamId,
           email: user.email!,
           status: InviteStatus.PENDING,
           createdAt: now,
           completedAt: now,
-          note: JSON.stringify({
-            reason: 'User already exists, added to team without asking',
-          }),
+          note: JSON.stringify({ reason: 'User exists, waiting for accept' }),
         })),
         skipDuplicates: true,
       });
@@ -163,6 +150,50 @@ export const addMembersToTeam = async (
     invitedCount: emails.length,
     unregisteredEmails,
   };
+};
+
+export const respondToTeamInvitation = async (
+  userId: number,
+  teamId: number,
+  action: 'agree' | 'decline'
+): Promise<void> => {
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: { equals: (await prisma.user.findUnique({ where: { id: userId } }))?.email ?? '' },
+      status: InviteStatus.PENDING,
+    },
+  });
+  if (!invitation) {
+    throw new Error('找不到邀請或邀請已失效');
+  }
+
+  if (action === 'agree') {
+    await prisma.teamMember.create({
+      data: {
+        teamId,
+        userId,
+        role: TeamRole.EDITOR,
+        joinedAt: getTimestampNow(),
+      },
+    });
+
+    await prisma.inviteTeamMember.update({
+      where: { id: invitation.id },
+      data: {
+        status: InviteStatus.COMPLETED,
+        completedAt: getTimestampNow(),
+      },
+    });
+  } else {
+    await prisma.inviteTeamMember.update({
+      where: { id: invitation.id },
+      data: {
+        status: InviteStatus.DECLINED,
+        declinedAt: getTimestampNow(),
+      },
+    });
+  }
 };
 
 export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {

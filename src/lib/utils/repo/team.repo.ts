@@ -21,6 +21,32 @@ import { getGracePeriodInfo } from '@/lib/shared/permission';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { checkTeamMemberLimit } from '@/lib/utils/plan/check_plan_limit';
 
+function buildTeamListWhere({
+  teamIds,
+  startDate,
+  endDate,
+  searchQuery,
+}: {
+  teamIds: number[];
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+}) {
+  const where: { [key: string]: object } = {
+    id: { in: teamIds },
+  };
+
+  if (startDate && endDate) {
+    where.createdAt = { gte: startDate, lte: endDate };
+  }
+
+  if (searchQuery?.trim()) {
+    where.name = { contains: searchQuery.trim(), mode: 'insensitive' };
+  }
+
+  return where;
+}
+
 export const getTeamList = async (
   userId: number,
   queryParams: z.infer<typeof listTeamQuerySchema>
@@ -35,36 +61,24 @@ export const getTeamList = async (
     canCreateAccountBookOnly = false,
     syncSession = true,
   } = queryParams;
+  const userTeamMemberships = await prisma.teamMember.findMany({
+    where: { userId },
+    select: { teamId: true, status: true },
+  });
 
-  const nowInSecond = getTimestampNow();
-  const THREE_DAYS_IN_SECONDS = 3 * 24 * 60 * 60;
+  const inTeamIds = userTeamMemberships
+    .filter((m) => m.status === LeaveStatus.IN_TEAM)
+    .map((m) => m.teamId);
+
+  const where = buildTeamListWhere({ teamIds: inTeamIds, startDate, endDate, searchQuery });
 
   const [totalCount, teams] = await prisma.$transaction([
-    prisma.team.count({
-      where: {
-        members: { some: { userId, status: LeaveStatus.IN_TEAM } },
-        createdAt: { gte: startDate, lte: endDate },
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-      },
-    }),
+    prisma.team.count({ where }),
     prisma.team.findMany({
-      where: {
-        members: { some: { userId, status: LeaveStatus.IN_TEAM } },
-        createdAt: { gte: startDate, lte: endDate },
-        name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
-      },
+      where,
       include: {
         members: { where: { userId }, select: { id: true, role: true } },
         accountBook: true,
-        subscriptions: {
-          where: {
-            startDate: { lte: nowInSecond },
-            expiredDate: { gt: nowInSecond - THREE_DAYS_IN_SECONDS },
-          },
-          orderBy: { expiredDate: SortOrder.DESC },
-          take: 1,
-          include: { plan: true },
-        },
         imageFile: { select: { id: true, url: true } },
       },
       skip: (page - 1) * pageSize,
@@ -77,14 +91,9 @@ export const getTeamList = async (
 
   const teamData = await Promise.all(
     teams.map(async (team) => {
-      // Info: (20250411 - Tzuhan) actualRole 是用來判斷用戶的實際角色
-      const { effectiveRole } = await assertUserIsTeamMember(userId, team.id);
+      const { actualRole, effectiveRole, expiredAt, inGracePeriod, gracePeriodEndAt, planType } =
+        await assertUserIsTeamMember(userId, team.id);
 
-      if (syncSession) {
-        updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
-      }
-      const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
-      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
       if (syncSession) {
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
@@ -94,17 +103,18 @@ export const getTeamList = async (
         teamId: team.id,
         action: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
       });
+
       if (canCreateAccountBookOnly && !can) return null;
 
       return {
         id: team.id,
         imageId: team.imageFile?.url ?? '/images/fake_team_img.svg',
-        role: effectiveRole,
+        role: actualRole,
         name: { value: team.name, editable: effectiveRole !== TeamRole.VIEWER },
         about: { value: team.about || '', editable: effectiveRole !== TeamRole.VIEWER },
         profile: { value: team.profile || '', editable: effectiveRole !== TeamRole.VIEWER },
         planType: {
-          value: (team.subscriptions[0]?.plan.type as TPlanType) ?? TPlanType.BEGINNER,
+          value: planType,
           editable: false,
         },
         totalMembers: team.members.length,

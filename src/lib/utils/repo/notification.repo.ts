@@ -1,5 +1,6 @@
 import prisma from '@/client';
 import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import { SortOrder } from '@/constants/sort';
 import { NotificationType, NotificationEvent } from '@/interfaces/notification';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { NotificationType as PrismaNotificationType } from '@prisma/client';
@@ -11,7 +12,7 @@ export async function listNotifications(userId: number) {
       deletedAt: null,
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: SortOrder.DESC,
     },
   });
 }
