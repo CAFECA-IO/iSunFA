@@ -16,7 +16,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import AccountTitleSelector from '@/components/voucher/account_title_selector';
+import AccountTitleSelector from '@/components/ledger/account_title_selector';
 import { EVENT_TYPE } from '@/constants/account';
 import { ToastId } from '@/constants/toast_id';
 
