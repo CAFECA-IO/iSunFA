@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleSelector from '@/components/voucher/account_title_selector';
+import AccountTitleSelector from '@/components/ledger/account_selector_modal';
 import NumericInput from '@/components/numeric_input/numeric_input';
 
 interface IVoucherLineItemProps {
@@ -408,7 +408,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     <>
       {/* Info: (20241121 - Julian) Line Item */}
       <>
-        {/* Info: (20241125 - Julian) Accounting */}
+        {/* Info: (20241121 - Julian) Accounting */}
         <AccountTitleSelector
           id={id}
           defaultAccount={lineItemAccount}

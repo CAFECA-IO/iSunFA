@@ -12,7 +12,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { FaAngleDown } from 'react-icons/fa6';
 import { IoBookOutline } from 'react-icons/io5';
-import AccountSelectorModal from '@/components/ledger/account_selector_modal';
+import AccountTitleSelector from '@/components/ledger/account_selector_modal';
 import Pagination from '@/components/pagination/pagination';
 
 enum ReportType {
@@ -501,13 +501,13 @@ const LedgerPageBody = () => {
 
         {/* Info: (20250311 - Anna) 加入 AccountTitleSelector 彈窗 */}
         {isStartAccountSelectorOpen && (
-          <AccountSelectorModal
+          <AccountTitleSelector
             toggleModal={() => setIsStartAccountSelectorOpen(false)}
             accountSelectedHandler={startAccountSelectedHandler}
           />
         )}
         {isEndAccountSelectorOpen && (
-          <AccountSelectorModal
+          <AccountTitleSelector
             toggleModal={() => setIsEndAccountSelectorOpen(false)}
             accountSelectedHandler={endAccountSelectedHandler}
           />

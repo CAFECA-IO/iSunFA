@@ -4,6 +4,8 @@ import { AccountTypeBeta } from '@/constants/account';
 import { FaChevronRight, FaRegStar } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
+import { inputStyle } from '@/constants/display';
+import { LuBookOpen } from 'react-icons/lu';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -11,6 +13,23 @@ import { useUserCtx } from '@/contexts/user_context';
 import { Button } from '@/components/button/button';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { TbArrowBackUp } from 'react-icons/tb';
+
+interface IAccountTitleSelectorProps {
+  id?: number;
+  defaultAccount?: IAccount | null;
+  accountSelectedHandler: (account: IAccount) => void;
+
+  // Info: (20250523 - Anna) 若有傳入，就由外層控制 Modal 開關（ex.ledger）
+  // Info: (20250523 - Anna) 若未傳入，就用組件內部的狀態控制（ex.voucher）
+  toggleModal?: () => void;
+
+  // Info: (20241125 - Julian) 檢查
+  flagOfSubmit?: boolean;
+  accountIsNull?: boolean;
+
+  // Info: (20250306 - Julian) 樣式
+  className?: string;
+}
 
 interface IAccountSelectorModalProps {
   toggleModal: () => void;
@@ -21,7 +40,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   toggleModal,
   accountSelectedHandler,
 }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
 
   // Info: (20250306 - Julian) 搜尋欄 ref
@@ -250,6 +269,10 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
             toggleModal();
           };
 
+          // Info: (20250521 - Julian) 如果沒有翻譯，則顯示原本的名稱
+          const nameKey = `reports:ACCOUNTING_ACCOUNT.${account.name}`;
+          const translatedName = i18n.exists(nameKey) ? t(nameKey) : account.name;
+
           return (
             <button
               key={account.id}
@@ -258,7 +281,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
               className="px-12px py-8px text-left text-tabs-text-default outline-tabs-text-active hover:text-tabs-text-hover focus:outline-dashed"
               onClick={clickHandler}
             >
-              {account.code} - {account.name}
+              {account.code} - {translatedName}
             </button>
           );
         })
@@ -333,4 +356,81 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
   );
 };
 
-export default AccountSelectorModal;
+const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
+  id,
+  defaultAccount,
+  accountSelectedHandler,
+  toggleModal,
+  flagOfSubmit,
+  accountIsNull,
+  className = '',
+}) => {
+  const { t } = useTranslation(['common', 'reports']);
+
+  // Info: (20241121 - Julian) 會計科目 input ref
+  const accountRef = useRef<HTMLButtonElement>(null);
+
+  const accountString = defaultAccount
+    ? `${defaultAccount?.code} ${defaultAccount?.name}`
+    : t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING');
+
+  // Info: (20250305 - Julian) 開啟 Account Selector modal
+  const [isAccountSelectorOpen, setIsAccountSelectorMenuOpen] = useState(false);
+
+  // Info: (20241125 - Julian) input state
+  const [accountStyle, setAccountStyle] = useState<string>(inputStyle.NORMAL);
+
+  useEffect(() => {
+    // Info: (20241007 - Julian) 檢查是否填入會計科目
+    setAccountStyle(accountIsNull ? inputStyle.ERROR : inputStyle.NORMAL);
+  }, [flagOfSubmit]);
+
+  useEffect(() => {
+    // Info: (20241007 - Julian) 修改會計科目時，樣式改回 NORMAL
+    setAccountStyle(inputStyle.NORMAL);
+  }, [defaultAccount]);
+
+  // Info: (20241121 - Julian) 編輯會計科目：開啟 Accounting Menu
+  const accountEditingHandler = () => setIsAccountSelectorMenuOpen(true);
+
+  const toggleAccountSelector = () => {
+    setIsAccountSelectorMenuOpen(!isAccountSelectorOpen);
+  };
+  // Info: (20250523 - Anna) 若父層有傳入 toggleModal，表示由父層控制 modal 開關（ex.ledger）
+  // Info: (20250523 - Anna) 不需再渲染 selector 按鈕，直接渲染 <AccountSelectorModal>
+  if (toggleModal) {
+    return (
+      <AccountSelectorModal
+        toggleModal={toggleModal}
+        accountSelectedHandler={accountSelectedHandler}
+      />
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <button
+        id={`account-title-${id}`}
+        ref={accountRef}
+        type="button"
+        onClick={accountEditingHandler}
+        className={`flex w-full items-center justify-between gap-8px divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer hover:divide-input-stroke-selected hover:border-input-stroke-selected ${isAccountSelectorOpen ? 'divide-input-stroke-selected border-input-stroke-selected text-tabs-text-active' : accountStyle}`}
+      >
+        <p className={`truncate px-12px py-10px`}>{accountString}</p>
+        <div className="flex h-44px items-center justify-center px-12px py-10px">
+          <LuBookOpen size={20} />
+        </div>
+      </button>
+
+      {/* Info: (20250305 - Julian) Account Selector modal */}
+      {isAccountSelectorOpen && (
+        <AccountSelectorModal
+          toggleModal={toggleAccountSelector}
+          accountSelectedHandler={accountSelectedHandler}
+        />
+      )}
+    </div>
+  );
+};
+
+export default AccountTitleSelector;
