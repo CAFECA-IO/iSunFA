@@ -12,7 +12,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { FaAngleDown } from 'react-icons/fa6';
 import { IoBookOutline } from 'react-icons/io5';
-import AccountTitleSelector from '@/components/ledger/account_selector_modal';
+import AccountTitleSelector from '@/components/ledger/account_title_selector';
 import Pagination from '@/components/pagination/pagination';
 
 enum ReportType {

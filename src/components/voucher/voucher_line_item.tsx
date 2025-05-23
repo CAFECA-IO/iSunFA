@@ -8,7 +8,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { FaPlus } from 'react-icons/fa6';
 import ReverseLineItem from '@/components/voucher/reverse_line_item';
 import { IAccount } from '@/interfaces/accounting_account';
-import AccountTitleSelector from '@/components/ledger/account_selector_modal';
+import AccountTitleSelector from '@/components/ledger/account_title_selector';
 import NumericInput from '@/components/numeric_input/numeric_input';
 
 interface IVoucherLineItemProps {
