@@ -58,7 +58,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
             type="button"
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             onClick={async () => {
-              await acceptTeamInvitation({ body: { teamId: notification.teamId } });
+              await acceptTeamInvitation({ params: { teamId: notification.teamId } });
               onMarkAsRead(id);
             }}
           >
@@ -68,7 +68,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
             type="button"
             className="rounded-xs border border-button-stroke-secondary px-16px py-8px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover disabled:text-button-text-disable"
             onClick={async () => {
-              await declineTeamInvitation({ body: { teamId: notification.teamId } });
+              await declineTeamInvitation({ params: { teamId: notification.teamId } });
               onMarkAsRead(id);
             }}
           >
