@@ -8,13 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import StepOneForm from '@/components/beta/account_books_page/step_one_form';
-import StepTwoForm from '@/components/beta/account_books_page/step_two_form';
-import {
-  initialStep1FormState,
-  step1FormReducer,
-  initialStep2FormState,
-  step2FormReducer,
-} from '@/constants/account_book';
+import { initialStep1FormState, step1FormReducer } from '@/constants/account_book';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface AccountBookInfoModalProps {
@@ -34,7 +28,6 @@ const AccountBookInfoModal = ({
   const { createAccountBook, userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
-  const [step, setStep] = useState<number>(0);
   const [step1FormState, step1FormDispatch] = useReducer(
     step1FormReducer,
     accountBookToEdit
@@ -49,30 +42,26 @@ const AccountBookInfoModal = ({
         }
       : initialStep1FormState
   );
-  const [step2FormState, step2FormDispatch] = useReducer(step2FormReducer, initialStep2FormState);
+  // const [step2FormState, step2FormDispatch] = useReducer(step2FormReducer, initialStep2FormState);
   const [teamList, setTeamList] = useState<ITeam[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Info: (20250303 - Liz) 取得團隊清單 API
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
-  // ToDo: (20250421 - Liz) 等新版的建立帳本 API 實作後再改
   const {
     companyName,
-    // representativeName,
+    representativeName,
     taxId,
-    // taxSerialNumber,
-    // phoneNumber,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
     tag,
     team,
-    // city,
-    // district,
-    // districtOptions,
-    // enteredAddress,
+    city,
+    district,
+    enteredAddress,
   } = step1FormState;
-
-  const handleNext = () => setStep((prev) => prev + 1);
-  const handleBack = () => setStep((prev) => prev - 1);
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async () => {
@@ -86,7 +75,14 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-        // ToDo: (20250428 - Liz) 等新版的建立帳本 API 實作後再調整參數
+        fileId: 0,
+        representativeName,
+        taxSerialNumber,
+        contactPerson,
+        phoneNumber,
+        city: city || '',
+        district: district || '',
+        enteredAddress,
       });
 
       if (!success) {
@@ -109,7 +105,6 @@ const AccountBookInfoModal = ({
 
       // Info: (20250421 - Liz) 新增帳本成功後清空表單並關閉 modal
       step1FormDispatch({ type: 'RESET' });
-      step2FormDispatch({ type: 'RESET' });
       closeAccountBookInfoModal();
 
       if (getAccountBookList) getAccountBookList(); // Info: (20241209 - Liz) 重新取得帳本清單
@@ -161,28 +156,14 @@ const AccountBookInfoModal = ({
 
   return (
     <div>
-      {step === 0 && (
-        <StepOneForm
-          handleNext={handleNext}
-          step1FormState={step1FormState}
-          step1FormDispatch={step1FormDispatch}
-          teamList={teamList}
-          closeAccountBookInfoModal={closeAccountBookInfoModal}
-          accountBookToEdit={accountBookToEdit}
-        />
-      )}
-
-      {/* Info: (20250418 - Liz) 進入第二步驟的商業稅設定 */}
-      {step === 1 && (
-        <StepTwoForm
-          handleBack={handleBack}
-          handleSubmit={accountBookToEdit ? handleEdit : handleSubmit}
-          isLoading={isLoading}
-          step2FormState={step2FormState}
-          step2FormDispatch={step2FormDispatch}
-          closeAccountBookInfoModal={closeAccountBookInfoModal}
-        />
-      )}
+      <StepOneForm
+        step1FormState={step1FormState}
+        step1FormDispatch={step1FormDispatch}
+        teamList={teamList}
+        closeAccountBookInfoModal={closeAccountBookInfoModal}
+        accountBookToEdit={accountBookToEdit}
+        handleSubmit={accountBookToEdit ? handleEdit : handleSubmit}
+      />
     </div>
   );
 };

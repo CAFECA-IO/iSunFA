@@ -5,7 +5,12 @@ import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
-import { WORK_TAG, IAccountBook } from '@/interfaces/account_book';
+import {
+  WORK_TAG,
+  IAccountBook,
+  IAccountBookInfo,
+  ICreateAccountBookReqBody,
+} from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
 import { Provider } from '@/constants/provider';
@@ -40,12 +45,15 @@ interface UserContextType {
     taxId,
     tag,
     teamId,
-  }: {
-    name: string;
-    taxId: string;
-    tag: WORK_TAG;
-    teamId: number;
-  }) => Promise<{ success: boolean; code: string; errorMsg: string }>;
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: ICreateAccountBookReqBody) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
   connectedAccountBook: IAccountBook | null;
   team: ITeam | null;
@@ -163,7 +171,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
   // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250422 - Liz) 此 api 會再改版
-  const { trigger: createAccountBookAPI } = APIHandler<IAccountBook>(APIName.CREATE_ACCOUNT_BOOK);
+  const { trigger: createAccountBookAPI } = APIHandler<IAccountBookInfo>(
+    APIName.CREATE_ACCOUNT_BOOK
+  );
 
   // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
@@ -602,16 +612,32 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     taxId,
     tag,
     teamId,
-  }: {
-    name: string;
-    taxId: string;
-    tag: WORK_TAG;
-    teamId: number;
-  }) => {
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: ICreateAccountBookReqBody) => {
     try {
       const { success, code, error } = await createAccountBookAPI({
         params: { userId: userAuthRef.current?.id },
-        body: { name, taxId, tag, teamId },
+        body: {
+          name,
+          taxId,
+          tag,
+          teamId,
+          fileId,
+          representativeName,
+          taxSerialNumber,
+          contactPerson,
+          phoneNumber,
+          city,
+          district,
+          enteredAddress,
+        },
       });
 
       if (!success) {
