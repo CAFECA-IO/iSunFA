@@ -166,7 +166,10 @@
     "REMOVE_THIS": "删除该客户/供应商",
     "NO_DATA_AVAILABLE": "没有可用资料",
     "NAME_ALREADY_EXISTS": "此名称已有资料",
-    "TAX_ID_ALREADY_EXISTS": "此统一编号已重复使用"
+    "TAX_ID_ALREADY_EXISTS": "此统一编号已重复使用",
+    "COUNTERPARTY_SUCCESSFULLY_CHANGED": "客户/供应商资讯已成功更改",
+    "REMOVE_COUNTERPARTY": "删除交易伙伴",
+    "CHECK_REMOVE_COUNTERPARTY": "您确定要从您的客户/供应商清单中删除 <strong>{{counterparty}}</strong> 吗？"
   },
   "LABEL": {
     "NEW": "新增"

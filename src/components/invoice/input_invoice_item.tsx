@@ -9,8 +9,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaCheck } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
-import { DeductionType } from '@/constants/invoice_rc2';
-import { TaxType } from '@/constants/invoice_rc2';
+import { DeductionType, TaxType } from '@/constants/invoice_rc2';
 
 interface InputInvoiceListIrops {
   activeSelection: boolean;
@@ -196,7 +195,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
             {certificate?.file.url ? (
               <Image
-                src={certificate.file.url}
+                src={certificate.file.thumbnail?.url || certificate.file.url}
                 alt="avatar"
                 width={14}
                 height={14}

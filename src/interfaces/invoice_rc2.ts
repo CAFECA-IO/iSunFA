@@ -17,6 +17,12 @@ export interface IInvoiceRC2Base {
     name: string;
     size: number;
     url: string;
+    thumbnail?: {
+      id: number;
+      name: string;
+      size: number;
+      url: string;
+    };
   };
   uploaderId: number;
   direction: InvoiceDirection;
