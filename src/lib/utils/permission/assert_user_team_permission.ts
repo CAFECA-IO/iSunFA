@@ -5,6 +5,9 @@ import prisma from '@/client';
 import { SortOrder } from '@/constants/sort';
 import { updateTeamMemberSession } from '@/lib/utils/session';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { getTimestampNow } from '@/lib/utils/common';
+import { GRACE_PERIOD_SECONDS } from '@/constants/team/permissions';
+import { TPlanType } from '@/interfaces/subscription';
 
 const ACTION_USE_ACTUAL_ROLE: TeamPermissionAction[] = [
   // Info: (20250411 - Tzuhan) 團隊管理
@@ -25,19 +28,21 @@ const ACTION_USE_ACTUAL_ROLE: TeamPermissionAction[] = [
   TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
 ];
 
-type TeamMemberRoleInfo = {
+type TeamAndTeamMemberRoleInfo = {
   actualRole: TeamRole; // Info: (20250411 - Tzuhan) 使用者在團隊中的真實角色（資料庫）
   effectiveRole: TeamRole; // Info: (20250411 - Tzuhan) 實際被允許的角色，若訂閱過期則為 Viewer
-  expiredAt?: number; // Info: (20250411 - Tzuhan) 團隊訂閱過期時間（Unix 秒數），若無有效訂閱則為 0
+  expiredAt: number; // Info: (20250411 - Tzuhan) 團隊訂閱過期時間（Unix 秒數），若無有效訂閱則為 0
   inGracePeriod: boolean; // Info: (20250411 - Tzuhan) 是否在寬限期內
   gracePeriodEndAt: number; // Info: (20250411 - Tzuhan) 團隊訂閱寬限期結束時間（Unix 秒數）
+  isExpired: boolean;
+  planType: TPlanType;
 };
 
 export async function assertUserIsTeamMember(
   userId: number,
   teamId: number
-): Promise<TeamMemberRoleInfo> {
-  const nowInSecond = Math.floor(Date.now() / 1000);
+): Promise<TeamAndTeamMemberRoleInfo> {
+  const nowInSecond = getTimestampNow();
 
   const member = await prisma.teamMember.findFirst({
     where: {
@@ -50,19 +55,12 @@ export async function assertUserIsTeamMember(
       team: {
         select: {
           subscriptions: {
-            where: {
-              startDate: {
-                lte: nowInSecond,
-              },
-              expiredDate: {
-                gt: nowInSecond,
-              },
-            },
-            orderBy: { expiredDate: SortOrder.DESC }, // Info: (20250411 - Tzuhan) 保險起見，拿最新的
+            orderBy: { expiredDate: SortOrder.DESC },
             take: 1,
             select: {
               expiredDate: true,
               startDate: true,
+              plan: true,
             },
           },
         },
@@ -77,9 +75,16 @@ export async function assertUserIsTeamMember(
   }
 
   const { role, team } = member;
-  const expiredAt = team.subscriptions[0]?.expiredDate ?? 0;
+  const subscription = team.subscriptions[0];
+  const expiredAt = subscription?.expiredDate ?? 0;
+  const startAt = subscription?.startDate ?? 0;
+
+  const isValid = startAt <= nowInSecond && expiredAt > nowInSecond;
+  const isInGrace = expiredAt <= nowInSecond && expiredAt > nowInSecond - GRACE_PERIOD_SECONDS;
+
   const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
-  const isExpired = expiredAt === 0 || nowInSecond > gracePeriodEndAt;
+
+  const isExpired = !(isValid || isInGrace);
 
   return {
     actualRole: role as TeamRole,
@@ -87,6 +92,8 @@ export async function assertUserIsTeamMember(
     expiredAt,
     inGracePeriod,
     gracePeriodEndAt,
+    isExpired,
+    planType: isValid || isInGrace ? (subscription?.plan?.type as TPlanType) : TPlanType.BEGINNER,
   };
 }
 
