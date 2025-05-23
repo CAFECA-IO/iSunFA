@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation, Trans } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { CounterpartyType } from '@/constants/counterparty';
@@ -13,6 +13,8 @@ import { useUserCtx } from '@/contexts/user_context';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface EditCounterPartyModalProps {
   onClose: () => void;
@@ -40,7 +42,8 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   counterpartyId, // Info: (20241110 - Anna) 傳入 counterpartyId
 }) => {
   const { t } = useTranslation(['common', 'certificate']);
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
   const { connectedAccountBook } = useUserCtx();
   const [inputName, setInputName] = useState<string>(name || '');
   const [inputTaxId, setInputTaxId] = useState<string>(taxId || '');
@@ -174,11 +177,18 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
   // Info: (20241111 - Anna) 添加 deleteCounterpartyHandler 函數以處理刪除交易夥伴
   const deleteCounterpartyHandler = () => {
     messageModalDataHandler({
-      title: '刪除交易夥伴',
-      content: '您確定要刪除這個交易夥伴嗎？',
-      notes: inputName,
+      title: t('certificate:COUNTERPARTY.REMOVE_COUNTERPARTY'),
+      content: (
+        <Trans
+          i18nKey="certificate:COUNTERPARTY.CHECK_REMOVE_COUNTERPARTY"
+          values={{ counterparty: inputName }}
+          components={{ strong: <span className="font-semibold" /> }}
+        />
+      ),
       messageType: MessageType.WARNING,
       submitBtnStr: t('settings:SETTINGS.REMOVE'),
+      submitBtnClassName:
+        'bg-orange-400 text-orange-900 hover:bg-button-surface-strong-primary-hover',
       submitBtnFunction: async () => {
         try {
           await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除
@@ -189,6 +199,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         }
       },
       backBtnStr: t('common:COMMON.CANCEL'),
+      backBtnClassName: 'border-orange-500 text-orange-600',
     });
     messageModalVisibilityHandler();
   };
@@ -212,6 +223,13 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     try {
       const response = await editCounterpartyTrigger();
       if (response.success) {
+        toastHandler({
+          id: ToastId.UPDATE_COUNTERPARTY_SUCCESS,
+          type: ToastType.SUCCESS,
+          content: t('certificate:COUNTERPARTY.COUNTERPARTY_SUCCESSFULLY_CHANGED'),
+          closeable: true,
+        });
+
         onSave({
           id: counterpartyId,
           name: inputName,

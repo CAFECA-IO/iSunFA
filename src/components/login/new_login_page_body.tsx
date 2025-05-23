@@ -219,8 +219,8 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   // Info: (20250508 - Liz) I18n 語言選單的外部點擊事件
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250508 - Liz) 每秒減一，直到 0（驗證碼有效時間）
@@ -257,7 +257,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
       <section className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-12px text-button-text-secondary">
         <div ref={globalRef}>
-          <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         </div>
         <Link
           href={ISUNFA_ROUTE.LANDING_PAGE}

@@ -86,7 +86,7 @@ export interface IAccountBookInfo {
   updatedAt: number;
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
-  // ToDo: (20250515 - Liz) RC2 新增表單欄位
+  // Info: (20250523 - Liz) RC2 新增表單欄位
   representativeName: string; // Info: (20250423 - Liz) 負責人姓名
   taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
   contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
@@ -95,17 +95,17 @@ export interface IAccountBookInfo {
   district: string; // Info: (20250423 - Liz) 行政區
   enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
 
-  // ToDo: (20250515 - Liz) 以下欄位為選填
-  filingFrequency?: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
-  filingMethod?: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
-  declarantFilingMethod?: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
+  // Deprecated: (20250523 - Liz) 即將移除
+  // filingFrequency?: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
+  // filingMethod?: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
+  // declarantFilingMethod?: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
 
-  declarantName?: string; // Info: (20250423 - Liz) 申報人姓名
-  declarantPersonalId?: string; // Info: (20250423 - Liz) 申報人身分證字號
-  declarantPhoneNumber?: string; // Info: (20250423 - Liz) 申報人電話號碼
+  // declarantName?: string; // Info: (20250423 - Liz) 申報人姓名
+  // declarantPersonalId?: string; // Info: (20250423 - Liz) 申報人身分證字號
+  // declarantPhoneNumber?: string; // Info: (20250423 - Liz) 申報人電話號碼
 
-  agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
-  licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
+  // agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
+  // licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
 }
 
 /**
@@ -141,6 +141,21 @@ export interface IAccountBookDetails {
   startDate: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface ICreateAccountBookReqBody {
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  teamId: number;
+  fileId?: number; // Info: (20250523 - Liz) 圖片 ID
+  representativeName?: string; // Info: (20250523 - Liz) 負責人姓名
+  taxSerialNumber?: string; // Info: (20250523 - Liz) 稅籍編號
+  contactPerson?: string; // Info: (20250523 - Liz) 聯絡人姓名
+  phoneNumber?: string; // Info: (20250523 - Liz) 電話號碼
+  city?: string; // Info: (20250523 - Liz) 縣市
+  district?: string; // Info: (20250523 - Liz) 行政區
+  enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
 }
 
 export interface ICompanyTaxIdAndName {

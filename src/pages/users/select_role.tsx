@@ -8,39 +8,18 @@ import Link from 'next/link';
 import I18n from '@/components/i18n/i18n';
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { DEFAULT_AVATAR_URL } from '@/constants/display';
 import { IUserRole } from '@/interfaces/user_role';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { RoleName } from '@/constants/role';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { findUnusedRoles } from '@/lib/utils/role';
 import UserRole from '@/components/beta/select_role/user_role';
 import Loader from '@/components/loader/loader';
 
-// Info: (20241029 - Liz) 用來對照 Role 的 Icon
-const USER_ROLES_ICON = [
-  {
-    id: RoleName.INDIVIDUAL,
-    roleIconSrc: '/icons/information_desk.svg',
-    roleIconAlt: 'information_desk',
-  },
-  {
-    id: RoleName.ACCOUNTING_FIRMS,
-    roleIconSrc: '/icons/accounting_firms_icon.svg',
-    roleIconAlt: 'graduation_cap',
-  },
-  {
-    id: RoleName.ENTERPRISE,
-    roleIconSrc: '/icons/enterprise_icon.svg',
-    roleIconAlt: 'enterprise',
-  },
-];
-
 const SelectRolePage = () => {
   const { t } = useTranslation(['dashboard']);
-  const { signOut, userAuth, getUserRoleList, getSystemRoleList } = useUserCtx();
+  const { signOut, getUserRoleList, getSystemRoleList } = useUserCtx();
   const router = useRouter();
   const [userRoleList, setUserRoleList] = useState<IUserRole[]>([]);
   const [isAbleToCreateRole, setIsAbleToCreateRole] = useState<boolean>(false);
@@ -82,8 +61,8 @@ const SelectRolePage = () => {
 
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250328 - Liz) 如果打 API 還在載入中，顯示載入中頁面
@@ -115,7 +94,7 @@ const SelectRolePage = () => {
 
         <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
           <div ref={globalRef}>
-            <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+            <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
           </div>
 
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
@@ -135,31 +114,26 @@ const SelectRolePage = () => {
         {/* Info: (20241009 - Liz) User Roles */}
         {isLoading && <SkeletonList count={4} />}
         {!isLoading && (
-          <section className="flex items-center justify-center gap-40px">
-            {userRoleList.map((userRole) => {
-              const roleIcon = USER_ROLES_ICON.find((icon) => icon.id === userRole.roleName);
-
-              return (
+          <main className="hide-scrollbar overflow-x-auto">
+            <section className="flex min-w-max items-center gap-40px px-16px py-50px">
+              {userRoleList.map((userRole) => (
                 <UserRole
                   key={userRole.id}
                   userRole={userRole}
-                  roleIconSrc={roleIcon?.roleIconSrc ?? ''}
-                  roleIconAlt={roleIcon?.roleIconAlt ?? ''}
-                  avatar={userAuth?.imageId ?? DEFAULT_AVATAR_URL}
                   lastLoginAt={userRole.lastLoginAt}
                 />
-              );
-            })}
+              ))}
 
-            {isAbleToCreateRole && (
-              <Link
-                href={ISUNFA_ROUTE.CREATE_ROLE}
-                className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
-              >
-                <HiPlus size={64} />
-              </Link>
-            )}
-          </section>
+              {isAbleToCreateRole && (
+                <Link
+                  href={ISUNFA_ROUTE.CREATE_ROLE}
+                  className="z-1 rounded-lg bg-surface-neutral-surface-lv1 p-18px text-text-neutral-secondary shadow-Dropshadow_S"
+                >
+                  <HiPlus size={64} />
+                </Link>
+              )}
+            </section>
+          </main>
         )}
       </div>
     </>

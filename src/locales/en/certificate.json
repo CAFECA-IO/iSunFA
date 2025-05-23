@@ -166,7 +166,10 @@
     "REMOVE_THIS": "Remove this Client/Supplier",
     "NO_DATA_AVAILABLE": "No Data Available",
     "NAME_ALREADY_EXISTS": "Data already exists for this name.",
-    "TAX_ID_ALREADY_EXISTS": "This Business Tax has already been used."
+    "TAX_ID_ALREADY_EXISTS": "This Business Tax has already been used.",
+    "COUNTERPARTY_SUCCESSFULLY_CHANGED": "Client/Supplier information successfully changed.",
+    "REMOVE_COUNTERPARTY": "Remove Client/Supplier",
+    "CHECK_REMOVE_COUNTERPARTY": "Are you sure you want to Remove <strong>{{counterparty}}</strong> from your Client/Supplier list?"
   },
   "LABEL": {
     "NEW": "New"
