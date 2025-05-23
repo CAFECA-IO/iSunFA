@@ -18,15 +18,15 @@ interface IntroductionProps {
 const Introduction = ({ displayedRole, togglePreviewModal }: IntroductionProps) => {
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   return (
     <main className="flex flex-auto flex-col p-16px tablet:p-0">
       <section className="mb-20px flex items-center justify-end gap-12px tablet:hidden">
         <div ref={globalRef}>
-          <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         </div>
         <Link
           href={ISUNFA_ROUTE.LANDING_PAGE}

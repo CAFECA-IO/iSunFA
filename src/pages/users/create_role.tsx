@@ -96,7 +96,7 @@ const CreateRolePage = () => {
 
   useEffect(() => {
     if (status === RolePageStatus.REDIRECT) {
-      router.push('/somewhere');
+      router.push(ISUNFA_ROUTE.SELECT_ROLE);
     }
   }, [router, status]);
 
@@ -107,7 +107,7 @@ const CreateRolePage = () => {
   }
 
   if (status === RolePageStatus.ERROR) {
-    return <div>無法取得角色資料，請稍後再試。</div>;
+    return <h1>{t('dashboard:CREATE_ROLE_PAGE.ROLE_DATA_NOT_FOUND')}</h1>;
   }
 
   // Info: (20250522 - Liz) 當 status === RolePageStatus.READY 才會走到這裡

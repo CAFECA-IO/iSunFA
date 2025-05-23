@@ -17,8 +17,8 @@ const LoginAnimation = ({ onFinished }: ILoginAnimationProps) => {
   // Info: (20250520 - Liz) I18n 語言選單的外部點擊事件
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const LoginAnimation = ({ onFinished }: ILoginAnimationProps) => {
 
       <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-12px">
         <div ref={globalRef}>
-          <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         </div>
         <Link
           href={ISUNFA_ROUTE.LANDING_PAGE}

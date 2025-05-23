@@ -87,6 +87,7 @@
     "SELECT_YOUR_ROLE": "選擇您的角色",
     "ROLE_FUNCTION_PREVIEW": "角色功能預覽",
     "BACK_TO_SELECT_ROLE_PAGE": "回到選擇角色頁面",
+    "ROLE_DATA_NOT_FOUND": "無法取得角色資料，請稍後再試",
 
     "COMMON_FUNCTIONS": "常用功能",
     "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "憑證管理、日記帳管理、應收帳款及應付帳款管理、財務報表、試算表、總帳",
