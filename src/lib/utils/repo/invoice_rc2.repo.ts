@@ -48,7 +48,9 @@ export const createOrderByList = (
 };
 
 type InvoiceRC2WithFullRelations = InvoiceRC2 & {
-  file: File;
+  file: File & {
+    thumbnail?: File | null;
+  };
   uploader: { id: number; name: string };
   voucher: { id: number; no: string } | null;
 };
@@ -94,12 +96,22 @@ export function isInvoiceRC2Complete(cert: InvoiceRC2Type): boolean {
 }
 
 function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof InvoiceRC2InputSchema> {
+  const fileWithThumbnail = {
+    ...cert.file,
+    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    ...(cert.file.thumbnail && {
+      thumbnail: {
+        id: cert.file.thumbnail.id,
+        name: cert.file.thumbnail.name,
+        size: cert.file.thumbnail.size,
+        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+      },
+    }),
+  };
+
   const invoiceRC2Input = InvoiceRC2InputSchema.parse({
     ...cert,
-    file: {
-      ...cert.file,
-      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
-    },
+    file: fileWithThumbnail,
     taxRate: cert.taxRate ?? null,
     deductionType: cert.deductionType ?? null,
     salesName: cert.salesName ?? '',
@@ -123,12 +135,22 @@ function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof Invoi
 function transformOutput(
   cert: InvoiceRC2WithFullRelations
 ): z.infer<typeof InvoiceRC2OutputSchema> {
+  const fileWithThumbnail = {
+    ...cert.file,
+    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    ...(cert.file.thumbnail && {
+      thumbnail: {
+        id: cert.file.thumbnail.id,
+        name: cert.file.thumbnail.name,
+        size: cert.file.thumbnail.size,
+        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+      },
+    }),
+  };
+
   const invoiceRC2Output = InvoiceRC2OutputSchema.parse({
     ...cert,
-    file: {
-      ...cert.file,
-      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
-    },
+    file: fileWithThumbnail,
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
@@ -161,7 +183,15 @@ export async function findInvoiceRC2ById(data: {
   });
   const cert = await prisma.invoiceRC2.findUnique({
     where: { id: invoiceId, deletedAt: null },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   if (!cert) return null;
   return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
@@ -221,7 +251,15 @@ export async function listInvoiceRC2Input(
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: createOrderByList(sortOption || []),
-      include: { file: true, voucher: true, uploader: true },
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
     }),
   ]);
 
@@ -304,7 +342,15 @@ export async function listInvoiceRC2Output(
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: createOrderByList(sortOption || []),
-      include: { file: true, voucher: true, uploader: true },
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
     }),
   ]);
 
@@ -365,7 +411,15 @@ export async function createInvoiceRC2(
       createdAt: now,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   const invoice =
     body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
@@ -415,7 +469,15 @@ export async function updateInvoiceRC2Input(
       incomplete,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   return transformInput(updated);
 }
@@ -456,7 +518,15 @@ export async function updateInvoiceRC2Output(
       incomplete,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   return transformOutput(updated);
 }
