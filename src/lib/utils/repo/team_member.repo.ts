@@ -67,22 +67,24 @@ export const addMembersToTeam = async (
       select: { userId: true },
     });
 
-    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
-
-    if (rejoinUserIds.size > 0) {
+    if (inactiveMembers.length > 0) {
       await tx.teamMember.updateMany({
         where: {
           teamId,
-          userId: { in: [...rejoinUserIds] },
+          userId: { in: inactiveMembers.map((m) => m.userId) },
+          status: LeaveStatus.NOT_IN_TEAM,
         },
         data: {
           status: LeaveStatus.IN_TEAM,
-          leftAt: null,
+          joinedAt: now,
         },
       });
     }
+    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
+    const usersToInvite = existingUsers.filter(
+      (user) => rejoinUserIds.has(user.id) || !existingUserIds.has(user.id)
+    );
 
-    const usersToInvite = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
     if (usersToInvite.length > 0) {
       await tx.inviteTeamMember.createMany({
         data: usersToInvite.map((user) => ({
