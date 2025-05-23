@@ -29,6 +29,7 @@ interface IVoucherListProps {
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   isHideReversals: boolean;
   hideReversalsToggleHandler: () => void;
+  toggleSideMenu: () => void;
   selectedStartDate?: number;
   selectedEndDate?: number;
   selectedType?: string;
@@ -51,13 +52,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   selectedType,
   keyword,
   currentPage,
+  toggleSideMenu,
 }) => {
   const { t } = useTranslation('common');
   const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { refreshVoucherListHandler } = useAccountingCtx();
-  const { exportVoucherModalVisibilityHandler, filterSideMenuVisibilityHandler } = useGlobalCtx();
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241022 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
@@ -384,7 +386,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {/* Info: (20250521 - Julian) Filter button */}
       <button
         type="button"
-        onClick={filterSideMenuVisibilityHandler}
+        onClick={toggleSideMenu}
         className="block p-10px text-button-text-secondary tablet:hidden"
       >
         <VscSettings size={24} />

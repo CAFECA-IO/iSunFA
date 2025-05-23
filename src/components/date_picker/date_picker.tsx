@@ -530,7 +530,10 @@ const DatePicker = ({
           }
         )}
       >
-        <FiCalendar size={16} />
+        <FiCalendar
+          size={16}
+          className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover"
+        />
       </Button>
     ) : type === DatePickerType.TEXT_PERIOD || type === DatePickerType.TEXT_DATE ? (
       <Button
@@ -559,7 +562,10 @@ const DatePicker = ({
         >
           {displayedPeriod}
         </p>
-        <FiCalendar size={20} />
+        <FiCalendar
+          size={20}
+          className="text-icon-surface-single-color-primary group-hover:text-button-text-primary-hover"
+        />
       </Button>
     ) : null;
 
@@ -570,7 +576,7 @@ const DatePicker = ({
       {/* Info: (20240417 - Shirley) Select Period button */}
       {/* Info: (20250416 - Anna) 標籤 */}
       {label && (
-        <p className="text-sm font-semibold text-neutral-300">
+        <p className="text-sm font-semibold text-input-text-primary">
           {t(`date_picker:DATE_PICKER.${label.toUpperCase()}`)}
         </p>
       )}

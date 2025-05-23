@@ -287,9 +287,9 @@ const LedgerPageBody = () => {
             {t('journal:LEDGER.SPECIFIC_ACCOUNTING_TITLE')}
           </p>
           {/* Info: (20250521 - Anna) 會計科目篩選(laptop以上) */}
-          <div className="hidden w-full space-x-4 laptop:flex">
+          <div className="hidden w-full laptop:flex laptop:gap-x-4">
             {/* Info: (20241015 - Anna) From 篩選 */}
-            <div className="flex w-1/2 items-center">
+            <div className="flex min-w-0 flex-1 items-center">
               <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.FROM')}</span>
               <div
                 className={`flex w-full flex-col gap-8px lg:w-200px`}
@@ -340,7 +340,7 @@ const LedgerPageBody = () => {
             </div>
 
             {/* Info: (20241015 - Anna) To 篩選 */}
-            <div className="flex w-1/2 items-center">
+            <div className="flex min-w-0 flex-1 items-center">
               <span className="mr-2 mt-2 text-sm text-neutral-600">{t('common:COMMON.TO')}</span>
               <div
                 className={`flex w-full flex-col gap-8px lg:w-200px`} // Info: (20250311 - Anna) 點擊打開彈窗

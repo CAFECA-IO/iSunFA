@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
+import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType, FileFolder } from '@/constants/file';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { IFileBeta } from '@/interfaces/file';
@@ -48,9 +48,9 @@ export const config = {
 };
 
 async function handleFileUpload(
-  type: UploadType,
+  type: UploadType | undefined,
   file: formidable.File[],
-  targetId: string,
+  targetId: string | undefined,
   isEncrypted: boolean,
   encryptedSymmetricKey: string,
   iv: Uint8Array
@@ -59,38 +59,48 @@ async function handleFileUpload(
   const fileName = fileForSave.newFilename;
   const fileMimeType = fileForSave.mimetype || 'image/jpeg';
   const fileSize = fileForSave.size;
-  const targetIdNum = type !== UploadType.ROOM ? convertStringToNumber(targetId) : -1;
+  const targetIdNum = targetId && type !== UploadType.ROOM ? convertStringToNumber(targetId) : -1;
   let fileUrl = '';
 
-  switch (type) {
-    case UploadType.KYC:
-    case UploadType.INVOICE:
-    case UploadType.ROOM: {
-      const localUrl = generateFilePathWithBaseUrlPlaceholder(
-        fileName,
-        UPLOAD_TYPE_TO_FOLDER_MAP[type]
-      );
-      fileUrl = localUrl || '';
-      break;
+  // Info: (20250522 - Shirley) 處理未指定類型的情況，直接上傳到 Google Storage
+  if (!type) {
+    const googleBucketUrl = await uploadFile(fileForSave);
+    fileUrl = googleBucketUrl;
+  } else {
+    // Info: (20250522 - Shirley) 原有的 switch 邏輯
+    switch (type) {
+      case UploadType.KYC:
+      case UploadType.INVOICE:
+      case UploadType.ROOM: {
+        const localUrl = generateFilePathWithBaseUrlPlaceholder(
+          fileName,
+          UPLOAD_TYPE_TO_FOLDER_MAP[type]
+        );
+        fileUrl = localUrl || '';
+        break;
+      }
+      case UploadType.COMPANY:
+      case UploadType.USER:
+      case UploadType.PROJECT:
+      case UploadType.TEAM: {
+        const googleBucketUrl = await uploadFile(fileForSave);
+        fileUrl = googleBucketUrl;
+        break;
+      }
+      default:
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
     }
-    case UploadType.COMPANY:
-    case UploadType.USER:
-    case UploadType.PROJECT:
-    case UploadType.TEAM: {
-      const googleBucketUrl = await uploadFile(fileForSave);
-      fileUrl = googleBucketUrl;
-      break;
-    }
-    default:
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
   const ivBuffer = uint8ArrayToBuffer(iv);
+
+  // Info: (20250522 - Shirley) 使用 FileFolder.TMP 作為默認類型
+  const fileType = type ? UPLOAD_TYPE_TO_FOLDER_MAP[type] || FileFolder.TMP : FileFolder.TMP;
 
   const fileInDB = await createFile({
     name: fileName,
     size: fileSize,
     mimeType: fileMimeType,
-    type: UPLOAD_TYPE_TO_FOLDER_MAP[type] || 'team',
+    type: fileType,
     url: fileUrl,
     isEncrypted,
     encryptedSymmetricKey,
@@ -150,10 +160,7 @@ async function handleFileUpload(
   // Info: (20250513 - Shirley) If we have a thumbnail, process it with the same encryption parameters
   if (thumbnailInfo && thumbnailInfo.success) {
     const thumbnailFileName = path.basename(thumbnailInfo.filepath);
-    const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
-      thumbnailFileName,
-      UPLOAD_TYPE_TO_FOLDER_MAP[type]
-    );
+    const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(thumbnailFileName, fileType);
 
     // Info: (20250513 - Shirley) Remove the decrypted PDF file after thumbnail generation
     fs.unlink(tempDecryptedPath);
@@ -197,7 +204,7 @@ async function handleFileUpload(
           name: thumbnailFileName,
           size: thumbnailInfo.size,
           mimeType: 'image/png',
-          type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+          type: fileType,
           url: thumbnailUrl,
           isEncrypted,
           encryptedSymmetricKey: thumbnailEncryptedKey,
@@ -229,7 +236,7 @@ async function handleFileUpload(
           name: thumbnailFileName,
           size: thumbnailInfo.size,
           mimeType: 'image/png',
-          type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+          type: fileType,
           url: thumbnailUrl,
           isEncrypted: false, // Info: (20250513 - Shirley) 設置為未加密
           encryptedSymmetricKey: '', // Info: (20250513 - Shirley) 加空字符串作為必需參數
@@ -248,7 +255,7 @@ async function handleFileUpload(
         name: thumbnailFileName,
         size: thumbnailInfo.size,
         mimeType: 'image/png',
-        type: UPLOAD_TYPE_TO_FOLDER_MAP[type],
+        type: fileType,
         url: thumbnailUrl,
         isEncrypted,
         encryptedSymmetricKey,
@@ -284,41 +291,44 @@ async function handleFileUpload(
     };
   }
 
-  switch (type) {
-    case UploadType.COMPANY: {
-      await updateCompanyById(targetIdNum, undefined, undefined, fileId);
-      break;
+  // Info: (20250522 - Shirley) 只有在指定了 type 和 targetId 的情況下才執行實體關聯
+  if (type && targetId) {
+    switch (type) {
+      case UploadType.COMPANY: {
+        await updateCompanyById(targetIdNum, undefined, undefined, fileId);
+        break;
+      }
+      case UploadType.USER: {
+        await updateUserById(targetIdNum, undefined, undefined, fileId);
+        break;
+      }
+      case UploadType.PROJECT: {
+        await updateProjectById(targetIdNum, undefined, fileId);
+        break;
+      }
+      case UploadType.TEAM: {
+        await updateTeamIcon(targetIdNum, fileId);
+        break;
+      }
+      case UploadType.KYC:
+      case UploadType.ROOM: {
+        roomManager.addFileToRoom(targetId, returnFile);
+        // Info: (20241121 - tzuhan)這是 FILE_UPLOAD 成功後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
+        /**
+         * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 JSON.stringify(file as IFileBeta)
+         */
+        const pusher = getPusherInstance();
+        pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
+          message: JSON.stringify(returnFile),
+        });
+        break;
+      }
+      case UploadType.INVOICE: {
+        break;
+      }
+      default:
+        throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
     }
-    case UploadType.USER: {
-      await updateUserById(targetIdNum, undefined, undefined, fileId);
-      break;
-    }
-    case UploadType.PROJECT: {
-      await updateProjectById(targetIdNum, undefined, fileId);
-      break;
-    }
-    case UploadType.TEAM: {
-      await updateTeamIcon(targetIdNum, fileId);
-      break;
-    }
-    case UploadType.KYC:
-    case UploadType.ROOM: {
-      roomManager.addFileToRoom(targetId, returnFile);
-      // Info: (20241121 - tzuhan)這是 FILE_UPLOAD 成功後，後端使用 pusher 的傳送 ROOM_EVENT.NEW_FILE 的範例
-      /**
-       * ROOM_EVENT.NEW_FILE 傳送的資料格式為 { message: string }, 其中 string 為 JSON.stringify(file as IFileBeta)
-       */
-      const pusher = getPusherInstance();
-      pusher.trigger(`${PRIVATE_CHANNEL.ROOM}-${targetId}`, ROOM_EVENT.NEW_FILE, {
-        message: JSON.stringify(returnFile),
-      });
-      break;
-    }
-    case UploadType.INVOICE: {
-      break;
-    }
-    default:
-      throw new Error(STATUS_MESSAGE.INVALID_INPUT_TYPE);
   }
 
   return returnFile;
@@ -358,69 +368,72 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.FILE_UPLOAD, req, session);
 
   const { query } = checkRequestData(APIName.FILE_UPLOAD, req, session);
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-  const { type, targetId } = query;
+  // Info: (20250522 - Shirley) type 和 targetId 都是可選的
+  const type = query?.type as UploadType | undefined;
+  const targetId = query?.targetId;
 
-  // Info: (20250410 - Shirley) 檢查用戶是否有權限上傳圖片(Team, Company)
-  if (type === UploadType.TEAM) {
-    // Info: (20250410 - Shirley) 直接比對 session 中的 teams 是否包含 targetId，再檢查 role 是否可以上傳圖片
-    const userTeam = teams?.find((team) => team.id === +targetId);
-    if (!userTeam) {
-      loggerBack.warn(`User is not in team ${targetId}`);
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
-    }
-    const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam.role as TeamRole,
-      canDo: TeamPermissionAction.MODIFY_IMAGE,
-    });
+  // Info: (20250522 - Shirley) 只有當同時提供 type 和 targetId 時才進行權限檢查
+  if (type && targetId) {
+    if (type === UploadType.TEAM) {
+      // Info: (20250522 - Shirley) 現有的團隊權限檢查
+      const userTeam = teams?.find((team) => team.id === +targetId);
+      if (!userTeam) {
+        loggerBack.warn(`User is not in team ${targetId}`);
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
+      const assertResult = convertTeamRoleCanDo({
+        teamRole: userTeam.role as TeamRole,
+        canDo: TeamPermissionAction.MODIFY_IMAGE,
+      });
 
-    if (!assertResult.can) {
-      loggerBack.warn(
-        `User with role ${userTeam.role} doesn't have permission to modify team icon`
-      );
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
-    }
-  } else if (type === UploadType.COMPANY) {
-    // Info: (20250410 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-    const company = await getCompanyById(+targetId);
-    if (!company) {
-      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
-    }
+      if (!assertResult.can) {
+        loggerBack.warn(
+          `User with role ${userTeam.role} doesn't have permission to modify team icon`
+        );
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
+    } else if (type === UploadType.COMPANY) {
+      // Info: (20250522 - Shirley) 現有的公司權限檢查
+      const company = await getCompanyById(+targetId);
+      if (!company) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
 
-    const { teamId: companyTeamId } = company;
-    if (!companyTeamId) {
-      statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
-    }
+      const { teamId: companyTeamId } = company;
+      if (!companyTeamId) {
+        statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
 
-    const userTeam = teams?.find((team) => team.id === companyTeamId);
-    if (!userTeam) {
-      loggerBack.warn(`User is not in team ${companyTeamId} associated with company ${targetId}`);
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
-    }
+      const userTeam = teams?.find((team) => team.id === companyTeamId);
+      if (!userTeam) {
+        loggerBack.warn(`User is not in team ${companyTeamId} associated with company ${targetId}`);
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
 
-    const assertResult = convertTeamRoleCanDo({
-      teamRole: userTeam.role as TeamRole,
-      canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
-    });
+      const assertResult = convertTeamRoleCanDo({
+        teamRole: userTeam.role as TeamRole,
+        canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+      });
 
-    if (!assertResult.can) {
-      loggerBack.warn(
-        `User with role ${userTeam.role} doesn't have permission to modify company icon`
-      );
-      statusMessage = STATUS_MESSAGE.FORBIDDEN;
-      return { response: formatApiResponse(statusMessage, null), statusMessage };
+      if (!assertResult.can) {
+        loggerBack.warn(
+          `User with role ${userTeam.role} doesn't have permission to modify company icon`
+        );
+        statusMessage = STATUS_MESSAGE.FORBIDDEN;
+        return { response: formatApiResponse(statusMessage, null), statusMessage };
+      }
     }
   }
 
   try {
-    const parsedForm = await parseForm(req, UPLOAD_TYPE_TO_FOLDER_MAP[type]);
+    // Info: (20250522 - Shirley) 確保傳遞給 parseForm 的是有效的 FileFolder 類型
+    const folder = type ? UPLOAD_TYPE_TO_FOLDER_MAP[type] || FileFolder.TMP : FileFolder.TMP;
+    const parsedForm = await parseForm(req, folder);
     const { files, fields } = parsedForm;
     const { file } = files;
     const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
@@ -442,7 +455,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
         statusMessage = STATUS_MESSAGE.CREATED;
         payload = returnFile;
         loggerBack.info(
-          `File uploaded successfully: id=${returnFile.id}, type=${type}, targetId=${targetId}`
+          `File uploaded successfully: id=${returnFile.id}, type=${type || 'none'}, targetId=${targetId || 'none'}`
         );
       }
     }
