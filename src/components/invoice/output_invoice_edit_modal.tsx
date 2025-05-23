@@ -504,7 +504,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
               imageUrl={
                 certificate.isGenerated && eInvoiceImageUrl
                   ? eInvoiceImageUrl
-                  : certificate.file.url
+                  : certificate.file.thumbnail?.url || certificate.file.url
               }
               className="max-h-630px min-h-450px w-440px"
               controlPosition="bottom-right"

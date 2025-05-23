@@ -160,7 +160,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
             {certificate?.file?.url ? (
               <Image
-                src={certificate.file.url}
+                src={certificate.file.thumbnail?.url || certificate.file.url}
                 alt="avatar"
                 width={14}
                 height={14}
