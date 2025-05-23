@@ -408,7 +408,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     <>
       {/* Info: (20241121 - Julian) Line Item */}
       <>
-        {/* Info: (20241121 - Julian) Accounting */}
+        {/* Info: (20241125 - Julian) Accounting */}
         <AccountTitleSelector
           id={id}
           defaultAccount={lineItemAccount}
