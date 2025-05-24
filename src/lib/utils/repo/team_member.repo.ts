@@ -640,7 +640,7 @@ export const acceptTeamInvitation = async (userId: number, teamId: number): Prom
       data: {
         teamId,
         userId,
-        role: TeamRole.EDITOR, // 預設角色
+        role: TeamRole.EDITOR, // Info: (20250523 - tzuhan) 預設角色
         joinedAt: now,
       },
     }),
