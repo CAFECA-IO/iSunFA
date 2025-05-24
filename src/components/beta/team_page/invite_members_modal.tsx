@@ -26,7 +26,7 @@ const InviteMembersModal = ({
 
   // Info: (20250306 - Liz) 邀請成員 API (add member to team)
   const { trigger: addMemberToTeamAPI } = APIHandler<IInviteMemberResponse>(
-    APIName.ADD_MEMBER_TO_TEAM
+    APIName.INVITE_MEMBER_TO_TEAM
   );
 
   const closeInviteMembersModal = () => {

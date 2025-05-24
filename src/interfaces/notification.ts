@@ -20,12 +20,10 @@ export enum NotificationType {
   PAYMENT = 'PAYMENT',
   SUBSCRIPTION = 'SUBSCRIPTION',
   TEAM_MEMBER = 'TEAM_MEMBER',
-  TEAM_INVITATION = 'TEAM_INVITATION',
 }
 
 export enum NotificationEvent {
   TRANSFER = 'TRANSFER',
-  CANCEL = 'CANCEL',
   UPDATED = 'UPDATED',
   EXPIRED = 'EXPIRED',
   REVIEWED = 'REVIEWED',
@@ -35,6 +33,7 @@ export enum NotificationEvent {
   CANCELLED = 'CANCELLED',
   COMPLETED = 'COMPLETED',
   DELETED = 'DELETED',
+  INVITED = 'INVITED',
 }
 
 export interface INotificationRC2 {

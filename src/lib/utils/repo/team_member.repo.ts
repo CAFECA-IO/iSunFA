@@ -67,22 +67,24 @@ export const addMembersToTeam = async (
       select: { userId: true },
     });
 
-    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
-
-    if (rejoinUserIds.size > 0) {
+    if (inactiveMembers.length > 0) {
       await tx.teamMember.updateMany({
         where: {
           teamId,
-          userId: { in: [...rejoinUserIds] },
+          userId: { in: inactiveMembers.map((m) => m.userId) },
+          status: LeaveStatus.NOT_IN_TEAM,
         },
         data: {
           status: LeaveStatus.IN_TEAM,
-          leftAt: null,
+          joinedAt: now,
         },
       });
     }
+    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
+    const usersToInvite = existingUsers.filter(
+      (user) => rejoinUserIds.has(user.id) || !existingUserIds.has(user.id)
+    );
 
-    const usersToInvite = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
     if (usersToInvite.length > 0) {
       await tx.inviteTeamMember.createMany({
         data: usersToInvite.map((user) => ({
@@ -130,8 +132,8 @@ export const addMembersToTeam = async (
       userEmailMap,
       template: EmailTemplateName.INVITE,
       teamId,
-      type: NotificationType.TEAM_INVITATION,
-      event: NotificationEvent.COMPLETED,
+      type: NotificationType.INVITATION,
+      event: NotificationEvent.INVITED,
       title: '加入團隊通知',
       message: `${inviter?.name ?? '某人'} 邀請您加入團隊「${team?.name ?? ''}」`,
       content: {
@@ -607,4 +609,78 @@ export const getExistingUsersInTeam = async (
   });
 
   return existingUsers.map((user) => user.id);
+};
+
+export const acceptTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  const now = getTimestampNow();
+
+  await prisma.$transaction([
+    prisma.teamMember.create({
+      data: {
+        teamId,
+        userId,
+        role: TeamRole.EDITOR, // Info: (20250523 - tzuhan) 預設角色
+        joinedAt: now,
+      },
+    }),
+    prisma.inviteTeamMember.update({
+      where: { id: invitation.id },
+      data: {
+        status: InviteStatus.COMPLETED,
+        completedAt: now,
+      },
+    }),
+  ]);
+};
+
+export const declineTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  await prisma.inviteTeamMember.update({
+    where: { id: invitation.id },
+    data: {
+      status: InviteStatus.DECLINED,
+      declinedAt: getTimestampNow(),
+    },
+  });
 };

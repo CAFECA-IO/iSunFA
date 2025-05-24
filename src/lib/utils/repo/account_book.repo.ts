@@ -20,7 +20,7 @@ import {
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
 } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import { listByTeamIdQuerySchema, transferAccountBookSchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
@@ -113,8 +113,8 @@ const buildAccountBookTransferNotification = async (
   }));
 
   const content = {
-    ledgerId: accountBook.id,
-    ledgerName: accountBook.name,
+    accountBookId: accountBook.id,
+    accountBookName: accountBook.name,
     fromTeamName: fromTeam.name,
     toTeamName: toTeam.name,
     operatorName: operator.name,
@@ -1138,7 +1138,7 @@ export const requestTransferAccountBook = async (
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1194,16 +1194,23 @@ export const cancelTransferAccountBook = async (
     accountBookId,
     transfer.fromTeamId,
     transfer.toTeamId,
-    NotificationEvent.CANCEL
+    NotificationEvent.CANCELLED
   );
   await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+
+  return {
+    accountBookId,
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.CANCELED,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   const transfer = await prisma.accountBookTransfer.findFirst({
@@ -1262,13 +1269,21 @@ export const acceptTransferAccountBook = async (
     NotificationEvent.APPROVED
   );
   await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+
+  return {
+    accountBookId,
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.COMPLETED,
+    transferredAt: now,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1315,6 +1330,13 @@ export const declineTransferAccountBook = async (
     NotificationEvent.DELETED
   );
   await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+
+  return {
+    accountBookId,
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.DECLINED,
+  };
 };
 
 /**

@@ -130,7 +130,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const { trigger: createTeam } = APIHandler<ITeam>(APIName.CREATE_TEAM);
 
   // Info: (20250226 - Julian) 邀請成員 API
-  const { trigger: inviteMember } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
+  const { trigger: inviteMember } = APIHandler(APIName.INVITE_MEMBER_TO_TEAM);
 
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
