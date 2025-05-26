@@ -78,7 +78,7 @@ const AccountBookInfoModal = ({
       if (!success) {
         // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'create-company-failed',
+          id: 'create-account-book-failed',
           type: ToastType.ERROR,
           content: (
             <p>
