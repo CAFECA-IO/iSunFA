@@ -8,6 +8,7 @@ import VoucherList from '@/components/voucher/voucher_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import FilterSideMenu from '@/components/filter_sidemenu/filter_sidemenu';
 import Pagination from '@/components/pagination/pagination';
+import SearchInput from '@/components/filter_section/search_input';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
@@ -151,10 +152,7 @@ const VoucherListPageBody: React.FC = () => {
         setTotalCount(data.totalCount);
 
         const voucherListUI: IVoucherUI[] = data.data.map((voucher) => {
-          return {
-            ...voucher,
-            isSelected: false,
-          };
+          return { ...voucher, isSelected: false };
         });
 
         setVoucherList(voucherListUI);
@@ -225,6 +223,10 @@ const VoucherListPageBody: React.FC = () => {
           onTabClick={tabClick}
           counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
+        {/* Info: (20250526 - Julian) Search Input */}
+        <div className="block tablet:hidden">
+          <SearchInput searchQuery={keyword} onSearchChange={setKeyword} />
+        </div>
         {/* Info: (20241022 - Julian) Filter Section */}
         <div className="hidden tablet:block">
           <FilterSection<IVoucherBeta[]>
@@ -265,14 +267,7 @@ const VoucherListPageBody: React.FC = () => {
       </div>
 
       {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
-      <FilterSideMenu
-        isModalVisible={isShowSideMenu}
-        modalVisibleHandler={toggleSideMenu}
-        searchState={{
-          searchQuery: keyword,
-          setSearchQuery: setKeyword,
-        }}
-      />
+      <FilterSideMenu isModalVisible={isShowSideMenu} modalVisibleHandler={toggleSideMenu} />
     </div>
   );
 };

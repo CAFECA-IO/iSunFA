@@ -12,8 +12,11 @@ interface SubscriptionPlansProps {
 const SubscriptionPlans = ({ team, getOwnedTeam }: SubscriptionPlansProps) => {
   const router = useRouter();
 
+  const nowTimestamp = Date.now() / 1000;
+
   // Info: (20250422 - Julian) 如果為試用期，則將免費版換成為試用版
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+  const isTrial =
+    team.paymentStatus === TPaymentStatus.TRIAL && team.expiredTimestamp > nowTimestamp;
   const planListWithTrial = PLANS.map((plan) => {
     if (plan.id === TPlanType.BEGINNER) {
       return TRAIL_PLAN;

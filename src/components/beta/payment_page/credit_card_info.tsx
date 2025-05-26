@@ -234,7 +234,13 @@ const CreditCardInfo = ({
       </div>
     </Button>
   ) : (
-    <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+    <Button
+      type="button"
+      variant="default"
+      size="large"
+      onClick={updateSubscription}
+      disabled={!hasCreditCardInfo}
+    >
       {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
     </Button>
   );
