@@ -58,6 +58,8 @@ class OenPaymentGateway implements IPaymentGateway {
     };
     loggerBack.warn('OenPaymentGateway getCardBindingUrl');
     loggerBack.warn(options);
+    loggerBack.warn(this.id);
+    loggerBack.warn(this.secret);
     /** Info: (20250317 - Luphia) the response format
      * {"code":"S0000","data":{"id":"2rbtp5feoNkmrS5y3Ovw1LIp65w"},"message":""}
      * The id in data is the paymentId.
