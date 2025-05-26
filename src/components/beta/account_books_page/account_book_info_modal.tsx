@@ -8,7 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import StepOneForm from '@/components/beta/account_books_page/step_one_form';
-import { initialStep1FormState, step1FormReducer } from '@/constants/account_book';
+import { step1FormReducer, createInitialStep1FormState } from '@/constants/account_book';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface AccountBookInfoModalProps {
@@ -25,26 +25,16 @@ const AccountBookInfoModal = ({
   accountBookToEdit,
 }: AccountBookInfoModalProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
-  const { createAccountBook, userAuth } = useUserCtx();
+  const { createAccountBook, updateAccountBook, userAuth } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const [step1FormState, step1FormDispatch] = useReducer(
     step1FormReducer,
-    accountBookToEdit
-      ? {
-          ...initialStep1FormState,
-          companyName: accountBookToEdit.name || '',
-          taxId: accountBookToEdit.taxId || '',
-          tag: accountBookToEdit.tag || null,
-          team: accountBookToEdit.team || null,
-          imageId: accountBookToEdit.imageId || '',
-          // Info: (20250428 - Liz) 把需要的欄位從 accountBookToEdit 中提取設為預設值
-        }
-      : initialStep1FormState
+    createInitialStep1FormState(accountBookToEdit)
   );
-  // const [step2FormState, step2FormDispatch] = useReducer(step2FormReducer, initialStep2FormState);
   const [teamList, setTeamList] = useState<ITeam[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isCreateLoading, setIsCreateLoading] = useState<boolean>(false);
+  const [isEditLoading, setIsEditLoading] = useState<boolean>(false);
 
   // Info: (20250303 - Liz) 取得團隊清單 API
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
@@ -65,8 +55,8 @@ const AccountBookInfoModal = ({
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async () => {
-    if (isLoading) return; // Info: (20250312 - Liz) 避免重複點擊
-    setIsLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
+    if (isCreateLoading) return; // Info: (20250312 - Liz) 避免重複點擊
+    setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
     if (!companyName || !taxId || !tag || !team) return;
 
     try {
@@ -88,7 +78,7 @@ const AccountBookInfoModal = ({
       if (!success) {
         // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'create-company-failed',
+          id: 'create-account-book-failed',
           type: ToastType.ERROR,
           content: (
             <p>
@@ -116,15 +106,68 @@ const AccountBookInfoModal = ({
       console.log('AccountBookInfoModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
-      setIsLoading(false);
+      setIsCreateLoading(false);
     }
   };
 
-  // ToDo: (20250428 - Liz) 打 API 編輯帳本(原為公司) 目前沒有 API
+  // Info: (20250526 - Liz) 打 API 更新帳本
   const handleEdit = async () => {
-    // Deprecated: (20250506 - Liz)
-    // eslint-disable-next-line no-alert
-    window.alert('打 API 編輯帳本！但是目前 API 正在修改中，無法使用');
+    if (!accountBookToEdit) return;
+    if (isEditLoading) return; // Info: (20250526 - Liz) 避免重複點擊
+    setIsEditLoading(true); // Info: (20250526 - Liz) 點擊後進入 loading 狀態
+    if (!companyName || !taxId || !tag || !team) return; // Info: (20250526 - Liz) 確保必填欄位都有填寫
+
+    try {
+      const { success, code, errorMsg } = await updateAccountBook({
+        accountBookId: `${accountBookToEdit.id}`,
+        name: companyName,
+        taxId,
+        tag,
+        fromTeamId: accountBookToEdit.team.id, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
+        toTeamId: team.id, // Info: (20250526 - Liz) 轉移到的團隊 ID
+        fileId: 0,
+        representativeName,
+        taxSerialNumber,
+        contactPerson,
+        phoneNumber,
+        city: city ?? '',
+        district: district ?? '',
+        enteredAddress,
+      });
+
+      if (!success) {
+        // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
+        toastHandler({
+          id: 'edit-account-book-failed',
+          type: ToastType.ERROR,
+          content: (
+            <p>
+              {`${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.UPDATE_ACCOUNT_BOOK_FAILED')}!
+              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_CODE')}: ${code}
+              ${t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ERROR_MESSAGE')}: ${errorMsg}`}
+            </p>
+          ),
+          closeable: true,
+          position: ToastPosition.TOP_CENTER,
+        });
+        return;
+      }
+
+      // Info: (20250526 - Liz) 更新帳本成功後清空表單並關閉 modal
+      step1FormDispatch({ type: 'RESET' });
+      closeAccountBookInfoModal();
+
+      if (getAccountBookList) getAccountBookList(); // Info: (20250526 - Liz) 重新取得帳本清單
+
+      if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250526 - Liz) This is a workaround to refresh the account book list after editing an account book (if use filterSection)
+    } catch (error) {
+      // Deprecated: (20250526 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('AccountBookInfoModal handleEdit error:', error);
+    } finally {
+      // Info: (20250526 - Liz) API 回傳後解除 loading 狀態
+      setIsEditLoading(false);
+    }
   };
 
   // Info: (20250303 - Liz) 打 API 取得使用者的團隊清單
@@ -163,6 +206,7 @@ const AccountBookInfoModal = ({
         closeAccountBookInfoModal={closeAccountBookInfoModal}
         accountBookToEdit={accountBookToEdit}
         handleSubmit={accountBookToEdit ? handleEdit : handleSubmit}
+        disabledSubmit={isCreateLoading || isEditLoading}
       />
     </div>
   );

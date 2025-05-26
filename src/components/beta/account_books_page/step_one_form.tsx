@@ -14,6 +14,8 @@ import { APIName } from '@/constants/api_connection';
 import { UploadType } from '@/constants/file';
 import { IFileUIBeta } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
+import { convertTeamRoleCanDo } from '@/lib/shared/permission';
+import { TeamPermissionAction } from '@/interfaces/permissions';
 
 interface StepOneFormProps {
   teamList: ITeam[];
@@ -22,6 +24,7 @@ interface StepOneFormProps {
   step1FormDispatch: Dispatch<Step1FormAction>;
   accountBookToEdit?: IAccountBookWithTeam;
   handleSubmit: () => Promise<void>;
+  disabledSubmit: boolean;
 }
 const StepOneForm = ({
   teamList,
@@ -30,8 +33,16 @@ const StepOneForm = ({
   step1FormDispatch,
   accountBookToEdit,
   handleSubmit,
+  disabledSubmit,
 }: StepOneFormProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
+  const isEditing = !!accountBookToEdit;
+  const canTransferAccountBook = isEditing
+    ? convertTeamRoleCanDo({
+        teamRole: accountBookToEdit.team.role,
+        canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
+      }).can
+    : true; // Info: (20250526 - Liz) 如果不是在編輯帳本，就不需要檢查權限
 
   const {
     imageId,
@@ -614,8 +625,9 @@ const StepOneForm = ({
               <div className="relative flex flex-col">
                 <button
                   type="button"
-                  className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM"
                   onClick={toggleTeamDropdown}
+                  disabled={!canTransferAccountBook}
+                  className="flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background text-dropdown-text-input-filled shadow-Dropshadow_SM disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable disabled:text-input-text-disable"
                 >
                   <p className="px-12px py-10px text-base font-medium">
                     {team ? (
@@ -732,6 +744,7 @@ const StepOneForm = ({
             <button
               type="button"
               onClick={onClickSubmit}
+              disabled={disabledSubmit}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
               <span>{t('dashboard:COMMON.SAVE')}</span>

@@ -183,6 +183,7 @@
     "CHOOSE_WORK_TAG": "选择工作标签",
     "CHOOSE_TEAM": "选择团队",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帐本失败",
+    "UPDATE_ACCOUNT_BOOK_FAILED": "更新帐本失败",
     "ERROR_CODE": "错误代码",
     "ERROR_MESSAGE": "错误讯息",
 

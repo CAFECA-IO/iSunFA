@@ -5,6 +5,7 @@ import {
   DECLARANT_FILING_METHOD,
   FILING_FREQUENCY,
   FILING_METHOD,
+  IAccountBookWithTeam,
 } from '@/interfaces/account_book';
 import { ITeam } from '@/interfaces/team';
 
@@ -54,6 +55,7 @@ export interface Step1FormState {
   tagError: string | null;
 }
 
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值
 export const initialStep1FormState: Step1FormState = {
   imageId: '',
   companyName: '',
@@ -79,6 +81,25 @@ export const initialStep1FormState: Step1FormState = {
   taxSerialNumberError: null,
   teamError: null,
   tagError: null,
+};
+
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值建立函式 => 判斷目前是否是「編輯模式」，如果是，就從現有資料中填入表單欄位，否則就用初始值
+export const createInitialStep1FormState = (
+  accountBookToEdit?: IAccountBookWithTeam
+): Step1FormState => {
+  if (!accountBookToEdit) return initialStep1FormState;
+
+  return {
+    ...initialStep1FormState,
+    companyName: accountBookToEdit.name ?? initialStep1FormState.companyName,
+    taxId: accountBookToEdit.taxId ?? initialStep1FormState.taxId,
+    tag: accountBookToEdit.tag ?? initialStep1FormState.tag,
+    team: accountBookToEdit.team ?? initialStep1FormState.team,
+    imageId: accountBookToEdit.imageId ?? initialStep1FormState.imageId,
+    representativeName:
+      accountBookToEdit.representativeName ?? initialStep1FormState.representativeName,
+    taxSerialNumber: accountBookToEdit.taxSerialNumber ?? initialStep1FormState.taxSerialNumber,
+  };
 };
 
 export type Step1FormAction =

@@ -258,7 +258,7 @@ const AccountBookItem = ({
             {isOptionsDropdownOpen && (
               <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
                 {/* Info: (20250428 - Liz) Edit Account Book */}
-                {requestTransferPermission.can && (
+                {editPermission.can && (
                   <button
                     type="button"
                     onClick={openEditAccountBookModal}
