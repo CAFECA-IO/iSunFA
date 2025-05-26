@@ -34,9 +34,15 @@ const SubscriptionPlan = ({
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn';
 
   const { toastHandler } = useModalContext();
+  const nowTimestamp = Date.now() / 1000;
 
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
-  const isSelected = team.plan === plan.id;
+  const isTrial =
+    team.paymentStatus === TPaymentStatus.TRIAL && team.expiredTimestamp > nowTimestamp;
+  const isSelected =
+    // Info: (20250526 - Julian) 邏輯可能還需檢查
+    team.paymentStatus === TPaymentStatus.TRIAL
+      ? plan.id === TPlanType.BEGINNER
+      : team.plan === plan.id;
 
   // Info: (20250425 - Julian) 試用期方案取代免費版的位置
   const isShowSelected = isTrial ? plan.id === TPlanType.TRIAL : isSelected;
