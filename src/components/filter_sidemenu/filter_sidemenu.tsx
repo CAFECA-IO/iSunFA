@@ -1,25 +1,17 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import { FaChevronDown } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import Toggle from '@/components/toggle/toggle';
-import SearchInput from '@/components/filter_section/search_input';
 
 interface IFilterSideMenuProps {
   isModalVisible: boolean;
   modalVisibleHandler: () => void;
-
-  // Info: (20250521 - Julian) 搜尋欄 state
-  searchState?: {
-    searchQuery: string | undefined;
-    setSearchQuery: Dispatch<SetStateAction<string | undefined>>;
-  };
 }
 
 const FilterSideMenu: React.FC<IFilterSideMenuProps> = ({
   isModalVisible,
   modalVisibleHandler,
-  searchState,
 }) => {
   const typeDropdownMenu = (
     <div className="flex flex-col items-start gap-8px">
@@ -57,13 +49,6 @@ const FilterSideMenu: React.FC<IFilterSideMenuProps> = ({
   //   </div>
   // );
 
-  const searchInput = searchState && (
-    <SearchInput
-      searchQuery={searchState.searchQuery}
-      onSearchChange={searchState.setSearchQuery}
-    />
-  );
-
   return (
     <div className="block tablet:hidden">
       {/* Info: (20250521 - Julian) 黑底遮罩 */}
@@ -90,7 +75,6 @@ const FilterSideMenu: React.FC<IFilterSideMenuProps> = ({
         <div className="flex flex-col items-stretch gap-lv-4">
           {typeDropdownMenu}
           {periodPicker}
-          {searchInput}
         </div>
         <div className="flex items-center gap-lv-2 text-xs font-medium">
           <Toggle
