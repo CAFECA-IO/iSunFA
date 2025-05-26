@@ -40,6 +40,7 @@ import { IFileUIBeta } from '@/interfaces/file';
 import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { ITeamMember } from '@/interfaces/team';
 
 interface CertificateListBodyProps {}
 
@@ -61,6 +62,11 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
     APIName.DELETE_INVOICE_RC2_OUTPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
+
+  // Info: (20250526 - Anna) 取得成員清單 API (list member by team id)
+  const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(
+    APIName.LIST_MEMBER_BY_TEAM_ID
+  );
 
   const [activeTab, setActiveTab] = useState<InvoiceTab>(InvoiceTab.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<IInvoiceRC2OutputUI[]>([]);
@@ -96,6 +102,9 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
+
+  // Info: (20250526 - Anna) 對應 uploaderNmae 和 imageId 的映射表，型別為 Record<string, string>，代表 key 和 value 都是字串
+  const [uploaderAvatarMap, setUploaderAvatarMap] = useState<Record<string, string>>({});
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
   const currentEditingCertificate = useMemo(() => {
@@ -545,6 +554,30 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     };
   }, [accountBookId]);
 
+    useEffect(() => {
+      const fetchMemberAvatars = async () => {
+        if (!connectedAccountBook?.teamId) return;
+
+        const { success, data } = await getMemberListByTeamIdAPI({
+          params: { teamId: connectedAccountBook.teamId.toString() },
+          query: { page: 1, pageSize: 9999 },
+        });
+
+        if (success && data) {
+          // Info: (20250526 - Anna) 初始化一個空的 avatarMap 物件
+          const avatarMap: Record<string, string> = {};
+          // Info: (20250526 - Anna) 對每一位成員，把 member.name 當作 key，把 member.imageId 當作 value，建立對應關係
+          data.data.forEach((member) => {
+            avatarMap[member.name] = member.imageId;
+          });
+          // Info: (20250526 - Anna) 把建立好的 avatarMap 存入 uploaderAvatarMap 的 state
+          setUploaderAvatarMap(avatarMap);
+        }
+      };
+
+      fetchMemberAvatars();
+    }, [connectedAccountBook?.teamId]);
+
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
@@ -679,6 +712,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
                 setCertificateNoSort={setCertificateNoSort}
                 setCertificateTypeSort={setCertificateTypeSort}
                 isExporting={isExporting}
+                uploaderAvatarMap={uploaderAvatarMap}
               />
             </div>
           </>

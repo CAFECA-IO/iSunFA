@@ -576,7 +576,7 @@ const DatePicker = ({
       {/* Info: (20240417 - Shirley) Select Period button */}
       {/* Info: (20250416 - Anna) 標籤 */}
       {label && (
-        <p className="text-sm font-semibold text-input-text-primary">
+        <p className="text-sm font-semibold text-neutral-300">
           {t(`date_picker:DATE_PICKER.${label.toUpperCase()}`)}
         </p>
       )}
