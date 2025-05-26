@@ -3,8 +3,8 @@ import { PrismaClient, Tag } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import teams from '@/seed_json/team.json';
 import country from '@/seed_json/country.json';
-import companies from '@/seed_json/company.json';
-import companyKYCs from '@/seed_json/company_kyc.json';
+import companies from '@/seed_json/account_book.json';
+import companyKYCs from '@/seed_json/account_book_kyc.json';
 // import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
@@ -40,7 +40,7 @@ import certificates from '@/seed_json/certificate.json';
 import voucherCertificates from '@/seed_json/voucher_certificate.json';
 import accountingSettings from '@/seed_json/accounting_setting.json';
 import userSettings from '@/seed_json/user_setting.json';
-// import companySettings from '@/seed_json/company_setting.json';
+// import accountBookSettings from '@/seed_json/account_book_setting.json';
 import userActionLogs from '@/seed_json/user_action_log.json';
 import invoice from '@/seed_json/invoice.json';
 
@@ -123,8 +123,8 @@ async function createTeam() {
   });
 }
 
-async function createCompany() {
-  await prisma.company.createMany({
+async function createAccountBook() {
+  await prisma.accountBook.createMany({
     data: companies.map((company) => ({
       ...company,
       tag: company.tag as Tag,
@@ -132,8 +132,8 @@ async function createCompany() {
   });
 }
 
-async function createCompanyKYC() {
-  await prisma.companyKYC.createMany({
+async function createAccountBookKYC() {
+  await prisma.accountBookKYC.createMany({
     data: companyKYCs,
   });
 }
@@ -392,7 +392,7 @@ async function main() {
     await createCountry();
     await createUser();
     await createTeam();
-    await createCompany();
+    await createAccountBook();
     await new Promise((resolve) => {
       setTimeout(resolve, 3000);
     });
@@ -405,7 +405,7 @@ async function main() {
     // await createCompanySetting();
     await createUserSetting();
     // await createRole();
-    await createCompanyKYC();
+    await createAccountBookKYC();
     await createAccount();
     // await createAdmin();
     await createDepartment();

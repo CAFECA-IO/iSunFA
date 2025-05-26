@@ -4,7 +4,7 @@
     "name": "Salary Voucher: 20240809001",
     "createdAt": 1723188860,
     "updatedAt": 1723188860,
-    "companyId": 8867,
-    "deletedAt": null
+    "deletedAt": null,
+    "accountBookId": 8867
   }
 ]

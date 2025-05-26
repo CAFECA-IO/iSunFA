@@ -1,7 +1,6 @@
 [
   {
     "id": 1000,
-    "companyId": 1000,
     "address": "123 Main St",
     "representativeName": "John Doe",
     "country": "en",
@@ -26,11 +25,11 @@
     "reviewAt": 1643625600,
     "createdAt": 1643625600,
     "updatedAt": 1643625600,
-    "deletedAt": null
+    "deletedAt": null,
+    "accountBookId": 1000
   },
   {
     "id": 1001,
-    "companyId": 1000,
     "address": "456 Elm St",
     "representativeName": "Jane Doe",
     "country": "en",
@@ -55,6 +54,7 @@
     "reviewAt": 1643625600,
     "createdAt": 1643625600,
     "updatedAt": 1643625600,
-    "deletedAt": null
+    "deletedAt": null,
+    "accountBookId": 1000
   }
 ]

@@ -1,14 +1,14 @@
 [
-    {
-        "id": 1001,
-        "companyId": 1001,
-        "salesTaxTaxable": false,
-        "salesTaxRate": 0.00,
-        "purchaseTaxTaxable": true,
-        "purchaseTaxRate": 0.10,
-        "returnPeriodicity": "quarterly",
-        "currency": "EUR",
-        "createdAt": 1234567890,
-        "updatedAt": 1234567890
-    }
+  {
+    "id": 1001,
+    "salesTaxTaxable": false,
+    "salesTaxRate": 0.0,
+    "purchaseTaxTaxable": true,
+    "purchaseTaxRate": 0.1,
+    "returnPeriodicity": "quarterly",
+    "currency": "EUR",
+    "createdAt": 1234567890,
+    "updatedAt": 1234567890,
+    "accountBookId": 1001
+  }
 ]

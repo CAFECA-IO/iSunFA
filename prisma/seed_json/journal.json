@@ -1,51 +1,51 @@
 [
   {
     "id": 1000,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1001,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1002,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1003,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1004,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1005,
-    "companyId": 1002,
     "createdAt": 1,
     "updatedAt": 1,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 1002
   },
   {
     "id": 1006,
-    "companyId": 8867,
     "createdAt": 1723188860,
     "updatedAt": 1723188860,
-    "event": "JOURNAL.UPLOADED"
+    "event": "JOURNAL.UPLOADED",
+    "accountBookId": 8867
   }
 ]
