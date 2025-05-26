@@ -3,7 +3,7 @@ import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortOrder } from '@/constants/sort';
 import { NotificationType, NotificationEvent } from '@/interfaces/notification';
 import { getPusherInstance } from '@/lib/utils/pusher';
-import { NotificationType as PrismaNotificationType } from '@prisma/client';
+import { Prisma, NotificationType as PrismaNotificationType } from '@prisma/client';
 import loggerBack from '@/lib/utils/logger_back';
 
 export async function listNotifications(userId: number) {
@@ -11,6 +11,7 @@ export async function listNotifications(userId: number) {
     where: {
       userId,
       deletedAt: null,
+      read: false,
     },
     orderBy: {
       createdAt: SortOrder.DESC,
@@ -112,7 +113,10 @@ export async function createNotification(params: CreateNotificationParams) {
   return notification;
 }
 
-export async function createNotificationsBulk(params: CreateManyNotificationParams) {
+export async function createNotificationsBulk(
+  tx: Prisma.TransactionClient,
+  params: CreateManyNotificationParams
+) {
   const now = Math.floor(Date.now() / 1000);
 
   const notifications = params.userEmailMap
@@ -133,7 +137,7 @@ export async function createNotificationsBulk(params: CreateManyNotificationPara
       updatedAt: now,
     }));
 
-  await prisma.notification.createMany({ data: notifications });
+  await tx.notification.createMany({ data: notifications });
 
   loggerBack.info(`pusher: ${params.pushPusher}`);
 
@@ -168,6 +172,6 @@ export async function createNotificationsBulk(params: CreateManyNotificationPara
       createdAt: now,
       updatedAt: now,
     }));
-    await prisma.emailJob.createMany({ data: emails });
+    await tx.emailJob.createMany({ data: emails });
   }
 }

@@ -218,29 +218,30 @@ export const createTeamWithTrial = async (
       const existingUserEmails = new Set(existingUsers.map((u) => u.email));
       const newUserEmails = teamData.members.filter((email) => !existingUserEmails.has(email));
 
-      if (existingUsers.length) {
-        await tx.teamMember.createMany({
-          data: existingUsers.map((user) => ({
-            teamId: newTeam.id,
-            userId: user.id,
-            role: TeamRole.EDITOR,
-            joinedAt: nowInSeconds,
-          })),
-          skipDuplicates: true,
-        });
+      const userEmailMap = [
+        ...existingUsers.map((user) => ({
+          userId: user.id,
+          email: user.email!,
+        })),
+        ...newUserEmails.map((email) => ({
+          userId: undefined,
+          email,
+        })),
+      ];
 
-        await tx.inviteTeamMember.createMany({
-          data: existingUsers.map((user) => ({
-            teamId: newTeam.id,
-            email: user.email!,
-            status: InviteStatus.COMPLETED,
-            createdAt: nowInSeconds,
-            completedAt: nowInSeconds,
-            note: JSON.stringify({ reason: 'User already exists, added to team without asking' }),
-          })),
-          skipDuplicates: true,
-        });
-      }
+      await tx.inviteTeamMember.createMany({
+        data: userEmailMap.map(({ email }) => ({
+          teamId: newTeam.id,
+          email,
+          status: InviteStatus.PENDING,
+          createdAt: nowInSeconds,
+          note: JSON.stringify({
+            reason: existingUserEmails.has(email)
+              ? 'User exists, waiting for accept'
+              : 'User not exists, pending for join, when user register, will be added to team',
+          }),
+        })),
+      });
 
       if (newUserEmails.length) {
         await tx.inviteTeamMember.createMany({

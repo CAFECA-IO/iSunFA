@@ -1111,9 +1111,8 @@ export const requestTransferAccountBook = async (
     error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
     throw error;
   }
-
-  await prisma.$transaction([
-    prisma.accountBookTransfer.create({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.create({
       data: {
         companyId: accountBookId,
         fromTeamId,
@@ -1122,18 +1121,19 @@ export const requestTransferAccountBook = async (
         status: TransferStatus.PENDING,
         pendingAt: now,
       },
-    }),
-    prisma.company.update({ where: { id: accountBookId }, data: { isTransferring: true } }),
-  ]);
+    });
+    await tx.company.update({ where: { id: accountBookId }, data: { isTransferring: true } });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    fromTeamId,
-    toTeamId,
-    NotificationEvent.TRANSFER
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      fromTeamId,
+      toTeamId,
+      NotificationEvent.TRANSFER
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
 
   return { accountBookId, fromTeamId, toTeamId, status: TransferStatus.PENDING };
 };
@@ -1182,25 +1182,26 @@ export const cancelTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
       data: { status: TransferStatus.CANCELED },
-    }),
-    prisma.company.update({
+    });
+    await tx.company.update({
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.CANCELLED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.CANCELLED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
 
   return {
     accountBookId,
@@ -1251,29 +1252,26 @@ export const acceptTransferAccountBook = async (
     throw error;
   }
 
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { teamId: transfer.toTeamId, isTransferring: false },
-    }),
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
-      data: {
-        status: TransferStatus.COMPLETED,
-        completedAt: now,
-      },
-    }),
-  ]);
+      data: { status: TransferStatus.COMPLETED },
+    });
+    await tx.company.update({
+      where: { id: accountBookId },
+      data: { isTransferring: false },
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.APPROVED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.APPROVED
+    );
 
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
   return {
     accountBookId,
     fromTeamId: transfer.fromTeamId,
@@ -1312,29 +1310,26 @@ export const declineTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
-      data: {
-        status: TransferStatus.DECLINED,
-        updatedAt: now,
-      },
-    }),
-    prisma.company.update({
+      data: { status: TransferStatus.DECLINED, updatedAt: now },
+    });
+    await tx.company.update({
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.DELETED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.REJECTED
+    );
 
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
   return {
     accountBookId,
     fromTeamId: transfer.fromTeamId,

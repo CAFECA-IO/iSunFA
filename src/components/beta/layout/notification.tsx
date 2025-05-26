@@ -80,6 +80,8 @@ const Notification = ({
   };
 
   const handleNewNotification = useCallback((data: { message: string }) => {
+    // eslint-disable-next-line no-console
+    console.log('New notification received:', data);
     const newNotification: INotificationRC2 = JSON.parse(data.message);
     setNotifications((prev) => [...prev, newNotification]);
   }, []);
