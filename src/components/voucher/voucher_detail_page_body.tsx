@@ -232,7 +232,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
         id={`${lineItem.account?.id}-description`}
         className="rounded-sm bg-input-surface-input-background px-12px py-10px"
       >
-        {lineItem.description !== '' ? lineItem.description : '-'}
+        {lineItem.description}
       </div>
       <div
         id={`${lineItem.account?.id}-debit`}
