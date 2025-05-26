@@ -59,8 +59,6 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
           pageSize: 10,
         },
       });
-      // eslint-disable-next-line no-console
-      console.log('🔍 LIST_MEMBER_BY_TEAM_ID response:', memberListData);
 
       if (!success) throw new Error();
       if (success && memberListData) {
