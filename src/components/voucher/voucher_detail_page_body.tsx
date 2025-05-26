@@ -553,7 +553,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
       <div className="mt-lv-6 w-full overflow-x-auto tablet:mt-40px">
         {/* Info: (20241008 - Julian) Voucher Line Block */}
-        <div className="flex w-max flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px tablet:w-auto">
+        <div className="flex w-max flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px text-xs tablet:w-auto tablet:text-base">
           {/* Info: (20241008 - Julian) Voucher Line Header */}
           <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
             <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
