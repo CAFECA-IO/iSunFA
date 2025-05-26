@@ -13,6 +13,7 @@ import { PAYMENT_GATEWAY, PAYMENT_METHOD_TYPE } from '@/constants/payment';
 import { DefaultValue } from '@/constants/default_value';
 import { HttpMethod } from '@/constants/api_connection';
 import { teamOrderToOrderOen } from '@/lib/utils/formatter/order.formatter';
+import loggerBack from '@/lib/utils/logger_back';
 
 class OenPaymentGateway implements IPaymentGateway {
   private platform: PAYMENT_GATEWAY;
@@ -55,6 +56,8 @@ class OenPaymentGateway implements IPaymentGateway {
       successUrl: options.successUrl,
       failureUrl: options.failureUrl,
     };
+    loggerBack.warn('OenPaymentGateway getCardBindingUrl');
+    loggerBack.warn(options);
     /** Info: (20250317 - Luphia) the response format
      * {"code":"S0000","data":{"id":"2rbtp5feoNkmrS5y3Ovw1LIp65w"},"message":""}
      * The id in data is the paymentId.
@@ -68,6 +71,8 @@ class OenPaymentGateway implements IPaymentGateway {
       body: JSON.stringify(query),
     });
     const queryResponseJson = await queryResponse.json();
+    loggerBack.warn('OenPaymentGateway getCardBindingUrl response');
+    loggerBack.warn(queryResponseJson);
     const paymentId = queryResponseJson.data.id;
     const result = this.cardBindingUrl.replace(':paymentId', paymentId);
     return result;
