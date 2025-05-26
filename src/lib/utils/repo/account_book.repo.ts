@@ -127,21 +127,25 @@ const buildAccountBookTransferNotification = async (
     switch (notificationEvent) {
       case NotificationEvent.TRANSFER:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: '已發起帳本轉移請求',
           toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 發出，待本團隊處理`,
         };
       case NotificationEvent.APPROVED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」已成功轉移至 ${toTeam.name}`,
           toTeam: `帳本「${accountBook.name}」已成功轉入團隊`,
         };
       case NotificationEvent.CANCELLED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」轉移請求已取消`,
           toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 取消`,
         };
       case NotificationEvent.REJECTED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」轉移請求已被拒絕`,
           toTeam: `帳本「${accountBook.name}」轉移請求已被 ${toTeam.name} 拒絕`,
         };
