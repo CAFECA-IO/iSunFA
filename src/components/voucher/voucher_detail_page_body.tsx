@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { TbArrowBackUp } from 'react-icons/tb';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
@@ -26,9 +27,14 @@ import { AccountCodesOfAPRegex } from '@/constants/asset';
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
   voucherNo: string | undefined;
+  goBackUrl: string;
 }
 
-const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
+const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
+  voucherId,
+  voucherNo,
+  goBackUrl,
+}) => {
   const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const { connectedAccountBook } = useUserCtx();
@@ -135,6 +141,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     }
   };
 
+  const goBack = () => router.push(goBackUrl);
+
   const deleteClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
@@ -224,7 +232,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         id={`${lineItem.account?.id}-description`}
         className="rounded-sm bg-input-surface-input-background px-12px py-10px"
       >
-        {lineItem.description}
+        {lineItem.description !== '' ? lineItem.description : '-'}
       </div>
       <div
         id={`${lineItem.account?.id}-debit`}
@@ -451,10 +459,20 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   }
 
   return (
-    <div className="overflow-y-auto px-40px pb-32px pt-10px">
-      <div className="flex justify-end gap-2 p-4">
+    <div className="overflow-y-auto pb-32px tablet:px-40px tablet:pt-10px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('journal:VOUCHER_DETAIL_PAGE.TITLE')} {voucherNo ?? voucherId}
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-lv-5 py-lv-6 tablet:gap-lv-4 tablet:p-4">
         <Button id="download-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
-          <MdOutlineFileDownload size={16} />
+          <MdOutlineFileDownload size={20} />
         </Button>
         <Button
           id="delete-voucher-btn"
@@ -465,7 +483,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           onClick={isReverseRelated ? () => {} : deleteClickHandler}
           disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能再次刪除
         >
-          <FiTrash2 size={16} />
+          <FiTrash2 size={20} />
         </Button>
 
         <Button
@@ -483,7 +501,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
             }
           }}
         >
-          <FiEdit size={16} />
+          <FiEdit size={20} />
         </Button>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
@@ -494,7 +512,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       />
 
       {/* Info: (20241008 - Julian) Voucher Detail */}
-      <div className="flex flex-col items-stretch gap-24px font-semibold">
+      <div className="mt-lv-6 flex flex-col items-stretch gap-24px text-xs font-semibold tablet:mt-40px tablet:text-sm">
         {/* Info: (20241007 - Julian) Voucher date */}
         <div className="flex justify-between">
           <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.DATE')}</p>
@@ -533,23 +551,25 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         {isAsset}
       </div>
 
-      {/* Info: (20241008 - Julian) Voucher Line Block */}
-      <div className="mt-40px flex flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px">
-        {/* Info: (20241008 - Julian) Voucher Line Header */}
-        <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.PARTICULARS')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.DEBIT')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.CREDIT')}</p>
-        </div>
-        {/* Info: (20241008 - Julian) Voucher Line Items */}
-        <div className="grid grid-cols-4 gap-24px font-medium text-input-text-input-filled">
-          {voucherLineBlock}
-        </div>
-        {/* Info: (20241008 - Julian) Voucher Line Total */}
-        <div className="grid grid-cols-4 gap-24px text-right text-sm text-text-neutral-solid-dark">
-          <div className="col-start-3">{numberWithCommas(totalDebit)}</div>
-          <div>{numberWithCommas(totalCredit)}</div>
+      <div className="mt-lv-6 w-full overflow-x-auto tablet:mt-40px">
+        {/* Info: (20241008 - Julian) Voucher Line Block */}
+        <div className="flex w-max flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px tablet:w-auto">
+          {/* Info: (20241008 - Julian) Voucher Line Header */}
+          <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.PARTICULARS')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.DEBIT')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.CREDIT')}</p>
+          </div>
+          {/* Info: (20241008 - Julian) Voucher Line Items */}
+          <div className="grid grid-cols-4 gap-24px font-medium text-input-text-input-filled">
+            {voucherLineBlock}
+          </div>
+          {/* Info: (20241008 - Julian) Voucher Line Total */}
+          <div className="grid grid-cols-4 gap-24px text-right text-sm text-text-neutral-solid-dark">
+            <div className="col-start-3">{numberWithCommas(totalDebit)}</div>
+            <div>{numberWithCommas(totalCredit)}</div>
+          </div>
         </div>
       </div>
     </div>
