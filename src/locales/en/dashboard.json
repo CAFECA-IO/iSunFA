@@ -183,6 +183,7 @@
     "CHOOSE_WORK_TAG": "Choose Work Tag",
     "CHOOSE_TEAM": "Choose Team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
+    "UPDATE_ACCOUNT_BOOK_FAILED": "Failed to update account book",
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
 

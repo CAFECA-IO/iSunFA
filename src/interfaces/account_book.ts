@@ -158,6 +158,25 @@ export interface ICreateAccountBookReqBody {
   enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
 }
 
+export interface IUpdateAccountBookReqBody {
+  accountBookId: string;
+  fromTeamId?: number; // Info: (20250523 - Liz) 轉移帳本的原團隊 ID (轉移帳本 API)
+  toTeamId?: number; // Info: (20250523 - Liz) 接收帳本的目標團隊 ID (轉移帳本 API)
+  action?: ACCOUNT_BOOK_UPDATE_ACTION;
+  tag?: WORK_TAG;
+  name?: string;
+  taxId?: string;
+  teamId?: number;
+  fileId?: number; // Info: (20250523 - Liz) 圖片 ID
+  representativeName?: string; // Info: (20250523 - Liz) 負責人姓名
+  taxSerialNumber?: string; // Info: (20250523 - Liz) 稅籍編號
+  contactPerson?: string; // Info: (20250523 - Liz) 聯絡人姓名
+  phoneNumber?: string; // Info: (20250523 - Liz) 電話號碼
+  city?: string; // Info: (20250523 - Liz) 縣市
+  district?: string; // Info: (20250523 - Liz) 行政區
+  enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+}
+
 export interface ICompanyTaxIdAndName {
   taxId: string;
   name: string;
