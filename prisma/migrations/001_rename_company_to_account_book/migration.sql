@@ -285,4 +285,4 @@ ALTER TABLE "voucher" ADD CONSTRAINT "voucher_account_book_id_fkey" FOREIGN KEY 
 
 ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
-ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "account_book"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE CASCADE ON UPDATE CASCADE;
