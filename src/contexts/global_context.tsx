@@ -6,7 +6,7 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import AddAssetModal from '@/components/asset/add_asset_modal';
-import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
+import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';

@@ -28,6 +28,7 @@ interface InputInvoiceTableProps {
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   isExporting: boolean;
+  uploaderAvatarMap: Record<string, string>;
 }
 
 const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
@@ -50,6 +51,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
   setCertificateTypeSort,
   setCertificateNoSort,
   isExporting,
+  uploaderAvatarMap,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -115,8 +117,8 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
 
   return (
     // Info: (20241210 - Anna) 隱藏 scrollbar
-    <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
-      <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
+    <div className="hide-scrollbar min-h-500px w-full flex-auto overflow-hidden overflow-x-auto rounded-md">
+      <div className="table w-full min-w-900px rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
         <div className="table-header-group w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px w-full">
             {activeSelection && (
@@ -167,6 +169,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
               certificate={certificate}
               key={`certificate-item-${index + 1}`}
               onEdit={onEdit}
+              uploaderAvatarMap={uploaderAvatarMap}
             />
           ))}
         </div>

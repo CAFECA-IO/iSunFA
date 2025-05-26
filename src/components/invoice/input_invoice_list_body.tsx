@@ -37,6 +37,7 @@ import { IFileUIBeta } from '@/interfaces/file';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
+import { ITeamMember } from '@/interfaces/team';
 
 interface InvoiceListBodyProps {}
 
@@ -58,6 +59,11 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
     APIName.DELETE_INVOICE_RC2_INPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
+
+  // Info: (20250526 - Anna) 取得成員清單 API (list member by team id)
+  const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(
+    APIName.LIST_MEMBER_BY_TEAM_ID
+  );
 
   const [activeTab, setActiveTab] = useState<InvoiceTab>(InvoiceTab.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<IInvoiceRC2InputUI[]>([]);
@@ -143,6 +149,9 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
       onClick: handleAddVoucher,
     },
   ]);
+
+  // Info: (20250526 - Anna) 對應 uploaderName 和 imageId 的映射表，型別為 Record<string, string>，代表 key 和 value 都是字串
+  const [uploaderAvatarMap, setUploaderAvatarMap] = useState<Record<string, string>>({});
 
   const handleDownloadItem = useCallback(
     (id: number) => {
@@ -541,6 +550,30 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     };
   }, [accountBookId]);
 
+  useEffect(() => {
+    const fetchMemberAvatars = async () => {
+      if (!connectedAccountBook?.teamId) return;
+
+      const { success, data } = await getMemberListByTeamIdAPI({
+        params: { teamId: connectedAccountBook.teamId.toString() },
+        query: { page: 1, pageSize: 9999 },
+      });
+
+      if (success && data) {
+        // Info: (20250526 - Anna) 初始化一個空的 avatarMap 物件
+        const avatarMap: Record<string, string> = {};
+        // Info: (20250526 - Anna) 對每一位成員，把 member.name 當作 key，把 member.imageId 當作 value，建立對應關係
+        data.data.forEach((member) => {
+          avatarMap[member.name] = member.imageId;
+        });
+        // Info: (20250526 - Anna) 把建立好的 avatarMap 存入 uploaderAvatarMap 的 state
+        setUploaderAvatarMap(avatarMap);
+      }
+    };
+
+    fetchMemberAvatars();
+  }, [connectedAccountBook?.teamId]);
+
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">
       <Image
@@ -668,6 +701,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
                 setCertificateTypeSort={setCertificateTypeSort}
                 setCertificateNoSort={setCertificateNoSort}
                 isExporting={isExporting}
+                uploaderAvatarMap={uploaderAvatarMap}
               />
             </div>
           </>
