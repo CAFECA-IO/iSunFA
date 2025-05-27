@@ -9,7 +9,7 @@ import {
 
 export interface IAccountBookInfo {
   id: number;
-  companyId: number;
+  accountBookId: number;
   companyName: string;
   companyTaxId: string;
   companyStartDate?: number;
@@ -43,9 +43,9 @@ export interface IAccountBookInfo {
   licenseId?: string;
 }
 
-export type IAccountBookWithRelations = Prisma.CompanySettingGetPayload<{
+export type IAccountBookWithRelations = Prisma.AccountBookSettingGetPayload<{
   include: {
-    company: {
+    accountBook: {
       include: {
         imageFile: boolean;
         team: {

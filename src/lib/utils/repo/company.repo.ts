@@ -1,15 +1,15 @@
 import prisma from '@/client';
-import { Company, Prisma, File, CompanySetting } from '@prisma/client';
+import { AccountBook, Prisma, File, AccountBookSetting } from '@prisma/client';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 
 export async function getCompanyById(
-  companyId: number
-): Promise<(Company & { imageFile: File | null }) | null> {
-  let company: (Company & { imageFile: File | null }) | null = null;
-  if (companyId > 0) {
-    company = await prisma.company.findUnique({
+  accountBookId: number
+): Promise<(AccountBook & { imageFile: File | null }) | null> {
+  let company: (AccountBook & { imageFile: File | null }) | null = null;
+  if (accountBookId > 0) {
+    company = await prisma.accountBook.findUnique({
       where: {
-        id: companyId,
+        id: accountBookId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
@@ -20,40 +20,40 @@ export async function getCompanyById(
   return company;
 }
 
-export async function getCompanyWithSettingById(companyId: number): Promise<
-  | (Company & {
+export async function getCompanyWithSettingById(accountBookId: number): Promise<
+  | (AccountBook & {
       imageFile: File | null;
-      companySettings: CompanySetting[];
+      accountBookSettings: AccountBookSetting[];
     })
   | null
 > {
   let company:
-    | (Company & {
+    | (AccountBook & {
         imageFile: File | null;
-        companySettings: CompanySetting[];
+        accountBookSettings: AccountBookSetting[];
       })
     | null = null;
-  if (companyId > 0) {
-    company = await prisma.company.findUnique({
+  if (accountBookId > 0) {
+    company = await prisma.accountBook.findUnique({
       where: {
-        id: companyId,
+        id: accountBookId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
         imageFile: true,
-        companySettings: true,
+        accountBookSettings: true,
       },
     });
   }
   return company;
 }
 
-export async function getCompanyWithOwner(companyId: number): Promise<Company | null> {
-  let company: Company | null = null;
-  if (companyId > 0) {
-    company = await prisma.company.findUnique({
+export async function getCompanyWithOwner(accountBookId: number): Promise<AccountBook | null> {
+  let company: AccountBook | null = null;
+  if (accountBookId > 0) {
+    company = await prisma.accountBook.findUnique({
       where: {
-        id: companyId,
+        id: accountBookId,
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
     });
@@ -62,17 +62,17 @@ export async function getCompanyWithOwner(companyId: number): Promise<Company | 
 }
 
 export async function updateCompanyById(
-  companyId: number,
+  accountBookId: number,
   taxId?: string,
   name?: string,
   imageId?: number
-): Promise<Company & { imageFile: File | null }> {
+): Promise<AccountBook & { imageFile: File | null }> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const company = await prisma.company.update({
+  const company = await prisma.accountBook.update({
     where: {
-      id: companyId,
+      id: accountBookId,
     },
     data: {
       taxId,
@@ -88,16 +88,16 @@ export async function updateCompanyById(
 }
 
 export async function deleteCompanyById(
-  companyId: number
-): Promise<Company & { imageFile: File | null }> {
+  accountBookId: number
+): Promise<AccountBook & { imageFile: File | null }> {
   const nowInSecond = getTimestampNow();
 
-  const where: Prisma.CompanyWhereUniqueInput = {
-    id: companyId,
+  const where: Prisma.AccountBookWhereUniqueInput = {
+    id: accountBookId,
     OR: [{ deletedAt: 0 }, { deletedAt: null }],
   };
 
-  const data: Prisma.CompanyUpdateInput = {
+  const data: Prisma.AccountBookUpdateInput = {
     updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
@@ -112,26 +112,26 @@ export async function deleteCompanyById(
     include,
   };
 
-  const company = await prisma.company.update(updateArgs);
+  const company = await prisma.accountBook.update(updateArgs);
   return company;
 }
 
-export async function deleteCompanyByIdForTesting(companyId: number): Promise<Company> {
-  const company = await prisma.company.delete({
+export async function deleteCompanyByIdForTesting(accountBookId: number): Promise<AccountBook> {
+  const company = await prisma.accountBook.delete({
     where: {
-      id: companyId,
+      id: accountBookId,
     },
   });
   return company;
 }
 
-export async function putCompanyIcon(options: { companyId: number; fileId: number }) {
+export async function putCompanyIcon(options: { accountBookId: number; fileId: number }) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const { companyId, fileId } = options;
-  const updatedCompany = await prisma.company.update({
+  const { accountBookId, fileId } = options;
+  const updatedCompany = await prisma.accountBook.update({
     where: {
-      id: companyId,
+      id: accountBookId,
     },
     data: {
       imageFile: {

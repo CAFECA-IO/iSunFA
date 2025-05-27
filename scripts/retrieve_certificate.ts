@@ -18,7 +18,7 @@ import { ProgressStatus } from '@/constants/account';
 async function processCertificateContent(certificate: {
   id: number;
   aiResultId: string;
-  companyId: number;
+  accountBookId: number;
 }) {
   loggerBack.info(`Processing certificate ${certificate.id}`);
   try {
@@ -33,7 +33,7 @@ async function processCertificateContent(certificate: {
       const { status, value } = aiPayload;
       if (status !== ProgressStatus.SUCCESS) {
         loggerError({
-          userId: certificate.companyId,
+          userId: certificate.accountBookId,
           errorType: 'CertificateProcessingError',
           errorMessage: `Failed to process certificate ${certificate.id}`,
         });
@@ -47,7 +47,7 @@ async function processCertificateContent(certificate: {
           // ToDo: (20241128 - Luphia) Do not process sql query in loop especially for fuzzy search
           const counterparty = await fuzzySearchCounterpartyByName(
             invoice.counterpartyName,
-            certificate.companyId
+            certificate.accountBookId
           );
           const nowTimestamp = getTimestampNow();
           // ToDo: (20241128 - Luphia) Declare expact data format for analysisResult
@@ -83,7 +83,7 @@ async function processCertificateContent(certificate: {
   } catch (_error) {
     const error = _error as Error;
     loggerError({
-      userId: certificate.companyId,
+      userId: certificate.accountBookId,
       errorType: 'CertificateProcessingError',
       errorMessage: error,
     });

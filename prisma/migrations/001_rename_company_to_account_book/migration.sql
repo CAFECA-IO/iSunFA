@@ -77,6 +77,7 @@ ALTER TABLE "company" RENAME TO "account_book";
 ALTER TABLE "company_kyc" RENAME TO "account_book_kyc";
 ALTER TABLE "company_setting" RENAME TO "account_book_setting";
 ALTER TABLE "user_todo_company" RENAME TO "user_todo_account_book";
+ALTER TABLE "accountBook_transfer" RENAME COLUMN "company_id" TO "account_book_id";
 
 -- Step 3: Rename constraints on the renamed tables (more efficient than drop/create)
 ALTER TABLE "account_book" RENAME CONSTRAINT "company_image_file_id_fkey" TO "account_book_image_file_id_fkey";
@@ -286,3 +287,4 @@ ALTER TABLE "voucher" ADD CONSTRAINT "voucher_account_book_id_fkey" FOREIGN KEY 
 ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

@@ -10,14 +10,14 @@ import { File, Ocr, Prisma } from '@prisma/client';
 import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
-export async function findUniqueCompanyInPrisma(companyId: number) {
-  let company: {
+export async function findUniqueCompanyInPrisma(accountBookId: number) {
+  let accountBook: {
     id: number;
   } | null;
 
   try {
-    company = await prisma.company.findUnique({
-      where: { id: companyId },
+    accountBook = await prisma.accountBook.findUnique({
+      where: { id: accountBookId },
       select: { id: true },
     });
   } catch (error) {
@@ -29,21 +29,21 @@ export async function findUniqueCompanyInPrisma(companyId: number) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 
-  if (!company) {
+  if (!accountBook) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  return company;
+  return accountBook;
 }
 
 export async function findManyOCRByCompanyIdWithoutUsedInPrisma(
-  companyId: number,
+  accountBookId: number,
   ocrType: ocrTypes = ocrTypes.INVOICE
 ): Promise<ocrIncludeFile[]> {
   let ocrData: ocrIncludeFile[] = [];
 
   const where: Prisma.OcrWhereInput = {
-    companyId,
+    accountBookId,
     type: ocrType,
     deletedAt: null,
     status: {
@@ -96,7 +96,7 @@ export async function getOcrByResultId(
 }
 
 export async function createOcrInPrisma(
-  companyId: number,
+  accountBookId: number,
   resultStatus: IAccountResultStatus,
   type: string,
   fileId: number
@@ -107,7 +107,7 @@ export async function createOcrInPrisma(
   try {
     ocrData = await prisma.ocr.create({
       data: {
-        companyId,
+        accountBookId,
         aichResultId: resultStatus.resultId,
         status: resultStatus.status,
         type,

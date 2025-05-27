@@ -192,10 +192,10 @@ async function handlePutRequest(req: NextApiRequest) {
     }
 
     // Info: (20250424 - Shirley) Update accounting settings
-    const updatedAccountingSetting = await updateAccountingSettingById(
+    const updatedAccountingSetting = await updateAccountingSettingById(accountBookId, {
+      ...accountingSetting,
       accountBookId,
-      accountingSetting
-    );
+    });
 
     if (updatedAccountingSetting) {
       payload = formatAccountingSetting(updatedAccountingSetting);

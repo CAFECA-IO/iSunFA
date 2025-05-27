@@ -10,7 +10,7 @@ import { IAccountQueryArgs } from '@/interfaces/accounting_account';
 
 export default class AccountRetrieverFactory {
   static createRetriever({
-    companyId,
+    accountBookId,
     includeDefaultAccount,
     liquidity,
     type,
@@ -35,7 +35,7 @@ export default class AccountRetrieverFactory {
         switch (type) {
           case AccountType.ASSET:
             return new AssetAccountRetriever(
-              companyId,
+              accountBookId,
               includeDefaultAccount,
               liquidity,
               type,
@@ -51,7 +51,7 @@ export default class AccountRetrieverFactory {
             );
           case AccountType.LIABILITY:
             return new LiabilityAccountRetriever(
-              companyId,
+              accountBookId,
               includeDefaultAccount,
               liquidity,
               type,
@@ -67,7 +67,7 @@ export default class AccountRetrieverFactory {
             );
           case AccountType.EQUITY:
             return new EquityAccountRetriever(
-              companyId,
+              accountBookId,
               includeDefaultAccount,
               liquidity,
               type,
@@ -83,7 +83,7 @@ export default class AccountRetrieverFactory {
             );
           default:
             return new BalanceSheetAccountRetriever(
-              companyId,
+              accountBookId,
               includeDefaultAccount,
               liquidity,
               type,
@@ -100,7 +100,7 @@ export default class AccountRetrieverFactory {
         }
       case ReportSheetType.INCOME_STATEMENT:
         return new IncomeStatementAccountRetriever(
-          companyId,
+          accountBookId,
           includeDefaultAccount,
           liquidity,
           type,
@@ -116,7 +116,7 @@ export default class AccountRetrieverFactory {
         );
       default:
         return new GeneralAccountRetriever(
-          companyId,
+          accountBookId,
           includeDefaultAccount,
           liquidity,
           type,

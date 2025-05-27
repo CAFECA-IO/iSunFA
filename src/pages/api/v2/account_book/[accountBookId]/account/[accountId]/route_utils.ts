@@ -96,7 +96,7 @@ export const lineItemGetByAccountAPIUtils = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getLineItemsByAccountIdFromPrisma: async (options: {
     accountId: number;
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     sortOption: { sortBy: BetaSortBy; sortOrder: SortOrder }[];
@@ -201,13 +201,13 @@ export const voucherGetByAccountAPIUtils = {
     logger.error(errorMessage);
     throw new Error(statusMessage);
   },
-  getAccountFromPrisma: async (options: { accountId: number; companyId: number }) => {
-    const { accountId, companyId } = options;
-    return findFirstAccountInPrisma(accountId, companyId);
+  getAccountFromPrisma: async (options: { accountId: number; accountBookId: number }) => {
+    const { accountId, accountBookId } = options;
+    return findFirstAccountInPrisma(accountId, accountBookId);
   },
 
   getVouchersFromPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     accountId: number;
     startDate: number;
     endDate: number;

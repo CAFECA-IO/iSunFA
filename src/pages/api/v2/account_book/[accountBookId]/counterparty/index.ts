@@ -166,8 +166,8 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250502 - Shirley) 檢查是否有重複的交易對手
-  const originClientByName = await getCounterpartyByName({ name, companyId: accountBookId });
-  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, companyId: accountBookId });
+  const originClientByName = await getCounterpartyByName({ name, accountBookId });
+  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, accountBookId });
 
   if (originClientByName) {
     statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_NAME;

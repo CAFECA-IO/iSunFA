@@ -63,7 +63,7 @@ const lineItemGetByAccountOutputValidatorV2 = z
           lineItemBeReversedId: lineItem.id,
           account: {
             id: lineItem.account.id,
-            companyId: lineItem.account.companyId,
+            accountBookId: lineItem.account.accountBookId,
             system: lineItem.account.system,
             type: lineItem.account.type,
             debit: lineItem.account.debit,

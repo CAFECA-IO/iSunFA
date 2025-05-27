@@ -11,7 +11,7 @@ import { parseCounterPartyFromNoInInvoice } from '@/lib/utils/counterparty';
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 
 export async function postInvoiceV2(options: {
-  companyId: number;
+  accountBookId: number;
   nowInSecond: number;
   certificateId: number;
   inputOrOutput: InvoiceTransactionDirection;
@@ -114,7 +114,7 @@ export async function postInvoiceV2(options: {
 }
 
 export async function putInvoiceV2(options: {
-  companyId: number;
+  accountBookId: number;
   nowInSecond: number;
   invoiceId: number;
   certificateId?: number;
@@ -240,7 +240,11 @@ export async function getInvoiceByIdV2(id: number): Promise<
       );
       invoice = {
         ...invoiceFromPrisma,
-        counterParty: { ...partialInfo, ...PUBLIC_COUNTER_PARTY },
+        counterParty: {
+          ...partialInfo,
+          ...PUBLIC_COUNTER_PARTY,
+          accountBookId: invoiceFromPrisma.certificate.accountBookId,
+        },
       };
     }
   } catch (_error) {

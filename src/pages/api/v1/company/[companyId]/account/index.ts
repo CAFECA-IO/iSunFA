@@ -134,7 +134,7 @@ function formatIsDeleted(isDeleted: unknown): boolean | undefined {
   return formattedIsDeleted;
 }
 
-export function formatGetQuery(companyId: number, req: NextApiRequest): IAccountQueryArgs {
+export function formatGetQuery(accountBookId: number, req: NextApiRequest): IAccountQueryArgs {
   const {
     includeDefaultAccount,
     liquidity,
@@ -163,7 +163,7 @@ export function formatGetQuery(companyId: number, req: NextApiRequest): IAccount
   const formattedSearchKey = formatSearchKey(searchKey);
   const formattedIsDeleted = formatIsDeleted(isDeleted);
   return {
-    companyId,
+    accountBookId,
     includeDefaultAccount: formattedIncludeDefaultAccount,
     liquidity: formattedLiquidity,
     type: formattedType,

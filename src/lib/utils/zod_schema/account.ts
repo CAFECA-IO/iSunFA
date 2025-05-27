@@ -16,7 +16,7 @@ import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
  */
 const basicAccountEntityValidator = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   system: z.nativeEnum(AccountSystem),
   type: z.nativeEnum(AccountType),
   debit: z.boolean(),
@@ -55,7 +55,7 @@ export const accountEntityValidator: z.ZodType<AccountEntity> = basicAccountEnti
  */
 export const IAccountValidator = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   system: z.nativeEnum(AccountSystem),
   type: z.nativeEnum(AccountType),
   debit: z.boolean().describe('false will be credit'),

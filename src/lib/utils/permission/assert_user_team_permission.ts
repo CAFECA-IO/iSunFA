@@ -168,7 +168,7 @@ export const assertUserCanByAccountBook = async ({
   can: boolean;
   alterableRoles?: TeamRole[];
 }> => {
-  const accountBook = await prisma.company.findFirst({
+  const accountBook = await prisma.accountBook.findFirst({
     where: {
       id: accountBookId,
     },

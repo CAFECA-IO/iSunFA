@@ -1535,7 +1535,7 @@ enum TransferStatus {
 
 model AccountBookTransfer {
   id                Int            @id @default(autoincrement())
-  companyId         Int            @map("company_id") // Info: (20250307 - Tzuhan) 被轉移的帳本 ID
+  accountBookId     Int            @map("account_book_id") // Info: (20250307 - Tzuhan) 被轉移的帳本 ID
   fromTeamId        Int            @map("from_team_id") // Info: (20250307 - Tzuhan) 轉出團隊 ID
   toTeamId          Int            @map("to_team_id") // Info: (20250307 - Tzuhan) 轉入團隊 ID
   initiatedByUserId Int            @map("initiated_by_user_id") // Info: (20250307 - Tzuhan) 執行轉移的使用者 ID
@@ -1547,7 +1547,7 @@ model AccountBookTransfer {
   updatedAt         Int            @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250307 - Tzuhan) 最後更新時間
   note              Json?          @default("{}") @map("note") // Info: (20250307 - Tzuhan) 備註欄位（可存放轉移原因、備註等）
 
-  accountBook     AccountBook @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  accountBook     AccountBook @relation(fields: [accountBookId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   fromTeam        Team        @relation("fromTeamId", fields: [fromTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
   toTeam          Team        @relation("toTeamId", fields: [toTeamId], references: [id], onDelete: Cascade, onUpdate: Cascade) // Info: (20250310 - Tzuhan) 明確命名關聯
   initiatedByUser User        @relation(fields: [initiatedByUserId], references: [id], onDelete: Cascade, onUpdate: Cascade)

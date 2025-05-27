@@ -75,7 +75,7 @@ export async function checkProjectCompanyMatch(session: ISessionData, req: NextA
   let isAuth = session.companyId === reqCompanyIdNumber;
   if (isAuth) {
     const project = await getProjectById(queryProjectIdNumber);
-    isAuth = !!project && project.companyId === reqCompanyIdNumber;
+    isAuth = !!project && project.accountBookId === reqCompanyIdNumber;
   }
 
   return isAuth;

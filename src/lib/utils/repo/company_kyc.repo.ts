@@ -1,21 +1,20 @@
 import prisma from '@/client';
 import { KYCStatus } from '@/constants/kyc';
 import { SortOrder } from '@/constants/sort';
-import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { IAccountBookKYCForm } from '@/interfaces/company_kyc';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
-import { CompanyKYC, Prisma } from '@prisma/client';
+import { AccountBookKYC, Prisma } from '@prisma/client';
 
-export async function createCompanyKYC(
-  companyId: number,
-  companyKYCForm: ICompanyKYCForm
-): Promise<CompanyKYC> {
+export async function createAccountBookKYC(
+  accountBookId: number,
+  companyKYCForm: IAccountBookKYCForm
+): Promise<AccountBookKYC> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
 
-  const companyKYC: CompanyKYC = await prisma.companyKYC.create({
+  const companyKYC: AccountBookKYC = await prisma.accountBookKYC.create({
     data: {
-      companyId,
-      // ...companyKYCForm,
+      accountBookId,
       legalName: companyKYCForm.legalName,
       city: companyKYCForm.city,
       zipCode: companyKYCForm.zipCode,
@@ -43,12 +42,14 @@ export async function createCompanyKYC(
   return companyKYC;
 }
 
-export async function getCompanyKYCByCompanyId(companyId: number): Promise<CompanyKYC | null> {
+export async function getAccountBookKYCByCompanyId(
+  accountBookId: number
+): Promise<AccountBookKYC | null> {
   let companyKYC = null;
-  if (companyId > 0) {
-    companyKYC = await prisma.companyKYC.findFirst({
+  if (accountBookId > 0) {
+    companyKYC = await prisma.accountBookKYC.findFirst({
       where: {
-        companyId,
+        accountBookId,
       },
       orderBy: {
         id: SortOrder.DESC,
@@ -58,15 +59,15 @@ export async function getCompanyKYCByCompanyId(companyId: number): Promise<Compa
   return companyKYC;
 }
 
-export async function deleteCompanyKYC(id: number): Promise<CompanyKYC> {
+export async function deleteAccountBookKYC(id: number): Promise<AccountBookKYC> {
   const nowInSecond = getTimestampNow();
 
-  const where: Prisma.CompanyKYCWhereUniqueInput = {
+  const where: Prisma.AccountBookKYCWhereUniqueInput = {
     id,
     deletedAt: null,
   };
 
-  const data: Prisma.CompanyKYCUpdateInput = {
+  const data: Prisma.AccountBookKYCUpdateInput = {
     updatedAt: nowInSecond,
     deletedAt: nowInSecond,
   };
@@ -75,18 +76,18 @@ export async function deleteCompanyKYC(id: number): Promise<CompanyKYC> {
     where,
     data,
   };
-  const companyKYC = await prisma.companyKYC.update(updateArgs);
+  const companyKYC = await prisma.accountBookKYC.update(updateArgs);
 
   return companyKYC;
 }
 
 // Info: (20240723 - Murky) Real delete for testing
-export async function deleteCompanyKYCForTesting(id: number): Promise<CompanyKYC> {
-  const where: Prisma.CompanyKYCWhereUniqueInput = {
+export async function deleteAccountBookKYCForTesting(id: number): Promise<AccountBookKYC> {
+  const where: Prisma.AccountBookKYCWhereUniqueInput = {
     id,
   };
 
-  const companyKYC = await prisma.companyKYC.delete({
+  const companyKYC = await prisma.accountBookKYC.delete({
     where,
   });
 

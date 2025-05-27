@@ -20,7 +20,7 @@ import { DefaultValue } from '@/constants/default_value';
 async function processCertificateFile(certificate: {
   id: number;
   fileId: number;
-  companyId: number;
+  accountBookId: number;
 }) {
   loggerBack.info(`Processing certificate with ID: ${certificate.id}`);
   const file = await findFileById(certificate.fileId);
@@ -33,7 +33,7 @@ async function processCertificateFile(certificate: {
     const decryptFileBuffer = await decryptImageFile({
       imageBuffer: fileBuffer,
       file,
-      companyId: certificate.companyId,
+      companyId: certificate.accountBookId,
     });
     // Info: (20241128 - Jacky) Prepare the form data with decrypted image
     const fileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);

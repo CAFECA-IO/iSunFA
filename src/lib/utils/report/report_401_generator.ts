@@ -10,14 +10,14 @@ import {
   TaxCalculation,
   TaxReport401,
 } from '@/interfaces/report';
-import { getCompanyKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
+import { getAccountBookKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
 import { listInvoiceVoucherJournalFor401 } from '@/lib/utils/repo/beta_transition.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { importsCategories, purchasesCategories, salesCategories } from '@/constants/invoice';
 import {
   Account,
-  CompanyKYC,
+  AccountBookKYC,
   Invoice,
   InvoiceVoucherJournal,
   Journal,
@@ -298,14 +298,14 @@ export default class Report401Generator extends ReportGenerator {
     from: number,
     to: number
   ): Promise<TaxReport401> {
-    const companyKYC: CompanyKYC | null = await getCompanyKYCByCompanyId(companyId);
+    const accountBookKYC: AccountBookKYC | null = await getAccountBookKYCByCompanyId(companyId);
     const company = await getCompanyWithSettingById(companyId);
 
     // Info: (20241217 - Murky) Get Company Setting from company in prisma
     const companySetting =
-      company && company.companySettings.length ? company.companySettings[0] : null;
+      company && company.accountBookSettings.length ? company.accountBookSettings[0] : null;
 
-    if (!companyKYC) {
+    if (!accountBookKYC) {
       // Info: (20240912 - Murky) temporary allow to generate report without KYC
       // throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
@@ -318,8 +318,8 @@ export default class Report401Generator extends ReportGenerator {
       voucher: (Voucher & { lineItems: (LineItem & { account: Account })[] }) | null;
     })[] = await listInvoiceVoucherJournalFor401(companyId, from, to);
     const basicInfo = {
-      uniformNumber: companyKYC?.registrationNumber ?? company?.taxId ?? '',
-      businessName: companyKYC?.legalName ?? company?.name ?? '',
+      uniformNumber: accountBookKYC?.registrationNumber ?? company?.taxId ?? '',
+      businessName: accountBookKYC?.legalName ?? company?.name ?? '',
       personInCharge: companySetting?.representativeName ?? '',
       taxSerialNumber: companySetting?.taxSerialNumber || '', // TODO (20240808 - Jacky): Implement this field in next sprint
       businessAddress:

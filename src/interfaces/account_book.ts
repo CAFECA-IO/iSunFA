@@ -166,7 +166,7 @@ export interface ICompanyTaxIdAndName {
 /**
  * Info: (20241023 - Murky)
  * @description Company entity interface specific for backend
- * @note use parsePrismaCompanyToCompanyEntity to convert Prisma.Company to ICompanyEntity
+ * @note use parsePrismaCompanyToCompanyEntity to convert prisma.accountBook to ICompanyEntity
  * @note use initCompanyEntity to create a new ICompanyEntity from scratch
  */
 export interface ICompanyEntity {

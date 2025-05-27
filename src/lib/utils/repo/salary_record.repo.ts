@@ -52,13 +52,15 @@ export async function getSalaryInfoByEmployeeId(id: number): Promise<{
   return formatEmployeeInfo;
 }
 
-export async function updateSalaryRecordsConfirmed(companyId: number): Promise<ISalaryRecord[]> {
+export async function updateSalaryRecordsConfirmed(
+  accountBookId: number
+): Promise<ISalaryRecord[]> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   await prisma.salaryRecord.updateMany({
     where: {
       employee: {
-        companyId,
+        accountBookId,
       },
       confirmed: false,
     },
@@ -70,7 +72,7 @@ export async function updateSalaryRecordsConfirmed(companyId: number): Promise<I
   const updatedSalaryRecords = await prisma.salaryRecord.findMany({
     where: {
       employee: {
-        companyId,
+        accountBookId,
       },
       confirmed: true,
       updatedAt: nowTimestamp,
@@ -250,11 +252,11 @@ export async function createSalaryRecord(
   }
 }
 
-export async function getSalaryRecordsList(companyId: number): Promise<ISalaryRecord[]> {
+export async function getSalaryRecordsList(accountBookId: number): Promise<ISalaryRecord[]> {
   const salaryRecordsLists = await prisma.salaryRecord.findMany({
     where: {
       employee: {
-        companyId,
+        accountBookId,
       },
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
@@ -306,13 +308,13 @@ export async function getSalaryRecordsList(companyId: number): Promise<ISalaryRe
 
 export async function getSalaryRecordById(
   salaryIdNum: number,
-  companyId: number
+  accountBookId: number
 ): Promise<ISalaryRecordWithProjects | null> {
   const salaryRecord = await prisma.salaryRecord.findFirst({
     where: {
       id: salaryIdNum,
       employee: {
-        companyId,
+        accountBookId,
       },
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
@@ -388,7 +390,7 @@ export async function getSalaryRecordById(
 
 export async function updateSalaryRecordById(
   salaryIdNum: number,
-  companyId: number,
+  accountBookId: number,
   startDate: number,
   endDate: number,
   department: string,
@@ -410,7 +412,7 @@ export async function updateSalaryRecordById(
     where: {
       id: salaryIdNum,
       employee: {
-        companyId,
+        accountBookId,
       },
     },
     data: {
@@ -502,7 +504,7 @@ export async function updateSalaryRecordById(
 }
 
 export async function createSalaryRecordJournal(
-  companyId: number,
+  accountBookId: number,
   event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
 ): Promise<number> {
   const now = Date.now();
@@ -512,7 +514,7 @@ export async function createSalaryRecordJournal(
       event,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
-      companyId,
+      accountBookId,
     },
   });
   return journal.id;
@@ -559,7 +561,7 @@ export async function getInfoFromSalaryRecordLists(
 export async function createVoucherFolder(
   voucherType: string,
   newVoucherNo: string,
-  companyId: number
+  accountBookId: number
 ): Promise<IFolder> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
@@ -569,7 +571,7 @@ export async function createVoucherFolder(
       name,
       createdAt: nowTimestamp,
       updatedAt: nowTimestamp,
-      companyId,
+      accountBookId,
     },
   });
   return voucherFolder;
