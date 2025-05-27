@@ -29,7 +29,6 @@ export const FILING_METHOD_OPTIONS = [
 
 // Info: (20250421 - Liz) 第一步驟表單狀態
 export interface Step1FormState {
-  fileId: number; // Info: (20250527 - Liz) 圖片 ID，用於上傳圖片
   imageId: string;
   companyName: string;
   representativeName: string;
@@ -58,7 +57,6 @@ export interface Step1FormState {
 
 // Info: (20250526 - Liz) 第一步驟表單狀態的初始值
 export const initialStep1FormState: Step1FormState = {
-  fileId: 0, // Info: (20250527 - Liz) 初始值為 0，表示尚未上傳圖片
   imageId: '',
   companyName: '',
   representativeName: '',

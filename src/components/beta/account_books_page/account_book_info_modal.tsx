@@ -41,7 +41,6 @@ const AccountBookInfoModal = ({
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
   const {
-    fileId,
     companyName,
     representativeName,
     taxId,
@@ -56,10 +55,10 @@ const AccountBookInfoModal = ({
   } = step1FormState;
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ passedFileId }: { passedFileId?: number }) => {
     if (isCreateLoading) return; // Info: (20250312 - Liz) 避免重複點擊
-    setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
     if (!companyName || !taxId || !tag || !team) return;
+    setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
 
     try {
       const { success, code, errorMsg } = await createAccountBook({
@@ -67,7 +66,7 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-        fileId, // Info: (20250527 - Liz) 上傳圖片的 ID
+        fileId: passedFileId, // Info: (20250527 - Liz) 上傳圖片的 ID
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -127,7 +126,6 @@ const AccountBookInfoModal = ({
         tag,
         fromTeamId: accountBookToEdit.team.id, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
         toTeamId: team.id, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
-        fileId,
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -211,7 +209,8 @@ const AccountBookInfoModal = ({
         teamList={teamList}
         closeAccountBookInfoModal={closeAccountBookInfoModal}
         accountBookToEdit={accountBookToEdit}
-        handleSubmit={accountBookToEdit ? handleEdit : handleSubmit}
+        handleSubmit={handleSubmit}
+        handleEdit={handleEdit}
         disabledSubmit={isCreateLoading || isEditLoading}
       />
     </div>
