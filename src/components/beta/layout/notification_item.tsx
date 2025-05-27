@@ -115,6 +115,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                 onClick={handleCancel}
                 className="rounded border border-button-stroke-secondary px-12px py-6px text-sm text-red-500 hover:border-red-500 hover:text-red-600"
               >
+                {/* ToDo: (20250527 - Luphia) use i18n */}
                 取消轉移
               </button>
             ) : (
@@ -124,6 +125,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                   onClick={handleAccept}
                   className="rounded bg-button-surface-strong-secondary px-12px py-6px text-sm text-white hover:bg-button-surface-strong-secondary-hover"
                 >
+                  {/* ToDo: (20250527 - Luphia) use i18n */}
                   接受轉移
                 </button>
                 <button
@@ -131,6 +133,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
                   onClick={handleDecline}
                   className="rounded border border-button-stroke-secondary px-12px py-6px text-sm text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover"
                 >
+                  {/* ToDo: (20250527 - Luphia) use i18n */}
                   拒絕
                 </button>
               </>
