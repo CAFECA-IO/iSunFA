@@ -148,17 +148,20 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         onSelect(newCounterparty);
       };
 
-      onSelect({
-        name: searchName,
-        taxId: searchTaxId,
-      });
+      // Info: (20250527 - Julian) 如果搜尋欄位有值，則觸發選擇事件
+      if (searchName || searchTaxId) {
+        onSelect({
+          name: searchName,
+          taxId: searchTaxId,
+        });
 
-      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
-      addCounterPartyModalDataHandler({
-        onSave: handleAddCounterparty,
-        name: searchName,
-        taxId: searchTaxId,
-      });
+        // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
+        addCounterPartyModalDataHandler({
+          onSave: handleAddCounterparty,
+          name: searchName,
+          taxId: searchTaxId,
+        });
+      }
     }, [accountBookId, filteredCounterpartyList, searchName, searchTaxId]);
 
     useEffect(() => {
@@ -209,7 +212,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             onChange={counterpartyInputHandler}
             type="text"
             placeholder={t('certificate:EDIT.ID_NUMBER')}
-            className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
+            className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           />
           <input
             id="counterparty-name"
@@ -218,12 +221,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             onChange={counterpartyInputHandler}
             type="text"
             placeholder={t('certificate:EDIT.NAME')}
-            className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
+            className="flex-1 truncate bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           />
         </div>
       ) : (
         <div
-          className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-dropdown-text-secondary'}`}
+          className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-input-text-input-placeholder'}`}
         >
           <p className="h-44px w-100px border-r px-12px py-10px">
             {counterparty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}
