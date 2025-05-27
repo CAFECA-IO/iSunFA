@@ -6,10 +6,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import {
-  WORK_TAG,
+  ACCOUNT_BOOK_UPDATE_ACTION,
   IAccountBook,
   IAccountBookInfo,
   ICreateAccountBookReqBody,
+  IUpdateAccountBookReqBody,
 } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
@@ -20,7 +21,7 @@ import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IUserRole } from '@/interfaces/user_role';
-import { ITeam, TeamRole } from '@/interfaces/team';
+import { ITeam, ITransferAccountBook, TeamRole } from '@/interfaces/team';
 import { RoleName } from '@/constants/role';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { IStatusInfo } from '@/interfaces/status_info';
@@ -55,23 +56,34 @@ interface UserContextType {
     enteredAddress,
   }: ICreateAccountBookReqBody) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  connectedAccountBook: IAccountBook | null;
-  team: ITeam | null;
-  teamRole: TeamRole | null;
-  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
-
-  disconnectAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
+  updateAccountBookTag: ({
+    accountBookId,
+    action,
+    tag,
+  }: IUpdateAccountBookReqBody) => Promise<{ success: boolean }>;
 
   updateAccountBook: ({
     accountBookId,
     action,
     tag,
-  }: {
-    accountBookId: string;
-    action: string;
-    tag: WORK_TAG;
-  }) => Promise<{ success: boolean }>;
+    name,
+    taxId,
+    teamId,
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: IUpdateAccountBookReqBody) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
+  connectedAccountBook: IAccountBook | null;
+  team: ITeam | null;
+  teamRole: TeamRole | null;
+  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
+  disconnectAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
   deleteAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
 
   errorCode: string | null;
@@ -104,13 +116,14 @@ export const UserContext = createContext<UserContextType>({
   selectedRole: null,
   switchRole: () => {},
   createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
+  updateAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
+  updateAccountBookTag: async () => ({ success: false }),
 
   connectedAccountBook: null,
   team: null,
   teamRole: null,
   connectAccountBook: async () => ({ success: false }),
   disconnectAccountBook: async () => ({ success: false }),
-  updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => ({ success: false }),
 
   errorCode: null,
@@ -170,12 +183,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
-  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250422 - Liz) 此 api 會再改版
+  // Info: (20241104 - Liz) 建立帳本 API
   const { trigger: createAccountBookAPI } = APIHandler<IAccountBookInfo>(
     APIName.CREATE_ACCOUNT_BOOK
   );
 
-  // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
+  // Info: (20241113 - Liz) 更新帳本 API
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookInfo>(
+    APIName.UPDATE_ACCOUNT_BOOK
+  );
+
+  // Info: (20241111 - Liz) 連結帳本 API
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
@@ -184,11 +202,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     success: boolean;
   }>(APIName.DISCONNECT_ACCOUNT_BOOK);
 
-  // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
-
-  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
+  // Info: (20241115 - Liz) 刪除帳本 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
+
+  // Info: (20250311 - Liz) 轉移帳本 API
+  const { trigger: transferAccountBookAPI } = APIHandler<ITransferAccountBook>(
+    APIName.REQUEST_TRANSFER_ACCOUNT_BOOK
+  );
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
   const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
@@ -606,7 +626,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241104 - Liz) 建立帳本的功能(原為公司)
+  // Info: (20241104 - Liz) 建立帳本的功能
   const createAccountBook = async ({
     name,
     taxId,
@@ -650,7 +670,85 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
+  // Info: (20250526 - Liz) 更新帳本的功能
+  const updateAccountBook = async ({
+    accountBookId,
+    fromTeamId, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
+    toTeamId, // Info: (20250526 - Liz) 轉移到的團隊 ID
+    name,
+    taxId,
+    tag,
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: IUpdateAccountBookReqBody) => {
+    try {
+      const { success, code, error } = await updateAccountBookAPI({
+        params: { accountBookId },
+        body: {
+          action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+          name,
+          taxId,
+          tag,
+          fileId,
+          representativeName,
+          taxSerialNumber,
+          contactPerson,
+          phoneNumber,
+          city,
+          district,
+          enteredAddress,
+        },
+      });
+
+      if (!success) {
+        return { success: false, code, errorMsg: error?.message ?? '' };
+      }
+
+      // Info: (20250526 - Liz) 如果 fromTeamId 和 toTeamId 不同，才需要轉移帳本
+      if (fromTeamId && toTeamId && fromTeamId !== toTeamId) {
+        // Info: (20250526 - Liz) 呼叫轉移帳本的 API
+        const {
+          success: transferSuccess,
+          code: transferCode,
+          error: transferError,
+        } = await transferAccountBookAPI({
+          params: { accountBookId },
+          body: { fromTeamId, toTeamId },
+        });
+
+        if (!transferSuccess) {
+          return { success: false, code: transferCode, errorMsg: transferError?.message ?? '' };
+        }
+      }
+
+      return { success: true, code: '', errorMsg: '' };
+    } catch (error) {
+      return { success: false, code: '', errorMsg: 'unknown error' };
+    }
+  };
+
+  // Info: (20250526 - Liz) 更新帳本工作標籤
+  const updateAccountBookTag = async ({ accountBookId, tag }: IUpdateAccountBookReqBody) => {
+    try {
+      const { success } = await updateAccountBookAPI({
+        params: { accountBookId },
+        body: { action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG, tag },
+      });
+
+      if (!success) return { success: false };
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  };
+
+  // Info: (20241111 - Liz) 連結帳本的功能
   const connectAccountBook = async (accountBookId: number) => {
     try {
       const { success, data } = await connectAccountBookAPI({
@@ -691,30 +789,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更工作標籤
-  const updateAccountBook = async ({
-    accountBookId,
-    action,
-    tag,
-  }: {
-    accountBookId: string;
-    action: string;
-    tag: WORK_TAG;
-  }) => {
-    try {
-      const { success } = await updateAccountBookAPI({
-        params: { accountBookId },
-        body: { action, tag },
-      });
-
-      if (!success) return { success: false };
-      return { success: true };
-    } catch (error) {
-      return { success: false };
-    }
-  };
-
-  // Info: (20241115 - Liz) 刪除帳本的功能(原為公司)
+  // Info: (20241115 - Liz) 刪除帳本的功能
   const deleteAccountBook = async (accountBookId: number) => {
     try {
       const { success, data: accountBook } = await deleteAccountBookAPI({
@@ -835,9 +910,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       switchRole,
       createAccountBook,
+      updateAccountBookTag,
+      updateAccountBook,
       connectAccountBook,
       disconnectAccountBook,
-      updateAccountBook,
       deleteAccountBook,
       connectedAccountBook: connectedAccountBookRef.current,
       team: teamRef.current,

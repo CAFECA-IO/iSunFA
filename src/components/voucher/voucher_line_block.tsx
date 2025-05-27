@@ -152,7 +152,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     );
 
   return (
-    <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+    <div className="flex w-max flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-lv-5 py-lv-3 text-sm tablet:w-auto tablet:text-base">
       <div className="grid w-full grid-cols-13 gap-x-lv-5">
         {/* Info: (20240927 - Julian) Table Header */}
         <div className="col-span-3 font-semibold text-text-neutral-invert">

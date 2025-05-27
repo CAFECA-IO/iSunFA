@@ -2,11 +2,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import {
-  WORK_TAG,
-  IAccountBookWithTeam,
-  ACCOUNT_BOOK_UPDATE_ACTION,
-} from '@/interfaces/account_book';
+import { WORK_TAG, IAccountBookWithTeam } from '@/interfaces/account_book';
 
 interface ChangeTagModalProps {
   accountBookToChangeTag: IAccountBookWithTeam;
@@ -22,7 +18,7 @@ const ChangeTagModal = ({
   getAccountBookListByTeamId,
 }: ChangeTagModalProps) => {
   const { t } = useTranslation(['account_book']);
-  const { updateAccountBook } = useUserCtx();
+  const { updateAccountBookTag } = useUserCtx();
 
   const [tag, setTag] = useState<WORK_TAG>(accountBookToChangeTag.tag);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -45,9 +41,8 @@ const ChangeTagModal = ({
     setIsLoading(true);
 
     try {
-      const success = await updateAccountBook({
+      const success = await updateAccountBookTag({
         accountBookId: accountBookToChangeTag.id.toString(),
-        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG,
         tag,
       });
 

@@ -410,7 +410,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         {/* Info: (20240920 - Julian) Select All & Cancel button */}
         <button
           type="button"
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary hover:opacity-70`}
           onClick={selectAllHandler}
         >
           {isSelectedAll ? t('journal:VOUCHER.UNSELECT_ALL') : t('journal:VOUCHER.SELECT_ALL')}

@@ -26,16 +26,25 @@ const OwnedTeam = ({
   isBillingButtonHidden = false,
 }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const { id, plan, name, paymentStatus, enableAutoRenewal, expiredTimestamp } = team;
 
-  const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`;
-  const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/billing`;
-  const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
+  const nowTimestamp = Date.now() / 1000;
 
-  const isPlanBeginner = team.plan === TPlanType.BEGINNER;
-  const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
+  const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}`;
+  const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}/billing`;
+  const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}/payment`;
 
-  // Info: (20250422 - Julian) 是否為試用期
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+  // Info: (20250526 - Julian) 「plan 為 Beginner」或「已過期」
+  const isPlanBeginner = plan === TPlanType.BEGINNER || expiredTimestamp < nowTimestamp;
+  const teamUsingPlan = PLANS.find((item) => item.id === plan);
+
+  // Info: (20250526 - Julian) 「paymentStatus 為 Trial」且「還沒過期」
+  const isTrial = paymentStatus === TPaymentStatus.TRIAL && expiredTimestamp > nowTimestamp;
+
+  // Info: (20250526 - Julian) 免費版名稱固定
+  const planName = isPlanBeginner
+    ? t('subscriptions:PLAN_NAME.BEGINNER')
+    : t(`subscriptions:PLAN_NAME.${plan.toUpperCase()}`);
 
   const formatPrice = teamUsingPlan
     ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
@@ -46,9 +55,6 @@ const OwnedTeam = ({
       ? `(${t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')})`
       : formatPrice;
 
-  // Info: (20250422 - Julian) 是否開啟自動續訂
-  const isAutoRenewalEnabled = team.enableAutoRenewal;
-
   const openTurnOnAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(team);
   };
@@ -58,9 +64,9 @@ const OwnedTeam = ({
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = getRemainingDays(team.expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
   // Info: (20250422 - Julian) 計算試用期剩餘天數
-  // const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
+  // const trialRemainingDays = getRemainingDays(nextRenewalTimestamp * 1000);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
@@ -93,10 +99,8 @@ const OwnedTeam = ({
 
       <section className="flex flex-auto gap-40px bg-surface-brand-primary-5 p-24px">
         <div className="flex flex-col gap-12px">
-          <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{team.name}</h2>
-          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
-            {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
-          </h1>
+          <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{name}</h2>
+          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">{planName}</h1>
           <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
         </div>
 
@@ -107,29 +111,25 @@ const OwnedTeam = ({
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
               {/* Info: (20250421 - Julian) 已付款 */}
-              {team.paymentStatus === TPaymentStatus.PAID &&
-                (team.enableAutoRenewal ? (
+              {paymentStatus === TPaymentStatus.PAID &&
+                (enableAutoRenewal ? (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp
-                        ? timestampToString(team.expiredTimestamp).dateWithSlash
-                        : ''}
+                      {expiredTimestamp ? timestampToString(expiredTimestamp).dateWithSlash : ''}
                     </span>
                   </div>
                 ) : (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp
-                        ? timestampToString(team.expiredTimestamp).dateWithSlash
-                        : ''}
+                      {expiredTimestamp ? timestampToString(expiredTimestamp).dateWithSlash : ''}
                     </span>
                   </div>
                 ))}
 
               {/* Info: (20250421 - Julian) 付款失敗 */}
-              {team.paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
+              {paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
                 <div>
                   <div className="flex items-center gap-8px">
                     <p className="text-2xl font-semibold text-text-state-error">
@@ -171,9 +171,9 @@ const OwnedTeam = ({
                 </span>
 
                 <SimpleToggle
-                  isOn={isAutoRenewalEnabled}
+                  isOn={enableAutoRenewal}
                   onClick={
-                    isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
+                    enableAutoRenewal ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
                   }
                 />
               </div>
