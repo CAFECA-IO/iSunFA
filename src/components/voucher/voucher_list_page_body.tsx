@@ -6,7 +6,7 @@ import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 import FilterSection from '@/components/filter_section/filter_section';
-import FilterSideMenu from '@/components/filter_sidemenu/filter_sidemenu';
+import FilterSideMenu from '@/components/filter_section/filter_sidemenu';
 import Pagination from '@/components/pagination/pagination';
 import SearchInput from '@/components/filter_section/search_input';
 import { EventType } from '@/constants/account';
@@ -172,32 +172,6 @@ const VoucherListPageBody: React.FC = () => {
   const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
   const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
-  const displayVoucherList =
-    voucherList && voucherList.length > 0 ? (
-      <VoucherList
-        voucherList={voucherList}
-        dateSort={dateSort}
-        creditSort={creditSort}
-        debitSort={debitSort}
-        setDateSort={setDateSort}
-        setCreditSort={setCreditSort}
-        setDebitSort={setDebitSort}
-        isHideReversals={isHideReversals}
-        hideReversalsToggleHandler={hideReversalsToggleHandler}
-        // Info: (20250324 - Anna) 流程3:傳遞篩選條件
-        selectedStartDate={selectedStartDate}
-        selectedEndDate={selectedEndDate}
-        selectedType={selectedType}
-        keyword={keyword}
-        currentPage={page}
-        toggleSideMenu={toggleSideMenu} // Info: (20250522 - Julian) 手機版 filter 的開關
-      />
-    ) : (
-      <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-        <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
-      </div>
-    );
-
   return (
     <div ref={sideMenuRef} className="relative flex flex-col items-center gap-lv-6 tablet:gap-40px">
       {/* Info: (20250521 - Julian) Page Title for mobile */}
@@ -256,7 +230,24 @@ const VoucherListPageBody: React.FC = () => {
           />
         </div>
         {/* Info: (20240920 - Julian) Voucher List */}
-        {displayVoucherList}
+        <VoucherList
+          voucherList={voucherList}
+          dateSort={dateSort}
+          creditSort={creditSort}
+          debitSort={debitSort}
+          setDateSort={setDateSort}
+          setCreditSort={setCreditSort}
+          setDebitSort={setDebitSort}
+          isHideReversals={isHideReversals}
+          hideReversalsToggleHandler={hideReversalsToggleHandler}
+          // Info: (20250324 - Anna) 流程3:傳遞篩選條件
+          selectedStartDate={selectedStartDate}
+          selectedEndDate={selectedEndDate}
+          selectedType={selectedType}
+          keyword={keyword}
+          currentPage={page}
+          toggleSideMenu={toggleSideMenu} // Info: (20250522 - Julian) 手機版 filter 的開關
+        />
         {/* Info: (20240920 - Julian) Pagination */}
         <Pagination
           currentPage={page}
@@ -267,7 +258,14 @@ const VoucherListPageBody: React.FC = () => {
       </div>
 
       {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
-      <FilterSideMenu isModalVisible={isShowSideMenu} modalVisibleHandler={toggleSideMenu} />
+      <FilterSideMenu<IVoucherBeta[]>
+        apiName={APIName.VOUCHER_LIST_V2}
+        params={params}
+        activeTab={activeTab}
+        isModalVisible={isShowSideMenu}
+        modalVisibleHandler={toggleSideMenu}
+        onApiResponse={handleApiResponse}
+      />
     </div>
   );
 };
