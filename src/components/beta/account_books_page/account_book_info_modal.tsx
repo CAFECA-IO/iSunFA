@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 import { ITeam } from '@/interfaces/team';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -78,7 +79,7 @@ const AccountBookInfoModal = ({
       if (!success) {
         // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'create-account-book-failed',
+          id: ToastId.CREATE_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
           content: (
             <p>
@@ -138,7 +139,7 @@ const AccountBookInfoModal = ({
       if (!success) {
         // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'edit-account-book-failed',
+          id: ToastId.EDIT_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
           content: (
             <p>
