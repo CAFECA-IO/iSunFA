@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
@@ -38,6 +38,9 @@ const AccountBookList = ({
       }, {}) // Info: (20250227 - Liz) 初始值是一個空物件
     : { all: { teamName: '', accountBooks: accountBookList } }; // Info: (20250227 - Liz) 不需要分組的情況用 key 'all' 讓結構保持一致
 
+  // Info: (20250527 - Liz) 用來控制 OptionsDropdown 的開關 id
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
   return (
     <main className="flex flex-auto flex-col gap-40px">
       {Object.entries(groupedByTeam).map(([teamId, { teamName, accountBooks }]) => (
@@ -62,6 +65,8 @@ const AccountBookList = ({
                 setAccountBookToChangeTag={setAccountBookToChangeTag}
                 setAccountBookToDelete={setAccountBookToDelete}
                 setRefreshKey={setRefreshKey}
+                openDropdownId={openDropdownId}
+                setOpenDropdownId={setOpenDropdownId}
               />
             ))}
           </div>

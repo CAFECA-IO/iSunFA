@@ -9,7 +9,6 @@ import { IAccountBook, IAccountBookWithTeam, WORK_TAG } from '@/interfaces/accou
 import { Step1FormAction, Step1FormState } from '@/constants/account_book';
 import { ITeam } from '@/interfaces/team';
 import ChangePictureModal from '@/components/beta/account_books_page/change_picture_modal';
-// ToDo: (20250430 - Liz) 這是測試用的上傳檔案 API，等串接新 API 後就移除
 import { APIName } from '@/constants/api_connection';
 import { UploadType } from '@/constants/file';
 import { IFileUIBeta } from '@/interfaces/file';
@@ -23,7 +22,8 @@ interface StepOneFormProps {
   step1FormState: Step1FormState;
   step1FormDispatch: Dispatch<Step1FormAction>;
   accountBookToEdit?: IAccountBookWithTeam;
-  handleSubmit: () => Promise<void>;
+  handleSubmit: ({ passedFileId }: { passedFileId?: number }) => Promise<void>;
+  handleEdit: () => Promise<void>;
   disabledSubmit: boolean;
 }
 const StepOneForm = ({
@@ -33,11 +33,12 @@ const StepOneForm = ({
   step1FormDispatch,
   accountBookToEdit,
   handleSubmit,
+  handleEdit,
   disabledSubmit,
 }: StepOneFormProps) => {
   const { t } = useTranslation(['dashboard', 'city_district']);
-  const isEditing = !!accountBookToEdit;
-  const canTransferAccountBook = isEditing
+  const isEditMode = !!accountBookToEdit;
+  const canTransferAccountBook = isEditMode
     ? convertTeamRoleCanDo({
         teamRole: accountBookToEdit.team.role,
         canDo: TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
@@ -75,7 +76,7 @@ const StepOneForm = ({
   const [croppedBlob, setCroppedBlob] = useState<Blob | null>(null); // Info: (20250430 - Liz) 這是用來上傳的圖片格式
   const [savedImage, setSavedImage] = useState<string | null>(null); // Info: (20250430 - Liz) 這是用來預覽的圖片格式
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
   const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
     APIName.ACCOUNT_BOOK_PUT_ICON
@@ -123,7 +124,7 @@ const StepOneForm = ({
     handleChange('isCityDropdownOpen')(false);
   };
 
-  // Info: (20250422 - Liz) 驗證必填欄位後才可以進入第二步驟
+  // Info: (20250527 - Liz) 驗證必填欄位後才可以提交表單
   const validateRequiredFields = () => {
     let isValid = true;
 
@@ -178,19 +179,12 @@ const StepOneForm = ({
     return isValid;
   };
 
-  const onClickSubmit = () => {
-    const isValid = validateRequiredFields();
-    if (!isValid) return;
-
-    // Info: (20250523 - Liz) 送出表單資料
-    handleSubmit();
-  };
-
   const openUploadCompanyPictureModal = (e: React.MouseEvent<HTMLButtonElement>) => {
     setIsChangePictureModalOpen(true);
     e.stopPropagation(); // Info: (20250428 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
+  // Info: (20250527 - Liz) onSave 函式，在 ChangePictureModal 裁切圖片後，會呼叫這個函式來儲存裁切後的圖片
   const onSave = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     setSavedImage(url);
@@ -198,9 +192,44 @@ const StepOneForm = ({
     setIsChangePictureModalOpen(false);
   };
 
-  // ToDo: (20250430 - Liz) 這是測試用的上傳檔案 API，等串接新 API 後就移除
-  const handleUpload = useCallback(
+  // Info: (20250527 - Liz) 新增帳本圖片 (建立帳本時上傳圖片)
+  const createAccountBookImage = useCallback(
     async (file: File) => {
+      if (isLoading) return undefined;
+      setIsLoading(true);
+
+      try {
+        // Info: (20241212 - Liz) 打 API 上傳檔案
+        const formData = new FormData();
+        formData.append('file', file);
+        const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
+          body: formData,
+        });
+
+        if (!uploadFileSuccess || !fileMeta) {
+          // Deprecated: (20241212 - Liz)
+          // eslint-disable-next-line no-console
+          console.error('Failed to upload file:', file.name);
+          return undefined;
+        }
+
+        return fileMeta.id ?? undefined;
+      } catch (error) {
+        // Deprecated: (20241212 - Liz)
+        // eslint-disable-next-line no-console
+        console.error('Failed to upload file:', error);
+        return undefined;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [handleChange, isLoading]
+  );
+
+  // Info: (20250527 - Liz) 更新帳本圖片 (編輯帳本時上傳圖片)
+  const updateAccountBookImage = useCallback(
+    async (file: File) => {
+      if (!accountBookToEdit) return;
       if (isLoading) return;
       setIsLoading(true);
 
@@ -211,7 +240,7 @@ const StepOneForm = ({
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
             type: UploadType.COMPANY,
-            targetId: String(accountBookToEdit?.id),
+            targetId: String(accountBookToEdit.id),
           },
           body: formData,
         });
@@ -225,7 +254,7 @@ const StepOneForm = ({
 
         // Info: (20241212 - Liz) 打 API 更新帳本圖片
         const { success, error } = await uploadAccountBookCompanyPictureAPI({
-          params: { accountBookId: accountBookToEdit?.id },
+          params: { accountBookId: accountBookToEdit.id },
           body: { fileId: fileMeta.id },
         });
 
@@ -233,10 +262,11 @@ const StepOneForm = ({
           // Deprecated: (20241212 - Liz)
           // eslint-disable-next-line no-console
           console.error('更新帳本圖片失敗! error message:', error?.message);
-          return;
         }
 
-        setIsChangePictureModalOpen(false);
+        // Deprecated: (20250527 - Liz)
+        // eslint-disable-next-line no-console
+        console.log('帳本圖片更新成功:', fileMeta.id);
       } catch (error) {
         // Deprecated: (20241212 - Liz)
         // eslint-disable-next-line no-console
@@ -245,15 +275,33 @@ const StepOneForm = ({
         setIsLoading(false);
       }
     },
-    [accountBookToEdit?.id, isLoading]
+    [accountBookToEdit, isLoading]
   );
 
-  // Info: (20250430 - Liz) 測試用的上傳檔案 API，等串接新 API 後就移除
-  const handleUploadCroppedImage = () => {
-    if (!croppedBlob) return;
+  const onClickSubmit = async () => {
+    const isValid = validateRequiredFields();
+    if (!isValid) return;
 
-    const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
-    handleUpload(file);
+    // Info: (20250527 - Liz) 編輯模式：更新圖片 + 編輯帳本
+    if (isEditMode) {
+      if (croppedBlob) {
+        const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
+        await updateAccountBookImage(file);
+      }
+
+      await handleEdit();
+      return;
+    }
+
+    // Info: (20250527 - Liz) 新增模式：新增圖片 + 新增帳本
+    let fileId: number | undefined;
+
+    if (croppedBlob) {
+      const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
+      fileId = await createAccountBookImage(file);
+    }
+
+    await handleSubmit({ passedFileId: fileId });
   };
 
   // Info: (20250430 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
@@ -294,7 +342,7 @@ const StepOneForm = ({
 
           <section className="flex items-center gap-24px">
             {/* Info: (20250428 - Liz) 帳本圖片 */}
-            {imageId ? (
+            {savedImage || imageId ? (
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
@@ -302,9 +350,9 @@ const StepOneForm = ({
               >
                 <Image
                   src={savedImage || imageId}
-                  alt={'account book image'}
                   width={168}
                   height={168}
+                  alt="account book image"
                   className="h-168px w-168px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
                 ></Image>
 
@@ -313,14 +361,18 @@ const StepOneForm = ({
                 </div>
               </button>
             ) : (
-              <div className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute">
+              <button
+                type="button"
+                onClick={openUploadCompanyPictureModal}
+                className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
+              >
                 <Image
                   src="/icons/upload_icon.svg"
                   width={48}
                   height={48}
                   alt="upload_icon"
                 ></Image>
-              </div>
+              </button>
             )}
 
             <section className="flex flex-col gap-24px">
@@ -749,11 +801,6 @@ const StepOneForm = ({
             >
               <span>{t('dashboard:COMMON.SAVE')}</span>
               <IoSaveOutline size={16} />
-            </button>
-
-            {/* ToDo: (20250430 - Liz) 測試用，等串接新 API 後就移除 */}
-            <button type="button" onClick={handleUploadCroppedImage} className="hidden">
-              測試用照片上傳按鈕
             </button>
           </section>
         </div>
