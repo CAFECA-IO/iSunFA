@@ -124,11 +124,11 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
               <Button
                 type="button"
                 variant="tertiaryOutline"
-                className="h-36px py-1.5"
+                className="h-36px w-36px !p-0 tablet:w-auto tablet:!px-4 tablet:!py-1.5"
                 onClick={onDownload}
               >
-                <FiDownload />
-                <div>{t('certificate:COMMON.EXPORT_INVOICES')}</div>
+                <FiDownload size={16} />
+                <div className="hidden tablet:block">{t('certificate:COMMON.EXPORT_INVOICES')}</div>
               </Button>
             )}
             {isSelectable && (
