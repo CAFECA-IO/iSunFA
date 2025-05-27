@@ -41,6 +41,7 @@ const AccountBookInfoModal = ({
   const { trigger: getTeamListAPI } = APIHandler<IPaginatedData<ITeam[]>>(APIName.LIST_TEAM);
 
   const {
+    fileId,
     companyName,
     representativeName,
     taxId,
@@ -66,7 +67,7 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-        fileId: 0,
+        fileId, // Info: (20250527 - Liz) 上傳圖片的 ID
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -76,8 +77,8 @@ const AccountBookInfoModal = ({
         enteredAddress,
       });
 
+      // Info: (20250527 - Liz) 新增帳本失敗時顯示錯誤訊息
       if (!success) {
-        // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
           id: ToastId.CREATE_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
@@ -125,8 +126,8 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         fromTeamId: accountBookToEdit.team.id, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
-        toTeamId: team.id, // Info: (20250526 - Liz) 轉移到的團隊 ID
-        fileId: 0,
+        toTeamId: team.id, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
+        fileId,
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -136,8 +137,8 @@ const AccountBookInfoModal = ({
         enteredAddress,
       });
 
+      // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
       if (!success) {
-        // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
         toastHandler({
           id: ToastId.EDIT_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
@@ -157,6 +158,10 @@ const AccountBookInfoModal = ({
       // Info: (20250526 - Liz) 更新帳本成功後清空表單並關閉 modal
       step1FormDispatch({ type: 'RESET' });
       closeAccountBookInfoModal();
+
+      // Deprecated: (20250527 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('帳本更新成功');
 
       if (getAccountBookList) getAccountBookList(); // Info: (20250526 - Liz) 重新取得帳本清單
 
