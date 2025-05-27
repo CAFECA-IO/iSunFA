@@ -47,6 +47,19 @@ import { createNotificationsBulk } from '@/lib/utils/repo/notification.repo';
 import { NotificationEvent, NotificationType } from '@/interfaces/notification';
 import { EmailTemplateName } from '@/constants/email_template';
 
+type MessageKeys = {
+  fromTeam: string;
+  toTeam: string;
+};
+
+export function getAccountBookTransferMessageKeys(event: NotificationEvent): MessageKeys {
+  const baseKey = `ACCOUNT_BOOK_TRANSFER.${event.toUpperCase()}`;
+  return {
+    fromTeam: `${baseKey}.FROM_TEAM`,
+    toTeam: `${baseKey}.TO_TEAM`,
+  };
+}
+
 const buildAccountBookTransferNotification = async (
   userId: number,
   accountBookId: number,
@@ -123,42 +136,11 @@ const buildAccountBookTransferNotification = async (
   const actionUrl = `/team/${toTeamId}/account_book/${accountBook.id}`;
   const imageUrl = operator.imageFile?.url;
 
-  const getMessages = (notificationEvent: NotificationEvent) => {
-    switch (notificationEvent) {
-      case NotificationEvent.TRANSFER:
-        return {
-          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
-          fromTeam: '已發起帳本轉移請求',
-          toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 發出，待本團隊處理`,
-        };
-      case NotificationEvent.APPROVED:
-        return {
-          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
-          fromTeam: `帳本「${accountBook.name}」已成功轉移至 ${toTeam.name}`,
-          toTeam: `帳本「${accountBook.name}」已成功轉入團隊`,
-        };
-      case NotificationEvent.CANCELLED:
-        return {
-          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
-          fromTeam: `帳本「${accountBook.name}」轉移請求已取消`,
-          toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 取消`,
-        };
-      case NotificationEvent.REJECTED:
-        return {
-          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
-          fromTeam: `帳本「${accountBook.name}」轉移請求已被拒絕`,
-          toTeam: `帳本「${accountBook.name}」轉移請求已被 ${toTeam.name} 拒絕`,
-        };
-      default:
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-    }
-  };
-
-  const messages = getMessages(event);
+  const messageKeys = getAccountBookTransferMessageKeys(event);
 
   return [
-    { recipients: toTeamRecipients, message: messages.toTeam },
-    { recipients: fromTeamRecipients, message: messages.fromTeam },
+    { recipients: toTeamRecipients, message: messageKeys.toTeam },
+    { recipients: fromTeamRecipients, message: messageKeys.fromTeam },
   ].map(({ recipients, message }) => ({
     userEmailMap: recipients,
     teamId: toTeamId,

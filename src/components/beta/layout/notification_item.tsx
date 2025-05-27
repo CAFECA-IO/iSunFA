@@ -81,8 +81,7 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   if (type === NotificationType.ACCOUNT_BOOK) {
     const { accountBookId } = notification.content;
 
-    // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
-    const isTransferInitiator = message.includes('已發起帳本轉移請求');
+    const isTransferInitiator = message === 'ACCOUNT_BOOK_TRANSFER.TRANSFER.FROM_TEAM';
 
     const handleAccept = async () => {
       await acceptAccountBookTransfer({
