@@ -65,7 +65,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isOnTopOfModal ? '' : 'bg-black/50'}`}
     >
-      <div className="relative flex max-h-90vh flex-col rounded-sm bg-surface-neutral-surface-lv2 md:max-h-100vh">
+      <div className="relative flex max-h-90vh w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 md:max-h-100vh">
         {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
         <button
           type="button"
@@ -75,7 +75,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
           <RxCross1 size={24} />
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
-        <h2 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary px-40px py-16px text-xl font-semibold text-card-text-title">
+        <h2 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary px-40px py-16px text-xl font-semibold text-card-text-primary">
           <div className="text-xl font-semibold">{t('journal:JOURNAL.PREVIEW_INVOICE')}</div>
           <div className="text-xs font-normal text-card-text-secondary">
             {certificate.file.name}
@@ -104,7 +104,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
         <div className="hide-scrollbar flex justify-center overflow-hidden px-4">
           <ImageZoom
             imageUrl={certificate.file.thumbnail?.url || certificate.file.url}
-            className="max-h-700px min-h-500px min-w-600px max-w-1200px"
+            className="h-450px w-full tablet:min-w-600px tablet:max-w-1200px"
           />
           <Image
             ref={printRef}
