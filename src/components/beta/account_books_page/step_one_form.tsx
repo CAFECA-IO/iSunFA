@@ -278,32 +278,30 @@ const StepOneForm = ({
     [accountBookToEdit, isLoading]
   );
 
-  const uploadAccountBookImage = async () => {
-    if (!croppedBlob) return undefined;
-
-    const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
-
-    // Info: (20250527 - Liz) 如果是編輯帳本，就更新帳本圖片；如果是建立帳本，就新增帳本圖片
-    if (!isEditMode) {
-      const fileId = await createAccountBookImage(file);
-      return fileId;
-    }
-    await updateAccountBookImage(file);
-    return undefined;
-  };
-
   const onClickSubmit = async () => {
     const isValid = validateRequiredFields();
     if (!isValid) return;
 
-    const fileId = await uploadAccountBookImage();
+    // Info: (20250527 - Liz) 編輯模式：更新圖片 + 編輯帳本
+    if (isEditMode) {
+      if (croppedBlob) {
+        const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
+        await updateAccountBookImage(file);
+      }
 
-    // Info: (20250527 - Liz) 如果是編輯帳本，就呼叫 handleEdit；如果是建立帳本，就呼叫 handleSubmit
-    if (!isEditMode) {
-      await handleSubmit({ passedFileId: fileId });
+      await handleEdit();
       return;
     }
-    await handleEdit();
+
+    // Info: (20250527 - Liz) 新增模式：新增圖片 + 新增帳本
+    let fileId: number | undefined;
+
+    if (croppedBlob) {
+      const file = new File([croppedBlob], 'cropped-image.jpg', { type: croppedBlob.type });
+      fileId = await createAccountBookImage(file);
+    }
+
+    await handleSubmit({ passedFileId: fileId });
   };
 
   // Info: (20250430 - Liz) 避免記憶體外洩，component unmount 時清除 blob URL
