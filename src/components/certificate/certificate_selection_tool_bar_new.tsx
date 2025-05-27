@@ -110,35 +110,47 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
         </>
       ) : (
         <>
-          {/* Info: (20240920 - Anna) 左側選擇計數顯示 */}
+          {/* Info: (20240920 - Anna) 左側選擇計數顯示(tablet以上) */}
           {subtitle && currency && (
-            <div className="font-medium text-text-neutral-tertiary">
-              <span>{subtitle} </span>
-              <span className="text-black">{numberWithCommas(totalPrice ?? 0)}</span>
+            <div className="hidden font-medium text-text-neutral-tertiary tablet:flex">
+              <span className="mr-1">{subtitle} </span>
+              <span className="mr-1 text-black">{numberWithCommas(totalPrice ?? 0)}</span>
               <span>{currency}</span>
             </div>
           )}
-          <div className="flex h-42px items-center justify-end space-x-4 text-link-text-primary">
-            {/* Info: (20250418 - Anna) 匯出憑證 */}
-            {onDownload && (
-              <Button
-                type="button"
-                variant="tertiaryOutline"
-                className="h-36px w-36px !p-0 tablet:w-auto tablet:!px-4 tablet:!py-1.5"
-                onClick={onDownload}
-              >
-                <FiDownload size={16} />
-                <div className="hidden tablet:block">{t('certificate:COMMON.EXPORT_INVOICES')}</div>
-              </Button>
-            )}
-            {isSelectable && (
-              <button
-                type="button"
-                className="hover:underline"
-                onClick={() => onActiveChange(true)}
-              >
-                {t('certificate:COMMON.SELECT')}
-              </button>
+          <div>
+            <div className="flex h-42px items-center justify-end space-x-4 text-link-text-primary">
+              {/* Info: (20250418 - Anna) 匯出憑證 */}
+              {onDownload && (
+                <Button
+                  type="button"
+                  variant="tertiaryOutline"
+                  className="h-36px w-36px !p-0 tablet:w-auto tablet:!px-4 tablet:!py-1.5"
+                  onClick={onDownload}
+                >
+                  <FiDownload size={16} />
+                  <div className="hidden tablet:block">
+                    {t('certificate:COMMON.EXPORT_INVOICES')}
+                  </div>
+                </Button>
+              )}
+              {isSelectable && (
+                <button
+                  type="button"
+                  className="hover:underline"
+                  onClick={() => onActiveChange(true)}
+                >
+                  {t('certificate:COMMON.SELECT')}
+                </button>
+              )}
+            </div>
+            {/* Info: (20250527 - Anna) 左側選擇計數顯示(tablet以下) */}
+            {subtitle && currency && (
+              <div className="mb-6 mt-18px flex font-medium text-text-neutral-tertiary tablet:hidden">
+                <span className="mr-1">{subtitle} </span>
+                <span className="mr-1 text-black">{numberWithCommas(totalPrice ?? 0)}</span>
+                <span>{currency}</span>
+              </div>
             )}
           </div>
         </>
