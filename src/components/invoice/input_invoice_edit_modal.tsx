@@ -506,7 +506,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             </div>
 
             {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-            <div className="hide-scrollbar flex w-full flex-col items-start justify-between gap-5 overflow-y-scroll md:h-600px lg:flex-row">
+            <div className="hide-scrollbar flex w-full flex-col items-start justify-between gap-5 overflow-y-scroll lg:h-600px lg:flex-row">
               {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
               {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
@@ -534,7 +534,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto max-h-640px min-h-510px w-440px lg:mx-0"
+                    className="mx-auto w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px h-350px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -706,7 +706,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 )}
                 {/* Info: (20240924 - Anna) Invoice Number */}
                 <div className="flex w-full flex-col gap-4">
-                  <div className="relative flex w-full flex-col items-start gap-2">
+                  <div className="relative flex w-full flex-1 flex-col items-start gap-2">
                     {/* Info: (20250422 - Anna) 28 - 進項海關代徵營業稅繳納證 or 29 - 進項海關退還溢繳營業稅申報單 */}
                     {formState.type === InvoiceType.INPUT_28 ||
                     formState.type === InvoiceType.INPUT_29 ? (
@@ -771,9 +771,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     ) : // Info: (20250429 - Anna) 格式22、格式25
                     formState.type === InvoiceType.INPUT_22 ||
                       formState.type === InvoiceType.INPUT_25 ? (
-                      <div className="flex w-full justify-between gap-4">
+                      <div className="flex w-full flex-col justify-between lg:flex-row">
                         {/* Info: (20250429 - Anna) Invoice No. */}
-                        <div className="flex flex-1 flex-col gap-2 lg:w-52">
+                        <div className="flex flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.INVOICE_NUMBER')}
                             <span> </span>
@@ -810,7 +810,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                              className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
                               placeholder="12345678"
                               disabled={
                                 !!formState.otherCertificateNo ||
@@ -820,9 +820,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           </div>
                         </div>
                         {/* Info: (20250429 - Anna) or */}
-                        <p className="flex items-end text-neutral-400">{t('common:COMMON.OR')}</p>
+                        <p className="mt-2 flex w-full items-end justify-center text-neutral-400 lg:mx-4 lg:w-3">
+                          {t('common:COMMON.OR')}
+                        </p>
                         {/* Info: (20250429 - Anna) Other Certificate No.、Carrier Serial No. * */}
-                        <div className="flex flex-1 flex-col gap-2 lg:w-52">
+                        <div className="flex flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
                             {formState.type === InvoiceType.INPUT_22
                               ? t('certificate:EDIT.OTHER_CERTIFICATE_NO')
@@ -833,13 +835,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           {formState.type === InvoiceType.INPUT_22 && (
                             <div className="flex w-full items-center">
                               <input
-                                id="other-certificate-no"
+                                id="other-certificate-no w-full"
                                 type="text"
                                 value={formState.otherCertificateNo ?? ''}
                                 onChange={(e) => {
                                   handleInputChange('otherCertificateNo', e.target.value);
                                 }}
-                                className="h-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                                className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-40"
                                 placeholder="CC12345678"
                                 disabled={!!formState.no}
                               />
@@ -862,7 +864,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                     `${e.target.value.toUpperCase()}${suffix}`
                                   );
                                 }}
-                                className="h-44px w-16 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                                className="h-44px w-16 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                                 placeholder="BB"
                                 disabled={!!formState.no}
                               />
@@ -880,7 +882,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                     `${prefix}${e.target.value}`
                                   );
                                 }}
-                                className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                                className="h-44px w-full rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-28"
                                 placeholder={t('certificate:EDIT.CHARACTERS_8')}
                                 disabled={!!formState.no}
                               />
@@ -890,7 +892,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       </div>
                     ) : // Info: (20250429 - Anna) 格式27
                     formState.type === InvoiceType.INPUT_27 ? (
-                      <div className="flex w-full justify-between gap-4">
+                      <div className="flex w-full flex-col justify-between lg:flex-row">
                         {/* Info: (20250429 - Anna) Representative Invoice No. */}
                         <div className="flex flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
@@ -926,14 +928,16 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-36"
+                              className="h-44px w-full rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-36"
                               placeholder="12345678"
                               disabled={!!formState.otherCertificateNo}
                             />
                           </div>
                         </div>
                         {/* Info: (20250429 - Anna) or */}
-                        <p className="flex items-end text-neutral-400">{t('common:COMMON.OR')}</p>
+                        <p className="mt-2 flex items-end justify-center text-neutral-400">
+                          {t('common:COMMON.OR')}
+                        </p>
                         {/* Info: (20250429 - Anna) Other Certificate No. */}
                         <div className="flex flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
@@ -950,7 +954,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               onChange={(e) => {
                                 handleInputChange('otherCertificateNo', e.target.value);
                               }}
-                              className="h-44px rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                              className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="CC12345678"
                               disabled={!!formState.no}
                             />
@@ -1215,7 +1219,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       </div>
                       {(formState.type === InvoiceType.INPUT_22 ||
                         formState.type === InvoiceType.INPUT_27) && (
-                        <p className="w-full text-right text-sm font-medium tracking-wide text-neutral-300">
+                        <p className="w-full whitespace-nowrap text-right text-sm font-medium tracking-wide text-neutral-300">
                           {t('certificate:EDIT.DUPLICATE_INVOICE_TAX')}
                         </p>
                       )}

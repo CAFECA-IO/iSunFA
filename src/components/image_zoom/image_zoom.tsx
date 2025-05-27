@@ -148,7 +148,7 @@ const ImageZoom = ({
         >
           <FaPlus />
         </Button>
-        <p className="text-lg font-medium">{magnification} %</p>
+        <p className="text-lg font-medium whitespace-nowrap">{magnification} %</p>
         <Button
           type="button"
           size="smallSquare"
