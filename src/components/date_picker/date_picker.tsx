@@ -71,7 +71,7 @@ const PopulateDates = ({
 
   // Info: (2020417 - Shirley) 用於日期選取的樣式
   const beforeStyle =
-    'before:absolute before:-z-10 before:w-40px before:md:w-42px before:h-40px before:md:h-42px before:rounded-full before:bg-date-picker-surface-date-selected';
+    'before:absolute before:-z-10 before:w-40px before:md:w-42px before:h-40px before:md:h-36px before:rounded-full before:bg-date-picker-surface-date-selected';
 
   // Info: (20240417 - Shirley) 顯示星期標題
   const weekNameList = WEEK_LIST.map((week) => (
@@ -169,7 +169,7 @@ const PopulateDates = ({
         key={el?.date || `${Date.now()}-${index}`}
         type="button"
         disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
-        className={`relative z-10 flex h-42px items-center justify-center whitespace-nowrap px-1 text-base transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable ${isSelectedDateStyle} ${isSelectedPeriodStyle} ${!el?.disable ? 'hover:bg-date-picker-surface-date-period' : ''} hover:rounded-full`}
+        className={`relative z-10 flex h-36px items-center justify-center whitespace-nowrap px-1 transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable ${isSelectedDateStyle} ${isSelectedPeriodStyle} ${!el?.disable ? 'hover:bg-date-picker-surface-date-period' : ''} hover:rounded-full`}
         onClick={dateClickHandler}
       >
         {el?.date ?? ' '}
@@ -178,7 +178,7 @@ const PopulateDates = ({
   });
 
   return (
-    <div className="grid grid-cols-7 gap-y-2 text-center text-base">
+    <div className="grid grid-cols-7 text-center text-sm tablet:gap-y-2 tablet:text-base">
       {weekNameList}
       {formatDaysInMonth}
     </div>
