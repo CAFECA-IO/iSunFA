@@ -20,7 +20,7 @@ import {
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
 } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import { listByTeamIdQuerySchema, transferAccountBookSchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
@@ -113,8 +113,8 @@ const buildAccountBookTransferNotification = async (
   }));
 
   const content = {
-    ledgerId: accountBook.id,
-    ledgerName: accountBook.name,
+    accountBookId: accountBook.id,
+    accountBookName: accountBook.name,
     fromTeamName: fromTeam.name,
     toTeamName: toTeam.name,
     operatorName: operator.name,
@@ -127,21 +127,25 @@ const buildAccountBookTransferNotification = async (
     switch (notificationEvent) {
       case NotificationEvent.TRANSFER:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: '已發起帳本轉移請求',
           toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 發出，待本團隊處理`,
         };
       case NotificationEvent.APPROVED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」已成功轉移至 ${toTeam.name}`,
           toTeam: `帳本「${accountBook.name}」已成功轉入團隊`,
         };
       case NotificationEvent.CANCELLED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」轉移請求已取消`,
           toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 取消`,
         };
       case NotificationEvent.REJECTED:
         return {
+          // Todo: (20250526 - Tzuhan) @Liz 請問可以由前端協助調整改成 i18n 嗎？
           fromTeam: `帳本「${accountBook.name}」轉移請求已被拒絕`,
           toTeam: `帳本「${accountBook.name}」轉移請求已被 ${toTeam.name} 拒絕`,
         };
@@ -1107,9 +1111,8 @@ export const requestTransferAccountBook = async (
     error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
     throw error;
   }
-
-  await prisma.$transaction([
-    prisma.accountBookTransfer.create({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.create({
       data: {
         companyId: accountBookId,
         fromTeamId,
@@ -1118,18 +1121,19 @@ export const requestTransferAccountBook = async (
         status: TransferStatus.PENDING,
         pendingAt: now,
       },
-    }),
-    prisma.company.update({ where: { id: accountBookId }, data: { isTransferring: true } }),
-  ]);
+    });
+    await tx.company.update({ where: { id: accountBookId }, data: { isTransferring: true } });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    fromTeamId,
-    toTeamId,
-    NotificationEvent.TRANSFER
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      fromTeamId,
+      toTeamId,
+      NotificationEvent.TRANSFER
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
 
   return { accountBookId, fromTeamId, toTeamId, status: TransferStatus.PENDING };
 };
@@ -1138,7 +1142,7 @@ export const requestTransferAccountBook = async (
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1178,32 +1182,40 @@ export const cancelTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
       data: { status: TransferStatus.CANCELED },
-    }),
-    prisma.company.update({
+    });
+    await tx.company.update({
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.CANCELLED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.CANCEL
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.CANCELED,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   const transfer = await prisma.accountBookTransfer.findFirst({
@@ -1240,35 +1252,40 @@ export const acceptTransferAccountBook = async (
     throw error;
   }
 
-  await prisma.$transaction([
-    prisma.company.update({
-      where: { id: accountBookId },
-      data: { teamId: transfer.toTeamId, isTransferring: false },
-    }),
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
-      data: {
-        status: TransferStatus.COMPLETED,
-        completedAt: now,
-      },
-    }),
-  ]);
+      data: { status: TransferStatus.COMPLETED },
+    });
+    await tx.company.update({
+      where: { id: accountBookId },
+      data: { isTransferring: false },
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.APPROVED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.APPROVED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.COMPLETED,
+    transferredAt: now,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1293,28 +1310,32 @@ export const declineTransferAccountBook = async (
   }
 
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
-  await prisma.$transaction([
-    prisma.accountBookTransfer.update({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
       where: { id: transfer.id },
-      data: {
-        status: TransferStatus.DECLINED,
-        updatedAt: now,
-      },
-    }),
-    prisma.company.update({
+      data: { status: TransferStatus.DECLINED, updatedAt: now },
+    });
+    await tx.company.update({
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.REJECTED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.DELETED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.DECLINED,
+  };
 };
 
 /**

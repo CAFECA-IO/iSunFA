@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { FiCheckCircle } from 'react-icons/fi';
 import { PiBell } from 'react-icons/pi';
 import NotificationItem from '@/components/beta/layout/notification_item';
@@ -8,6 +8,8 @@ import { INotificationRC2 } from '@/interfaces/notification';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
+import { getPusherInstance } from '@/lib/utils/pusher_client';
+import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 
 interface NotificationProps {
   isPanelOpen: boolean;
@@ -25,6 +27,7 @@ const Notification = ({
   const { userAuth } = userCtx;
 
   const { trigger: listNotifications } = APIHandler<INotificationRC2[]>(APIName.LIST_NOTIFICATION);
+  const { trigger: readNotification } = APIHandler<{ count: number }>(APIName.READ_NOTIFICATION);
 
   const [notifications, setNotifications] = useState<INotificationRC2[]>([]);
   const isNoData = notifications.length === 0;
@@ -56,7 +59,7 @@ const Notification = ({
 
     try {
       // ToDo: (20241225 - Liz) 呼叫 API 標記為已讀
-      // await readNotificationAPI(notificationId);
+      await readNotification({ params: { userId: userAuth?.id, notificationId } });
 
       // ToDo: (20241225 - Liz) 更新本地狀態
       setNotifications((prev) =>
@@ -69,12 +72,34 @@ const Notification = ({
     }
   };
 
-  const handleOpenPanel = () => {
+  const handleOpenPanel = async () => {
     if (!isPanelOpen) {
-      getNotifications();
+      await getNotifications();
     }
     toggleNotificationPanel();
   };
+
+  const handleNewNotification = useCallback((data: { message: string }) => {
+    // eslint-disable-next-line no-console
+    console.log('New notification received:', data);
+    const newNotification: INotificationRC2 = JSON.parse(data.message);
+    setNotifications((prev) => [...prev, newNotification]);
+  }, []);
+
+  useEffect(() => {
+    if (!userAuth?.id) return () => {};
+    const pusher = getPusherInstance(userAuth.id);
+    const channel = pusher.subscribe(`${PRIVATE_CHANNEL.NOTIFICATION}-${userAuth.id}`);
+    channel.bind(NOTIFICATION_EVENT.NEW, handleNewNotification);
+
+    return () => {
+      if (channel) {
+        channel.unbind(NOTIFICATION_EVENT.NEW, handleNewNotification);
+        channel.unsubscribe();
+      }
+      pusher.unsubscribe(`${PRIVATE_CHANNEL.NOTIFICATION}-${userAuth.id}`);
+    };
+  }, [userAuth?.id]);
 
   return (
     <section className="relative">

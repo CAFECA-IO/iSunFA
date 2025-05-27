@@ -4,7 +4,6 @@ import { formatApiResponse } from '@/lib/utils/common';
 import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import { APIName, HttpMethod } from '@/constants/api_connection';
 import {
   checkSessionUser,
   checkUserAuthorization,
@@ -12,29 +11,25 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
-import { getNotificationById } from '@/lib/utils/repo/notification.repo';
+import { APIName, HttpMethod } from '@/constants/api_connection';
+import { acceptTeamInvitation } from '@/lib/utils/repo/team_member.repo';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  const { query } = checkRequestData(APIName.GET_NOTIFICATION_BY_ID, req, session);
-  await checkSessionUser(session, APIName.GET_NOTIFICATION_BY_ID, req);
-  await checkUserAuthorization(APIName.GET_NOTIFICATION_BY_ID, req, session);
+  const { query } = checkRequestData(APIName.ACCEPT_TEAM_INVITATION, req, session);
+  await checkSessionUser(session, APIName.ACCEPT_TEAM_INVITATION, req);
+  await checkUserAuthorization(APIName.ACCEPT_TEAM_INVITATION, req, session);
 
-  if (!query || !query.userId || !query.notificationId) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  if (!query || !query.teamId) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const notification = await getNotificationById(query.userId, query.notificationId);
+  const notifications = await acceptTeamInvitation(session.userId, query.teamId);
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.GET_NOTIFICATION_BY_ID,
-    notification
+    APIName.ACCEPT_TEAM_INVITATION,
+    notifications
   );
-  statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  payload = isOutputDataValid ? outputData : null;
-
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;
 
@@ -48,13 +43,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let result;
   let response;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-  let apiName = APIName.GET_NOTIFICATION_BY_ID;
   const session = await getSession(req);
 
   try {
     switch (method) {
       case HttpMethod.GET:
-        apiName = APIName.GET_NOTIFICATION_BY_ID;
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
@@ -70,6 +63,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, apiName, req, statusMessage);
+  await logUserAction(session, APIName.ACCEPT_TEAM_INVITATION, req, statusMessage);
   res.status(httpCode).json(result);
 }
