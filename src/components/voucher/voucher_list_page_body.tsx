@@ -197,7 +197,7 @@ const VoucherListPageBody: React.FC = () => {
           onTabClick={tabClick}
           counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
-        {/* Info: (20250526 - Julian) Search Input */}
+        {/* Info: (20250526 - Julian) Mobile Search Input */}
         <div className="block tablet:hidden">
           <SearchInput searchQuery={keyword} onSearchChange={setKeyword} />
         </div>
