@@ -1,9 +1,9 @@
 import { IAccountBookInfo } from '@/interfaces/company_setting';
-import { Company, CompanySetting } from '@prisma/client';
+import { AccountBook, AccountBookSetting } from '@prisma/client';
 import { companySettingOutputSchema } from '@/lib/utils/zod_schema/company_setting';
 
 export function formatAccountBookInfo(
-  accountBook: CompanySetting & { company: Company }
+  accountBook: AccountBookSetting & { accountBook: AccountBook }
 ): IAccountBookInfo {
   const formattedAccountBook = companySettingOutputSchema.safeParse(accountBook);
   if (!formattedAccountBook.success) {

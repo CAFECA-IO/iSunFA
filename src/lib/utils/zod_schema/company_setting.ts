@@ -7,16 +7,16 @@ const companySettingNullSchema = z.union([z.object({}), z.string()]);
 
 // Info: (20241023 - Jacky) Company setting get schema
 const companySettingGetQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 
 // Info: (20241023 - Jacky) Company setting put schema
 const companySettingPutQuerySchema = z.object({
-  companyId: zodStringToNumber,
+  accountBookId: zodStringToNumber,
 });
 const companySettingPutBodySchema = z.object({
   id: z.number().optional(),
-  companyId: z.number().int().optional(),
+  accountBookId: z.number().int().optional(),
   companyName: z.string(),
   companyTaxId: z.string(),
   taxSerialNumber: z.string(),
@@ -33,8 +33,8 @@ const companySettingPutBodySchema = z.object({
 export const companySettingOutputSchema = z
   .object({
     id: z.number(),
-    companyId: z.number(),
-    company: z.object({
+    accountBookId: z.number(),
+    accountBook: z.object({
       name: z.string(),
       taxId: z.string(),
     }),
@@ -48,9 +48,9 @@ export const companySettingOutputSchema = z
   })
   .transform((companySetting) => ({
     id: companySetting.id,
-    companyId: companySetting.companyId,
-    companyName: companySetting.company.name || '',
-    companyTaxId: companySetting.company.taxId || '',
+    accountBookId: companySetting.accountBookId,
+    companyName: companySetting.accountBook.name || '',
+    companyTaxId: companySetting.accountBook.taxId || '',
     taxSerialNumber: companySetting.taxSerialNumber || '',
     representativeName: companySetting.representativeName || '',
     country: LocaleKey.en || null,
@@ -64,7 +64,7 @@ export const companySettingOutputSchema = z
 // Info: (20241029 - Jacky) Company setting validate schema
 const companySettingValidateSchema = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   companyName: z.string(),
   companyTaxId: z.string(),
   taxSerialNumber: z.string(),

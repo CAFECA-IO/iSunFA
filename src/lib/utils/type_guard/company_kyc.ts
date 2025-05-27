@@ -4,7 +4,7 @@ import {
   LegalStructureOptions,
   RepresentativeIDType,
 } from '@/constants/kyc';
-import { ICompanyKYC, ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { ICompanyKYC, IAccountBookKYCForm } from '@/interfaces/company_kyc';
 import { iCompanyKYCFormValidator, iCompanyKYCValidator } from '@/lib/utils/zod_schema/kyc';
 
 export function isCompanyKYC(data: unknown): data is ICompanyKYC {
@@ -43,7 +43,7 @@ export function isCompanyKYC(data: unknown): data is ICompanyKYC {
   return isValid.success;
 }
 
-export function isCompanyKYCForm(obj: unknown): obj is ICompanyKYCForm {
+export function isCompanyKYCForm(obj: unknown): obj is IAccountBookKYCForm {
   // Deprecated: (20240912 - Murky) Use zod validator instead
   // const countryEnumValue = getEnumValue(CountryOptions, obj.country);
   // const structureEnumValue = getEnumValue(LegalStructureOptions, obj.structure);
@@ -81,7 +81,7 @@ export function isCompanyKYCForm(obj: unknown): obj is ICompanyKYCForm {
   return isValid.success;
 }
 
-export function isKYCFormComplete(data: ICompanyKYCForm): {
+export function isKYCFormComplete(data: IAccountBookKYCForm): {
   isComplete: boolean;
   missingFields: string[];
 } {

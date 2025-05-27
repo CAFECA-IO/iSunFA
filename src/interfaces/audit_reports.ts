@@ -1,6 +1,6 @@
 export interface IAuditReports {
   id: number;
-  companyId: number;
+  accountBookId: number;
   code: string;
   company: string;
   informationYear: string;

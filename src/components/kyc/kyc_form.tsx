@@ -19,7 +19,7 @@ import {
   ContactInfoKeys,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { IAccountBookKYCForm } from '@/interfaces/company_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
 import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
@@ -95,7 +95,7 @@ const KYCForm = () => {
         uploadDocuments[UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]
       ),
     };
-    const companyKYCForm: ICompanyKYCForm = {
+    const companyKYCForm: IAccountBookKYCForm = {
       ...basicInfoValues,
       ...registrationInfoValues,
       ...restContactInfoValues,

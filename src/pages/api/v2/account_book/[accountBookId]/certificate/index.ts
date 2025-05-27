@@ -135,7 +135,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
         invoice: invoiceEntity,
         file: fileEntity,
         uploader: uploaderEntity,
-        vouchers: voucherCertificateEntity.map((v) => v.voucher),
+        vouchers: voucherCertificateEntity.map((v: { voucher: IVoucherEntity }) => v.voucher),
       };
 
       return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
@@ -260,7 +260,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
           nowInSecond,
-          companyId: accountBookId,
+          accountBookId,
           uploaderId: userId,
           fileId,
         });
@@ -285,7 +285,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
           file: fileEntity,
           uploader: uploaderEntity,
           vouchers: voucherCertificateEntity.map(
-            (voucherCertificate) => voucherCertificate.voucher
+            (voucherCertificate: { voucher: IVoucherEntity }) => voucherCertificate.voucher
           ),
         };
 

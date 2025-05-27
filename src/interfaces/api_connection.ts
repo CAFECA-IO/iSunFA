@@ -1,6 +1,6 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
-import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { IAccountBookKYCForm } from '@/interfaces/company_kyc';
 import { ICertificate } from '@/interfaces/certificate';
 
 export type IAPIName =
@@ -156,7 +156,7 @@ export type IAPIInput = {
     | FormData
     | IVoucher
     | IFinancialReportRequest
-    | ICompanyKYCForm
+    | IAccountBookKYCForm
     | ICertificate
     | string;
   params?: { [key: string]: unknown };

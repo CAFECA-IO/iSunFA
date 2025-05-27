@@ -64,7 +64,7 @@ export function formatIJournal(
   assertIsJournalEvent(invoiceVoucherJournal.voucher?.status);
   const imageUrl = transformOCRImageIDToURL(
     FileFolder.INVOICE,
-    invoiceVoucherJournal.journal?.companyId || 0,
+    invoiceVoucherJournal.journal?.accountBookId || 0,
     invoiceVoucherJournal.invoice?.certificate.file.id || 0
   );
   return {

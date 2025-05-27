@@ -7,14 +7,14 @@ import { LeaveStatus } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { Prisma } from '@prisma/client';
 
-export async function createCompanySetting(companyId: number) {
+export async function createCompanySetting(accountBookId: number) {
   const nowInSecond = getTimestampNow();
   let companySetting = null;
 
   try {
-    companySetting = await prisma.companySetting.create({
+    companySetting = await prisma.accountBookSetting.create({
       data: {
-        companyId,
+        accountBookId,
         taxSerialNumber: '',
         representativeName: '',
         country: '',
@@ -24,7 +24,7 @@ export async function createCompanySetting(companyId: number) {
         updatedAt: nowInSecond,
       },
       include: {
-        company: true,
+        accountBook: true,
       },
     });
   } catch (error) {
@@ -38,14 +38,14 @@ export async function createCompanySetting(companyId: number) {
   return companySetting;
 }
 
-export async function getCompanySettingByCompanyId(companyId: number) {
+export async function getCompanySettingByCompanyId(accountBookId: number) {
   let companySetting = null;
 
   try {
-    companySetting = await prisma.companySetting.findFirst({
-      where: { companyId },
+    companySetting = await prisma.accountBookSetting.findFirst({
+      where: { accountBookId },
       include: {
-        company: true,
+        accountBook: true,
       },
     });
   } catch (error) {
@@ -60,17 +60,17 @@ export async function getCompanySettingByCompanyId(companyId: number) {
 }
 
 export async function updateCompanySettingByCompanyId(options: {
-  companyId: number;
+  accountBookId: number;
   data: Partial<IAccountBookInfo>;
 }) {
-  const { companyId, data } = options;
+  const { accountBookId, data } = options;
   let companySetting = null;
   const nowInSecond = getTimestampNow();
 
   try {
     // Info: (20250521 - Shirley) 獲取現有的 companySetting
-    const existingSetting = await prisma.companySetting.findUnique({
-      where: { companyId },
+    const existingSetting = await prisma.accountBookSetting.findUnique({
+      where: { accountBookId },
       select: { address: true },
     });
 
@@ -108,10 +108,10 @@ export async function updateCompanySettingByCompanyId(options: {
     };
 
     // Info: (20250521 - Shirley) 構建更新數據，只包含請求中實際提供的欄位
-    const updateData: Prisma.CompanySettingUpdateInput = {
+    const updateData: Prisma.AccountBookSettingUpdateInput = {
       address: addressData, // Info: (20250521 - Shirley) 已經考慮了現有值的地址物件
       updatedAt: nowInSecond,
-      company: {
+      accountBook: {
         update: {},
       },
     };
@@ -143,27 +143,27 @@ export async function updateCompanySettingByCompanyId(options: {
     if (data.licenseId !== undefined) updateData.licenseId = data.licenseId;
 
     // Info: (20250521 - Shirley) 處理公司相關欄位
-    const companyUpdate: Prisma.CompanyUpdateInput = {};
+    const companyUpdate: Prisma.AccountBookUpdateInput = {};
     if (data.companyName !== undefined) companyUpdate.name = data.companyName;
     if (data.companyTaxId !== undefined) companyUpdate.taxId = data.companyTaxId;
     if (data.companyStartDate !== undefined) companyUpdate.startDate = data.companyStartDate;
 
     // Info: (20250521 - Shirley) 確保只在有實際變更時才觸發關聯表的更新操作
     if (Object.keys(companyUpdate).length > 0) {
-      updateData.company = {
+      updateData.accountBook = {
         update: companyUpdate,
       };
     } else {
-      delete updateData.company; // 沒有欄位需要更新時刪除
+      delete updateData.accountBook; // 沒有欄位需要更新時刪除
     }
 
-    companySetting = await prisma.companySetting.update({
+    companySetting = await prisma.accountBookSetting.update({
       where: {
-        companyId,
+        accountBookId,
       },
       data: updateData,
       include: {
-        company: true,
+        accountBook: true,
       },
     });
   } catch (error) {
@@ -182,7 +182,7 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
   const nowInSecond = getTimestampNow();
 
   try {
-    companySetting = await prisma.companySetting.update({
+    companySetting = await prisma.accountBookSetting.update({
       where: { id },
       data: {
         taxSerialNumber: data.taxSerialNumber,
@@ -198,7 +198,7 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
                 enteredAddress: data.address?.enteredAddress || '',
               },
         updatedAt: nowInSecond,
-        company: {
+        accountBook: {
           update: {
             name: data.companyName,
             taxId: data.companyTaxId,
@@ -207,7 +207,7 @@ export async function updateCompanySettingById(id: number, data: IAccountBookInf
         },
       },
       include: {
-        company: true,
+        accountBook: true,
       },
     });
   } catch (error) {
@@ -225,7 +225,7 @@ export async function deleteCompanySettingByIdForTesting(id: number) {
   let companySetting = null;
 
   try {
-    companySetting = await prisma.companySetting.delete({
+    companySetting = await prisma.accountBookSetting.delete({
       where: { id },
     });
   } catch (error) {
@@ -312,7 +312,7 @@ export async function getOptimizedCompanySettingsByUserId(
 
       if (['createdAt', 'updatedAt', 'name', 'startDate'].includes(field)) {
         return {
-          company: {
+          accountBook: {
             [field]: option.sortOrder.toLowerCase(),
           },
         };
@@ -324,9 +324,9 @@ export async function getOptimizedCompanySettingsByUserId(
     });
 
     // Info: (20250421 - Shirley) First get the total count for pagination
-    const countResult = await prisma.companySetting.count({
+    const countResult = await prisma.accountBookSetting.count({
       where: {
-        company: {
+        accountBook: {
           teamId: { in: teamIds },
           name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
           createdAt: { gte: startDate, lte: endDate },
@@ -337,20 +337,20 @@ export async function getOptimizedCompanySettingsByUserId(
 
     totalCount = countResult;
 
-    const results = await prisma.companySetting.findMany({
+    const results = await prisma.accountBookSetting.findMany({
       where: {
-        company: {
+        accountBook: {
           teamId: { in: teamIds },
           name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
           createdAt: { gte: startDate, lte: endDate },
           AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
         },
       },
-      orderBy: orderBy.length > 0 ? orderBy[0] : { company: { createdAt: 'desc' } },
+      orderBy: orderBy.length > 0 ? orderBy[0] : { accountBook: { createdAt: 'desc' } },
       skip: (page - 1) * pageSize,
       take: pageSize,
       include: {
-        company: {
+        accountBook: {
           include: {
             imageFile: includedImageFile,
             team: {
@@ -377,8 +377,8 @@ export async function getOptimizedCompanySettingsByUserId(
     companySettings = results;
 
     companySettings.forEach((setting) => {
-      if (setting.companyId && setting.company) {
-        companySettingsMap.set(setting.companyId, setting);
+      if (setting.accountBookId && setting.accountBook) {
+        companySettingsMap.set(setting.accountBookId, setting);
       }
     });
 

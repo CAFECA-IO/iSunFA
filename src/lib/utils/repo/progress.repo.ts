@@ -19,7 +19,7 @@ export async function listProjectProgress(projectId: number): Promise<number> {
   return completedPercent;
 }
 
-export async function getStatusNumber(dateToTimeStamp: number, companyId: number) {
+export async function getStatusNumber(dateToTimeStamp: number, accountBookId: number) {
   const statusNumber = await prisma.milestone.groupBy({
     by: ['status'],
     _count: {
@@ -33,7 +33,7 @@ export async function getStatusNumber(dateToTimeStamp: number, companyId: number
         gte: dateToTimeStamp,
       },
       project: {
-        companyId,
+        accountBookId,
       },
     },
   });

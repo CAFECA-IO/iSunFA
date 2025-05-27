@@ -11,7 +11,7 @@ import {
 
 export interface ICompanyKYC {
   id: number;
-  companyId: number;
+  accountBookId: number;
   legalName: string;
   country: CountryOptions;
   city: string;
@@ -39,7 +39,7 @@ export interface ICompanyKYC {
   deletedAt: number | null;
 }
 
-export interface ICompanyKYCForm {
+export interface IAccountBookKYCForm {
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: string;
   [BasicInfoKeys.CITY]: string;
   [BasicInfoKeys.ZIP_CODE]: string;
@@ -60,7 +60,7 @@ export interface ICompanyKYCForm {
   [UploadDocumentKeys.REPRESENTATIVE_CERTIFICATE_ID]: number;
 }
 
-export function createFormData(data: ICompanyKYCForm): FormData {
+export function createFormData(data: IAccountBookKYCForm): FormData {
   const formData = new FormData();
   Object.entries(data).forEach(([key, value]) => {
     formData.append(key, value);

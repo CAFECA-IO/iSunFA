@@ -10,7 +10,7 @@ import { SortOrder } from '@/constants/sort';
  */
 export interface IAccount {
   id: number;
-  companyId: number;
+  accountBookId: number;
   /**
    * Info: (20241023 - Murky)
    * @enum {string} system - IFRS, GAAP
@@ -87,7 +87,7 @@ export interface IAccountReadyForFrontend {
 }
 
 export type IAccountQueryArgs = {
-  companyId: number;
+  accountBookId: number;
   includeDefaultAccount?: boolean;
   liquidity?: boolean;
   type?: AccountType;
@@ -114,7 +114,7 @@ export interface IAccountEntity {
    * @description account id from database, 0 means not created in database yet
    */
   id: number;
-  companyId: number;
+  accountBookId: number;
   /**
    * Info: (20241023 - Murky)
    * @enum {string} system - IFRS, GAAP

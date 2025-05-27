@@ -1,6 +1,6 @@
 import prisma from '@/client';
 
-export async function getWorkRatesByCompanyId(companyId: number, date: number) {
+export async function getWorkRatesByCompanyId(accountBookId: number, date: number) {
   const workRates = await prisma.workRate.findMany({
     where: {
       createdAt: {
@@ -8,7 +8,7 @@ export async function getWorkRatesByCompanyId(companyId: number, date: number) {
       },
       employeeProject: {
         project: {
-          companyId,
+          accountBookId,
         },
       },
     },
@@ -22,7 +22,7 @@ export async function getWorkRatesByCompanyId(companyId: number, date: number) {
           projectId: true,
           project: {
             select: {
-              companyId: true,
+              accountBookId: true,
               name: true,
             },
           },

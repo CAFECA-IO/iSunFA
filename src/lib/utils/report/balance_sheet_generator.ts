@@ -127,7 +127,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY,
             id: -1,
-            companyId: this.companyId,
+            accountBookId: this.companyId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
@@ -158,7 +158,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS,
             id: -1,
-            companyId: this.companyId,
+            accountBookId: this.companyId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
@@ -191,7 +191,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER,
             id: -1,
-            companyId: this.companyId,
+            accountBookId: this.companyId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,

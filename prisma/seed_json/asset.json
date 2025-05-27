@@ -2,7 +2,6 @@
   {
     "id": 1,
     "createdUserId": 1000,
-    "companyId": 1000,
     "name": "Notebook",
     "type": "1691",
     "number": "LAPTOP-001",
@@ -15,12 +14,12 @@
     "usefulLife": 60,
     "note": "Company Notebook",
     "createdAt": 1609459200,
-    "updatedAt": 1609459200
+    "updatedAt": 1609459200,
+    "accountBookId": 1000
   },
   {
     "id": 2,
     "createdUserId": 1000,
-    "companyId": 1001,
     "name": "Desk",
     "type": "1691",
     "number": "DESK-001",
@@ -33,6 +32,7 @@
     "usefulLife": 120,
     "note": "Company Desk",
     "createdAt": 1612137600,
-    "updatedAt": 1612137600
+    "updatedAt": 1612137600,
+    "accountBookId": 1001
   }
 ]

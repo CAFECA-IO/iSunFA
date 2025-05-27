@@ -4,7 +4,7 @@ import { ProjectStage } from '@/constants/project';
 export async function getIncomeExpenseToday(
   startDayTimestampOfTargetTime: number,
   endDayTimestampOfTargetTime: number,
-  companyId: number
+  accountBookId: number
 ) {
   const IncomeExpenseToday = await prisma.incomeExpense.findMany({
     select: {
@@ -16,7 +16,7 @@ export async function getIncomeExpenseToday(
         gte: startDayTimestampOfTargetTime,
         lte: endDayTimestampOfTargetTime,
       },
-      companyId,
+      accountBookId,
     },
   });
   return IncomeExpenseToday;
@@ -25,7 +25,7 @@ export async function getIncomeExpenseToday(
 export async function getIncomeExpenseYesterday(
   startPreviousDayTimestampOfTargetTime: number,
   endPreviousDayTimestampOfTargetTime: number,
-  companyId: number
+  accountBookId: number
 ) {
   const IncomeExpenseYesterday = await prisma.incomeExpense.findMany({
     select: {
@@ -37,13 +37,13 @@ export async function getIncomeExpenseYesterday(
         gte: startPreviousDayTimestampOfTargetTime,
         lte: endPreviousDayTimestampOfTargetTime,
       },
-      companyId,
+      accountBookId,
     },
   });
   return IncomeExpenseYesterday;
 }
 
-export async function getProjectsIncomeExpense(companyId: number) {
+export async function getProjectsIncomeExpense(accountBookId: number) {
   const projectsIncomeExpense = await prisma.incomeExpense.groupBy({
     by: ['projectId'],
     _sum: {
@@ -51,17 +51,17 @@ export async function getProjectsIncomeExpense(companyId: number) {
       expense: true,
     },
     where: {
-      companyId,
+      accountBookId,
     },
   });
   return projectsIncomeExpense;
 }
 
-export async function getPreLaunchProjectCount(companyId: number) {
+export async function getPreLaunchProjectCount(accountBookId: number) {
   const preLaunchProject = await prisma.project.count({
     where: {
       stage: ProjectStage.BETA_TESTING,
-      companyId,
+      accountBookId,
     },
   });
   return preLaunchProject;

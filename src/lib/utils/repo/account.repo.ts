@@ -11,7 +11,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function findManyAccountsInPrisma({
-  companyId,
+  accountBookId,
   includeDefaultAccount,
   liquidity,
   type,
@@ -25,7 +25,7 @@ export async function findManyAccountsInPrisma({
   sortOrder = SortOrder.ASC,
   searchKey,
 }: {
-  companyId: number;
+  accountBookId: number;
   includeDefaultAccount?: boolean;
   liquidity?: boolean;
   type?: AccountType;
@@ -65,9 +65,9 @@ export async function findManyAccountsInPrisma({
         OR:
           includeDefaultAccount !== undefined
             ? includeDefaultAccount
-              ? [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }]
-              : [{ companyId }]
-            : [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
+              ? [{ accountBookId }, { accountBookId: PUBLIC_ACCOUNT_BOOK_ID }]
+              : [{ accountBookId }]
+            : [{ accountBookId }, { accountBookId: PUBLIC_ACCOUNT_BOOK_ID }],
       },
       equityType && type === AccountType.EQUITY
         ? {
@@ -144,7 +144,7 @@ export async function findManyAccountsInPrisma({
   return returnValue;
 }
 
-export async function findFirstAccountInPrisma(accountId: number, companyId: number) {
+export async function findFirstAccountInPrisma(accountId: number, accountBookId: number) {
   let account: Account | null = null;
   try {
     account = await prisma.account.findFirst({
@@ -152,10 +152,10 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
         id: accountId,
         OR: [
           {
-            companyId,
+            accountBookId,
           },
           {
-            companyId: PUBLIC_ACCOUNT_BOOK_ID,
+            accountBookId: PUBLIC_ACCOUNT_BOOK_ID,
           },
         ],
       },
@@ -173,7 +173,7 @@ export async function findFirstAccountInPrisma(accountId: number, companyId: num
 
 export async function updateAccountInPrisma(
   accountIdNumber: number,
-  companyIdNumber: number,
+  accountBookIdNumber: number,
   name: string,
   note?: string
 ) {
@@ -182,7 +182,7 @@ export async function updateAccountInPrisma(
     account = await prisma.account.update({
       where: {
         id: accountIdNumber,
-        companyId: companyIdNumber,
+        accountBookId: accountBookIdNumber,
       },
       data: {
         name,
@@ -200,7 +200,10 @@ export async function updateAccountInPrisma(
   return account;
 }
 
-export async function softDeleteAccountInPrisma(accountIdNumber: number, companyIdNumber: number) {
+export async function softDeleteAccountInPrisma(
+  accountIdNumber: number,
+  accountBookIdNumber: number
+) {
   let account: Account | null = null;
   const time = new Date().getTime();
   const timeInSeconds = timestampInSeconds(time);
@@ -208,7 +211,7 @@ export async function softDeleteAccountInPrisma(accountIdNumber: number, company
     account = await prisma.account.update({
       where: {
         id: accountIdNumber,
-        companyId: companyIdNumber,
+        accountBookId: accountBookIdNumber,
       },
       data: {
         deletedAt: timeInSeconds,
@@ -245,10 +248,10 @@ export async function findLatestSubAccountInPrisma(parentAccount: Account) {
   return latestSubAccount;
 }
 
-export async function easyFindManyAccountsInPrisma(companyId: number, type: AccountType) {
+export async function easyFindManyAccountsInPrisma(accountBookId: number, type: AccountType) {
   const accounts: Account[] = await prisma.account.findMany({
     where: {
-      OR: [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
+      OR: [{ accountBookId }, { accountBookId: PUBLIC_ACCOUNT_BOOK_ID }],
       type,
     },
   });
@@ -256,10 +259,10 @@ export async function easyFindManyAccountsInPrisma(companyId: number, type: Acco
 }
 
 // TODO: (20241126 - Shirley) FIXME: account code 可能重複，要改用 account id 找
-export async function findFirstAccountByCodeInPrisma(code: string, companyId?: number) {
+export async function findFirstAccountByCodeInPrisma(code: string, accountBookId?: number) {
   const account: Account | null = await prisma.account.findFirst({
     where: {
-      OR: [{ companyId }, { companyId: PUBLIC_ACCOUNT_BOOK_ID }],
+      OR: [{ accountBookId }, { accountBookId: PUBLIC_ACCOUNT_BOOK_ID }],
       code,
     },
   });
@@ -299,7 +302,7 @@ export async function fuzzySearchAccountByName(name: string) {
 
 export async function createAccountInPrisma(options: {
   nowInSecond: number;
-  companyId: number;
+  accountBookId: number;
   system: string;
   type: string;
   debit: boolean;
@@ -315,7 +318,7 @@ export async function createAccountInPrisma(options: {
   note: string | null;
 }) {
   const {
-    companyId,
+    accountBookId,
     system,
     type,
     debit,
@@ -335,7 +338,7 @@ export async function createAccountInPrisma(options: {
   try {
     account = await prisma.account.create({
       data: {
-        companyId,
+        accountBookId,
         system,
         type,
         debit,

@@ -1,4 +1,4 @@
-import { Company as PrismaCompany } from '@prisma/client';
+import { AccountBook as PrismaAccountBook } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ICompanyEntity } from '@/interfaces/account_book';
 
@@ -7,7 +7,7 @@ import { ICompanyEntity } from '@/interfaces/account_book';
  * @description Create ICompanyEntity from scratch
  */
 export function initCompanyEntity(
-  dto: Partial<PrismaCompany> & {
+  dto: Partial<PrismaAccountBook> & {
     name: string;
     taxId: string;
   }

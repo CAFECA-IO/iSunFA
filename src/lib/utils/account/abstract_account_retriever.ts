@@ -8,7 +8,7 @@ import { formatIPaginatedAccount } from '@/lib/utils/formatter/account.formatter
 import { SortOrder } from '@/constants/sort';
 
 export abstract class AbstractAccountRetriever {
-  protected companyId: number;
+  protected accountBookId: number;
 
   protected includeDefaultAccount: boolean | undefined;
 
@@ -35,7 +35,7 @@ export abstract class AbstractAccountRetriever {
   protected isDeleted: boolean | undefined;
 
   constructor({
-    companyId,
+    accountBookId,
     includeDefaultAccount,
     liquidity,
     type,
@@ -49,7 +49,7 @@ export abstract class AbstractAccountRetriever {
     searchKey,
     isDeleted,
   }: IAccountQueryArgs) {
-    this.companyId = companyId;
+    this.accountBookId = accountBookId;
     this.includeDefaultAccount = includeDefaultAccount;
     this.liquidity = liquidity;
     this.type = type;
@@ -66,7 +66,7 @@ export abstract class AbstractAccountRetriever {
 
   public async getAccounts(): Promise<IPaginatedAccount> {
     const accounts = await findManyAccountsInPrisma({
-      companyId: this.companyId,
+      accountBookId: this.accountBookId,
       includeDefaultAccount: this.includeDefaultAccount,
       liquidity: this.liquidity,
       type: this.type,

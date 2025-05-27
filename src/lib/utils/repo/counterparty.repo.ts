@@ -12,13 +12,13 @@ import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatt
 
 export async function getCounterpartyByName(options: {
   name: string;
-  companyId: number;
+  accountBookId: number;
 }): Promise<Counterparty | null> {
-  const { name, companyId } = options;
+  const { name, accountBookId } = options;
   const counterparty = await prisma.counterparty.findFirst({
     where: {
       name,
-      companyId,
+      accountBookId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
@@ -28,18 +28,18 @@ export async function getCounterpartyByName(options: {
 
 export async function getCounterpartyByTaxId(options: {
   taxId: string;
-  companyId: number;
+  accountBookId: number;
 }): Promise<Counterparty | null> {
-  const { taxId, companyId } = options;
+  const { taxId, accountBookId } = options;
   const counterparty = await prisma.counterparty.findFirst({
-    where: { taxId, companyId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
+    where: { taxId, accountBookId, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
   });
   return counterparty;
 }
 
 // Info: (20241022 - Jacky) Create
 export async function createCounterparty(
-  companyId: number,
+  accountBookId: number,
   name: string,
   taxId: string,
   type: string,
@@ -49,7 +49,7 @@ export async function createCounterparty(
   const nowTimestamp = timestampInSeconds(now);
   const newCounterparty = await prisma.counterparty.create({
     data: {
-      companyId,
+      accountBookId,
       name,
       taxId,
       type,
@@ -63,7 +63,7 @@ export async function createCounterparty(
 
 // Info: (20241022 - Jacky) List
 export async function listCounterparty(
-  companyId: number,
+  accountBookId: number,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   type?: string,
@@ -73,7 +73,7 @@ export async function listCounterparty(
 ) {
   let counterparties: Counterparty[] = [];
   const where: Prisma.CounterpartyWhereInput = {
-    companyId,
+    accountBookId,
     type,
     AND: [
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
@@ -214,7 +214,7 @@ export async function deleteCounterpartyForTesting(id: number): Promise<Counterp
   return deletedCounterparty;
 }
 
-export async function fuzzySearchCounterpartyByName(name: string, companyId: number) {
+export async function fuzzySearchCounterpartyByName(name: string, accountBookId: number) {
   let counterparty: Counterparty | null = null;
 
   const counterpartyName = name || '';
@@ -223,7 +223,7 @@ export async function fuzzySearchCounterpartyByName(name: string, companyId: num
     // Info: (20241119 - Luphia) be mindful of the risks associated with raw queries
     const counterparties: Counterparty[] = await prisma.$queryRaw`
       SELECT * FROM public."counterparty"
-      WHERE company_id = ${companyId}
+      WHERE company_id = ${accountBookId}
       ORDER BY SIMILARITY(name, ${counterpartyName}) DESC
       LIMIT 1;
     `;

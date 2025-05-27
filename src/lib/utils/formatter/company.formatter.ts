@@ -1,11 +1,11 @@
 import { ICompanyEntity, WORK_TAG } from '@/interfaces/account_book';
-import { Company, File, Company as PrismaCompany } from '@prisma/client';
+import { AccountBook, File, AccountBook as PrismaAccountBook } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import { accountBookEntityValidator } from '@/lib/utils/zod_schema/company';
 import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 export async function formatCompanyList(
-  companyList: (Company & {
+  companyList: (AccountBook & {
     imageFile: File;
   })[]
 ): Promise<IAccountBookEntity[]> {
@@ -22,7 +22,7 @@ export async function formatCompanyList(
 }
 
 export function formatCompany(
-  company: Company & {
+  company: AccountBook & {
     imageFile: File | null;
   }
 ): IAccountBookEntity {
@@ -37,10 +37,10 @@ export function formatCompany(
 
 /**
  * Info: (20241023 - Murky)
- * @description convert Prisma.Company to ICompanyEntity
+ * @description convert prisma.accountBook to ICompanyEntity
  * @note please check companyEntityValidator for how to parse the data
  */
-export function parsePrismaCompanyToCompanyEntity(dto: PrismaCompany): ICompanyEntity {
+export function parsePrismaCompanyToCompanyEntity(dto: PrismaAccountBook): ICompanyEntity {
   const { data, success, error } = accountBookEntityValidator.safeParse(dto);
 
   if (!success) {

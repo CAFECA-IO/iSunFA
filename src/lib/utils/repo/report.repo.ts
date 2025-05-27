@@ -12,7 +12,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function findFirstReportByFromTo(
-  companyId: number,
+  accountBookId: number,
   fromInSecond: number,
   toInSecond: number,
   reportSheetType: ReportSheetType
@@ -22,7 +22,7 @@ export async function findFirstReportByFromTo(
   try {
     report = await prisma.report.findFirst({
       where: {
-        companyId,
+        accountBookId,
         from: fromInSecond,
         to: toInSecond,
         reportType: reportSheetType,
@@ -49,7 +49,7 @@ export async function findUniqueReportById(reportId: number) {
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        company: true,
+        accountBook: true,
         project: true,
       },
     });
@@ -66,7 +66,7 @@ export async function findUniqueReportById(reportId: number) {
 }
 
 export async function getReportIdByFromTo(
-  companyId: number,
+  accountBookId: number,
   fromInSecond: number,
   toInSecond: number,
   reportSheetType: ReportSheetType
@@ -76,7 +76,7 @@ export async function getReportIdByFromTo(
   try {
     report = await prisma.report.findFirst({
       where: {
-        companyId,
+        accountBookId,
         from: fromInSecond,
         to: toInSecond,
         reportType: reportSheetType,
@@ -97,7 +97,7 @@ export async function getReportIdByFromTo(
 }
 
 export async function createReport(
-  companyId: number,
+  accountBookId: number,
   projectId: number | null,
   name: string,
   fromInSecond: number,
@@ -113,7 +113,7 @@ export async function createReport(
   try {
     report = await prisma.report.create({
       data: {
-        companyId,
+        accountBookId,
         projectId,
         name,
         from: fromInSecond,
@@ -138,7 +138,7 @@ export async function createReport(
 }
 
 export async function findManyReports(
-  companyId: number,
+  accountBookId: number,
   status: ReportStatusType = ReportStatusType.PENDING,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
@@ -153,7 +153,7 @@ export async function findManyReports(
     id: {
       gte: 10000000, // Info
     },
-    companyId,
+    accountBookId,
     status,
     AND: [
       // { from: { gte: startDateInSecond } }, // Info: (20240719 - Jacky)

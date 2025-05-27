@@ -7,7 +7,7 @@ import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 export function formatAccount(account: PrismaAccount): IAccount {
   return {
     id: account.id,
-    companyId: account.companyId,
+    accountBookId: account.accountBookId,
     system: account.system,
     type: account.type,
     liquidity: account.liquidity,

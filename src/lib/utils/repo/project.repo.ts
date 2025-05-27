@@ -4,10 +4,10 @@ import { Milestone } from '@/constants/milestone';
 import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
 
-export async function listProject(companyId: number) {
+export async function listProject(accountBookId: number) {
   const listedProject = await prisma.project.findMany({
     where: {
-      companyId,
+      accountBookId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
     orderBy: {
@@ -67,7 +67,7 @@ export async function getProjectById(projectId: number): Promise<
 }
 
 export async function createProject(
-  companyId: number,
+  accountBookId: number,
   name: string,
   stage: Milestone,
   imageId: number,
@@ -85,7 +85,7 @@ export async function createProject(
 
   const createdProject = await prisma.project.create({
     data: {
-      companyId,
+      accountBookId,
       name,
       stage,
       imageFileId: imageId,

@@ -100,7 +100,7 @@ export const MOCK_REPORTS: IReport[] = [
 export type IReportIncludeCompanyProject = Prisma.ReportGetPayload<{
   include: {
     project: true;
-    company: true;
+    accountBook: true;
   };
 }>;
 export interface IReportOld {
