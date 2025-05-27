@@ -1404,6 +1404,7 @@ model TeamPlanFeature {
   createdAt    Int      @map("created_at")
   updatedAt    Int      @map("updated_at")
 
+  @@unique([planId, featureKey])
   @@map("team_plan_feature")
 }
 

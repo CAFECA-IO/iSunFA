@@ -1,4 +1,4 @@
-import { PrismaClient, Tag } from '@prisma/client';
+import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
 // import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import teams from '@/seed_json/team.json';
@@ -352,39 +352,120 @@ async function createInvoice() {
   });
 }
 
-/*
-async function createTPlan() {
+async function createTPlans() {
+  const now = Math.floor(Date.now() / 1000);
+  const tPlans = [
+    {
+      type: TeamPlanType.BEGINNER,
+      planName: 'Beginner',
+      price: 0,
+      features: [
+        { featureKey: 'JOINABLE_TEAM_LIMIT', featureValue: 'UNLIMITED' },
+        { featureKey: 'OWNED_TEAM_MEMBER_LIMIT', featureValue: 'LIMIT_1_MEMBER' },
+        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'LIMIT_1_LEDGER' },
+        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'VIEW_ONLY' },
+        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'VIEW_ONLY' },
+        { featureKey: 'STORAGE', featureValue: 'STORAGE_10GB' },
+        { featureKey: 'TRIAL_BALANCE', featureValue: 'AVAILABLE_TB' },
+        { featureKey: 'LEDGER', featureValue: 'AVAILABLE_LEDGER' },
+        { featureKey: 'FINANCIAL_REPORTS', featureValue: 'DAILY_DOWNLOADABLE' },
+        { featureKey: 'TECH_ADVANTAGE', featureValue: 'HOMOMORPHIC_ENCRYPTION_BLOCKCHAIN' },
+      ],
+    },
+    {
+      type: TeamPlanType.PROFESSIONAL,
+      planName: 'Professional',
+      price: 899,
+      extraMemberPrice: 89,
+      features: [
+        {
+          featureKey: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',
+          featureValue: 'LIMIT_3_MEMBERS_PAID_EXTENSION',
+        },
+        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'UNLIMITED' },
+        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'UPLOAD_UNLIMITED' },
+        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'EDIT_UNLIMITED' },
+        { featureKey: 'STORAGE', featureValue: 'STORAGE_50GB' },
+        { featureKey: 'CONTINUOUS_AUDIT', featureValue: 'AUTO_EMBED_DISCLOSURE' },
+        { featureKey: 'EARLY_ACCESS', featureValue: 'LATEST_FEATURES_FIRST' },
+      ],
+    },
+    {
+      type: TeamPlanType.ENTERPRISE,
+      planName: 'Enterprise',
+      price: 2399,
+      extraMemberPrice: 89,
+      features: [
+        { featureKey: 'STORAGE', featureValue: 'STORAGE_200GB' },
+        { featureKey: 'AI_MODEL_ASSISTANCE', featureValue: 'META_LLAMA' },
+        { featureKey: 'ENTERPRISE_SUPPORT', featureValue: 'TURN_KEY_AND_MCP' },
+      ],
+    },
+    {
+      type: TeamPlanType.TRIAL,
+      planName: 'Trial',
+      price: 0,
+      features: [
+        {
+          featureKey: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',
+          featureValue: 'LIMIT_3_MEMBERS_PAID_EXTENSION',
+        },
+        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'UNLIMITED' },
+        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'UPLOAD_UNLIMITED' },
+        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'EDIT_UNLIMITED' },
+        { featureKey: 'STORAGE', featureValue: 'STORAGE_50GB' },
+        { featureKey: 'CONTINUOUS_AUDIT', featureValue: 'AUTO_EMBED_DISCLOSURE' },
+        { featureKey: 'EARLY_ACCESS', featureValue: 'LATEST_FEATURES_FIRST' },
+      ],
+    },
+  ];
+
   await Promise.all(
     tPlans.map(async (plan) => {
-      const createdPlan = await prisma.teamPlan.create({
-        data: {
-          type: plan.type as TeamPlanType,
+      const createdPlan = await prisma.teamPlan.upsert({
+        where: { type: plan.type },
+        update: {
           planName: plan.planName,
           price: plan.price,
-          extraMemberPrice: plan.extraMemberPrice || null,
-          createdAt: Math.floor(new Date().getTime() / 1000),
-          updatedAt: Math.floor(new Date().getTime() / 1000),
+          extraMemberPrice: plan.extraMemberPrice ?? null,
+          updatedAt: now,
+        },
+        create: {
+          type: plan.type,
+          planName: plan.planName,
+          price: plan.price,
+          extraMemberPrice: plan.extraMemberPrice ?? null,
+          createdAt: now,
+          updatedAt: now,
         },
       });
 
-      // Info: (20250221 - tzuhan) 插入 Feature 資料
-      if (plan.features) {
-        await prisma.teamPlanFeature.createMany({
-          data: plan.features.map((feature) => ({
-            planId: createdPlan.id,
-            featureKey: feature.featureKey,
-            featureValue: Array.isArray(feature.featureValue)
-              ? JSON.stringify(feature.featureValue)
-              : feature.featureValue,
-            createdAt: Math.floor(new Date().getTime() / 1000),
-            updatedAt: Math.floor(new Date().getTime() / 1000),
-          })),
-        });
-      }
+      await Promise.all(
+        plan.features.map((feature) =>
+          prisma.teamPlanFeature.upsert({
+            where: {
+              planId_featureKey: {
+                planId: createdPlan.id,
+                featureKey: feature.featureKey,
+              },
+            },
+            update: {
+              featureValue: feature.featureValue,
+              updatedAt: now,
+            },
+            create: {
+              planId: createdPlan.id,
+              featureKey: feature.featureKey,
+              featureValue: feature.featureValue,
+              createdAt: now,
+              updatedAt: now,
+            },
+          })
+        )
+      );
     })
   );
 }
-*/
 
 async function main() {
   try {
@@ -416,7 +497,7 @@ async function main() {
     await createEmployeeProject();
     await createWorkRate();
     await createPlan();
-    // await createTPlan();
+    await createTPlans();
     await createOrder();
     await createPaymentRecord();
     await createSubscription();
