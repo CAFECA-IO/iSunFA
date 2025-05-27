@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { Button } from '@/components/button/button';
 import { useQRCode } from 'next-qrcode';
-import { IoCloseOutline } from 'react-icons/io5';
+import { RxCross2 } from 'react-icons/rx';
 import Image from 'next/image';
 import { IRoom } from '@/interfaces/room';
 
@@ -58,7 +58,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
+      <div className="flex w-90vw flex-col rounded-lg bg-surface-neutral-surface-lv2 tablet:w-400px">
         <section className="relative">
           <h1 className="flex flex-col items-center justify-center gap-2 p-2 text-xl font-semibold text-card-text-title">
             <div className="text-xl font-semibold">{t('certificate:UPLOAD.PHONE_SCANNER')}</div>
@@ -67,7 +67,7 @@ const CertificateQRCodeModal: React.FC<CertificateQRCodeModalProps> = ({
             </div>
           </h1>
           <button type="button" onClick={toggleQRCode} className="absolute right-24px top-24px">
-            <IoCloseOutline size={24} />
+            <RxCross2 size={24} />
           </button>
         </section>
         {displayedQRCode}
