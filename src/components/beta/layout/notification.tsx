@@ -80,6 +80,7 @@ const Notification = ({
   };
 
   const handleNewNotification = useCallback((data: { message: string }) => {
+    // Deprecated: (20250527 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('New notification received:', data);
     const newNotification: INotificationRC2 = JSON.parse(data.message);
