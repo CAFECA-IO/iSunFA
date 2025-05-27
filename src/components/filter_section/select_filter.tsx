@@ -39,7 +39,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
   return (
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
     <div className={`flex flex-col gap-8px ${width || 'w-full lg:w-200px'} ${containerClassName}`}>
-      <p className={`${labelClassName} text-sm font-semibold text-input-text-primary`}>
+      <p className={`${labelClassName} text-sm font-semibold`}>
         {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}

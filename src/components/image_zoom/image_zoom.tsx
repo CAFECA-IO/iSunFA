@@ -134,10 +134,10 @@ const ImageZoom = ({
   }, [magnification]);
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex h-full w-full flex-col">
       {/* Info: (20250307 - Julian) 縮放倍率 */}
       <div
-        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} flex items-center gap-12px text-button-stroke-secondary`}
+        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} hidden items-center gap-12px text-button-stroke-secondary tablet:flex`}
       >
         <Button
           type="button"
@@ -167,7 +167,7 @@ const ImageZoom = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className={`relative ${className} overflow-hidden ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`relative ${className} overflow-hidden p-2 ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ userSelect: 'none' }} // Info: (20250307 - Julian) 防止選取內容
       >
         {/* Info: (20250307 - Julian) 圖片 */}
