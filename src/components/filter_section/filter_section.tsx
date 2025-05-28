@@ -259,17 +259,17 @@ const FilterSection = <T,>({
 
   return (
     <div
-      className={`flex flex-wrap items-end justify-start gap-4 ${className || ''}`}
+      className={`flex flex-col items-end justify-start gap-4 tablet:flex-row tablet:flex-wrap ${className || ''}`}
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
-      {!displayTypeFilter && types.length > 0 && !isSideMenuStyle && (
+      {!displayTypeFilter && types.length > 0 && (
         <SelectFilter
           label="Type"
           options={types}
           selectedValue={selectedType}
           onChange={setSelectedType}
-          containerClassName="flex-1"
+          containerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
           labelClassName={labelClassName}
         />
       )}
@@ -281,25 +281,29 @@ const FilterSection = <T,>({
           options={statuses}
           selectedValue={selectedStatus}
           onChange={setSelectedStatus}
-          containerClassName="flex-1"
+          containerClassName="basis-1/5"
         />
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
-      {!disableDateSearch && !isSideMenuStyle && (
-        <div className="flex min-w-250px flex-1 flex-col">
-          <DatePicker
-            label="Issue_Date"
-            period={selectedDateRange}
-            setFilteredPeriod={setSelectedDateRange}
-            type={DatePickerType.TEXT_PERIOD}
-            btnClassName=""
-          />
-        </div>
+      {!disableDateSearch && (
+        <DatePicker
+          label="Issue_Date"
+          period={selectedDateRange}
+          setFilteredPeriod={setSelectedDateRange}
+          type={DatePickerType.TEXT_PERIOD}
+          datePickerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
+        />
       )}
 
       {/* Info: (20240919 - tzuhan) 搜索欄 */}
-      {enableSearch && <SearchInput searchQuery={searchQuery} onSearchChange={setSearchQuery} />}
+      {enableSearch && (
+        <SearchInput
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          className="w-full grow"
+        />
+      )}
 
       {/* Info: (20240919 - tzuhan) 顯示風格切換 */}
       {viewType && viewToggleHandler && (
