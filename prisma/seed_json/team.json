@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "ownerId": 1001,
+    "name": "Test_User_2's Team",
+    "about": "",
+    "profile": "",
+    "bankInfo": "{\"code\": \"\", \"number\": \"\"}",
+    "createdAt": 1740652650,
+    "imageFileId": null,
+    "updatedAt": 1743133039
+  }
+]

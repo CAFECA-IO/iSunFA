@@ -1,4 +1,5 @@
 import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
+import teams from '@/seed_json/team.json';
 import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
 import country from '@/seed_json/country.json';
@@ -6,9 +7,9 @@ import teamPlans from '@/seed_json/team_plan.json';
 
 const prisma = new PrismaClient();
 
-async function createAccount() {
-  await prisma.account.createMany({
-    data: accounts,
+async function createTeam() {
+  await prisma.team.createMany({
+    data: teams,
   });
 }
 
@@ -24,6 +25,12 @@ async function createCompany() {
 async function createCountry() {
   await prisma.country.createMany({
     data: country,
+  });
+}
+
+async function createAccount() {
+  await prisma.account.createMany({
+    data: accounts,
   });
 }
 
@@ -78,6 +85,7 @@ async function createTeamPlans() {
 
 async function main() {
   try {
+    await createTeam();
     await createCompany();
     await createAccount();
     await createCountry();
