@@ -85,7 +85,7 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
             // sort={{ by: SortBy.TAG, order: typeSort ?? SortOrder.DESC }} // ToDo: (20250506 - Liz) 工作標籤排序功能尚未實作
-            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
+            sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
           />
 
           <div className="flex items-center gap-4">

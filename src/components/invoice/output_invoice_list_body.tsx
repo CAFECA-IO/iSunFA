@@ -41,6 +41,7 @@ import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { ITeamMember } from '@/interfaces/team';
+import { ISortOption } from '@/interfaces/sort';
 
 interface CertificateListBodyProps {}
 
@@ -90,13 +91,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
   const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
   const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -525,15 +520,15 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     if (dateSort) {
-      setSelectedSort({ by: SortBy.DATE, order: dateSort });
+      setSelectedSort({ sortBy: SortBy.DATE, sortOrder: dateSort });
     } else if (amountSort) {
-      setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
+      setSelectedSort({ sortBy: SortBy.AMOUNT, sortOrder: amountSort });
     } else if (voucherSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+      setSelectedSort({ sortBy: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort });
     } else if (certificateNoSort) {
-      setSelectedSort({ by: SortBy.INVOICE_NUMBER, order: certificateNoSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_NUMBER, sortOrder: certificateNoSort });
     } else if (certificateTypeSort) {
-      setSelectedSort({ by: SortBy.INVOICE_TYPE, order: certificateTypeSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_TYPE, sortOrder: certificateTypeSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -554,29 +549,29 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     };
   }, [accountBookId]);
 
-    useEffect(() => {
-      const fetchMemberAvatars = async () => {
-        if (!connectedAccountBook?.teamId) return;
+  useEffect(() => {
+    const fetchMemberAvatars = async () => {
+      if (!connectedAccountBook?.teamId) return;
 
-        const { success, data } = await getMemberListByTeamIdAPI({
-          params: { teamId: connectedAccountBook.teamId.toString() },
-          query: { page: 1, pageSize: 9999 },
+      const { success, data } = await getMemberListByTeamIdAPI({
+        params: { teamId: connectedAccountBook.teamId.toString() },
+        query: { page: 1, pageSize: 9999 },
+      });
+
+      if (success && data) {
+        // Info: (20250526 - Anna) 初始化一個空的 avatarMap 物件
+        const avatarMap: Record<string, string> = {};
+        // Info: (20250526 - Anna) 對每一位成員，把 member.name 當作 key，把 member.imageId 當作 value，建立對應關係
+        data.data.forEach((member) => {
+          avatarMap[member.name] = member.imageId;
         });
+        // Info: (20250526 - Anna) 把建立好的 avatarMap 存入 uploaderAvatarMap 的 state
+        setUploaderAvatarMap(avatarMap);
+      }
+    };
 
-        if (success && data) {
-          // Info: (20250526 - Anna) 初始化一個空的 avatarMap 物件
-          const avatarMap: Record<string, string> = {};
-          // Info: (20250526 - Anna) 對每一位成員，把 member.name 當作 key，把 member.imageId 當作 value，建立對應關係
-          data.data.forEach((member) => {
-            avatarMap[member.name] = member.imageId;
-          });
-          // Info: (20250526 - Anna) 把建立好的 avatarMap 存入 uploaderAvatarMap 的 state
-          setUploaderAvatarMap(avatarMap);
-        }
-      };
-
-      fetchMemberAvatars();
-    }, [connectedAccountBook?.teamId]);
+    fetchMemberAvatars();
+  }, [connectedAccountBook?.teamId]);
 
   return !accountBookId ? (
     <div className="flex flex-col items-center gap-2">

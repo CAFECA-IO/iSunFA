@@ -23,6 +23,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { VoucherTabs } from '@/constants/voucher';
 import { ToastType } from '@/interfaces/toastify';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { ISortOption } from '@/interfaces/sort';
 
 const VoucherListPageBody: React.FC = () => {
   const router = useRouter();
@@ -58,13 +59,7 @@ const VoucherListPageBody: React.FC = () => {
   // Info: (20250107 - Julian) 是否顯示沖銷傳票
   // ToDo: (20250107 - Julian) API query
   const [isHideReversals, setIsHideReversals] = useState(true);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   // Info: (20250324 - Anna) 流程2:為了將篩選條件傳遞給 VoucherItem，非用於給 FilterSection 打 API
@@ -111,19 +106,19 @@ const VoucherListPageBody: React.FC = () => {
   }, [router.isReady]);
 
   useEffect(() => {
-    let sort: { by: SortBy; order: SortOrder } | undefined;
+    let sort: ISortOption | undefined;
     // Info: (20241230 - Julian) 如果有借貸排序，則清除日期排序
     const newDateSort = !creditSort && !debitSort && dateSort ? dateSort : null;
     setDateSort(newDateSort);
     if (newDateSort) {
-      sort = { by: SortBy.DATE, order: newDateSort };
+      sort = { sortBy: SortBy.DATE, sortOrder: newDateSort };
     } else {
       // Info: (20241230 - Julian) 如果有日期排序，則清除借貸排序
       if (creditSort) {
-        sort = { by: SortBy.CREDIT, order: creditSort };
+        sort = { sortBy: SortBy.CREDIT, sortOrder: creditSort };
       }
       if (debitSort) {
-        sort = { by: SortBy.DEBIT, order: debitSort };
+        sort = { sortBy: SortBy.DEBIT, sortOrder: debitSort };
       }
     }
     setSelectedSort(sort);
@@ -262,6 +257,8 @@ const VoucherListPageBody: React.FC = () => {
         apiName={APIName.VOUCHER_LIST_V2}
         params={params}
         activeTab={activeTab}
+        typeOptions={voucherTypeList}
+        hideReversedRelated={isHideReversals}
         isModalVisible={isShowSideMenu}
         modalVisibleHandler={toggleSideMenu}
         onApiResponse={handleApiResponse}

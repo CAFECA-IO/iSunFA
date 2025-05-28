@@ -38,6 +38,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { ITeamMember } from '@/interfaces/team';
+import { ISortOption } from '@/interfaces/sort';
 
 interface InvoiceListBodyProps {}
 
@@ -87,13 +88,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
   const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
   const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -521,15 +516,15 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   useEffect(() => {
     if (dateSort) {
-      setSelectedSort({ by: SortBy.DATE, order: dateSort });
+      setSelectedSort({ sortBy: SortBy.DATE, sortOrder: dateSort });
     } else if (amountSort) {
-      setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
+      setSelectedSort({ sortBy: SortBy.AMOUNT, sortOrder: amountSort });
     } else if (voucherSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+      setSelectedSort({ sortBy: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort });
     } else if (certificateTypeSort) {
-      setSelectedSort({ by: SortBy.INVOICE_TYPE, order: certificateTypeSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_TYPE, sortOrder: certificateTypeSort });
     } else if (certificateNoSort) {
-      setSelectedSort({ by: SortBy.INVOICE_NUMBER, order: certificateNoSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_NUMBER, sortOrder: certificateNoSort });
     } else {
       setSelectedSort(undefined);
     }

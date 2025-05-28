@@ -32,6 +32,7 @@ import { CurrencyType } from '@/constants/currency';
 import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upload_popup';
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
+import { ISortOption } from '@/interfaces/sort';
 
 interface CertificateListBodyProps {}
 
@@ -69,13 +70,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -471,11 +466,11 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
   useEffect(() => {
     if (dateSort) {
-      setSelectedSort({ by: SortBy.DATE, order: dateSort });
+      setSelectedSort({ sortBy: SortBy.DATE, sortOrder: dateSort });
     } else if (amountSort) {
-      setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
+      setSelectedSort({ sortBy: SortBy.AMOUNT, sortOrder: amountSort });
     } else if (voucherSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+      setSelectedSort({ sortBy: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort });
     } else {
       setSelectedSort(undefined);
     }

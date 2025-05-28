@@ -14,6 +14,7 @@ import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortOrder, SortBy } from '@/constants/sort';
+import { ISortOption } from '@/interfaces/sort';
 // import { useTranslation } from 'next-i18next';
 
 interface FilterSectionProps<T> {
@@ -38,10 +39,7 @@ interface FilterSectionProps<T> {
     sortOrder: SortOrder;
   }[];
   */
-  sort?: {
-    by: SortBy;
-    order: SortOrder;
-  };
+  sort?: ISortOption;
   disableDateSearch?: boolean;
   displayTypeFilter?: boolean;
   hideReversedRelated?: boolean; // Info: (20250210 - Julian) 用於 VoucherListBody，隱藏沖銷分錄
@@ -115,13 +113,9 @@ const FilterSection = <T,>({
   // Info: (20250324 - Anna) 初始化搜尋關鍵字，優先使用從父層傳入的 initialKeyword
   const [searchQuery, setSearchQuery] = useState<string | undefined>(initialKeyword);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [selectedSortOption, setSelectedSortOption] = useState<
-    | {
-        by: string;
-        order: SortOrder;
-      }
-    | undefined
-  >(sort ? { by: sort.by, order: sort.order } : undefined);
+  const [selectedSortOption, setSelectedSortOption] = useState<ISortOption | undefined>(
+    sort ? { sortBy: sort.sortBy, sortOrder: sort.sortOrder } : undefined
+  );
 
   // Info: (20250324 - Anna) 判斷是否為初次載入（無初始篩選條件）
   const [isInitialized] = useState(() => {
@@ -142,7 +136,10 @@ const FilterSection = <T,>({
       setIsLoading(true);
       // Info: (20241022 - tzuhan) @Murky, 這裡是前端呼叫 CERTIFICATE_LIST_V2 API 的地方，以及query參數的組合
 
-      const effectiveSort = selectedSortOption || { by: SortBy.DATE, order: SortOrder.DESC };
+      const effectiveSort = selectedSortOption || {
+        sortBy: SortBy.DATE,
+        sortOrder: SortOrder.DESC,
+      };
 
       const { success, code, data } = await trigger({
         params,
@@ -153,7 +150,7 @@ const FilterSection = <T,>({
           tab,
           type: selectedType,
           status: selectedStatus, // Info: (20241022 - tzuhan) 這個如果是用在<CertificateListBody> 或是 <CertificateSelectorModal>, 會是 undefined，所以不會被加入 query 參數
-          sortOption: `${effectiveSort.by}:${effectiveSort.order}`,
+          sortOption: `${effectiveSort.sortBy}:${effectiveSort.sortOrder}`,
           startDate: !selectedDateRange.startTimeStamp
             ? undefined
             : selectedDateRange.startTimeStamp,
@@ -208,7 +205,11 @@ const FilterSection = <T,>({
   // };
 
   useEffect(() => {
-    if (sort && (sort.by !== selectedSortOption?.by || sort.order !== selectedSortOption?.order)) {
+    if (
+      sort &&
+      (sort.sortBy !== selectedSortOption?.sortBy ||
+        sort.sortOrder !== selectedSortOption?.sortOrder)
+    ) {
       setSelectedSortOption(sort);
     }
   }, [sort]);

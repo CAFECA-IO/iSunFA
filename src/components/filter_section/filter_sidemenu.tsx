@@ -8,12 +8,16 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { IAPIName } from '@/interfaces/api_connection';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { IDatePeriod } from '@/interfaces/date_period';
+import { default30DayPeriodInSec } from '@/constants/display';
 
 interface IFilterSideMenuProps<T> {
   isModalVisible: boolean;
   modalVisibleHandler: () => void;
 
   activeTab?: string; // Info: (20250527 - Julian) 用於指定當前選項卡
+  typeOptions?: string[]; // Info: (20250528 - Julian) 用於指定可選的類型選項
+  hideReversedRelated?: boolean; // Info: (20250527 - Julian) 是否隱藏已刪除的憑證和其相關的反向憑證
 
   apiName: IAPIName;
   params?: Record<string, string | number | boolean | undefined>;
@@ -24,22 +28,21 @@ const FilterSideMenu = <T,>({
   isModalVisible,
   modalVisibleHandler,
   activeTab,
+  typeOptions,
+  hideReversedRelated,
   apiName,
   params,
   onApiResponse,
 }: IFilterSideMenuProps<T>) => {
-  const { t } = useTranslation(['filter_section_type', 'common']);
+  const { t } = useTranslation(['filter_section_type', 'journal', 'common']);
 
-  const types = ['All', 'Sales', 'Purchases', 'Inventory'];
+  // Info: (20250528 - Julian) Type 管理
   const [selectedType, setSelectedType] = useState<string>('All');
 
-  const [selectedPeriod, setSelectedPeriod] = useState<{
-    startTimeStamp: number;
-    endTimeStamp: number;
-  }>({
-    startTimeStamp: 0,
-    endTimeStamp: 0,
-  });
+  // Info: (20250528 - Julian) Date Period 管理
+  const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+
+  const [isOpenToggle, setIsOpenToggle] = useState<boolean>(hideReversedRelated ?? false);
 
   // Info: (20250527 - Julian) API 呼叫處理器
   const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
@@ -66,7 +69,7 @@ const FilterSideMenu = <T,>({
             selectedPeriod.startTimeStamp !== 0 ? selectedPeriod.startTimeStamp : undefined,
           endDate: selectedPeriod.endTimeStamp !== 0 ? selectedPeriod.endTimeStamp : undefined,
 
-          hideReversedRelated: false, // Info: (20250527 - Julian) 是否隱藏已刪除的憑證和其相關的反向憑證
+          hideReversedRelated, // Info: (20250527 - Julian) 是否隱藏已刪除的憑證和其相關的反向憑證
         },
       });
 
@@ -83,7 +86,13 @@ const FilterSideMenu = <T,>({
       // eslint-disable-next-line no-console
       console.error('Error fetching data:', err);
     }
-  }, [selectedType, selectedPeriod.startTimeStamp, selectedPeriod.endTimeStamp]);
+  }, [
+    activeTab,
+    selectedType,
+    selectedPeriod.startTimeStamp,
+    selectedPeriod.endTimeStamp,
+    hideReversedRelated,
+  ]);
 
   useEffect(() => {
     // Info: (20250527 - Julian) 當選擇類型或日期變更時，重新呼叫 API
@@ -115,13 +124,15 @@ const FilterSideMenu = <T,>({
         {/* Info: (20250521 - Julian) 選單內容 */}
         <div className="flex flex-col items-stretch gap-lv-4">
           {/* Info: (20250527 - Julian) 選擇類型 */}
-          <SelectFilter
-            label="Type"
-            options={types}
-            selectedValue={selectedType}
-            onChange={setSelectedType}
-            labelClassName="text-input-text-primary"
-          />
+          {typeOptions && (
+            <SelectFilter
+              label="Type"
+              options={typeOptions}
+              selectedValue={selectedType}
+              onChange={setSelectedType}
+              labelClassName="text-input-text-primary"
+            />
+          )}
 
           {/* Info: (20250527 - Julian) 選擇日期 */}
           <div className="flex flex-col items-start gap-8px">
@@ -137,16 +148,19 @@ const FilterSideMenu = <T,>({
             />
           </div>
         </div>
-        <div className="flex items-center gap-lv-2 text-xs font-medium">
-          <Toggle
-            id="hide-reversals-toggle-mobile"
-            // initialToggleState={isHideReversals}
-            // getToggledState={hideReversalsToggleHandler}
-            // toggleStateFromParent={isHideReversals}
-            getToggledState={() => {}}
-          />
-          Hide deleted vouchers and their reversals.
-        </div>
+
+        {/* Info: (20250528 - Julian) 開關 */}
+        {hideReversedRelated && (
+          <div className="flex items-center gap-lv-2 text-xs font-medium">
+            <Toggle
+              id="hide-reversals-toggle-mobile"
+              initialToggleState={isOpenToggle}
+              toggleStateFromParent={isOpenToggle}
+              getToggledState={() => setIsOpenToggle(!isOpenToggle)}
+            />
+            {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+          </div>
+        )}
       </div>
     </div>
   );
