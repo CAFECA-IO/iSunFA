@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1002,
+    "name": "100002.png",
+    "size": 512.25,
+    "mimeType": "image/png",
+    "type": "invoice",
+    "url": "/elements/avatar_default.svg",
+    "isEncrypted": true,
+    "encryptedSymmetricKey": "c29tZUVuY3J5cHRlZEtleQ==",
+    "iv": "",
+    "createdAt": 1693488000,
+    "updatedAt": 1693488000,
+    "deletedAt": null
+  },
+  {
+    "id": 1003,
+    "name": "100002.png",
+    "size": 512.25,
+    "mimeType": "image/png",
+    "type": "invoice",
+    "url": "/elements/avatar_default.svg",
+    "isEncrypted": true,
+    "encryptedSymmetricKey": "c29tZUVuY3J5cHRlZEtleQ==",
+    "iv": "",
+    "createdAt": 1693488000,
+    "updatedAt": 1693488000,
+    "deletedAt": null
+  },
+  {
+    "id": 1005,
+    "name": "100002.png",
+    "size": 512.25,
+    "mimeType": "image/png",
+    "type": "invoice",
+    "url": "/elements/avatar_default.svg",
+    "isEncrypted": true,
+    "encryptedSymmetricKey": "c29tZUVuY3J5cHRlZEtleQ==",
+    "iv": "",
+    "createdAt": 1693488000,
+    "updatedAt": 1693488000,
+    "deletedAt": null
+  }
+]
