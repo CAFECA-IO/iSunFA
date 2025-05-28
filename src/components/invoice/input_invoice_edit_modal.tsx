@@ -541,7 +541,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               )}
 
               {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
-              <div className="flex w-full justify-center pt-20 lg:hidden">
+              <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
                 <div>
                   <div className="ml-auto flex items-center gap-4">
                     {/* Info: (20250415 - Anna) 上一筆 */}

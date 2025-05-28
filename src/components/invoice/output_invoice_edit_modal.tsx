@@ -517,7 +517,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 </div>
               )}
               {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
-              <div className="flex w-full justify-center pt-20 lg:hidden">
+              <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
                 <div className="flex flex-col">
                   <div className="flex gap-4">
                     {/* Info: (20250415 - Anna) 上一筆 */}
@@ -561,7 +561,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
               {/* Info: (20240924 - Anna) 編輯表單 */}
               {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-              <div className="hide-scrollbar flex lg:h-600px w-full flex-col items-start space-y-4 lg:overflow-y-scroll lg:pb-80px pt-20">
+              <div className="hide-scrollbar flex w-full flex-col items-start space-y-4 pt-20 lg:h-600px lg:overflow-y-scroll lg:pb-80px">
                 {/* Info: (20240924 - Anna) Invoice Type */}
                 <div className="flex w-full flex-col items-start gap-2">
                   <p className="text-sm font-semibold text-neutral-300">
