@@ -4,9 +4,6 @@ import companies from '@/seed_json/company.json';
 import country from '@/seed_json/country.json';
 import teamPlans from '@/seed_json/team_plan.json';
 
-// Info (2024722 - Murky) - Uncomment this line to seed generated reports
-// import generatedReports from '@/seed_json/generated_report.json';
-
 const prisma = new PrismaClient();
 
 async function createAccount() {
