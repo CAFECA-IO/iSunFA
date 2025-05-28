@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1002,
+    "teamId": 1,
+    "userId": 1003,
+    "tag": "ALL",
+    "name": "Public_Company",
+    "taxId": "1",
+    "imageFileId": 1002,
+    "startDate": 1717751006,
+    "createdAt": 1717751006,
+    "updatedAt": 1717751006,
+    "isPrivate": false,
+    "isTransferring": false
+  }
+]
