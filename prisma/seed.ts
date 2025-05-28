@@ -1,14 +1,11 @@
 import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
-// import { PrismaClient, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import teams from '@/seed_json/team.json';
 import country from '@/seed_json/country.json';
 import companies from '@/seed_json/company.json';
 import companyKYCs from '@/seed_json/company_kyc.json';
-// import admins from '@/seed_json/admin.json';
 import projects from '@/seed_json/project.json';
 import IncomeExpenses from '@/seed_json/income_expense.json';
-// import roles from '@/seed_json/role.json';
 import users from '@/seed_json/user.json';
 import milestones from '@/seed_json/milestone.json';
 
@@ -21,12 +18,10 @@ import employeeProjects from '@/seed_json/employee_project.json';
 import values from '@/seed_json/value.json';
 import sales from '@/seed_json/sale.json';
 import workRates from '@/seed_json/work_rate.json';
-import plans from '@/seed_json/plan.json';
-// import tPlans from '@/seed_json/t_plan.json';
 import subscriptions from '@/seed_json/subscription.json';
 import orders from '@/seed_json/order.json';
 import paymentRecords from '@/seed_json/payment_record.json';
-// import invitations from '@/seed_json/invitation.json';
+import teamPlans from '@/seed_json/team_plan.json';
 import journals from '@/seed_json/journal.json';
 import vouchers from '@/seed_json/voucher.json';
 import lineItems from '@/seed_json/line_item.json';
@@ -176,12 +171,6 @@ async function createSale() {
 async function createWorkRate() {
   await prisma.workRate.createMany({
     data: workRates,
-  });
-}
-
-async function createPlan() {
-  await prisma.plan.createMany({
-    data: plans,
   });
 }
 
@@ -352,78 +341,12 @@ async function createInvoice() {
   });
 }
 
-async function createTPlans() {
+async function createTeamPlans() {
   const now = Math.floor(Date.now() / 1000);
-  const tPlans = [
-    {
-      type: TeamPlanType.BEGINNER,
-      planName: 'Beginner',
-      price: 0,
-      features: [
-        { featureKey: 'JOINABLE_TEAM_LIMIT', featureValue: 'UNLIMITED' },
-        { featureKey: 'OWNED_TEAM_MEMBER_LIMIT', featureValue: 'LIMIT_1_MEMBER' },
-        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'LIMIT_1_LEDGER' },
-        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'VIEW_ONLY' },
-        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'VIEW_ONLY' },
-        { featureKey: 'STORAGE', featureValue: 'STORAGE_10GB' },
-        { featureKey: 'TRIAL_BALANCE', featureValue: 'AVAILABLE_TB' },
-        { featureKey: 'LEDGER', featureValue: 'AVAILABLE_LEDGER' },
-        { featureKey: 'FINANCIAL_REPORTS', featureValue: 'DAILY_DOWNLOADABLE' },
-        { featureKey: 'TECH_ADVANTAGE', featureValue: 'HOMOMORPHIC_ENCRYPTION_BLOCKCHAIN' },
-      ],
-    },
-    {
-      type: TeamPlanType.PROFESSIONAL,
-      planName: 'Professional',
-      price: 899,
-      extraMemberPrice: 89,
-      features: [
-        {
-          featureKey: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',
-          featureValue: 'LIMIT_3_MEMBERS_PAID_EXTENSION',
-        },
-        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'UNLIMITED' },
-        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'UPLOAD_UNLIMITED' },
-        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'EDIT_UNLIMITED' },
-        { featureKey: 'STORAGE', featureValue: 'STORAGE_50GB' },
-        { featureKey: 'CONTINUOUS_AUDIT', featureValue: 'AUTO_EMBED_DISCLOSURE' },
-        { featureKey: 'EARLY_ACCESS', featureValue: 'LATEST_FEATURES_FIRST' },
-      ],
-    },
-    {
-      type: TeamPlanType.ENTERPRISE,
-      planName: 'Enterprise',
-      price: 2399,
-      extraMemberPrice: 89,
-      features: [
-        { featureKey: 'STORAGE', featureValue: 'STORAGE_200GB' },
-        { featureKey: 'AI_MODEL_ASSISTANCE', featureValue: 'META_LLAMA' },
-        { featureKey: 'ENTERPRISE_SUPPORT', featureValue: 'TURN_KEY_AND_MCP' },
-      ],
-    },
-    {
-      type: TeamPlanType.TRIAL,
-      planName: 'Trial',
-      price: 0,
-      features: [
-        {
-          featureKey: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',
-          featureValue: 'LIMIT_3_MEMBERS_PAID_EXTENSION',
-        },
-        { featureKey: 'OWNED_TEAM_LEDGER_LIMIT', featureValue: 'UNLIMITED' },
-        { featureKey: 'CERTIFICATE_MANAGEMENT', featureValue: 'UPLOAD_UNLIMITED' },
-        { featureKey: 'VOUCHER_MANAGEMENT', featureValue: 'EDIT_UNLIMITED' },
-        { featureKey: 'STORAGE', featureValue: 'STORAGE_50GB' },
-        { featureKey: 'CONTINUOUS_AUDIT', featureValue: 'AUTO_EMBED_DISCLOSURE' },
-        { featureKey: 'EARLY_ACCESS', featureValue: 'LATEST_FEATURES_FIRST' },
-      ],
-    },
-  ];
-
   await Promise.all(
-    tPlans.map(async (plan) => {
+    teamPlans.map(async (plan) => {
       const createdPlan = await prisma.teamPlan.upsert({
-        where: { type: plan.type },
+        where: { type: plan.type as TeamPlanType },
         update: {
           planName: plan.planName,
           price: plan.price,
@@ -431,7 +354,7 @@ async function createTPlans() {
           updatedAt: now,
         },
         create: {
-          type: plan.type,
+          type: plan.type as TeamPlanType,
           planName: plan.planName,
           price: plan.price,
           extraMemberPrice: plan.extraMemberPrice ?? null,
@@ -496,8 +419,7 @@ async function main() {
     await createValue();
     await createEmployeeProject();
     await createWorkRate();
-    await createPlan();
-    await createTPlans();
+    await createTeamPlans();
     await createOrder();
     await createPaymentRecord();
     await createSubscription();
