@@ -1047,6 +1047,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             btnClassName={
               isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
             }
+            calenderClassName="w-full tablet:w-auto"
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}

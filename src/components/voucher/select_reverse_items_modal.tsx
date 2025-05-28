@@ -280,7 +280,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         </h2>
 
         {/* Info: (20241104 - Julian) Modal body */}
-        <div className="flex w-full flex-1 flex-col items-center gap-16px px-20px">
+        <div className="flex w-full flex-1 flex-col items-center gap-16px tablet:px-20px">
           {/* Info: (20241104 - Julian) Filter */}
           <FilterSection<IReverseItem[]>
             apiName={APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2}
@@ -292,10 +292,10 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           />
 
           {/* Info: (20241104 - Julian) Table */}
-          <div className="flex w-full flex-1 flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
+          <div className="flex w-full flex-1 flex-col items-stretch overflow-hidden rounded-md border border-stroke-neutral-quaternary">
             <div className="max-h-300px overflow-y-auto">
               {/* Info: (20241104 - Julian) summary */}
-              <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
+              <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px text-xs font-medium tablet:text-base">
                 {/* Info: (20241104 - Julian) Select */}
                 <p className="text-text-neutral-secondary">
                   ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
@@ -304,7 +304,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
                 <p className="text-text-neutral-secondary">
                   {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
                   <span className="text-text-neutral-primary">
-                    {numberWithCommas(totalReverseAmount)}
+                    {numberWithCommas(totalReverseAmount)}{' '}
                   </span>
                   {t('common:CURRENCY_ALIAS.TWD')}
                 </p>
@@ -351,11 +351,11 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           </div>
 
           {/* Info: (20241104 - Julian) Confirm Button */}
-          <div className="ml-auto flex items-center gap-12px">
+          <div className="flex w-full items-center gap-12px tablet:justify-end">
             <Button
               type="button"
               variant="tertiaryOutline"
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               onClick={modalVisibilityHandler}
             >
               {t('common:COMMON.CANCEL')}
@@ -363,7 +363,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
             <Button
               type="button"
               variant="tertiary"
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               disabled={confirmDisabled}
               onClick={confirmHandler}
             >

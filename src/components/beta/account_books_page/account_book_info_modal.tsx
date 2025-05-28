@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 import { ITeam } from '@/interfaces/team';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -54,10 +55,10 @@ const AccountBookInfoModal = ({
   } = step1FormState;
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ passedFileId }: { passedFileId?: number }) => {
     if (isCreateLoading) return; // Info: (20250312 - Liz) 避免重複點擊
-    setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
     if (!companyName || !taxId || !tag || !team) return;
+    setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
 
     try {
       const { success, code, errorMsg } = await createAccountBook({
@@ -65,7 +66,7 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
-        fileId: 0,
+        fileId: passedFileId, // Info: (20250527 - Liz) 上傳圖片的 ID
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -75,10 +76,10 @@ const AccountBookInfoModal = ({
         enteredAddress,
       });
 
+      // Info: (20250527 - Liz) 新增帳本失敗時顯示錯誤訊息
       if (!success) {
-        // Info: (20241114 - Liz) 新增帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'create-account-book-failed',
+          id: ToastId.CREATE_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
           content: (
             <p>
@@ -124,8 +125,7 @@ const AccountBookInfoModal = ({
         taxId,
         tag,
         fromTeamId: accountBookToEdit.team.id, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
-        toTeamId: team.id, // Info: (20250526 - Liz) 轉移到的團隊 ID
-        fileId: 0,
+        toTeamId: team.id, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
         representativeName,
         taxSerialNumber,
         contactPerson,
@@ -135,10 +135,10 @@ const AccountBookInfoModal = ({
         enteredAddress,
       });
 
+      // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
       if (!success) {
-        // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
         toastHandler({
-          id: 'edit-account-book-failed',
+          id: ToastId.EDIT_ACCOUNT_BOOK_FAILED,
           type: ToastType.ERROR,
           content: (
             <p>
@@ -156,6 +156,10 @@ const AccountBookInfoModal = ({
       // Info: (20250526 - Liz) 更新帳本成功後清空表單並關閉 modal
       step1FormDispatch({ type: 'RESET' });
       closeAccountBookInfoModal();
+
+      // Deprecated: (20250527 - Liz)
+      // eslint-disable-next-line no-console
+      console.log('帳本更新成功');
 
       if (getAccountBookList) getAccountBookList(); // Info: (20250526 - Liz) 重新取得帳本清單
 
@@ -205,7 +209,8 @@ const AccountBookInfoModal = ({
         teamList={teamList}
         closeAccountBookInfoModal={closeAccountBookInfoModal}
         accountBookToEdit={accountBookToEdit}
-        handleSubmit={accountBookToEdit ? handleEdit : handleSubmit}
+        handleSubmit={handleSubmit}
+        handleEdit={handleEdit}
         disabledSubmit={isCreateLoading || isEditLoading}
       />
     </div>
