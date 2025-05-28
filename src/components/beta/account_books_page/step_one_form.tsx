@@ -78,7 +78,7 @@ const StepOneForm = ({
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
+  const { trigger: uploadAccountBookImageAPI } = APIHandler<IAccountBook>(
     APIName.ACCOUNT_BOOK_PUT_ICON
   );
 
@@ -253,7 +253,7 @@ const StepOneForm = ({
         }
 
         // Info: (20241212 - Liz) 打 API 更新帳本圖片
-        const { success, error } = await uploadAccountBookCompanyPictureAPI({
+        const { success, error } = await uploadAccountBookImageAPI({
           params: { accountBookId: accountBookToEdit.id },
           body: { fileId: fileMeta.id },
         });

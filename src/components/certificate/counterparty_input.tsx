@@ -25,7 +25,6 @@ interface ICounterpartyInputProps {
   counterparty: ICounterpartyOptional | undefined;
   counterpartyList: ICounterparty[];
   onSelect: (counterparty: ICounterpartyOptional) => void;
-  flagOfSubmit?: boolean;
   className?: string;
   labelClassName?: string;
   counterpartyRole?: 'buyer' | 'seller' | 'both';
@@ -39,7 +38,7 @@ let debounceTimer: NodeJS.Timeout | null = null;
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, counterpartyList, onSelect, flagOfSubmit, className } = props;
+    const { counterparty, counterpartyList, onSelect, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { connectedAccountBook } = useUserCtx();
@@ -56,7 +55,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const [searchedCompanies, setSearchedCompanies] = useState<ICompanyTaxIdAndName[]>([]);
     const [searchName, setSearchName] = useState<string>(counterparty?.name || '');
     const [searchTaxId, setSearchTaxId] = useState<string>(counterparty?.taxId || '');
-    const [isShowRedHint, setIsShowRedHint] = useState(false);
+
     const {
       isMessageModalVisible,
       messageModalDataHandler,
@@ -148,16 +147,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       },
       [searchName, searchTaxId]
     );
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 flagOfSubmit 改變，則顯示紅色提示
-      setIsShowRedHint(true);
-    }, [flagOfSubmit]);
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 Counterparty 改變，則取消紅色提示
-      setIsShowRedHint(false);
-    }, [counterparty]);
 
     // Info: (20241204 - tzuhan) 篩選函式抽取，減少重複代碼
     const filterByCriteria = (list: ICounterpartyOptional[], taxId?: string, name?: string) => {
@@ -256,7 +245,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
           onFocus={() => setCounterpartyMenuOpen(true)}
           type="text"
           placeholder={t('certificate:EDIT.NAME')}
-          className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
+          className="w-28 overflow-hidden truncate bg-transparent px-12px py-10px outline-none iphonexr:w-40 iphone12promax:w-44 lg:flex-1"
         />
       </div>
     );
@@ -329,9 +318,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         </p>
         <div className="relative w-full" ref={counterpartyMenuRef}>
           <div
-            className={`flex items-center justify-between rounded-sm border ${
-              isShowRedHint ? inputStyle.ERROR : inputStyle.NORMAL
-            } bg-input-surface-input-background hover:cursor-pointer`}
+            className={`flex items-center justify-between rounded-sm border ${inputStyle.NORMAL} bg-input-surface-input-background hover:cursor-pointer`}
           >
             {counterpartyInput}
             <FiSearch

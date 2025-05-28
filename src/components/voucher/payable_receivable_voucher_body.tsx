@@ -12,6 +12,7 @@ import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
 import { TransactionStatus } from '@/constants/account';
+import { ISortOption } from '@/interfaces/sort';
 // import Toggle from '@/components/toggle/toggle';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
@@ -36,19 +37,13 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const [remainSort, setRemainSort] = useState<null | SortOrder>(null);
   // const [otherSorts, setOtherSorts] = useState<{ sort: SortBy; sortOrder: SortOrder }[]>([]);
   const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   // Info: (20250109 - Julian) 是否顯示沖銷傳票
   // ToDo: (20250109 - Julian) API query
   // const [isHideReversals, setIsHideReversals] = useState(true);
 
   useEffect(() => {
-    let sort: { by: SortBy; order: SortOrder } | undefined;
+    let sort: ISortOption | undefined;
     // Info: (20241230 - Julian) 如果有其他排序，則清除日期排序
     const newDateSort =
       !payReceiveSort && !payReceiveAlreadyHappenedSort && !remainSort && dateSort
@@ -56,17 +51,20 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
         : null;
     setDateSort(newDateSort);
     if (newDateSort) {
-      sort = { by: SortBy.DATE, order: newDateSort };
+      sort = { sortBy: SortBy.DATE, sortOrder: newDateSort };
     } else {
       // Info: (20241230 - Julian) 如果有日期排序，則清除其他排序
       if (payReceiveSort) {
-        sort = { by: SortBy.PAY_RECEIVE_TOTAL, order: payReceiveSort };
+        sort = { sortBy: SortBy.PAY_RECEIVE_TOTAL, sortOrder: payReceiveSort };
       }
       if (payReceiveAlreadyHappenedSort) {
-        sort = { by: SortBy.PAY_RECEIVE_ALREADY_HAPPENED, order: payReceiveAlreadyHappenedSort };
+        sort = {
+          sortBy: SortBy.PAY_RECEIVE_ALREADY_HAPPENED,
+          sortOrder: payReceiveAlreadyHappenedSort,
+        };
       }
       if (remainSort) {
-        sort = { by: SortBy.PAY_RECEIVE_REMAIN, order: remainSort };
+        sort = { sortBy: SortBy.PAY_RECEIVE_REMAIN, sortOrder: remainSort };
       }
     }
     setSelectedSort(sort);
