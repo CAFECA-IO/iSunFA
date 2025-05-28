@@ -371,20 +371,16 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const displayedSelectArea = (
     <div className="flex items-center justify-between">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
-      <div className="hidden items-center gap-16px tablet:flex">
+      <div className="hidden tablet:block">
         <Toggle
           id="hide-reversals-toggle"
           initialToggleState={isHideReversals}
           getToggledState={hideReversalsToggleHandler}
           toggleStateFromParent={isHideReversals}
           lockedToOpen={false}
+          label={t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+          labelClassName="text-switch-text-primary hover:cursor-pointer"
         />
-        <div
-          onClick={hideReversalsToggleHandler}
-          className="text-switch-text-primary hover:cursor-pointer"
-        >
-          {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
-        </div>
       </div>
       {/* Info: (20250521 - Julian) Filter button */}
       <button

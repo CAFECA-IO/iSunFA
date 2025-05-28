@@ -358,15 +358,14 @@ const FilterSection = <T,>({
 
           {/* Info: (20250528 - Julian) 開關 */}
           {isShowReversedToggle && (
-            <div className="flex items-center gap-lv-2 text-xs font-medium">
-              <Toggle
-                id="hide-reversals-toggle-mobile"
-                initialToggleState={hideReversedRelated}
-                toggleStateFromParent={hideReversedRelated}
-                getToggledState={() => hideReversalsToggleHandler(!hideReversedRelated)}
-              />
-              {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
-            </div>
+            <Toggle
+              id="hide-reversals-toggle-mobile"
+              initialToggleState={hideReversedRelated}
+              toggleStateFromParent={hideReversedRelated}
+              getToggledState={() => hideReversalsToggleHandler(!hideReversedRelated)}
+              label={t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+              labelClassName="text-xs font-medium text-switch-text-primary"
+            />
           )}
         </div>
       </div>
