@@ -9,30 +9,30 @@ import APIHandler from '@/lib/utils/api_handler';
 import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
 
-interface UploadAccountBookPictureModalProps {
-  accountBookToUploadPicture: IAccountBookWithTeam;
-  setAccountBookToUploadPicture: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
+interface ChangeAccountBookImageModalProps {
+  accountBookToChangeImage: IAccountBookWithTeam;
+  setAccountBookToChangeImage: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: Dispatch<SetStateAction<number>>;
   getAccountBookListByTeamId?: () => Promise<void>;
 }
 
-const UploadAccountBookPictureModal = ({
-  accountBookToUploadPicture,
-  setAccountBookToUploadPicture,
+const ChangeAccountBookImageModal = ({
+  accountBookToChangeImage,
+  setAccountBookToChangeImage,
   setRefreshKey,
   getAccountBookListByTeamId,
-}: UploadAccountBookPictureModalProps) => {
+}: ChangeAccountBookImageModalProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectedAccountBook, connectAccountBook } = useUserCtx();
   const [isLoading, setIsLoading] = useState(false);
   const { trigger: uploadFileAPI } = APIHandler<IFileUIBeta>(APIName.FILE_UPLOAD);
-  const { trigger: uploadAccountBookCompanyPictureAPI } = APIHandler<IAccountBook>(
+  const { trigger: uploadAccountBookImageAPI } = APIHandler<IAccountBook>(
     APIName.ACCOUNT_BOOK_PUT_ICON
   );
 
-  const closeUploadAccountBookCompanyPictureModal = useCallback(() => {
-    setAccountBookToUploadPicture(undefined);
-  }, [setAccountBookToUploadPicture]);
+  const closeChangeAccountBookImageModal = useCallback(() => {
+    setAccountBookToChangeImage(undefined);
+  }, [setAccountBookToChangeImage]);
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -46,7 +46,7 @@ const UploadAccountBookPictureModal = ({
         const { success: uploadFileSuccess, data: fileMeta } = await uploadFileAPI({
           query: {
             type: UploadType.COMPANY,
-            targetId: String(accountBookToUploadPicture.id),
+            targetId: String(accountBookToChangeImage.id),
           },
           body: formData,
         });
@@ -59,8 +59,8 @@ const UploadAccountBookPictureModal = ({
         }
 
         // Info: (20241212 - Liz) 打 API 更新帳本圖片
-        const { success, error } = await uploadAccountBookCompanyPictureAPI({
-          params: { accountBookId: accountBookToUploadPicture.id },
+        const { success, error } = await uploadAccountBookImageAPI({
+          params: { accountBookId: accountBookToChangeImage.id },
           body: { fileId: fileMeta.id },
         });
 
@@ -71,17 +71,16 @@ const UploadAccountBookPictureModal = ({
           return;
         }
 
-        closeUploadAccountBookCompanyPictureModal();
+        closeChangeAccountBookImageModal();
         if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241212 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
 
         if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250326 - Liz) 重新取得團隊帳本清單
 
-        const isChangingSelectedCompany =
-          connectedAccountBook?.id === accountBookToUploadPicture.id;
+        const isChangingSelectedCompany = connectedAccountBook?.id === accountBookToChangeImage.id;
 
         // Info: (20241212 - Liz) 如果是改變已選擇的帳本的圖片，就打 API 重新選擇該帳本以更新圖片
         if (isChangingSelectedCompany) {
-          connectAccountBook(accountBookToUploadPicture.id);
+          connectAccountBook(accountBookToChangeImage.id);
         }
       } catch (error) {
         // Deprecated: (20241212 - Liz)
@@ -92,8 +91,8 @@ const UploadAccountBookPictureModal = ({
       }
     },
     [
-      closeUploadAccountBookCompanyPictureModal,
-      accountBookToUploadPicture.id,
+      closeChangeAccountBookImageModal,
+      accountBookToChangeImage.id,
       isLoading,
       connectedAccountBook?.id,
       setRefreshKey,
@@ -107,7 +106,7 @@ const UploadAccountBookPictureModal = ({
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('account_book:UPLOAD_COMPANY_AVATAR_MODAL.TITLE')}
           </h1>
-          <button type="button" onClick={closeUploadAccountBookCompanyPictureModal}>
+          <button type="button" onClick={closeChangeAccountBookImageModal}>
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -118,4 +117,4 @@ const UploadAccountBookPictureModal = ({
   );
 };
 
-export default UploadAccountBookPictureModal;
+export default ChangeAccountBookImageModal;
