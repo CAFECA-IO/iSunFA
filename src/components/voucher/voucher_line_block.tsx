@@ -146,7 +146,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       ))
     ) : (
       <div className="col-start-1 col-end-14 flex w-full flex-col items-center rounded-sm bg-input-surface-input-background py-10px text-xs">
-        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY')}</p>
         <p className={'text-text-state-error'}>{t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}</p>
       </div>
     );
@@ -259,7 +259,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
       })
     ) : (
       <div className="col-start-1 col-end-14 flex w-full flex-col items-center rounded-sm bg-input-surface-input-background py-10px text-xs">
-        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY')}</p>
         <p className="text-text-neutral-primary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}</p>
       </div>
     );

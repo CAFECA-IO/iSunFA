@@ -166,6 +166,7 @@
     "PARTICULARS": "摘要",
     "CREDIT": "贷方金额",
     "DEBIT": "借方金额",
+    "EMPTY": "无资料",
     "EMPTY_HINT": "请新增至少 1 笔会计分录！",
     "REVERSE_ITEM": "冲销项目",
     "REVERSE_HINT": "请新增至少 1 笔冲销传票！"
