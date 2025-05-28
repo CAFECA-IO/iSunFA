@@ -53,7 +53,7 @@ const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div
-        className="flex w-90vw flex-col gap-40px rounded-lg bg-surface-neutral-main-background p-40px tablet:w-700px"
+        className="flex w-90vw flex-col gap-24px rounded-lg bg-surface-neutral-main-background px-16px py-24px tablet:w-700px tablet:gap-40px tablet:p-40px"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
