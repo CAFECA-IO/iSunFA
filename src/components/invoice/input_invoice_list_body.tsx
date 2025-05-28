@@ -21,6 +21,7 @@ import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
+import SearchInput from '@/components/filter_section/search_input';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
 } from '@/components/certificate/certificate_selection_tool_bar_new';
@@ -39,6 +40,7 @@ import { jsPDF } from 'jspdf';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { ITeamMember } from '@/interfaces/team';
 import { ISortOption } from '@/interfaces/sort';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface InvoiceListBodyProps {}
 
@@ -65,6 +67,13 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const { trigger: getMemberListByTeamIdAPI } = APIHandler<IPaginatedData<ITeamMember[]>>(
     APIName.LIST_MEMBER_BY_TEAM_ID
   );
+
+  // Info: (20250528 - Anna) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const [activeTab, setActiveTab] = useState<InvoiceTab>(InvoiceTab.WITHOUT_VOUCHER);
   const [certificates, setCertificates] = useState<IInvoiceRC2InputUI[]>([]);
@@ -94,6 +103,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
+  const [keyword, setKeyword] = useState<string>();
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
   const currentEditingCertificate = useMemo(() => {
@@ -405,6 +415,8 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     [activeTab, handleAddVoucher, handleExport]
   );
 
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
+
   const openEditModalHandler = useCallback(
     (id: number) => {
       setIsEditModalOpen(true);
@@ -581,7 +593,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
       <div>{t('certificate:UPLOAD.LOADING')}</div>
     </div>
   ) : (
-    <>
+    <div ref={sideMenuRef}>
       {isEditModalOpen && editingId !== null && (
         <InputInvoiceEditModal
           accountBookId={accountBookId}
@@ -621,31 +633,49 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           onTabClick={onTabClick}
           counts={incomplete ? [incomplete.withoutVoucher, incomplete.withVoucher] : [0, 0]}
         />
-
+        {/* Info: (20250528 - Anna) Mobile Search Input */}
+        <div className="block tablet:hidden">
+          <SearchInput searchQuery={keyword} onSearchChange={setKeyword} />
+        </div>
         {/* Info: (20240919 - Anna) Filter Section */}
-        <FilterSection<IInvoiceRC2Input[]>
-          className="mt-2"
+        <div className="hidden tablet:block">
+          <FilterSection<IInvoiceRC2Input[]>
+            className="mt-2"
+            params={{ accountBookId }}
+            apiName={APIName.LIST_INVOICE_RC2_INPUT}
+            onApiResponse={handleApiResponse}
+            page={page}
+            pageSize={DEFAULT_PAGE_LIMIT}
+            tab={activeTab}
+            types={[
+              InvoiceType.ALL,
+              InvoiceType.INPUT_21,
+              InvoiceType.INPUT_22,
+              InvoiceType.INPUT_23,
+              InvoiceType.INPUT_24,
+              InvoiceType.INPUT_25,
+              InvoiceType.INPUT_26,
+              InvoiceType.INPUT_27,
+              InvoiceType.INPUT_28,
+              InvoiceType.INPUT_29,
+            ]}
+            sort={selectedSort}
+            labelClassName="text-neutral-300"
+            isShowSideMenu={isShowSideMenu}
+            sideMenuVisibleHandler={toggleSideMenu}
+          />
+        </div>
+
+        {/* Todo: (20250528 - Anna) Filter Side Menu for mobile 還要把Types傳進來，等 FilterSideMenu 實作好 */}
+        {/* Todo: (20250528 - Julian) @Anna 我已經把 FilterSideMenu 和 FilterSection 合併了，我到時候在跟你確認其他細節 */}
+        {/* <FilterSideMenu<IInvoiceRC2Input[]>
           params={{ accountBookId }}
           apiName={APIName.LIST_INVOICE_RC2_INPUT}
           onApiResponse={handleApiResponse}
-          page={page}
-          pageSize={DEFAULT_PAGE_LIMIT}
-          tab={activeTab}
-          types={[
-            InvoiceType.ALL,
-            InvoiceType.INPUT_21,
-            InvoiceType.INPUT_22,
-            InvoiceType.INPUT_23,
-            InvoiceType.INPUT_24,
-            InvoiceType.INPUT_25,
-            InvoiceType.INPUT_26,
-            InvoiceType.INPUT_27,
-            InvoiceType.INPUT_28,
-            InvoiceType.INPUT_29,
-          ]}
-          sort={selectedSort}
-          labelClassName="text-neutral-300"
-        />
+          activeTab={activeTab}
+          isModalVisible={isShowSideMenu}
+          modalVisibleHandler={toggleSideMenu}
+        /> */}
 
         {/* Info: (20240919 - Anna) Certificate Table */}
         {Object.values(certificates) && Object.values(certificates).length > 0 ? (
@@ -667,7 +697,9 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
               exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
               onDownload={handleDownload}
+              toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
             />
+
             <div ref={downloadRef} className="download-page">
               <InputInvoice
                 activeTab={activeTab}
@@ -706,7 +738,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

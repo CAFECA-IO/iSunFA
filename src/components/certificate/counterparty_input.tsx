@@ -245,7 +245,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
           onFocus={() => setCounterpartyMenuOpen(true)}
           type="text"
           placeholder={t('certificate:EDIT.NAME')}
-          className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
+          className="w-28 overflow-hidden truncate bg-transparent px-12px py-10px outline-none iphonexr:w-40 iphone12promax:w-44 lg:flex-1"
         />
       </div>
     );

@@ -203,7 +203,9 @@ const CreateRolePage = () => {
         />
 
         {/* Info: (20250329 - Liz) Modal */}
-        {isPreviewModalOpen && <PreviewModal togglePreviewModal={togglePreviewModal} />}
+        {isPreviewModalOpen && (
+          <PreviewModal togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
+        )}
       </main>
     </>
   );
