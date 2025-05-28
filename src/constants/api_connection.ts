@@ -38,6 +38,7 @@ export enum APIName {
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
+  LIST_INVOICE_RC2 = 'LIST_INVOICE_RC2',
   LIST_INVOICE_RC2_INPUT = 'LIST_INVOICE_RC2_INPUT',
   CREATE_INVOICE_RC2_INPUT = 'CREATE_INVOICE_RC2_INPUT',
   GET_INVOICE_RC2_INPUT = 'GET_INVOICE_RC2_INPUT',
@@ -188,6 +189,7 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
+  LIST_INVOICE_RC2 = `${apiPrefixRC2}/account_book/:accountBookId/invoice`,
   LIST_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
   CREATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
   GET_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
@@ -655,6 +657,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.LIST_INVOICE_RC2]: createConfig({
+    name: APIName.LIST_INVOICE_RC2,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_INVOICE_RC2,
   }),
   [APIName.LIST_INVOICE_RC2_INPUT]: createConfig({
     name: APIName.LIST_INVOICE_RC2_INPUT,
