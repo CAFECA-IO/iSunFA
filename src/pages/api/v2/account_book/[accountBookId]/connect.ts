@@ -10,7 +10,7 @@ import {
   IConnectAccountBookQueryParams,
 } from '@/lib/utils/zod_schema/account_book';
 import { getSession, setSession } from '@/lib/utils/session';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';

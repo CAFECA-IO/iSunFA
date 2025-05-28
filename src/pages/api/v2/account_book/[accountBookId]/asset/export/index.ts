@@ -17,7 +17,7 @@ import { APIName, HttpMethod } from '@/constants/api_connection';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 

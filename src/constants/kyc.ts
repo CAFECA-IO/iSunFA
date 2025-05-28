@@ -11,7 +11,7 @@ export enum LegalStructureOptions {
   SOLE_PROPRIETORSHIP = 'Sole Proprietorship',
   PARTNERSHIP = 'Partnership',
   CORPORATION = 'Corporation',
-  LIMITED_LIABILITY_COMPANY = 'Limited Liability Company',
+  LIMITED_LIABILITY_ACCOUNT_BOOK = 'Limited Liability Account Book',
 }
 
 // Info: (20240717 - Liz)  Industry Options
@@ -78,12 +78,12 @@ export enum RepresentativeIDType {
 }
 
 export enum BasicInfoKeys {
-  LEGAL_COMPANY_NAME = 'legalName',
+  LEGAL_ACCOUNT_BOOK_NAME = 'legalName',
   COUNTRY = 'country',
   CITY = 'city',
   ZIP_CODE = 'zipCode',
   ADDRESS = 'address',
-  KEY_COMPANY_REPRESENTATIVES_NAME = 'representativeName',
+  KEY_ACCOUNT_BOOK_REPRESENTATIVES_NAME = 'representativeName',
 }
 
 export enum RegistrationInfoKeys {
@@ -100,7 +100,7 @@ export enum ContactInfoKeys {
   CONTACT_PHONE = 'contactPhone',
   KEY_CONTACT_PERSON = 'contactPerson',
   EMAIL_ADDRESS = 'contactEmail',
-  COMPANY_WEBSITE = 'website',
+  ACCOUNT_BOOK_WEBSITE = 'website',
 }
 
 export enum UploadDocumentKeys {

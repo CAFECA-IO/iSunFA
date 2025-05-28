@@ -70,7 +70,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(apiName, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { userId, companyId } = session;
+  const { userId, accountBookId: companyId } = session;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
@@ -159,7 +159,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const { voucherId, isVoucherNo } = query;
-  const { userId, companyId } = session;
+  const { userId, accountBookId: companyId } = session;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
@@ -282,10 +282,10 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const { voucherId, isVoucherNo } = query;
-  const { userId, companyId } = session;
+  const { userId, accountBookId } = session;
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.DELETE_VOUCHER,
   });
 
@@ -300,7 +300,10 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   try {
     const nowInSecond = getTimestampNow();
-    const voucher = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const voucher = await getUtils.getVoucherFromPrisma(voucherId, {
+      isVoucherNo,
+      companyId: accountBookId,
+    });
     const origin = parsePrismaVoucherToVoucherEntity(voucher);
     if (origin.deletedAt) {
       const error = new Error(STATUS_MESSAGE.VOUCHER_ALREADY_DELETED);
@@ -330,7 +333,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
     const result = await deleteVoucherByCreateReverseVoucher({
       nowInSecond,
-      companyId,
+      accountBookId: +accountBookId,
       issuerId: userId,
       voucherDeleteOtherEntity: deleteEntity,
       deleteVersionOriginVoucher: origin,

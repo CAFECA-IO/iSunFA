@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { File } from '@prisma/client';
+import { AccountBook, File } from '@prisma/client';
 import {
   TeamRole,
   LeaveStatus,
@@ -31,7 +31,7 @@ import { generateIcon } from '@/lib/utils/generate_user_icon';
 import { generateKeyPair, storeKeyByCompany } from '@/lib/utils/crypto';
 import { createFile, findFileById } from '@/lib/utils/repo/file.repo';
 import { FileFolder } from '@/constants/file';
-import { getTimestampNow } from '@/lib/utils/common';
+import { getTimestampNow, timestampInSeconds } from '@/lib/utils/common';
 import { getTeamList } from '@/lib/utils/repo/team.repo';
 import { DEFAULT_MAX_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { assertUserCan } from '@/lib/utils/permission/assert_user_team_permission';
@@ -256,7 +256,7 @@ export const getAccountBookById = async (id: number): Promise<IAccountBookEntity
   if (accountBook) {
     result = {
       ...accountBook,
-      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: accountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
       tag: accountBook.tag as WORK_TAG,
     };
   }
@@ -284,7 +284,7 @@ export const getAccountBookByNameAndTeamId = async (
   if (accountBook) {
     result = {
       ...accountBook,
-      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: accountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
       tag: accountBook.tag as WORK_TAG,
     };
   }
@@ -373,14 +373,14 @@ export const createAccountBook = async (
       loggerBack.info(`Using existing file ID ${fileId} for account book icon`);
     } else {
       // Info: (20250522 - Shirley) 如果沒有提供 fileId，則自動生成一個圖像（保留原有邏輯）
-      const companyIcon = await generateIcon(name);
+      const accountBookIcon = await generateIcon(name);
       const imageName = name + '_icon' + nowInSecond;
       file = await createFile({
         name: imageName,
-        size: companyIcon.size,
-        mimeType: companyIcon.mimeType,
+        size: accountBookIcon.size,
+        mimeType: accountBookIcon.mimeType,
         type: FileFolder.TMP,
-        url: companyIcon.iconUrl,
+        url: accountBookIcon.iconUrl,
         isEncrypted: false,
         encryptedSymmetricKey: '',
       });
@@ -413,7 +413,7 @@ export const createAccountBook = async (
     }
     await checkAccountBookLimit(teamId);
 
-    // Info: (20250506 - Shirley) Using transaction to create account book and company setting together
+    // Info: (20250506 - Shirley) Using transaction to create account book and accountBook setting together
     const result = await transaction(async (tx) => {
       const createdAccountBook = await tx.accountBook.create({
         data: {
@@ -440,7 +440,7 @@ export const createAccountBook = async (
         enteredAddress: enteredAddress || '',
       };
 
-      const companySetting = await tx.accountBookSetting.create({
+      const accountBookSetting = await tx.accountBookSetting.create({
         data: {
           accountBookId: createdAccountBook.id,
           taxSerialNumber: taxSerialNumber || '',
@@ -479,7 +479,7 @@ export const createAccountBook = async (
 
       return {
         accountBook: createdAccountBook,
-        companySetting,
+        accountBookSetting,
       };
     });
 
@@ -488,12 +488,12 @@ export const createAccountBook = async (
     accountBook = {
       ...createdAccountBook,
       ...body,
-      imageId: createdAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: createdAccountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
     };
 
     // Info: (20250124 - Shirley) Step 4.
-    const companyKeyPair = await generateKeyPair();
-    await storeKeyByCompany(createdAccountBook.id, companyKeyPair);
+    const accountBookKeyPair = await generateKeyPair();
+    await storeKeyByCompany(createdAccountBook.id, accountBookKeyPair);
   }
   return accountBook;
 };
@@ -583,7 +583,7 @@ export const listAccountBookByUserId = async (
         },
       },
       imageFile: { select: { id: true, url: true } },
-      // Info: (20250517 - Shirley) 添加 accountBookSettings 以獲取更多欄位
+      // Info: (20250517 - Shirley) 添加 companySettings 以獲取更多欄位
       accountBookSettings: {
         where: {
           deletedAt: null,
@@ -604,7 +604,7 @@ export const listAccountBookByUserId = async (
       const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
-      // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      // Info: (20250516 - Shirley) 獲取 accountBookSetting 欄位，如果不存在則提供默認值
       const setting = book.accountBookSettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
@@ -616,7 +616,7 @@ export const listAccountBookByUserId = async (
         id: book.id,
         teamId: book.teamId,
         userId: book.userId,
-        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        imageId: book.imageFile?.url ?? '/images/fake_accountBook_img.svg',
         name: book.name,
         taxId: book.taxId,
         startDate: book.startDate,
@@ -625,7 +625,7 @@ export const listAccountBookByUserId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG,
 
-        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 accountBookSetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
@@ -683,7 +683,7 @@ export const listAccountBookByUserId = async (
 };
 
 /**
- * Info: (20250515 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 companySetting 資料）
+ * Info: (20250515 - Shirley) 獲取用戶的帳本列表（簡化版，不包含 accountBookSetting 資料）
  * @param userId 用戶ID
  * @param queryParams 查詢參數，包含分頁、排序、搜索等選項
  * @returns 分頁後的帳本列表
@@ -792,7 +792,7 @@ export const listSimpleAccountBookByUserId = async (
         id: book.id,
         teamId: book.teamId,
         userId: book.userId,
-        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        imageId: book.imageFile?.url ?? '/images/fake_accountBook_img.svg',
         name: book.name,
         taxId: book.taxId,
         startDate: book.startDate,
@@ -956,7 +956,7 @@ export const listAccountBooksByTeamId = async (
       const expiredAt = book.team.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
-      // Info: (20250517 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      // Info: (20250517 - Shirley) 獲取 accountBookSetting 欄位，如果不存在則提供默認值
       const setting = book.accountBookSettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
@@ -968,7 +968,7 @@ export const listAccountBooksByTeamId = async (
         id: book.id,
         teamId: book.teamId,
         userId: book.userId,
-        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        imageId: book.imageFile?.url ?? '/images/fake_accountBook_img.svg',
         name: book.name,
         taxId: book.taxId,
         startDate: book.startDate,
@@ -977,7 +977,7 @@ export const listAccountBooksByTeamId = async (
         isPrivate: book.isPrivate ?? false,
         tag: book.tag as WORK_TAG, // Info: (20250324 - Tzuhan) 直接取用 tag
 
-        // Info: (20250517 - Shirley) 添加 CompanySetting 欄位
+        // Info: (20250517 - Shirley) 添加 accountBookSetting 欄位
         representativeName: setting.representativeName || '',
         taxSerialNumber: setting.taxSerialNumber || '',
         contactPerson: setting.contactPerson || '',
@@ -1177,7 +1177,7 @@ export const cancelTransferAccountBook = async (
     throw error;
   }
 
-  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `accountBook.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
       where: { id: transfer.id },
@@ -1273,7 +1273,7 @@ export const declineTransferAccountBook = async (
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
   const transfer = await prisma.accountBookTransfer.findFirst({
-    where: { accountBook: { id: accountBookId }, status: TransferStatus.PENDING },
+    where: { accountBookId, status: TransferStatus.PENDING },
   });
   if (!transfer) {
     const error = new Error(STATUS_MESSAGE.TRANSFER_RECORD_NOT_FOUND);
@@ -1292,7 +1292,7 @@ export const declineTransferAccountBook = async (
     throw error;
   }
 
-  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `accountBook.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
       where: { id: transfer.id },
@@ -1322,7 +1322,7 @@ export const declineTransferAccountBook = async (
  * for the status_info API. It retrieves the account book, user role, team info, and other necessary data
  * using Prisma's relation capabilities to minimize database queries.
  * @param userId The ID of the user
- * @param accountBookId The ID of the company/account book
+ * @param accountBookId The ID of the accountBook/account book
  * @param teamId The ID of the team the account book belongs to
  * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
@@ -1423,7 +1423,7 @@ export async function getAccountBookForUserWithTeam(
     return {
       id: accountBook.id,
       userId: accountBook.userId,
-      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: accountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
       name: accountBook.name,
       taxId: accountBook.taxId,
       startDate: accountBook.startDate,
@@ -1452,7 +1452,7 @@ export async function getAccountBookForUserWithTeam(
  * across all teams the user is a member of. It uses Prisma's relational queries to minimize
  * database access.
  * @param userId The ID of the user
- * @param accountBookId The ID of the company/account book
+ * @param accountBookId The ID of the accountBook/account book
  * @param teamIds Optional array of team IDs to search within (if known)
  * @returns A promise resolving to IAccountBookWithTeamEntityobject or null if not found
  */
@@ -1557,7 +1557,7 @@ export async function findUserAccountBook(
     return {
       id: accountBook.id,
       userId: accountBook.userId,
-      imageId: accountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: accountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
       name: accountBook.name,
       taxId: accountBook.taxId,
       startDate: accountBook.startDate,
@@ -1632,10 +1632,10 @@ export const updateAccountBook = async (
     });
 
     if (updatedAccountBook) {
-      const imageUrl = updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg';
+      const imageUrl = updatedAccountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg';
 
-      // Info: (20250411 - Shirley) 創建標準 accountBookSchema 格式的 company 對象
-      const companyWithImageId = {
+      // Info: (20250411 - Shirley) 創建標準 accountBookSchema 格式的 accountBook 對象
+      const accountBookWithImageId = {
         id: updatedAccountBook.id,
         teamId: updatedAccountBook.teamId,
         userId: updatedAccountBook.userId,
@@ -1655,11 +1655,11 @@ export const updateAccountBook = async (
         teamId: updatedAccountBook.teamId,
         imageId: imageUrl,
         tag: updatedAccountBook.tag as WORK_TAG,
-        company: companyWithImageId,
+        accountBook: accountBookWithImageId,
         order: 1,
         accountBookRole: ACCOUNT_BOOK_ROLE.COMPANY,
       } as IAccountBookEntity & {
-        company: typeof companyWithImageId;
+        accountBook: typeof accountBookWithImageId;
         order: number;
         accountBookRole: ACCOUNT_BOOK_ROLE;
       };
@@ -1711,7 +1711,7 @@ export const deleteAccountBook = async (
   if (updatedAccountBook) {
     result = {
       ...updatedAccountBook,
-      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_company_img.svg',
+      imageId: updatedAccountBook.imageFile?.url ?? '/images/fake_accountBook_img.svg',
       tag: updatedAccountBook.tag as WORK_TAG,
     };
   }
@@ -1745,3 +1745,47 @@ export const getAccountBookTeamId = async (accountBookId: number): Promise<numbe
     return null;
   }
 };
+
+export async function getCompanyById(
+  accountBookId: number
+): Promise<(AccountBook & { imageFile: File | null }) | null> {
+  let accountBook: (AccountBook & { imageFile: File | null }) | null = null;
+  if (accountBookId > 0) {
+    accountBook = await prisma.accountBook.findUnique({
+      where: {
+        id: accountBookId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        imageFile: true,
+      },
+    });
+  }
+  return accountBook;
+}
+
+export async function updateCompanyById(
+  accountBookId: number,
+  taxId?: string,
+  name?: string,
+  imageId?: number
+): Promise<AccountBook & { imageFile: File | null }> {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+
+  const company = await prisma.accountBook.update({
+    where: {
+      id: accountBookId,
+    },
+    data: {
+      taxId,
+      name,
+      updatedAt: nowTimestamp,
+      imageFileId: imageId,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+  return company;
+}

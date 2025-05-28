@@ -63,7 +63,7 @@ type ILineItemEntityWithAssociate = ILineItemEntity & {
 
 /**
  * Info: (20241113 - Murky)
- * @description for src/pages/api/v2/company/[companyId]/account/[accountId]/lineitem.ts
+ * @description for src/pages/api/v2/account_book/[accountBookId]/account/[accountId]/lineitem.ts
  */
 export const lineItemGetByAccountAPIUtils = {
   reversibleAccountSetRegex: new RegExp(`^(${AccountCodesOfAPandAR.join('|')})`),

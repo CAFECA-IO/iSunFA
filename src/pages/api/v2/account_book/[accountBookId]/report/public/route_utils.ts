@@ -9,7 +9,7 @@ import { BalanceSheetOtherInfo, IReportContent } from '@/interfaces/report';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { timestampToString } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { createReport } from '@/lib/utils/repo/report.repo';
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 

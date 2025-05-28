@@ -79,7 +79,7 @@ export const buildVoucherBeta = (
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_LIST_V2;
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId, accountBookId: companyId } = session;
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
@@ -201,7 +201,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { userId, companyId } = session;
+  const { userId, accountBookId: companyId } = session;
 
   const { can } = await assertUserCanByAccountBook({
     userId,

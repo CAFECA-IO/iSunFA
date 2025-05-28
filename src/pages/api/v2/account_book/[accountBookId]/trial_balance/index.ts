@@ -20,7 +20,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { parseSortOption } from '@/lib/utils/sort';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { SortOrder } from '@/constants/sort';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -159,7 +159,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Step 3 撈出所有會計科目
     const accounts = await findManyAccountsInPrisma({
-      companyId: accountBookId,
+      accountBookId: +accountBookId,
       includeDefaultAccount: true,
       page: 1,
       limit: 9999999,

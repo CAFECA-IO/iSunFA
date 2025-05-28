@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
   GetVoucherByAccountResponse
 > = async ({ query, session }) => {
   const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { userId, companyId: accountBookId } = session;
+  const { userId, accountBookId: accountBookId } = session;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;

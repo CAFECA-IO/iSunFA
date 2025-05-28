@@ -3,10 +3,10 @@ import {
   getReportFilterByReportType,
   transformAccountsMapToFilterSequence,
   transformAccountsToMap,
-} from '@/pages/api/v2/company/[companyId]/report/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/report/route_utils';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 
-describe('company/[companyId]/v2/report/route_utils unit test', () => {
+describe('account_book/[accountBookId]/v2/report/route_utils unit test', () => {
   describe('getMappingByReportType unit test', () => {
     it('should return map For balance sheet', () => {
       const mapping = getReportFilterByReportType(ReportSheetType.BALANCE_SHEET);

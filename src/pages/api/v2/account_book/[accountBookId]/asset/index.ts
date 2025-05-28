@@ -21,7 +21,7 @@ import { parseSortOption } from '@/lib/utils/sort';
 import { calculateRemainingLife } from '@/lib/utils/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { getSession } from '@/lib/utils/session';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';

@@ -6,8 +6,8 @@ export enum AuthFunctionsKeysNew {
   admin = 'admin',
   owner = 'owner',
   superAdmin = 'superAdmin',
-  CompanyAdminMatch = 'CompanyAdminMatch',
-  projectCompanyMatch = 'projectCompanyMatch',
+  AccountBookAdminMatch = 'AccountBookAdminMatch',
+  projectAccountBookMatch = 'projectAccountBookMatch',
 }
 
 export const AUTH_WHITELIST = {

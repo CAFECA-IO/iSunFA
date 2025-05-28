@@ -38,7 +38,7 @@ const handleGetRequest: IHandleRequest<
   GetVoucherByAccountResponse
 > = async ({ query, session }) => {
   const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { companyId: accountBookId } = session;
+  const { accountBookId: accountBookId } = session;
   // const { pageSize, page, sortOption } = query;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;

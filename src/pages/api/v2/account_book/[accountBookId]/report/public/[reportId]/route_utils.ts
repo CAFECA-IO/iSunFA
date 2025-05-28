@@ -9,7 +9,7 @@ import {
 } from '@/interfaces/report';
 import { formatIReport } from '@/lib/utils/formatter/report.formatter';
 import { findUniqueReportById } from '@/lib/utils/repo/report.repo';
-import { Company } from '@prisma/client';
+import { AccountBook } from '@prisma/client';
 
 import balanceSheetLiteMapping from '@/constants/account_sheet_mapping/v1/balance_sheet_lite_mapping.json';
 import cashFlowStatementLiteMapping from '@/constants/account_sheet_mapping/v1/cash_flow_statement_lite_mapping.json';
@@ -134,7 +134,7 @@ export const getPublicReportUtils = {
     return otherInfo;
   },
 
-  formatPayloadFromIReport: (report: IReport, company: Company): FinancialReport => {
+  formatPayloadFromIReport: (report: IReport, company: AccountBook): FinancialReport => {
     const { reportType } = report;
     const details = report.content;
 
@@ -170,10 +170,10 @@ export const getPublicReportUtils = {
   getPeriodReport: async (reportId: number) => {
     const curPeriodReportFromDB = await findUniqueReportById(reportId);
     let curPeriodReport: IReport | null = null;
-    let company: Company | null = null;
+    let company: AccountBook | null = null;
     if (curPeriodReportFromDB) {
       curPeriodReport = formatIReport(curPeriodReportFromDB);
-      company = curPeriodReportFromDB.company;
+      company = curPeriodReportFromDB.accountBook;
     }
 
     return {

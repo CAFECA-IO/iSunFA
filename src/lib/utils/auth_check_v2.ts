@@ -29,7 +29,8 @@ export async function checkUserAdmin(session: ISessionData, req: NextApiRequest)
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
+  const isAuth =
+    session.userId === queryUserIdNumber && session.accountBookId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -40,7 +41,8 @@ export async function checkUserCompanyOwner(session: ISessionData, req: NextApiR
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
+  const isAuth =
+    session.userId === queryUserIdNumber && session.accountBookId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -51,7 +53,8 @@ export async function checkUserCompanySuperAdmin(session: ISessionData, req: Nex
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryUserIdNumber = convertStringToNumber(queryUserId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  const isAuth = session.userId === queryUserIdNumber && session.companyId === reqCompanyIdNumber;
+  const isAuth =
+    session.userId === queryUserIdNumber && session.accountBookId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -61,7 +64,7 @@ export async function checkCompanyAdminMatch(session: ISessionData, req: NextApi
   const { companyId: bodyCompanyId } = req.body;
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  const isAuth = session.companyId === reqCompanyIdNumber;
+  const isAuth = session.accountBookId === reqCompanyIdNumber;
 
   return isAuth;
 }
@@ -72,7 +75,7 @@ export async function checkProjectCompanyMatch(session: ISessionData, req: NextA
   const reqCompanyId = bodyCompanyId || queryCompanyId;
   const queryProjectIdNumber = convertStringToNumber(queryProjectId);
   const reqCompanyIdNumber = convertStringToNumber(reqCompanyId);
-  let isAuth = session.companyId === reqCompanyIdNumber;
+  let isAuth = session.accountBookId === reqCompanyIdNumber;
   if (isAuth) {
     const project = await getProjectById(queryProjectIdNumber);
     isAuth = !!project && project.accountBookId === reqCompanyIdNumber;

@@ -1,52 +1,26 @@
-import { APIName, HttpMethod } from '@/constants/api_connection';
+import { APIName } from '@/constants/api_connection';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IResponseData } from '@/interfaces/response_data';
 import AccountRetrieverFactory from '@/lib/utils/account/account_retriever_factory';
 import { formatApiResponse, getTimestampNow } from '@/lib/utils/common';
-import loggerBack from '@/lib/utils/logger_back';
+import { loggerError } from '@/lib/utils/logger_back';
+import { withRequestValidation } from '@/lib/utils/middleware';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { accountAPIPostUtils as postUtils } from '@/pages/api/v2/company/[companyId]/account/route_utils';
+import { accountAPIPostUtils as postUtils } from '@/pages/api/v2/account_book/[accountBookId]/account/route_utils';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { TeamRole } from '@/interfaces/team';
-import { HTTP_STATUS } from '@/constants/http';
-import { getSession } from '@/lib/utils/session';
-import { validateOutputData } from '@/lib/utils/validator';
-import {
-  checkRequestData,
-  checkSessionUser,
-  checkUserAuthorization,
-  logUserAction,
-} from '@/lib/utils/middleware';
 
-/**
- * Info: (20250505 - Shirley) Handle GET request for account list
- * This function follows the flat coding style pattern:
- * 1. Get user session and validate authentication
- * 2. Check user authorization
- * 3. Validate request data
- * 4. Perform team permission check
- * 5. Fetch accounts
- * 6. Validate output data
- * 7. Return formatted response
- */
-const handleGetRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
-  const { userId, companyId: accountBookId } = session;
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+export const handleGetRequest: IHandleRequest<
+  APIName.ACCOUNT_LIST,
+  IPaginatedAccount | null
+> = async ({ query, session }) => {
+  const { accountBookId: companyId, teams } = session;
   let payload: IPaginatedAccount | null = null;
-
-  await checkSessionUser(session, APIName.ACCOUNT_LIST, req);
-  await checkUserAuthorization(APIName.ACCOUNT_LIST, req, session);
-
-  // Info: (20250505 - Shirley) 驗證請求資料
-  const { query } = checkRequestData(APIName.ACCOUNT_LIST, req, session);
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const {
     includeDefaultAccount,
     liquidity,
@@ -62,108 +36,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     isDeleted,
   } = query;
 
-  loggerBack.info(
-    `User: ${userId} Getting account list for companyId: ${accountBookId} with query: ${JSON.stringify(query)}`
-  );
-
-  // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
-  const { teams } = session;
-
-  // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(accountBookId);
-  if (!company) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-
-  const { teamId: companyTeamId } = company;
-  if (!companyTeamId) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
-  }
-
-  const userTeam = teams?.find((team) => team.id === companyTeamId);
-  if (!userTeam) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-
-  const assertResult = convertTeamRoleCanDo({
-    teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
-  });
-
-  if (!assertResult.can) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-
-  // Info: (20250505 - Shirley) 獲取帳號列表
-  const accountRetriever = AccountRetrieverFactory.createRetriever({
-    accountBookId,
-    includeDefaultAccount,
-    liquidity,
-    type,
-    reportType,
-    equityType,
-    forUser,
-    page,
-    limit,
-    sortBy,
-    sortOrder,
-    searchKey,
-    isDeleted,
-  });
-
-  const accounts = await accountRetriever.getAccounts();
-  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
-
-  // Info: (20250505 - Shirley) 驗證輸出資料
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.ACCOUNT_LIST, accounts);
-
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  } else {
-    payload = outputData;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
-  return { response, statusMessage };
-};
-
-/**
- * Info: (20250505 - Shirley) Handle POST request for creating new sub-account
- * This function follows the flat coding style pattern:
- * 1. Get user session and validate authentication
- * 2. Check user authorization
- * 3. Validate request data
- * 4. Perform team permission check
- * 5. Create new sub-account
- * 6. Validate output data
- * 7. Return formatted response
- */
-const handlePostRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
-  const { userId, companyId } = session;
-  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccount | null = null;
-
-  await checkSessionUser(session, APIName.CREATE_NEW_SUB_ACCOUNT, req);
-  await checkUserAuthorization(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
-
-  // Info: (20250505 - Shirley) 驗證請求資料
-  const { body } = checkRequestData(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
-  if (body === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
-
-  const { accountId, name, note } = body;
-  const nowInSecond = getTimestampNow();
-
-  loggerBack.info(
-    `User: ${userId} Creating new sub-account for companyId: ${companyId}, parentId: ${accountId}`
-  );
-
-  // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
-  const { teams } = session;
-
-  // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -188,105 +61,137 @@ const handlePostRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250505 - Shirley) 創建新的子帳號
-  try {
-    const parentAccount = await postUtils.getParentAccountFromPrisma({
-      accountId,
-      companyId,
-    });
+  const accountRetriever = AccountRetrieverFactory.createRetriever({
+    companyId,
+    includeDefaultAccount,
+    liquidity,
+    type,
+    reportType,
+    equityType,
+    forUser,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+    searchKey,
+    isDeleted,
+  });
 
-    const lastSubAccount = await postUtils.getLastSubAccountFromPrisma(parentAccount);
-    const newCode = postUtils.getNewCode({
-      parentAccount,
-      latestSubAccount: lastSubAccount,
-    });
-    const newName = postUtils.getNewName({
-      parentAccount,
-      name,
-    });
+  payload = await accountRetriever.getAccounts();
+  statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
 
-    const newSubAccount = await postUtils.createNewSubAccountInPrisma({
-      parentAccount,
-      nowInSecond,
-      companyId,
-      newCode,
-      newName,
-      note: note ?? '',
-    });
-
-    // Info: (20250505 - Shirley) 驗證輸出資料
-    const { isOutputDataValid, outputData } = validateOutputData(
-      APIName.CREATE_NEW_SUB_ACCOUNT,
-      newSubAccount
-    );
-
-    if (!isOutputDataValid) {
-      statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    } else {
-      statusMessage = STATUS_MESSAGE.CREATED;
-      payload = outputData;
-    }
-  } catch (error) {
-    loggerBack.error({
-      message: 'Error creating new sub-account',
-      error,
-      companyId,
-      accountId,
-    });
-    throw error;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
-  return { response, statusMessage };
+  return {
+    statusMessage,
+    payload,
+  };
 };
 
-/**
- * Info: (20250505 - Shirley) Export default handler function
- * This follows the flat coding style API pattern:
- * 1. Define a switch-case for different HTTP methods
- * 2. Call the appropriate handler based on method
- * 3. Handle errors and return consistent response format
- * 4. Log user action
- */
+export const handlePostRequest: IHandleRequest<
+  APIName.CREATE_NEW_SUB_ACCOUNT,
+  IAccount | null
+> = async ({ body, session }) => {
+  const { accountBookId: companyId, teams } = session;
+  const { accountId, name, note } = body;
+  let payload: IAccount | null = null;
+  const nowInSecond = getTimestampNow();
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+
+  // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const { teamId: companyTeamId } = company;
+  if (!companyTeamId) {
+    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+  }
+
+  const userTeam = teams?.find((team) => team.id === companyTeamId);
+  if (!userTeam) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const assertResult = convertTeamRoleCanDo({
+    teamRole: userTeam?.role as TeamRole,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+  });
+
+  if (!assertResult.can) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  const parentAccount = await postUtils.getParentAccountFromPrisma({
+    accountId,
+    companyId,
+  });
+
+  const lastSubAccount = await postUtils.getLastSubAccountFromPrisma(parentAccount);
+  const newCode = postUtils.getNewCode({
+    parentAccount,
+    latestSubAccount: lastSubAccount,
+  });
+  const newName = postUtils.getNewName({
+    parentAccount,
+    name,
+  });
+
+  const newSubAccount = await postUtils.createNewSubAccountInPrisma({
+    parentAccount,
+    nowInSecond,
+    companyId,
+    newCode,
+    newName,
+    note: note ?? '',
+  });
+
+  payload = newSubAccount;
+  statusMessage = STATUS_MESSAGE.CREATED;
+
+  return {
+    statusMessage,
+    payload,
+  };
+};
+
+type APIResponse = IPaginatedAccount | IAccount | null;
+
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{
+    statusMessage: string;
+    payload: APIResponse;
+  }>;
+} = {
+  GET: (req) => withRequestValidation(APIName.ACCOUNT_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.CREATE_NEW_SUB_ACCOUNT, req, handlePostRequest),
+};
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedAccount | IAccount | null>>
+  res: NextApiResponse<IResponseData<APIResponse>>
 ) {
-  const method = req.method || HttpMethod.GET;
-  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
-  let result;
-  let response;
-  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-  let apiName: APIName = APIName.ACCOUNT_LIST;
-  const session = await getSession(req);
-
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: APIResponse = null;
+  const userId = -1;
   try {
-    switch (method) {
-      case HttpMethod.GET:
-        apiName = APIName.ACCOUNT_LIST;
-        ({ response, statusMessage } = await handleGetRequest(req));
-        ({ httpCode, result } = response);
-        break;
-      case HttpMethod.POST:
-        apiName = APIName.CREATE_NEW_SUB_ACCOUNT;
-        ({ response, statusMessage } = await handlePostRequest(req));
-        ({ httpCode, result } = response);
-        break;
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
-        break;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
-  } catch (error) {
-    const err = error as Error;
-    loggerBack.error({
-      userId: session.userId || -1,
-      errorType: err.name,
-      errorMessage: err.message,
+  } catch (_error) {
+    const error = _error as Error;
+    loggerError({
+      userId,
+      errorType: error.name,
+      errorMessage: error.message,
     });
-    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
-    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+    statusMessage = error.message;
   }
-  await logUserAction(session, apiName, req, statusMessage);
+  const { httpCode, result } = formatApiResponse<APIResponse>(statusMessage, payload);
   res.status(httpCode).json(result);
 }

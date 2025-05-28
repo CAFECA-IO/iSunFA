@@ -16,7 +16,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { Invoice as PrismaInvoice } from '@prisma/client';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';

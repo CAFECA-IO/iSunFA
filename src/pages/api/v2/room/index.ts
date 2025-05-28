@@ -13,7 +13,7 @@ const handlePostRequest: IHandleRequest<APIName.ROOM_ADD, IRoom> = async ({ sess
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IRoom | null = null;
 
-  const { companyId } = session;
+  const { accountBookId: companyId } = session;
 
   const newRoom = roomManager.addRoom(companyId);
   loggerBack.info(`Room List: ${JSON.stringify(roomManager.getRoomList(), null, 2)}`);

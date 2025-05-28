@@ -18,7 +18,7 @@ const handleGetRequest: IHandleRequest<APIName.IMAGE_GET_BY_ID, Buffer> = async 
   let payload: Buffer | null = null;
 
   try {
-    const { companyId } = session;
+    const { accountBookId: companyId } = session;
     const { imageId } = query;
     const file = await findFileById(imageId);
 

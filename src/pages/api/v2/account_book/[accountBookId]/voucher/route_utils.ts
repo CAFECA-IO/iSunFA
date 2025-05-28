@@ -21,13 +21,13 @@ import {
 import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
+import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/account_book.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IUserEntity } from '@/interfaces/user';
 import { ICompanyEntity } from '@/interfaces/account_book';
 import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 import { IAssetEntity } from '@/interfaces/asset';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { getUserById } from '@/lib/utils/repo/user.repo';
@@ -54,6 +54,8 @@ import { IFileEntity } from '@/interfaces/file';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
+import { parsePrismaAccountBookToAccountBookEntity } from '@/lib/utils/formatter/account_book.formatter';
+import { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 
 /**
  * Info: (20241121 - Murky)
@@ -109,7 +111,7 @@ export const voucherAPIGetUtils = {
     throw new Error(statusMessage);
   },
   getVoucherListFromPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     page: number;

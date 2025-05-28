@@ -125,7 +125,7 @@ export const handlePostRequest: IHandleRequest<APIName.ASK_AI_V2, IAskResult | n
 
   const { reason } = query;
   const { targetIdList } = body;
-  const { companyId } = session;
+  const { accountBookId: companyId } = session;
 
   const postHandler = postHandlers[reason];
   ({ statusMessage, payload } = await postHandler(companyId, reason, targetIdList));
