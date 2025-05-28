@@ -24,7 +24,7 @@ import Loader, { LoaderSize } from '@/components/loader/loader';
 interface ICounterpartyInputProps {
   counterparty: ICounterpartyOptional | undefined;
   onSelect: (counterparty: ICounterpartyOptional) => void;
-  flagOfSubmit?: boolean;
+  isShowRedHint: boolean;
   className?: string;
   onTriggerSave?: () => Promise<void>;
 }
@@ -35,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
+    const { counterparty, onSelect, isShowRedHint, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { connectedAccountBook } = useUserCtx();
@@ -50,7 +50,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<ICounterparty[]>([]);
     const [searchName, setSearchName] = useState<string>(counterparty?.name ?? '');
     const [searchTaxId, setSearchTaxId] = useState<string>(counterparty?.taxId ?? '');
-    const [isShowRedHint, setIsShowRedHint] = useState(false);
 
     const {
       isMessageModalVisible,
@@ -163,16 +162,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         });
       }
     }, [accountBookId, filteredCounterpartyList, searchName, searchTaxId]);
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 flagOfSubmit 改變，則顯示紅色提示
-      setIsShowRedHint(true);
-    }, [flagOfSubmit]);
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 Counterparty 改變，則取消紅色提示
-      setIsShowRedHint(false);
-    }, [counterparty]);
 
     // Info: (20241209 - Julian) Counterparty 搜尋欄位事件
     const counterpartyInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {

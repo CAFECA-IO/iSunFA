@@ -503,6 +503,7 @@ const VoucherEditingPageBody: React.FC<{
   useHotkeys('tab', handleTabPress);
 
   const dateRef = useRef<HTMLDivElement>(null);
+  const counterpartyRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
@@ -946,12 +947,13 @@ const VoucherEditingPageBody: React.FC<{
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <CounterpartyInput
-            counterparty={counterparty}
-            onSelect={handleCounterpartySelect}
-            className="tablet:col-span-2"
-            flagOfSubmit={flagOfSubmit}
-          />
+          <div ref={counterpartyRef} className="tablet:col-span-2">
+            <CounterpartyInput
+              counterparty={counterparty}
+              onSelect={handleCounterpartySelect}
+              isShowRedHint={isCounterpartyRequired && !counterparty}
+            />
+          </div>
         )}
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (

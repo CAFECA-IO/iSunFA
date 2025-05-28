@@ -488,17 +488,14 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
         </div>
         {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
-        <div className="flex items-center gap-4">
-          <Toggle
-            id="subAccounts-toggle"
-            initialToggleState={subAccountsToggle}
-            getToggledState={subAccountsToggleHandler}
-            toggleStateFromParent={subAccountsToggle}
-          />
-          <span className="font-normal text-switch-text-primary">
-            {t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
-          </span>
-        </div>
+        <Toggle
+          id="subAccounts-toggle"
+          initialToggleState={subAccountsToggle}
+          getToggledState={subAccountsToggleHandler}
+          toggleStateFromParent={subAccountsToggle}
+          label={t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
+          labelClassName="font-normal text-switch-text-primary"
+        />
         {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
         <div className="ml-auto flex items-center gap-8px md:gap-16px">
           <DownloadButton onClick={handleDownload} />

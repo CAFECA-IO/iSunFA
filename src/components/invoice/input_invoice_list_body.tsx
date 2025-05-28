@@ -39,8 +39,8 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { ITeamMember } from '@/interfaces/team';
+import { ISortOption } from '@/interfaces/sort';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import FilterSideMenu from '@/components/filter_section/filter_sidemenu';
 
 interface InvoiceListBodyProps {}
 
@@ -97,13 +97,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
   const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
   const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -534,15 +528,15 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   useEffect(() => {
     if (dateSort) {
-      setSelectedSort({ by: SortBy.DATE, order: dateSort });
+      setSelectedSort({ sortBy: SortBy.DATE, sortOrder: dateSort });
     } else if (amountSort) {
-      setSelectedSort({ by: SortBy.AMOUNT, order: amountSort });
+      setSelectedSort({ sortBy: SortBy.AMOUNT, sortOrder: amountSort });
     } else if (voucherSort) {
-      setSelectedSort({ by: SortBy.VOUCHER_NUMBER, order: voucherSort });
+      setSelectedSort({ sortBy: SortBy.VOUCHER_NUMBER, sortOrder: voucherSort });
     } else if (certificateTypeSort) {
-      setSelectedSort({ by: SortBy.INVOICE_TYPE, order: certificateTypeSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_TYPE, sortOrder: certificateTypeSort });
     } else if (certificateNoSort) {
-      setSelectedSort({ by: SortBy.INVOICE_NUMBER, order: certificateNoSort });
+      setSelectedSort({ sortBy: SortBy.INVOICE_NUMBER, sortOrder: certificateNoSort });
     } else {
       setSelectedSort(undefined);
     }
@@ -667,18 +661,21 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
             ]}
             sort={selectedSort}
             labelClassName="text-neutral-300"
+            isShowSideMenu={isShowSideMenu}
+            sideMenuVisibleHandler={toggleSideMenu}
           />
         </div>
 
         {/* Todo: (20250528 - Anna) Filter Side Menu for mobile 還要把Types傳進來，等 FilterSideMenu 實作好 */}
-        <FilterSideMenu<IInvoiceRC2Input[]>
+        {/* Todo: (20250528 - Julian) @Anna 我已經把 FilterSideMenu 和 FilterSection 合併了，我到時候在跟你確認其他細節 */}
+        {/* <FilterSideMenu<IInvoiceRC2Input[]>
           params={{ accountBookId }}
           apiName={APIName.LIST_INVOICE_RC2_INPUT}
           onApiResponse={handleApiResponse}
           activeTab={activeTab}
           isModalVisible={isShowSideMenu}
           modalVisibleHandler={toggleSideMenu}
-        />
+        /> */}
 
         {/* Info: (20240919 - Anna) Certificate Table */}
         {Object.values(certificates) && Object.values(certificates).length > 0 ? (

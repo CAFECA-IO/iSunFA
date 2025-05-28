@@ -164,6 +164,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
+  const [isShowCounterpartyHint, setIsShowCounterpartyHint] = useState<boolean>(false);
   // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
@@ -442,6 +443,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const dateRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
+  const counterpartyRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
@@ -455,6 +457,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowDateHint(false);
     }
   }, [date]);
+
+  // Info: (20241007 - Julian) 交易對象未選擇時顯示提示
+  useEffect(() => {
+    if (isCounterpartyRequired && counterparty) {
+      setIsShowCounterpartyHint(false);
+    }
+  }, [counterparty, isCounterpartyRequired]);
 
   // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
   // useEffect(() => {
@@ -648,7 +657,19 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
-      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
+      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
+    } else if (
+      isCounterpartyRequired &&
+      (!counterparty || counterparty?.taxId === '' || counterparty?.name === '')
+    ) {
+      setIsShowCounterpartyHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}:${t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}`,
+        closeable: true,
+      });
+      if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
       // } else if (
       //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
       //   isRecurring &&
@@ -708,6 +729,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
+      setIsShowCounterpartyHint(false);
       // setIsShowRecurringPeriodHint(false);
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
@@ -735,7 +757,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
-    <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
+    <div className="absolute left-0 top-50px z-10 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
       {typeList.map((voucherType) => {
         const typeClickHandler = () => {
           setType(voucherType);
@@ -1091,12 +1113,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <CounterpartyInput
-            counterparty={counterparty}
-            onSelect={handleCounterpartySelect}
-            flagOfSubmit={flagOfSubmit}
-            className="tablet:col-span-2"
-          />
+          <div ref={counterpartyRef} className="tablet:col-span-2">
+            <CounterpartyInput
+              counterparty={counterparty}
+              onSelect={handleCounterpartySelect}
+              isShowRedHint={isShowCounterpartyHint}
+            />
+          </div>
         )}
         {/* Info: (20241007 - Julian) Recurring */}
 

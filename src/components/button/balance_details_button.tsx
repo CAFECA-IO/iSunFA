@@ -191,7 +191,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     dateSort={dateSort}
                     otherSorts={[]}
                     */
-                      sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined} // Info: (20250113 - Anna) 傳遞日期排序參數
+                      sort={dateSort ? { sortBy: SortBy.DATE, sortOrder: dateSort } : undefined} // Info: (20250113 - Anna) 傳遞日期排序參數
                     />
                   </div>
                 )}

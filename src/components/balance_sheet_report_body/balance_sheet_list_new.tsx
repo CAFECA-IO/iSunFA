@@ -528,15 +528,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
-        <div className="flex items-center gap-4">
-          <Toggle
-            id="totalSubAccounts-toggle"
-            initialToggleState={totalSubAccountsToggle}
-            getToggledState={totalSubAccountsToggleHandler}
-            toggleStateFromParent={totalSubAccountsToggle}
-          />
-          <span className="text-neutral-600">{t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}</span>
-        </div>
+        <Toggle
+          id="totalSubAccounts-toggle"
+          initialToggleState={totalSubAccountsToggle}
+          getToggledState={totalSubAccountsToggleHandler}
+          toggleStateFromParent={totalSubAccountsToggle}
+          label={t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
+          labelClassName="text-neutral-600"
+        />
         <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
           <DownloadButton onClick={downloadFn} />
           <PrintButton onClick={printFn} disabled={!isChinese} />
