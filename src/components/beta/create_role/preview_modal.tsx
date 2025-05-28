@@ -1,20 +1,49 @@
 import { useRef, useState } from 'react';
 import { IoCloseOutline, IoEllipse } from 'react-icons/io5';
 import { useTranslation } from 'next-i18next';
+import { RoleName } from '@/constants/role';
 
-const videos: { id: number; url: string }[] = [
-  { id: 0, url: 'https://www.youtube.com/embed/ybzMzaD74gs' },
-  { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
-  { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
-  { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+const ALL_ROLE_VIDEOS: { role: RoleName; videos: { id: number; url: string }[] }[] = [
+  {
+    role: RoleName.INDIVIDUAL,
+    videos: [
+      { id: 0, url: 'https://www.youtube.com/embed/ybzMzaD74gs' },
+      { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
+      { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
+      { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+    ],
+  },
+  {
+    role: RoleName.ACCOUNTING_FIRMS,
+    videos: [
+      { id: 0, url: 'https://www.youtube.com/embed/ybzMzaD74gs' },
+      { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
+      { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
+      { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+    ],
+  },
+  {
+    role: RoleName.ENTERPRISE,
+    videos: [
+      { id: 0, url: 'https://www.youtube.com/embed/ybzMzaD74gs' },
+      { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
+      { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
+      { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+    ],
+  },
 ];
 
 interface PreviewModalProps {
   togglePreviewModal: () => void;
+  displayedRole: RoleName | undefined; // Info: (20250528 - Liz) 目前畫面顯示的角色
 }
 
-const PreviewModal = ({ togglePreviewModal }: PreviewModalProps) => {
+const PreviewModal = ({ togglePreviewModal, displayedRole }: PreviewModalProps) => {
   const { t } = useTranslation('dashboard');
+
+  // Info: (20250528 - Liz) 根據角色取得對應的影片
+  const videos =
+    ALL_ROLE_VIDEOS.find((roleVideos) => roleVideos.role === displayedRole)?.videos ?? [];
 
   // Info: (20250528 - Liz) 根據 videoIndex 顯示不同影片
   const [videoIndex, setVideoIndex] = useState<number>(0);
