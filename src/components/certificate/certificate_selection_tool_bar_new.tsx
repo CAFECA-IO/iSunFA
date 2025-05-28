@@ -34,7 +34,7 @@ interface SelectionToolbarProps {
   // eslint-disable-next-line react/no-unused-prop-types
   exportOperations?: ISelectionToolBarOperation[];
   onDownload?: () => void;
-  toggleSideMenu: () => void; // Info: (20250528 - Anna)
+  toggleSideMenu: () => void;
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
@@ -53,7 +53,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   onDelete,
   addOperations,
   onDownload,
-  toggleSideMenu, // Info: (20250528 - Anna)
+  toggleSideMenu,
 }) => {
   const { t } = useTranslation(['certificate']);
 

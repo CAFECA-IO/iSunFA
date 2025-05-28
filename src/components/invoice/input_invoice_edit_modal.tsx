@@ -28,7 +28,7 @@ import { HiCheck } from 'react-icons/hi';
 import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { InvoiceDirection, InvoiceType, DeductionType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
-import { useIsLg } from '@/lib/utils/use_is_lg'; // Info: (20250527 - Anna)
+import { useIsLg } from '@/lib/utils/use_is_lg';
 
 interface InputInvoiceEditModalProps {
   isOpen: boolean;
@@ -71,7 +71,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const isLg = useIsLg(); // Info: (20250527 - Anna)
+  const isLg = useIsLg();
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
   const certificateRef = useRef<HTMLDivElement>(null);

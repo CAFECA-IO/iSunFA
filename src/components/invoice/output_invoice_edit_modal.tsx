@@ -28,7 +28,7 @@ import { getInvoiceTracksByDate } from '@/lib/utils/invoice_track';
 import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
-import { useIsLg } from '@/lib/utils/use_is_lg'; // Info: (20250527 - Anna)
+import { useIsLg } from '@/lib/utils/use_is_lg';
 
 interface OutputInvoiceEditModalProps {
   isOpen: boolean;
@@ -67,7 +67,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const isLg = useIsLg(); // Info: (20250527 - Anna)
+  const isLg = useIsLg();
 
   // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
   const originalTypeRef = useRef<InvoiceType>();

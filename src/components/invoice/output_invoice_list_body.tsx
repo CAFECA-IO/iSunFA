@@ -112,7 +112,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
-  const [keyword, setKeyword] = useState<string>(); // Info: (20250528 - Anna)
+  const [keyword, setKeyword] = useState<string>();
 
   // Info: (20250526 - Anna) 對應 uploaderNmae 和 imageId 的映射表，型別為 Record<string, string>，代表 key 和 value 都是字串
   const [uploaderAvatarMap, setUploaderAvatarMap] = useState<Record<string, string>>({});
@@ -428,7 +428,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     [activeTab, handleAddVoucher, handleExport]
   );
 
-  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev); // Info: (20250528 - Anna)
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   const openEditModalHandler = useCallback(
     (id: number) => {

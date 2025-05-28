@@ -109,7 +109,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
-  const [keyword, setKeyword] = useState<string>(); // Info: (20250528 - Anna)
+  const [keyword, setKeyword] = useState<string>();
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
   const currentEditingCertificate = useMemo(() => {
@@ -421,7 +421,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     [activeTab, handleAddVoucher, handleExport]
   );
 
-  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev); // Info: (20250528 - Anna)
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   const openEditModalHandler = useCallback(
     (id: number) => {
