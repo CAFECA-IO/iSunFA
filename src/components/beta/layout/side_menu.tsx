@@ -286,8 +286,9 @@ interface SideMenuProps {
 }
 
 const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
-  const { version } = packageJson;
   const { t } = useTranslation(['layout']);
+  const { version, versionName } = packageJson;
+  const currentYear = new Date().getFullYear();
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
   const { isSideMenuOpen, toggleSideMenu } = useDashboardCtx();
   const { teamRole, connectedAccountBook } = useUserCtx();
@@ -399,7 +400,9 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
-            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
+            <p className="text-xs text-text-neutral-tertiary">
+              iSunFA {currentYear} {versionName} v{version}
+            </p>
 
             {/* Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
