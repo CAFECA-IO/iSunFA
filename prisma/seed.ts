@@ -1,4 +1,6 @@
 import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
+import files from '@/seed_json/file.json';
+import users from '@/seed_json/user.json';
 import teams from '@/seed_json/team.json';
 import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
@@ -6,6 +8,24 @@ import country from '@/seed_json/country.json';
 import teamPlans from '@/seed_json/team_plan.json';
 
 const prisma = new PrismaClient();
+
+async function createFile() {
+  const data = files.map((f) => {
+    return {
+      ...f,
+      iv: Buffer.from(f.iv, 'base64'),
+    };
+  });
+  await prisma.file.createMany({
+    data,
+  });
+}
+
+async function createUser() {
+  await prisma.user.createMany({
+    data: users,
+  });
+}
 
 async function createTeam() {
   await prisma.team.createMany({
@@ -85,11 +105,13 @@ async function createTeamPlans() {
 
 async function main() {
   try {
+    await createTeamPlans();
+    await createCountry();
+    await createFile();
+    await createUser();
     await createTeam();
     await createCompany();
     await createAccount();
-    await createCountry();
-    await createTeamPlans();
   } finally {
     await prisma.$disconnect();
   }
