@@ -6,9 +6,7 @@ import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 import FilterSection from '@/components/filter_section/filter_section';
-import FilterSideMenu from '@/components/filter_section/filter_sidemenu';
 import Pagination from '@/components/pagination/pagination';
-import MobileSearchInput from '@/components/filter_section/mobile_search_input';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
 import { APIName } from '@/constants/api_connection';
@@ -192,50 +190,35 @@ const VoucherListPageBody: React.FC = () => {
           onTabClick={tabClick}
           counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
-        {/* Info: (20250526 - Julian) Mobile Search Input */}
-        <MobileSearchInput<IVoucherBeta[]>
-          apiName={APIName.VOUCHER_LIST_V2}
-          param={params}
-          currentPage={page}
-          maxPageSize={DEFAULT_PAGE_LIMIT}
-          sortOption={selectedSort}
-          currentTab={activeTab}
-          type={selectedType}
-          datePeriod={{
-            start: selectedStartDate ?? 0,
-            end: selectedEndDate ?? 0,
-          }}
-          hideReversedRelated={isHideReversals}
-          onApiResponse={handleApiResponse}
-        />
         {/* Info: (20241022 - Julian) Filter Section */}
-        <div className="hidden tablet:block">
-          <FilterSection<IVoucherBeta[]>
-            params={params}
-            apiName={APIName.VOUCHER_LIST_V2}
-            onApiResponse={handleApiResponse}
-            page={page}
-            pageSize={DEFAULT_PAGE_LIMIT}
-            tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
-            types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
-            sort={selectedSort}
-            hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
-            flagOfRefresh={flagOfRefreshVoucherList}
-            // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
-            onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
-              setSelectedStartDate(startDate);
-              setSelectedEndDate(endDate);
-              setSelectedType(type);
-              setKeyword(passKeyword);
-            }}
-            // Info: (20250324 - Anna) 流程6:傳初始值
-            initialStartDate={queryStartDate}
-            initialEndDate={queryEndDate}
-            initialType={queryType}
-            initialKeyword={queryKeyword}
-            initialPage={queryPage}
-          />
-        </div>
+        <FilterSection<IVoucherBeta[]>
+          params={params}
+          apiName={APIName.VOUCHER_LIST_V2}
+          onApiResponse={handleApiResponse}
+          page={page}
+          pageSize={DEFAULT_PAGE_LIMIT}
+          tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
+          types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
+          sort={selectedSort}
+          hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
+          hideReversalsToggleHandler={hideReversalsToggleHandler}
+          flagOfRefresh={flagOfRefreshVoucherList}
+          // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
+          onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
+            setSelectedStartDate(startDate);
+            setSelectedEndDate(endDate);
+            setSelectedType(type);
+            setKeyword(passKeyword);
+          }}
+          // Info: (20250324 - Anna) 流程6:傳初始值
+          initialStartDate={queryStartDate}
+          initialEndDate={queryEndDate}
+          initialType={queryType}
+          initialKeyword={queryKeyword}
+          initialPage={queryPage}
+          isShowSideMenu={isShowSideMenu}
+          sideMenuVisibleHandler={toggleSideMenu}
+        />
         {/* Info: (20240920 - Julian) Voucher List */}
         <VoucherList
           voucherList={voucherList}
@@ -263,18 +246,6 @@ const VoucherListPageBody: React.FC = () => {
           totalCount={totalCount}
         />
       </div>
-
-      {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
-      <FilterSideMenu<IVoucherBeta[]>
-        apiName={APIName.VOUCHER_LIST_V2}
-        params={params}
-        activeTab={activeTab}
-        typeOptions={voucherTypeList}
-        hideReversedRelated={isHideReversals}
-        isModalVisible={isShowSideMenu}
-        modalVisibleHandler={toggleSideMenu}
-        onApiResponse={handleApiResponse}
-      />
     </div>
   );
 };

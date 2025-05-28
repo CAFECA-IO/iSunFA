@@ -8,6 +8,7 @@ import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker
 import SelectFilter from '@/components/filter_section/select_filter';
 import SearchInput from '@/components/filter_section/search_input';
 import ViewToggle from '@/components/filter_section/view_toggle';
+import Toggle from '@/components/toggle/toggle';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
@@ -15,7 +16,8 @@ import { ToastType } from '@/interfaces/toastify';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { SortOrder, SortBy } from '@/constants/sort';
 import { ISortOption } from '@/interfaces/sort';
-// import { useTranslation } from 'next-i18next';
+import { RxCross2 } from 'react-icons/rx';
+import { useTranslation } from 'next-i18next';
 
 interface FilterSectionProps<T> {
   className?: string;
@@ -43,6 +45,7 @@ interface FilterSectionProps<T> {
   disableDateSearch?: boolean;
   displayTypeFilter?: boolean;
   hideReversedRelated?: boolean; // Info: (20250210 - Julian) 用於 VoucherListBody，隱藏沖銷分錄
+  hideReversalsToggleHandler?: (isOpen: boolean) => void; // Info: (20250528 - Julian) 用於 VoucherListBody，沖銷分錄開關
   flagOfRefresh?: boolean; // Info: (20250221 - Julian) 當 flagOfRefresh 變更時，重新發送 API 請求
 
   // Info: (20250324 - Anna) 篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給父層
@@ -58,6 +61,9 @@ interface FilterSectionProps<T> {
   initialKeyword?: string;
   initialPage?: number;
   labelClassName?: string; // Info: (20250416 - Anna) label的 className
+
+  isShowSideMenu?: boolean; // Info: (20250528 - Julian) 側邊欄是否打開
+  sideMenuVisibleHandler?: () => void; // Info: (20250528 - Julian) 側邊欄開關
 }
 
 const FilterSection = <T,>({
@@ -83,6 +89,7 @@ const FilterSection = <T,>({
   disableDateSearch,
   displayTypeFilter,
   hideReversedRelated,
+  hideReversalsToggleHandler,
   flagOfRefresh,
   onFilterChange,
   initialStartDate,
@@ -91,8 +98,10 @@ const FilterSection = <T,>({
   initialKeyword,
   initialPage,
   labelClassName = '',
+  isShowSideMenu,
+  sideMenuVisibleHandler,
 }: FilterSectionProps<T>) => {
-  // const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
 
   // Info: (20250324 - Anna) 以 initialPage 優先，沒有的話就用外層的 page 值
@@ -121,6 +130,12 @@ const FilterSection = <T,>({
   const [isInitialized] = useState(() => {
     return !(initialStartDate || initialEndDate || initialType || initialKeyword);
   });
+
+  // Info: (20250528 - Julian) 如果有傳入相關參數和處理函數，則顯示沖銷分錄開關
+  const isShowReversedToggle = hideReversedRelated !== undefined && hideReversalsToggleHandler;
+
+  // Info: (20250528 - Julian) 側邊欄樣式 => 隱藏電腦版 type / date picker
+  const isSideMenuStyle = isShowSideMenu !== undefined && sideMenuVisibleHandler;
 
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
   const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
@@ -248,7 +263,7 @@ const FilterSection = <T,>({
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
-      {!displayTypeFilter && types.length > 0 && (
+      {!displayTypeFilter && types.length > 0 && !isSideMenuStyle && (
         <SelectFilter
           label="Type"
           options={types}
@@ -271,7 +286,7 @@ const FilterSection = <T,>({
       )}
 
       {/* Info: (20240919 - tzuhan) 時間區間篩選 */}
-      {!disableDateSearch && (
+      {!disableDateSearch && !isSideMenuStyle && (
         <div className="flex min-w-250px flex-1 flex-col">
           <DatePicker
             label="Issue_Date"
@@ -291,26 +306,70 @@ const FilterSection = <T,>({
         <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
       )}
 
-      {/* Info: (20240919 - tzuhan) 排序選項 */}
-      {/* {selectedSortOptions[SortBy.DATE] ? (
-        <button type="button" className="flex items-center space-x-2 pb-2" onClick={handleSort}>
-          <Image src="/elements/double_arrow_down.svg" alt="arrow_down" width={20} height={20} />
-          <div className="leading-none">
-            {selectedSortOptions[SortBy.DATE].order === SortOrder.DESC
-              ? t('common:SORTING.NEWEST')
-              : t('common:SORTING.OLDEST')}
+      {/* Info: (20250528 - Julian) 手機版側邊欄 */}
+      <div
+        className={`fixed inset-0 z-120 flex items-center justify-center bg-black/50 transition-all duration-300 ease-in-out tablet:hidden ${isShowSideMenu ? 'visible opacity-100' : 'invisible opacity-0'}`}
+      >
+        {/* Info: (20250528 - Julian) 選單 */}
+        <div
+          className={`fixed right-0 top-0 z-130 flex h-screen w-90vw flex-col gap-lv-5 bg-white px-16px py-24px transition-all duration-300 ease-in-out ${isShowSideMenu ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+          {/* Info: (20250528 - Julian) Header */}
+          <div className="relative flex w-full flex-col items-center">
+            <button
+              type="button"
+              className="absolute left-0 p-10px"
+              onClick={sideMenuVisibleHandler}
+            >
+              <RxCross2 size={16} />
+            </button>
+            <p className="text-center text-base font-semibold text-text-neutral-secondary">
+              Filter
+            </p>
           </div>
-        </button>
-      ) : (
-        sortingOptions.length > 0 && (
-          <SelectFilter
-            label="Sort"
-            options={sortingOptions}
-            selectedValue={selectedSorting}
-            onChange={setSelectedSorting}
-          />
-        )
-      )} */}
+
+          {/* Info: (20250528 - Julian) 分隔線 */}
+          <hr className="border-divider-stroke-lv-4" />
+          {/* Info: (20250528 - Julian) 選單內容 */}
+          <div className="flex flex-col items-stretch gap-lv-4">
+            {/* Info: (20250528 - Julian) 類型篩選 */}
+            {!displayTypeFilter && types.length > 0 && (
+              <SelectFilter
+                label="Type"
+                options={types}
+                selectedValue={selectedType}
+                onChange={setSelectedType}
+                labelClassName="text-input-text-primary"
+              />
+            )}
+
+            {/* Info: (20250528 - Julian) 時間區間篩選 */}
+            <div className="flex flex-col items-start gap-8px">
+              <DatePicker
+                label="Issue_Date"
+                type={DatePickerType.TEXT_DATE}
+                period={selectedDateRange}
+                setFilteredPeriod={setSelectedDateRange}
+                btnClassName="h-46px"
+                calenderClassName="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Info: (20250528 - Julian) 開關 */}
+          {isShowReversedToggle && (
+            <div className="flex items-center gap-lv-2 text-xs font-medium">
+              <Toggle
+                id="hide-reversals-toggle-mobile"
+                initialToggleState={hideReversedRelated}
+                toggleStateFromParent={hideReversedRelated}
+                getToggledState={() => hideReversalsToggleHandler(!hideReversedRelated)}
+              />
+              {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
