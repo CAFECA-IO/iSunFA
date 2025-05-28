@@ -1,6 +1,6 @@
 [
   {
-    "type": "TeamPlanType.BEGINNER",
+    "type": "BEGINNER",
     "planName": "Beginner",
     "price": 0,
     "features": [
@@ -17,7 +17,7 @@
     ]
   },
   {
-    "type": "TeamPlanType.PROFESSIONAL",
+    "type": "PROFESSIONAL",
     "planName": "Professional",
     "price": 899,
     "extraMemberPrice": 89,
@@ -35,7 +35,7 @@
     ]
   },
   {
-    "type": "TeamPlanType.ENTERPRISE",
+    "type": "ENTERPRISE",
     "planName": "Enterprise",
     "price": 2399,
     "extraMemberPrice": 89,
@@ -46,7 +46,7 @@
     ]
   },
   {
-    "type": "TeamPlanType.TRIAL",
+    "type": "TRIAL",
     "planName": "Trial",
     "price": 0,
     "features": [
