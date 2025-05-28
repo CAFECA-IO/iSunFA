@@ -1,4 +1,4 @@
-import { PrismaClient, Tag } from '@prisma/client';
+import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
 import accounts from '@/seed_json/account_new.json';
 import teams from '@/seed_json/team.json';
 import country from '@/seed_json/country.json';
@@ -346,7 +346,7 @@ async function createTeamPlans() {
   await Promise.all(
     teamPlans.map(async (plan) => {
       const createdPlan = await prisma.teamPlan.upsert({
-        where: { type: plan.type },
+        where: { type: plan.type as TeamPlanType },
         update: {
           planName: plan.planName,
           price: plan.price,
@@ -354,7 +354,7 @@ async function createTeamPlans() {
           updatedAt: now,
         },
         create: {
-          type: plan.type,
+          type: plan.type as TeamPlanType,
           planName: plan.planName,
           price: plan.price,
           extraMemberPrice: plan.extraMemberPrice ?? null,
