@@ -534,7 +534,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px h-350px lg:mx-0"
+                    className="mx-auto h-350px w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -550,7 +550,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
                       variant="tertiaryOutline"
-                      className="px-16px py-8px"
+                      className="h-36px px-16px py-8px"
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
@@ -561,7 +561,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       type="button"
                       disabled={!hasNext}
                       variant="tertiary"
-                      className="px-16px py-8px"
+                      className="h-36px px-16px py-8px"
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
@@ -571,7 +571,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     <Button
                       id="certificate-delete-btn"
                       type="button"
-                      className="mt-10px w-full px-16px py-8px"
+                      className="mt-10px h-36px w-full px-16px py-8px"
                       onClick={() => onDelete(certificate.id)}
                       variant="errorOutline"
                     >
@@ -1166,18 +1166,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         <NumericInput
                           id="input-tax"
                           name="input-tax"
-                          value={
-                            formState.type === InvoiceType.INPUT_22 ? 0 : (formState.taxAmount ?? 0)
-                          }
+                          value={formState.taxAmount ?? 0}
                           isDecimal
                           required
                           hasComma
-                          disabled={formState.type === InvoiceType.INPUT_22}
-                          className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none ${
-                            formState.type === InvoiceType.INPUT_22
-                              ? 'text-neutral-300'
-                              : 'text-input-text-primary'
-                          }`}
+                          className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right text-input-text-primary outline-none`}
                           // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
                           // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
                           triggerWhenChanged={(value: number) => {
