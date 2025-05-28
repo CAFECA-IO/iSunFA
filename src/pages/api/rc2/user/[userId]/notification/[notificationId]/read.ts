@@ -12,28 +12,23 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
-import { getNotificationById } from '@/lib/utils/repo/notification.repo';
+import { markNotificationAsRead } from '@/lib/utils/repo/notification.repo';
 
-const handleGetRequest = async (req: NextApiRequest) => {
+const handlePatchRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  const { query } = checkRequestData(APIName.GET_NOTIFICATION_BY_ID, req, session);
-  await checkSessionUser(session, APIName.GET_NOTIFICATION_BY_ID, req);
-  await checkUserAuthorization(APIName.GET_NOTIFICATION_BY_ID, req, session);
+  const { query } = checkRequestData(APIName.READ_NOTIFICATION, req, session);
+  await checkSessionUser(session, APIName.READ_NOTIFICATION, req);
+  await checkUserAuthorization(APIName.READ_NOTIFICATION, req, session);
 
   if (!query || !query.userId || !query.notificationId) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const notification = await getNotificationById(query.userId, query.notificationId);
-  const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.GET_NOTIFICATION_BY_ID,
-    notification
-  );
-  statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  payload = isOutputDataValid ? outputData : null;
+  const result = await markNotificationAsRead(query.userId, query.notificationId);
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.READ_NOTIFICATION, result);
 
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;
@@ -53,9 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
-      case HttpMethod.GET:
-        apiName = APIName.GET_NOTIFICATION_BY_ID;
-        ({ response, statusMessage } = await handleGetRequest(req));
+      case HttpMethod.PATCH:
+        apiName = APIName.READ_NOTIFICATION;
+        ({ response, statusMessage } = await handlePatchRequest(req));
         ({ httpCode, result } = response);
         break;
       default:

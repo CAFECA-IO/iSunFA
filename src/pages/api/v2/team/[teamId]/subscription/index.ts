@@ -14,6 +14,8 @@ import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { getTeamPaymentByTeamId, updateTeamPayment } from '@/lib/utils/repo/team_payment.repo';
 import { ITeamPayment } from '@/interfaces/payment';
+import { IUserOwnedTeam } from '@/interfaces/subscription';
+import { getSubscriptionByTeamId } from '@/lib/utils/repo/team_subscription.repo';
 
 const handlePutRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -46,7 +48,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
     }
     teamPayment.autoRenewal = autoRenew || teamPayment.autoRenewal;
     teamPayment.teamPlanType = plan || teamPayment.teamPlanType;
-    payload = await await updateTeamPayment(teamPayment);
+    payload = await updateTeamPayment(teamPayment);
     if (!payload) {
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
@@ -68,6 +70,49 @@ const handlePutRequest = async (req: NextApiRequest) => {
   return result;
 };
 
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  let payload: IUserOwnedTeam | null = null;
+
+  // Info: (20250420 - Luphia) 檢查使用者是否登入
+  const isLogin = await checkSessionUser(session, APIName.GET_SUBSCRIPTION_BY_TEAM_ID, req);
+  if (!isLogin) {
+    throw new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+  }
+  // Info: (20250420 - Luphia) 檢查使用者是否有權限
+  const isAuth = await checkUserAuthorization(APIName.GET_SUBSCRIPTION_BY_TEAM_ID, req, session);
+  if (!isAuth) {
+    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+  }
+
+  // Info: (20250420 - Luphia) 檢查請求參數
+  const { query } = checkRequestData(APIName.GET_SUBSCRIPTION_BY_TEAM_ID, req, session);
+
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  try {
+    const { teamId } = query;
+    const team = await getSubscriptionByTeamId(session.userId, teamId);
+    payload = team || null;
+    // Info: (20250420 - Luphia) 檢驗回傳資料格式
+  } catch (error) {
+    loggerBack.error(`Update subscription failed: ${error}`);
+    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+  }
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.GET_SUBSCRIPTION_BY_TEAM_ID,
+    payload
+  );
+  if (!isOutputDataValid) {
+    throw new Error(STATUS_MESSAGE.INVALID_OUTPUT_DATA);
+  }
+
+  const result = formatApiResponse(STATUS_MESSAGE.SUCCESS, outputData);
+  return result;
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
@@ -77,6 +122,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === HttpMethod.PUT) {
       session = await getSession(req);
       ({ httpCode, result } = await handlePutRequest(req));
+    } else if (req.method === HttpMethod.GET) {
+      ({ httpCode, result } = await handleGetRequest(req));
     } else {
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
