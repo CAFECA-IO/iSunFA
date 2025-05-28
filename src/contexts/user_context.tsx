@@ -674,7 +674,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const updateAccountBook = async ({
     accountBookId,
     fromTeamId, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
-    toTeamId, // Info: (20250526 - Liz) 轉移到的團隊 ID
+    toTeamId, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
     name,
     taxId,
     tag,

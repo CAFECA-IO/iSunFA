@@ -77,6 +77,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
+  // Info: (20250527 - Julian) 如果 uiVoucherList 為空，則顯示無資料狀態
+  const isNoData = uiVoucherList.length === 0;
+
   // Info: (20250203 - Julian) 根據 voucher 的數量決定底色：奇數白色、偶數灰色
   const bottomColor =
     voucherList.length % 2 === 0
@@ -452,7 +455,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     );
   });
 
-  const displayedTable = (
+  const displayedTable = !isNoData ? (
     <div className={`table overflow-hidden rounded-lg tablet:shadow-Dropshadow_XS ${bottomColor}`}>
       {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
       <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
@@ -501,6 +504,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
       <div className="table-footer-group h-20px"></div>
     </div>
+  ) : (
+    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+    </div>
   );
 
   return (
@@ -513,7 +520,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
 
       {/* Info: (20250521 - Julian) Table for mobile */}
       <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
-        <div className="w-max">{displayedTable}</div>
+        <div className={isNoData ? '' : 'w-max'}>{displayedTable}</div>
       </div>
 
       {/* Info: (20250521 - Julian) Table for desktop */}
