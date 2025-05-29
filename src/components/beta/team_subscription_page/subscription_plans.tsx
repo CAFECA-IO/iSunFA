@@ -43,7 +43,11 @@ const SubscriptionPlans = ({ team, getOwnedTeam }: SubscriptionPlansProps) => {
     );
   });
 
-  return <main className="flex justify-center gap-10px">{plans}</main>;
+  return (
+    <main className="overflow-x-auto">
+      <div className="mx-auto flex w-max gap-10px pt-lv-5 tablet:pt-40px">{plans}</div>
+    </main>
+  );
 };
 
 export default SubscriptionPlans;

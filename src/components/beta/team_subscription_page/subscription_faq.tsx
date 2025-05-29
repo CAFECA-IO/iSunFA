@@ -50,7 +50,7 @@ const SubscriptionFaq = () => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <h1 className="text-center text-36px font-bold text-surface-brand-secondary">
+      <h1 className="text-center text-28px font-bold text-surface-brand-secondary tablet:text-36px">
         {t('subscriptions:SUBSCRIPTION_FAQ.SUBSCRIPTION_FAQ')}
       </h1>
 
@@ -58,7 +58,7 @@ const SubscriptionFaq = () => {
         {FAQS.map((faq) => (
           <div key={faq.id}>
             <div
-              className="flex cursor-pointer items-center gap-16px px-40px py-32px"
+              className="flex cursor-pointer items-center gap-16px px-lv-4 py-lv-6 tablet:px-40px tablet:py-32px"
               onClick={() => (isOpen === faq.id ? closeFaq() : openFaq(faq.id))}
             >
               <Image
@@ -66,23 +66,24 @@ const SubscriptionFaq = () => {
                 alt="Bubble Help Icon"
                 width={20}
                 height={20}
+                className="shrink-0"
               />
 
               <h3
-                className={`flex-auto text-2xl font-semibold ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'} transition-all duration-300 ease-in-out`}
+                className={`flex-auto text-base font-semibold tablet:text-2xl ${isOpen === faq.id ? 'text-accordion-surface-background-text-title-active' : 'text-accordion-surface-background-text-title'} transition-all duration-300 ease-in-out`}
               >
                 {t(`subscriptions:SUBSCRIPTION_FAQ.${faq.question}`)}
               </h3>
 
               <IoChevronDown
-                className={`${isOpen === faq.id ? 'rotate-180' : 'rotate-0'} transition-all duration-300 ease-in-out`}
+                className={`${isOpen === faq.id ? 'rotate-180' : 'rotate-0'} shrink-0 transition-all duration-300 ease-in-out`}
               />
             </div>
 
             <div
-              className={`grid overflow-hidden text-lg font-normal ${isOpen === faq.id ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'} text-accordion-surface-background-text-paragraph transition-all duration-300 ease-in-out`}
+              className={`grid overflow-hidden text-xs font-normal tablet:text-lg ${isOpen === faq.id ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'} text-accordion-surface-background-text-paragraph transition-all duration-300 ease-in-out`}
             >
-              <p className="px-40px pb-32px">
+              <p className="px-lv-4 pb-32px leading-5 tablet:px-40px">
                 {faq.answer ? t(`subscriptions:SUBSCRIPTION_FAQ.${faq.answer}`) : ''}
               </p>
             </div>

@@ -17,11 +17,19 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { ISortOption } from '@/interfaces/sort';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
+
+  // Info: (20250522 - Julian) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { accountBookId };
@@ -40,8 +48,6 @@ const AssetListPageBody: React.FC = () => {
   const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
-
-  const [isShowSideMenu, setIsShowSideMenu] = useState(false);
 
   const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
 
@@ -112,7 +118,7 @@ const AssetListPageBody: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div ref={sideMenuRef} className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240925 - Julian) Asset List */}
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241024 - Julian) Filter Section */}
