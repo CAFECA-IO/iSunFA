@@ -59,9 +59,12 @@ const PendingTaskForAll = () => {
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate =
-    userPendingTaskTotal.totalMissingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = Math.round(
+    userPendingTaskTotal.totalMissingCertificatePercentage * 100
+  );
+  const percentageForUnpostedVouchers = Math.round(
+    userPendingTaskTotal.totalUnpostedVoucherPercentage * 100
+  );
   const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
   const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
 

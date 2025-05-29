@@ -86,8 +86,10 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate = pendingTask.missingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = pendingTask.unpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = Math.round(
+    pendingTask.missingCertificatePercentage * 100
+  );
+  const percentageForUnpostedVouchers = Math.round(pendingTask.unpostedVoucherPercentage * 100);
 
   return (
     <section className="flex flex-col gap-24px">
