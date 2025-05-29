@@ -3,22 +3,22 @@ import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { RxCross1 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
-import { ICertificateUI } from '@/interfaces/certificate';
 import { Button } from '@/components/button/button';
 // import Magnifier from '@/components/magnifier/magifier';
 import ImageZoom from '@/components/image_zoom/image_zoom';
+import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
-  certificate: ICertificateUI | null;
+  invoice: IInvoiceRC2InputOrOutput | null;
   isOnTopOfModal: boolean;
 }
 
 const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
   isOpen,
   onClose,
-  certificate,
+  invoice,
   isOnTopOfModal,
 }) => {
   const { t } = useTranslation(['common']);
@@ -27,7 +27,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
   // Info: (20250311 - Julian) 列印發票
   const handlePrint = useReactToPrint({
     contentRef: printRef, // Info: (20250311 - Julian) 指定要列印的元素
-    documentTitle: `${certificate?.file.name}`, // Info: (20250311 - Julian) 列印的文件標題
+    documentTitle: `${invoice?.file.name}`, // Info: (20250311 - Julian) 列印的文件標題
     onBeforePrint: async () => {
       return Promise.resolve(); // Info: (20250311 - Julian) 確保回傳一個 Promise
     },
@@ -37,11 +37,11 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
   });
 
   // Info: (20250311 - Julian) 如果模態框未開啟或沒有發票資料，則不顯示模態框
-  if (!isOpen || !certificate) return null;
+  if (!isOpen || !invoice) return null;
 
   // Info: (20250311 - Julian) 下載發票
   const handleDownload = async () => {
-    const imageUrl = certificate.file.thumbnail?.url || certificate.file.url;
+    const imageUrl = invoice.file.thumbnail?.url || invoice.file.url;
     try {
       const response = await fetch(imageUrl);
       const blob = await response.blob();
@@ -49,7 +49,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
 
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = certificate.file.name;
+      link.download = invoice.file.name;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(blobUrl); // Info: (20250311 - Julian) 釋放 URL 資源
@@ -77,9 +77,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
         <h2 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary px-40px py-16px text-xl font-semibold text-card-text-primary">
           <div className="text-xl font-semibold">{t('journal:JOURNAL.PREVIEW_INVOICE')}</div>
-          <div className="text-xs font-normal text-card-text-secondary">
-            {certificate.file.name}
-          </div>
+          <div className="text-xs font-normal text-card-text-secondary">{invoice.file.name}</div>
         </h2>
         <div className="flex justify-end gap-2 border-b border-stroke-neutral-quaternary px-4 py-3">
           <Button
@@ -103,20 +101,20 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
         </div>
         <div className="hide-scrollbar flex justify-center overflow-hidden px-4">
           <ImageZoom
-            imageUrl={certificate.file.thumbnail?.url || certificate.file.url}
+            imageUrl={invoice.file.thumbnail?.url || invoice.file.url}
             className="h-450px w-full tablet:min-w-600px tablet:max-w-1200px"
           />
           <Image
             ref={printRef}
-            src={certificate.file.thumbnail?.url || certificate.file.url}
-            alt="certificate"
+            src={invoice.file.thumbnail?.url || invoice.file.url}
+            alt="invoice"
             fill
             objectFit="contain"
             className="absolute hidden print:block"
           />
           {/* <Magnifier
             className="max-h-800px min-h-500px min-w-700px max-w-1200px object-contain"
-            imageUrl={certificate.file.thumbnail?.url || certificate.file.url.file.url}
+            imageUrl={invoice.file.thumbnail?.url || invoice.file.url.file.url}
             zoomLevelX={2}
             useNaturalSize
           /> */}

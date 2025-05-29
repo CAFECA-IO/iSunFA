@@ -7,6 +7,7 @@ import {
   InvoiceRC2OutputSchema,
   createInvoiceRC2QuerySchema,
   createInvoiceRC2BodySchema,
+  listInvoiceRC2InputOrOutputQuerySchema,
 } from '@/lib/utils/zod_schema/invoice_rc2';
 import { InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -553,3 +554,45 @@ export async function deleteInvoiceRC2(userId: number, accountBookId: number, in
     deletedIds: deleted.count > 0 ? invoiceds : [],
   };
 }
+
+export const listInvoiceRC2 = async (
+  userId: number,
+  query: z.infer<typeof listInvoiceRC2InputOrOutputQuerySchema>
+) => {
+  const { accountBookId, direction, page, pageSize, sortOption } = query;
+
+  const whereClause: Prisma.InvoiceRC2WhereInput = {
+    accountBookId,
+    direction,
+    deletedAt: null,
+  };
+
+  const [totalCount, invoices] = await Promise.all([
+    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.findMany({
+      where: whereClause,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption || []),
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
+    }),
+  ]);
+
+  const transformed = invoices.map((cert) => {
+    return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+  });
+
+  return toPaginatedData({
+    ...query,
+    totalCount,
+    data: transformed,
+  });
+};

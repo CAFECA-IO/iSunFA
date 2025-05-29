@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import FilterSection from '@/components/filter_section/filter_section';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
 import SelectionPanel from '@/components/certificate/certificate_selection_panel';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { InvoiceTabs } from '@/constants/invoice_rc2';
-// import { InvoiceType } from '@/constants/invoice';
+import { InvoiceDirection, InvoiceTabs } from '@/constants/invoice_rc2';
 import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
-import { InvoiceType } from '@/constants/invoice';
+import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -20,8 +18,8 @@ interface CertificateSelectorModalProps {
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
 
   handleSelect: (ids: number[]) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
-  certificates: ICertificateUI[]; // Info: (20240926 - tzuhan) 證書列表
-  handleApiResponse: (data: IPaginatedData<ICertificate[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
+  invoices: IInvoiceRC2InputOrOutput[]; // Info: (20240926 - tzuhan) 證書列表
+  handleApiResponse: (data: IPaginatedData<IInvoiceRC2InputOrOutput[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }
 
@@ -31,7 +29,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
   onClose,
   handleSelect,
   handleApiResponse,
-  certificates,
+  invoices,
   selectedIds,
   setSelectedIds,
   openUploaderModal,
@@ -41,9 +39,9 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
 
   useEffect(() => {
     // Info: (20250331- Julian) 判斷是否全選
-    const selectedAll = certificates.length === selectedIds.length && certificates.length > 0;
+    const selectedAll = invoices.length === selectedIds.length && invoices.length > 0;
     setIsSelectAll(selectedAll);
-  }, [selectedIds, certificates]);
+  }, [selectedIds, invoices]);
 
   // Info: (20240924 - tzuhan) 不顯示模態框時返回 null
   if (!isOpen) return null;
@@ -62,7 +60,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
       setSelectedIds([]);
     } else {
       // Info: (20250312 - Julian) 將所有發票加入 selectedIds
-      setSelectedIds(certificates.map((item) => item.id));
+      setSelectedIds(invoices.map((item) => item.id));
     }
   };
 
@@ -100,25 +98,25 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
 
         {/* Info: (20250527 - Julian) content */}
         <div className="overflow-y-auto overflow-x-hidden px-lv-4 py-lv-3">
-          <FilterSection
-            apiName={APIName.CERTIFICATE_LIST_V2}
+          <FilterSection<IInvoiceRC2InputOrOutput[]>
+            apiName={APIName.LIST_INVOICE_RC2}
             params={{ accountBookId }}
             page={1}
             pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
             tab={InvoiceTabs.WITHOUT_VOUCHER}
             onApiResponse={handleApiResponse}
-            types={Object.keys(InvoiceType)}
+            types={['BOTH', ...Object.values(InvoiceDirection)]}
           />
           <div className="mt-12px tablet:px-4">
             <div className="flex items-center justify-between">
               <div className="font-medium text-text-neutral-secondary">
-                ({t('certificate:COMMON.SELECT')} {selectedIds.length}/{certificates.length})
+                ({t('certificate:COMMON.SELECT')} {selectedIds.length}/{invoices.length})
               </div>
               <button
                 type="button"
                 className="text-link-text-primary enabled:hover:underline disabled:text-link-text-disable"
                 onClick={handleSelectAll}
-                disabled={certificates.length === 0} // Info: (20250331 - Julian) 如果沒有發票，則不能全選
+                disabled={invoices.length === 0} // Info: (20250331 - Julian) 如果沒有發票，則不能全選
               >
                 {isSelectAll
                   ? t('certificate:COMMON.UNSELECT_ALL')
@@ -127,7 +125,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             </div>
           </div>
           <SelectionPanel
-            certificates={certificates}
+            invoices={invoices}
             selectedIds={selectedIds}
             handleSelect={handleSelectOne}
             openUploaderModal={openUploaderModal}
