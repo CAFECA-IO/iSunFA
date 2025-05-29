@@ -44,19 +44,7 @@ import {
   todoPostSchema,
   todoPutSchema,
 } from '@/lib/utils/zod_schema/todo';
-import {
-  voucherDeleteSchema,
-  voucherGetAllValidatorV2,
-  voucherGetByAccountSchema,
-  voucherGetOneSchema,
-  voucherGetOneValidatorV2,
-  voucherListSchema,
-  voucherPostSchema,
-  voucherPostValidatorV2,
-  voucherPutSchema,
-  voucherWasReadValidatorV2,
-  voucherRestoreSchema,
-} from '@/lib/utils/zod_schema/voucher';
+import { voucherRequestValidatorsV2 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
   accountingSettingGetSchema,
@@ -174,10 +162,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.CERTIFICATE_POST_V2]: certificatePostValidator,
   [APIName.CERTIFICATE_PUT_V2]: certificatePutValidator,
   [APIName.REPORT_GET_V2]: reportGetValidatorV2,
-  [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
-  [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
-  [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
-  [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
 };
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
@@ -213,15 +197,15 @@ export const ZOD_SCHEMA_API = {
   [APIName.USER_SETTING_GET]: userSettingGetSchema,
   [APIName.USER_SETTING_UPDATE]: userSettingPutSchema,
   [APIName.USER_ACTION_LOG_LIST]: userActionLogListSchema,
-  [APIName.VOUCHER_POST_V2]: voucherPostSchema,
-  [APIName.VOUCHER_LIST_V2]: voucherListSchema,
+  [APIName.VOUCHER_POST_V2]: voucherRequestValidatorsV2.POST,
+  [APIName.VOUCHER_LIST_V2]: voucherRequestValidatorsV2.GET_LIST,
   [APIName.TRIAL_BALANCE_LIST]: trialBalanceListSchema,
-  [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneSchema,
-  [APIName.VOUCHER_PUT_V2]: voucherPutSchema,
-  [APIName.VOUCHER_DELETE_V2]: voucherDeleteSchema,
-  [APIName.VOUCHER_RESTORE_V2]: voucherRestoreSchema,
+  [APIName.VOUCHER_GET_BY_ID_V2]: voucherRequestValidatorsV2.GET_ONE,
+  [APIName.VOUCHER_PUT_V2]: voucherRequestValidatorsV2.PUT,
+  [APIName.VOUCHER_DELETE_V2]: voucherRequestValidatorsV2.DELETE,
+  [APIName.VOUCHER_RESTORE_V2]: voucherRequestValidatorsV2.RESTORE,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
-  [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
+  [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherRequestValidatorsV2.GET_LIST_BY_ACCOUNT,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
   [APIName.LIST_INVOICE_RC2]: listInvoiceRC2,
@@ -254,7 +238,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
-  [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,

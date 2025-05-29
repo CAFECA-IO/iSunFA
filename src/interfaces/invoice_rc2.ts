@@ -89,6 +89,8 @@ export interface IInvoiceRC2OutputUI extends IInvoiceRC2Output {
 
 export type IInvoiceRC2InputOrOutput = IInvoiceRC2Input | IInvoiceRC2Output;
 
+export type IInvoiceRC2InputOrOutputUI = IInvoiceRC2InputUI | IInvoiceRC2OutputUI;
+
 export const isInputInvoice = (cert: IInvoiceRC2InputOrOutput): cert is IInvoiceRC2Input => {
   return cert.direction === InvoiceDirection.INPUT;
 };

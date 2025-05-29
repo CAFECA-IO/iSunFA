@@ -8,7 +8,7 @@ import { RxCross2 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { InvoiceDirection, InvoiceTabs } from '@/constants/invoice_rc2';
 import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
-import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
+import { IInvoiceRC2InputOrOutputUI, IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectorModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ interface CertificateSelectorModalProps {
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
 
   handleSelect: (ids: number[]) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
-  invoices: IInvoiceRC2InputOrOutput[]; // Info: (20240926 - tzuhan) 證書列表
+  invoices: IInvoiceRC2InputOrOutputUI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: IPaginatedData<IInvoiceRC2InputOrOutput[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
   openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }

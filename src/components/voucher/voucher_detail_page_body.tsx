@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
@@ -23,6 +22,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 import { AccountCodesOfAPRegex } from '@/constants/asset';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
@@ -42,7 +42,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   const accountBookId = connectedAccountBook?.id;
 
-  const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
+  const [certificates, setCertificates] = useState<IInvoiceRC2InputOrOutputUI[]>([]);
 
   // Info: (20241029 - Julian) Get voucher details from API
   const {

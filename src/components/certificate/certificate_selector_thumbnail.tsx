@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import CertificatePreviewModal from '@/components/certificate/certificate_preview_modal';
 import { simplifyFileName } from '@/lib/utils/common';
-import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectorThumbnailProps {
-  invoice: IInvoiceRC2InputOrOutput;
+  invoice: IInvoiceRC2InputOrOutputUI;
   isSelected: boolean;
   isSelectable: boolean;
   isDeletable: boolean;
@@ -23,13 +23,13 @@ const CertificateSelectorThumbnail: React.FC<CertificateSelectorThumbnailProps> 
   onDelete,
   isOnTopOfModal = false,
 }) => {
-  const [selectedCertificate, setSelectedCertificate] = useState<IInvoiceRC2InputOrOutput | null>(
+  const [selectedCertificate, setSelectedCertificate] = useState<IInvoiceRC2InputOrOutputUI | null>(
     null
   );
 
   const handleClicked = (
     e: React.MouseEvent<HTMLDivElement>,
-    clickedCertificate: IInvoiceRC2InputOrOutput
+    clickedCertificate: IInvoiceRC2InputOrOutputUI
   ) => {
     e.stopPropagation();
     if (selectedCertificate?.id !== invoice.id) {

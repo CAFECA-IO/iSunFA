@@ -6,12 +6,12 @@ import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 // import Magnifier from '@/components/magnifier/magifier';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificatePreviewModalProps {
   isOpen: boolean;
   onClose: () => void; // Info: (20240924 - tzuhan) 關閉模態框的回調函數
-  invoice: IInvoiceRC2InputOrOutput | null;
+  invoice: IInvoiceRC2InputOrOutputUI | null;
   isOnTopOfModal: boolean;
 }
 

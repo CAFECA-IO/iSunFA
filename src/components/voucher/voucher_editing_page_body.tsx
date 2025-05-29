@@ -26,7 +26,6 @@ import {
 // Deprecated: (20250311 - Julian) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
@@ -47,6 +46,7 @@ import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
+import { IInvoiceRC2InputOrOutput, IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
@@ -135,13 +135,15 @@ const VoucherEditingPageBody: React.FC<{
     return { ...lineItem, isReverse: false, reverseList: lineItem.reverseList };
   });
 
-  const defaultCertificateUI: ICertificateUI[] = voucherCertificates.map((certificate) => {
-    return {
-      ...certificate,
-      isSelected: true,
-      actions: [],
-    };
-  });
+  const defaultCertificateUI: IInvoiceRC2InputOrOutputUI[] = voucherCertificates.map(
+    (certificate) => {
+      return {
+        ...certificate,
+        isSelected: true,
+        actions: [],
+      };
+    }
+  );
 
   const defaultAssetList: IAssetPostOutput[] = voucherAssets.map((asset) => ({
     ...asset,
@@ -215,18 +217,22 @@ const VoucherEditingPageBody: React.FC<{
   );
 
   // Info: (20241118 - Julian) 選擇憑證相關 state
-  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
-  const [bindedCertificateUI, setBindedCertificateUI] = useState<{ [id: string]: ICertificateUI }>(
+  const [certificates, setCertificates] = useState<{ [id: string]: IInvoiceRC2InputOrOutputUI }>(
+    {}
+  );
+  const [bindedCertificateUI, setBindedCertificateUI] = useState<{
+    [id: string]: IInvoiceRC2InputOrOutputUI;
+  }>(
     defaultCertificateUI.reduce(
       (acc, certificate) => {
         acc[certificate.id] = { ...certificate };
         return acc;
       },
-      {} as { [id: string]: ICertificateUI }
+      {} as { [id: string]: IInvoiceRC2InputOrOutputUI }
     )
   );
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
-    useState<ICertificateUI[]>(defaultCertificateUI);
+    useState<IInvoiceRC2InputOrOutputUI[]>(defaultCertificateUI);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -309,7 +315,7 @@ const VoucherEditingPageBody: React.FC<{
           acc[item.id] = { ...item, isSelected: false };
           return acc;
         },
-        {} as { [id: string]: ICertificateUI }
+        {} as { [id: string]: IInvoiceRC2InputOrOutputUI }
       );
 
       // Info: (20241230 - Tzuhan) 把所有 bindedCertificateUI 也先歸零
@@ -318,7 +324,7 @@ const VoucherEditingPageBody: React.FC<{
           acc[item.id] = { ...item, isSelected: false };
           return acc;
         },
-        {} as { [id: string]: ICertificateUI }
+        {} as { [id: string]: IInvoiceRC2InputOrOutputUI }
       );
 
       // Info: (20250312 - Julian) 更新選擇狀態：包含在 ids 中的 isSelected 為 true，不在 ids 中的為 false
@@ -375,7 +381,7 @@ const VoucherEditingPageBody: React.FC<{
       }
       const selectedCerts = Object.values({ ...bindedCertificateUI, ...certificates }).filter(
         (item) => item.isSelected
-      ) as ICertificateUI[];
+      ) as IInvoiceRC2InputOrOutputUI[];
 
       setSelectedCertificatesUI(selectedCerts);
     },
@@ -403,7 +409,7 @@ const VoucherEditingPageBody: React.FC<{
 
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
   const handleCertificateApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
+    (resData: IPaginatedData<IInvoiceRC2InputOrOutput[]>) => {
       const { data } = resData;
       const certificatesData = data.reduce(
         (acc, certificate) => {
@@ -414,7 +420,7 @@ const VoucherEditingPageBody: React.FC<{
           };
           return acc;
         },
-        {} as { [id: string]: ICertificateUI }
+        {} as { [id: string]: IInvoiceRC2InputOrOutputUI }
       );
       setCertificates({ ...bindedCertificateUI, ...certificatesData });
     },
@@ -790,9 +796,9 @@ const VoucherEditingPageBody: React.FC<{
 
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: IInvoiceRC2InputOrOutput = JSON.parse(data.message);
       setCertificates((prev) => {
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        const newCertificatesUI: { [id: string]: IInvoiceRC2InputOrOutputUI } = {
           [newCertificate.id]: {
             ...newCertificate,
             isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
@@ -857,7 +863,7 @@ const VoucherEditingPageBody: React.FC<{
         openUploaderModal={() => setOpenUploaderModal(true)}
         handleSelect={handleSelect}
         handleApiResponse={handleCertificateApiResponse}
-        certificates={Object.values(certificates)}
+        invoices={Object.values(certificates)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
       />

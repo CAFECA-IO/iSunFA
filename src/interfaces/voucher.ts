@@ -24,10 +24,11 @@ import type { IEventEntity } from '@/interfaces/event';
 import type { ICompanyEntity } from '@/interfaces/account_book';
 import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
-import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
+import type { ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserEntity } from '@/interfaces/user';
 import { AI_TYPE } from '@/constants/aich';
 import { CounterpartyType } from '@/constants/counterparty';
+import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
 
 export interface IVoucherMetaData {
   date: number;
@@ -146,7 +147,7 @@ export interface IVoucherDetailForFrontend {
     voucherNo: string;
   }[];
   assets: IAssetDetails[];
-  certificates: ICertificate[];
+  certificates: IInvoiceRC2InputOrOutput[];
   lineItems: (ILineItemBeta & {
     reverseList: IReverseItem[];
   })[];

@@ -3,12 +3,12 @@ import { useTranslation } from 'next-i18next';
 import { Button } from '@/components/button/button';
 import { AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import { FaPlus } from 'react-icons/fa6';
-import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import Image from 'next/image';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectionProps {
-  selectedCertificates: ICertificateUI[];
+  selectedCertificates: IInvoiceRC2InputOrOutputUI[];
   isSelectable: boolean;
   isDeletable: boolean;
   setOpenModal?: () => void;
@@ -105,7 +105,7 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
             selectedCertificates.map((certificate) => (
               <CertificateSelectorThumbnail
                 key={certificate.id}
-                certificate={certificate}
+                invoice={certificate}
                 isSelected={false}
                 isSelectable={false}
                 isDeletable={isDeletable}

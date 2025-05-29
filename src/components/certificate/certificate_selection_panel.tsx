@@ -1,10 +1,10 @@
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
 import { useEffect, useState } from 'react';
-import { IInvoiceRC2InputOrOutput } from '@/interfaces/invoice_rc2';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectionPanelProps {
-  invoices: IInvoiceRC2InputOrOutput[];
+  invoices: IInvoiceRC2InputOrOutputUI[];
   selectedIds: number[];
   handleSelect: (id: number) => void;
   openUploaderModal: () => void;
@@ -17,11 +17,11 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
   openUploaderModal,
 }: CertificateSelectionPanelProps) => {
   const [invoicesReOrdered, setCertificatesReOrdered] =
-    useState<IInvoiceRC2InputOrOutput[]>(invoices);
+    useState<IInvoiceRC2InputOrOutputUI[]>(invoices);
 
   useEffect(() => {
-    const incompleteCertificates: IInvoiceRC2InputOrOutput[] = [];
-    const readCertificates: IInvoiceRC2InputOrOutput[] = [];
+    const incompleteCertificates: IInvoiceRC2InputOrOutputUI[] = [];
+    const readCertificates: IInvoiceRC2InputOrOutputUI[] = [];
     invoices.forEach((certificate) => {
       if (certificate.incomplete) {
         incompleteCertificates.push(certificate);
