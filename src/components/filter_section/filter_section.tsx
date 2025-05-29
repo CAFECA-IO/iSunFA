@@ -351,7 +351,7 @@ const FilterSection = <T,>({
             <div className="flex flex-col items-start gap-8px">
               <DatePicker
                 label="Issue_Date"
-                type={DatePickerType.TEXT_DATE}
+                type={DatePickerType.TEXT_PERIOD}
                 period={selectedDateRange}
                 setFilteredPeriod={setSelectedDateRange}
                 btnClassName="h-46px"

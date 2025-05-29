@@ -21,7 +21,6 @@ import { ToastId } from '@/constants/toast_id';
 import { APIName } from '@/constants/api_connection';
 import Tabs from '@/components/tabs/tabs';
 import FilterSection from '@/components/filter_section/filter_section';
-import SearchInput from '@/components/filter_section/search_input';
 import SelectionToolbar, {
   ISelectionToolBarOperation,
 } from '@/components/certificate/certificate_selection_tool_bar_new';
@@ -107,7 +106,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [currency, setCurrency] = useState<CurrencyType>(CurrencyType.TWD);
   const [files, setFiles] = useState<IFileUIBeta[]>([]);
-  const [keyword, setKeyword] = useState<string>();
 
   // Info: (20250526 - Anna) 對應 uploaderNmae 和 imageId 的映射表，型別為 Record<string, string>，代表 key 和 value 都是字串
   const [uploaderAvatarMap, setUploaderAvatarMap] = useState<Record<string, string>>({});
@@ -650,47 +648,29 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
             counts={incomplete ? [incomplete.withoutVoucher, incomplete.withVoucher] : [0, 0]}
           />
 
-          {/* Info: (20250528 - Anna) Mobile Search Input */}
-          <div className="block tablet:hidden">
-            <SearchInput searchQuery={keyword} onSearchChange={setKeyword} />
-          </div>
-
           {/* Info: (20240919 - Anna) Filter Section */}
-          <div className="hidden tablet:block">
-            <FilterSection<IInvoiceRC2Output[]>
-              className="mt-2"
-              params={{ accountBookId }}
-              apiName={APIName.LIST_INVOICE_RC2_OUTPUT}
-              onApiResponse={handleApiResponse}
-              page={page}
-              pageSize={DEFAULT_PAGE_LIMIT}
-              tab={activeTab}
-              types={[
-                InvoiceType.ALL,
-                InvoiceType.OUTPUT_31,
-                InvoiceType.OUTPUT_32,
-                InvoiceType.OUTPUT_33,
-                InvoiceType.OUTPUT_34,
-                InvoiceType.OUTPUT_35,
-                InvoiceType.OUTPUT_36,
-              ]}
-              sort={selectedSort}
-              labelClassName="text-neutral-300"
-              isShowSideMenu={isShowSideMenu}
-              sideMenuVisibleHandler={toggleSideMenu}
-            />
-          </div>
-
-          {/* Todo: (20250528 - Anna) Filter Side Menu for mobile 還要把Types傳進來，等 FilterSideMenu 實作好 */}
-          {/* Todo: (20250528 - Julian) @Anna 我已經把 FilterSideMenu 和 FilterSection 合併了，我到時候在跟你確認其他細節 */}
-          {/* <FilterSideMenu<IInvoiceRC2Output[]>
+          <FilterSection<IInvoiceRC2Output[]>
+            className="mt-2"
             params={{ accountBookId }}
             apiName={APIName.LIST_INVOICE_RC2_OUTPUT}
             onApiResponse={handleApiResponse}
-            activeTab={activeTab}
-            isModalVisible={isShowSideMenu}
-            modalVisibleHandler={toggleSideMenu}
-          /> */}
+            page={page}
+            pageSize={DEFAULT_PAGE_LIMIT}
+            tab={activeTab}
+            types={[
+              InvoiceType.ALL,
+              InvoiceType.OUTPUT_31,
+              InvoiceType.OUTPUT_32,
+              InvoiceType.OUTPUT_33,
+              InvoiceType.OUTPUT_34,
+              InvoiceType.OUTPUT_35,
+              InvoiceType.OUTPUT_36,
+            ]}
+            sort={selectedSort}
+            labelClassName="text-neutral-300"
+            isShowSideMenu={isShowSideMenu}
+            sideMenuVisibleHandler={toggleSideMenu}
+          />
 
           {/* Info: (20240919 - Anna) Certificate Table */}
           {Object.values(certificates) && Object.values(certificates).length > 0 ? (
