@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { VscSettings } from 'react-icons/vsc';
 import AssetList from '@/components/asset/asset_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
@@ -16,11 +17,19 @@ import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import { ISortOption } from '@/interfaces/sort';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
+
+  // Info: (20250522 - Julian) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { accountBookId };
@@ -41,6 +50,8 @@ const AssetListPageBody: React.FC = () => {
   const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
 
   const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
+
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   useEffect(() => {
     let sort: ISortOption | undefined;
@@ -107,7 +118,7 @@ const AssetListPageBody: React.FC = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div ref={sideMenuRef} className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240925 - Julian) Asset List */}
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241024 - Julian) Filter Section */}
@@ -120,7 +131,17 @@ const AssetListPageBody: React.FC = () => {
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
           sort={selectedSort}
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
+        {/* Info: (20250529 - Julian) Filter button */}
+        <button
+          type="button"
+          onClick={toggleSideMenu}
+          className="block p-10px text-button-text-secondary tablet:hidden"
+        >
+          <VscSettings size={24} />
+        </button>
         {/* Info: (20240925 - Julian) Asset List */}
         {assetList && assetList.length > 0 ? (
           <AssetList

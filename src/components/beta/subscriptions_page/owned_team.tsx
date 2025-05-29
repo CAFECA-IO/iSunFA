@@ -94,17 +94,23 @@ const OwnedTeam = ({
   );
 
   return (
-    <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
-      <div className="w-24px flex-none bg-surface-brand-primary"></div>
+    <main className="flex flex-col overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2 tablet:flex-row">
+      <div className="hidden w-24px flex-none bg-surface-brand-primary tablet:block"></div>
+      <div className="block h-24px flex-none bg-surface-brand-primary tablet:hidden"></div>
 
-      <section className="flex flex-auto gap-40px bg-surface-brand-primary-5 p-24px">
+      <section className="flex flex-auto flex-col gap-40px bg-surface-brand-primary-5 p-24px tablet:flex-row">
         <div className="flex flex-col gap-12px">
-          <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{name}</h2>
-          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">{planName}</h1>
-          <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
+          <h2 className="text-base font-semibold text-text-brand-secondary-lv1 tablet:text-xl">
+            {name}
+          </h2>
+          <h1 className="w-200px text-28px font-bold text-text-brand-primary-lv1 tablet:text-36px">
+            {planName}
+          </h1>
+          <p className="text-sm font-medium text-text-neutral-tertiary tablet:text-lg">{price}</p>
         </div>
 
-        <div className="w-1px bg-surface-neutral-depth"></div>
+        <div className="hidden w-1px bg-surface-neutral-depth tablet:block"></div>
+        <div className="block h-1px bg-surface-neutral-depth tablet:hidden"></div>
 
         {/* Info: (20250421 - Julian) 下次續訂/到期日 */}
         {isShowExpiredDate ? (
@@ -113,7 +119,7 @@ const OwnedTeam = ({
               {/* Info: (20250421 - Julian) 已付款 */}
               {paymentStatus === TPaymentStatus.PAID &&
                 (enableAutoRenewal ? (
-                  <div className="text-2xl font-semibold text-text-neutral-tertiary">
+                  <div className="text-lg font-semibold text-text-neutral-tertiary tablet:text-2xl">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
                       {expiredTimestamp ? timestampToString(expiredTimestamp).dateWithSlash : ''}
@@ -188,7 +194,7 @@ const OwnedTeam = ({
 
           {isShowBillingButton && (
             <Link href={BILLING_PAGE}>
-              <Button type="button" className="w-full">
+              <Button type="button" className="w-full" variant="hollowYellow">
                 {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
               </Button>
             </Link>

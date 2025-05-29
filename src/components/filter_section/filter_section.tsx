@@ -63,7 +63,7 @@ interface FilterSectionProps<T> {
   labelClassName?: string; // Info: (20250416 - Anna) label的 className
 
   isShowSideMenu?: boolean; // Info: (20250528 - Julian) 側邊欄是否打開
-  sideMenuVisibleHandler?: () => void; // Info: (20250528 - Julian) 側邊欄開關
+  toggleSideMenu?: () => void; // Info: (20250528 - Julian) 側邊欄開關
 }
 
 const FilterSection = <T,>({
@@ -99,7 +99,7 @@ const FilterSection = <T,>({
   initialPage,
   labelClassName = '',
   isShowSideMenu,
-  sideMenuVisibleHandler,
+  toggleSideMenu,
 }: FilterSectionProps<T>) => {
   const { t } = useTranslation(['common']);
   const { toastHandler } = useModalContext();
@@ -135,7 +135,7 @@ const FilterSection = <T,>({
   const isShowReversedToggle = hideReversedRelated !== undefined && hideReversalsToggleHandler;
 
   // Info: (20250528 - Julian) 側邊欄樣式 => 隱藏電腦版 type / date picker
-  const isSideMenuStyle = isShowSideMenu !== undefined && sideMenuVisibleHandler;
+  const isSideMenuStyle = isShowSideMenu !== undefined && toggleSideMenu;
 
   // Info: (20241022 - tzuhan) @Murky, <...> 裡面是 CERTIFICATE_LIST_V2 API 需要的回傳資料格式
   const { trigger } = APIHandler<IPaginatedData<T>>(apiName);
@@ -281,7 +281,7 @@ const FilterSection = <T,>({
           options={statuses}
           selectedValue={selectedStatus}
           onChange={setSelectedStatus}
-          containerClassName="basis-1/5"
+          containerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
         />
       )}
 
@@ -310,7 +310,7 @@ const FilterSection = <T,>({
         <ViewToggle viewType={viewType} onViewTypeChange={viewToggleHandler} />
       )}
 
-      {/* Info: (20250528 - Julian) 手機版側邊欄 */}
+      {/* Info: (20250528 - Julian) ========== 手機版側邊欄 ========== */}
       <div
         className={`fixed inset-0 z-120 flex items-center justify-center bg-black/50 transition-all duration-300 ease-in-out tablet:hidden ${isShowSideMenu ? 'visible opacity-100' : 'invisible opacity-0'}`}
       >
@@ -320,15 +320,11 @@ const FilterSection = <T,>({
         >
           {/* Info: (20250528 - Julian) Header */}
           <div className="relative flex w-full flex-col items-center">
-            <button
-              type="button"
-              className="absolute left-0 p-10px"
-              onClick={sideMenuVisibleHandler}
-            >
+            <button type="button" className="absolute left-0 p-10px" onClick={toggleSideMenu}>
               <RxCross2 size={16} />
             </button>
             <p className="text-center text-base font-semibold text-text-neutral-secondary">
-              Filter
+              {t('common:COMMON.FILTER')}
             </p>
           </div>
 
@@ -347,11 +343,21 @@ const FilterSection = <T,>({
               />
             )}
 
+            {/* Info: (20240919 - tzuhan) 狀態篩選 */}
+            {statuses.length > 0 && (
+              <SelectFilter
+                label="Status"
+                options={statuses}
+                selectedValue={selectedStatus}
+                onChange={setSelectedStatus}
+              />
+            )}
+
             {/* Info: (20250528 - Julian) 時間區間篩選 */}
             <div className="flex flex-col items-start gap-8px">
               <DatePicker
                 label="Issue_Date"
-                type={DatePickerType.TEXT_DATE}
+                type={DatePickerType.TEXT_PERIOD}
                 period={selectedDateRange}
                 setFilteredPeriod={setSelectedDateRange}
                 btnClassName="h-46px"

@@ -49,7 +49,7 @@ const Toggle = ({
       : '';
 
   return (
-    <div onClick={toggleClickHandler} className="flex items-center gap-lv-2 tablet:gap-16px">
+    <div onClick={toggleClickHandler} className="flex w-fit items-center gap-lv-2 tablet:gap-16px">
       <div
         id={id}
         className={`${toggleBackgroundStyle} inline-flex h-26px w-46px cursor-pointer items-center rounded-full p-3px duration-300 ease-in-out hover:cursor-pointer`}

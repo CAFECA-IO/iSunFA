@@ -210,7 +210,7 @@ const SubscriptionPlan = ({
 
   return (
     <section
-      className={`relative flex w-290px flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
+      className={`relative flex w-290px shrink-0 flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px ${isShowSelected ? 'border border-stroke-brand-primary' : borderedStyle}`}
     >
       {isShowSelected && (
         <Image
