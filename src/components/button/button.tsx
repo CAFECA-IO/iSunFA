@@ -27,8 +27,10 @@ const buttonVariants = cva(
         disabledGray: 'border border-button-stroke-disable text-button-text-disable',
         disabledYellow: 'border border-button-stroke-primary text-button-text-primary',
         linkBorderless:
-          'border-none text-text-neutral-link hover:text-button-text-primary-hover  disabled:text-button-text-disable',
+          'border-none text-text-neutral-link hover:text-button-text-primary-hover disabled:text-button-text-disable',
         errorBorderless: 'border-none text-text-state-error  disabled:text-button-text-disable',
+        hollowYellow:
+          'border border-button-stroke-primary bg-button-surface-soft-primary text-button-text-primary-solid hover:bg-button-surface-soft-primary-hover',
       },
       size: {
         large: 'px-32px py-14px gap-8px', // Info: (20241106 - Liz) 設計稿 Size: Large

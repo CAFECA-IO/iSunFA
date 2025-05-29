@@ -16,16 +16,18 @@ const OwnedTeams = ({
   setTeamForCancelSubscription,
 }: UserOwnedTeamsProps) => {
   return (
-    <main className="flex flex-col gap-40px">
-      {userOwnedTeams.map((team) => (
-        <OwnedTeam
-          key={team.id}
-          team={team}
-          setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
-          setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          setTeamForCancelSubscription={setTeamForCancelSubscription}
-        />
-      ))}
+    <main className="overflow-y-auto tablet:overflow-hidden">
+      <div className="flex w-max gap-x-lv-5 gap-y-40px tablet:w-full tablet:flex-col">
+        {userOwnedTeams.map((team) => (
+          <OwnedTeam
+            key={team.id}
+            team={team}
+            setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
+            setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
+            setTeamForCancelSubscription={setTeamForCancelSubscription}
+          />
+        ))}
+      </div>
     </main>
   );
 };
