@@ -18,7 +18,7 @@ export const handleGetRequest: IHandleRequest<
   APIName.ACCOUNT_LIST,
   IPaginatedAccount | null
 > = async ({ query, session }) => {
-  const { accountBookId: companyId, teams } = session;
+  const { accountBookId, teams } = session;
   let payload: IPaginatedAccount | null = null;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const {
@@ -37,7 +37,7 @@ export const handleGetRequest: IHandleRequest<
   } = query;
 
   // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -62,7 +62,7 @@ export const handleGetRequest: IHandleRequest<
   }
 
   const accountRetriever = AccountRetrieverFactory.createRetriever({
-    companyId,
+    accountBookId,
     includeDefaultAccount,
     liquidity,
     type,

@@ -256,7 +256,7 @@ export const certificateAPIPostUtils = {
     const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
-      companyId: certificateEntity.companyId,
+      companyId: certificateEntity.accountBookId,
       incomplete: false,
       file,
       invoice,
@@ -489,7 +489,7 @@ export const certificateAPIGetListUtils = {
     const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
-      companyId: certificateEntity.companyId,
+      companyId: certificateEntity.accountBookId,
       incomplete: false,
       file,
       invoice,

@@ -61,7 +61,7 @@ export interface ICertificateEntity {
    * Info: (20241024 - Murky)
    * @description company id of company this certificate belongs to
    */
-  companyId: number;
+  accountBookId: number;
 
   /**
    * Info: (20241024 - Murky)

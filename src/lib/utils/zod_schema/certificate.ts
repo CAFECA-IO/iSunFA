@@ -52,7 +52,7 @@ export const ICertificatePartialInvoiceValidator = createCertificateValidator(tr
  */
 export const certificateEntityValidator = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   // voucherNo: z.string().nullable(),
   aiResultId: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column
   aiStatus: z.string().optional(), // Info: (20241024 - Murky) it should be nullable but db not yet created this column

@@ -79,13 +79,13 @@ export const buildVoucherBeta = (
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_LIST_V2;
   const session = await getSession(req);
-  const { userId, accountBookId: companyId } = session;
+  const { userId, accountBookId } = session;
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.VIEW_VOUCHER_LIST,
   });
 
@@ -135,7 +135,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   try {
     const typeFilter = getTypeFilter(type);
     const paginationVouchers = await getUtils.getVoucherListFromPrisma({
-      companyId,
+      accountBookId,
       page,
       pageSize,
       startDate,
@@ -283,7 +283,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
       counterPartyId: counterPartyEntity.id!,
-      companyId: company.id,
+      accountBookId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
       editable: true,

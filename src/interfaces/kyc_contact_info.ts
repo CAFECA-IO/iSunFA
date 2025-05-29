@@ -6,7 +6,7 @@ export interface IContactInfo {
   [ContactInfoKeys.CONTACT_PHONE]: string;
   [ContactInfoKeys.KEY_CONTACT_PERSON]: string;
   [ContactInfoKeys.EMAIL_ADDRESS]: string;
-  [ContactInfoKeys.ACCOUNT_BOOK_WEBSITE]: string;
+  [ContactInfoKeys.COMPANY_WEBSITE]: string;
 }
 
 export const initialContactInfo: IContactInfo = {
@@ -15,5 +15,5 @@ export const initialContactInfo: IContactInfo = {
   [ContactInfoKeys.CONTACT_NUMBER]: '',
   [ContactInfoKeys.CONTACT_PHONE]: '',
   [ContactInfoKeys.EMAIL_ADDRESS]: '',
-  [ContactInfoKeys.ACCOUNT_BOOK_WEBSITE]: '',
+  [ContactInfoKeys.COMPANY_WEBSITE]: '',
 };

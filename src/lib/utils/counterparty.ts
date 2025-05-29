@@ -2,7 +2,7 @@ import { ICounterPartyEntity } from '@/interfaces/counterparty';
 import { Counterparty as PrismaCounterParty } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
 import { CounterpartyType } from '@/constants/counterparty';
-import { ICompanyEntity } from '@/interfaces/account_book';
+import { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 
 /**
  * Info: (20241111 - Murky)
@@ -14,7 +14,7 @@ export function initCounterPartyEntity(
     name: string;
     taxId: string;
     type: CounterpartyType;
-    company?: ICompanyEntity;
+    company?: IAccountBookWithoutTeamEntity;
   }
 ): ICounterPartyEntity {
   const nowInSecond = getTimestampNow();

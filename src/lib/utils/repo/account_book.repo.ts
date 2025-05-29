@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { AccountBook, File } from '@prisma/client';
+import { AccountBook, AccountBookSetting, File } from '@prisma/client';
 import {
   TeamRole,
   LeaveStatus,
@@ -1788,4 +1788,55 @@ export async function updateCompanyById(
     },
   });
   return company;
+}
+
+export async function getAccountBookWithSettingById(accountBookId: number): Promise<
+  | (AccountBook & {
+      imageFile: File | null;
+      accountBookSettings: AccountBookSetting[];
+    })
+  | null
+> {
+  let accountBook:
+    | (AccountBook & {
+        imageFile: File | null;
+        accountBookSettings: AccountBookSetting[];
+      })
+    | null = null;
+  if (accountBookId > 0) {
+    accountBook = await prisma.accountBook.findUnique({
+      where: {
+        id: accountBookId,
+        OR: [{ deletedAt: 0 }, { deletedAt: null }],
+      },
+      include: {
+        imageFile: true,
+        accountBookSettings: true,
+      },
+    });
+  }
+  return accountBook;
+}
+
+export async function putCompanyIcon(options: { accountBookId: number; fileId: number }) {
+  const now = Date.now();
+  const nowTimestamp = timestampInSeconds(now);
+  const { accountBookId, fileId } = options;
+  const updatedAccountBook = await prisma.accountBook.update({
+    where: {
+      id: accountBookId,
+    },
+    data: {
+      imageFile: {
+        connect: {
+          id: fileId,
+        },
+      },
+      updatedAt: nowTimestamp,
+    },
+    include: {
+      imageFile: true,
+    },
+  });
+  return updatedAccountBook;
 }

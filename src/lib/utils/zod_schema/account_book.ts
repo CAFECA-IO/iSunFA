@@ -381,7 +381,7 @@ export const accountBookSearchSchema = {
   }),
 };
 
-export const accountBookEntityValidator = z.object({
+export const accountBookWithoutTeamEntityValidator = z.object({
   id: z.number(),
   userId: z.number().default(555),
   name: z.string(),

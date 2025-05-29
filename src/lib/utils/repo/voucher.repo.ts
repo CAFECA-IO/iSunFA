@@ -25,7 +25,7 @@ import {
 } from '@/interfaces/voucher';
 import { SortBy, SortOrder } from '@/constants/sort';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import type { IEventEntity } from '@/interfaces/event';
 import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';
@@ -484,7 +484,7 @@ export async function postVoucherV2({
   certificateIds,
 }: {
   nowInSecond: number;
-  company: ICompanyEntity;
+  company: IAccountBookWithoutTeamEntity;
   originalVoucher: IVoucherEntity;
   issuer: IUserEntity;
   eventControlPanel: {

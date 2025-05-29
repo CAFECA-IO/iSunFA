@@ -10,7 +10,7 @@ import {
   TaxCalculation,
   TaxReport401,
 } from '@/interfaces/report';
-import { getAccountBookKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
+import { getAccountBookKYCByCompanyId } from '@/lib/utils/repo/account_book_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
 import { listInvoiceVoucherJournalFor401 } from '@/lib/utils/repo/beta_transition.repo';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
@@ -24,7 +24,7 @@ import {
   LineItem,
   Voucher,
 } from '@prisma/client';
-import { getCompanyWithSettingById } from '@/lib/utils/repo/company.repo';
+import { getAccountBookWithSettingById } from '@/lib/utils/repo/account_book.repo';
 
 // Info: (20250516 - Shirley) 定義 CompanyAddress 介面
 interface CompanyAddress {
@@ -299,7 +299,7 @@ export default class Report401Generator extends ReportGenerator {
     to: number
   ): Promise<TaxReport401> {
     const accountBookKYC: AccountBookKYC | null = await getAccountBookKYCByCompanyId(companyId);
-    const company = await getCompanyWithSettingById(companyId);
+    const company = await getAccountBookWithSettingById(companyId);
 
     // Info: (20241217 - Murky) Get Company Setting from company in prisma
     const companySetting =

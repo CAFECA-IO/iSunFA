@@ -78,14 +78,14 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICounterPartyEntity | null = null;
 
-  const { accountBookId: companyId } = query;
+  const { accountBookId } = query;
   const { name, taxId, type, note } = body;
 
   // Info: (20250416 - Shirley) 添加團隊權限檢查
   const { teams } = await getSession(req);
 
   // Info: (20250416 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -109,8 +109,8 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  const originClientByName = await getCounterpartyByName({ name, companyId });
-  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, companyId });
+  const originClientByName = await getCounterpartyByName({ name, accountBookId });
+  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, accountBookId });
 
   if (originClientByName) {
     statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_NAME;
@@ -119,7 +119,7 @@ const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty>
     statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_TAX_ID;
     payload = parsePrismaCounterPartyToCounterPartyEntity(originClientByTaxId);
   } else {
-    const newClient = await createCounterparty(companyId, name, taxId, type, note);
+    const newClient = await createCounterparty(accountBookId, name, taxId, type, note);
     if (newClient) {
       statusMessage = STATUS_MESSAGE.CREATED;
       payload = parsePrismaCounterPartyToCounterPartyEntity(newClient);

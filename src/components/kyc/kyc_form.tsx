@@ -19,10 +19,10 @@ import {
   ContactInfoKeys,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { IAccountBookKYCForm } from '@/interfaces/company_kyc';
+import { IAccountBookKYCForm } from '@/interfaces/account_book_kyc';
 import { MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
-import { isKYCFormComplete } from '@/lib/utils/type_guard/company_kyc';
+import { isKYCFormComplete } from '@/lib/utils/type_guard/account_book_kyc';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useRouter } from 'next/router';
 

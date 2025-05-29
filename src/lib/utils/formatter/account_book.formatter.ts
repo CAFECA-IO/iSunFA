@@ -2,7 +2,7 @@ import { IAccountBookWithoutTeamEntity, WORK_TAG } from '@/interfaces/account_bo
 import { AccountBook, File, AccountBook as PrismaAccountBook } from '@prisma/client';
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import {
-  accountBookEntityValidator,
+  accountBookWithoutTeamEntityValidator,
   IAccountBookEntity,
 } from '@/lib/utils/zod_schema/account_book';
 
@@ -45,7 +45,7 @@ export function formatAccountBook(
 export function parsePrismaAccountBookToAccountBookEntity(
   dto: PrismaAccountBook
 ): IAccountBookWithoutTeamEntity {
-  const { data, success, error } = accountBookEntityValidator.safeParse(dto);
+  const { data, success, error } = accountBookWithoutTeamEntityValidator.safeParse(dto);
 
   if (!success) {
     throw new FormatterError('AccountBookEntity format prisma data error', {

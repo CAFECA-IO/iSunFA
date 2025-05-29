@@ -79,7 +79,7 @@ export const voucherEntityValidator = z.object({
   id: z.number(),
   issuerId: z.number(),
   counterPartyId: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   status: z.nativeEnum(JOURNAL_EVENT),
   editable: z.boolean(),
   no: z.string(),
@@ -511,7 +511,7 @@ const voucherGetOneOutputValidatorV2 = z
       type: data.type,
       note: data.note ?? '',
       counterParty: {
-        companyId: data.companyId,
+        companyId: data.accountBookId,
         name: data.counterParty.name,
         taxId: data.counterParty.taxId,
       },
@@ -552,7 +552,7 @@ const voucherGetOneOutputValidatorV2 = z
         const certificateInstance = {
           id: certificate.id,
           name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
-          companyId: certificate.companyId,
+          companyId: certificate.accountBookId,
           voucherNo: data.no,
           voucherId: data.id ?? null,
           uploaderUrl: data.issuer.imageFile?.url || '',

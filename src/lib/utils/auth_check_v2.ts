@@ -108,8 +108,8 @@ export const authFunctionsNew: AuthFunctionsNew = {
   admin: checkUserAdmin,
   owner: checkUserCompanyOwner,
   superAdmin: checkUserCompanySuperAdmin,
-  CompanyAdminMatch: checkCompanyAdminMatch,
-  projectCompanyMatch: checkProjectCompanyMatch,
+  AccountBookAdminMatch: checkCompanyAdminMatch,
+  projectAccountBookMatch: checkProjectCompanyMatch,
 };
 
 export async function checkAuthorizationNew<T extends APIName>(

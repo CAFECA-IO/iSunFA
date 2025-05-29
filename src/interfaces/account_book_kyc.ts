@@ -40,11 +40,11 @@ export interface IAccountBookKYC {
 }
 
 export interface IAccountBookKYCForm {
-  [BasicInfoKeys.LEGAL_ACCOUNT_BOOK_NAME]: string;
+  [BasicInfoKeys.LEGAL_COMPANY_NAME]: string;
   [BasicInfoKeys.CITY]: string;
   [BasicInfoKeys.ZIP_CODE]: string;
   [BasicInfoKeys.ADDRESS]: string;
-  [BasicInfoKeys.KEY_ACCOUNT_BOOK_REPRESENTATIVES_NAME]: string;
+  [BasicInfoKeys.KEY_COMPANY_REPRESENTATIVES_NAME]: string;
   [RegistrationInfoKeys.COUNTRY]: CountryOptions;
   [RegistrationInfoKeys.LEGAL_STRUCTURE]: LegalStructureOptions;
   [RegistrationInfoKeys.BUSINESS_REGISTRATION_NUMBER]: string;
@@ -53,7 +53,7 @@ export interface IAccountBookKYCForm {
   [ContactInfoKeys.KEY_CONTACT_PERSON]: string;
   [ContactInfoKeys.CONTACT_PHONE]: string;
   [ContactInfoKeys.EMAIL_ADDRESS]: string;
-  [ContactInfoKeys.ACCOUNT_BOOK_WEBSITE]: string; // Info: (20240719 - Tzuhan) To Jacky, this field is optional
+  [ContactInfoKeys.COMPANY_WEBSITE]: string; // Info: (20240719 - Tzuhan) To Jacky, this field is optional
   [UploadDocumentKeys.REPRESENTATIVE_ID_TYPE]: RepresentativeIDType;
   [UploadDocumentKeys.BUSINESS_REGISTRATION_CERTIFICATE_ID]: number;
   [UploadDocumentKeys.TAX_STATUS_CERTIFICATE_ID]: number;

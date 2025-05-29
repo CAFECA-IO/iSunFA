@@ -79,7 +79,7 @@ export const accountAPIPostUtils = {
     const { companyId, parentAccount, nowInSecond, newCode, newName, note } = options;
     const newOwnAccount = {
       nowInSecond,
-      companyId,
+      accountBookId: companyId,
       system: parentAccount.system,
       type: parentAccount.type,
       debit: parentAccount.debit,

@@ -7,7 +7,7 @@ import {
   TaxCalculation,
   TaxReport401,
 } from '@/interfaces/report';
-import { getAccountBookKYCByCompanyId } from '@/lib/utils/repo/company_kyc.repo';
+import { getAccountBookKYCByCompanyId } from '@/lib/utils/repo/account_book_kyc.repo';
 import { convertTimestampToROCDate } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';

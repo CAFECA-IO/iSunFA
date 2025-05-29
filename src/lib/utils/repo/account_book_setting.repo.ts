@@ -6,8 +6,6 @@ import { DefaultValue } from '@/constants/default_value';
 import { LeaveStatus } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { Prisma } from '@prisma/client';
-import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
-import { AccountBook, AccountBookSetting } from '@prisma/client';
 
 export async function createCompanySetting(accountBookId: number) {
   const nowInSecond = getTimestampNow();

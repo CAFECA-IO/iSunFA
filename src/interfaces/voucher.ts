@@ -365,7 +365,7 @@ export interface IVoucherEntity {
    * Info: (20241022 - Murky)
    * @description  Which company this voucher be created
    */
-  companyId: number;
+  accountBookId: number;
 
   /**
    * Info: (20241022 - Murky)
