@@ -14,17 +14,22 @@ import { getSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { createAccountBook, listAccountBookByUserId } from '@/lib/utils/repo/account_book.repo';
-import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
+import {
+  createAccountBook,
+  listAccountBookByUserId,
+  listSimpleAccountBookByUserId,
+} from '@/lib/utils/repo/account_book.repo';
+import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
+import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId, teams } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IAccountBookWithTeam[]> | null = null;
+  let payload: IPaginatedData<IAccountBookEntity[] | IAccountBookWithTeam[]> | null = null;
 
   await checkSessionUser(session, APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req);
   await checkUserAuthorization(APIName.LIST_ACCOUNT_BOOK_BY_USER_ID, req, session);
@@ -35,6 +40,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
+
+  const { simple } = query;
 
   let hasAnyTeamViewPermission = false;
 
@@ -65,13 +72,25 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const options: IPaginatedOptions<IAccountBookWithTeam[]> = await listAccountBookByUserId(
-    userId,
-    query
-  );
+
+  let options: IPaginatedOptions<IAccountBookEntity[] | IAccountBookWithTeam[]> | null = null;
+
+  if (simple) {
+    options = await listSimpleAccountBookByUserId(userId, query);
+    loggerBack.info(
+      `List simple account book by userId: ${userId} with query: ${JSON.stringify(query)}, options: ${JSON.stringify(options)}`
+    );
+  } else {
+    options = await listAccountBookByUserId(userId, query);
+  }
+
+  // Info: (20250515 - Shirley) 根據 simple 參數選擇不同的 API 名稱來驗證輸出數據
+  const apiNameForValidation = simple
+    ? APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID
+    : APIName.LIST_ACCOUNT_BOOK_BY_USER_ID;
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_ACCOUNT_BOOK_BY_USER_ID,
+    apiNameForValidation,
     toPaginatedData(options)
   );
 
@@ -80,7 +99,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   } else {
     payload = outputData;
     loggerBack.info(
-      `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId}`
+      `Successfully retrieved ${payload?.data?.length || 0} account books for user ${userId} with format: ${simple ? 'simple' : 'detailed'}`
     );
   }
 
@@ -92,7 +111,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
   const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IAccountBook | null = null;
+  let payload: IAccountBookEntity | null = null;
   await checkSessionUser(session, APIName.CREATE_ACCOUNT_BOOK, req);
   await checkUserAuthorization(APIName.CREATE_ACCOUNT_BOOK, req, session);
 
@@ -109,7 +128,56 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   statusMessage = STATUS_MESSAGE.SUCCESS;
-  const accountBook = await createAccountBook(userId, body);
+
+  // Info: (20250516 - Shirley) 從請求體中提取所有必要欄位
+  const {
+    name,
+    taxId,
+    tag,
+    teamId,
+    fileId: fileIdFromBody,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  } = body;
+
+  // Info: (20250516 - Shirley) 將所有欄位傳遞給 createAccountBook 函數
+  const accountBook = await createAccountBook(userId, {
+    name,
+    taxId,
+    tag,
+    teamId,
+    fileId: fileIdFromBody,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+    filingFrequency,
+    filingMethod,
+    declarantFilingMethod,
+    declarantName,
+    declarantPersonalId,
+    declarantPhoneNumber,
+    agentFilingRole,
+    licenseId,
+  });
+
+  loggerBack.info(`Created accountBook: ${JSON.stringify(accountBook)}`);
 
   const { isOutputDataValid, outputData } = validateOutputData(
     APIName.CREATE_ACCOUNT_BOOK,
@@ -154,6 +222,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     const err = error as Error;
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
+    loggerBack.error(`Error in ${apiName}: ${err.message}`);
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
   await logUserAction(session, apiName, req, statusMessage);

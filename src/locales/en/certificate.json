@@ -24,7 +24,9 @@
     "DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
     "DEDUCTIBLE_FIXED_ASSETS": "Fixed assets",
     "NON_DEDUCTIBLE_PURCHASE_AND_EXPENSE": "Purchase and expense",
-    "NON_DEDUCTIBLE_FIXED_ASSETS": "Fixed assets"
+    "NON_DEDUCTIBLE_FIXED_ASSETS": "Fixed assets",
+    "AFTER_TAX": "After-Tax",
+    "PRE_TAX": "Pre-Tax"
   },
   "PAUSE": {
     "TITLE": "Do you want to cancel uploading?",
@@ -101,13 +103,20 @@
     "NON_DEDUCTIBLE_FIXED_ASSETS": "Non - Deductible Fixed assets",
     "CERTIFICATE_BY_CUSTOMS": "Certificate of payment for business tax collected by Customs No.",
     "CHARACTERS": "14 characters",
+    "CHARACTERS_8": "8 characters",
     "ENTER_ONE_INVOICE": "Enter one invoice No as a reference",
     "REPRESENTATIVE_INVOICE": "Representative Invoice No.",
     "TOTAL_OF_SUMMARIZED_INVOICES": "Total of Summarized Invoices",
     "COPIES": "Copies",
     "ALLOWANCE_ISSUE_DATE": "(Allowance) Issue Date",
     "DUPLICATE_INVOICE_TAX": "Tax = 0 if using Duplicate invoice",
-    "OTHER_CERTIFICATE_NO": "Other Certificate No. *",
+    "SALES_AMOUNT_UNDER_10": "Tax = 0 if sales amount is under 10",
+    "OTHER_CERTIFICATE_NO": "Other Certificate No.",
+    "CARRIER_SERIAL_NO": "Carrier Serial No.",
+    "CERTIFICATE_NO": "Certificate No.",
+    "CERTIFICATE_AMOUNT": "Certificate Amount",
+    "TOTAL_OF_SALES_AMOUNT": "Total of Sales Amount",
+    "SALES_AMOUNT": "Sales Amount",
     "ELECTRONIC_INVOICE_INFO": "Electronic invoice information",
     "INVOICE_DATE": "Issue Date",
     "SELLER": "Seller",
@@ -117,7 +126,9 @@
     "SKIP_IF_TRIPLICATE_CASH_REGISTER": "Skip if using triplicate cash register invoice",
     "INVOICE_PERIOD": "Year {{year}}, {{startMonth}} - {{endMonth}}",
     "INPUT_INVOICE": "Input Invoice",
-    "OUTPUT_INVOICE": "Output Invoice"
+    "OUTPUT_INVOICE": "Output Invoice",
+    "DESCRIPTION_PLACEHOLDER": "A short description about this certificate",
+    "DESCRIPTION": "Description"
   },
   "TYPE": {
     "TRIPLICATE": "Triplicate",
@@ -155,7 +166,10 @@
     "REMOVE_THIS": "Remove this Client/Supplier",
     "NO_DATA_AVAILABLE": "No Data Available",
     "NAME_ALREADY_EXISTS": "Data already exists for this name.",
-    "TAX_ID_ALREADY_EXISTS": "This Business Tax has already been used."
+    "TAX_ID_ALREADY_EXISTS": "This Business Tax has already been used.",
+    "COUNTERPARTY_SUCCESSFULLY_CHANGED": "Client/Supplier information successfully changed.",
+    "REMOVE_COUNTERPARTY": "Remove Client/Supplier",
+    "CHECK_REMOVE_COUNTERPARTY": "Are you sure you want to Remove <strong>{{counterparty}}</strong> from your Client/Supplier list?"
   },
   "LABEL": {
     "NEW": "New"

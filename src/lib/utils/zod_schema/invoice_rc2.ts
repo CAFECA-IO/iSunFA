@@ -20,6 +20,15 @@ const InvoiceRC2BaseSchema = z.object({
     name: z.string(),
     size: z.number().describe('Bytes of file'),
     url: z.string(),
+    thumbnail: z
+      .object({
+        id: z.number(),
+        name: z.string(),
+        size: z.number().describe('Bytes of thumbnail file'),
+        url: z.string(),
+      })
+      .nullable()
+      .optional(),
   }),
   uploaderId: z.number(),
   direction: z.nativeEnum(InvoiceDirection),

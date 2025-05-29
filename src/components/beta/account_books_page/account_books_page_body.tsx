@@ -112,7 +112,7 @@ const AccountBooksPageBody = () => {
             onApiResponse={handleApiResponse}
             page={currentPage}
             pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
-            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
+            sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
           />
         )}
 

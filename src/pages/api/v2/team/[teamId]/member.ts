@@ -70,11 +70,11 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IInviteMemberResponse | null = null;
 
-  await checkSessionUser(session, APIName.ADD_MEMBER_TO_TEAM, req);
-  await checkUserAuthorization(APIName.ADD_MEMBER_TO_TEAM, req, session);
+  await checkSessionUser(session, APIName.INVITE_MEMBER_TO_TEAM, req);
+  await checkUserAuthorization(APIName.INVITE_MEMBER_TO_TEAM, req, session);
 
   // Info: (20250226 - Tzuhan) 驗證請求資料
-  const { query, body } = checkRequestData(APIName.ADD_MEMBER_TO_TEAM, req, session);
+  const { query, body } = checkRequestData(APIName.INVITE_MEMBER_TO_TEAM, req, session);
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
@@ -125,7 +125,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
   // Info: (20250226 - Tzuhan) 驗證輸出資料
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.ADD_MEMBER_TO_TEAM,
+    APIName.INVITE_MEMBER_TO_TEAM,
     addedResult
   );
 
@@ -156,7 +156,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ({ httpCode, result } = response);
         break;
       case HttpMethod.PUT:
-        apiName = APIName.ADD_MEMBER_TO_TEAM;
+        apiName = APIName.INVITE_MEMBER_TO_TEAM;
         ({ response, statusMessage } = await handlePutRequest(req));
         ({ httpCode, result } = response);
         break;

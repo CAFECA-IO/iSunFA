@@ -27,6 +27,8 @@ interface OutputInvoiceTableProps {
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  isExporting: boolean;
+  uploaderAvatarMap: Record<string, string>;
 }
 
 const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
@@ -48,6 +50,8 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   setVoucherSort,
   setCertificateNoSort,
   setCertificateTypeSort,
+  isExporting,
+  uploaderAvatarMap,
 }) => {
   const { t } = useTranslation('certificate');
   const displayedIssuedDate = SortingButton({
@@ -114,8 +118,8 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
 
   return (
     // Info: (20241210 - Anna) 隱藏 scrollbar
-    <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
-      <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
+    <div className="hide-scrollbar min-h-500px w-full flex-auto overflow-hidden overflow-x-auto rounded-md">
+      <div className="table w-full min-w-900px rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
         <div className="table-header-group w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
           <div className="table-row h-60px w-full">
             {activeSelection && (
@@ -128,27 +132,27 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedIssuedDate}
+            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {isExporting ? t('certificate:TABLE.DATE') : displayedIssuedDate}
             </div>
-            <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-left align-middle">
-              {displayedCertificateNo}
+            <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedCertificateNo}
             </div>
-            <div className="col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedCertificateType}
+            <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedCertificateType}
             </div>
 
-            <div className="table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {t('certificate:TABLE.TAX')}
+            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {t('certificate:EDIT.TAX_TYPE')}
             </div>
-            <div className="col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div className="download-pb-4 col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {t('certificate:EDIT.BUYER')}
             </div>
-            <div className="table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              {displayedAmount}
+            <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+              {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              <div>{t('certificate:TABLE.UPLOADER')}</div>
+              <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
@@ -164,6 +168,7 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
               certificate={certificate}
               key={`certificate-item-${index + 1}`}
               onEdit={onEdit}
+              uploaderAvatarMap={uploaderAvatarMap}
             />
           ))}
         </div>

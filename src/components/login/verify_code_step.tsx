@@ -32,14 +32,14 @@ const VerifyCodeStep = ({
   const { t } = useTranslation('dashboard');
 
   return (
-    <div className="z-10 flex w-480px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-40px shadow-Dropshadow_XS">
+    <div className="z-10 flex w-280px flex-col gap-40px rounded-md bg-surface-neutral-main-background p-24px shadow-Dropshadow_XS tablet:w-480px tablet:p-40px">
       <div className="flex items-center justify-center gap-10px">
         <Image src="/logo/isunfa_logo_new_icon.svg" alt="logo" width={38.371} height={33.997} />
         <Image src="/logo/isunfa_text_logo.svg" alt="logo" width={74.769} height={18.506} />
       </div>
 
       <section className="flex flex-col gap-24px">
-        <h1 className="text-start text-4xl font-bold leading-44px text-text-brand-secondary-lv2">
+        <h1 className="text-center text-28px font-bold leading-44px text-text-brand-secondary-lv2 tablet:text-start tablet:text-4xl">
           {t('dashboard:LOGIN.ENTER_THE_CODE')}
         </h1>
 

@@ -103,7 +103,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
           {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 
           {/* Info: (20241018 - Liz) Content Body */}
-          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
+          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden px-lv-4 py-lv-5">
             {children}
           </main>
         </div>

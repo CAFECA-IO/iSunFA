@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import { Dispatch, SetStateAction, useRef, useState } from 'react';
 import Image from 'next/image';
 import { IAccountBookWithTeam, CANCEL_ACCOUNT_BOOK_ID } from '@/interfaces/account_book';
 import { FiTag, FiTrash2, FiMoreVertical } from 'react-icons/fi';
@@ -7,7 +7,7 @@ import { PiShareFatBold } from 'react-icons/pi';
 import CompanyTag from '@/components/beta/account_books_page/company_tag';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
-import useOuterClick from '@/lib/hooks/use_outer_click';
+import useClickOutside from '@/lib/hooks/use_click_outside';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { APIName } from '@/constants/api_connection';
@@ -22,6 +22,8 @@ interface AccountBookItemProps {
   setAccountBookToChangeTag: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setAccountBookToDelete: Dispatch<SetStateAction<IAccountBookWithTeam | undefined>>;
   setRefreshKey?: React.Dispatch<React.SetStateAction<number>>;
+  openDropdownId: string | null; // Info: (20250407 - Liz) 用來控制 OptionsDropdown 的開關 id
+  setOpenDropdownId: Dispatch<SetStateAction<string | null>>;
 }
 
 const AccountBookItem = ({
@@ -31,6 +33,8 @@ const AccountBookItem = ({
   setAccountBookToChangeTag,
   setAccountBookToDelete,
   setRefreshKey,
+  openDropdownId,
+  setOpenDropdownId,
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectAccountBook, connectedAccountBook, disconnectAccountBook } = useUserCtx();
@@ -38,17 +42,23 @@ const AccountBookItem = ({
   const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
   const teamRole = accountBook.team.role;
 
+  const optionsDropdownRef = useRef<HTMLDivElement>(null);
+  const thisDropdownId = `${accountBook.id}`; // Info: (20250527 - Liz) 用帳本 ID 作為 OptionsDropdown 的 id，以便區分不同帳本的選單
+  const isOptionsDropdownOpen = openDropdownId === thisDropdownId; // Info: (20250527 - Liz) 用來判斷 OptionsDropdown 是否開啟
+
+  // Info: (20250527 - Liz) 使用外部點擊來關閉 OptionsDropdown (只有在開啟時綁定)
+  useClickOutside(optionsDropdownRef, () => {
+    if (isOptionsDropdownOpen) {
+      setOpenDropdownId(null);
+    }
+  });
+
   // Info: (20250326 - Liz) 取消轉移帳本 API
   const { trigger: cancelTransferAPI } = APIHandler<ITransferAccountBook>(
     APIName.CANCEL_TRANSFER_ACCOUNT_BOOK
   );
 
-  const {
-    targetRef: optionsDropdownRef,
-    componentVisible: isOptionsDropdownOpen,
-    setComponentVisible: setIsOptionsDropdownOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
+  // Info: (20250527 - Liz) 判斷使用者是否有權限進行各種操作
   const deletePermission = convertTeamRoleCanDo({
     teamRole,
     canDo: TeamPermissionAction.DELETE_ACCOUNT_BOOK,
@@ -74,6 +84,7 @@ const AccountBookItem = ({
     canDo: TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
   });
 
+  // Info: (20250527 - Liz) 判斷是否有權限顯示 OptionsDropdown
   const hasPermission =
     deletePermission.can ||
     editTagPermission.can ||
@@ -81,45 +92,40 @@ const AccountBookItem = ({
     editPermission.can;
 
   const toggleOptionsDropdown = (e: React.MouseEvent<HTMLButtonElement>) => {
-    setIsOptionsDropdownOpen((prev) => !prev);
     e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
+    setOpenDropdownId(isOptionsDropdownOpen ? null : thisDropdownId); // Info: (20250527 - Liz) 切換 OptionsDropdown 的開關狀態
   };
-
-  const closeOptionsDropdown = () => {
-    setIsOptionsDropdownOpen(false);
-  };
+  const closeOptionsDropdown = () => setOpenDropdownId(null);
 
   // Info: (20250428 - Liz) 開啟編輯帳本 modal
   const openEditAccountBookModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
     setAccountBookToEdit(accountBook);
     closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
   const openAccountBookTransferModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
     setAccountBookToTransfer(accountBook);
     closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
   const openChangeTagModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
     setAccountBookToChangeTag(accountBook);
     closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
   const openDeleteCompanyModal = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
     setAccountBookToDelete(accountBook);
     closeOptionsDropdown();
-    e.stopPropagation(); // Info: (20250407 - Liz) 避免點擊選單時觸發父元素的點擊事件
   };
 
   // Info: (20250422 - Liz) 打 API 取消連結帳本
   const handleDisconnect = async () => {
     if (isLoading) return;
-
     setIsLoading(true);
-
     try {
       const { success } = await disconnectAccountBook(accountBook.id);
 
@@ -140,11 +146,8 @@ const AccountBookItem = ({
   // Info: (20241113 - Liz) 打 API 連結帳本 (原為公司)
   const handleConnect = async () => {
     if (isLoading) return;
-
     setIsLoading(true);
-
     const accountBookId = isAccountBookConnected ? CANCEL_ACCOUNT_BOOK_ID : accountBook.id;
-
     try {
       // Info: (20250422 - Liz) 如果選擇的帳本已經是連結的帳本，則取消連結
       if (accountBook.id === connectedAccountBook?.id) {
@@ -248,7 +251,7 @@ const AccountBookItem = ({
           </section>
         )}
 
-        {/* Info: (20250407 - Liz) Edit Account Book */}
+        {/* Info: (20250407 - Liz) OptionsDropdown */}
         {hasPermission && (
           <div ref={optionsDropdownRef} className="relative">
             <button type="button" onClick={toggleOptionsDropdown} className="p-8px">
@@ -257,8 +260,8 @@ const AccountBookItem = ({
 
             {isOptionsDropdownOpen && (
               <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
-                {/* Info: (20250428 - Liz) Edit Account Book */}
-                {requestTransferPermission.can && (
+                {/* Info: (20250428 - Liz) 編輯帳本 */}
+                {editPermission.can && (
                   <button
                     type="button"
                     onClick={openEditAccountBookModal}
@@ -269,7 +272,7 @@ const AccountBookItem = ({
                   </button>
                 )}
 
-                {/* Info: (20250213 - Liz) Account Book Transfer */}
+                {/* Info: (20250213 - Liz) 轉移帳本 */}
                 {requestTransferPermission.can && (
                   <button
                     type="button"
@@ -283,7 +286,7 @@ const AccountBookItem = ({
                   </button>
                 )}
 
-                {/* Info: (20250213 - Liz) Change Tag */}
+                {/* Info: (20250213 - Liz) 變更工作標籤 */}
                 {editTagPermission.can && (
                   <button
                     type="button"
@@ -295,7 +298,7 @@ const AccountBookItem = ({
                   </button>
                 )}
 
-                {/* Info: (20250213 - Liz) Delete */}
+                {/* Info: (20250213 - Liz) 刪除帳本 */}
                 {deletePermission.can && (
                   <button
                     type="button"

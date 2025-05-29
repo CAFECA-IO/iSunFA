@@ -33,7 +33,7 @@ const BalanceSheetPage = () => {
       </Head>
       <Layout isDashboard={false} pageTitle={t('reports:REPORTS.BALANCE_SHEET')}>
         {/* Info: (20241017 - Anna) 拿掉w-screen */}
-        <main className="flex flex-col overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
+        <main className="hide-scrollbar flex flex-col overflow-x-auto overflow-y-auto bg-surface-neutral-main-background font-barlow transition-all duration-300 ease-in-out">
           <BalanceSheetPageBody />
         </main>
       </Layout>

@@ -126,7 +126,7 @@ import {
   listAccountBooksByTeamIdSchema,
   deleteAccountBookSchema,
   disconnectAccountBookSchema,
-  listAccountBookInfoSchema,
+  accountBookListSimpleSchema,
 } from '@/lib/utils/zod_schema/account_book';
 import {
   createInvoiceRC2Input,
@@ -141,6 +141,11 @@ import {
   updateInvoiceRC2Output,
 } from '@/lib/utils/zod_schema/invoice_rc2';
 import { publicKeyGetSchema } from '@/lib/utils/zod_schema/public_key';
+import {
+  getNotificationByIdSchema,
+  listNotificationByUserIdSchema,
+  readNotificationSchema,
+} from '@/lib/utils/zod_schema/notification';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -291,7 +296,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.DELETE_MEMBER]: teamSchemas.deleteMember,
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: listAccountBooksByTeamIdSchema,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
-  [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.INVITE_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.ACCEPT_TEAM_INVITATION]: teamSchemas.acceptInvitation,
+  [APIName.DECLINE_TEAM_INVITATION]: teamSchemas.declineInvitation,
   [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: teamSchemas.requestTransferAccountBook,
   [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: teamSchemas.cancelTransferAccountBook,
   [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: teamSchemas.acceptTransferAccountBook,
@@ -309,13 +316,14 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_PAYMENT_PLAN]: paymentPlanListSchema,
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSchema,
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: accountBookListSimpleSchema,
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: connectAccountBookSchema,
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: getAccountBookInfoSchema,
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: getAccountBookInfoSchema,
   [APIName.PUT_TEAM_ICON]: teamSchemas.putIcon,
   [APIName.UPDATE_ACCOUNT_BOOK]: updateAccountBookSchema,
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: updateAccountBookInfoSchema,
   [APIName.DISCONNECT_ACCOUNT_BOOK]: disconnectAccountBookSchema,
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: listAccountBookInfoSchema,
   [APIName.ACCOUNT_BOOK_PUT_ICON]: accountBookPutIconSchema,
 
   [APIName.USER_PAYMENT_METHOD_LIST]: nullAPISchema,
@@ -325,4 +333,8 @@ export const ZOD_SCHEMA_API = {
 
   [APIName.SEND_VERIFICATION_EMAIL]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for send verification email
   [APIName.VERIFY_CODE]: nullAPISchema, // ToDo: (20250509 - Liz) need to define the schema for verify code
+
+  [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
+  [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
+  [APIName.READ_NOTIFICATION]: readNotificationSchema,
 };

@@ -13,10 +13,11 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
-import loggerBack from '@/lib/utils/logger_back';
 import { getPusherInstance } from '@/lib/utils/pusher';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { checkStorageLimit } from '@/lib/utils/plan/check_plan_limit';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -47,7 +48,9 @@ export const createOrderByList = (
 };
 
 type InvoiceRC2WithFullRelations = InvoiceRC2 & {
-  file: File;
+  file: File & {
+    thumbnail?: File | null;
+  };
   uploader: { id: number; name: string };
   voucher: { id: number; no: string } | null;
 };
@@ -93,12 +96,22 @@ export function isInvoiceRC2Complete(cert: InvoiceRC2Type): boolean {
 }
 
 function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof InvoiceRC2InputSchema> {
+  const fileWithThumbnail = {
+    ...cert.file,
+    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    ...(cert.file.thumbnail && {
+      thumbnail: {
+        id: cert.file.thumbnail.id,
+        name: cert.file.thumbnail.name,
+        size: cert.file.thumbnail.size,
+        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+      },
+    }),
+  };
+
   const invoiceRC2Input = InvoiceRC2InputSchema.parse({
     ...cert,
-    file: {
-      ...cert.file,
-      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
-    },
+    file: fileWithThumbnail,
     taxRate: cert.taxRate ?? null,
     deductionType: cert.deductionType ?? null,
     salesName: cert.salesName ?? '',
@@ -115,7 +128,6 @@ function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof Invoi
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`InvoiceRC2Input.file: ${JSON.stringify(invoiceRC2Input.file)}`);
   invoiceRC2Input.incomplete = !isInvoiceRC2Complete(invoiceRC2Input);
   return invoiceRC2Input;
 }
@@ -123,12 +135,22 @@ function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof Invoi
 function transformOutput(
   cert: InvoiceRC2WithFullRelations
 ): z.infer<typeof InvoiceRC2OutputSchema> {
+  const fileWithThumbnail = {
+    ...cert.file,
+    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    ...(cert.file.thumbnail && {
+      thumbnail: {
+        id: cert.file.thumbnail.id,
+        name: cert.file.thumbnail.name,
+        size: cert.file.thumbnail.size,
+        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+      },
+    }),
+  };
+
   const invoiceRC2Output = InvoiceRC2OutputSchema.parse({
     ...cert,
-    file: {
-      ...cert.file,
-      url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
-    },
+    file: fileWithThumbnail,
     taxRate: cert?.taxRate ?? null,
     buyerName: cert?.buyerName ?? '',
     buyerIdNumber: cert?.buyerIdNumber ?? '',
@@ -144,7 +166,6 @@ function transformOutput(
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
   });
-  loggerBack.info(`InvoiceRC2Output.file: ${JSON.stringify(invoiceRC2Output.file)}`);
   invoiceRC2Output.incomplete = !isInvoiceRC2Complete(invoiceRC2Output);
   return invoiceRC2Output;
 }
@@ -162,7 +183,15 @@ export async function findInvoiceRC2ById(data: {
   });
   const cert = await prisma.invoiceRC2.findUnique({
     where: { id: invoiceId, deletedAt: null },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   if (!cert) return null;
   return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
@@ -222,7 +251,15 @@ export async function listInvoiceRC2Input(
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: createOrderByList(sortOption || []),
-      include: { file: true, voucher: true, uploader: true },
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
     }),
   ]);
 
@@ -305,7 +342,15 @@ export async function listInvoiceRC2Output(
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: createOrderByList(sortOption || []),
-      include: { file: true, voucher: true, uploader: true },
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
     }),
   ]);
 
@@ -339,12 +384,25 @@ export async function createInvoiceRC2(
   query: z.infer<typeof createInvoiceRC2QuerySchema>,
   body: z.infer<typeof createInvoiceRC2BodySchema>
 ) {
-  await assertUserCanByAccountBook({
+  const can = await assertUserCanByAccountBook({
     userId,
     accountBookId: query.accountBookId,
     action: TeamPermissionAction.CREATE_CERTIFICATE,
   });
+
+  const file = await prisma.file.findUnique({
+    where: { id: body.fileId },
+  });
+  if (!file) {
+    const error = new Error(STATUS_MESSAGE.FILE_NOT_FOUND);
+    error.name = STATUS_CODE.LIMIT_EXCEEDED_STORAGE;
+    throw error;
+  }
+
+  await checkStorageLimit(can.teamId, file?.size ?? 0);
+
   const now = getTimestampNow();
+
   const cert = await prisma.invoiceRC2.create({
     data: {
       ...body,
@@ -353,7 +411,15 @@ export async function createInvoiceRC2(
       createdAt: now,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   const invoice =
     body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
@@ -381,15 +447,37 @@ export async function updateInvoiceRC2Input(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
+  const certForCheck: InvoiceRC2Type = {
+    ...rest,
+    direction: InvoiceDirection.INPUT,
+    uploaderId: userId,
+    uploaderName: uploaderName ?? '',
+    voucherId: rest.voucherId ?? null,
+    voucherNo: voucherNo ?? null,
+    file,
+    note: rest.note ?? {},
+  } as InvoiceRC2InputType;
+
+  const incomplete = !isInvoiceRC2Complete(certForCheck);
+
   const updated = await prisma.invoiceRC2.update({
     where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaInvoiceType,
+      incomplete,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   return transformInput(updated);
 }
@@ -408,15 +496,37 @@ export async function updateInvoiceRC2Output(
   const now = getTimestampNow();
   const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
 
+  const certForCheck: InvoiceRC2Type = {
+    ...rest,
+    direction: InvoiceDirection.OUTPUT,
+    uploaderId: userId,
+    uploaderName: uploaderName ?? '',
+    voucherId: rest.voucherId ?? null,
+    voucherNo: voucherNo ?? null,
+    file,
+    note: rest.note ?? {},
+  } as InvoiceRC2OutputType;
+
+  const incomplete = !isInvoiceRC2Complete(certForCheck);
+
   const updated = await prisma.invoiceRC2.update({
     where: { id: invoiceId },
     data: {
       ...rest,
       note: JSON.stringify(data.note ?? {}) ?? null,
       type: data.type as PrismaInvoiceType,
+      incomplete,
       updatedAt: now,
     },
-    include: { file: true, voucher: true, uploader: true },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
+        },
+      },
+      voucher: true,
+      uploader: true,
+    },
   });
   return transformOutput(updated);
 }

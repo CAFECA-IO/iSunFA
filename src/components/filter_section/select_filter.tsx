@@ -38,8 +38,10 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
 
   return (
     // Info: (20241015 - Anna) 在這裡使用containerClassName屬性
-    <div className={`flex flex-col gap-8px ${width || 'w-full lg:w-200px'} ${containerClassName}`}>
-      <p className={`${labelClassName} text-sm font-semibold text-input-text-primary`}>
+    <div
+      className={`flex flex-col gap-8px ${width || 'w-full tablet:w-200px'} ${containerClassName}`}
+    >
+      <p className={`${labelClassName} text-sm font-semibold`}>
         {t(`filter_section_type:FILTER_SECTION_TYPE.${label.toUpperCase()}`)}
       </p>
       {/* Info: (20241015 - Anna) 在這裡使用className屬性 */}
@@ -48,7 +50,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
         className={`relative flex h-44px items-center justify-between rounded-sm border bg-input-surface-input-background text-sm ${menuVisibility ? 'border-input-stroke-selected' : 'border-input-stroke-input'} px-12px py-10px hover:cursor-pointer ${className}`}
         onClick={toggleMenuHandler}
       >
-        <p className="flex-1 truncate text-input-text-input-placeholder">
+        <p className="flex-1 truncate font-medium text-input-text-input-placeholder">
           {selectedValue
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}

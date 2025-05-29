@@ -9,17 +9,17 @@ import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { getTeamsByUserIdAndTeamIds } from '@/lib/utils/repo/team.repo';
 import { ITeam } from '@/interfaces/team';
-import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { findUserAccountBook } from '@/lib/utils/repo/account_book.repo';
 import { getUserRoleById } from '@/lib/utils/repo/user_role.repo';
 import { IUserRole } from '@/interfaces/user_role';
 import { IUser } from '@/interfaces/user';
+import { IAccountBookWithTeamEntity } from '@/lib/utils/zod_schema/account_book';
 
 const handleGetRequest: IHandleRequest<
   APIName.STATUS_INFO_GET,
   {
     user: IUser | null;
-    company: IAccountBookWithTeam | null;
+    company: IAccountBookWithTeamEntity | null;
     role: IUserRole | null;
     teams: ITeam[] | null;
   }
@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const payload: {
     user: IUser | null;
-    company: IAccountBookWithTeam | null;
+    company: IAccountBookWithTeamEntity | null;
     role: IUserRole | null;
     teams: ITeam[] | null;
   } = {

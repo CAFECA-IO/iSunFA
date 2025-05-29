@@ -13,6 +13,7 @@ export enum ToastId {
   UPLOAD_FILE_ERROR = 'toast-upload-file-error',
   NOTIFY_WEB_ERROR = 'toast-notify-web-error',
   ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
+  UPDATE_COUNTERPARTY_SUCCESS = 'toast-update-counterparty-success',
   SAVE_CERTIFICATE_SUCCESS = 'toast-save-certificate-success',
   API_REQUEST_FAILED = 'toast-api-request-failed',
   LIST_CERTIFICATE_ERROR = 'toast-list-certificate-error',
@@ -46,6 +47,7 @@ export enum ToastId {
   SUBSCRIPTION_UPDATE_ERROR = 'toast-subscription-update-error',
   SUBSCRIPTION_PAYMENT_STATUS_UNPAID = 'toast-subscription-payment-status-unpaid',
   NEED_TO_SELECT_ACCOUNT_BOOK = 'toast-need-to-select-account-book',
+  NEED_TO_SELECT_ACCOUNT_BOOK_MOBILE_VER = 'toast-need-to-select-account-book-mobile-ver',
   PLAN_EXPIRED_REMINDER = 'toast-plan-expired-reminder',
   DOWNGRADE_TO_BEGINNER_PLAN = 'toast-downgrade-to-beginner-plan',
   ACCOUNT_BOOK_NEEDED = 'toast-account-book-needed',
@@ -64,4 +66,6 @@ export enum ToastId {
   ACCOUNT_BOOK_DELETE_ERROR = 'toast-account-book-delete-error',
   ACCOUNT_BOOK_DELETE_SUCCESS = 'toast-account-book-delete-success',
   VERIFY_CODE_ERROR = 'toast-verify-code-error',
+  CREATE_ACCOUNT_BOOK_FAILED = 'toast-create-account-book-failed',
+  EDIT_ACCOUNT_BOOK_FAILED = 'toast-edit-account-book-failed',
 }

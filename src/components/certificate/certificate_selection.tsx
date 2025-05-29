@@ -143,12 +143,12 @@ const CertificateSelection: React.FC<CertificateSelectionProps> = ({
           )}
         </div>
       </div>
-      <div className="mt-2 w-full text-center">
-        <p className="text-text-neutral-tertiary">
+      <div className="mt-lv-3 w-full text-center text-sm font-medium text-text-neutral-tertiary">
+        <p>
           {isSelectable ? t('certificate:COMMON.UPLOADED') : t('certificate:COMMON.UPLOADED')}{' '}
           {selectedCertificates.length} {t('certificate:COMMON.CERTIFICATES')}
         </p>
-        <div className="mt-2 flex items-center justify-center space-x-2">
+        <div className="mt-lv-4 flex items-center justify-center space-x-2">
           <Button
             type="button"
             onClick={() => handleScroll('left')}

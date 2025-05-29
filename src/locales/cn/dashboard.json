@@ -87,6 +87,7 @@
     "SELECT_YOUR_ROLE": "选择您的角色",
     "ROLE_FUNCTION_PREVIEW": "角色功能预览",
     "BACK_TO_SELECT_ROLE_PAGE": "回到选择角色页面",
+    "ROLE_DATA_NOT_FOUND": "无法取得角色资料，请稍后再试",
 
     "COMMON_FUNCTIONS": "常用功能",
     "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "凭证管理、日记账管理、应收账款和应付账款管理、财务报表、试算表、总账",
@@ -175,12 +176,14 @@
     "RESPONSIBLE_PERSON": "负责人",
     "ENTER_RESPONSIBLE_PERSON": "输入负责人",
     "ENTER_TAX_ID": "输入统一编号",
-    "CANCEL": "取消",
     "ADD": "添加",
     "NEXT": "下一步",
+    "SKIP": "跳过",
+    "SKIPPED": "已跳过",
     "CHOOSE_WORK_TAG": "选择工作标签",
     "CHOOSE_TEAM": "选择团队",
     "CREATE_ACCOUNT_BOOK_FAILED": "建立帐本失败",
+    "UPDATE_ACCOUNT_BOOK_FAILED": "更新帐本失败",
     "ERROR_CODE": "错误代码",
     "ERROR_MESSAGE": "错误讯息",
 

@@ -1,25 +1,9 @@
 [
   {
-    "id": 1000,
-    "name": "Test_User_1",
-    "email": "test1@gmail.com",
-    "imageFileId": 1002,
-    "createdAt": 1,
-    "updatedAt": 1
-  },
-  {
     "id": 1001,
     "name": "Test_User_2",
     "email": "test2@gmail.com",
     "imageFileId": 1003,
-    "createdAt": 1,
-    "updatedAt": 1
-  },
-  {
-    "id": 1002,
-    "name": "Test_User_3",
-    "email": "test3@gmail.com",
-    "imageFileId": 1004,
     "createdAt": 1,
     "updatedAt": 1
   },

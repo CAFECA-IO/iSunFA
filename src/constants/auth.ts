@@ -132,7 +132,9 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.DELETE_MEMBER]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_MEMBER_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.ADD_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.INVITE_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCEPT_TEAM_INVITATION]: [AuthFunctionsKeysNew.user],
+  [APIName.DECLINE_TEAM_INVITATION]: [AuthFunctionsKeysNew.user],
   [APIName.LEAVE_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
@@ -150,8 +152,10 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.VOUCHER_RESTORE_V2]: [AuthFunctionsKeysNew.user],
 
   [APIName.LIST_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_ACCOUNT_BOOK_INFO_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.PUT_TEAM_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 
@@ -161,8 +165,11 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: [AuthFunctionsKeysNew.user],
   [APIName.UPDATE_ACCOUNT_BOOK_INFO]: [AuthFunctionsKeysNew.user],
   [APIName.DISCONNECT_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ACCOUNT_BOOK_PUT_ICON]: [AuthFunctionsKeysNew.user],
   [APIName.SEND_VERIFICATION_EMAIL]: [AuthFunctionsKeysNew.user],
   [APIName.VERIFY_CODE]: [AuthFunctionsKeysNew.user],
+
+  [APIName.LIST_NOTIFICATION]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_NOTIFICATION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.READ_NOTIFICATION]: [AuthFunctionsKeysNew.user],
 };

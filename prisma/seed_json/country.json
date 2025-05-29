@@ -1,0 +1,41 @@
+[
+  {
+    "id": 10000000,
+    "name": "Taiwan",
+    "localeKey": "tw",
+    "phoneCode": "+886",
+    "currencyCode": "TWD",
+    "currencyName": "New Taiwan Dollar",
+    "code": "tw",
+    "phoneExample": "0912345678",
+    "createdAt": 0,
+    "updatedAt": 0,
+    "deletedAt": null
+  },
+  {
+    "id": 10000001,
+    "name": "China",
+    "localeKey": "cn",
+    "phoneCode": "+86",
+    "currencyCode": "CNY",
+    "currencyName": "Chinese Yuan",
+    "code": "cn",
+    "phoneExample": "13912345678",
+    "createdAt": 1742979780,
+    "updatedAt": 1742979780,
+    "deletedAt": null
+  },
+  {
+    "id": 10000002,
+    "name": "United States",
+    "localeKey": "en",
+    "phoneCode": "+1",
+    "currencyCode": "USD",
+    "currencyName": "US Dollar",
+    "code": "en",
+    "phoneExample": "2125551234",
+    "createdAt": 1742979791,
+    "updatedAt": 1742979791,
+    "deletedAt": null
+  }
+]

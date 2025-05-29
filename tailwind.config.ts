@@ -936,6 +936,7 @@ module.exports = {
         '6px': '6px',
         // '8px': '8px',
         // '10px': '10px',
+        '11px': '11px',
         // '12px': '12px',
         '14px': '14px',
         // '15px': '15px',
@@ -1435,6 +1436,10 @@ module.exports = {
           'inset 2px 4px 5px 0px rgba(255, 255, 255, 0.4), inset -2px -4px 5px 0px rgba(255, 255, 255, 0.4), 0px 0px 70px 10px rgba(255, 182, 50, 0.5)',
         'technical-card': '0px 0px 80px 50px #120C00',
         job: 'inset 2px 2px 8px 0px rgba(255, 255, 255, 0.4), inset -2px -2px 8px 0px rgba(255, 255, 255, 0.4)',
+
+        // Info: (20250520 - Liz) 登入頁面第三方登入按鈕
+        thirdPartyLoginBtn:
+          '0px 0px 3px 0px rgba(0, 0, 0, 0.08), 0px 2px 3px 0px rgba(0, 0, 0, 0.17)',
       },
       dropShadow: {
         xs: '0px 50px 17px rgba(49, 67, 98, 0), 0px 28px 15px rgba(49, 67, 98, 0.01), 0px 11px 13px rgba(49, 67, 98, 0.05), 0px 6px 10px rgba(49, 67, 98, 0.09), 0px 2px 5px rgba(49, 67, 98, 0.10)',
@@ -1595,6 +1600,7 @@ module.exports = {
       letterSpacing: {
         'tight-016': '0.16px',
         'tight-018': '0.18px',
+        'wide-1': '1px',
       },
     },
   },

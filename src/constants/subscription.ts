@@ -20,11 +20,6 @@ export const PLANS: IPlan[] = [
     price: 0,
     features: [
       {
-        id: 'beginner_1',
-        name: 'OWNED_TEAM_LIMIT',
-        value: 'LIMIT_1_TEAM',
-      },
-      {
         id: 'beginner_2',
         name: 'JOINABLE_TEAM_LIMIT',
         value: 'UNLIMITED',
@@ -77,7 +72,6 @@ export const PLANS: IPlan[] = [
     ],
     comparison: {
       PRICE: 'PRICE',
-      OWNED_TEAM_LIMIT: 'OWNED_TEAM_LIMIT',
       JOINABLE_TEAM_LIMIT: 'JOINABLE_TEAM_LIMIT',
       OWNED_TEAM_MEMBER_LIMIT: 'OWNED_TEAM_MEMBER_LIMIT',
       OWNED_TEAM_LEDGER_LIMIT: 'OWNED_TEAM_LEDGER_LIMIT',
@@ -96,11 +90,6 @@ export const PLANS: IPlan[] = [
     price: 899,
     extraMemberPrice: 89,
     features: [
-      {
-        id: 'professional_1',
-        name: 'OWNED_TEAM_LIMIT',
-        value: 'LIMIT_3_TEAM',
-      },
       {
         id: 'professional_2',
         name: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',
@@ -140,7 +129,6 @@ export const PLANS: IPlan[] = [
     comparison: {
       PRICE: 'PRICE',
       FREE_TRIAL: 'FREE_TRIAL',
-      OWNED_TEAM_LIMIT: 'OWNED_TEAM_LIMIT',
       JOINABLE_TEAM_LIMIT: 'JOINABLE_TEAM_LIMIT',
       OWNED_TEAM_MEMBER_LIMIT: 'OWNED_TEAM_MEMBER_LIMIT',
       OWNED_TEAM_LEDGER_LIMIT: 'OWNED_TEAM_LEDGER_LIMIT',
@@ -169,8 +157,8 @@ export const PLANS: IPlan[] = [
       },
       {
         id: 'enterprise_2',
-        name: 'TAX_REPORTING',
-        value: 'SUPPORTED_REGIONS_EXPANDING',
+        name: 'AI_MODEL_ASSISTANCE',
+        value: 'META_LLAMA',
       },
       {
         id: 'enterprise_3',
@@ -180,7 +168,6 @@ export const PLANS: IPlan[] = [
     ],
     comparison: {
       PRICE: 'PRICE',
-      OWNED_TEAM_LIMIT: 'OWNED_TEAM_LIMIT',
       JOINABLE_TEAM_LIMIT: 'JOINABLE_TEAM_LIMIT',
       OWNED_TEAM_MEMBER_LIMIT: 'OWNED_TEAM_MEMBER_LIMIT',
       OWNED_TEAM_LEDGER_LIMIT: 'OWNED_TEAM_LEDGER_LIMIT',
@@ -193,7 +180,7 @@ export const PLANS: IPlan[] = [
       TECH_ADVANTAGE: 'TECH_ADVANTAGE',
       CONTINUOUS_AUDIT: 'CONTINUOUS_AUDIT',
       EARLY_ACCESS: 'EARLY_ACCESS',
-      TAX_REPORTING: 'TAX_REPORTING',
+      AI_MODEL_ASSISTANCE: 'AI_MODEL_ASSISTANCE',
       ENTERPRISE_SUPPORT: 'ENTERPRISE_SUPPORT',
       UNSUBSCRIBE: 'UNSUBSCRIBE',
     },
@@ -205,11 +192,6 @@ export const TRAIL_PLAN: IPlan = {
   planName: 'Trial',
   price: 0,
   features: [
-    {
-      id: 'professional_1',
-      name: 'OWNED_TEAM_LIMIT',
-      value: 'LIMIT_3_TEAM',
-    },
     {
       id: 'professional_2',
       name: 'EVERY_OWNED_TEAM_MEMBER_LIMIT',

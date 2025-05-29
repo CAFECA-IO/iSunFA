@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-// import { MdOutlineFileDownload } from 'react-icons/md';
+import { MdOutlineFileDownload } from 'react-icons/md';
 import { FaRegTrashAlt } from 'react-icons/fa';
+import { VscSettings } from 'react-icons/vsc';
 import { Button } from '@/components/button/button';
 import VoucherItem from '@/components/voucher/voucher_item';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
-// import { useGlobalCtx } from '@/contexts/global_context';
+import { useGlobalCtx } from '@/contexts/global_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { IVoucherUI } from '@/interfaces/voucher';
 import { MessageType } from '@/interfaces/message_modal';
@@ -28,6 +29,7 @@ interface IVoucherListProps {
   setDateSort: React.Dispatch<React.SetStateAction<null | SortOrder>>;
   isHideReversals: boolean;
   hideReversalsToggleHandler: () => void;
+  toggleSideMenu: () => void;
   selectedStartDate?: number;
   selectedEndDate?: number;
   selectedType?: string;
@@ -50,13 +52,14 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   selectedType,
   keyword,
   currentPage,
+  toggleSideMenu,
 }) => {
   const { t } = useTranslation('common');
   const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { refreshVoucherListHandler } = useAccountingCtx();
-  // const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
+  const { exportVoucherModalVisibilityHandler } = useGlobalCtx();
 
   // Info: (20241022 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
@@ -73,6 +76,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const tableCellStyles = 'table-cell text-xs text-center align-middle';
   const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+
+  // Info: (20250527 - Julian) 如果 uiVoucherList 為空，則顯示無資料狀態
+  const isNoData = uiVoucherList.length === 0;
 
   // Info: (20250203 - Julian) 根據 voucher 的數量決定底色：奇數白色、偶數灰色
   const bottomColor =
@@ -333,29 +339,11 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     },
   });
 
-  const displayedSelectArea = (
-    <div className="flex items-center justify-between">
-      {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
-      <div className="flex items-center gap-16px">
-        <Toggle
-          id="hide-reversals-toggle"
-          initialToggleState={isHideReversals}
-          getToggledState={hideReversalsToggleHandler}
-          toggleStateFromParent={isHideReversals}
-          lockedToOpen={false}
-        />
-        <div
-          onClick={hideReversalsToggleHandler}
-          className="text-switch-text-primary hover:cursor-pointer"
-        >
-          {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
-        </div>
-      </div>
-
-      {/* Info: (20250107 - Julian) export & select button */}
-      <div className="flex h-50px items-center gap-24px">
-        {/* Info: (20240920 - Julian) Export Voucher button */}
-        {/* <Button
+  const downloadBtn = (
+    <>
+      {/* Info: (20250521 - Julian) for desktop */}
+      <div className="hidden tablet:block">
+        <Button
           type="button"
           variant="tertiaryOutline"
           className={isCheckBoxOpen ? 'hidden' : 'flex'}
@@ -363,7 +351,50 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         >
           <MdOutlineFileDownload />
           <p>{t('journal:VOUCHER.EXPORT_VOUCHER')}</p>
-        </Button> */}
+        </Button>
+      </div>
+      {/* Info: (20250521 - Julian) for mobile */}
+      <div className="block tablet:hidden">
+        <Button
+          type="button"
+          variant="tertiaryOutline"
+          className={isCheckBoxOpen ? 'hidden' : 'flex'}
+          size="smallSquare"
+          onClick={exportVoucherModalVisibilityHandler}
+        >
+          <MdOutlineFileDownload size={16} />
+        </Button>
+      </div>
+    </>
+  );
+
+  const displayedSelectArea = (
+    <div className="flex items-center justify-between">
+      {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
+      <div className="hidden tablet:block">
+        <Toggle
+          id="hide-reversals-toggle"
+          initialToggleState={isHideReversals}
+          getToggledState={hideReversalsToggleHandler}
+          toggleStateFromParent={isHideReversals}
+          lockedToOpen={false}
+          label={t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+          labelClassName="text-switch-text-primary hover:cursor-pointer"
+        />
+      </div>
+      {/* Info: (20250521 - Julian) Filter button */}
+      <button
+        type="button"
+        onClick={toggleSideMenu}
+        className="block p-10px text-button-text-secondary tablet:hidden"
+      >
+        <VscSettings size={24} />
+      </button>
+
+      {/* Info: (20250107 - Julian) export & select button */}
+      <div className="ml-auto flex h-50px items-center gap-lv-3 tablet:gap-24px">
+        {/* Info: (20240920 - Julian) Export Voucher button */}
+        {downloadBtn}
         {/* Info: (20240920 - Julian) Delete button */}
         <div className={isCheckBoxOpen ? 'block' : 'hidden'}>
           <Button
@@ -378,7 +409,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         {/* Info: (20240920 - Julian) Select All & Cancel button */}
         <button
           type="button"
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary hover:opacity-70`}
           onClick={selectAllHandler}
         >
           {isSelectedAll ? t('journal:VOUCHER.UNSELECT_ALL') : t('journal:VOUCHER.SELECT_ALL')}
@@ -420,63 +451,76 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     );
   });
 
+  const displayedTable = !isNoData ? (
+    <div className={`table overflow-hidden rounded-lg tablet:shadow-Dropshadow_XS ${bottomColor}`}>
+      {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
+      <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-row">
+          <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
+            <span className="mx-auto table h-16px w-16px table-fixed">
+              <div
+                className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
+                onClick={checkAllHandler}
+              >
+                {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
+              </div>
+            </span>
+          </div>
+          <div
+            className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
+          >
+            {displayedDate}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {t('journal:VOUCHER.VOUCHER_NO')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
+            {t('journal:VOUCHER.NOTE')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
+            {t('journal:VOUCHER.ACCOUNTING')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {displayedDebit}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
+            {displayedCredit}
+          </div>
+          <div
+            className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-120px border-b border-stroke-neutral-quaternary`}
+          >
+            {t('journal:VOUCHER.ISSUER')}
+          </div>
+        </div>
+      </div>
+
+      {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
+      <div className="table-row-group">{displayedVoucherList}</div>
+
+      {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
+      <div className="table-footer-group h-20px"></div>
+    </div>
+  ) : (
+    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-lv-4">
       {displayedSelectArea}
 
-      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
+      <p className="text-xs font-semibold uppercase text-text-neutral-tertiary tablet:ml-auto">
         {t('journal:VOUCHER.CURRENCY')}: TWD
       </p>
 
-      {/* Info: (20240920 - Julian) Table */}
-      <div className={`table overflow-hidden rounded-lg ${bottomColor}`}>
-        {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
-              <span className="mx-auto table h-16px w-16px table-fixed">
-                <div
-                  className={`relative h-16px w-16px rounded-xxs border border-checkbox-stroke-unselected text-center ${isSelectedAll ? 'bg-checkbox-surface-selected' : 'bg-checkbox-surface-unselected'}`}
-                  onClick={checkAllHandler}
-                >
-                  {isSelectedAll && <HiCheck className="absolute text-neutral-white" />}
-                </div>
-              </span>
-            </div>
-            <div
-              className={`${tableCellStyles} ${sideBorderStyles} h-60px w-90px min-w-90px border-r`}
-            >
-              {displayedDate}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {t('journal:VOUCHER.VOUCHER_NO')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/3 min-w-90px border-r`}>
-              {t('journal:VOUCHER.NOTE')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/6 min-w-180px border-r`}>
-              {t('journal:VOUCHER.ACCOUNTING')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {displayedDebit}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-90px border-r`}>
-              {displayedCredit}
-            </div>
-            <div
-              className={`${tableCellStyles} ${sideBorderStyles} w-1/8 min-w-120px border-b border-stroke-neutral-quaternary`}
-            >
-              {t('journal:VOUCHER.ISSUER')}
-            </div>
-          </div>
-        </div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedVoucherList}</div>
-
-        {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
-        <div className="table-footer-group h-20px"></div>
+      {/* Info: (20250521 - Julian) Table for mobile */}
+      <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
+        <div className={isNoData ? '' : 'w-max'}>{displayedTable}</div>
       </div>
+
+      {/* Info: (20250521 - Julian) Table for desktop */}
+      <div className="hidden tablet:block">{displayedTable}</div>
     </div>
   );
 };

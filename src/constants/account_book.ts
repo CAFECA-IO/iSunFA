@@ -1,27 +1,21 @@
 import { SortBy, SortOrder } from '@/constants/sort';
-import { WORK_TAG } from '@/interfaces/account_book';
+import {
+  WORK_TAG,
+  AGENT_FILING_ROLE,
+  DECLARANT_FILING_METHOD,
+  FILING_FREQUENCY,
+  FILING_METHOD,
+  IAccountBookWithTeam,
+} from '@/interfaces/account_book';
 import { ITeam } from '@/interfaces/team';
 
 export const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }];
-
-// Info: (20250418 - Liz) 申報頻率
-export enum FILING_FREQUENCY {
-  BIMONTHLY_FILING = 'BIMONTHLY_FILING',
-  MONTHLY_FILING = 'MONTHLY_FILING',
-}
 
 // Info: (20250418 - Liz) 申報頻率選項的補充說明
 export const FILING_FREQUENCY_OPTIONS = [
   { label: FILING_FREQUENCY.BIMONTHLY_FILING, subLabel: 'EVERY_TWO_MONTHS' },
   { label: FILING_FREQUENCY.MONTHLY_FILING, subLabel: 'EVERY_MONTH' },
 ];
-
-// Info: (20250418 - Liz) 申報方式(總繳種類)
-export enum FILING_METHOD {
-  SINGLE_ENTITY_FILING = 'SINGLE_ENTITY_FILING',
-  CONSOLIDATED_FILING = 'CONSOLIDATED_FILING',
-  INDIVIDUAL_FILING = 'INDIVIDUAL_FILING',
-}
 
 // Info: (20250507 - Liz) 申報方式選項的補充說明
 export const FILING_METHOD_OPTIONS = [
@@ -33,24 +27,11 @@ export const FILING_METHOD_OPTIONS = [
   { label: FILING_METHOD.INDIVIDUAL_FILING, subLabel: 'EACH_UNIT_FILES_SEPARATELY' },
 ];
 
-// Info: (20250418 - Liz) (申報人)申報方式
-export enum DECLARANT_FILING_METHOD {
-  SELF_FILING = 'SELF_FILING',
-  AGENT_FILING = 'AGENT_FILING',
-}
-
-// Info: (20250507 - Liz) 申報代理人的角色有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
-export enum AGENT_FILING_ROLE {
-  ACCOUNTANT = 'ACCOUNTANT',
-  BOOKKEEPER = 'BOOKKEEPER',
-  BOOKKEEPER_AND_FILING_AGENT = 'BOOKKEEPER_AND_FILING_AGENT',
-}
-
 // Info: (20250421 - Liz) 第一步驟表單狀態
 export interface Step1FormState {
   imageId: string;
   companyName: string;
-  responsiblePerson: string;
+  representativeName: string;
   taxId: string;
   taxSerialNumber: string;
   contactPerson: string;
@@ -74,10 +55,11 @@ export interface Step1FormState {
   tagError: string | null;
 }
 
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值
 export const initialStep1FormState: Step1FormState = {
   imageId: '',
   companyName: '',
-  responsiblePerson: '',
+  representativeName: '',
   taxId: '',
   taxSerialNumber: '',
   contactPerson: '',
@@ -99,6 +81,25 @@ export const initialStep1FormState: Step1FormState = {
   taxSerialNumberError: null,
   teamError: null,
   tagError: null,
+};
+
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值建立函式 => 判斷目前是否是「編輯模式」，如果是，就從現有資料中填入表單欄位，否則就用初始值
+export const createInitialStep1FormState = (
+  accountBookToEdit?: IAccountBookWithTeam
+): Step1FormState => {
+  if (!accountBookToEdit) return initialStep1FormState;
+
+  return {
+    ...initialStep1FormState,
+    companyName: accountBookToEdit.name ?? initialStep1FormState.companyName,
+    taxId: accountBookToEdit.taxId ?? initialStep1FormState.taxId,
+    tag: accountBookToEdit.tag ?? initialStep1FormState.tag,
+    team: accountBookToEdit.team ?? initialStep1FormState.team,
+    imageId: accountBookToEdit.imageId ?? initialStep1FormState.imageId,
+    representativeName:
+      accountBookToEdit.representativeName ?? initialStep1FormState.representativeName,
+    taxSerialNumber: accountBookToEdit.taxSerialNumber ?? initialStep1FormState.taxSerialNumber,
+  };
 };
 
 export type Step1FormAction =
@@ -165,6 +166,9 @@ export type Step2FormState = {
   isFilingMethodDropdownOpen: boolean;
   isDeclarantFilingMethodDropdownOpen: boolean;
   isAgentFilingRolesDropdownOpen: boolean;
+
+  // Info: (20250516 - Liz) 是否跳過驗證
+  isValidationSkipped: boolean;
 };
 
 export type Step2FormAction =
@@ -200,6 +204,8 @@ export const initialStep2FormState: Step2FormState = {
   isFilingMethodDropdownOpen: false,
   isDeclarantFilingMethodDropdownOpen: false,
   isAgentFilingRolesDropdownOpen: false,
+
+  isValidationSkipped: false,
 };
 
 export const step2FormReducer = (

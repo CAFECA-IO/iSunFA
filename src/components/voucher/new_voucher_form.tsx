@@ -51,6 +51,7 @@ import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import { TbArrowBackUp } from 'react-icons/tb';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -163,6 +164,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
+  const [isShowCounterpartyHint, setIsShowCounterpartyHint] = useState<boolean>(false);
   // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
@@ -206,6 +208,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     (acc, item) => (item.debit === true ? acc + item.amount : acc),
     0
   );
+
+  const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
 
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
@@ -439,6 +443,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const dateRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
+  const counterpartyRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
@@ -452,6 +457,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowDateHint(false);
     }
   }, [date]);
+
+  // Info: (20241007 - Julian) 交易對象未選擇時顯示提示
+  useEffect(() => {
+    if (isCounterpartyRequired && counterparty) {
+      setIsShowCounterpartyHint(false);
+    }
+  }, [counterparty, isCounterpartyRequired]);
 
   // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
   // useEffect(() => {
@@ -645,7 +657,19 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
-      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
+      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
+    } else if (
+      isCounterpartyRequired &&
+      (!counterparty || counterparty?.taxId === '' || counterparty?.name === '')
+    ) {
+      setIsShowCounterpartyHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}:${t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}`,
+        closeable: true,
+      });
+      if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
       // } else if (
       //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
       //   isRecurring &&
@@ -705,6 +729,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
+      setIsShowCounterpartyHint(false);
       // setIsShowRecurringPeriodHint(false);
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
@@ -732,7 +757,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
-    <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
+    <div className="absolute left-0 top-50px z-10 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
       {typeList.map((voucherType) => {
         const typeClickHandler = () => {
           setType(voucherType);
@@ -977,7 +1002,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [selectedData]);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div className="relative flex flex-col gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')}
+        </p>
+      </div>
+
       <CertificateSelectorModal
         accountBookId={accountBookId}
         isOpen={openSelectorModal}
@@ -1015,7 +1050,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       />
 
       {/* Info: (20240926 - Julian) form */}
-      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+      <form
+        ref={formRef}
+        onSubmit={submitForm}
+        className="grid w-full grid-cols-1 gap-lv-5 tablet:grid-cols-2 tablet:gap-24px"
+      >
         {/* Info: (20240926 - Julian) Date */}
         <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
@@ -1030,6 +1069,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             btnClassName={
               isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
             }
+            calenderClassName="w-full tablet:w-auto"
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
@@ -1060,7 +1100,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         </div>
 
         {/* Info: (20240926 - Julian) Note */}
-        <div className="col-span-2 flex flex-col gap-8px">
+        <div className="flex flex-col gap-8px tablet:col-span-2">
           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
           <input
             id="voucher-note"
@@ -1073,18 +1113,19 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <CounterpartyInput
-            counterparty={counterparty}
-            onSelect={handleCounterpartySelect}
-            flagOfSubmit={flagOfSubmit}
-            className="col-span-2"
-          />
+          <div ref={counterpartyRef} className="tablet:col-span-2">
+            <CounterpartyInput
+              counterparty={counterparty}
+              onSelect={handleCounterpartySelect}
+              isShowRedHint={isShowCounterpartyHint}
+            />
+          </div>
         )}
         {/* Info: (20241007 - Julian) Recurring */}
 
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
-          <div ref={assetRef} className="col-span-2 flex flex-col">
+          <div ref={assetRef} className="flex flex-col tablet:col-span-2">
             <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
           </div>
         )}
@@ -1096,7 +1137,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             lineItems={aiLineItems}
           />
         ) : (
-          <div ref={voucherLineRef} className="col-span-2">
+          <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
             <VoucherLineBlock
               lineItems={voucherLineItems}
               setLineItems={setLineItems}
@@ -1114,12 +1155,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           </div>
         )}
         {/* Info: (20240926 - Julian) buttons */}
-        <div className="col-span-2 ml-auto flex items-center gap-12px">
+        <div className="flex items-center gap-24px tablet:col-span-2 tablet:ml-auto tablet:gap-12px">
           <Button
             id="voucher-clear-button"
             type="button"
             variant="secondaryOutline"
             onClick={clearClickHandler}
+            className="w-full tablet:w-auto"
           >
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
@@ -1129,6 +1171,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             onKeyDown={(e) => {
               if (e.key === KEYBOARD_EVENT_CODE.ENTER) e.preventDefault();
             }}
+            className="w-full tablet:w-auto"
             disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
           >
             <p>{t('common:COMMON.SAVE')}</p>

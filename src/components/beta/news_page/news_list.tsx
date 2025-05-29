@@ -5,6 +5,7 @@ import { useTranslation } from 'next-i18next';
 import { INews } from '@/interfaces/news';
 import { NewsType } from '@/constants/news';
 import { formatTimestamp } from '@/constants/time';
+import { cn } from '@/lib/utils/common';
 
 interface NewsProps {
   news: INews;
@@ -40,7 +41,7 @@ const News = ({ news }: NewsProps) => {
     <div className="flex items-center gap-16px rounded-xs bg-surface-neutral-surface-lv2 p-8px">
       <p className="flex-none text-sm font-normal text-text-neutral-tertiary">{formattedDate}</p>
 
-      <p className="flex-auto truncate text-base font-semibold text-text-neutral-primary">
+      <p className="min-w-0 flex-auto truncate text-base font-semibold text-text-neutral-primary">
         {news.title}
       </p>
 
@@ -72,7 +73,12 @@ const NewsList = ({ newsList, isPageStyle }: NewsListProps) => {
   }
 
   return (
-    <section className={`flex flex-auto flex-col ${isPageStyle ? 'gap-8px' : 'gap-24px'}`}>
+    <section
+      className={cn('flex min-w-0 flex-auto flex-col', {
+        'gap-8px': isPageStyle,
+        'gap-24px': !isPageStyle,
+      })}
+    >
       {newsList.map((news) => (
         <News key={news.id} news={news} />
       ))}

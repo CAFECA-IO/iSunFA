@@ -137,7 +137,7 @@ export enum APIName {
   GET_TEAM_BY_ID = 'GET_TEAM_BY_ID',
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = 'LIST_ACCOUNT_BOOK_BY_TEAM_ID',
   LIST_MEMBER_BY_TEAM_ID = 'LIST_MEMBER_BY_TEAM_ID',
-  ADD_MEMBER_TO_TEAM = 'ADD_MEMBER_TO_TEAM',
+  INVITE_MEMBER_TO_TEAM = 'INVITE_MEMBER_TO_TEAM',
   LIST_TEAM_SUBSCRIPTION = 'LIST_TEAM_SUBSCRIPTION',
   GET_SUBSCRIPTION_BY_TEAM_ID = 'GET_SUBSCRIPTION_BY_TEAM_ID',
   UPDATE_SUBSCRIPTION = 'UPDATE_SUBSCRIPTION',
@@ -151,6 +151,7 @@ export enum APIName {
   DECLINE_TRANSFER_ACCOUNT_BOOK = 'DECLINE_TRANSFER_ACCOUNT_BOOK',
   LIST_PAYMENT_PLAN = 'LIST_PAYMENT_PLAN',
   LIST_ACCOUNT_BOOK_BY_USER_ID = 'LIST_ACCOUNT_BOOK_BY_USER_ID',
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = 'LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID',
   CONNECT_ACCOUNT_BOOK_BY_ID = 'CONNECT_ACCOUNT_BOOK_BY_ID',
   UPDATE_TEAM_BY_ID = 'UPDATE_TEAM_BY_ID',
   UPDATE_MEMBER = 'UPDATE_MEMBER',
@@ -164,10 +165,15 @@ export enum APIName {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = 'PAYMENT_METHOD_REGISTER_CALLBACK_OEN',
   UPDATE_ACCOUNT_BOOK_INFO = 'UPDATE_ACCOUNT_BOOK_INFO',
   DISCONNECT_ACCOUNT_BOOK = 'DISCONNECT_ACCOUNT_BOOK',
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = 'LIST_ACCOUNT_BOOK_INFO_BY_USER_ID',
   ACCOUNT_BOOK_PUT_ICON = 'ACCOUNT_BOOK_PUT_ICON',
   SEND_VERIFICATION_EMAIL = 'SEND_VERIFICATION_EMAIL',
   VERIFY_CODE = 'VERIFY_CODE',
+  LIST_NOTIFICATION = 'LIST_NOTIFICATION',
+  GET_NOTIFICATION_BY_ID = 'GET_NOTIFICATION_BY_ID',
+  READ_NOTIFICATION = 'READ_NOTIFICATION',
+  GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
+  ACCEPT_TEAM_INVITATION = 'ACCEPT_TEAM_INVITATION',
+  DECLINE_TEAM_INVITATION = 'DECLINE_TEAM_INVITATION',
 }
 
 export enum APIPath {
@@ -276,12 +282,14 @@ export enum APIPath {
   GET_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
   LIST_ACCOUNT_BOOK_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/account_book`,
   LIST_MEMBER_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/member`,
-  ADD_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
-  LIST_TEAM_SUBSCRIPTION = `${apiPrefixV2}/subscription`,
-  GET_SUBSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId`,
-  UPDATE_SUBSCRIPTION = `${apiPrefixV2}/subscription/:teamId/subscription`,
-  LIST_TEAM_INVOICE = `${apiPrefixV2}/subscription/:teamId/invoice`,
-  GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/subscription/:teamId/invoice/:invoiceId`,
+  INVITE_MEMBER_TO_TEAM = `${apiPrefixV2}/team/:teamId/member`,
+  ACCEPT_TEAM_INVITATION = `${apiPrefixV2}/team/:teamId/invitation/accept`,
+  DECLINE_TEAM_INVITATION = `${apiPrefixV2}/team/:teamId/invitation/decline`,
+  LIST_TEAM_SUBSCRIPTION = `${apiPrefixV2}/team/subscription`,
+  GET_SUBSCRIPTION_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/subscription/`,
+  UPDATE_SUBSCRIPTION = `${apiPrefixV2}/team/:teamId/subscription`,
+  LIST_TEAM_INVOICE = `${apiPrefixV2}/team/:teamId/invoice`,
+  GET_SUBSCRIPTION_INVOICE_BY_TEAM_ID = `${apiPrefixV2}/team/:teamId/invoice/:invoiceId`,
   GET_CREDIT_CARD_INFO = `${apiPrefixV2}/team/:teamId/payment_method`,
   LEAVE_TEAM = `${apiPrefixV2}/team/:teamId/leave`,
   REQUEST_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/transfer`,
@@ -290,6 +298,7 @@ export enum APIPath {
   DECLINE_TRANSFER_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/decline`,
   LIST_PAYMENT_PLAN = `${apiPrefixV2}/payment_plan`,
   LIST_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`,
+  LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book`, // Info: (20250520 - Shirley) 新增此 API name 來區分 API response，但實際上是 endpoint 跟 LIST_ACCOUNT_BOOK_BY_USER_ID，但需要加上 query simple = true
   CONNECT_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/connect`,
 
   UPDATE_TEAM_BY_ID = `${apiPrefixV2}/team/:teamId`,
@@ -309,10 +318,13 @@ export enum APIPath {
   PAYMENT_METHOD_REGISTER_CALLBACK_OEN = `${apiPayment}/callback/oen`,
   UPDATE_ACCOUNT_BOOK_INFO = `${apiPrefixV2}/account_book/:accountBookId/info`,
   DISCONNECT_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId/disconnect`,
-  LIST_ACCOUNT_BOOK_INFO_BY_USER_ID = `${apiPrefixV2}/user/:userId/account_book/info`,
   ACCOUNT_BOOK_PUT_ICON = `${apiPrefixV2}/account_book/:accountBookId/icon`,
   SEND_VERIFICATION_EMAIL = `${apiPrefixV2}/email/:email/one_time_password`,
   VERIFY_CODE = `${apiPrefixV2}/email/:email/one_time_password`,
+  LIST_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification`,
+  GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
+  READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
+  GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
 }
 
 const createConfig = ({
@@ -875,10 +887,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LIST_MEMBER_BY_TEAM_ID,
   }),
-  [APIName.ADD_MEMBER_TO_TEAM]: createConfig({
-    name: APIName.ADD_MEMBER_TO_TEAM,
+  [APIName.INVITE_MEMBER_TO_TEAM]: createConfig({
+    name: APIName.INVITE_MEMBER_TO_TEAM,
     method: HttpMethod.PUT,
-    path: APIPath.ADD_MEMBER_TO_TEAM,
+    path: APIPath.INVITE_MEMBER_TO_TEAM,
   }),
   [APIName.LIST_TEAM_SUBSCRIPTION]: createConfig({
     name: APIName.LIST_TEAM_SUBSCRIPTION,
@@ -950,6 +962,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
   }),
+  [APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID]: createConfig({
+    name: APIName.LIST_SIMPLE_ACCOUNT_BOOK_BY_USER_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID,
+  }),
   [APIName.CONNECT_ACCOUNT_BOOK_BY_ID]: createConfig({
     name: APIName.CONNECT_ACCOUNT_BOOK_BY_ID,
     method: HttpMethod.GET,
@@ -1006,11 +1023,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     method: HttpMethod.GET,
     path: APIPath.DISCONNECT_ACCOUNT_BOOK,
   }),
-  [APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID]: createConfig({
-    name: APIName.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-    method: HttpMethod.GET,
-    path: APIPath.LIST_ACCOUNT_BOOK_INFO_BY_USER_ID,
-  }),
   [APIName.ACCOUNT_BOOK_PUT_ICON]: createConfig({
     name: APIName.ACCOUNT_BOOK_PUT_ICON,
     method: HttpMethod.PUT,
@@ -1025,5 +1037,35 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VERIFY_CODE,
     method: HttpMethod.POST,
     path: APIPath.VERIFY_CODE,
+  }),
+  [APIName.LIST_NOTIFICATION]: createConfig({
+    name: APIName.LIST_NOTIFICATION,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_NOTIFICATION,
+  }),
+  [APIName.GET_NOTIFICATION_BY_ID]: createConfig({
+    name: APIName.GET_NOTIFICATION_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_NOTIFICATION_BY_ID,
+  }),
+  [APIName.READ_NOTIFICATION]: createConfig({
+    name: APIName.READ_NOTIFICATION,
+    method: HttpMethod.PATCH,
+    path: APIPath.READ_NOTIFICATION,
+  }),
+  [APIName.GET_ACCOUNT_BOOK_BY_ID]: createConfig({
+    name: APIName.GET_ACCOUNT_BOOK_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_ACCOUNT_BOOK_BY_ID,
+  }),
+  [APIName.ACCEPT_TEAM_INVITATION]: createConfig({
+    name: APIName.ACCEPT_TEAM_INVITATION,
+    method: HttpMethod.GET,
+    path: APIPath.ACCEPT_TEAM_INVITATION,
+  }),
+  [APIName.DECLINE_TEAM_INVITATION]: createConfig({
+    name: APIName.DECLINE_TEAM_INVITATION,
+    method: HttpMethod.GET,
+    path: APIPath.DECLINE_TEAM_INVITATION,
   }),
 };

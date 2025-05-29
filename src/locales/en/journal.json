@@ -166,6 +166,7 @@
     "PARTICULARS": "Particulars",
     "CREDIT": "Credit",
     "DEBIT": "Debit",
+    "EMPTY": "Empty",
     "EMPTY_HINT": "Please add at least 1 accounting voucher!",
     "REVERSE_ITEM": "Reverse Item",
     "REVERSE_HINT": "Please add at least 1 reverse voucher!"
@@ -199,6 +200,7 @@
     "DELETED_REVERSE_VOUCHER_2": "Reverse voucher (Delete)"
   },
   "LEDGER": {
+    "LEDGER": "Ledger",
     "LEDGER_PERIOD": "Ledger Period",
     "LABEL_TYPE": "Label Type",
     "GENERAL": "General",

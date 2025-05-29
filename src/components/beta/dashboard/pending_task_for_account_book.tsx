@@ -11,7 +11,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CreateTodoModal from '@/components/beta/todo_list_page/create_todo_modal';
 
-const TASKS_ICON = [
+const PENDING_TASK = [
   {
     iconName: PendingTaskIconName.MISSING_CERTIFICATE,
     title: TaskTitle.MISSING_CERTIFICATE,
@@ -96,14 +96,12 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
       </h3>
 
       {/* Info: (20241127 - Liz) --- Chart Section --- */}
-      <section className="flex items-center gap-16px">
-        <div className="w-160px">
-          <DonutChart
-            percentageForMissingCertificate={percentageForMissingCertificate}
-            percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            isChartForTotal={false}
-          />
-        </div>
+      <section className="flex items-center gap-24px">
+        <DonutChart
+          percentageForMissingCertificate={percentageForMissingCertificate}
+          percentageForUnpostedVouchers={percentageForUnpostedVouchers}
+          isChartForTotal={false}
+        />
 
         <div className="flex grow flex-col gap-16px">
           <div className="flex items-center justify-between">
@@ -136,9 +134,9 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
 
       {/* Info: (20241127 - Liz) --- List Section ---  */}
       <section className="flex flex-col gap-24px">
-        {TASKS_ICON.map((task) => (
+        {PENDING_TASK.map((task) => (
           <section key={task.title} className="flex items-center justify-between">
-            <TaskType iconName={task.iconName} title={task.title} />
+            <TaskType iconName={task.iconName} title={task.title} alwaysNeedTitle />
             <button
               type="button"
               className="text-sm font-semibold text-link-text-primary"

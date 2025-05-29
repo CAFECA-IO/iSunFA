@@ -562,15 +562,14 @@ const ViewFinancialSection = ({
       >
         {/* Info: (20241002 - Anna) 只在 BalanceSheetReport 顯示 Toggle */}
         {reportTypesName.id === FinancialReportTypesKey.balance_sheet && (
-          <div className="flex gap-4">
-            <Toggle
-              id="subAccounts-toggle"
-              initialToggleState={subAccountsToggle}
-              getToggledState={subAccountsToggleHandler}
-              toggleStateFromParent={subAccountsToggle}
-            />
-            <span className="text-neutral-600">Display Sub-Accounts</span>
-          </div>
+          <Toggle
+            id="subAccounts-toggle"
+            initialToggleState={subAccountsToggle}
+            getToggledState={subAccountsToggleHandler}
+            toggleStateFromParent={subAccountsToggle}
+            label="Display Sub-Accounts"
+            labelClassName="text-neutral-600"
+          />
         )}
 
         <div className="my-auto flex flex-col justify-center self-stretch">

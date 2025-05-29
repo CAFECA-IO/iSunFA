@@ -13,7 +13,7 @@ const ImageZoom = ({
 }: {
   imageUrl: string;
   className?: string;
-  controlPosition?: 'top-right' | 'bottom-right'; // Info: (20250428 - Anna) 可選為位置右上角或右下角
+  controlPosition?: 'top-right' | 'bottom-right' | 'bottom-center'; // Info: (20250527 - Anna) 可選為位置右上角 or 右下角 or 下方中間
 }) => {
   // Info: (20250307 - Julian) 縮放倍率
   const [magnification, setMagnification] = useState<number>(100);
@@ -134,10 +134,10 @@ const ImageZoom = ({
   }, [magnification]);
 
   return (
-    <div className="relative flex h-full flex-col">
+    <div className="relative flex h-full w-full flex-col">
       {/* Info: (20250307 - Julian) 縮放倍率 */}
       <div
-        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} flex items-center gap-12px text-button-stroke-secondary`}
+        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} ${controlPosition === 'bottom-center' ? 'absolute -bottom-20 left-1/2 m-16px -translate-x-1/2' : ''} hidden items-center gap-12px text-button-stroke-secondary tablet:flex`}
       >
         <Button
           type="button"
@@ -148,7 +148,7 @@ const ImageZoom = ({
         >
           <FaPlus />
         </Button>
-        <p className="text-lg font-medium">{magnification} %</p>
+        <p className="whitespace-nowrap text-lg font-medium">{magnification} %</p>
         <Button
           type="button"
           size="smallSquare"
@@ -167,7 +167,7 @@ const ImageZoom = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        className={`relative ${className} overflow-hidden ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`relative ${className} overflow-hidden p-2 ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ userSelect: 'none' }} // Info: (20250307 - Julian) 防止選取內容
       >
         {/* Info: (20250307 - Julian) 圖片 */}

@@ -1,4 +1,3 @@
-// import { DECLARANT_FILING_METHOD, FILING_FREQUENCY, FILING_METHOD, AGENT_FILING_ROLE } from '@/constants/account_book'; // ToDo: (20250507 - Liz) RC2 新增表單欄位
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
 
@@ -21,10 +20,60 @@ export enum WORK_TAG {
 
 export enum ACCOUNT_BOOK_UPDATE_ACTION {
   UPDATE_TAG = 'updateTag',
+  UPDATE_INFO = 'updateInfo',
 }
 
-// Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
+// Info: (20250418 - Liz) 申報頻率
+export enum FILING_FREQUENCY {
+  BIMONTHLY_FILING = 'BIMONTHLY_FILING',
+  MONTHLY_FILING = 'MONTHLY_FILING',
+}
+
+// Info: (20250418 - Liz) 申報方式(總繳種類)
+export enum FILING_METHOD {
+  SINGLE_ENTITY_FILING = 'SINGLE_ENTITY_FILING',
+  CONSOLIDATED_FILING = 'CONSOLIDATED_FILING',
+  INDIVIDUAL_FILING = 'INDIVIDUAL_FILING',
+}
+
+// Info: (20250418 - Liz) (申報人)申報方式
+export enum DECLARANT_FILING_METHOD {
+  SELF_FILING = 'SELF_FILING',
+  AGENT_FILING = 'AGENT_FILING',
+}
+
+// Info: (20250507 - Liz) 申報代理人的角色有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
+export enum AGENT_FILING_ROLE {
+  ACCOUNTANT = 'ACCOUNTANT',
+  BOOKKEEPER = 'BOOKKEEPER',
+  BOOKKEEPER_AND_FILING_AGENT = 'BOOKKEEPER_AND_FILING_AGENT',
+}
+
+/**
+ * Info: (20250521 - Shirley)
+ * 為了解耦，區分前端跟後端使用的 interface，為新的 IAccountBook 除去 RC2 的欄位的樣子
+ * 對應後端的 IAccountBookEntity
+ * 適用於 connect, TODO, status_info 等不需要帳本詳細資訊的 API
+ */
 export interface IAccountBook {
+  id: number;
+  teamId: number;
+  userId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/**
+ * Info: (20250521 - Shirley)
+ * 適用於 call API `LIST_ACCOUNT_BOOK_BY_USER_ID,LIST_ACCOUNT_BOOK_BY_TEAM_ID,UPDATE_ACCOUNT_BOOK,CREATE_ACCOUNT_BOOK` 的畫面
+ */
+// Info: (20250226 - Liz) 原為 ICompany (因為公司已經改名成帳本)
+export interface IAccountBookInfo {
   id: number;
   teamId: number;
   userId: number;
@@ -37,28 +86,33 @@ export interface IAccountBook {
   updatedAt: number;
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
-  // Info: (20250423 - Liz) RC2 新增表單欄位
-  // responsiblePerson: string; // Info: (20250423 - Liz) 負責人姓名
-  // taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
-  // contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
-  // phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
-  // city: string; // Info: (20250423 - Liz) 縣市
-  // district: string; // Info: (20250423 - Liz) 行政區
-  // enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
+  // Info: (20250523 - Liz) RC2 新增表單欄位
+  representativeName: string; // Info: (20250423 - Liz) 負責人姓名
+  taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
+  contactPerson: string; // Info: (20250423 - Liz) 聯絡人姓名
+  phoneNumber: string; // Info: (20250423 - Liz) 電話號碼
+  city: string; // Info: (20250423 - Liz) 縣市
+  district: string; // Info: (20250423 - Liz) 行政區
+  enteredAddress: string; // Info: (20250423 - Liz) 使用者輸入的地址
 
-  // filingFrequency: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
-  // filingMethod: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
-  // declarantFilingMethod: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
+  // Deprecated: (20250523 - Liz) 即將移除
+  // filingFrequency?: FILING_FREQUENCY; // Info: (20250423 - Liz) 申報頻率
+  // filingMethod?: FILING_METHOD; // Info: (20250423 - Liz) 總繳種類
+  // declarantFilingMethod?: DECLARANT_FILING_METHOD; // Info: (20250423 - Liz) 申報方式
 
-  // declarantName: string; // Info: (20250423 - Liz) 申報人姓名
-  // declarantPersonalId: string; // Info: (20250423 - Liz) 申報人身分證字號
-  // declarantPhoneNumber: string; // Info: (20250423 - Liz) 申報人電話號碼
+  // declarantName?: string; // Info: (20250423 - Liz) 申報人姓名
+  // declarantPersonalId?: string; // Info: (20250423 - Liz) 申報人身分證字號
+  // declarantPhoneNumber?: string; // Info: (20250423 - Liz) 申報人電話號碼
 
   // agentFilingRole?: AGENT_FILING_ROLE; // Info: (20250423 - Liz) 申報代理人的角色，有三種：會計師(稅務代理人)、記帳士、記帳及報稅代理人
   // licenseId?: string; // Info: (20250506 - Liz) 申報代理人的證書字號、登錄字號
 }
 
-export interface IAccountBookWithTeam extends IAccountBook {
+/**
+ * Info: (20250521 - Shirley)
+ * 對應後端的 IAccountBookInfoWithTeamEntity
+ */
+export interface IAccountBookWithTeam extends IAccountBookInfo {
   team: ITeam;
   isTransferring: boolean;
 }
@@ -87,6 +141,40 @@ export interface IAccountBookDetails {
   startDate: number;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface ICreateAccountBookReqBody {
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  teamId: number;
+  fileId?: number; // Info: (20250523 - Liz) 圖片 ID
+  representativeName?: string; // Info: (20250523 - Liz) 負責人姓名
+  taxSerialNumber?: string; // Info: (20250523 - Liz) 稅籍編號
+  contactPerson?: string; // Info: (20250523 - Liz) 聯絡人姓名
+  phoneNumber?: string; // Info: (20250523 - Liz) 電話號碼
+  city?: string; // Info: (20250523 - Liz) 縣市
+  district?: string; // Info: (20250523 - Liz) 行政區
+  enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+}
+
+export interface IUpdateAccountBookReqBody {
+  accountBookId: string;
+  fromTeamId?: number; // Info: (20250523 - Liz) 轉移帳本的原團隊 ID (轉移帳本 API)
+  toTeamId?: number; // Info: (20250523 - Liz) 接收帳本的目標團隊 ID (轉移帳本 API)
+  action?: ACCOUNT_BOOK_UPDATE_ACTION;
+  tag?: WORK_TAG;
+  name?: string;
+  taxId?: string;
+  teamId?: number;
+  fileId?: number; // Info: (20250523 - Liz) 圖片 ID
+  representativeName?: string; // Info: (20250523 - Liz) 負責人姓名
+  taxSerialNumber?: string; // Info: (20250523 - Liz) 稅籍編號
+  contactPerson?: string; // Info: (20250523 - Liz) 聯絡人姓名
+  phoneNumber?: string; // Info: (20250523 - Liz) 電話號碼
+  city?: string; // Info: (20250523 - Liz) 縣市
+  district?: string; // Info: (20250523 - Liz) 行政區
+  enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
 }
 
 export interface ICompanyTaxIdAndName {

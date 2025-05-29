@@ -5,6 +5,7 @@ export enum PRIVATE_CHANNEL {
   REPORT = 'private-report',
   ROOM = 'private-room',
   INVOICE = 'private-invoice',
+  USER = 'private-user',
 }
 
 export enum CERTIFICATE_EVENT {
@@ -25,4 +26,8 @@ export enum ROOM_EVENT {
   JOIN = 'room-join',
   NEW_FILE = 'room-new-file',
   DELETE = 'room-delete',
+}
+
+export enum NOTIFICATION_EVENT {
+  NEW = 'notification:new',
 }

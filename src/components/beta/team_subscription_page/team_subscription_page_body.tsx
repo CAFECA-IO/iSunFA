@@ -11,11 +11,16 @@ interface TeamSubscriptionPageBodyProps {
 
 const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBodyProps) => {
   const { t } = useTranslation(['subscriptions']);
-  const isPlanBeginner = team.plan === TPlanType.BEGINNER;
+  const { plan, name, paymentStatus, enableAutoRenewal, expiredTimestamp, nextRenewalTimestamp } =
+    team;
 
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+  const nowTimestamp = Date.now() / 1000;
 
-  const isAutoRenewal = team.enableAutoRenewal;
+  // Info: (20250526 - Julian) 「plan 為 Beginner」或「已過期」
+  const isPlanBeginner = plan === TPlanType.BEGINNER || expiredTimestamp < nowTimestamp;
+
+  // Info: (20250526 - Julian) 「paymentStatus 為 Trial」且「還沒過期」
+  const isTrial = paymentStatus === TPaymentStatus.TRIAL && expiredTimestamp > nowTimestamp;
 
   // Info: (20250425 - Julian) 以（）拆分文字
   const trialStr = t('subscriptions:PLAN_NAME.TRIAL').split(/[（）]/, 2);
@@ -24,9 +29,13 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
     <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
       {trialStr[0]} <span className="text-text-brand-secondary-lv2">({trialStr[1]})</span>
     </p>
+  ) : isPlanBeginner ? ( // Info: (20250526 - Julian) 免費版名稱固定
+    <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
+      {t('subscriptions:PLAN_NAME.BEGINNER')}
+    </p>
   ) : (
     <p className="text-xl font-semibold capitalize leading-32px text-text-brand-primary-lv1">
-      {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
+      {t(`subscriptions:PLAN_NAME.${plan.toUpperCase()}`)}
     </p>
   );
 
@@ -36,19 +45,19 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
       <Trans
         i18nKey="subscriptions:SUBSCRIPTIONS_PAGE.LEFT_DAYS"
         values={{
-          days: getRemainingDays(team.nextRenewalTimestamp * 1000),
+          days: getRemainingDays(nextRenewalTimestamp * 1000),
         }}
       />
     </p>
   ) : (
     !isPlanBeginner &&
-    isAutoRenewal && (
+    enableAutoRenewal && (
       <p className="text-xs font-normal">
         <span className="leading-5 text-text-neutral-tertiary">
           {t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}:{' '}
         </span>
         <span className="text-text-neutral-primary">
-          {timestampToString(team.expiredTimestamp).dateWithSlash}
+          {timestampToString(expiredTimestamp).dateWithSlash}
         </span>
       </p>
     )
@@ -64,7 +73,7 @@ const TeamSubscriptionPageBody = ({ team, getOwnedTeam }: TeamSubscriptionPageBo
         <div className="w-24px flex-none bg-surface-brand-primary"></div>
 
         <section className="flex flex-auto items-center gap-40px bg-surface-brand-primary-5 p-24px">
-          <h2 className="text-36px font-bold text-text-brand-secondary-lv1">{team.name}</h2>
+          <h2 className="text-36px font-bold text-text-brand-secondary-lv1">{name}</h2>
 
           <div className="w-1px self-stretch bg-surface-neutral-depth"></div>
 

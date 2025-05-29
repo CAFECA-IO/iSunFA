@@ -62,22 +62,35 @@ const DashboardBody = () => {
   }, [getTodoList]);
 
   return (
-    <div className="flex w-100% flex-col gap-40px">
-      {/* ToDo: (20250401 - Liz) 目前沒有跑馬燈功能，故先隱藏 */}
-      {/* <Announcement /> */}
-      <MyAccountBookList />
+    <>
+      {/* Info: (20250519 - Liz) Desktop ver */}
+      <main className="hidden w-100% flex-col gap-40px laptop:flex">
+        {/* ToDo: (20250401 - Liz) 目前沒有跑馬燈功能，故先隱藏 */}
+        {/* <Announcement /> */}
+        <MyAccountBookList />
 
-      <div className="flex flex-wrap gap-24px">
-        <section className="flex flex-auto flex-col gap-24px">
-          <TodayTodoList todayTodoList={todayTodoList} />
-          <LatestNews />
-        </section>
+        <div className="flex gap-24px">
+          <section className="flex min-w-0 flex-1 flex-col gap-24px">
+            <TodayTodoList todayTodoList={todayTodoList} />
+            <LatestNews />
+          </section>
 
-        <section className="flex flex-auto">
-          <PendingTask getTodoList={getTodoList} />
-        </section>
-      </div>
-    </div>
+          <section className="flex min-w-0 flex-1">
+            <PendingTask getTodoList={getTodoList} />
+          </section>
+        </div>
+      </main>
+
+      {/* Info: (20250519 - Liz) Mobile ver */}
+      <main className="flex w-100% flex-col gap-40px laptop:hidden">
+        {/* ToDo: (20250401 - Liz) 目前沒有跑馬燈功能，故先隱藏 */}
+        {/* <Announcement /> */}
+        <MyAccountBookList />
+        <TodayTodoList todayTodoList={todayTodoList} />
+        <LatestNews />
+        <PendingTask getTodoList={getTodoList} />
+      </main>
+    </>
   );
 };
 

@@ -70,7 +70,7 @@ const VoucherDetailPage: React.FC<{ voucherId: string }> = ({ voucherId }) => {
       </Head>
 
       <Layout isDashboard={false} pageTitle={pageTitle} goBackUrl={goBackUrl}>
-        <VoucherDetailPageBody voucherId={voucherId} voucherNo={voucherNo} />
+        <VoucherDetailPageBody voucherId={voucherId} voucherNo={voucherNo} goBackUrl={goBackUrl} />
       </Layout>
     </>
   );

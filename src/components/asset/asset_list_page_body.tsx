@@ -15,6 +15,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { ISortOption } from '@/interfaces/sort';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
@@ -23,7 +24,6 @@ const AssetListPageBody: React.FC = () => {
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { accountBookId };
-  // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
   const { trigger: getAccountListAPI } = APIHandler<IPaginatedAccount>(APIName.ACCOUNT_LIST);
 
@@ -38,31 +38,25 @@ const AssetListPageBody: React.FC = () => {
   );
   const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
 
   const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
 
   useEffect(() => {
-    let sort: { by: SortBy; order: SortOrder } | undefined;
+    let sort: ISortOption | undefined;
     if (dateSort) {
-      sort = { by: SortBy.DATE, order: dateSort };
+      sort = { sortBy: SortBy.DATE, sortOrder: dateSort };
     } else if (purchasePriceSort) {
-      sort = { by: SortBy.PURCHASE_PRICE, order: purchasePriceSort };
+      sort = { sortBy: SortBy.PURCHASE_PRICE, sortOrder: purchasePriceSort };
     } else if (accumulatedDepreciationSort) {
       sort = {
-        by: SortBy.ACCUMULATED_DEPRECIATION,
-        order: accumulatedDepreciationSort,
+        sortBy: SortBy.ACCUMULATED_DEPRECIATION,
+        sortOrder: accumulatedDepreciationSort,
       };
     } else if (residualValueSort) {
-      sort = { by: SortBy.RESIDUAL_VALUE, order: residualValueSort };
+      sort = { sortBy: SortBy.RESIDUAL_VALUE, sortOrder: residualValueSort };
     } else if (remainingLifeSort) {
-      sort = { by: SortBy.REMAINING_LIFE, order: remainingLifeSort };
+      sort = { sortBy: SortBy.REMAINING_LIFE, sortOrder: remainingLifeSort };
     }
     setSelectedSort(sort);
   }, [

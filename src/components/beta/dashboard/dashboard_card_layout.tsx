@@ -4,9 +4,7 @@ interface DashboardCardLayoutProps {
 
 const DashboardCardLayout = ({ children }: DashboardCardLayoutProps) => {
   return (
-    <div className="min-w-400px flex-auto rounded-md bg-surface-neutral-surface-lv2 p-24px">
-      {children}
-    </div>
+    <div className="flex-auto rounded-md bg-surface-neutral-surface-lv2 p-24px">{children}</div>
   );
 };
 

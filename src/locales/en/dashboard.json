@@ -87,6 +87,7 @@
     "SELECT_YOUR_ROLE": "Select Your Role",
     "ROLE_FUNCTION_PREVIEW": "Role Function Preview",
     "BACK_TO_SELECT_ROLE_PAGE": "Back to Select Role Page",
+    "ROLE_DATA_NOT_FOUND": "Unable to retrieve role data, please try again later",
 
     "COMMON_FUNCTIONS": "Common Functions",
     "COMMON_FUNCTIONS_FOR_INDIVIDUAL": "Voucher Management, Journal Entry Management, Accounts Receivable & Payable Management, Financial Statements, Trial Balance, General Ledger",
@@ -175,12 +176,14 @@
     "RESPONSIBLE_PERSON": "Responsible Person",
     "ENTER_RESPONSIBLE_PERSON": "Enter Responsible Person",
     "ENTER_TAX_ID": "Enter Tax ID",
-    "CANCEL": "Cancel",
     "ADD": "Add",
     "NEXT": "Next",
+    "SKIP": "Skip",
+    "SKIPPED": "Skipped",
     "CHOOSE_WORK_TAG": "Choose Work Tag",
     "CHOOSE_TEAM": "Choose Team",
     "CREATE_ACCOUNT_BOOK_FAILED": "Failed to create account book",
+    "UPDATE_ACCOUNT_BOOK_FAILED": "Failed to update account book",
     "ERROR_CODE": "Error Code",
     "ERROR_MESSAGE": "Error Message",
 

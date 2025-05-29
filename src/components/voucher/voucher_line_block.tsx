@@ -146,13 +146,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       ))
     ) : (
       <div className="col-start-1 col-end-14 flex w-full flex-col items-center rounded-sm bg-input-surface-input-background py-10px text-xs">
-        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY')}</p>
         <p className={'text-text-state-error'}>{t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}</p>
       </div>
     );
 
   return (
-    <div className="flex flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-24px py-12px">
+    <div className="flex w-max flex-col items-center gap-y-24px rounded-md bg-surface-brand-secondary-moderate px-lv-5 py-lv-3 text-sm tablet:w-auto tablet:text-base">
       <div className="grid w-full grid-cols-13 gap-x-lv-5">
         {/* Info: (20240927 - Julian) Table Header */}
         <div className="col-span-3 font-semibold text-text-neutral-invert">
@@ -259,7 +259,7 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
       })
     ) : (
       <div className="col-start-1 col-end-14 flex w-full flex-col items-center rounded-sm bg-input-surface-input-background py-10px text-xs">
-        <p className="text-text-neutral-tertiary">{t('common:COMMON.EMPTY')}</p>
+        <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY')}</p>
         <p className="text-text-neutral-primary">{t('journal:VOUCHER_LINE_BLOCK.EMPTY_HINT')}</p>
       </div>
     );

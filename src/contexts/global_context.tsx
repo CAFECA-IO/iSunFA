@@ -6,7 +6,7 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import AddAssetModal from '@/components/asset/add_asset_modal';
-import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
+import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
@@ -18,7 +18,6 @@ import { useNotificationCtx } from '@/contexts/notification_context';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
-// import TeamSettingModal from '@/components/team_setting_modal/team_setting_modal';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
 import { useModalContext } from '@/contexts/modal_context';
@@ -27,7 +26,6 @@ import AssetStatusSettingModal from '@/components/asset_status_setting_modal/ass
 import { IAssetModal, initialAssetModal } from '@/interfaces/asset_modal';
 import SelectReverseItemsModal from '@/components/voucher/select_reverse_items_modal';
 import { IReverseItemModal, defaultReverseItemModal } from '@/interfaces/reverse';
-import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
 import ManualAccountOpeningModal from '@/components/general/account_settings/manual_account_opening_modal';
 import AddCounterPartyModal from '@/components/counterparty/add_counterparty_modal';
 
@@ -80,9 +78,6 @@ interface IGlobalContext {
   isSelectReverseItemsModalVisible: boolean;
   selectReverseItemsModalVisibilityHandler: () => void;
   selectReverseDataHandler: (data: IReverseItemModal) => void;
-
-  isAccountingTitleSettingModalVisible: boolean;
-  accountingTitleSettingModalVisibilityHandler: () => void;
 
   isManualAccountOpeningModalVisible: boolean;
   manualAccountOpeningModalVisibilityHandler: () => void;
@@ -153,9 +148,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [selectedReverseData, setSelectedReverseData] =
     useState<IReverseItemModal>(defaultReverseItemModal);
 
-  const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
-    useState(false);
-
   const [isManualAccountOpeningModalVisible, setIsManualAccountOpeningModalVisible] =
     useState(false);
 
@@ -204,10 +196,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
     setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
   };
 
-  // const teamSettingModalVisibilityHandler = () => {
-  //   setIsTeamSettingModalVisible(!isTeamSettingModalVisible);
-  // };
-
   const transferCompanyModalVisibilityHandler = () => {
     setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
   };
@@ -253,10 +241,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const selectReverseDataHandler = (data: IReverseItemModal) => {
     setSelectedReverseData(data);
-  };
-
-  const accountingTitleSettingModalVisibilityHandler = () => {
-    setIsAccountingTitleSettingModalVisible(!isAccountingTitleSettingModalVisible);
   };
 
   const manualAccountOpeningModalVisibilityHandler = () => {
@@ -339,9 +323,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
 
-      // isTeamSettingModalVisible,
-      // teamSettingModalVisibilityHandler,
-
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
 
@@ -355,9 +336,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isSelectReverseItemsModalVisible,
       selectReverseItemsModalVisibilityHandler,
       selectReverseDataHandler,
-
-      isAccountingTitleSettingModalVisible,
-      accountingTitleSettingModalVisibilityHandler,
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
@@ -391,9 +369,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
 
-      // isTeamSettingModalVisible,
-      // teamSettingModalVisibilityHandler,
-
       isTransferCompanyModalVisible,
       transferCompanyModalVisibilityHandler,
 
@@ -407,9 +382,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       isSelectReverseItemsModalVisible,
       selectReverseItemsModalVisibilityHandler,
       selectReverseDataHandler,
-
-      isAccountingTitleSettingModalVisible,
-      accountingTitleSettingModalVisibilityHandler,
 
       isManualAccountOpeningModalVisible,
       manualAccountOpeningModalVisibilityHandler,
@@ -481,11 +453,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
       />
 
-      {/* <TeamSettingModal
-        isModalVisible={isTeamSettingModalVisible}
-        modalVisibilityHandler={teamSettingModalVisibilityHandler}
-      /> */}
-
       <TransferCompanyModal
         isModalVisible={isTransferCompanyModalVisible}
         modalVisibilityHandler={transferCompanyModalVisibilityHandler}
@@ -507,11 +474,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={isSelectReverseItemsModalVisible}
         modalVisibilityHandler={selectReverseItemsModalVisibilityHandler}
         modalData={selectedReverseData}
-      />
-
-      <AccountingTitleSettingModal
-        isModalVisible={isAccountingTitleSettingModalVisible}
-        modalVisibilityHandler={accountingTitleSettingModalVisibilityHandler}
       />
 
       <ManualAccountOpeningModal

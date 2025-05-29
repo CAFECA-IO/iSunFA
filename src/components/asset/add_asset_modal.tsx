@@ -286,11 +286,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
     const addParams = { accountBookId };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     // Info: (20241028 - Julian) 更新資產需 assetId
     const updateParams = { accountBookId, assetId: assetData?.id };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     if (inputAmount > 1) {
       // Info: (20241210 - Julian) 若數量大於 1，則使用 createAssetBulk API
@@ -503,31 +501,31 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-450px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
+      <div className="flex max-h-600px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 tablet:max-h-450px md:max-h-90vh">
         {/* Info: (20241015 - Julian) title */}
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
           <h1 className="whitespace-nowrap text-xl font-bold text-card-text-primary">
             {modalTitle}
           </h1>
-          <p className="text-sm text-card-text-secondary">{modalSubtitle}</p>
+          <p className="text-xs text-card-text-secondary tablet:text-sm">{modalSubtitle}</p>
           {/* Info: (20241015 - Julian) close button */}
           <button
             type="button"
             onClick={modalVisibilityHandler}
             className="absolute right-20px top-16px text-icon-surface-single-color-primary"
           >
-            <RxCross2 size={20} />
+            <RxCross2 size={24} />
           </button>
         </div>
 
         {/* Info: (20241015 - Julian) content */}
         <form
           onSubmit={addAssetSubmitHandler}
-          className="flex w-full flex-col gap-y-40px px-30px py-24px text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-y-16px px-lv-4 py-16px text-sm text-input-text-primary tablet:gap-y-40px tablet:px-30px tablet:py-24px"
         >
           {/* Info: (20241015 - Julian) input fields */}
-          <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
+          <div className="grid max-h-400px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center tablet:max-h-500px md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
             {modalType === AssetModalType.ADD ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
@@ -763,9 +761,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           </div>
 
           {/* Info: (20240503 - Julian) confirm buttons */}
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center gap-12px tablet:justify-end">
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="button"
               onClick={modalVisibilityHandler}
               variant="secondaryOutline"
@@ -773,7 +771,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="submit"
               variant="tertiary"
               disabled={isLoading} // Info: (20241202 - Julian) 避免重複送出

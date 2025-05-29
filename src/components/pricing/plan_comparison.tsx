@@ -14,7 +14,6 @@ const PlanComparison: React.FC = () => {
   const features = [
     'PRICE',
     'FREE_TRIAL',
-    'OWNED_TEAM_LIMIT',
     'JOINABLE_TEAM_LIMIT',
     'OWNED_TEAM_MEMBER_LIMIT',
     'OWNED_TEAM_LEDGER_LIMIT',
@@ -27,7 +26,7 @@ const PlanComparison: React.FC = () => {
     'TECH_ADVANTAGE',
     'CONTINUOUS_AUDIT',
     'EARLY_ACCESS',
-    'TAX_REPORTING',
+    'AI_MODEL_ASSISTANCE',
     'ENTERPRISE_SUPPORT',
     'UNSUBSCRIBE',
   ];

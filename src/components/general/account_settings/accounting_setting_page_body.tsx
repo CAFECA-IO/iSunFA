@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { useTranslation } from 'next-i18next';
@@ -17,6 +17,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
 
 type ITaxTypeForFrontend =
   | number
@@ -43,12 +44,15 @@ enum TaxPeriod {
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
 
-  const {
-    accountingTitleSettingModalVisibilityHandler,
-    manualAccountOpeningModalVisibilityHandler,
-  } = useGlobalCtx();
+  const { manualAccountOpeningModalVisibilityHandler } = useGlobalCtx();
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
+
+  const [isAccountingTitleSettingModalVisible, setIsAccountingTitleSettingModalVisible] =
+    useState<boolean>(false);
+
+  const openAccountingTitleSettingModal = () => setIsAccountingTitleSettingModalVisible(true);
+  const closeAccountingTitleSettingModal = () => setIsAccountingTitleSettingModalVisible(false);
 
   const accountBookId = connectedAccountBook?.id;
   const currencyList = ['TWD', 'USD', 'CNY', 'HKD', 'JPY'];
@@ -117,33 +121,36 @@ const AccountingSettingPageBody: React.FC = () => {
   const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
   const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
 
-  const getAccountData = async () => {
-    // Info: (20250425 - Julian) GET API
-    const { data, success } = await getAccountSetting({ params: { accountBookId } });
+  // Info: (20250520 - Julian) call API after get connectedAccountBook
+  const getAccountData = useCallback(async () => {
+    if (accountBookId) {
+      // Info: (20250425 - Julian) GET API
+      const { data, success } = await getAccountSetting({ params: { accountBookId } });
 
-    // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
-    if (success && data) {
-      const { salesTax, purchaseTax, returnPeriodicity } = data.taxSettings;
+      // Info: (20250425 - Julian) 將 API 回傳的資料設置到狀態中
+      if (success && data) {
+        const { salesTax, purchaseTax, returnPeriodicity } = data.taxSettings;
 
-      const salesTaxRate = salesTax.taxable
-        ? salesTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
-          ? TaxTypeForFrontend.ZERO_TAX
-          : salesTax.rate
-        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+        const salesTaxRate = salesTax.taxable
+          ? salesTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+            ? TaxTypeForFrontend.ZERO_TAX
+            : salesTax.rate
+          : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
 
-      const purchaseTaxRate = purchaseTax.taxable
-        ? purchaseTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
-          ? TaxTypeForFrontend.ZERO_TAX
-          : purchaseTax.rate
-        : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
+        const purchaseTaxRate = purchaseTax.taxable
+          ? purchaseTax.rate === 0 // Info: (20250425 - Julian) 若稅率為 0，則為「零稅率」
+            ? TaxTypeForFrontend.ZERO_TAX
+            : purchaseTax.rate
+          : TaxTypeForFrontend.TAX_FREE; // Info: (20250425 - Julian) 若 taxable 為 false，則為「免稅」
 
-      setAccountSettingId(data.id); // Info: (20250425 - Julian) 取得會計 ID
-      setCurrentSalesTax(salesTaxRate);
-      setCurrentPurchaseTax(purchaseTaxRate);
-      setCurrentTaxPeriod(returnPeriodicity as ITaxPeriod);
-      setCurrentCurrency(data.currency);
+        setAccountSettingId(data.id); // Info: (20250425 - Julian) 取得會計 ID
+        setCurrentSalesTax(salesTaxRate);
+        setCurrentPurchaseTax(purchaseTaxRate);
+        setCurrentTaxPeriod(returnPeriodicity as ITaxPeriod);
+        setCurrentCurrency(data.currency);
+      }
     }
-  };
+  }, [connectedAccountBook]);
 
   const handleReportGenerateDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value, 10);
@@ -198,7 +205,7 @@ const AccountingSettingPageBody: React.FC = () => {
   // Info: (20250425 - Julian) 取得會計設定資料
   useEffect(() => {
     getAccountData();
-  }, []);
+  }, [getAccountData]);
 
   // Info: (20250425 - Julian) 更新資料
   useEffect(() => {
@@ -228,6 +235,9 @@ const AccountingSettingPageBody: React.FC = () => {
 
   // Info: (20241113 - Julian) 文字顯示設定
   const showTaxStr = (taxRate: ITaxTypeForFrontend) => {
+    // Info: (20250520 - Julian) 轉換稅率為百分比字串
+    const taxStr = typeof taxRate === 'number' ? taxRate * 100 : taxRate.toString();
+
     switch (taxRate) {
       case TaxTypeForFrontend.ZERO_TAX:
         return (
@@ -265,7 +275,7 @@ const AccountingSettingPageBody: React.FC = () => {
             <p className="text-input-text-input-filled">
               {t('settings:ACCOUNTING.TAX_OPTION_TAXABLE')}
             </p>
-            <p className="text-input-text-input-placeholder">{taxRate}%</p>
+            <p className="text-input-text-input-placeholder">{taxStr}%</p>
           </div>
         );
     }
@@ -276,7 +286,7 @@ const AccountingSettingPageBody: React.FC = () => {
     dropdownVisible: boolean,
     setTaxState: React.Dispatch<React.SetStateAction<ITaxTypeForFrontend>>
   ) => {
-    const fivePercentClickHandler = () => setTaxState(5);
+    const fivePercentClickHandler = () => setTaxState(0.05);
     const zeroTaxClickHandler = () => setTaxState('zeroTax');
     //  const zeroTaxThroughCustomsClickHandler = () => setTaxState('zeroTaxThroughCustoms');
     //  const zeroTaxNotThroughCustomsClickHandler = () => setTaxState('zeroTaxNotThroughCustoms');
@@ -421,7 +431,10 @@ const AccountingSettingPageBody: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col items-center gap-40px p-40px">
+    <div className="flex flex-col items-center gap-40px tablet:p-40px">
+      <div className="block w-full text-left text-base font-bold text-text-neutral-secondary tablet:hidden">
+        {t('settings:ACCOUNTING.TITLE')}
+      </div>
       {/* Info: (20241106 - Julian) ===== 稅務設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 稅務設定標題 ===== */}
@@ -433,7 +446,7 @@ const AccountingSettingPageBody: React.FC = () => {
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
         {/* Info: (20241106 - Julian) ===== 稅務設定內容 ===== */}
-        <div className="grid grid-cols-2 gap-x-40px gap-y-24px">
+        <div className="grid grid-cols-1 gap-x-40px gap-y-24px tablet:grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 銷售稅 ===== */}
           <div ref={salesTaxRef} className="flex flex-col gap-10px">
             <p className="text-sm text-input-text-primary">{t('settings:ACCOUNTING.TAX_SALES')}</p>
@@ -514,7 +527,7 @@ const AccountingSettingPageBody: React.FC = () => {
           <hr className="flex-1 border-divider-stroke-lv-1" />
         </div>
 
-        <div className="grid grid-cols-2">
+        <div className="grid grid-cols-1 tablet:grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 貨幣下拉選單 ===== */}
           <div
             ref={currencyMenuRef}
@@ -640,7 +653,7 @@ const AccountingSettingPageBody: React.FC = () => {
               <button
                 type="button"
                 className="flex items-center gap-4px text-sm text-link-text-primary disabled:text-text-neutral-mute"
-                onClick={accountingTitleSettingModalVisibilityHandler}
+                onClick={openAccountingTitleSettingModal}
               >
                 {t('settings:ACCOUNTING.VIEW_ALL_ACCOUNTING')}
               </button>
@@ -685,11 +698,19 @@ const AccountingSettingPageBody: React.FC = () => {
       </div>
 
       {/* Info: (20241106 - Julian) ===== 儲存按鈕 ===== */}
-      <div className="ml-auto flex items-center">
+      <div className="order-4 ml-auto flex items-center">
         <Button type="button" variant="tertiary" disabled={saveDisabled} onClick={saveClickHandler}>
           {t('settings:ACCOUNTING.SAVE_BTN')}
         </Button>
       </div>
+
+      {/* Info: (20250519 - Liz) 會計科目設定 Modal */}
+      {isAccountingTitleSettingModalVisible && (
+        <AccountingTitleSettingModal
+          isModalVisible={isAccountingTitleSettingModalVisible}
+          modalVisibilityHandler={closeAccountingTitleSettingModal}
+        />
+      )}
     </div>
   );
 };

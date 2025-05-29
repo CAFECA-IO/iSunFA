@@ -6,19 +6,29 @@ import Image from 'next/image';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { FiArrowRight } from 'react-icons/fi';
 import { IUserRole } from '@/interfaces/user_role';
+import { RoleName } from '@/constants/role';
+import { DEFAULT_AVATAR_URL } from '@/constants/display';
+
+// Info: (20250523 - Liz) 每個角色對應的小圖示
+const ROLES_ICON: Record<RoleName, string> = {
+  [RoleName.INDIVIDUAL]: '/icons/information_desk.svg',
+  [RoleName.ACCOUNTING_FIRMS]: '/icons/accounting_firms_icon.svg',
+  [RoleName.ENTERPRISE]: '/icons/enterprise_icon.svg',
+};
 
 interface UserRoleProps {
   userRole: IUserRole;
-  roleIconSrc: string;
-  roleIconAlt: string;
-  avatar: string;
   lastLoginAt: number;
 }
 
-const UserRole = ({ userRole, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: UserRoleProps) => {
+const UserRole = ({ userRole, lastLoginAt }: UserRoleProps) => {
   const { t } = useTranslation(['dashboard']);
   const router = useRouter();
-  const { selectRole } = useUserCtx();
+  const { userAuth, selectRole } = useUserCtx();
+  const roleIcon = ROLES_ICON[userRole.roleName];
+  const roleIconAlt = `${userRole.roleName} icon`;
+  const avatar = userAuth?.imageId ?? DEFAULT_AVATAR_URL;
+
   const [isLoading, setIsLoading] = useState(false);
 
   const selectUserRole = async () => {
@@ -60,7 +70,7 @@ const UserRole = ({ userRole, roleIconSrc, roleIconAlt, avatar, lastLoginAt }: U
   return (
     <div className="relative flex h-480px w-280px flex-col items-center justify-between rounded-lg bg-surface-neutral-surface-lv1 p-40px shadow-Dropshadow_S">
       <div className="absolute left-20px top-20px opacity-30">
-        <Image src={roleIconSrc} alt={roleIconAlt} width={64} height={64} />
+        <Image src={roleIcon} alt={roleIconAlt} width={64} height={64} />
       </div>
 
       <h2 className="text-32px font-bold text-text-neutral-primary">
