@@ -669,7 +669,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
             sort={selectedSort}
             labelClassName="text-neutral-300"
             isShowSideMenu={isShowSideMenu}
-            sideMenuVisibleHandler={toggleSideMenu}
+            toggleSideMenu={toggleSideMenu}
           />
 
           {/* Info: (20240919 - Anna) Certificate Table */}

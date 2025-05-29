@@ -158,7 +158,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           hideReversedRelated={isHideReversals}
           hideReversalsToggleHandler={hideReversalsToggleHandler}
           isShowSideMenu={isShowSideMenu}
-          sideMenuVisibleHandler={toggleSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
         <div className="hidden tablet:block">

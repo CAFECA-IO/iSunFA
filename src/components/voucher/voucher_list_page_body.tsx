@@ -217,7 +217,7 @@ const VoucherListPageBody: React.FC = () => {
           initialKeyword={queryKeyword}
           initialPage={queryPage}
           isShowSideMenu={isShowSideMenu}
-          sideMenuVisibleHandler={toggleSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         <VoucherList

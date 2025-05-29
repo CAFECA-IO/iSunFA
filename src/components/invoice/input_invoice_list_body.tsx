@@ -655,7 +655,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           sort={selectedSort}
           labelClassName="text-neutral-300"
           isShowSideMenu={isShowSideMenu}
-          sideMenuVisibleHandler={toggleSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
 
         {/* Info: (20240919 - Anna) Certificate Table */}

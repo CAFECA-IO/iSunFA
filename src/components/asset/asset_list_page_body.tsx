@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import { VscSettings } from 'react-icons/vsc';
 import AssetList from '@/components/asset/asset_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
@@ -40,7 +41,11 @@ const AssetListPageBody: React.FC = () => {
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
 
+  const [isShowSideMenu, setIsShowSideMenu] = useState(false);
+
   const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
+
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   useEffect(() => {
     let sort: ISortOption | undefined;
@@ -120,7 +125,17 @@ const AssetListPageBody: React.FC = () => {
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
           sort={selectedSort}
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
+        {/* Info: (20250529 - Julian) Filter button */}
+        <button
+          type="button"
+          onClick={toggleSideMenu}
+          className="block p-10px text-button-text-secondary tablet:hidden"
+        >
+          <VscSettings size={24} />
+        </button>
         {/* Info: (20240925 - Julian) Asset List */}
         {assetList && assetList.length > 0 ? (
           <AssetList
