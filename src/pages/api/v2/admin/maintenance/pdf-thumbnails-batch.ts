@@ -39,7 +39,7 @@ let isExecuting = false;
 let lastExecutionTime = 0;
 
 interface BatchThumbnailRequest {
-  force?: boolean; // 是否強制重新執行
+  force?: boolean; // Info: (20250529 - Shirley) 是否強制重新執行
 }
 
 interface BatchThumbnailResponse {
@@ -80,7 +80,7 @@ function validateEnvironment(): { isValid: boolean; error?: string } {
  */
 function canExecute(force = false): { canExecute: boolean; reason?: string } {
   const now = Date.now();
-  const cooldownPeriod = 60 * 1000; // 1分鐘冷卻期
+  const cooldownPeriod = 60 * 1000; // Info: (20250529 - Shirley) 1分鐘冷卻期
 
   if (isExecuting) {
     return {
@@ -551,16 +551,16 @@ export default async function handler(
     const invoiceFolderPath = path.join(process.env.BASE_STORAGE_PATH || '', 'invoice');
     loggerBack.info(`[PDF_BATCH_THUMBNAIL] Scanning PDF files in: ${invoiceFolderPath}`);
 
-    // 讀取資料夾中的所有檔案
+    // Info: (20250529 - Shirley) 讀取資料夾中的所有檔案
     const files = await fs.readdir(invoiceFolderPath);
-    // 篩選出 PDF 檔案
+    // Info: (20250529 - Shirley) 篩選出 PDF 檔案
     const pdfFiles = files.filter((file) => file.toLowerCase().endsWith('.pdf'));
 
     loggerBack.info(
       `[PDF_BATCH_THUMBNAIL] Found ${pdfFiles.length} PDF files in ${invoiceFolderPath}`
     );
 
-    // 取得所有 PDF 檔案的檔名列表
+    // Info: (20250529 - Shirley) 取得所有 PDF 檔案的檔名列表
     const targetFileNames = pdfFiles;
 
     // Info: (20250529 - Shirley) 獲取檔案資訊和對應的公司ID的SQL邏輯實現
@@ -569,7 +569,7 @@ export default async function handler(
         name: {
           in: targetFileNames,
         },
-        thumbnailId: null, // 只處理還沒有縮圖的檔案
+        thumbnailId: null, // Info: (20250529 - Shirley) 只處理還沒有縮圖的檔案
         deletedAt: null,
       },
       select: {
