@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils/common';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 
+// ToDo: (20250529 - Liz) 此元件正在修改中，尚未完成!!!
+
 type NotificationItemProps = {
   notification: INotificationRC2;
   onMarkAsRead: (id: number) => void;
@@ -14,20 +16,33 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   const { id, title, message, read, type, event, content } = notification;
   const { teamName } = content;
 
-  const { trigger: acceptAccountBookTransfer } = APIHandler<void>(
+  const { trigger: acceptAccountBookTransferAPI } = APIHandler<void>(
     APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK
   );
-  const { trigger: declineAccountBookTransfer } = APIHandler<void>(
+  const { trigger: declineAccountBookTransferAPI } = APIHandler<void>(
     APIName.DECLINE_TRANSFER_ACCOUNT_BOOK
   );
-  const { trigger: cancelAccountBookTransfer } = APIHandler<void>(
+  const { trigger: cancelAccountBookTransferAPI } = APIHandler<void>(
     APIName.CANCEL_TRANSFER_ACCOUNT_BOOK
   );
-  const { trigger: acceptTeamInvitation } = APIHandler<void>(APIName.ACCEPT_TEAM_INVITATION);
-  const { trigger: declineTeamInvitation } = APIHandler<void>(APIName.DECLINE_TEAM_INVITATION);
+  const { trigger: acceptTeamInvitationAPI } = APIHandler<void>(APIName.ACCEPT_TEAM_INVITATION);
+  const { trigger: declineTeamInvitationAPI } = APIHandler<void>(APIName.DECLINE_TEAM_INVITATION);
 
-  // ToDo: (20250516 - Liz) 打 API 接受團隊邀請
-  // ToDo: (20250516 - Liz) 打 API 拒絕團隊邀請
+  // Info: (20250529 - Liz) 打 API 接受團隊邀請
+  const acceptTeamInvitation = async () => {
+    const { success } = await acceptTeamInvitationAPI({ params: { teamId: notification.teamId } });
+    if (success) {
+      onMarkAsRead(id);
+    }
+  };
+
+  // Info: (20250529 - Liz) 打 API 拒絕團隊邀請
+  const declineTeamInvitation = async () => {
+    const { success } = await declineTeamInvitationAPI({ params: { teamId: notification.teamId } });
+    if (success) {
+      onMarkAsRead(id);
+    }
+  };
 
   if (type === NotificationType.GENERAL) {
     return (
@@ -49,28 +64,22 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
   if (type === NotificationType.INVITATION) {
     return (
       <div
-        className={`flex flex-col gap-16px bg-surface-neutral-surface-lv2 p-12px font-medium text-text-neutral-primary hover:bg-surface-neutral-surface-lv1`}
+        className={`flex flex-col gap-16px bg-surface-neutral-surface-lv2 p-12px text-text-neutral-primary hover:bg-surface-neutral-surface-lv1`}
       >
-        {`${title} ${teamName}`}
+        <h3 className="font-medium">{`${title} ${teamName}`}</h3>
 
         <div className="flex items-center justify-center gap-15px">
           <button
             type="button"
             className="rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-            onClick={async () => {
-              await acceptTeamInvitation({ params: { teamId: notification.teamId } });
-              onMarkAsRead(id);
-            }}
+            onClick={acceptTeamInvitation}
           >
             {t('dashboard:HEADER.ACCEPT')}
           </button>
           <button
             type="button"
             className="rounded-xs border border-button-stroke-secondary px-16px py-8px text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover disabled:text-button-text-disable"
-            onClick={async () => {
-              await declineTeamInvitation({ params: { teamId: notification.teamId } });
-              onMarkAsRead(id);
-            }}
+            onClick={declineTeamInvitation}
           >
             {t('dashboard:HEADER.DECLINE')}
           </button>
@@ -78,62 +87,67 @@ const NotificationItem = ({ notification, onMarkAsRead }: NotificationItemProps)
       </div>
     );
   }
+
   if (type === NotificationType.ACCOUNT_BOOK) {
     const { accountBookId } = notification.content;
 
     const isTransferInitiator = message === 'ACCOUNT_BOOK_TRANSFER.TRANSFER.FROM_TEAM';
 
-    const handleAccept = async () => {
-      await acceptAccountBookTransfer({
+    // Info: (20250529 - Liz) 打 API 接受帳本轉移
+    const acceptAccountBookTransfer = async () => {
+      await acceptAccountBookTransferAPI({
         params: { accountBookId },
       });
       onMarkAsRead(id);
     };
 
-    const handleDecline = async () => {
-      await declineAccountBookTransfer({
+    // Info: (20250529 - Liz) 打 API 拒絕帳本轉移
+    const declineAccountBookTransfer = async () => {
+      await declineAccountBookTransferAPI({
         params: { accountBookId },
       });
       onMarkAsRead(id);
     };
 
-    const handleCancel = async () => {
-      await cancelAccountBookTransfer({
+    // Info: (20250529 - Liz) 打 API 取消帳本轉移
+    const cancelAccountBookTransfer = async () => {
+      await cancelAccountBookTransferAPI({
         params: { accountBookId },
       });
       onMarkAsRead(id);
     };
 
     return (
-      <section className="flex flex-col gap-8px rounded-md bg-surface-neutral-surface-lv2 p-12px">
-        <p className="text-base font-medium text-text-neutral-primary">{message}</p>
+      <section className="flex flex-col gap-16px bg-surface-neutral-surface-lv2 p-12px text-text-neutral-primary hover:bg-surface-neutral-surface-lv1">
+        <h3 className="text-base font-medium text-text-neutral-primary">{message}</h3>
+
         {event === NotificationEvent.TRANSFER && (
           <div className="flex justify-end gap-8px">
             {isTransferInitiator ? (
               <button
                 type="button"
-                onClick={handleCancel}
+                onClick={cancelAccountBookTransfer}
                 className="rounded border border-button-stroke-secondary px-12px py-6px text-sm text-red-500 hover:border-red-500 hover:text-red-600"
               >
-                {/* ToDo: (20250527 - Luphia) use i18n */}
+                {/* ToDo: (20250529 - Luphia) use i18n */}
                 取消轉移
               </button>
             ) : (
               <>
                 <button
                   type="button"
-                  onClick={handleAccept}
+                  onClick={acceptAccountBookTransfer}
                   className="rounded bg-button-surface-strong-secondary px-12px py-6px text-sm text-white hover:bg-button-surface-strong-secondary-hover"
                 >
-                  {/* ToDo: (20250527 - Luphia) use i18n */}
+                  {/* ToDo: (20250529 - Luphia) use i18n */}
                   接受轉移
                 </button>
                 <button
                   type="button"
-                  onClick={handleDecline}
+                  onClick={declineAccountBookTransfer}
                   className="rounded border border-button-stroke-secondary px-12px py-6px text-sm text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover"
                 >
-                  {/* ToDo: (20250527 - Luphia) use i18n */}
+                  {/* ToDo: (20250529 - Luphia) use i18n */}
                   拒絕
                 </button>
               </>
