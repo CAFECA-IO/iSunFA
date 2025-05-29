@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
+import { useModalContext } from '@/contexts/modal_context';
 import PayableReceivableVoucherList from '@/components/voucher/payable_receivable_voucher_list';
 import Tabs from '@/components/tabs/tabs';
 import Pagination from '@/components/pagination/pagination';
@@ -13,11 +14,22 @@ import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
 import { PayableReceivableTabs } from '@/constants/voucher';
 import { TransactionStatus } from '@/constants/account';
 import { ISortOption } from '@/interfaces/sort';
-// import Toggle from '@/components/toggle/toggle';
+import Toggle from '@/components/toggle/toggle';
+import { ToastType } from '@/interfaces/toastify';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { VscSettings } from 'react-icons/vsc';
 
 const PayableReceivableVoucherPageBody: React.FC = () => {
   const { t } = useTranslation('common');
   const { connectedAccountBook } = useUserCtx();
+  const { toastHandler } = useModalContext();
+
+  // Info: (20250529 - Julian) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const [activeTab, setActiveTab] = useState(PayableReceivableTabs.PAYMENT);
   const [page, setPage] = useState(1);
@@ -39,8 +51,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const [voucherList, setVoucherList] = useState<IVoucherBeta[]>([]);
   const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   // Info: (20250109 - Julian) 是否顯示沖銷傳票
-  // ToDo: (20250109 - Julian) API query
-  // const [isHideReversals, setIsHideReversals] = useState(true);
+  const [isHideReversals, setIsHideReversals] = useState(true);
 
   useEffect(() => {
     let sort: ISortOption | undefined;
@@ -76,17 +87,30 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
 
   const params = { accountBookId: connectedAccountBook?.id };
 
-  const handleApiResponse = (data: IPaginatedData<IVoucherBeta[]>) => {
-    const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
-    setPage(data.page);
-    setIncomplete(note.incomplete);
-    setTotalPages(Math.max(1, Math.ceil(data.data.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
-    setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
-    setVoucherList(data.data);
-  };
+  const handleApiResponse = useCallback(
+    (data: IPaginatedData<IVoucherBeta[]>) => {
+      try {
+        const note = JSON.parse(data.note ?? '{}') as IVoucherListSummary;
+        setPage(data.page);
+        setIncomplete(note.incomplete);
+        setTotalPages(Math.max(1, Math.ceil(data.data.length / DEFAULT_PAGE_LIMIT))); // Info: (20250124 - Anna) 改為不是全部傳票的總頁數，而是應收/應付傳票的總頁數
+        setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
+        setVoucherList(data.data);
+      } catch (error) {
+        toastHandler({
+          id: 'voucher-list-error',
+          type: ToastType.ERROR,
+          content: 'Get voucher list failed',
+          closeable: true,
+        });
+      }
+    },
+    [activeTab]
+  );
 
   const tabsClick = (tab: string) => setActiveTab(tab as PayableReceivableTabs);
-  // const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
+  const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
   const displayVoucherList =
     voucherList && voucherList.length > 0 ? (
@@ -111,7 +135,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const transactionStatusList = ['All', ...Object.values(TransactionStatus)];
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div ref={sideMenuRef} className="relative flex flex-col items-center gap-40px">
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
@@ -130,29 +154,32 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           pageSize={DEFAULT_PAGE_LIMIT}
           tab={activeTab}
           types={transactionStatusList}
-          /* Deprecated: (20250107 - tzuhan) 一次只能有一個排序條件
-          dateSort={dateSort}
-          otherSorts={otherSorts}
-          */
           sort={selectedSort}
-          hideReversedRelated
+          hideReversedRelated={isHideReversals}
+          hideReversalsToggleHandler={hideReversalsToggleHandler}
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
         />
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
-        {/* <div className="flex items-center gap-16px">
+        <div className="hidden tablet:block">
           <Toggle
             id="hide-reversals-toggle"
             initialToggleState={isHideReversals}
             getToggledState={hideReversalsToggleHandler}
             toggleStateFromParent={isHideReversals}
             lockedToOpen={false}
+            label={t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+            labelClassName="text-switch-text-primary hover:cursor-pointer"
           />
-          <div
-            onClick={hideReversalsToggleHandler}
-            className="text-switch-text-primary hover:cursor-pointer"
-          >
-            {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
-          </div>
-        </div> */}
+        </div>
+        {/* Info: (20250521 - Julian) Filter button */}
+        <button
+          type="button"
+          onClick={toggleSideMenu}
+          className="block p-10px text-button-text-secondary tablet:hidden"
+        >
+          <VscSettings size={24} />
+        </button>
         {/* Info: (20240924 - Julian) List */}
         {displayVoucherList}
         {/* Info: (20241122 - Julian) Pagination */}
