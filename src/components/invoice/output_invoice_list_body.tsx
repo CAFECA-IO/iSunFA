@@ -337,7 +337,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const { success, data } = await deleteCertificatesAPI({
           params: { accountBookId },
-          body: { certificateIds: selectedIds },
+          body: { invoiceIds: selectedIds },
         });
 
         if (success && data?.success && data.deletedIds) {
