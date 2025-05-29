@@ -51,7 +51,8 @@
     "PARTNER_S_NAME": "交易夥伴名稱",
     "TAX_ID": "統一編號",
     "SUBMIT": "送出",
-    "BACK": "返回"
+    "BACK": "返回",
+    "FILTER": "篩選"
   },
   "LOADING_MODAL": {
     "LOADING": "正在載入中，請稍等..."

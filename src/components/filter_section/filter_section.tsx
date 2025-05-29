@@ -324,7 +324,7 @@ const FilterSection = <T,>({
               <RxCross2 size={16} />
             </button>
             <p className="text-center text-base font-semibold text-text-neutral-secondary">
-              Filter
+              {t('common:COMMON.FILTER')}
             </p>
           </div>
 
