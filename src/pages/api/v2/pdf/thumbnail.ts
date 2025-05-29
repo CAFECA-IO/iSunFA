@@ -332,7 +332,11 @@ async function processFilesSequentially(fileDataList: any[]) {
     );
 
     // Info: (20250514 - Shirley) 獲取實際文件路徑
-    const pdfPath = url.replace('/baseurl/', '');
+    const basePath =
+      process.env.BASE_STORAGE_PATH?.replace('${HOME}', process.env.HOME || '') || '';
+    const pdfPath = url.replace('{BASE_URL_PLACEHOLDER}', basePath);
+
+    loggerBack.info(`Base path: ${basePath}, File URL: ${url}, Resolved path: ${pdfPath}`);
 
     try {
       // Info: (20250514 - Shirley) 檢查檔案是否存在
