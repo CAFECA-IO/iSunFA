@@ -35,7 +35,7 @@ describe('voucher/:voucherId', () => {
       id: 1002,
       issuerId: 1000,
       counterPartyId: 1000,
-      companyId: 1000,
+      accountBookId: 1000,
       aiResultId: '0',
       status: 'journal:JOURNAL.UPLOADED',
       editable: true,
@@ -67,7 +67,7 @@ describe('voucher/:voucherId', () => {
           certificate: {
             id: 1000,
             aiResultId: '0',
-            companyId: 1003,
+            accountBookId: 1003,
             fileId: 1000,
             uploaderId: 1000,
             invoices: [
@@ -75,7 +75,7 @@ describe('voucher/:voucherId', () => {
                 id: 1000,
                 name: 'invoice',
                 certificateId: 1000,
-                counterPartyId: 1000,
+                counterPartyInfo: '1000',
                 inputOrOutput: 'input',
                 date: 1,
                 no: '1001',
@@ -105,6 +105,7 @@ describe('voucher/:voucherId', () => {
               isEncrypted: false,
               iv: Buffer.from('1234567890123456'),
               encryptedSymmetricKey: '1234567890123456',
+              thumbnailId: null,
             },
             createdAt: 1,
             updatedAt: 1,
@@ -125,7 +126,7 @@ describe('voucher/:voucherId', () => {
       ],
       counterparty: {
         id: 1000,
-        companyId: 1000,
+        accountBookId: 1000,
         name: 'ABC Corp',
         taxId: '123456789',
         type: 'SUPPLIER',
@@ -159,7 +160,7 @@ describe('voucher/:voucherId', () => {
             id: 1000,
             issuerId: 1000,
             counterPartyId: 1000,
-            companyId: 1000,
+            accountBookId: 1000,
             aiResultId: '0',
             status: 'journal:JOURNAL.UPLOADED',
             editable: true,
@@ -183,7 +184,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000981,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'liability',
                   debit: false,
@@ -214,7 +215,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10001099,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'asset',
                   debit: true,
@@ -245,7 +246,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000603,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'asset',
                   debit: true,
@@ -293,7 +294,7 @@ describe('voucher/:voucherId', () => {
             id: 1000,
             issuerId: 1000,
             counterPartyId: 1000,
-            companyId: 1000,
+            accountBookId: 1000,
             aiResultId: '0',
             status: 'journal:JOURNAL.UPLOADED',
             editable: true,
@@ -317,7 +318,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000981,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'liability',
                   debit: false,
@@ -348,7 +349,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10001099,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'asset',
                   debit: true,
@@ -379,7 +380,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000603,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'asset',
                   debit: true,
@@ -419,7 +420,7 @@ describe('voucher/:voucherId', () => {
             updatedAt: 1609459200,
             deletedAt: null,
             residualValue: 1000,
-            companyId: 1000,
+            accountBookId: 1000,
             number: 'LAPTOP-001',
             acquisitionDate: 1609459200,
             purchasePrice: 30000,
@@ -447,7 +448,7 @@ describe('voucher/:voucherId', () => {
           resultLineItem: [],
           account: {
             id: 10000603,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: 'asset',
             debit: true,
@@ -499,7 +500,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000981,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'liability',
                   debit: false,
@@ -564,7 +565,7 @@ describe('voucher/:voucherId', () => {
                 deletedAt: null,
                 account: {
                   id: 10000981,
-                  companyId: 1002,
+                  accountBookId: 1002,
                   system: 'IFRS',
                   type: 'liability',
                   debit: false,
@@ -607,7 +608,7 @@ describe('voucher/:voucherId', () => {
                   id: 1000,
                   issuerId: 1000,
                   counterPartyId: 1000,
-                  companyId: 1000,
+                  accountBookId: 1000,
                   aiResultId: '0',
                   status: 'journal:JOURNAL.UPLOADED',
                   editable: true,
@@ -624,7 +625,7 @@ describe('voucher/:voucherId', () => {
           ],
           account: {
             id: 10000981,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: 'liability',
             debit: false,
@@ -658,7 +659,7 @@ describe('voucher/:voucherId', () => {
         const voucherId = 1002;
         const result = voucherAPIGetOneUtils.getVoucherFromPrisma(voucherId, {
           isVoucherNo: false,
-          companyId: 1000,
+          accountBookId: 1000,
         });
         expect(result).toBeDefined();
       });
@@ -666,8 +667,8 @@ describe('voucher/:voucherId', () => {
 
     describe('getAccountingSettingFromPrisma', () => {
       it('should return accounting setting from prisma', () => {
-        const companyId = 1001;
-        const result = voucherAPIGetOneUtils.getAccountingSettingFromPrisma(companyId);
+        const accountBookId = 1001;
+        const result = voucherAPIGetOneUtils.getAccountingSettingFromPrisma(accountBookId);
         expect(result).toBeDefined();
       });
     });
@@ -786,7 +787,7 @@ describe('voucher/:voucherId', () => {
         // originalLineItem: [],
         account: {
           id: 10000981,
-          companyId: 1002,
+          accountBookId: 1002,
           system: 'IFRS',
           type: 'liability',
           debit: false,
@@ -843,7 +844,7 @@ describe('voucher/:voucherId', () => {
           deletedAt: null,
           account: {
             id: 10000981,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: AccountType.LIABILITY,
             debit: false,
@@ -873,7 +874,7 @@ describe('voucher/:voucherId', () => {
           deletedAt: null,
           account: {
             id: 10001099,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: AccountType.ASSET,
             debit: true,
@@ -903,7 +904,7 @@ describe('voucher/:voucherId', () => {
           deletedAt: null,
           account: {
             id: 10000603,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: AccountType.ASSET,
             debit: true,
@@ -937,7 +938,7 @@ describe('voucher/:voucherId', () => {
           // originalLineItem: [],
           account: {
             id: 10000603,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: AccountType.ASSET,
             debit: true,
@@ -968,7 +969,7 @@ describe('voucher/:voucherId', () => {
           // originalLineItem: [],
           account: {
             id: 10000981,
-            companyId: 1002,
+            accountBookId: 1002,
             system: 'IFRS',
             type: AccountType.LIABILITY,
             debit: false,

@@ -11,7 +11,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
   };
   let fakeLineItemsFromDB: IGetLineItemByAccount[];
   // let fakePaginatedLineItemsFromDB: IPaginatedData<IGetLineItemByAccount[]>;
-  const fakeCompanyId = 1000;
+  const fakeaccountBookId = 1000;
 
   beforeEach(() => {
     fakeReverseLineItems = {
@@ -26,7 +26,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
       deletedAt: null,
       account: {
         id: 10000981,
-        companyId: 1002,
+        accountBookId: 1002,
         system: 'IFRS',
         type: 'liability',
         debit: false,
@@ -58,7 +58,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
         deletedAt: null,
         account: {
           id: 10000981,
-          companyId: 1002,
+          accountBookId: 1002,
           system: 'IFRS',
           type: 'liability',
           debit: false,
@@ -80,7 +80,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
           id: 1000,
           issuerId: 1000,
           counterPartyId: 1000,
-          companyId: 1000,
+          accountBookId: 1000,
           aiResultId: '0',
           status: 'journal:JOURNAL.UPLOADED',
           editable: true,
@@ -104,7 +104,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
                 id: 1002,
                 issuerId: 1000,
                 counterPartyId: 1000,
-                companyId: 1000,
+                accountBookId: 1000,
                 aiResultId: '0',
                 status: 'journal:JOURNAL.UPLOADED',
                 editable: true,
@@ -128,7 +128,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
                     deletedAt: null,
                     account: {
                       id: 10000981,
-                      companyId: 1002,
+                      accountBookId: 1002,
                       system: 'IFRS',
                       type: 'liability',
                       debit: false,
@@ -165,7 +165,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
         deletedAt: null,
         account: {
           id: 10000981,
-          companyId: 1002,
+          accountBookId: 1002,
           system: 'IFRS',
           type: 'liability',
           debit: false,
@@ -187,7 +187,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
           id: 1002,
           issuerId: 1000,
           counterPartyId: 1000,
-          companyId: 1000,
+          accountBookId: 1000,
           aiResultId: '0',
           status: 'journal:JOURNAL.UPLOADED',
           editable: true,
@@ -228,7 +228,7 @@ describe('lineItemGetByAccountAPIUtils', () => {
 
       const result = await lineItemGetByAccountAPIUtils.getLineItemsByAccountIdFromPrisma({
         accountId: accountPayable!.id,
-        companyId: fakeCompanyId,
+        accountBookId: fakeaccountBookId,
         startDate: 0,
         endDate: 1772531200,
         sortOption: [],
