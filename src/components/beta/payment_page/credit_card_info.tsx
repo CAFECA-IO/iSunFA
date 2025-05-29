@@ -20,7 +20,7 @@ interface CreditCardInfoProps {
   plan: IPlan | undefined;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  setIsDirty: Dispatch<SetStateAction<boolean>>;
+  // setIsDirty: Dispatch<SetStateAction<boolean>>;
   isHideSubscribeButton?: boolean;
 }
 
@@ -29,7 +29,7 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  setIsDirty,
+  // setIsDirty,
   isHideSubscribeButton,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
@@ -141,7 +141,7 @@ const CreditCardInfo = ({
     // Info: (20250414 - Julian) 執行中，禁用訂閱按鈕
     setIsSubscribeBtnDisabled(true);
     // Info: (20250414 - Julian) 取消阻止離開頁面
-    setIsDirty(false);
+    // setIsDirty(false);
 
     try {
       const { success } = await updateSubscriptionAPI({
