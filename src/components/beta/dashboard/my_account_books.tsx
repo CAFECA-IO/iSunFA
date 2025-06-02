@@ -7,8 +7,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250428 - Liz) 預計替換成新版的建立帳本 Modal (AccountBookInfoModal)
-// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250428 - Liz) 預計會替換成這個 Modal !!
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
@@ -29,16 +28,9 @@ const MyAccountBooks = () => {
   // Info: (20241126 - Liz) 連結帳本 API (原為公司)
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
 
-  const closeMessageModal = () => {
-    setAccountBookToSelect(undefined);
-  };
-
-  const openCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(true);
-  };
-  const closeCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(false);
-  };
+  const closeMessageModal = () => setAccountBookToSelect(undefined);
+  const openCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(true);
+  const closeCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(false);
 
   // Info: (20241126 - Liz) 打 API 連結帳本(原為公司)
   const handleSelectAccountBook = async () => {
@@ -159,8 +151,8 @@ const MyAccountBooks = () => {
         )}
 
         {isCreateAccountBookModalOpen && (
-          <CreateAccountBookModal
-            closeCreateAccountBookModal={closeCreateAccountBookModal}
+          <AccountBookInfoModal
+            closeAccountBookInfoModal={closeCreateAccountBookModal}
             getAccountBookList={getAccountBookList}
           />
         )}

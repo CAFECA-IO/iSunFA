@@ -44,20 +44,10 @@ const AccountBooksPageBody = () => {
 
   const isNoData = accountBookList.length === 0;
 
-  const openCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(true);
-  };
-  const closeCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(false);
-  };
-
-  const closeEditAccountBookModal = () => {
-    setAccountBookToEdit(undefined);
-  };
-
-  const closeDeleteModal = () => {
-    setAccountBookToDelete(undefined);
-  };
+  const openCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(true);
+  const closeCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(false);
+  const closeEditAccountBookModal = () => setAccountBookToEdit(undefined);
+  const closeDeleteModal = () => setAccountBookToDelete(undefined);
 
   // Info: (20241115 - Liz) 打 API 刪除帳本(原為公司)
   const handleDeleteAccountBook = async () => {
