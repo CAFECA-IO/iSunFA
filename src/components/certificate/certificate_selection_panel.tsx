@@ -1,28 +1,28 @@
-import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorThumbnail from '@/components/certificate/certificate_selector_thumbnail';
 import { FaPlus } from 'react-icons/fa6';
 import { useEffect, useState } from 'react';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 interface CertificateSelectionPanelProps {
-  certificates: ICertificateUI[];
+  invoices: IInvoiceRC2InputOrOutputUI[];
   selectedIds: number[];
   handleSelect: (id: number) => void;
   openUploaderModal: () => void;
 }
 
 const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
-  certificates,
+  invoices,
   selectedIds,
   handleSelect,
   openUploaderModal,
 }: CertificateSelectionPanelProps) => {
-  const [certificatesReOrdered, setCertificatesReOrdered] =
-    useState<ICertificateUI[]>(certificates);
+  const [invoicesReOrdered, setCertificatesReOrdered] =
+    useState<IInvoiceRC2InputOrOutputUI[]>(invoices);
 
   useEffect(() => {
-    const incompleteCertificates: ICertificateUI[] = [];
-    const readCertificates: ICertificateUI[] = [];
-    certificates.forEach((certificate) => {
+    const incompleteCertificates: IInvoiceRC2InputOrOutputUI[] = [];
+    const readCertificates: IInvoiceRC2InputOrOutputUI[] = [];
+    invoices.forEach((certificate) => {
       if (certificate.incomplete) {
         incompleteCertificates.push(certificate);
       } else {
@@ -30,7 +30,7 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
       }
     });
     setCertificatesReOrdered([...incompleteCertificates, ...readCertificates]);
-  }, [certificates]);
+  }, [invoices]);
 
   return (
     <div className="my-4 h-392px bg-surface-neutral-main-background py-lv-2 tablet:rounded-lg tablet:px-8 tablet:py-4">
@@ -48,11 +48,11 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
               />
             </button>
           </div>
-          {certificatesReOrdered.map((certificate) => (
+          {invoicesReOrdered.map((certificate) => (
             <CertificateSelectorThumbnail
               key={certificate.id}
               isSelected={selectedIds.includes(certificate.id)}
-              certificate={certificate}
+              invoice={certificate}
               handleSelect={handleSelect}
               isDeletable={false}
               isSelectable

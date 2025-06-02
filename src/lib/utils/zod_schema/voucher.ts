@@ -1,15 +1,6 @@
-import { IZodValidator } from '@/interfaces/zod_validator';
 import { z } from 'zod';
-import {
-  ILineItemBetaValidator,
-  iLineItemBodyValidatorV2,
-  iLineItemValidator,
-} from '@/lib/utils/zod_schema/lineItem';
-import {
-  IVoucherDetailForFrontend,
-  IVoucherBeta,
-  IVoucherForSingleAccount,
-} from '@/interfaces/voucher';
+import { ILineItemBetaValidator, iLineItemBodyValidatorV2 } from '@/lib/utils/zod_schema/lineItem';
+
 import {
   nullSchema,
   zodFilterSectionSortingOptions,
@@ -19,62 +10,16 @@ import {
 } from '@/lib/utils/zod_schema/common';
 import { DEFAULT_END_DATE, DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import { EventType, TransactionStatus, VoucherType } from '@/constants/account';
-import { SortBy } from '@/constants/sort';
 import { recurringEventForVoucherPostValidatorV2 } from '@/lib/utils/zod_schema/recurring_event';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { VoucherListTabV2, VoucherV2Action } from '@/constants/voucher';
-import { partialCounterPartyEntityValidator } from '@/constants/counterparty';
-import { userEntityValidator } from '@/lib/utils/zod_schema/user';
-import { eventTypeToVoucherType } from '@/lib/utils/common';
-import { fileEntityValidator } from '@/lib/utils/zod_schema/file';
-import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
-import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
-import {
-  certificateEntityValidator,
-  ICertificateValidator,
-} from '@/lib/utils/zod_schema/certificate';
-import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
-import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
-import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
-import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
-import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
-import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
+import { IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
 
-const iVoucherValidator = z.object({
-  journalId: z.number(),
-  lineItems: z.array(iLineItemValidator),
-});
+import { IReverseItemValidator } from '@/lib/utils/zod_schema/line_item';
+import { InvoiceRC2Schema } from '@/lib/utils/zod_schema/invoice_rc2';
+import { SortBy } from '@/constants/sort';
 
-const voucherCreateBodyValidator = z.object({
-  voucher: iVoucherValidator,
-});
-
-const voucherUpdateQueryValidator = z.object({
-  voucherId: zodStringToNumber,
-});
-
-export const voucherUpdateValidator: IZodValidator<
-  (typeof voucherUpdateQueryValidator)['shape'],
-  (typeof voucherCreateBodyValidator)['shape']
-> = {
-  query: voucherUpdateQueryValidator,
-  body: voucherCreateBodyValidator,
-};
-
-/**
- * ************************************************
- * Info: (20240927 - Murky)
- * V2 validator below
- * ************************************************
- */
-
-/**
- * Info: (20241025 - Murky)
- * @description schema for init voucher entity or parsed prisma voucher
- * @todo originalEvents, resultEvents, lineItems, certificates, issuer, need to be implement
- */
 export const voucherEntityValidator = z.object({
   id: z.number(),
   issuerId: z.number(),
@@ -132,25 +77,24 @@ export const IVoucherBetaValidator = z.object({
 });
 
 export const IVoucherForSingleAccountValidator = z.object({
-  id: z.number().describe('voucher id'),
-  date: z.number().describe('voucher date, selected by user'),
-  voucherNo: z.string().describe('voucher 流水號'),
-  voucherType: z.nativeEnum(VoucherType).describe('RECEIVE, TRANSFER, EXPENSE'),
-  note: z.string().describe('voucher note'),
+  id: z.number(),
+  date: z.number(),
+  voucherNo: z.string(),
+  voucherType: z.nativeEnum(VoucherType),
+  note: z.string(),
   lineItems: z
     .array(
       z.object({
-        id: z.number().describe('line item id'),
-        amount: z.number().describe('line item amount'),
-        description: z.string().describe('line item description (for `particular`)'),
-        debit: z.boolean().describe('line item debit or credit'),
+        id: z.number(),
+        amount: z.number(),
+        description: z.string(),
+        debit: z.boolean(),
       })
     )
-    .min(1)
-    .describe('particulars and amount for display'),
+    .min(1),
   issuer: z.object({
-    avatar: z.string().describe('issuer avatar url'),
-    name: z.string().describe('issuer name'),
+    avatar: z.string(),
+    name: z.string(),
   }),
 });
 
@@ -170,9 +114,13 @@ const voucherListAllSortOptions = z.enum([
   SortBy.PAY_RECEIVE_REMAIN,
 ]);
 
-// Info: (20240927 - Murky) GET all v2 validator
-// Info: (20241104 - Murky) 不需要status, 因為status和tab重複, 都是upcoming, uploaded
-const voucherGetAllQueryValidatorV2 = z.object({
+// ============================
+// Info: (20250529 - Tzuhan) 新增：Zod Schema 根據前端需要的介面調整
+// ============================
+
+// Info: (20250529 - Tzuhan) LIST BY ACCOUNT /account_book/:accountBookId/account/:accountId/voucher
+export const voucherListByAccountQueryValidatorV2 = z.object({
+  accountId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   type: z.preprocess(
@@ -192,194 +140,34 @@ const voucherGetAllQueryValidatorV2 = z.object({
   hideReversedRelated: zodStringToBooleanOptional,
 });
 
-const voucherGetAllBodyValidatorV2 = z.object({});
-
-export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
-  z.object({
-    ...voucherEntityValidator.shape,
-    counterParty: partialCounterPartyEntityValidator,
-    issuer: z.object({
-      ...userEntityValidator.shape,
-      imageFile: fileEntityValidator,
-    }),
-    lineItems: z.array(
-      z.object({
-        ...iLineItemBodyValidatorV2.shape,
-        id: z.number(),
-        account: accountEntityValidator,
-      })
-    ),
-    sum: z.object({
-      debit: z.boolean(),
-      amount: z.number(),
-    }),
-    payableInfo: z.object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
-    }),
-    receivingInfo: z.object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
-    }),
-    originalEvents: z.array(eventEntityValidator),
-    resultEvents: z.array(eventEntityValidator),
-    isReverseRelated: z.boolean().optional(),
-  })
-).transform((data) => {
-  const parsedVouchers: IVoucherBeta[] = data.data.map((voucher) => {
-    const reverseVouchers = voucher.originalEvents.flatMap((event) =>
-      (event.associateVouchers || []).map((av) => ({
-        id: av.resultVoucher.id,
-        voucherNo: av.resultVoucher.no,
-      }))
-    );
-
-    const deletedReverseVouchers = voucher.resultEvents.flatMap((event) =>
-      (event.associateVouchers || [])
-        .filter((av) => av.originalVoucher)
-        .map((av) => ({
-          id: av.originalVoucher.id,
-          voucherNo: av.originalVoucher.no,
-        }))
-    );
-
-    const parsedVoucher = {
-      id: voucher.id,
-      status: voucher.status,
-      voucherDate: voucher.date,
-      voucherNo: voucher.no,
-      voucherType: eventTypeToVoucherType(voucher.type),
-      note: voucher.note ?? '',
-      counterParty: {
-        companyId: voucher.counterParty.id,
-        name: voucher.counterParty.name,
-        taxId: voucher.counterParty.taxId,
-      },
-      issuer: {
-        avatar: voucher.issuer.imageFile.url,
-        name: voucher.issuer.name,
-      },
-      incomplete: false,
-      unRead: false,
-      lineItemsInfo: {
-        lineItems: voucher.lineItems.map((lineItem) => ({
-          id: lineItem.id,
-          description: lineItem.description,
-          debit: lineItem.debit,
-          amount: lineItem.amount,
-          account: {
-            ...lineItem.account,
-            note: lineItem.account.note ?? null,
-          },
-        })),
-        sum: voucher.sum,
-      },
-      payableInfo: voucher.payableInfo,
-      receivingInfo: voucher.receivingInfo,
-      reverseVouchers,
-      deletedReverseVouchers,
-      isReverseRelated: !!voucher.isReverseRelated,
-      deletedAt: voucher.deletedAt,
-    };
-
-    parsedVoucher.incomplete = isCompleteVoucherBeta(parsedVoucher);
-    return parsedVoucher;
-  });
-
-  return {
-    ...data,
-    data: parsedVouchers,
-  };
+// Info: (20250529 - Tzuhan) POST /account_book/:accountBookId/voucher
+export const voucherPostQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
 });
 
-const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
-
-export const voucherGetAllValidatorV2: IZodValidator<
-  (typeof voucherGetAllQueryValidatorV2)['shape'],
-  (typeof voucherGetAllBodyValidatorV2)['shape']
-> = {
-  query: voucherGetAllQueryValidatorV2,
-  body: voucherGetAllBodyValidatorV2,
-};
-
-// Info: (20240927 - Murky) POST voucher v2 validator
-const voucherPostQueryValidatorV2 = z.object({});
-const voucherPostBodyValidatorV2 = z.object({
-  actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
-  certificateIds: z.array(z.number().int()),
-  voucherDate: z.number().int(), // Info: (20241105 - Murky) timestamp in Second
-  type: z.nativeEnum(EventType),
-  note: z.string(),
-  lineItems: z.array(iLineItemBodyValidatorV2),
+export const voucherPostBodyValidatorV2 = z.object({
+  voucherDate: z.number(), //
+  type: z.nativeEnum(EventType), //
+  note: z.string(), //
+  counterPartyId: z.number().optional(), //
+  lineItems: z.array(iLineItemBodyValidatorV2), //
+  assetIds: z.array(z.number()), //
+  certificateIds: z.array(z.number()), //
   recurringInfo: recurringEventForVoucherPostValidatorV2.optional(),
-  assetIds: z.array(z.number().int()), // Info: (20241105 - Murky) 沒有的話寫 []
-  counterPartyId: z.number().int().optional(),
-  /**
-   * Info: (20241105 - Murky)
-   * @Julian Post Voucher的時候 reverseVouchers[0].lineItemIdBeReversed 填寫 REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 取得的id,
-   * reverseVouchers[0].lineItemIdReverseOther 放的則是要被Reverse的lineItem 在 Post lineItem array中的id
-   * @example
-   * ```
-   *  [{
-   *    voucherId: 1,
-   *    lineItemIdBeReversed: 1, // 白色藍底的lineItem的id
-   *    lineItemIdReverseOther: 2, // 藍色白底的lineItem 的編號，這邊不是只在database中的id, 而是post 中在 lineItems array中的index
-   *    amount: 1000
-   *  },]
-   * ```
-
-   */
-  reverseVouchers: z
-    .array(
-      z.object({
-        voucherId: z.number().int(),
-        lineItemIdBeReversed: z.number().int(),
-        lineItemIdReverseOther: z.number().int(),
-        amount: z.number(),
-      })
-    )
-    .optional()
-    .transform((data) => {
-      const result = data || [];
-      return result;
-    }),
+  actions: z.array(z.nativeEnum(VoucherV2Action)), //
+  reverseVouchers: z.array(
+    z.object({
+      voucherId: z.number(),
+      lineItemIdBeReversed: z.number(),
+      lineItemIdReverseOther: z.number(),
+      amount: z.number(),
+    })
+  ),
 });
 
-const voucherPostOutputValidatorV2 = voucherEntityValidator.nullable().transform((data) => {
-  if (data === null) {
-    return null;
-  }
-  return data.id;
-});
-const voucherPostFrontendValidatorV2 = z.number();
-
-export const voucherPostValidatorV2: IZodValidator<
-  (typeof voucherPostQueryValidatorV2)['shape'],
-  (typeof voucherPostBodyValidatorV2)['shape']
-> = {
-  query: voucherPostQueryValidatorV2,
-  body: voucherPostBodyValidatorV2,
-};
-
-// Info: (20240927 - Murky) Post vouchers have been read
-const voucherWasReadQueryValidatorV2 = z.object({});
-const voucherWasReadBodyValidatorV2 = z.object({
-  voucherIds: z.array(z.number().int()),
-});
-
-export const voucherWasReadValidatorV2: IZodValidator<
-  (typeof voucherWasReadQueryValidatorV2)['shape'],
-  (typeof voucherWasReadBodyValidatorV2)['shape']
-> = {
-  query: voucherWasReadQueryValidatorV2,
-  body: voucherWasReadBodyValidatorV2,
-};
-
-// Info: (20240927 - Murky) GET One Voucher v2
-
-const voucherGetOneQueryValidatorV2 = z.object({
+// Info: (20250529 - Tzuhan) PUT /account_book/:accountBookId/voucher/:voucherId
+export const voucherPutQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   voucherId: zodStringToNumber,
   isVoucherNo: z
     .string()
@@ -393,240 +181,61 @@ const voucherGetOneQueryValidatorV2 = z.object({
     }),
 });
 
-const voucherGetOneBodyValidatorV2 = z.object({});
+export const voucherPutBodyValidatorV2 = voucherPostBodyValidatorV2;
 
-const voucherGetOneOutputValidatorV2 = z
-  .object({
-    ...voucherEntityValidator.shape,
-    issuer: userEntityValidator,
-    accountSetting: accountingSettingEntityValidator,
-    counterParty: partialCounterPartyEntityValidator,
-    originalEvents: z.array(eventEntityValidator),
-    resultEvents: z.array(eventEntityValidator),
-    asset: z.array(assetEntityValidator),
-    certificates: z.array(
-      z.object({
-        ...certificateEntityValidator.shape,
-        invoice: invoiceEntityValidator,
-        file: fileEntityValidator,
-      })
-    ),
-    lineItems: z.array(
-      z.object({
-        ...iLineItemBodyValidatorV2.shape,
-        id: z.number(),
-        account: accountEntityValidator,
-        resultLineItems: z.array(
-          z.object({
-            ...IAssociateLineItemEntitySchema.shape,
-            associateVoucher: z.object({
-              ...IAssociateVoucherEntitySchema.shape,
-              originalVoucher: voucherEntityValidator,
-            }),
-            originalLineItem: z.object({
-              ...iLineItemBodyValidatorV2.shape,
-              id: z.number(),
-              account: accountEntityValidator,
-            }),
-          })
-        ),
-      })
-    ),
-    payableInfo: z
-      .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
-      })
-      .optional(),
-    receivingInfo: z
-      .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
-      })
-      .optional(),
-    isReverseRelated: z.boolean().optional(),
-  })
-  .nullable()
-  .transform((data) => {
-    if (data === null) {
-      // Info: (20241223 - Murky) 如果輸入為 null，直接返回 null
-      return null;
-    }
-    let reverseVoucherIds = Array.from(
-      new Map(
-        [
-          ...(data.originalEvents
-            ?.filter((event) => event.eventType === 'revert' || event.eventType === 'delete')
-            ?.flatMap(
-              (event) =>
-                event.associateVouchers
-                  ?.filter((associateVoucher) => associateVoucher.resultVoucher)
-                  .map((associateVoucher) => ({
-                    id: associateVoucher.resultVoucher.id,
-                    voucherNo: associateVoucher.resultVoucher.no,
-                    type: event.eventType === 'delete' ? 'reverse' : 'settlement',
-                  })) ?? []
-            ) ?? []),
+// Info: (20250529 - Tzuhan) GET /account_book/:accountBookId/voucher/:voucherId
+export const voucherGetOneQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+  voucherId: zodStringToNumber,
+  isVoucherNo: z
+    .string()
+    .optional()
+    .transform((data) => {
+      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
+      if (data === undefined) {
+        return false;
+      }
+      return data === 'true';
+    }),
+});
 
-          // Info: (20250213 - Tzuhan)  **3. 沖銷傳票 -> 立賬傳票**
-          ...(data.resultEvents
-            ?.filter((event) => event.eventType === 'revert') // Info: (20250213 - Tzuhan)  只篩選 eventType === 'revert'
-            ?.flatMap(
-              (event) =>
-                event.associateVouchers
-                  ?.filter((associateVoucher) => associateVoucher.originalVoucher)
-                  .map((associateVoucher) => ({
-                    id: associateVoucher.originalVoucher.id,
-                    voucherNo: associateVoucher.originalVoucher.no,
-                    type: 'original',
-                  })) ?? []
-            ) ?? []),
-        ].map((item) => [item.id, item]) // Info: (20250213 - Tzuhan)  使用 Map 去重複
-      ).values()
-    );
+// Info: (20250529 - Tzuhan) DELETE /account_book/:accountBookId/voucher/:voucherId
+export const voucherDeleteQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+  voucherId: zodStringToNumber,
+  isVoucherNo: z
+    .string()
+    .optional()
+    .transform((data) => {
+      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
+      if (data === undefined) {
+        return false;
+      }
+      return data === 'true';
+    }),
+});
 
-    let deletedReverseVoucherIds =
-      data.resultEvents
-        ?.filter((event) => event.eventType === 'delete')
-        ?.flatMap(
-          (event) =>
-            event.associateVouchers
-              ?.filter((associateVoucher) => associateVoucher.originalVoucher)
-              .map((associateVoucher) => ({
-                id: associateVoucher.originalVoucher.id,
-                voucherNo: associateVoucher.originalVoucher.no,
-              })) ?? []
-        ) ?? [];
+// Info: (20250529 - Tzuhan) RESTORE /account_book/:accountBookId/voucher/:voucherId/restore
+export const voucherRestoreQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+  voucherId: zodStringToNumber,
+});
 
-    //  Info: (20250212 - Tzuhan) 過濾掉 `undefined`
-    reverseVoucherIds = reverseVoucherIds.filter((voucher) => voucher.id && voucher.voucherNo);
-    deletedReverseVoucherIds = deletedReverseVoucherIds.filter(
-      (voucher) => voucher.id && voucher.voucherNo
-    );
-    const voucherDetail: IVoucherDetailForFrontend = {
-      id: data.id,
-      voucherDate: data.date,
-      type: data.type,
-      note: data.note ?? '',
-      counterParty: {
-        companyId: data.companyId,
-        name: data.counterParty.name,
-        taxId: data.counterParty.taxId,
-      },
-      // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
-      recurringInfo: {
-        type: '',
-        startDate: 0,
-        endDate: 0,
-        daysOfWeek: [],
-        monthsOfYear: [],
-      },
-      payableInfo: data.payableInfo,
-      receivingInfo: data.receivingInfo,
-      reverseVoucherIds,
-      deletedReverseVoucherIds,
-      assets: data.asset.map((asset) => ({
-        id: asset.id,
-        currencyAlias: data.accountSetting.currency,
-        acquisitionDate: asset.acquisitionDate,
-        assetType: asset.type,
-        assetNumber: asset.number,
-        assetName: asset.name,
-        purchasePrice: asset.purchasePrice,
-        accumulatedDepreciation: asset.accumulatedDepreciation,
-        residualValue: asset.residualValue,
-        remainingLife: asset.remainingLife,
-        assetStatus: asset.status,
-        createdAt: asset.createdAt,
-        updatedAt: asset.updatedAt,
-        deletedAt: asset.deletedAt,
-        depreciationStart: asset.depreciationStart,
-        depreciationMethod: asset.depreciationMethod,
-        usefulLife: asset.usefulLife,
-        relatedVouchers: [],
-        note: asset.note,
-      })),
-      certificates: data.certificates.map((certificate) => {
-        const certificateInstance = {
-          id: certificate.id,
-          name: 'Invoice-' + String(certificate.invoice.no).padStart(8, '0'),
-          companyId: certificate.companyId,
-          voucherNo: data.no,
-          voucherId: data.id ?? null,
-          uploaderUrl: data.issuer.imageFile?.url || '',
-          incomplete: false,
-          unRead: false,
-          uploader: data.issuer.name,
-          invoice: {
-            id: certificate.invoice.id,
-            inputOrOutput: certificate.invoice.inputOrOutput,
-            date: certificate.invoice.date,
-            no: certificate.invoice.no,
-            currencyAlias: certificate.invoice.currencyAlias,
-            priceBeforeTax: certificate.invoice.priceBeforeTax,
-            taxType: certificate.invoice.taxType,
-            taxRatio: certificate.invoice.taxRatio,
-            taxPrice: certificate.invoice.taxPrice,
-            totalPrice: certificate.invoice.totalPrice,
-            type: certificate.invoice.type,
-            deductible: certificate.invoice.deductible,
-            createdAt: certificate.invoice.createdAt,
-            updatedAt: certificate.invoice.updatedAt,
-            name: 'InvoiceName',
-            counterParty: {
-              id: data.counterParty.id,
-              companyId: data.counterParty.companyId,
-              name: data.counterParty.name,
-              taxId: data.counterParty.taxId,
-              type: data.counterParty.type,
-              note: data.counterParty.note,
-              createdAt: data.counterParty.createdAt,
-              updatedAt: data.counterParty.updatedAt,
-            },
-          },
-          file: {
-            id: certificate.file.id,
-            name: certificate.file.name,
-            url: certificate.file.url,
-            size: certificate.file.size,
-            existed: !!certificate.file,
-          },
-          createdAt: certificate.createdAt,
-          updatedAt: certificate.updatedAt,
-        };
+// Info: (20250529 - Tzuhan) LIST /account_book/:accountBookId/voucher
+export const voucherListQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
+  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
+  type: z.nativeEnum(EventType).optional(),
+  tab: z.nativeEnum(VoucherListTabV2),
+  startDate: zodStringToNumberWithDefault(0),
+  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
+  sortOption: zodFilterSectionSortingOptions(),
+  searchQuery: z.string().optional(),
+  hideReversedRelated: zodStringToBooleanOptional,
+});
 
-        return certificateInstance;
-      }),
-      lineItems: data.lineItems.map((lineItem) => ({
-        id: lineItem.id,
-        description: lineItem.description,
-        debit: lineItem.debit,
-        amount: lineItem.amount,
-        account: {
-          ...lineItem.account,
-          note: lineItem.account.note ?? null,
-        },
-        reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
-          voucherId: resultLineItem.associateVoucher.originalVoucherId,
-          amount: resultLineItem.amount,
-          description: resultLineItem.originalLineItem.description,
-          debit: resultLineItem.debit,
-          account: {
-            ...resultLineItem.originalLineItem.account,
-            note: resultLineItem.originalLineItem.account.note ?? null,
-          },
-          voucherNo: resultLineItem.associateVoucher.originalVoucher.no,
-          lineItemBeReversedId: resultLineItem.originalLineItemId,
-        })),
-      })),
-      isReverseRelated: data.isReverseRelated,
-    };
-    return voucherDetail;
-  });
-
-const IVoucherDetailForFrontendValidator = z.object({
+export const IVoucherDetailForFrontendValidator = z.object({
   id: z.number(),
   voucherDate: z.number(),
   type: z.nativeEnum(EventType),
@@ -642,7 +251,6 @@ const IVoucherDetailForFrontendValidator = z.object({
     updatedAt: z.number().optional(),
   }),
   recurringInfo: z.object({
-    // Deprecated: (20241105 - Murky)
     type: z.string(),
     startDate: z.number(),
     endDate: z.number(),
@@ -667,6 +275,7 @@ const IVoucherDetailForFrontendValidator = z.object({
     z.object({
       id: z.number(),
       voucherNo: z.string(),
+      type: z.string(),
     })
   ),
   deletedReverseVoucherIds: z.array(
@@ -676,7 +285,7 @@ const IVoucherDetailForFrontendValidator = z.object({
     })
   ),
   assets: z.array(IAssetDetailsValidator),
-  certificates: z.array(ICertificateValidator),
+  certificates: z.array(InvoiceRC2Schema),
   lineItems: z.array(
     z.object({
       ...ILineItemBetaValidator.shape,
@@ -686,218 +295,65 @@ const IVoucherDetailForFrontendValidator = z.object({
   isReverseRelated: z.boolean().optional(),
 });
 
-export const voucherGetOneFrontendValidatorV2 = IVoucherDetailForFrontendValidator;
-
-export const voucherGetOneValidatorV2: IZodValidator<
-  (typeof voucherGetOneQueryValidatorV2)['shape'],
-  (typeof voucherGetOneBodyValidatorV2)['shape']
-> = {
-  query: voucherGetOneQueryValidatorV2,
-  body: voucherGetOneBodyValidatorV2,
-};
-
-// Info: (20240927 - Murky) PUT voucher v2 (body validator is same as Post)
-const voucherPutQueryValidatorV2 = z.object({
-  voucherId: zodStringToNumber,
-  isVoucherNo: z
-    .string()
-    .optional()
-    .transform((data) => {
-      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
-      if (data === undefined) {
-        return false;
-      }
-      return data === 'true';
-    }),
-});
-
-export const voucherPutValidatorV2: IZodValidator<
-  (typeof voucherPutQueryValidatorV2)['shape'],
-  (typeof voucherPostBodyValidatorV2)['shape']
-> = {
-  query: voucherPutQueryValidatorV2,
-  body: voucherPostBodyValidatorV2,
-};
-
-// Info: (20240927 - Murky) DELETE voucher v2
-const voucherDeleteQueryValidatorV2 = z.object({
-  voucherId: zodStringToNumber,
-  isVoucherNo: z
-    .string()
-    .optional()
-    .transform((data) => {
-      // Info: (20241230 - Murky) @Tzuhan false, undefined: voucherId, true: voucherNo
-      if (data === undefined) {
-        return false;
-      }
-      return data === 'true';
-    }),
-});
-
-const voucherDeleteBodyValidatorV2 = z.object({});
-
-export const voucherDeleteValidatorV2: IZodValidator<
-  (typeof voucherDeleteQueryValidatorV2)['shape'],
-  (typeof voucherDeleteBodyValidatorV2)['shape']
-> = {
-  query: voucherDeleteQueryValidatorV2,
-  body: voucherDeleteBodyValidatorV2,
-};
+// ============================
+// Info: (20250529 - Tzuhan) 匯總給 zod_schema 統一管理用
+// ============================
 
 export const voucherRequestValidatorsV2 = {
-  GET_ONE: voucherGetOneValidatorV2,
-  GET_LIST: voucherGetAllValidatorV2,
-  PUT: voucherPutValidatorV2,
-  POST: voucherPostValidatorV2,
-  DELETE: voucherDeleteValidatorV2,
-  WAS_READ: voucherWasReadValidatorV2,
-};
-
-// Info: (20241106 - Murky) api/v2/account/[accountId]/voucher.ts
-const voucherGetByAccountQueryValidatorV2 = z.object({
-  accountId: zodStringToNumber,
-  page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
-  pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
-  // type: z.nativeEnum(EventType).optional(),
-  // tab: z.nativeEnum(),
-  startDate: zodStringToNumberWithDefault(0),
-  endDate: zodStringToNumberWithDefault(DEFAULT_END_DATE),
-  sortOption: zodFilterSectionSortingOptions(),
-  searchQuery: z.string().optional(),
-});
-
-const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
-  z.object({
-    ...voucherEntityValidator.shape,
-    lineItems: z
-      .array(
-        z.object({
-          ...lineItemEntityValidator.shape,
-          id: z.number(),
-          account: accountEntityValidator,
-        })
-      )
-      .min(0),
-    issuer: z.object({
-      ...userEntityValidator.shape,
-      imageFile: fileEntityValidator,
-    }),
-  })
-).transform((data) => {
-  const vouchers = data.data.map((voucher) => {
-    const lineItems = voucher.lineItems.map((lineItem) => ({
-      id: lineItem.id,
-      amount: lineItem.amount,
-      description: lineItem.description,
-      debit: lineItem.debit,
-    }));
-    const voucherForSingleAccount: IVoucherForSingleAccount = {
-      id: voucher.id,
-      voucherNo: voucher.no,
-      date: voucher.date,
-      note: voucher.note ?? '',
-      voucherType: eventTypeToVoucherType(voucher.type),
-      lineItems,
-      issuer: {
-        avatar: voucher.issuer.imageFile.url,
-        name: voucher.issuer.name,
-      },
-    };
-
-    return voucherForSingleAccount;
-  });
-  const reverseItemsPagination: z.infer<typeof voucherGetByAccountFrontendValidatorV2> = {
-    page: data.page,
-    totalPages: data.totalPages,
-    totalCount: data.totalCount,
-    pageSize: data.pageSize,
-    hasNextPage: data.hasNextPage,
-    hasPreviousPage: data.hasPreviousPage,
-    sort: data.sort,
-    data: vouchers,
-  };
-
-  return reverseItemsPagination;
-});
-
-const voucherGetByAccountFrontendValidatorV2 = paginatedDataSchema(
-  IVoucherForSingleAccountValidator
-);
-
-// Info: (20241030 - Murky) Below is new version of middleware
-
-const voucherNullSchema = z.union([z.object({}), z.string()]);
-
-export const voucherPostSchema = {
-  input: {
-    querySchema: voucherPostQueryValidatorV2,
-    bodySchema: voucherPostBodyValidatorV2,
+  POST: {
+    input: {
+      querySchema: voucherPostQueryValidatorV2,
+      bodySchema: voucherPostBodyValidatorV2,
+    },
+    outputSchema: IVoucherBetaValidator,
+    frontend: IVoucherBetaValidator,
   },
-  outputSchema: voucherPostOutputValidatorV2,
-  frontend: voucherPostFrontendValidatorV2,
-};
-
-export const voucherListSchema = {
-  input: {
-    querySchema: voucherGetAllQueryValidatorV2,
-    bodySchema: nullSchema,
+  PUT: {
+    input: {
+      querySchema: voucherPutQueryValidatorV2,
+      bodySchema: voucherPutBodyValidatorV2,
+    },
+    outputSchema: IVoucherBetaValidator,
+    frontend: IVoucherBetaValidator,
   },
-  outputSchema: voucherGetAllOutputValidatorV2,
-  frontend: voucherGetAllFrontendValidatorV2,
-};
-
-export const voucherGetOneSchema = {
-  input: {
-    querySchema: voucherGetOneQueryValidatorV2,
-    bodySchema: nullSchema,
+  GET_ONE: {
+    input: {
+      querySchema: voucherGetOneQueryValidatorV2,
+      bodySchema: nullSchema,
+    },
+    outputSchema: IVoucherDetailForFrontendValidator,
+    frontend: IVoucherDetailForFrontendValidator,
   },
-  outputSchema: voucherGetOneOutputValidatorV2,
-  frontend: voucherGetOneFrontendValidatorV2,
-};
-
-export const voucherPutSchema = {
-  input: {
-    querySchema: voucherPutQueryValidatorV2,
-    bodySchema: voucherPostBodyValidatorV2,
+  DELETE: {
+    input: {
+      querySchema: voucherDeleteQueryValidatorV2,
+      bodySchema: nullSchema,
+    },
+    outputSchema: z.union([z.number(), z.null()]),
+    frontend: z.number(),
   },
-  outputSchema: z
-    .number()
-    .nullable()
-    .transform((data) => {
-      if (data === null) {
-        return null;
-      }
-      return data;
-    }),
-  frontend: voucherNullSchema,
-};
-
-export const voucherDeleteSchema = {
-  input: {
-    querySchema: voucherDeleteQueryValidatorV2,
-    bodySchema: voucherNullSchema,
+  RESTORE: {
+    input: {
+      querySchema: voucherRestoreQueryValidatorV2,
+      bodySchema: nullSchema,
+    },
+    outputSchema: z.union([z.number(), z.null()]),
+    frontend: z.number(),
   },
-  outputSchema: z.union([z.number(), z.null()]),
-  frontend: z.number(),
-};
-
-// Info: (20250218 - Shirley) Restore voucher schema
-export const voucherRestoreSchema = {
-  input: {
-    querySchema: z.object({
-      voucherId: zodStringToNumber,
-    }),
-    bodySchema: nullSchema,
+  GET_LIST: {
+    input: {
+      querySchema: voucherListQueryValidatorV2,
+      bodySchema: nullSchema,
+    },
+    outputSchema: paginatedDataSchema(IVoucherBetaValidator),
+    frontend: paginatedDataSchema(IVoucherBetaValidator),
   },
-  outputSchema: z.union([z.number(), z.null()]),
-  frontend: z.number(),
-};
-
-export const voucherGetByAccountSchema = {
-  input: {
-    querySchema: voucherGetByAccountQueryValidatorV2,
-    bodySchema: voucherNullSchema,
+  GET_LIST_BY_ACCOUNT: {
+    input: {
+      querySchema: voucherListByAccountQueryValidatorV2,
+      bodySchema: nullSchema,
+    },
+    outputSchema: paginatedDataSchema(IVoucherForSingleAccountValidator),
+    frontend: paginatedDataSchema(IVoucherForSingleAccountValidator),
   },
-  outputSchema: voucherGetByAccountOutputValidatorV2,
-  frontend: voucherGetByAccountFrontendValidatorV2,
 };

@@ -38,6 +38,7 @@ export enum APIName {
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
+  LIST_INVOICE_RC2 = 'LIST_INVOICE_RC2',
   LIST_INVOICE_RC2_INPUT = 'LIST_INVOICE_RC2_INPUT',
   CREATE_INVOICE_RC2_INPUT = 'CREATE_INVOICE_RC2_INPUT',
   GET_INVOICE_RC2_INPUT = 'GET_INVOICE_RC2_INPUT',
@@ -69,7 +70,6 @@ export enum APIName {
   VOUCHER_POST_V2 = 'VOUCHER_POST_V2',
   VOUCHER_GET_BY_ID_V2 = 'VOUCHER_GET_BY_ID_V2',
   VOUCHER_DELETE_V2 = 'VOUCHER_DELETE_V2',
-  VOUCHER_WAS_READ_V2 = 'VOUCHER_WAS_READ_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
   VOUCHER_RESTORE_V2 = 'VOUCHER_RESTORE_V2',
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = 'REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2',
@@ -188,6 +188,7 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
+  LIST_INVOICE_RC2 = `${apiPrefixRC2}/account_book/:accountBookId/invoice`,
   LIST_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
   CREATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
   GET_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
@@ -215,11 +216,13 @@ export enum APIPath {
   ASK_AI_STATUS = `${apiPrefixV2}/account_book/:accountBookId/ask_ai/:resultId/status`,
   ASK_AI_V2 = `${apiPrefixV2}/ask_ai`,
   ASK_AI_RESULT_V2 = `${apiPrefixV2}/ask_ai/:resultId`,
-  VOUCHER_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
   VOUCHER_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
+  VOUCHER_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
+  VOUCHER_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
   VOUCHER_DELETE_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
-  VOUCHER_WAS_READ_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/read`,
+  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId/restore`,
+  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/account_book/:accountBookId/account/:accountId/voucher`,
   JOURNAL_LIST = `${apiPrefix}/company/:companyId/journal`, // Deprecated: (20250430 - Shirley) 沒有使用，且跟 v2 版本衝突，故不遷移
   REPORT_LIST = `${apiPrefix}/company/:companyId/report`, // Deprecated: (20250430 - Shirley) 沒有使用，且跟 v2 版本衝突，故不遷移
   REPORT_GET_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/report/public/:reportId`,
@@ -306,10 +309,7 @@ export enum APIPath {
   DELETE_MEMBER = `${apiPrefixV2}/team/:teamId/member/:memberId`,
   GET_ACCOUNT_BOOK_INFO_BY_ID = `${apiPrefixV2}/account_book/:accountBookId/info`,
   PUT_TEAM_ICON = `${apiPrefixV2}/team/:teamId/icon`,
-  VOUCHER_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
-  VOUCHER_RESTORE_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId/restore`,
   REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/account_book/:accountBookId/account/:accountId/lineitem`,
-  VOUCHER_LIST_GET_BY_ACCOUNT_V2 = `${apiPrefixV2}/account_book/:accountBookId/account/:accountId/voucher`,
   UPDATE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`,
   DELETE_ACCOUNT_BOOK = `${apiPrefixV2}/account_book/:accountBookId`, // Info: (20250418 - Liz) 新版刪除帳本 api
   USER_PAYMENT_METHOD_LIST = `${apiPrefixV2}/user/:userId/payment_method`,
@@ -655,6 +655,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.LIST_INVOICE_RC2]: createConfig({
+    name: APIName.LIST_INVOICE_RC2,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_INVOICE_RC2,
   }),
   [APIName.LIST_INVOICE_RC2_INPUT]: createConfig({
     name: APIName.LIST_INVOICE_RC2_INPUT,

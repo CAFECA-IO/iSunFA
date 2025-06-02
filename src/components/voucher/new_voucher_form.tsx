@@ -32,7 +32,6 @@ import {
   ProgressStatus,
 } from '@/constants/account';
 import { /* AIWorkingArea, */ AIState } from '@/components/voucher/ai_working_area';
-import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import CertificateSelection from '@/components/certificate/certificate_selection';
@@ -52,6 +51,7 @@ import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
+import { IInvoiceRC2InputOrOutput, IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -68,7 +68,7 @@ const dummyAIResult: IAIResultVoucher = {
 };
 
 interface NewVoucherFormProps {
-  selectedData: { [id: string]: ICertificateUI };
+  selectedData: { [id: string]: IInvoiceRC2InputOrOutputUI };
 }
 
 const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
@@ -186,8 +186,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
+  const [certificates, setCertificates] = useState<{ [id: string]: IInvoiceRC2InputOrOutputUI }>(
+    {}
+  );
+  const [selectedCertificates, setSelectedCertificates] = useState<IInvoiceRC2InputOrOutputUI[]>(
+    []
+  );
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -257,7 +261,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       const selectedCerts = Object.values(updatedData).filter(
         (item) => item.isSelected
-      ) as ICertificateUI[];
+      ) as IInvoiceRC2InputOrOutputUI[];
 
       setCertificates(updatedData);
       setSelectedCertificates(selectedCerts);
@@ -285,7 +289,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       const selectedCerts = Object.values(updatedData).filter(
         (item) => item.isSelected
-      ) as ICertificateUI[];
+      ) as IInvoiceRC2InputOrOutputUI[];
 
       setCertificates(updatedData);
       setSelectedCertificates(selectedCerts);
@@ -307,7 +311,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 處理選擇憑證 API 回傳
   const handleCertificateApiResponse = useCallback(
-    (resData: IPaginatedData<ICertificate[]>) => {
+    (resData: IPaginatedData<IInvoiceRC2InputOrOutput[]>) => {
       const { data } = resData;
       const certificatesData = data.reduce(
         (acc, item) => {
@@ -318,7 +322,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           };
           return acc;
         },
-        {} as { [id: string]: ICertificateUI }
+        {} as { [id: string]: IInvoiceRC2InputOrOutputUI }
       );
       setCertificates(certificatesData);
     },
@@ -909,7 +913,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
-      const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificate: IInvoiceRC2InputOrOutput = JSON.parse(data.message);
       // Deprecated: (20241122 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
@@ -917,7 +921,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        const newCertificatesUI: { [id: string]: IInvoiceRC2InputOrOutputUI } = {
           [newCertificate.id]: {
             ...newCertificate,
             isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
@@ -1020,7 +1024,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         openUploaderModal={() => setOpenUploaderModal(true)}
         handleSelect={handleSelect}
         handleApiResponse={handleCertificateApiResponse}
-        certificates={Object.values(certificates)}
+        invoices={Object.values(certificates)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
       />
