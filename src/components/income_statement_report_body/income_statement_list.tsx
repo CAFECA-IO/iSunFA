@@ -205,7 +205,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       try {
         const { success, data, code } = await getReportAPI({
           params: {
-            companyId: connectedAccountBook?.id,
+            accountBookId: connectedAccountBook?.id,
           },
           query: {
             startDate: selectedDateRange.startTimeStamp,
