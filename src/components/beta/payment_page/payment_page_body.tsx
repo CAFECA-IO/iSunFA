@@ -28,9 +28,9 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   const plan = subscriptionPlan ?? PLANS.find((p) => p.id === team.plan);
 
   // Info: (20250116 - Liz) 未完成訂閱的狀態下，阻止離開頁面，並且顯示提示 Modal
-  const [isDirty, setIsDirty] = useState(true); // Info: (20250116 - Liz) 是否需要阻止離開
-  const [isConfirmLeaveModalOpen, setIsConfirmLeaveModalOpen] = useState(false);
-  const [nextRoute, setNextRoute] = useState<string | null>(null); // Info: (20250116 - Liz) 儲存即將導向的網址
+  // const [isDirty, setIsDirty] = useState(true); // Info: (20250116 - Liz) 是否需要阻止離開
+  // const [isConfirmLeaveModalOpen, setIsConfirmLeaveModalOpen] = useState(false);
+  // const [nextRoute, setNextRoute] = useState<string | null>(null); // Info: (20250116 - Liz) 儲存即將導向的網址
   const router = useRouter();
   const { retcode } = router.query;
 
@@ -100,65 +100,65 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
     backBtnStr: t('subscriptions:SUBSCRIPTIONS_PAGE.CANCEL'),
   };
 
-  const handleLeave = () => {
-    setIsConfirmLeaveModalOpen(false);
-    setIsDirty(false); // Info: (20250116 - Liz) 清除阻止狀態
-    if (nextRoute) {
-      router.push(nextRoute); // Info: (20250116 - Liz) 導向下一頁
-    }
-  };
+  // const handleLeave = () => {
+  //   setIsConfirmLeaveModalOpen(false);
+  //   setIsDirty(false); // Info: (20250116 - Liz) 清除阻止狀態
+  //   if (nextRoute) {
+  //     router.push(nextRoute); // Info: (20250116 - Liz) 導向下一頁
+  //   }
+  // };
 
-  const handleCancel = () => {
-    setIsConfirmLeaveModalOpen(false);
-    setNextRoute(null); // Info: (20250116 - Liz) 清除儲存的路由
-  };
+  // const handleCancel = () => {
+  //   setIsConfirmLeaveModalOpen(false);
+  //   setNextRoute(null); // Info: (20250116 - Liz) 清除儲存的路由
+  // };
 
-  const messageModalDataForLeavePage: IMessageModal = {
-    title: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET'),
-    content: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE'),
-    submitBtnStr: t('subscriptions:MODAL.LEAVE'),
-    submitBtnFunction: handleLeave,
-    messageType: MessageType.WARNING,
-    backBtnFunction: handleCancel,
-    backBtnStr: t('subscriptions:MODAL.KEEP_FINISHING_MY_SUBSCRIPTION'),
-  };
+  // const messageModalDataForLeavePage: IMessageModal = {
+  //   title: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET'),
+  //   content: t('subscriptions:MODAL.SUBSCRIPTION_IS_NOT_DONE_YET_MESSAGE'),
+  //   submitBtnStr: t('subscriptions:MODAL.LEAVE'),
+  //   submitBtnFunction: handleLeave,
+  //   messageType: MessageType.WARNING,
+  //   backBtnFunction: handleCancel,
+  //   backBtnStr: t('subscriptions:MODAL.KEEP_FINISHING_MY_SUBSCRIPTION'),
+  // };
 
-  useEffect(() => {
-    const handleRouteChangeStart = (url: string) => {
-      if (isDirty) {
-        setIsConfirmLeaveModalOpen(true);
-        setNextRoute(url); // Info: (20250116 - Liz) 儲存下一個路由
-        // Deprecated: (20250116 - Liz) remove eslint-disable
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
-        throw 'Route change blocked because of unfinished subscription.'; // Info: (20250116 - Liz)
-        // throw new Error('Route change blocked because of unfinished subscription.'); // Info: (20250116 - Liz) 阻止路由變化 (dev 環境會顯示錯誤訊息是正常的) (prod 環境不會顯示錯誤訊息) 如果想刪除上面的 eslint-disable-next-line，就要改成使用這行
-      }
-    };
+  // useEffect(() => {
+  //   const handleRouteChangeStart = (url: string) => {
+  //     if (isDirty) {
+  //       setIsConfirmLeaveModalOpen(true);
+  //       setNextRoute(url); // Info: (20250116 - Liz) 儲存下一個路由
+  //       // Deprecated: (20250116 - Liz) remove eslint-disable
+  //       // eslint-disable-next-line @typescript-eslint/no-throw-literal
+  //       throw 'Route change blocked because of unfinished subscription.'; // Info: (20250116 - Liz)
+  //       // throw new Error('Route change blocked because of unfinished subscription.'); // Info: (20250116 - Liz) 阻止路由變化 (dev 環境會顯示錯誤訊息是正常的) (prod 環境不會顯示錯誤訊息) 如果想刪除上面的 eslint-disable-next-line，就要改成使用這行
+  //     }
+  //   };
 
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-      }
-    };
+  //   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+  //     if (isDirty) {
+  //       e.preventDefault();
+  //     }
+  //   };
 
-    // Info: (20250116 - Liz) 攔截路由變化
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    router.events.on('routeChangeStart', handleRouteChangeStart);
+  //   // Info: (20250116 - Liz) 攔截路由變化
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  //   router.events.on('routeChangeStart', handleRouteChangeStart);
 
-    // Info: (20250116 - Liz) 使用 beforePopState 攔截瀏覽器的返回事件(像是按下瀏覽器的返回按鈕)
-    router.beforePopState(() => {
-      if (isDirty) {
-        setIsConfirmLeaveModalOpen(true);
-        return false; // Info: (20250116 - Liz) 阻止返回
-      }
-      return true; // Info: (20250116 - Liz) 允許返回
-    });
+  //   // Info: (20250116 - Liz) 使用 beforePopState 攔截瀏覽器的返回事件(像是按下瀏覽器的返回按鈕)
+  //   router.beforePopState(() => {
+  //     if (isDirty) {
+  //       setIsConfirmLeaveModalOpen(true);
+  //       return false; // Info: (20250116 - Liz) 阻止返回
+  //     }
+  //     return true; // Info: (20250116 - Liz) 允許返回
+  //   });
 
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      router.events.off('routeChangeStart', handleRouteChangeStart);
-    };
-  }, [isDirty, router]);
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //     router.events.off('routeChangeStart', handleRouteChangeStart);
+  //   };
+  // }, [isDirty, router]);
 
   useEffect(() => {
     if (!retcode) return;
@@ -191,7 +191,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
           plan={plan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          setIsDirty={setIsDirty}
+          // setIsDirty={setIsDirty}
         />
       </section>
 
@@ -211,13 +211,13 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
         />
       )}
 
-      {isConfirmLeaveModalOpen && (
+      {/* {isConfirmLeaveModalOpen && (
         <MessageModal
           messageModalData={messageModalDataForLeavePage}
           isModalVisible={!!isConfirmLeaveModalOpen}
           modalVisibilityHandler={handleCancel}
         />
-      )}
+      )} */}
     </main>
   );
 };

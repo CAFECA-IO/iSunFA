@@ -3,13 +3,15 @@ import { FiCheckCircle } from 'react-icons/fi';
 import { PiBell } from 'react-icons/pi';
 import NotificationItem from '@/components/beta/layout/notification_item';
 import { useTranslation } from 'next-i18next';
-// import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 import { INotificationRC2 } from '@/interfaces/notification';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+
+// ToDo: (20250529 - Liz) 先暫時使用假資料 FAKE_NOTIFICATIONS ，等功能完成後再改成實際資料 notifications
+const FAKE_NOTIFICATIONS: INotificationRC2[] = [];
 
 interface NotificationProps {
   isPanelOpen: boolean;
@@ -26,45 +28,49 @@ const Notification = ({
   const userCtx = useUserCtx();
   const { userAuth } = userCtx;
 
-  const { trigger: listNotifications } = APIHandler<INotificationRC2[]>(APIName.LIST_NOTIFICATION);
-  const { trigger: readNotification } = APIHandler<{ count: number }>(APIName.READ_NOTIFICATION);
+  const { trigger: listNotificationsAPI } = APIHandler<INotificationRC2[]>(
+    APIName.LIST_NOTIFICATION
+  );
+  const { trigger: readNotificationAPI } = APIHandler<{ count: number }>(APIName.READ_NOTIFICATION);
 
+  // ToDo: (20250529 - Liz) 暫時使用假資料 FAKE_NOTIFICATIONS ，等功能完成後再改成實際資料 notifications
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [notifications, setNotifications] = useState<INotificationRC2[]>([]);
-  const isNoData = notifications.length === 0;
-  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
+  const isNoData = FAKE_NOTIFICATIONS.length === 0;
+  const hasUnreadNotifications = FAKE_NOTIFICATIONS.some((notification) => !notification.read);
 
-  // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getNotifications = async () => {
+  const [isGetNotificationsLoading, setIsGetNotificationsLoading] = useState<boolean>(false);
+
+  // Info: (20250529 - Liz) 打 API 取得所有通知
+  const getNotifications = useCallback(async () => {
     if (!userAuth) return;
-    const { success, data } = await listNotifications({
-      params: { userId: userAuth.id },
-    });
-    if (success && data) {
-      setNotifications(data);
+    if (isGetNotificationsLoading) return;
+    setIsGetNotificationsLoading(true);
+    try {
+      const { success, data } = await listNotificationsAPI({
+        params: { userId: userAuth.id },
+      });
+      if (success && data) {
+        setNotifications(data);
+      }
+    } catch (error) {
+      // Deprecated: (20250516 - Liz)
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch notifications', error);
+    } finally {
+      setIsGetNotificationsLoading(false);
     }
-  };
-
-  // ToDo: (20241225 - Liz) 打 API 更新通知為已讀
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const readNotificationAPI = () => {};
+  }, [userAuth, isGetNotificationsLoading]);
 
   // Info: (20241225 - Liz) 標記通知為已讀
   const onMarkAsRead = async (notificationId: number) => {
-    const notificationIndex = notifications.findIndex((n) => n.id === notificationId);
-    // Info: (20241225 - Liz) 如果通知不存在或已讀，則不執行任何操作
-    if (notificationIndex === -1 || notifications[notificationIndex].read) {
-      return;
-    }
-
+    if (!userAuth) return;
     try {
-      // ToDo: (20241225 - Liz) 呼叫 API 標記為已讀
-      await readNotification({ params: { userId: userAuth?.id, notificationId } });
+      // Info: (20250529 - Liz) 打 API 標記通知為已讀
+      await readNotificationAPI({ params: { userId: userAuth.id, notificationId } });
 
-      // ToDo: (20241225 - Liz) 更新本地狀態
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, isRead: true } : n))
-      );
+      // Info: (20250529 - Liz) 打 API 取得所有通知
+      getNotifications();
     } catch (error) {
       // Deprecated: (20250516 - Liz)
       // eslint-disable-next-line no-console
@@ -72,7 +78,7 @@ const Notification = ({
     }
   };
 
-  const handleOpenPanel = async () => {
+  const togglePanel = async () => {
     if (!isPanelOpen) {
       await getNotifications();
     }
@@ -80,9 +86,6 @@ const Notification = ({
   };
 
   const handleNewNotification = useCallback((data: { message: string }) => {
-    // Deprecated: (20250527 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('New notification received:', data);
     const newNotification: INotificationRC2 = JSON.parse(data.message);
     setNotifications((prev) => [...prev, newNotification]);
   }, []);
@@ -107,7 +110,7 @@ const Notification = ({
       {/* Info: (20241011 - Liz) 通知鈴鐺 icon */}
       <button
         type="button"
-        onClick={handleOpenPanel}
+        onClick={togglePanel}
         className="relative p-10px text-icon-surface-single-color-primary hover:text-button-text-primary-hover disabled:text-button-text-disable"
       >
         <PiBell size={20} className="cursor-pointer" />
@@ -128,7 +131,7 @@ const Notification = ({
           </button>
 
           <section className="max-h-60vh overflow-y-auto">
-            {notifications.map((notification) => (
+            {FAKE_NOTIFICATIONS.map((notification) => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}
