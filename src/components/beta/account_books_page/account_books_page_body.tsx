@@ -189,6 +189,10 @@ const AccountBooksPageBody = () => {
 
       {/* Info: (20250602 - Liz) Mobile Version */}
       <main className="flex min-h-full flex-col gap-32px tablet:hidden">
+        <h1 className="text-base font-semibold text-text-neutral-secondary">
+          {t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}
+        </h1>
+
         <div>
           {userId && (
             <FilterSection<IAccountBookWithTeam[]>
