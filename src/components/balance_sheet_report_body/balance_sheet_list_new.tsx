@@ -120,7 +120,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: connectedAccountBook?.id,
+          accountBookId: connectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp,
