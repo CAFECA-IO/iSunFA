@@ -511,7 +511,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto h-350px w-256px tablet:max-h-630px tablet:min-h-450px tablet:w-440px lg:mx-0"
+                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:max-h-630px tablet:min-h-450px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -526,7 +526,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
                       variant="tertiaryOutline"
-                      className="h-36px flex-1 px-16px py-8px"
+                      className="h-36px flex-1 px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
@@ -537,7 +537,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       type="button"
                       disabled={!hasNext}
                       variant="tertiary"
-                      className="h-36px flex-1 px-16px py-8px"
+                      className="h-36px flex-1 px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
@@ -699,7 +699,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <div
                         ref={invoicePrefixMenuRef}
                         onClick={invoicePrefixMenuClickHandler}
-                        className={`relative h-44px min-w-72px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border border-r-0 bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                        className={`relative h-44px min-w-72px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                       >
                         <p className="flex h-44px w-full items-center justify-between gap-x-2">
                           <span className="overflow-hidden">
@@ -739,7 +739,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                           const prefix = latestNo.substring(0, 2);
                           handleInputChange('no', `${prefix}${e.target.value}`);
                         }}
-                        className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                        className="h-44px min-w-0 flex-1 rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                         placeholder="12345678"
                       />
                     </div>
@@ -827,7 +827,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 <div className="flex w-full flex-col items-center gap-2 lg:flex-row">
                   {/* Info: (20240924 - Anna) Price Before Tax */}
                   <div
-                    className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''} `}
+                    className={`relative flex w-full flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''} `}
                   >
                     <p className="text-sm font-semibold text-neutral-300">
                       {formState.type === InvoiceType.OUTPUT_30
@@ -874,7 +874,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <>
                         {/* Info: (20250414 - Anna) Tax */}
                         <div
-                          className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''}`}
+                          className={`relative flex w-full flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''}`}
                         >
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.TAX')}

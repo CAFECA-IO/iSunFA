@@ -35,7 +35,14 @@ const SubMenuOption = ({
   const { teamRole } = useUserCtx();
 
   const toggleEmbedCodeModal = () => {
-    setIsEmbedCodeModalOpen((prev) => !prev);
+    setIsEmbedCodeModalOpen((prev) => {
+      const next = !prev;
+      // Info: (20250602 - Anna) !next 為 true 時，再呼叫 closeMenu ，避免 modal 尚未顯示就被 menu 卸載
+      if (!next) {
+        closeMenu();
+      }
+      return next;
+    });
   };
 
   const showAccountBookNeededToast = () => {
@@ -68,6 +75,8 @@ const SubMenuOption = ({
 
     if (title === 'GENERATE_EMBED_CODE') {
       toggleEmbedCodeModal();
+      // Info: (20250602 - Anna) 點「嵌入程式碼」時，避免執行 closeMenu，否則 modal 會被立即卸載
+      return;
     }
     // Info: (20241126 - Liz) 如果有其他按鈕的 onClick 事件就新增在這裡: if (title === 'XXX') { ... }
     closeMenu();
