@@ -91,7 +91,7 @@ const AccountBooksPageBody = () => {
     <>
       {/* Info: (20250602 - Liz) Desktop Version */}
       <main className="hidden min-h-full flex-col gap-40px tablet:flex">
-        <section className="flex items-center gap-40px">
+        <section className="flex flex-col gap-40px laptop:flex-row laptop:items-center">
           {userId && (
             <FilterSection<IAccountBookWithTeam[]>
               key={refreshKey}
@@ -242,6 +242,14 @@ const AccountBooksPageBody = () => {
         {isCreateAccountBookModalOpen && (
           <AccountBookInfoModal
             closeAccountBookInfoModal={closeCreateAccountBookModal}
+            setRefreshKey={setRefreshKey}
+          />
+        )}
+
+        {accountBookToEdit && (
+          <AccountBookInfoModal
+            accountBookToEdit={accountBookToEdit}
+            closeAccountBookInfoModal={closeEditAccountBookModal}
             setRefreshKey={setRefreshKey}
           />
         )}
