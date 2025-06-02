@@ -47,7 +47,8 @@
     "DELETE": "Delete",
     "DELETE_MESSAGE_TITLE": "Delete the Account Book",
     "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?",
-    "WAITING_FOR_TRANSFERRING": "Waiting for transferring"
+    "WAITING_FOR_TRANSFERRING": "Waiting for transferring",
+    "ADD_NEW_ACCOUNT_BOOK": "Add New Account Book"
   },
   "DELETE": {
     "TITLE": "Delete the Account Book",
