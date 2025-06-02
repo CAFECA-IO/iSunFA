@@ -27,7 +27,7 @@ export const SESSION_DEVELOPER: ISessionData = {
       role: TeamRole.OWNER,
     },
     {
-      id: 3,
+      id: 10000000, // Info: (20250602 - Liz) 新的 team id 格式
       role: TeamRole.OWNER,
     },
   ],
