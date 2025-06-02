@@ -300,7 +300,7 @@ export const IVoucherDetailForFrontendValidator = z.object({
 // ============================
 
 export const voucherRequestValidatorsV2 = {
-  POST: {
+  create: {
     input: {
       querySchema: voucherPostQueryValidatorV2,
       bodySchema: voucherPostBodyValidatorV2,
@@ -308,7 +308,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: IVoucherBetaValidator,
     frontend: IVoucherBetaValidator,
   },
-  PUT: {
+  update: {
     input: {
       querySchema: voucherPutQueryValidatorV2,
       bodySchema: voucherPutBodyValidatorV2,
@@ -316,7 +316,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: IVoucherBetaValidator,
     frontend: IVoucherBetaValidator,
   },
-  GET_ONE: {
+  getById: {
     input: {
       querySchema: voucherGetOneQueryValidatorV2,
       bodySchema: nullSchema,
@@ -324,7 +324,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: IVoucherDetailForFrontendValidator,
     frontend: IVoucherDetailForFrontendValidator,
   },
-  DELETE: {
+  delete: {
     input: {
       querySchema: voucherDeleteQueryValidatorV2,
       bodySchema: nullSchema,
@@ -332,7 +332,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: z.union([z.number(), z.null()]),
     frontend: z.number(),
   },
-  RESTORE: {
+  restore: {
     input: {
       querySchema: voucherRestoreQueryValidatorV2,
       bodySchema: nullSchema,
@@ -340,7 +340,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: z.union([z.number(), z.null()]),
     frontend: z.number(),
   },
-  GET_LIST: {
+  list: {
     input: {
       querySchema: voucherListQueryValidatorV2,
       bodySchema: nullSchema,
@@ -348,7 +348,7 @@ export const voucherRequestValidatorsV2 = {
     outputSchema: paginatedDataSchema(IVoucherBetaValidator),
     frontend: paginatedDataSchema(IVoucherBetaValidator),
   },
-  GET_LIST_BY_ACCOUNT: {
+  listByAccount: {
     input: {
       querySchema: voucherListByAccountQueryValidatorV2,
       bodySchema: nullSchema,

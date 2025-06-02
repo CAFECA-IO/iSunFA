@@ -6,7 +6,7 @@ import { ILocale } from '@/interfaces/locale';
 import NewVoucherForm from '@/components/voucher/new_voucher_form';
 import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import { ICertificateUI } from '@/interfaces/certificate';
+import { IInvoiceRC2InputOrOutputUI } from '@/interfaces/invoice_rc2';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { TeamRole } from '@/interfaces/team';
@@ -16,7 +16,7 @@ const AddNewVoucherPage: React.FC = () => {
   const { teamRole } = useUserCtx();
 
   const [selectedCertificates, setSelectedCertificates] = useState<{
-    [id: string]: ICertificateUI;
+    [id: string]: IInvoiceRC2InputOrOutputUI;
   }>({});
 
   const { clearReverseListHandler } = useAccountingCtx();
