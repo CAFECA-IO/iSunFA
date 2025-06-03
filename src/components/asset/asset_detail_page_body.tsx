@@ -339,7 +339,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   );
 
   return (
-    <div className="overflow-y-auto tablet:px-40px tablet:pb-32px tablet:pt-40px">
+    <div className="overflow-y-auto pb-25px tablet:px-40px tablet:pb-32px tablet:pt-40px">
       {/* Info: (20250526 - Julian) Mobile back button */}
       <div className="flex items-center gap-lv-2 tablet:hidden">
         <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
@@ -350,7 +350,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         </p>
       </div>
       {/* Info: (20241016 - Julian) Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-y-lv-6 tablet:flex-row tablet:items-center">
         {isTitle}
         {/* Info: (20241016 - Julian) Action Buttons */}
         <div className="flex justify-end gap-16px">
@@ -385,7 +385,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         </div>
       </div>
       {/* Info: (20241016 - Julian) Asset Details */}
-      <div className="mt-40px flex w-full flex-col gap-24px text-xs tablet:text-sm">
+      <div className="mt-lv-6 flex w-full flex-col gap-24px text-xs tablet:mt-40px tablet:text-sm">
         {/* Info: (20241016 - Julian) Asset Type */}
         <div className="flex items-center justify-between font-semibold">
           <p className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.TYPE')}</p>
