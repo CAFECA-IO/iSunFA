@@ -99,7 +99,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: connectedAccountBook?.id,
+          accountBookId: connectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp, // Info: (20241001 - Anna) 根據選擇的日期範圍傳遞參數
@@ -452,7 +452,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary items-center">
+        <div className="relative z-1 mb-16px flex items-center justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
@@ -472,7 +472,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     <div id="2" className="relative overflow-hidden">
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="relative -z-10"></div>
-        <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary items-center">
+        <div className="mb-4 mt-8 flex items-center justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />

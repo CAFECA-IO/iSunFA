@@ -140,6 +140,8 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
                     variant="tertiaryOutline"
                     className="h-36px w-36px !p-0 tablet:w-auto tablet:!px-4 tablet:!py-1.5"
                     onClick={onDownload}
+                    // Todo: (20250602 - Anna) 暫時禁用，有問題需處理
+                    disabled
                   >
                     <FiDownload size={16} />
                     <div className="hidden tablet:block">
