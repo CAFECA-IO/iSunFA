@@ -138,30 +138,24 @@ const AssetListPageBody: React.FC = () => {
         <button
           type="button"
           onClick={toggleSideMenu}
-          className="block p-10px text-button-text-secondary tablet:hidden"
+          className="block w-fit p-10px text-button-text-secondary tablet:hidden"
         >
           <VscSettings size={24} />
         </button>
         {/* Info: (20240925 - Julian) Asset List */}
-        {assetList && assetList.length > 0 ? (
-          <AssetList
-            assetList={assetList}
-            dateSort={dateSort}
-            setDateSort={setDateSort}
-            priceSort={purchasePriceSort}
-            setPriceSort={setPurchasePriceSort}
-            depreciationSort={accumulatedDepreciationSort}
-            setDepreciationSort={setAccumulatedDepreciationSort}
-            residualSort={residualValueSort}
-            setResidualSort={setResidualValueSort}
-            remainingLifeSort={remainingLifeSort}
-            setRemainingLifeSort={setRemainingLifeSort}
-          />
-        ) : (
-          <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-            <p>{t('asset:ASSET_DETAIL_PAGE.NO_ASSET')}</p>
-          </div>
-        )}
+        <AssetList
+          assetList={assetList}
+          dateSort={dateSort}
+          setDateSort={setDateSort}
+          priceSort={purchasePriceSort}
+          setPriceSort={setPurchasePriceSort}
+          depreciationSort={accumulatedDepreciationSort}
+          setDepreciationSort={setAccumulatedDepreciationSort}
+          residualSort={residualValueSort}
+          setResidualSort={setResidualValueSort}
+          remainingLifeSort={remainingLifeSort}
+          setRemainingLifeSort={setRemainingLifeSort}
+        />
 
         {/* Info: (20240925 - Julian) Pagination */}
         <div className="mx-auto">
