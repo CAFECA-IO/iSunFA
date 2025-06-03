@@ -8,12 +8,12 @@ import Layout from '@/components/beta/layout/layout';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { useAccountingCtx } from '@/contexts/accounting_context';
-import { useUserCtx } from '@/contexts/user_context';
-import { TeamRole } from '@/interfaces/team';
+// import { useUserCtx } from '@/contexts/user_context'; // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
+// import { TeamRole } from '@/interfaces/team'; // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
 
 const AddNewVoucherPage: React.FC = () => {
   const { t } = useTranslation('common');
-  const { teamRole } = useUserCtx();
+  // const { teamRole } = useUserCtx();
 
   const [selectedCertificates, setSelectedCertificates] = useState<{
     [id: string]: ICertificateUI;
@@ -32,14 +32,15 @@ const AddNewVoucherPage: React.FC = () => {
     }
   }, []);
 
+  // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
   // Info: (20250319 - Liz) 拒絕團隊角色 viewer 進入此頁面
-  if (teamRole === TeamRole.VIEWER) {
-    return (
-      <div className="flex h-100vh items-center justify-center">
-        <div className="text-2xl">{t('common:PERMISSION_ERROR.PERMISSION_DENIED_MESSAGE')}</div>
-      </div>
-    );
-  }
+  // if (teamRole === TeamRole.VIEWER) {
+  //   return (
+  //     <div className="flex h-100vh items-center justify-center">
+  //       <div className="text-2xl">{t('common:PERMISSION_ERROR.PERMISSION_DENIED_MESSAGE')}</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
