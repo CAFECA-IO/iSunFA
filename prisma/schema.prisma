@@ -1275,7 +1275,7 @@ model UserTodoCompany {
 model Voucher {
   id             Int     @id @default(autoincrement())
   issuerId       Int     @map("issuer_id")
-  counterPartyId Int     @map("counter_party_id")
+  counterPartyId Int?     @map("counter_party_id")
   companyId      Int     @map("company_id")
   aiResultId     String  @default("0") @map("ai_result_id")
   status         String  @default("journal:JOURNAL.UPLOADED")
@@ -1301,7 +1301,7 @@ model Voucher {
 
   company      Company      @relation(fields: [companyId], references: [id])
   issuer       User         @relation(fields: [issuerId], references: [id])
-  counterparty Counterparty @relation(fields: [counterPartyId], references: [id])
+  counterparty Counterparty? @relation(fields: [counterPartyId], references: [id])
 
   @@map("voucher")
 }

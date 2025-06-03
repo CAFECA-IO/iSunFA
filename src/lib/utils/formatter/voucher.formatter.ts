@@ -21,6 +21,7 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     certificates: [],
     asset: [],
     ...dto,
+    counterPartyId: dto.counterPartyId ?? null,
   };
 
   const { data, success, error } = voucherEntityValidator.safeParse(newDto);
@@ -41,6 +42,7 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     lineItems: data.lineItems || [],
     certificates: data.certificates || [],
     asset: data.asset || [],
+    counterPartyId: dto.counterPartyId ?? null,
   };
 
   return voucherEntity;

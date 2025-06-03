@@ -206,7 +206,7 @@ export interface IVoucherBeta {
   voucherNo: string;
   voucherType: VoucherType;
   note: string;
-  counterParty: ICounterpartyOptional;
+  counterParty: ICounterpartyOptional | null;
   issuer: {
     avatar: string;
     name: string;
@@ -359,7 +359,7 @@ export interface IVoucherEntity {
    * Info: (20241022 - Murky)
    * @description companyId, 交易對象
    */
-  counterPartyId: number;
+  counterPartyId: number | null;
 
   /**
    * Info: (20241022 - Murky)
@@ -455,7 +455,7 @@ export interface IVoucherEntity {
    * Info: (20241023 - Murky)
    * @description this voucher is caused by which company
    */
-  counterParty?: ICounterPartyEntityPartial;
+  counterParty?: ICounterPartyEntityPartial | null;
 
   /**
    * Info: (20241024 - Murky)
@@ -494,7 +494,7 @@ export interface IVoucherEntity {
   isReverseRelated?: boolean;
 }
 
-export type PartialPrismaCounterparty = Partial<PrismaCounterParty>;
+export type PartialPrismaCounterparty = Partial<PrismaCounterParty> | null;
 
 export type IGetOneVoucherResponse = PrismaVoucher & {
   issuer: PrismaUser;
