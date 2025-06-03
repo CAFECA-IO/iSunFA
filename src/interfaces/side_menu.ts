@@ -90,7 +90,7 @@ export const MENU_CONFIG: TMenuOption[] = [
     subMenu: [
       {
         caption: 'ACCOUNTING',
-        hiddenForRole: TeamRole.VIEWER,
+        // hiddenForRole: TeamRole.VIEWER,
         subMenu: [
           {
             type: SubMenuOptionType.LINK,
@@ -120,7 +120,7 @@ export const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'asset_management_icon',
     iconWidth: 24,
     iconHeight: 24,
-    hiddenForRole: TeamRole.VIEWER,
+    // hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'ASSET',
@@ -141,7 +141,7 @@ export const MENU_CONFIG: TMenuOption[] = [
     iconSrcAlt: 'reports_icon',
     iconWidth: 20.58,
     iconHeight: 23.85,
-    hiddenForRole: TeamRole.VIEWER,
+    // hiddenForRole: TeamRole.VIEWER,
     subMenu: [
       {
         caption: 'FINANCIAL_REPORT',
@@ -221,7 +221,7 @@ export const MENU_CONFIG: TMenuOption[] = [
             title: 'ACCOUNTING_SETTINGS',
             link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
             needToConnectAccountBook: true,
-            hiddenForRole: TeamRole.VIEWER,
+            // hiddenForRole: TeamRole.VIEWER,
           },
           {
             type: SubMenuOptionType.LINK,
