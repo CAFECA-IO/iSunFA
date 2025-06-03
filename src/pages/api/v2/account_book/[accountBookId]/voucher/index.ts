@@ -243,10 +243,12 @@ const handlePostRequest = async (req: NextApiRequest) => {
     };
 
     const doRevert = postUtils.isDoAction({ actions, command: VoucherV2Action.REVERT });
-    const isOffsetOnly = reverseVouchersInfo?.length > 0 && actions?.length === 0;
+    const isOffsetOnly =
+      reverseVouchersInfo?.length > 0 && actions?.includes(VoucherV2Action.REVERT) === false;
 
     if (isOffsetOnly && doRevert) {
-      loggerBack.info(`'沖銷分錄不應建立反轉事件，請移除 REVERT action'`);
+      loggerBack.info(`[防呆觸發] 嘗試在沖銷行為中建立 REVERT 傳票，已拒絕執行。body=${body}`);
+
       const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
       error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
       throw error;
