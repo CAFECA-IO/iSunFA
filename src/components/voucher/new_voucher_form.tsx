@@ -590,7 +590,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
-    if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
+    if (isAssetRequired && temporaryAssetListByUser.length > 0) {
+      actions.push(VoucherV2Action.ADD_ASSET);
+    }
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
     const lineItems = voucherLineItems.map((lineItem) => {
@@ -660,7 +662,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
     } else if (
       isCounterpartyRequired &&
-      (!counterparty || counterparty?.taxId === '' || counterparty?.name === '')
+      (!counterparty || counterparty?.name === '')
     ) {
       setIsShowCounterpartyHint(true);
       toastHandler({
@@ -704,16 +706,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ),
         closeable: true,
       });
-    } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
-      setIsShowAssetHint(true);
-      toastHandler({
-        id: ToastId.FILL_UP_VOUCHER_FORM,
-        type: ToastType.ERROR,
-        content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
-        closeable: true,
-      });
-      if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
@@ -724,6 +716,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
     } else {
+      if (isAssetRequired && temporaryAssetListByUser.length === 0) {
+        // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
+        toastHandler({
+          id: ToastId.FILL_UP_VOUCHER_FORM,
+          type: ToastType.WARNING,
+          content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
+          closeable: true,
+        });
+        if (assetRef.current) assetRef.current.scrollIntoView();
+      }
+
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
 

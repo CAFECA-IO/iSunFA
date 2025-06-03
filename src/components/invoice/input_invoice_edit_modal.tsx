@@ -71,6 +71,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const [currency, setCurrency] = useState<string>('TWD');
   const isLg = useIsLg();
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
@@ -80,6 +81,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 certificate，用來做 shallowEqual 比對
   const savedInvoiceRC2Ref = useRef<Partial<IInvoiceRC2Input>>(certificate ?? {});
 
+  // Info: (20250603 - Anna) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
   );
@@ -359,11 +361,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
   const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
-  const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
-  );
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
   const currentIndex = certificates.findIndex((c) => c.id === editingId);
@@ -476,6 +474,19 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       console.log('Modal initialized with certificate:', certificate);
     }
   }, [isOpen, certificate]);
+
+    useEffect(() => {
+      const fetchCurrency = async () => {
+        if (!accountBookId) return;
+        const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+        if (isSuccess && data?.currency) {
+          setCurrency(data.currency);
+        }
+      };
+      if (isOpen) {
+        fetchCurrency();
+      }
+    }, [isOpen, accountBookId]);
 
   return (
     <div
@@ -939,7 +950,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           {t('common:COMMON.OR')}
                         </p>
                         {/* Info: (20250429 - Anna) Other Certificate No. */}
-                        <div className="flex min-w-0 flex-col gap-2 ">
+                        <div className="flex min-w-0 flex-col gap-2">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
                             <span> </span>
@@ -1132,13 +1143,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.netAmount && (
@@ -1200,13 +1211,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         />
                         <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                           <Image
-                            src={currencyAliasImageSrc}
+                            src={`/currencies/${currency.toLowerCase()}.svg`}
                             width={16}
                             height={16}
                             alt={currencyAliasImageAlt}
-                            className="rounded-full"
+                            className="aspect-square rounded-full object-cover"
                           />
-                          <p>{currencyAliasStr}</p>
+                          <p>{currency}</p>
                         </div>
                       </div>
                       {(formState.type === InvoiceType.INPUT_22 ||
@@ -1245,13 +1256,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.taxAmount && (
