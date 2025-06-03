@@ -22,7 +22,7 @@ import { ToastId } from '@/constants/toast_id';
 import { TbArrowBackUp } from 'react-icons/tb';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const { t } = useTranslation('asset');
+  const { t } = useTranslation(['asset', 'filter_section_type']);
   const router = useRouter();
 
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =

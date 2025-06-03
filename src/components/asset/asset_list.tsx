@@ -76,7 +76,8 @@ const AssetList: React.FC<IAssetListProps> = ({
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
   // Info: (20250603 - Julian) 如果 uiAssetList 為空，則顯示無資料狀態
-  const isNoData = uiAssetList.length === 0;
+  // ToDo: (20250603 - Julian) 開發中，未完成
+  const isNoData = defaultAssetList.length === 0;
 
   // Info: (20241024 - Julian) checkbox 的開關
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
@@ -279,7 +280,7 @@ const AssetList: React.FC<IAssetListProps> = ({
     },
   });
 
-  const displayedAssetList = uiAssetList.map((asset) => {
+  const displayedAssetList = defaultAssetList.map((asset) => {
     return (
       <AssetItem
         key={asset.id}
@@ -291,7 +292,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   });
 
   const displayedTable = !isNoData ? (
-    <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+    <div className="table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
       {/* Info: (20240925 - Julian) ---------------- Table Header ---------------- */}
       <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
         <div className="table-row">
@@ -337,7 +338,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   return (
     <div className="flex flex-col gap-16px">
       {/* Info: (20240925 - Julian) Export Asset button */}
-      <div className="ml-auto hidden items-center gap-24px">
+      <div className="ml-auto flex items-center gap-24px">
         <Button
           type="button"
           variant="tertiaryOutline"
@@ -352,7 +353,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           type="button"
           className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
           onClick={selectAllHandler}
-          disabled={uiAssetList.length === 0}
+          disabled={isNoData}
         >
           {isSelectedAll ? t('asset:COMMON.UNSELECT_ALL') : t('asset:COMMON.SELECT_ALL')}
         </button>
