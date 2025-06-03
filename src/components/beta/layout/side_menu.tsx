@@ -16,6 +16,7 @@ import packageJson from '@package';
 import { TeamRole } from '@/interfaces/team';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { MENU_CONFIG } from '@/interfaces/side_menu';
+import { cn } from '@/lib/utils/common';
 
 interface IDefaultMenuOption {
   title: string;
@@ -144,15 +145,17 @@ const SubMenuOption = ({
 
   if (disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
-  if (hiddenForRole && hiddenForRole === teamRole) return null;
-
   if (type === SubMenuOptionType.LINK) {
     return (
       <Link
         href={link}
         onClick={onClickLink}
-        className="rounded-xs px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid"
+        className={cn('rounded-xs px-12px py-10px font-medium text-button-text-secondary', {
+          'pointer-events-none disabled:text-button-text-disable':
+            hiddenForRole && hiddenForRole === teamRole,
+          'hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid':
+            !hiddenForRole || hiddenForRole !== teamRole,
+        })}
       >
         {t(`layout:SIDE_MENU.${title}`)}
       </Link>
@@ -195,12 +198,17 @@ const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) 
 
   if (subMenuSection.disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
-  if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
-
   return (
     <>
-      <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
+      <h4
+        className={cn(
+          'text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1',
+          {
+            'pointer-events-none disabled:text-button-text-disable':
+              subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole,
+          }
+        )}
+      >
         {t(`layout:SIDE_MENU.${subMenuSection.caption}`)}
       </h4>
 
@@ -243,11 +251,13 @@ const MenuOption = ({
   iconWidth,
   iconHeight,
   disabled = false,
+  hiddenForRole,
   link,
   subMenu,
   onClickMenuOption,
 }: MenuOptionProps) => {
   const { t } = useTranslation(['layout']);
+  const { teamRole } = useUserCtx();
 
   if (disabled) return null;
 
@@ -256,7 +266,15 @@ const MenuOption = ({
       {link ? (
         <Link
           href={link}
-          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover"
+          className={cn(
+            'flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary',
+            {
+              'pointer-events-none disabled:text-button-text-disable':
+                hiddenForRole && hiddenForRole === teamRole,
+              'hover:bg-button-surface-soft-secondary-hover':
+                !hiddenForRole || hiddenForRole !== teamRole,
+            }
+          )}
         >
           <div className="flex h-24px w-24px items-center justify-center">
             <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
@@ -291,7 +309,7 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
   const currentYear = new Date().getFullYear();
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
   const { isSideMenuOpen, toggleSideMenu } = useDashboardCtx();
-  const { teamRole, connectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const hasConnectedAccountBook = !!connectedAccountBook;
   const userAvatarSrc = hasConnectedAccountBook
@@ -385,13 +403,9 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* Info: (20241121 - Liz) Side Menu Content */}
           <div className="flex flex-auto flex-col gap-24px">
-            {MENU_CONFIG.map((menu) => {
-              // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 menuOption
-              if (menu.hiddenForRole && menu.hiddenForRole === teamRole) return null;
-              return (
-                <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
-              );
-            })}
+            {MENU_CONFIG.map((menu) => (
+              <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
+            ))}
           </div>
 
           {isSubMenuOpen && (
