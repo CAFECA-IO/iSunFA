@@ -10,6 +10,7 @@ import {
   Prisma,
   Voucher as PrismaVoucher,
   AssociateLineItem as PrismaAssociateLineItem,
+  Voucher,
 } from '@prisma/client';
 
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
@@ -493,13 +494,8 @@ export async function postVoucherV2({
     assetEvent: IEventEntity | null;
   };
   certificateIds: number[];
-}) {
-  // ToDo: (20241030 - Murky) Implement recurringEvent and assetEvent
-  // const isRecurringEvent = !!recurringEvent;
-  // const isAssetEvent = !!assetEvent;
+}): Promise<Voucher> {
   const isRevertEvent = !!revertEvent;
-
-  // Info: (20241111 - Murky) 目前沒有event, 折舊在post voucher的時候執行
   const isAssetEvent = originalVoucher.asset.length > 0;
 
   const voucherCreated = await prisma.$transaction(async (tx) => {
@@ -507,126 +503,98 @@ export async function postVoucherV2({
       voucherDate: originalVoucher.date,
     });
 
+    if (!originalVoucher.lineItems.length) {
+      loggerBack.info('Voucher must contain at least one line item');
+      const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
+      throw error;
+    }
+
+    const voucherData: Prisma.VoucherCreateInput = {
+      no: originalVoucherNo,
+      date: originalVoucher.date,
+      type: originalVoucher.type,
+      note: originalVoucher.note,
+      status: originalVoucher.status,
+      editable: originalVoucher.editable,
+      createdAt: nowInSecond,
+      updatedAt: nowInSecond,
+      company: {
+        connect: { id: company.id },
+      },
+      issuer: {
+        connect: { id: issuer.id },
+      },
+      voucherCertificates: {
+        create: certificateIds.map((certificateId) => ({
+          certificate: {
+            connect: { id: certificateId },
+          },
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        })),
+      },
+      counterparty: originalVoucher.counterPartyId
+        ? { connect: { id: originalVoucher.counterPartyId } }
+        : undefined,
+      lineItems: {
+        create: originalVoucher.lineItems.map((lineItem) => ({
+          amount: lineItem.amount,
+          description: lineItem.description,
+          debit: lineItem.debit,
+          account: {
+            connect: { id: lineItem.accountId },
+          },
+          createdAt: nowInSecond,
+          updatedAt: nowInSecond,
+        })),
+      },
+    };
+
     const originalVoucherInDB = await tx.voucher.create({
-      data: {
-        no: originalVoucherNo,
-        date: originalVoucher.date,
-        type: originalVoucher.type,
-        note: originalVoucher.note,
-        status: originalVoucher.status,
-        editable: originalVoucher.editable,
-        createdAt: nowInSecond,
-        updatedAt: nowInSecond,
-        deletedAt: null,
-        company: {
-          connect: {
-            id: company.id,
-          },
-        },
-        voucherCertificates: {
-          create: certificateIds.map((certificateId) => ({
-            certificate: {
-              connect: {
-                id: certificateId,
-              },
-            },
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-          })),
-        },
-        issuer: {
-          connect: {
-            id: issuer.id,
-          },
-        },
-        counterparty: {
-          connect: {
-            id: originalVoucher.counterPartyId,
-          },
-        },
-        lineItems: {
-          create: originalVoucher.lineItems.map((lineItem) => ({
-            amount: lineItem.amount,
-            description: lineItem.description,
-            debit: lineItem.debit,
-            account: {
-              connect: {
-                id: lineItem.accountId,
-              },
-            },
-            createdAt: nowInSecond,
-            updatedAt: nowInSecond,
-          })),
-        },
-      },
-      include: {
-        lineItems: true,
-      },
+      data: voucherData,
+      include: { lineItems: true },
     });
 
     if (isAssetEvent) {
       await Promise.all(
-        originalVoucher.asset.map(async (asset) => {
-          const assetVoucher = await tx.assetVoucher.create({
+        originalVoucher.asset.map((asset) =>
+          tx.assetVoucher.create({
             data: {
-              asset: {
-                connect: {
-                  id: asset.id,
-                },
-              },
-              voucher: {
-                connect: {
-                  id: originalVoucherInDB.id,
-                },
-              },
+              asset: { connect: { id: asset.id } },
+              voucher: { connect: { id: originalVoucherInDB.id } },
               createdAt: nowInSecond,
               updatedAt: nowInSecond,
             },
-          });
-          return assetVoucher;
-        })
+          })
+        )
       );
     }
 
     if (isRevertEvent) {
       const { associateVouchers } = revertEvent;
-
-      assert(
-        associateVouchers,
-        'associateVouchers is not provided in postVoucherV2 in voucher.repo.ts'
-      );
-
-      assert(
-        associateVouchers.length > 0,
-        'associateVouchers is empty in postVoucherV2 in voucher.repo.ts'
-      );
+      assert(associateVouchers?.length, 'associateVouchers missing or empty');
 
       await Promise.all(
-        associateVouchers.map(async (associateVoucher) => {
-          const { originalVoucher: original, resultVoucher } = associateVoucher;
-          // const { resultVoucher } = associateVoucher;
-
+        associateVouchers.map(async ({ originalVoucher: original, resultVoucher }) => {
           const originalLineItem = original.lineItems[0];
-
-          // Info: (20241111 - Murky) Patch, 找出原始 voucher 被反轉的 lineItem
-          const resultLineItem = originalVoucherInDB.lineItems.find((lineItem) => {
-            const targetLineItem = resultVoucher.lineItems[0];
+          const resultLineItem = originalVoucherInDB.lineItems.find((li) => {
+            const target = resultVoucher.lineItems[0];
             return (
-              lineItem.accountId === targetLineItem.accountId &&
-              lineItem.debit === targetLineItem.debit &&
-              lineItem.amount === targetLineItem.amount &&
-              lineItem.description === targetLineItem.description
+              li.accountId === target.accountId &&
+              li.debit === target.debit &&
+              li.amount === target.amount &&
+              li.description === target.description
             );
           });
 
-          assert(
-            !!resultLineItem,
-            'resultLineItem is not found in postVoucherV2 in voucher.repo.ts'
-          );
-
           if (!resultLineItem) {
-            const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
-            error.name = STATUS_CODE.MISSING_LINE_ITEMS;
+            loggerBack.error('resultLineItem not found', {
+              originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
+              target: resultVoucher.lineItems[0],
+            });
+            const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+            error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
             throw error;
           }
 
@@ -643,28 +611,20 @@ export async function postVoucherV2({
               associateVouchers: {
                 create: {
                   originalVoucher: {
-                    connect: {
-                      id: original.id,
-                    },
+                    connect: { id: original.id },
                   },
                   resultVoucher: {
-                    connect: {
-                      id: originalVoucherInDB.id,
-                    },
+                    connect: { id: originalVoucherInDB.id },
                   },
                   createdAt: nowInSecond,
                   updatedAt: nowInSecond,
                   associateLineItems: {
                     create: {
                       originalLineItem: {
-                        connect: {
-                          id: originalLineItem.id,
-                        },
+                        connect: { id: originalLineItem.id },
                       },
                       resultLineItem: {
-                        connect: {
-                          id: resultLineItem.id,
-                        },
+                        connect: { id: resultLineItem.id },
                       },
                       createdAt: nowInSecond,
                       updatedAt: nowInSecond,
@@ -674,9 +634,6 @@ export async function postVoucherV2({
                   },
                 },
               },
-            },
-            include: {
-              associateVouchers: true,
             },
           });
         })
@@ -1504,14 +1461,18 @@ export async function getManyVoucherV2(options: {
     }
     vouchers = vouchers.map((voucher) => {
       const noteData = parseNoteData(voucher.note ?? '');
+      const isPublic = voucher.counterparty?.id === 555;
+
       return {
         ...voucher,
         note: noteData.note ?? voucher.note ?? '',
-        counterparty: {
-          ...voucher.counterparty,
-          name: voucher.counterparty.id === 555 ? noteData.name : voucher.counterparty.name,
-          taxId: voucher.counterparty.id === 555 ? noteData.taxId : voucher.counterparty.taxId,
-        },
+        counterparty: voucher.counterparty
+          ? {
+              ...voucher.counterparty,
+              name: isPublic ? noteData.name : voucher.counterparty.name,
+              taxId: isPublic ? noteData.taxId : voucher.counterparty.taxId,
+            }
+          : null,
       };
     });
   } catch (error) {
@@ -1983,11 +1944,9 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
             id: issuerId,
           },
         },
-        counterparty: {
-          connect: {
-            id: voucherDeleteOtherEntity.counterPartyId,
-          },
-        },
+        counterparty: voucherDeleteOtherEntity.counterPartyId
+          ? { connect: { id: voucherDeleteOtherEntity.counterPartyId } }
+          : undefined,
         lineItems: {
           create: voucherDeleteOtherEntity.lineItems.map((lineItem) => ({
             amount: lineItem.amount,
