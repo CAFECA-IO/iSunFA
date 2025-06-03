@@ -243,6 +243,15 @@ const handlePostRequest = async (req: NextApiRequest) => {
     };
 
     const doRevert = postUtils.isDoAction({ actions, command: VoucherV2Action.REVERT });
+    const isOffsetOnly = reverseVouchersInfo?.length > 0 && actions?.length === 0;
+
+    if (isOffsetOnly && doRevert) {
+      loggerBack.info(`'沖銷分錄不應建立反轉事件，請移除 REVERT action'`);
+      const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
+      throw error;
+    }
+
     const doAddAsset = postUtils.isDoAction({ actions, command: VoucherV2Action.ADD_ASSET });
 
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
