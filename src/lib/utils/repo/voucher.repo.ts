@@ -10,6 +10,7 @@ import {
   Prisma,
   Voucher as PrismaVoucher,
   AssociateLineItem as PrismaAssociateLineItem,
+  LineItem as PrismaLineItem,
   Voucher,
 } from '@prisma/client';
 
@@ -47,6 +48,10 @@ import {
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+
+interface DeepNestedLineItem extends PrismaLineItem {
+  originalLineItem?: PrismaAssociateLineItem[];
+}
 
 export async function findUniqueJournalInvolveInvoicePaymentInPrisma(
   journalId: number | undefined
@@ -1124,6 +1129,20 @@ export async function getOneVoucherByVoucherNoV2(options: {
   return voucher;
 }
 
+export function isFullyReversed(lineItem: DeepNestedLineItem): boolean {
+  const reversedPairs = lineItem.originalLineItem ?? [];
+
+  const totalReversedAmount = reversedPairs.reduce((sum, pair) => {
+    return sum + pair.amount;
+  }, 0);
+
+  return totalReversedAmount >= lineItem.amount;
+}
+
+export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems: T[]): T[] {
+  return lineItems.filter((li) => !isFullyReversed(li));
+}
+
 export async function getManyVoucherV2(options: {
   companyId: number;
   startDate: number;
@@ -1223,6 +1242,15 @@ export async function getManyVoucherV2(options: {
         ? [
             {
               resultVouchers: {
+                none: {
+                  event: {
+                    eventType: 'revert',
+                  },
+                },
+              },
+            },
+            {
+              originalVouchers: {
                 none: {
                   event: {
                     eventType: 'revert',
@@ -1468,6 +1496,7 @@ export async function getManyVoucherV2(options: {
 
       return {
         ...voucher,
+        lineItems: filterAvailableLineItems(voucher.lineItems),
         note: noteData.note ?? voucher.note ?? '',
         counterparty: voucher.counterparty
           ? {
