@@ -204,7 +204,7 @@ const voucherGetAllBodyValidatorV2 = z.object({});
 export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   z.object({
     ...voucherEntityValidator.shape,
-    counterParty: partialCounterPartyEntityValidator.nullable(),
+    counterParty: partialCounterPartyEntityValidator,
     issuer: z.object({
       ...userEntityValidator.shape,
       imageFile: fileEntityValidator,
@@ -521,8 +521,8 @@ const voucherGetOneOutputValidatorV2 = z
       note: data.note ?? '',
       counterParty: {
         companyId: data.companyId,
-        name: data.counterParty.name,
-        taxId: data.counterParty.taxId,
+        name: data.counterParty?.name,
+        taxId: data.counterParty?.taxId,
       },
       // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
       recurringInfo: {
@@ -585,14 +585,14 @@ const voucherGetOneOutputValidatorV2 = z
             updatedAt: certificate.invoice.updatedAt,
             name: 'InvoiceName',
             counterParty: {
-              id: data.counterParty.id,
-              companyId: data.counterParty.companyId,
-              name: data.counterParty.name,
-              taxId: data.counterParty.taxId,
-              type: data.counterParty.type,
-              note: data.counterParty.note,
-              createdAt: data.counterParty.createdAt,
-              updatedAt: data.counterParty.updatedAt,
+              id: data.counterParty?.id,
+              companyId: data.counterParty?.companyId,
+              name: data.counterParty?.name,
+              taxId: data.counterParty?.taxId,
+              type: data.counterParty?.type,
+              note: data.counterParty?.note,
+              createdAt: data.counterParty?.createdAt,
+              updatedAt: data.counterParty?.updatedAt,
             },
           },
           file: {
