@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import packageJson from '@package';
 import { MENU_CONFIG, MenuContent, TMenuOption } from '@/interfaces/side_menu';
+import { cn } from '@/lib/utils/common';
 
 type MenuOptionProps = TMenuOption & {
   onClickMenuOption: (menuOptionTitle: string) => void;
@@ -20,12 +21,14 @@ const MenuOption = ({
   iconWidth,
   iconHeight,
   disabled = false,
+  hiddenForRole,
   link,
   subMenu,
   onClickMenuOption,
   closeMenu,
 }: MenuOptionProps) => {
   const { t } = useTranslation(['layout']);
+  const { teamRole } = useUserCtx();
 
   if (disabled) return null;
 
@@ -34,7 +37,12 @@ const MenuOption = ({
       {link ? (
         <Link
           href={link}
-          className="flex w-full items-center gap-8px px-12px py-10px hover:bg-button-surface-soft-secondary-hover"
+          className={cn('flex w-full items-center gap-8px px-12px py-10px', {
+            'pointer-events-none disabled:text-button-text-disable':
+              hiddenForRole && hiddenForRole === teamRole,
+            'hover:bg-button-surface-soft-secondary-hover':
+              !hiddenForRole || hiddenForRole !== teamRole,
+          })}
           onClick={closeMenu}
         >
           <div className="flex h-24px w-24px items-center justify-center">
@@ -79,7 +87,6 @@ const MainMenu = ({ setSelectedMenuOption, closeMenu, changeMenu }: MainMenuProp
   const { t } = useTranslation(['layout']);
   const { version, versionName } = packageJson;
   const currentYear = new Date().getFullYear();
-  const { teamRole } = useUserCtx();
 
   const onClickMenuOption = (menuOption: string) => {
     setSelectedMenuOption(menuOption);
@@ -93,18 +100,14 @@ const MainMenu = ({ setSelectedMenuOption, closeMenu, changeMenu }: MainMenuProp
     <section className="flex flex-auto flex-col gap-24px bg-surface-neutral-surface-lv2 px-12px py-16px">
       {/* Info: (20241121 - Liz) Side Menu Content */}
       <div className="flex flex-auto flex-col gap-24px">
-        {MENU_CONFIG.map((menu) => {
-          // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 menuOption
-          if (menu.hiddenForRole && menu.hiddenForRole === teamRole) return null;
-          return (
-            <MenuOption
-              key={menu.title}
-              {...menu}
-              onClickMenuOption={onClickMenuOption}
-              closeMenu={closeMenu}
-            />
-          );
-        })}
+        {MENU_CONFIG.map((menu) => (
+          <MenuOption
+            key={menu.title}
+            {...menu}
+            onClickMenuOption={onClickMenuOption}
+            closeMenu={closeMenu}
+          />
+        ))}
       </div>
 
       {/* Info: (20241121 - Liz) Side Menu Footer */}
