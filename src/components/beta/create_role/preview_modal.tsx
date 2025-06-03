@@ -11,6 +11,7 @@ const ALL_ROLE_VIDEOS: { role: RoleName; videos: { id: number; url: string }[] }
       { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
       { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
       { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+      { id: 4, url: 'https://www.youtube.com/embed/GXoTiXkIZdc' },
     ],
   },
   {
@@ -20,6 +21,7 @@ const ALL_ROLE_VIDEOS: { role: RoleName; videos: { id: number; url: string }[] }
       { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
       { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
       { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+      { id: 4, url: 'https://www.youtube.com/embed/GXoTiXkIZdc' },
     ],
   },
   {
@@ -29,6 +31,7 @@ const ALL_ROLE_VIDEOS: { role: RoleName; videos: { id: number; url: string }[] }
       { id: 1, url: 'https://www.youtube.com/embed/Nt_HvFha-rA' },
       { id: 2, url: 'https://www.youtube.com/embed/2tuKxQIkh2Q' },
       { id: 3, url: 'https://www.youtube.com/embed/JaMhpQ0CnoU' },
+      { id: 4, url: 'https://www.youtube.com/embed/GXoTiXkIZdc' },
     ],
   },
 ];
