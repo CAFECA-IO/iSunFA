@@ -31,7 +31,6 @@ import type { IEventEntity } from '@/interfaces/event';
 import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';
 import { EventType } from '@/constants/account';
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 import { IAssociateLineItemEntity } from '@/interfaces/associate_line_item';
 import { IAssociateVoucherEntity } from '@/interfaces/associate_voucher';
@@ -510,6 +509,15 @@ export async function postVoucherV2({
       throw error;
     }
 
+    if (originalVoucher.counterPartyId) {
+      const exists = await prisma.counterparty.findUnique({
+        where: { id: originalVoucher.counterPartyId },
+      });
+      if (!exists) {
+        throw new Error(`⚠️ counterPartyId ${originalVoucher.counterPartyId} 不存在於資料庫中`);
+      }
+    }
+
     const voucherData: Prisma.VoucherCreateInput = {
       no: originalVoucherNo,
       date: originalVoucher.date,
@@ -648,7 +656,7 @@ export async function putVoucherWithoutCreateNew(
   voucherId: number,
   options: {
     issuerId: number;
-    counterPartyId?: number;
+    counterPartyId?: number | null;
     voucherInfo: {
       type: EventType;
       note: string;
@@ -686,7 +694,7 @@ export async function putVoucherWithoutCreateNew(
   const nowInSecond = getTimestampNow();
   const {
     issuerId,
-    counterPartyId = PUBLIC_COUNTER_PARTY.id,
+    counterPartyId,
     voucherInfo,
     certificateOptions,
     assetOptions,
@@ -706,11 +714,7 @@ export async function putVoucherWithoutCreateNew(
               id: issuerId,
             },
           },
-          counterparty: {
-            connect: {
-              id: counterPartyId,
-            },
-          },
+          counterparty: counterPartyId ? { connect: { id: counterPartyId } } : undefined,
           type: voucherInfo.type,
           note: voucherInfo.note,
           date: voucherInfo.voucherDate,
@@ -1461,7 +1465,6 @@ export async function getManyVoucherV2(options: {
     }
     vouchers = vouchers.map((voucher) => {
       const noteData = parseNoteData(voucher.note ?? '');
-      const isPublic = voucher.counterparty?.id === 555;
 
       return {
         ...voucher,
@@ -1469,8 +1472,7 @@ export async function getManyVoucherV2(options: {
         counterparty: voucher.counterparty
           ? {
               ...voucher.counterparty,
-              name: isPublic ? noteData.name : voucher.counterparty.name,
-              taxId: isPublic ? noteData.taxId : voucher.counterparty.taxId,
+              taxId: voucher.counterparty.taxId ?? '',
             }
           : null,
       };

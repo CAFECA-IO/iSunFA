@@ -18,8 +18,6 @@ import {
 } from '@/pages/api/v2/account_book/[accountBookId]/voucher/route_utils';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { initCounterPartyEntity } from '@/lib/utils/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { IGetManyVoucherResponseButOne, IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
@@ -288,12 +286,12 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const issuer = await postUtils.initIssuerFromPrisma(userId);
     const counterPartyEntity = postUtils.isItemExist(counterPartyId)
       ? await postUtils.initCounterPartyFromPrisma(counterPartyId)
-      : initCounterPartyEntity(PUBLIC_COUNTER_PARTY);
+      : null;
 
     const lineItemEntities = postUtils.initLineItemEntities(lineItems);
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
-      counterPartyId: counterPartyEntity.id!,
+      counterPartyId: counterPartyEntity?.id || null,
       companyId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
