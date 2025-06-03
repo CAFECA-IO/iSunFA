@@ -588,7 +588,7 @@ const DatePicker = ({
          */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-300px grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            'w-230px invisible absolute top-16 z-20 grid grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out iphone12pro:w-300px md:w-[350px]',
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
               'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,

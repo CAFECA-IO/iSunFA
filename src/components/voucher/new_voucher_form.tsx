@@ -157,6 +157,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
   const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  // Info: (20250603 - Tzuhan) 目前只有刪除傳票時需要建立反轉分錄
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
@@ -294,8 +296,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 
   useEffect(() => {
+    /* (20250603 - Tzuhan) Fix: Prevent incorrect REVERT on offset]
+    * 原本根據 voucherLineItems 中是否存在 isReverse=true 來推斷是否需要建立反轉分錄（REVERT）
+    但實務上「沖銷行為」也會產生 isReverse=true 的項目，並不代表使用者要刪除原始傳票
+    因此這段邏輯會造成「沖銷時誤送出 actions: ['revert']」，導致建立錯誤的反轉傳票
+    目前僅允許由刪除傳票流程（明確執行 delete API）觸發 REVERT，因此這段先行註解
     const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
+    */
     setIsShowReverseHint(false); // Info: (20250304 - Julian) 重置沖銷提示
   }, [voucherLineItems]);
 

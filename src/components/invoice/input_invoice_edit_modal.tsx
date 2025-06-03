@@ -534,7 +534,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto h-350px w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
+                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -550,7 +550,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
                       variant="tertiaryOutline"
-                      className="h-36px px-16px py-8px"
+                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
@@ -561,7 +561,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       type="button"
                       disabled={!hasNext}
                       variant="tertiary"
-                      className="h-36px px-16px py-8px"
+                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
@@ -571,7 +571,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     <Button
                       id="certificate-delete-btn"
                       type="button"
-                      className="mt-10px h-36px w-full px-16px py-8px"
+                      className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
                       onClick={() => onDelete(certificate.id)}
                       variant="errorOutline"
                     >
@@ -763,7 +763,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const prefix = latestNo.substring(0, 2);
                               handleInputChange('no', `${prefix}${e.target.value}`);
                             }}
-                            className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                            className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                             placeholder={t('certificate:EDIT.ENTER_ONE_INVOICE')}
                           />
                         </div>
@@ -810,7 +810,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
+                              className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
                               placeholder="12345678"
                               disabled={
                                 !!formState.otherCertificateNo ||
@@ -894,7 +894,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     formState.type === InvoiceType.INPUT_27 ? (
                       <div className="flex w-full flex-col justify-between lg:flex-row">
                         {/* Info: (20250429 - Anna) Representative Invoice No. */}
-                        <div className="flex flex-col gap-2 lg:w-52">
+                        <div className="flex min-w-0 flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
                             <span> </span>
@@ -928,24 +928,23 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px w-full rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-36"
+                              className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="12345678"
                               disabled={!!formState.otherCertificateNo}
                             />
                           </div>
                         </div>
                         {/* Info: (20250429 - Anna) or */}
-                        <p className="mt-2 flex items-end justify-center text-neutral-400">
+                        <p className="mx-4 mt-2 flex items-end justify-center text-neutral-400">
                           {t('common:COMMON.OR')}
                         </p>
                         {/* Info: (20250429 - Anna) Other Certificate No. */}
-                        <div className="flex flex-col gap-2 lg:w-52">
+                        <div className="flex min-w-0 flex-col gap-2 ">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
                             <span> </span>
                             <span className="text-text-state-error">*</span>
                           </p>
-
                           <div className="flex w-full items-center">
                             <input
                               id="other-certificate-no"
@@ -954,7 +953,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               onChange={(e) => {
                                 handleInputChange('otherCertificateNo', e.target.value);
                               }}
-                              className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                              className="h-44px min-w-0 flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="CC12345678"
                               disabled={!!formState.no}
                             />
@@ -998,7 +997,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const suffix = latestNo.substring(2);
                               handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
                             }}
-                            className="h-44px w-16 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                            className="h-44px w-14 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                             placeholder="AB"
                           />
 
@@ -1012,7 +1011,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const prefix = latestNo.substring(0, 2);
                               handleInputChange('no', `${prefix}${e.target.value}`);
                             }}
-                            className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                            className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                             placeholder="12345678"
                           />
                         </div>
