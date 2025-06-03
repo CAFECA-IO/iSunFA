@@ -75,6 +75,10 @@ const AssetList: React.FC<IAssetListProps> = ({
   const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
 
+  // Info: (20250603 - Julian) 如果 uiAssetList 為空，則顯示無資料狀態
+  // ToDo: (20250603 - Julian) 開發中，未完成
+  const isNoData = defaultAssetList.length === 0;
+
   // Info: (20241024 - Julian) checkbox 的開關
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
 
@@ -276,7 +280,7 @@ const AssetList: React.FC<IAssetListProps> = ({
     },
   });
 
-  const displayedAssetList = uiAssetList.map((asset) => {
+  const displayedAssetList = defaultAssetList.map((asset) => {
     return (
       <AssetItem
         key={asset.id}
@@ -287,10 +291,54 @@ const AssetList: React.FC<IAssetListProps> = ({
     );
   });
 
+  const displayedTable = !isNoData ? (
+    <div className="table w-full overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
+      {/* Info: (20240925 - Julian) ---------------- Table Header ---------------- */}
+      <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
+        <div className="table-row">
+          <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
+            <input
+              type="checkbox"
+              className={checkboxStyle}
+              checked={isSelectedAll}
+              onChange={checkAllHandler}
+            />
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+            {displayedIssuedDate}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-140px`}>
+            {t('asset:ASSET.TYPE')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-120px`}>
+            {t('asset:ASSET.ASSET_NAME')}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>{displayedPrice}</div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+            {displayedDepreciation}
+          </div>
+          <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
+            {displayedResidual}
+          </div>
+          <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
+            {displayedRemainingLife}
+          </div>
+        </div>
+      </div>
+
+      {/* Info: (20240925 - Julian) ---------------- Table Body ---------------- */}
+      <div className="table-row-group">{displayedAssetList}</div>
+    </div>
+  ) : (
+    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+      <p>{t('asset:ASSET_DETAIL_PAGE.NO_ASSET')}</p>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-16px">
       {/* Info: (20240925 - Julian) Export Asset button */}
-      <div className="ml-auto hidden items-center gap-24px">
+      <div className="ml-auto flex items-center gap-24px">
         <Button
           type="button"
           variant="tertiaryOutline"
@@ -305,7 +353,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           type="button"
           className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
           onClick={selectAllHandler}
-          disabled={uiAssetList.length === 0}
+          disabled={isNoData}
         >
           {isSelectedAll ? t('asset:COMMON.UNSELECT_ALL') : t('asset:COMMON.SELECT_ALL')}
         </button>
@@ -327,44 +375,13 @@ const AssetList: React.FC<IAssetListProps> = ({
         </button>
       </div>
 
-      {/* Info: (20241024 - Julian) Asset Table */}
-      <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv2">
-        {/* Info: (20240925 - Julian) ---------------- Table Header ---------------- */}
-        <div className="table-header-group bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className={`${checkStyle} w-20px border-b border-stroke-neutral-quaternary`}>
-              <input
-                type="checkbox"
-                className={checkboxStyle}
-                checked={isSelectedAll}
-                onChange={checkAllHandler}
-              />
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
-              {displayedIssuedDate}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-140px`}>
-              {t('asset:ASSET.TYPE')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-120px`}>
-              {t('asset:ASSET.ASSET_NAME')}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>{displayedPrice}</div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
-              {displayedDepreciation}
-            </div>
-            <div className={`${tableCellStyles} ${sideBorderStyles} w-100px`}>
-              {displayedResidual}
-            </div>
-            <div className={`${tableCellStyles} border-b border-stroke-neutral-quaternary`}>
-              {displayedRemainingLife}
-            </div>
-          </div>
-        </div>
-
-        {/* Info: (20240925 - Julian) ---------------- Table Body ---------------- */}
-        <div className="table-row-group">{displayedAssetList}</div>
+      {/* Info: (20250603 - Julian) Table for mobile */}
+      <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
+        <div className={isNoData ? '' : 'w-max'}>{displayedTable}</div>
       </div>
+
+      {/* Info: (20250603 - Julian) Table for desktop */}
+      <div className="hidden tablet:block">{displayedTable}</div>
     </div>
   );
 };

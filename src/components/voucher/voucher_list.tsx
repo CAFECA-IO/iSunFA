@@ -386,7 +386,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       <button
         type="button"
         onClick={toggleSideMenu}
-        className="block p-10px text-button-text-secondary tablet:hidden"
+        className="block w-fit p-10px text-button-text-secondary tablet:hidden"
       >
         <VscSettings size={24} />
       </button>
