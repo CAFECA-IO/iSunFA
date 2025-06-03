@@ -212,7 +212,7 @@ const AccountBookItem = ({
             }
           )}
         >
-          {/* Info: (20250326 - Liz) Account Book Image & Name */}
+          {/* Info: (20250326 - Liz) Account Book Image & Name 顯示帳本圖片 & 名稱 */}
           <section className="flex flex-auto items-center gap-24px">
             <Image
               src={accountBook.imageId}
@@ -229,12 +229,12 @@ const AccountBookItem = ({
             </div>
           </section>
 
-          {/* Info: (20250326 - Liz) Work Tag */}
+          {/* Info: (20250326 - Liz) Work Tag 顯示工作標籤 */}
           <div className="flex w-90px justify-center">
             <CompanyTag tag={accountBook.tag} />
           </div>
 
-          {/* Info: (20250326 - Liz) Transferring */}
+          {/* Info: (20250326 - Liz) Transferring 顯示正在轉移中 */}
           {accountBook.isTransferring && (
             <section className="flex w-140px items-center justify-center gap-16px">
               <p className="text-nowrap text-sm font-medium">
@@ -253,7 +253,7 @@ const AccountBookItem = ({
             </section>
           )}
 
-          {/* Info: (20250407 - Liz) OptionsDropdown */}
+          {/* Info: (20250407 - Liz) OptionsDropdown 選單 */}
           {hasPermission && (
             <div ref={optionsDropdownRef} className="relative">
               <button type="button" onClick={toggleOptionsDropdown} className="p-8px">
@@ -334,7 +334,7 @@ const AccountBookItem = ({
             }
           )}
         >
-          {/* Info: (20250326 - Liz) Account Book Image & Name */}
+          {/* Info: (20250326 - Liz) Account Book Image & Name 顯示帳本圖片 & 名稱 */}
           <section className="flex flex-auto items-center gap-24px">
             <Image
               src={accountBook.imageId}
@@ -345,15 +345,15 @@ const AccountBookItem = ({
             ></Image>
 
             <div className="flex items-center justify-between gap-8px">
-              <p className="max-w-80px truncate text-base font-medium text-text-neutral-solid-dark">
+              <p className="max-w-50px truncate text-base font-medium text-text-neutral-solid-dark">
                 {accountBook.name}
               </p>
             </div>
           </section>
 
-          {/* Info: (20250602 - Liz) 編輯帳本 */}
-          {editPermission.can && (
-            <button type="button" onClick={openEditAccountBookModal}>
+          {/* Info: (20250602 - Liz) 編輯帳本按鈕 */}
+          {editPermission.can && !accountBook.isTransferring && (
+            <button type="button" onClick={openEditAccountBookModal} className="p-8px">
               <Image
                 src="/icons/edit_account_book_icon.svg"
                 alt="edit_account_book_icon"
@@ -363,9 +363,9 @@ const AccountBookItem = ({
             </button>
           )}
 
-          {/* Info: (20250326 - Liz) Transferring */}
+          {/* Info: (20250326 - Liz) Transferring 顯示正在轉移中 */}
           {accountBook.isTransferring && (
-            <section className="flex w-140px items-center justify-center gap-16px">
+            <section className="flex w-140px items-center justify-center gap-8px">
               <p className="text-nowrap text-sm font-medium">
                 {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.WAITING_FOR_TRANSFERRING')}...
               </p>

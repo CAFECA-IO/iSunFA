@@ -78,7 +78,7 @@ export const voucherUpdateValidator: IZodValidator<
 export const voucherEntityValidator = z.object({
   id: z.number(),
   issuerId: z.number(),
-  counterPartyId: z.number(),
+  counterPartyId: z.number().int().nullable().optional(),
   companyId: z.number(),
   status: z.nativeEnum(JOURNAL_EVENT),
   editable: z.boolean(),
@@ -110,11 +110,18 @@ export const IVoucherBetaValidator = z.object({
   voucherNo: z.string(),
   voucherType: z.nativeEnum(VoucherType),
   note: z.string(),
-  counterParty: z.object({
-    companyId: z.number(),
-    name: z.string().optional(),
-    taxId: z.string().optional(),
-  }),
+  counterParty: z
+    .object({
+      id: z.number().optional(),
+      companyId: z.number().optional(),
+      name: z.string().optional(),
+      taxId: z.string().optional(),
+      type: z.string().optional(),
+      note: z.string().optional(),
+      createdAt: z.number().optional(),
+      updatedAt: z.number().optional(),
+    })
+    .nullable(),
   issuer: z.object({
     avatar: z.string(),
     name: z.string(),
@@ -252,11 +259,13 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       voucherNo: voucher.no,
       voucherType: eventTypeToVoucherType(voucher.type),
       note: voucher.note ?? '',
-      counterParty: {
-        companyId: voucher.counterParty.id,
-        name: voucher.counterParty.name,
-        taxId: voucher.counterParty.taxId,
-      },
+      counterParty: voucher.counterParty
+        ? {
+            companyId: voucher.counterParty.companyId ?? 0,
+            name: voucher.counterParty.name ?? '',
+            taxId: voucher.counterParty.taxId ?? '',
+          }
+        : null,
       issuer: {
         avatar: voucher.issuer.imageFile.url,
         name: voucher.issuer.name,
@@ -315,7 +324,7 @@ const voucherPostBodyValidatorV2 = z.object({
   lineItems: z.array(iLineItemBodyValidatorV2),
   recurringInfo: recurringEventForVoucherPostValidatorV2.optional(),
   assetIds: z.array(z.number().int()), // Info: (20241105 - Murky) 沒有的話寫 []
-  counterPartyId: z.number().int().optional(),
+  counterPartyId: z.number().int().nullable().optional(),
   /**
    * Info: (20241105 - Murky)
    * @Julian Post Voucher的時候 reverseVouchers[0].lineItemIdBeReversed 填寫 REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2 取得的id,
@@ -512,8 +521,8 @@ const voucherGetOneOutputValidatorV2 = z
       note: data.note ?? '',
       counterParty: {
         companyId: data.companyId,
-        name: data.counterParty.name,
-        taxId: data.counterParty.taxId,
+        name: data.counterParty?.name,
+        taxId: data.counterParty?.taxId,
       },
       // Info: (20241105 - Murky) Recurring info 不需要，所以都會是 空值
       recurringInfo: {
@@ -576,14 +585,14 @@ const voucherGetOneOutputValidatorV2 = z
             updatedAt: certificate.invoice.updatedAt,
             name: 'InvoiceName',
             counterParty: {
-              id: data.counterParty.id,
-              companyId: data.counterParty.companyId,
-              name: data.counterParty.name,
-              taxId: data.counterParty.taxId,
-              type: data.counterParty.type,
-              note: data.counterParty.note,
-              createdAt: data.counterParty.createdAt,
-              updatedAt: data.counterParty.updatedAt,
+              id: data.counterParty?.id,
+              companyId: data.counterParty?.companyId,
+              name: data.counterParty?.name,
+              taxId: data.counterParty?.taxId,
+              type: data.counterParty?.type,
+              note: data.counterParty?.note,
+              createdAt: data.counterParty?.createdAt,
+              updatedAt: data.counterParty?.updatedAt,
             },
           },
           file: {
@@ -631,16 +640,18 @@ const IVoucherDetailForFrontendValidator = z.object({
   voucherDate: z.number(),
   type: z.nativeEnum(EventType),
   note: z.string(),
-  counterParty: z.object({
-    id: z.number().optional(),
-    companyId: z.number().optional(),
-    name: z.string().optional(),
-    taxId: z.string().optional(),
-    type: z.string().optional(),
-    note: z.string().optional(),
-    createdAt: z.number().optional(),
-    updatedAt: z.number().optional(),
-  }),
+  counterParty: z
+    .object({
+      id: z.number().optional(),
+      companyId: z.number().optional(),
+      name: z.string().optional(),
+      taxId: z.string().optional(),
+      type: z.string().optional(),
+      note: z.string().optional(),
+      createdAt: z.number().optional(),
+      updatedAt: z.number().optional(),
+    })
+    .nullable(),
   recurringInfo: z.object({
     // Deprecated: (20241105 - Murky)
     type: z.string(),
