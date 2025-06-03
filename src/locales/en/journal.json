@@ -158,7 +158,7 @@
   "ASSET_SECTION": {
     "TITLE": "Asset",
     "EMPTY": "Empty",
-    "EMPTY_HINT": "Please add at least 1 asset!",
+    "EMPTY_HINT": "The voucher has been saved successfully. Please make sure to return to this voucher and add at least one asset.",
     "ADD_BTN": "Add New Asset"
   },
   "VOUCHER_LINE_BLOCK": {

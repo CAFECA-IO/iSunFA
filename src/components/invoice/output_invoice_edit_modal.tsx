@@ -67,6 +67,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const [currency, setCurrency] = useState<string>('TWD');
   const isLg = useIsLg();
 
   // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
@@ -79,6 +80,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRC2Ref = useRef<Partial<IInvoiceRC2Output>>(certificate ?? {});
 
+  // Info: (20250603 - Anna) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
   );
@@ -324,11 +326,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
   const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
-  const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
-  );
 
   // Info: (20250416 - Anna) 發票字軌選單
   const invoiceDate = formState.issuedDate ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
@@ -452,6 +450,19 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       console.log('Modal initialized with certificate:', certificate);
     }
   }, [isOpen, certificate]);
+
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
+      }
+    };
+    if (isOpen) {
+      fetchCurrency();
+    }
+  }, [isOpen, accountBookId]);
 
   return (
     <div
@@ -852,13 +863,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.netAmount && (
@@ -897,13 +908,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                             />
                             <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                               <Image
-                                src={currencyAliasImageSrc}
+                                src={`/currencies/${currency.toLowerCase()}.svg`}
                                 width={16}
                                 height={16}
                                 alt={currencyAliasImageAlt}
-                                className="rounded-full"
+                                className="aspect-square rounded-full object-cover"
                               />
-                              <p>{currencyAliasStr}</p>
+                              <p>{currency}</p>
                             </div>
                           </div>
                           {formState.type === InvoiceType.OUTPUT_35 && (
@@ -939,13 +950,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                         />
                         <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                           <Image
-                            src={currencyAliasImageSrc}
+                            src={`/currencies/${currency.toLowerCase()}.svg`}
                             width={16}
                             height={16}
                             alt={currencyAliasImageAlt}
-                            className="rounded-full"
+                            className="aspect-square rounded-full object-cover"
                           />
-                          <p>{currencyAliasStr}</p>
+                          <p>{currency}</p>
                         </div>
                       </div>
                       {errors.totalAmount && (
