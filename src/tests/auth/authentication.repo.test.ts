@@ -17,6 +17,7 @@ jest.mock('@/lib/utils/common', () => ({
   timestampInSeconds: jest.fn(),
 }));
 
+// Deprecated: (20250603 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const mockPrisma = require('@/client').default;
 
