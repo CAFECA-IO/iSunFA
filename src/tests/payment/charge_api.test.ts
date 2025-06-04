@@ -284,10 +284,12 @@ describe('Payment Charge API 測試', () => {
   describe('成功付費流程', () => {
     beforeEach(() => {
       mockGetUserPaymentInfoById.mockResolvedValue(mockPaymentInfo);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockGetUserById.mockResolvedValue(mockUser as any);
       mockGenerateTeamOrder.mockResolvedValue(mockTeamOrder);
       mockCreateTeamOrder.mockResolvedValue(mockTeamOrder);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockCreatePaymentGateway.mockReturnValue(mockPaymentGateway as any);
       mockPaymentGateway.chargeWithToken.mockResolvedValue('gateway-record-123');
@@ -302,6 +304,7 @@ describe('Payment Charge API 測試', () => {
       mockUpdateTeamOrderStatus.mockResolvedValue(mockTeamOrder);
 
       mockTransaction.mockImplementation(async (callback) => {
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await callback({} as any);
         return result;
@@ -379,14 +382,17 @@ describe('Payment Charge API 測試', () => {
   describe('付費失敗處理', () => {
     beforeEach(() => {
       mockGetUserPaymentInfoById.mockResolvedValue(mockPaymentInfo);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockGetUserById.mockResolvedValue(mockUser as any);
       mockGenerateTeamOrder.mockResolvedValue(mockTeamOrder);
       mockCreateTeamOrder.mockResolvedValue(mockTeamOrder);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockCreatePaymentGateway.mockReturnValue(mockPaymentGateway as any);
 
       mockTransaction.mockImplementation(async (callback) => {
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await callback({} as any);
         return result;
@@ -468,6 +474,7 @@ describe('Payment Charge API 測試', () => {
       mockCreateTeamOrder.mockResolvedValue(mockTeamOrder);
 
       mockTransaction.mockImplementation(async (callback) => {
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = await callback({} as any);
         return result;
@@ -485,6 +492,7 @@ describe('Payment Charge API 測試', () => {
 
     it('應該檢查用戶是否存在', async () => {
       mockGetUserPaymentInfoById.mockResolvedValue(mockPaymentInfo);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockGetUserById.mockResolvedValue(null as any);
 
@@ -497,6 +505,7 @@ describe('Payment Charge API 測試', () => {
     it('應該檢查付費方式是否屬於該用戶', async () => {
       const wrongUserPaymentInfo = { ...mockPaymentInfo, userId: 999 };
       mockGetUserPaymentInfoById.mockResolvedValue(wrongUserPaymentInfo);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockGetUserById.mockResolvedValue(mockUser as any);
 
@@ -520,15 +529,18 @@ describe('Payment Charge API 測試', () => {
     it('應該設定適當的事務超時時間', async () => {
       mockTransaction.mockImplementation(async (callback, options) => {
         expect(options?.timeout).toBe(20_000);
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return callback({} as any);
       });
 
       mockGetUserPaymentInfoById.mockResolvedValue(mockPaymentInfo);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockGetUserById.mockResolvedValue(mockUser as any);
       mockGenerateTeamOrder.mockResolvedValue(mockTeamOrder);
       mockCreateTeamOrder.mockResolvedValue(mockTeamOrder);
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockCreatePaymentGateway.mockReturnValue(mockPaymentGateway as any);
       mockPaymentGateway.chargeWithToken.mockResolvedValue('success');
