@@ -5,7 +5,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import AssetItem from '@/components/asset/asset_item';
-import { IAssetItem, IAssetItemUI } from '@/interfaces/asset';
+import { IAssetItemUI } from '@/interfaces/asset';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { Button } from '@/components/button/button';
 import { checkboxStyle } from '@/constants/display';
@@ -14,9 +14,10 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { VscSettings } from 'react-icons/vsc';
 
 interface IAssetListProps {
-  assetList: IAssetItem[];
+  assetList: IAssetItemUI[];
   dateSort: SortOrder | null;
   setDateSort: (sortOrder: SortOrder | null) => void;
   priceSort: SortOrder | null;
@@ -27,6 +28,7 @@ interface IAssetListProps {
   setResidualSort: (sortOrder: SortOrder | null) => void;
   remainingLifeSort: SortOrder | null;
   setRemainingLifeSort: (sortOrder: SortOrder | null) => void;
+  toggleSideMenu: () => void;
 }
 
 const AssetList: React.FC<IAssetListProps> = ({
@@ -41,6 +43,7 @@ const AssetList: React.FC<IAssetListProps> = ({
   setResidualSort,
   remainingLifeSort,
   setRemainingLifeSort,
+  toggleSideMenu,
 }) => {
   const { t } = useTranslation('asset');
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
@@ -54,17 +57,10 @@ const AssetList: React.FC<IAssetListProps> = ({
     data: downloadFile,
   } = APIHandler(APIName.ASSET_LIST_EXPORT);
 
-  const defaultAssetList: IAssetItemUI[] = assetList.map((asset) => {
-    return {
-      ...asset,
-      isSelected: false,
-    };
-  });
-
   // Info: (20241024 - Julian) checkbox 是否開啟
   const [isCheckBoxOpen, setIsCheckBoxOpen] = useState(false);
   // Info: (20241024 - Julian) 轉換成 IAssetItemUI[]
-  const [uiAssetList, setUiAssetList] = useState<IAssetItemUI[]>(defaultAssetList);
+  const [uiAssetList, setUiAssetList] = useState<IAssetItemUI[]>(assetList);
   // Info: (20241024 - Julian) 全選狀態
   const [isSelectedAll, setIsSelectedAll] = useState(false);
   // Info: (20241024 - Julian) 被選中的 voucher
@@ -77,7 +73,7 @@ const AssetList: React.FC<IAssetListProps> = ({
 
   // Info: (20250603 - Julian) 如果 uiAssetList 為空，則顯示無資料狀態
   // ToDo: (20250603 - Julian) 開發中，未完成
-  const isNoData = defaultAssetList.length === 0;
+  const isNoData = uiAssetList.length === 0;
 
   // Info: (20241024 - Julian) checkbox 的開關
   const selectToggleHandler = () => setIsCheckBoxOpen((prev) => !prev);
@@ -177,6 +173,11 @@ const AssetList: React.FC<IAssetListProps> = ({
       });
     }
   };
+
+  // Info: (20250604 - Julian) 更新 assetList
+  useEffect(() => {
+    setUiAssetList(assetList);
+  }, [assetList]);
 
   // Info: (20241024 - Julian) 更新被選中的 asset
   useEffect(() => {
@@ -280,7 +281,7 @@ const AssetList: React.FC<IAssetListProps> = ({
     },
   });
 
-  const displayedAssetList = defaultAssetList.map((asset) => {
+  const displayedAssetList = uiAssetList.map((asset) => {
     return (
       <AssetItem
         key={asset.id}
@@ -337,42 +338,52 @@ const AssetList: React.FC<IAssetListProps> = ({
 
   return (
     <div className="flex flex-col gap-16px">
-      {/* Info: (20240925 - Julian) Export Asset button */}
-      <div className="ml-auto flex items-center gap-24px">
-        <Button
-          type="button"
-          variant="tertiaryOutline"
-          onClick={exportAssetHandler}
-          disabled={isLoading} // Info: (20241202 - Julian) 防止重複點擊
-        >
-          <MdOutlineFileDownload />
-          <p>{t('asset:ASSET.EXPORT_ASSET_LIST')}</p>
-        </Button>
-        {/* Info: (20241024 - Julian) Select All */}
+      <div className="flex items-center">
+        {/* Info: (20250529 - Julian) Filter button */}
         <button
           type="button"
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
-          onClick={selectAllHandler}
-          disabled={isNoData}
+          onClick={toggleSideMenu}
+          className="block w-fit p-10px text-button-text-secondary tablet:hidden"
         >
-          {isSelectedAll ? t('asset:COMMON.UNSELECT_ALL') : t('asset:COMMON.SELECT_ALL')}
+          <VscSettings size={24} />
         </button>
-        {/* Info: (20241024 - Julian) Cancel selecting button */}
-        <button
-          type="button"
-          onClick={selectToggleHandler}
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
-        >
-          {t('asset:COMMON.CANCEL')}
-        </button>
-        {/* Info: (20241024 - Julian) Select toggle button */}
-        <button
-          type="button"
-          onClick={selectToggleHandler}
-          className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary enabled:hover:underline`}
-        >
-          {t('asset:COMMON.SELECT')}
-        </button>
+        {/* Info: (20240925 - Julian) Export Asset button */}
+        <div className="ml-auto flex items-center gap-24px">
+          <Button
+            type="button"
+            variant="tertiaryOutline"
+            onClick={exportAssetHandler}
+            disabled={isLoading} // Info: (20241202 - Julian) 防止重複點擊
+          >
+            <MdOutlineFileDownload />
+            <p>{t('asset:ASSET.EXPORT_ASSET_LIST')}</p>
+          </Button>
+          {/* Info: (20241024 - Julian) Select All */}
+          <button
+            type="button"
+            className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
+            onClick={selectAllHandler}
+            disabled={isNoData}
+          >
+            {isSelectedAll ? t('asset:COMMON.UNSELECT_ALL') : t('asset:COMMON.SELECT_ALL')}
+          </button>
+          {/* Info: (20241024 - Julian) Cancel selecting button */}
+          <button
+            type="button"
+            onClick={selectToggleHandler}
+            className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
+          >
+            {t('asset:COMMON.CANCEL')}
+          </button>
+          {/* Info: (20241024 - Julian) Select toggle button */}
+          <button
+            type="button"
+            onClick={selectToggleHandler}
+            className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary enabled:hover:underline`}
+          >
+            {t('asset:COMMON.SELECT')}
+          </button>
+        </div>
       </div>
 
       {/* Info: (20250603 - Julian) Table for mobile */}
