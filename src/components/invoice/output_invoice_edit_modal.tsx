@@ -88,10 +88,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     APIName.COUNTERPARTY_LIST
   );
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-  // Info: (20240924 - Anna) 不顯示模態框時返回 null
-  if (!isOpen || !certificate) return null;
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.issuedDate ?? 0,
+    startTimeStamp: certificate?.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
@@ -100,15 +98,15 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       ({
         // Info: (20250414 - Anna) 這個組件改為全為銷項
         direction: InvoiceDirection.OUTPUT,
-        date: certificate.issuedDate,
-        no: certificate.no,
-        netAmount: certificate.netAmount,
-        taxRate: certificate.taxRate,
-        taxAmount: certificate.taxAmount,
-        totalAmount: certificate.totalAmount,
-        buyerIdNumber: certificate.buyerIdNumber,
-        buyerName: certificate.buyerName,
-        type: certificate.type ?? InvoiceType.INPUT_21,
+        date: certificate?.issuedDate,
+        no: certificate?.no,
+        netAmount: certificate?.netAmount,
+        taxRate: certificate?.taxRate,
+        taxAmount: certificate?.taxAmount,
+        totalAmount: certificate?.totalAmount,
+        buyerIdNumber: certificate?.buyerIdNumber,
+        buyerName: certificate?.buyerName,
+        type: certificate?.type ?? InvoiceType.INPUT_21,
       }) as Partial<IInvoiceRC2Output>
   );
   const [errors] = useState<Record<string, string>>({});
@@ -248,6 +246,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
+    if (!certificate) return;
     const { isSelected, actions, ...rest } = certificate;
 
     const updatedCertificate = {
@@ -326,7 +325,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
   // Info: (20250416 - Anna) 發票字軌選單
   const invoiceDate = formState.issuedDate ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
@@ -503,18 +502,18 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     ref={certificateRef}
                     certificateType={InvoiceType.OUTPUT_35}
                     issuedDate={dayjs
-                      .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
+                      .unix(formState.issuedDate ?? certificate?.issuedDate ?? 0)
                       .format('YYYY-MM-DD')}
-                    invoiceNo={formState.no ?? certificate.no ?? ''}
-                    taxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
-                    netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
-                    taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
-                    totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
+                    invoiceNo={formState.no ?? certificate?.no ?? ''}
+                    taxId={formState.buyerIdNumber ?? certificate?.buyerIdNumber ?? undefined}
+                    netAmount={formState.netAmount ?? certificate?.netAmount ?? 0}
+                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? 0}
+                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? 0}
                   />
                 </div>
               )}
 
-              {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
+              {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
                 <div className="relative w-full lg:h-570px">
                   <ImageZoom
                     imageUrl={
@@ -555,12 +554,16 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     </Button>
                   </div>
 
-                  {!certificate.voucherNo && (
+                  {!certificate?.voucherNo && (
                     <Button
                       id="certificate-delete-btn"
                       type="button"
                       className="mt-10px h-36px w-full px-16px py-8px"
-                      onClick={() => onDelete(certificate.id)}
+                      onClick={() => {
+                        if (certificate?.id !== undefined) {
+                          onDelete(certificate.id);
+                        }
+                      }}
                       variant="errorOutline"
                     >
                       <LuTrash2 size={20} />
@@ -1114,12 +1117,16 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             </div>
             {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以上) */}
             <div className="hidden items-center lg:flex">
-              {!certificate.voucherNo && (
+              {!certificate?.voucherNo && (
                 <Button
                   id="certificate-delete-btn"
                   type="button"
                   className="px-16px py-8px"
-                  onClick={() => onDelete(certificate.id)}
+                  onClick={() => {
+                    if (certificate?.id !== undefined) {
+                      onDelete(certificate.id);
+                    }
+                  }}
                   variant="errorOutline"
                 >
                   <LuTrash2 size={20} />
