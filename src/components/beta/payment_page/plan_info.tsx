@@ -18,17 +18,17 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
   }
 
   return (
-    <main className="flex w-fit flex-col gap-40px">
-      <section className="flex w-300px overflow-hidden rounded-sm border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
+    <div className="flex w-full flex-col gap-lv-6 tablet:w-fit tablet:gap-40px">
+      <section className="flex w-full overflow-hidden rounded-sm border border-stroke-brand-primary bg-surface-neutral-surface-lv2 tablet:w-300px">
         <div className="w-24px flex-none bg-surface-brand-primary"></div>
-        <div className="flex-auto bg-surface-brand-primary-5 px-24px py-12px text-center text-36px font-bold text-text-brand-secondary-lv1">
+        <div className="flex-auto bg-surface-brand-primary-5 px-24px py-12px text-center text-xl font-bold text-text-brand-secondary-lv1 tablet:text-36px">
           {team.name}
         </div>
       </section>
 
       <section
         key={plan.id}
-        className="flex w-300px flex-auto flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px"
+        className="flex w-full flex-auto flex-col justify-start gap-24px rounded-sm bg-surface-neutral-surface-lv2 px-32px py-16px tablet:w-300px"
       >
         <div className="flex flex-col gap-24px text-center">
           <h2 className="text-xl font-bold text-text-brand-primary-lv1">
@@ -117,7 +117,7 @@ const PlanInfo = ({ team, plan }: PlanInfoProps) => {
           ))}
         </ul>
       </section>
-    </main>
+    </div>
   );
 };
 

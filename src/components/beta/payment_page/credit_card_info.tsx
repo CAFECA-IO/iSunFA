@@ -246,9 +246,9 @@ const CreditCardInfo = ({
   );
 
   return (
-    <section className="flex flex-auto flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
-      <div className="flex justify-between">
-        <span className="text-lg font-semibold text-text-brand-secondary-lv3">
+    <section className="flex flex-auto flex-col gap-lv-4 rounded-md bg-surface-neutral-surface-lv2 px-lv-6 py-lv-5 shadow-Dropshadow_XS">
+      <div className="flex flex-wrap items-center justify-between">
+        <span className="text-base font-semibold text-text-brand-secondary-lv3 tablet:text-lg">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
         {hasCreditCardInfo && plan ? (
@@ -277,7 +277,7 @@ const CreditCardInfo = ({
       <div className="h-1px bg-divider-stroke-lv-4"></div>
 
       <div className="flex flex-auto items-start justify-between gap-20px">
-        <span className="text-lg font-semibold text-text-brand-secondary-lv1">
+        <span className="text-base font-semibold text-text-brand-secondary-lv1 tablet:text-lg">
           {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
         </span>
         <SimpleToggle

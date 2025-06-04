@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import React, { useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { RxCross1 } from 'react-icons/rx';
+import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import { ICertificateUI } from '@/interfaces/certificate';
 import { Button } from '@/components/button/button';
@@ -72,7 +72,7 @@ const CertificatePreviewModal: React.FC<CertificatePreviewModalProps> = ({
           className="absolute right-4 top-4 text-checkbox-text-primary"
           onClick={onClose}
         >
-          <RxCross1 size={24} />
+          <RxCross2 size={24} />
         </button>
         {/* Info: (20240924 - tzuhan) 模態框標題 */}
         <h2 className="flex flex-col items-center justify-center gap-2 border-b border-stroke-neutral-quaternary px-40px py-16px text-xl font-semibold text-card-text-primary">
