@@ -293,6 +293,7 @@ const FilterSection = <T,>({
           setFilteredPeriod={setSelectedDateRange}
           type={DatePickerType.TEXT_PERIOD}
           datePickerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
+          labelClassName={labelClassName}
         />
       )}
 

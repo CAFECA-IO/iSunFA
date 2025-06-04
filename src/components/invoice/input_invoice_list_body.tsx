@@ -193,6 +193,9 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
     if (!downloadRef.current) return;
 
+    // Info: (20250604 - Anna) 加上桌面樣式 class
+    downloadRef.current.classList.add('force-desktop-style');
+
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
@@ -209,6 +212,21 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   }
     .download-hidden {
     display: none;
+  }
+
+    /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
+  .force-desktop-style {
+    width: 1024px !important;
+    min-width: 1024px !important;
+    max-width: 1024px !important;
+  }
+
+  /* Info: (20250604 - Anna) 匯出時隱藏手機版、顯示桌面版元件 */
+  .force-desktop-style .mobile-only {
+    display: none !important;
+  }
+  .force-desktop-style .desktop-only {
+    display: block !important;
   }
 `;
 
@@ -232,6 +250,10 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
     style.remove();
+
+    // Info: (20250604 - Anna) 移除 class，還原畫面
+    downloadRef.current.classList.remove('force-desktop-style');
+
     pdf.save('input-certificates.pdf');
 
     // Info: (20250506 - Anna) 匯出後還原畫面
@@ -248,6 +270,8 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
+      // eslint-disable-next-line no-console
+      console.log('📥 API 回傳資料:', resData);
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalCertificatePrice: number;
