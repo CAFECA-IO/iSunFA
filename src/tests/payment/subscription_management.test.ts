@@ -170,6 +170,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         effectiveRole: TeamRole.ADMIN,
         can: true,
       });
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockPrisma.teamSubscription.create.mockResolvedValue(null as any);
 
@@ -193,6 +194,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
       });
 
       // Info: (20250604 - Shirley) 執行
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await createTeamSubscription(mockTeamSubscription, mockTx as any);
 
@@ -248,6 +250,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
 
     it('應該在更新失敗時拋出錯誤', async () => {
       // Info: (20250604 - Shirley) 準備
+      // Deprecated: (20250604 - Luphia) remove eslint-disable
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockPrisma.teamSubscription.update.mockResolvedValue(null as any);
 
@@ -642,6 +645,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         updatedAt: mockTimestamp,
         subscriptions: [],
         teamOrder: [],
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
@@ -791,6 +795,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         name: 'Test Team',
         subscriptions: [],
         teamOrder: [],
+        // Deprecated: (20250604 - Luphia) remove eslint-disable
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
