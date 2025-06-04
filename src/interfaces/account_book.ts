@@ -86,6 +86,10 @@ export interface IAccountBookInfo {
   updatedAt: number;
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
+  // Info: (20250604 - Liz) RC3 新增表單欄位
+  businessLocation?: string; // Info: (20250604 - Liz) 商業地址
+  accountingCurrency?: string; // Info: (20250604 - Liz) 會計幣別
+
   // Info: (20250523 - Liz) RC2 新增表單欄位
   representativeName: string; // Info: (20250423 - Liz) 負責人姓名
   taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號

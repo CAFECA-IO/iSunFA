@@ -259,7 +259,7 @@ const FilterSection = <T,>({
 
   return (
     <div
-      className={`flex flex-col items-end justify-start gap-4 tablet:flex-row tablet:flex-wrap ${className || ''}`}
+      className={`z-30 flex flex-col items-end justify-start gap-4 tablet:flex-row tablet:flex-wrap ${className || ''}`}
       style={{ maxWidth: '100%' }}
     >
       {/* Info: (20240919 - tzuhan) 類型篩選 */}
@@ -293,6 +293,7 @@ const FilterSection = <T,>({
           setFilteredPeriod={setSelectedDateRange}
           type={DatePickerType.TEXT_PERIOD}
           datePickerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
+          labelClassName={labelClassName}
         />
       )}
 

@@ -112,31 +112,11 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
   const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
   const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
 
-  const displayVoucherList =
-    voucherList && voucherList.length > 0 ? (
-      <PayableReceivableVoucherList
-        voucherList={voucherList}
-        activeTab={activeTab}
-        dateSort={dateSort}
-        payReceiveSort={payReceiveSort}
-        payReceiveAlreadyHappenedSort={payReceiveAlreadyHappenedSort}
-        remainSort={remainSort}
-        setDateSort={setDateSort}
-        setPayReceiveSort={setPayReceiveSort}
-        setPayReceiveAlreadyHappenedSort={setPayReceiveAlreadyHappenedSort}
-        setRemainSort={setRemainSort}
-      />
-    ) : (
-      <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-        <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
-      </div>
-    );
-
   const transactionStatusList = ['All', ...Object.values(TransactionStatus)];
 
   return (
     <div ref={sideMenuRef} className="relative flex flex-col items-center gap-40px">
-      <div className="flex w-full flex-col items-stretch gap-40px">
+      <div className="flex w-full flex-col items-stretch gap-lv-6 tablet:gap-40px">
         {/* Info: (20240925 - Julian) Tabs */}
         <Tabs
           tabs={Object.values(PayableReceivableTabs)}
@@ -145,21 +125,31 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
           onTabClick={tabsClick}
           counts={[incomplete.receivingVoucher, incomplete.paymentVoucher]}
         />
-        {/* Info: (20241122 - Julian) Filter Section */}
-        <FilterSection<IVoucherBeta[]>
-          params={params}
-          apiName={APIName.VOUCHER_LIST_V2}
-          onApiResponse={handleApiResponse}
-          page={page}
-          pageSize={DEFAULT_PAGE_LIMIT}
-          tab={activeTab}
-          types={transactionStatusList}
-          sort={selectedSort}
-          hideReversedRelated={isHideReversals}
-          hideReversalsToggleHandler={hideReversalsToggleHandler}
-          isShowSideMenu={isShowSideMenu}
-          toggleSideMenu={toggleSideMenu}
-        />
+        <div className="flex flex-col gap-18px">
+          {/* Info: (20241122 - Julian) Filter Section */}
+          <FilterSection<IVoucherBeta[]>
+            params={params}
+            apiName={APIName.VOUCHER_LIST_V2}
+            onApiResponse={handleApiResponse}
+            page={page}
+            pageSize={DEFAULT_PAGE_LIMIT}
+            tab={activeTab}
+            types={transactionStatusList}
+            sort={selectedSort}
+            hideReversedRelated={isHideReversals}
+            hideReversalsToggleHandler={hideReversalsToggleHandler}
+            isShowSideMenu={isShowSideMenu}
+            toggleSideMenu={toggleSideMenu}
+          />
+          {/* Info: (20250521 - Julian) Filter button */}
+          <button
+            type="button"
+            onClick={toggleSideMenu}
+            className="block w-fit p-10px text-button-text-secondary tablet:hidden"
+          >
+            <VscSettings size={24} />
+          </button>
+        </div>
         {/* Info: (20250109 - Julian) hidden delete voucher & reversals toggle */}
         <div className="hidden tablet:block">
           <Toggle
@@ -172,16 +162,19 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
             labelClassName="text-switch-text-primary hover:cursor-pointer"
           />
         </div>
-        {/* Info: (20250521 - Julian) Filter button */}
-        <button
-          type="button"
-          onClick={toggleSideMenu}
-          className="block p-10px text-button-text-secondary tablet:hidden"
-        >
-          <VscSettings size={24} />
-        </button>
         {/* Info: (20240924 - Julian) List */}
-        {displayVoucherList}
+        <PayableReceivableVoucherList
+          voucherList={voucherList}
+          activeTab={activeTab}
+          dateSort={dateSort}
+          payReceiveSort={payReceiveSort}
+          payReceiveAlreadyHappenedSort={payReceiveAlreadyHappenedSort}
+          remainSort={remainSort}
+          setDateSort={setDateSort}
+          setPayReceiveSort={setPayReceiveSort}
+          setPayReceiveAlreadyHappenedSort={setPayReceiveAlreadyHappenedSort}
+          setRemainSort={setRemainSort}
+        />
         {/* Info: (20241122 - Julian) Pagination */}
         <Pagination
           currentPage={page}

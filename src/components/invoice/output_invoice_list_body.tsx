@@ -201,6 +201,9 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
     if (!downloadRef.current) return;
 
+    // Info: (20250604 - Anna) 加上桌面樣式 class
+    downloadRef.current.classList.add('force-desktop-style');
+
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
@@ -217,6 +220,11 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     }
       .download-hidden {
       display: none;
+    }
+
+      /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
+      .force-desktop-style {
+      width: 1024px !important;
     }
   `;
 
@@ -240,6 +248,10 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
     style.remove();
+
+    // Info: (20250604 - Anna) 移除 class，還原畫面
+    downloadRef.current.classList.remove('force-desktop-style');
+
     pdf.save('output-certificates.pdf');
 
     // Info: (20250506 - Anna) 匯出後還原畫面
@@ -335,7 +347,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const { success, data } = await deleteCertificatesAPI({
           params: { accountBookId },
-          body: { certificateIds: selectedIds },
+          body: { invoiceIds: selectedIds },
         });
 
         if (success && data?.success && data.deletedIds) {
@@ -368,11 +380,12 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.id || ''}?`,
+        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.no || ''}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
           await deleteSelectedCertificates([selectedId]);
+          setIsEditModalOpen(false); // Info: (20250604 - Anna) 關閉編輯 Modal
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });

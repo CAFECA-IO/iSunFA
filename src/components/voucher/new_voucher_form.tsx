@@ -157,6 +157,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
   const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  // Info: (20250603 - Tzuhan) 目前只有刪除傳票時需要建立反轉分錄
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
@@ -294,8 +296,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 
   useEffect(() => {
+    /* (20250603 - Tzuhan) Fix: Prevent incorrect REVERT on offset]
+    * 原本根據 voucherLineItems 中是否存在 isReverse=true 來推斷是否需要建立反轉分錄（REVERT）
+    但實務上「沖銷行為」也會產生 isReverse=true 的項目，並不代表使用者要刪除原始傳票
+    因此這段邏輯會造成「沖銷時誤送出 actions: ['revert']」，導致建立錯誤的反轉傳票
+    目前僅允許由刪除傳票流程（明確執行 delete API）觸發 REVERT，因此這段先行註解
     const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
+    */
     setIsShowReverseHint(false); // Info: (20250304 - Julian) 重置沖銷提示
   }, [voucherLineItems]);
 
@@ -590,7 +598,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
-    if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
+    if (isAssetRequired && temporaryAssetListByUser.length > 0) {
+      actions.push(VoucherV2Action.ADD_ASSET);
+    }
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
     const lineItems = voucherLineItems.map((lineItem) => {
@@ -658,10 +668,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
-    } else if (
-      isCounterpartyRequired &&
-      (!counterparty || counterparty?.taxId === '' || counterparty?.name === '')
-    ) {
+    } else if (isCounterpartyRequired && (!counterparty || counterparty?.name === '')) {
       setIsShowCounterpartyHint(true);
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
@@ -704,16 +711,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ),
         closeable: true,
       });
-    } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
-      setIsShowAssetHint(true);
-      toastHandler({
-        id: ToastId.FILL_UP_VOUCHER_FORM,
-        type: ToastType.ERROR,
-        content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
-        closeable: true,
-      });
-      if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
@@ -724,6 +721,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
     } else {
+      if (isAssetRequired && temporaryAssetListByUser.length === 0) {
+        // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
+        toastHandler({
+          id: ToastId.FILL_UP_VOUCHER_FORM,
+          type: ToastType.WARNING,
+          content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
+          closeable: true,
+        });
+        if (assetRef.current) assetRef.current.scrollIntoView();
+      }
+
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
 
@@ -910,6 +918,20 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
+
+      const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        [newCertificate.id]: {
+          ...newCertificate,
+          isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
+          actions: !newCertificate.voucherNo
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        },
+      };
+
       // Deprecated: (20241122 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
@@ -917,21 +939,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
-          [newCertificate.id]: {
-            ...newCertificate,
-            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
-            actions: !newCertificate.voucherNo
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-          },
-        };
+
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
             ...certificate,
+            // Info: (20250604 - Julian) 保留原有的 isSelected 狀態
+            isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
         // Deprecated: (20241122 - tzuhan) Debugging purpose

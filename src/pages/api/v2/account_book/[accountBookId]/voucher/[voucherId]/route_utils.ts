@@ -102,15 +102,12 @@ export const voucherAPIGetOneUtils = {
         statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
       });
     } else {
-      if (voucher.counterparty && voucher.counterparty.id === 555) {
-        voucher.counterparty.id = undefined;
-        voucher.counterparty.name = undefined;
-        voucher.counterparty.taxId = undefined;
-      }
       const noteData = parseNoteData(voucher?.note ?? '');
       voucher.note = noteData.note;
-      voucher.counterparty.name = voucher.counterparty.name || noteData.name;
-      voucher.counterparty.taxId = voucher.counterparty.taxId || noteData.taxId;
+      if (voucher.counterparty) {
+        voucher.counterparty.name = voucher.counterparty.name || noteData.name;
+        voucher.counterparty.taxId = voucher.counterparty.taxId || noteData.taxId;
+      }
     }
     return voucher!;
   },

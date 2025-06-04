@@ -13,6 +13,8 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -25,12 +27,14 @@ interface IReverseItemProps {
   // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
   selectHandler: (id: number, itemIndex: number) => void;
   amountChangeHandler: (id: number, itemIndex: number, value: number) => void;
+  currency: string;
 }
 
 const ReverseItem: React.FC<IReverseItemProps> = ({
   reverseData,
   selectHandler,
   amountChangeHandler,
+  currency,
 }) => {
   const { t } = useTranslation('common');
 
@@ -81,8 +85,14 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
         className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
       />
       <div className="flex items-center gap-8px px-12px py-10px">
-        <Image src="/flags/tw.svg" width={16} height={16} alt="tw_icon" className="rounded-full" />
-        <p className="text-input-text-input-placeholder">{t('journal:JOURNAL.TWD')}</p>
+        <Image
+          src={`/currencies/${currency.toLowerCase()}.svg`}
+          width={16}
+          height={16}
+          alt="tw_icon"
+          className="aspect-square rounded-full object-cover"
+        />
+        <p className="text-input-text-input-placeholder">{currency}</p>
       </div>
     </div>
   );
@@ -158,6 +168,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   modalData,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
+  const [currency, setCurrency] = useState<string>('TWD');
   const { addReverseListHandler } = useAccountingCtx();
   const { connectedAccountBook } = useUserCtx();
 
@@ -173,6 +184,13 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   // Info: (20241104 - Julian) Select All
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
   const [selectCount, setSelectCount] = useState<number>(0);
+
+  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+
+  // Info: (20250603 - Anna) 取得會計設定資料
+  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET
+  );
 
   // Info: (20241104 - Julian) reverse item 數量
   const totalItems = uiReverseItemList.length;
@@ -244,6 +262,19 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
     }
   }, [isModalVisible]);
 
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
+      }
+    };
+    if (isModalVisible) {
+      fetchCurrency();
+    }
+  }, [isModalVisible, accountBookId]);
+
   const reverseList =
     uiReverseItemList.length > 0 ? (
       uiReverseItemList.map((reverse) => {
@@ -280,12 +311,13 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         return (
-          // Info: (2025-213 - Anna) 確保 key 唯一
+          // Info: (20250213 - Anna) 確保 key 唯一
           <ReverseItem
             key={`${reverse.voucherId}-${reverse.lineItemIndex}`}
             reverseData={reverse}
             selectHandler={selectCountHandler}
             amountChangeHandler={amountChangeHandler}
+            currency={currency}
           />
         );
       })

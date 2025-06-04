@@ -18,7 +18,6 @@ import {
   isFloatsEqual,
   timestampInSeconds,
 } from '@/lib/utils/common';
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
 import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
@@ -985,7 +984,7 @@ export const voucherAPIPostUtils = {
     const depreciateExpenseVoucherNo = ''; // Info: (20241029 - Murky) 需要在存入database的時候取得voucherNo
     const depreciateExpenseVoucher = initVoucherEntity({
       issuerId: userId,
-      counterPartyId: PUBLIC_COUNTER_PARTY.id,
+      counterPartyId: null,
       companyId,
       type: EventType.TRANSFER,
       status: JOURNAL_EVENT.UPCOMING,

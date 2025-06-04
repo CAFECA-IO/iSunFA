@@ -454,7 +454,7 @@ describe('會計參數設定功能測試', () => {
       // Info: (20250603 - Shirley) 準備測試數據 - ID 不匹配
       const mismatchedAccountingSetting = {
         ...mockAccountingSetting,
-        id: 999, // 不同的 ID
+        id: 999, // Info: (20250603 - Shirley) 不同的 ID
       };
 
       // Info: (20250603 - Shirley) 執行測試

@@ -67,6 +67,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const [currency, setCurrency] = useState<string>('TWD');
   const isLg = useIsLg();
 
   // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
@@ -79,6 +80,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 invoice，用來做 shallowEqual 比對
   const savedInvoiceRC2Ref = useRef<Partial<IInvoiceRC2Output>>(certificate ?? {});
 
+  // Info: (20250603 - Anna) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
   );
@@ -86,10 +88,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     APIName.COUNTERPARTY_LIST
   );
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-  // Info: (20240924 - Anna) 不顯示模態框時返回 null
-  if (!isOpen || !certificate) return null;
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.issuedDate ?? 0,
+    startTimeStamp: certificate?.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
@@ -98,15 +98,15 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       ({
         // Info: (20250414 - Anna) 這個組件改為全為銷項
         direction: InvoiceDirection.OUTPUT,
-        date: certificate.issuedDate,
-        no: certificate.no,
-        netAmount: certificate.netAmount,
-        taxRate: certificate.taxRate,
-        taxAmount: certificate.taxAmount,
-        totalAmount: certificate.totalAmount,
-        buyerIdNumber: certificate.buyerIdNumber,
-        buyerName: certificate.buyerName,
-        type: certificate.type ?? InvoiceType.INPUT_21,
+        date: certificate?.issuedDate,
+        no: certificate?.no,
+        netAmount: certificate?.netAmount,
+        taxRate: certificate?.taxRate,
+        taxAmount: certificate?.taxAmount,
+        totalAmount: certificate?.totalAmount,
+        buyerIdNumber: certificate?.buyerIdNumber,
+        buyerName: certificate?.buyerName,
+        type: certificate?.type ?? InvoiceType.INPUT_21,
       }) as Partial<IInvoiceRC2Output>
   );
   const [errors] = useState<Record<string, string>>({});
@@ -246,6 +246,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
+    if (!certificate) return;
     const { isSelected, actions, ...rest } = certificate;
 
     const updatedCertificate = {
@@ -324,11 +325,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
-  const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
-  );
+  const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
   // Info: (20250416 - Anna) 發票字軌選單
   const invoiceDate = formState.issuedDate ?? 0; // Info: (20250416 - Anna) 用 formState.date 即時對應變動
@@ -453,6 +450,19 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     }
   }, [isOpen, certificate]);
 
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
+      }
+    };
+    if (isOpen) {
+      fetchCurrency();
+    }
+  }, [isOpen, accountBookId]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -492,18 +502,18 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     ref={certificateRef}
                     certificateType={InvoiceType.OUTPUT_35}
                     issuedDate={dayjs
-                      .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
+                      .unix(formState.issuedDate ?? certificate?.issuedDate ?? 0)
                       .format('YYYY-MM-DD')}
-                    invoiceNo={formState.no ?? certificate.no ?? ''}
-                    taxId={formState.buyerIdNumber ?? certificate.buyerIdNumber ?? undefined}
-                    netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
-                    taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
-                    totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
+                    invoiceNo={formState.no ?? certificate?.no ?? ''}
+                    taxId={formState.buyerIdNumber ?? certificate?.buyerIdNumber ?? undefined}
+                    netAmount={formState.netAmount ?? certificate?.netAmount ?? 0}
+                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? 0}
+                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? 0}
                   />
                 </div>
               )}
 
-              {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
+              {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
                 <div className="relative w-full lg:h-570px">
                   <ImageZoom
                     imageUrl={
@@ -511,7 +521,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto h-350px w-256px tablet:max-h-630px tablet:min-h-450px tablet:w-440px lg:mx-0"
+                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:max-h-630px tablet:min-h-450px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -526,7 +536,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
                       variant="tertiaryOutline"
-                      className="h-36px flex-1 px-16px py-8px"
+                      className="h-36px flex-1 px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
@@ -537,19 +547,23 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       type="button"
                       disabled={!hasNext}
                       variant="tertiary"
-                      className="h-36px flex-1 px-16px py-8px"
+                      className="h-36px flex-1 px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
                     </Button>
                   </div>
 
-                  {!certificate.voucherNo && (
+                  {!certificate?.voucherNo && (
                     <Button
                       id="certificate-delete-btn"
                       type="button"
                       className="mt-10px h-36px w-full px-16px py-8px"
-                      onClick={() => onDelete(certificate.id)}
+                      onClick={() => {
+                        if (certificate?.id !== undefined) {
+                          onDelete(certificate.id);
+                        }
+                      }}
                       variant="errorOutline"
                     >
                       <LuTrash2 size={20} />
@@ -699,7 +713,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <div
                         ref={invoicePrefixMenuRef}
                         onClick={invoicePrefixMenuClickHandler}
-                        className={`relative h-44px min-w-72px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border border-r-0 bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
+                        className={`relative h-44px min-w-72px cursor-pointer ${isInvoicePrefixMenuOpen ? 'border-input-stroke-selected text-dropdown-stroke-input-hover' : 'border-input-stroke-input text-input-text-input-filled'} flex items-center justify-between rounded-l-sm border bg-input-surface-input-background p-16px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
                       >
                         <p className="flex h-44px w-full items-center justify-between gap-x-2">
                           <span className="overflow-hidden">
@@ -739,7 +753,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                           const prefix = latestNo.substring(0, 2);
                           handleInputChange('no', `${prefix}${e.target.value}`);
                         }}
-                        className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                        className="h-44px min-w-0 flex-1 rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                         placeholder="12345678"
                       />
                     </div>
@@ -827,7 +841,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 <div className="flex w-full flex-col items-center gap-2 lg:flex-row">
                   {/* Info: (20240924 - Anna) Price Before Tax */}
                   <div
-                    className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''} `}
+                    className={`relative flex w-full flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''} `}
                   >
                     <p className="text-sm font-semibold text-neutral-300">
                       {formState.type === InvoiceType.OUTPUT_30
@@ -852,13 +866,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.netAmount && (
@@ -874,7 +888,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <>
                         {/* Info: (20250414 - Anna) Tax */}
                         <div
-                          className={`relative flex flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''}`}
+                          className={`relative flex w-full flex-1 flex-col items-start gap-2 ${formState.type === InvoiceType.OUTPUT_35 ? 'md:h-122px' : ''}`}
                         >
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.TAX')}
@@ -897,13 +911,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                             />
                             <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                               <Image
-                                src={currencyAliasImageSrc}
+                                src={`/currencies/${currency.toLowerCase()}.svg`}
                                 width={16}
                                 height={16}
                                 alt={currencyAliasImageAlt}
-                                className="rounded-full"
+                                className="aspect-square rounded-full object-cover"
                               />
-                              <p>{currencyAliasStr}</p>
+                              <p>{currency}</p>
                             </div>
                           </div>
                           {formState.type === InvoiceType.OUTPUT_35 && (
@@ -939,13 +953,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                         />
                         <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                           <Image
-                            src={currencyAliasImageSrc}
+                            src={`/currencies/${currency.toLowerCase()}.svg`}
                             width={16}
                             height={16}
                             alt={currencyAliasImageAlt}
-                            className="rounded-full"
+                            className="aspect-square rounded-full object-cover"
                           />
-                          <p>{currencyAliasStr}</p>
+                          <p>{currency}</p>
                         </div>
                       </div>
                       {errors.totalAmount && (
@@ -1103,12 +1117,16 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
             </div>
             {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以上) */}
             <div className="hidden items-center lg:flex">
-              {!certificate.voucherNo && (
+              {!certificate?.voucherNo && (
                 <Button
                   id="certificate-delete-btn"
                   type="button"
                   className="px-16px py-8px"
-                  onClick={() => onDelete(certificate.id)}
+                  onClick={() => {
+                    if (certificate?.id !== undefined) {
+                      onDelete(certificate.id);
+                    }
+                  }}
                   variant="errorOutline"
                 >
                   <LuTrash2 size={20} />

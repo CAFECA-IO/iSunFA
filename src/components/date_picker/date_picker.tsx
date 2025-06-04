@@ -53,6 +53,7 @@ interface IDatePickerProps {
   datePickerClassName?: string;
   disabled?: boolean;
   label?: string; // Info: (20250416 - Anna) 選項標籤
+  labelClassName?: string;
 }
 
 // Info: (2020417 - Shirley) Safari 只接受 YYYY/MM/DD 格式的日期
@@ -317,6 +318,7 @@ const DatePicker = ({
   disabled,
   datePickerHandler,
   label,
+  labelClassName,
 }: IDatePickerProps) => {
   const { t }: { t: TranslateFunction } = useTranslation('date_picker');
   const { targetRef, componentVisible, setComponentVisible } = useOuterClick<HTMLDivElement>(false);
@@ -576,7 +578,7 @@ const DatePicker = ({
       {/* Info: (20240417 - Shirley) Select Period button */}
       {/* Info: (20250416 - Anna) 標籤 */}
       {label && (
-        <p className="text-sm font-semibold text-input-text-primary">
+        <p className={`text-sm font-semibold text-input-text-primary ${labelClassName}`}>
           {t(`date_picker:DATE_PICKER.${label.toUpperCase()}`)}
         </p>
       )}
@@ -588,7 +590,7 @@ const DatePicker = ({
          */}
         <div
           className={cn(
-            'invisible absolute top-16 z-20 grid w-300px grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out md:w-[350px]',
+            'w-230px invisible absolute top-16 z-20 grid grid-rows-0 items-center space-y-4 rounded-md bg-date-picker-surface-calendar-background p-5 text-date-picker-text-default opacity-0 shadow-xl transition-all duration-300 ease-in-out iphone12pro:w-300px md:w-[350px]',
             {
               'visible translate-y-0 grid-rows-1 opacity-100': componentVisible && !loading,
               'translate-x-0': alignCalendar === DatePickerAlign.LEFT || !!alignCalendar,

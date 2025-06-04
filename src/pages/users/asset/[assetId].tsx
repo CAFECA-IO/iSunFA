@@ -48,6 +48,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
         'salary',
         'asset',
         'dashboard',
+        'filter_section_type',
       ])),
     },
   };

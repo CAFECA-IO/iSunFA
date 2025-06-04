@@ -71,6 +71,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
+  const [currency, setCurrency] = useState<string>('TWD');
   const isLg = useIsLg();
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
@@ -80,6 +81,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   // Info: (20250414 - Anna) 記錄上一次成功儲存的 certificate，用來做 shallowEqual 比對
   const savedInvoiceRC2Ref = useRef<Partial<IInvoiceRC2Input>>(certificate ?? {});
 
+  // Info: (20250603 - Anna) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
     APIName.ACCOUNTING_SETTING_GET
   );
@@ -87,10 +89,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     APIName.COUNTERPARTY_LIST
   );
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-  // Info: (20240924 - Anna) 不顯示模態框時返回 null
-  if (!isOpen || !certificate) return null;
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.issuedDate ?? 0,
+    startTimeStamp: certificate?.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
@@ -99,24 +99,24 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       ({
         // Info: (20250414 - Anna) 這個組件改為全為進項
         direction: InvoiceDirection.INPUT,
-        date: certificate.issuedDate,
-        no: certificate.no,
-        netAmount: certificate.netAmount,
-        taxType: certificate.taxType,
-        taxRate: certificate.taxRate ?? undefined,
-        taxAmount: certificate.taxAmount,
-        totalAmount: certificate.totalAmount,
-        salesName: certificate.salesName,
-        salesIdNumber: certificate.salesIdNumber,
-        type: certificate.type ?? InvoiceType.INPUT_21,
+        date: certificate?.issuedDate,
+        no: certificate?.no,
+        netAmount: certificate?.netAmount,
+        taxType: certificate?.taxType,
+        taxRate: certificate?.taxRate ?? undefined,
+        taxAmount: certificate?.taxAmount,
+        totalAmount: certificate?.totalAmount,
+        salesName: certificate?.salesName,
+        salesIdNumber: certificate?.salesIdNumber,
+        type: certificate?.type ?? InvoiceType.INPUT_21,
         // Info: (20250422 - Anna)「扣抵類型」
-        deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
+        deductionType: certificate?.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
         // Info: (20250429 - Anna)「是否為彙總金額代表憑證」
-        isSharedAmount: certificate.isSharedAmount ?? false,
+        isSharedAmount: certificate?.isSharedAmount ?? false,
         // Info: (20250429 - Anna)「其他憑證編號」
-        otherCertificateNo: certificate.otherCertificateNo ?? '',
+        otherCertificateNo: certificate?.otherCertificateNo ?? '',
         // Info: (20250514 - Anna)「載具流水號」
-        carrierSerialNumber: certificate.carrierSerialNumber ?? '',
+        carrierSerialNumber: certificate?.carrierSerialNumber ?? '',
       }) as Partial<IInvoiceRC2Input>
   );
   const [errors] = useState<Record<string, string>>({});
@@ -217,7 +217,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
-
+    if (!certificate) return;
     const { isSelected, actions, ...rest } = certificate;
 
     const updatedCertificate = {
@@ -359,11 +359,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageSrc = `/currencies/${(certificate.currencyCode || currencyAlias).toLowerCase()}.svg`;
-  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
-  const currencyAliasStr = t(
-    `common:CURRENCY_ALIAS.${(certificate.currencyCode || currencyAlias).toUpperCase()}`
-  );
+  const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
   const currentIndex = certificates.findIndex((c) => c.id === editingId);
@@ -477,6 +473,19 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
   }, [isOpen, certificate]);
 
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
+      }
+    };
+    if (isOpen) {
+      fetchCurrency();
+    }
+  }, [isOpen, accountBookId]);
+
   return (
     <div
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
@@ -516,17 +525,17 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     ref={certificateRef}
                     certificateType={InvoiceType.INPUT_25}
                     issuedDate={dayjs
-                      .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
+                      .unix(formState.issuedDate ?? certificate?.issuedDate ?? 0)
                       .format('YYYY-MM-DD')}
-                    invoiceNo={formState.no ?? certificate.no ?? ''}
-                    taxId={formState.salesIdNumber ?? certificate.salesIdNumber ?? undefined}
-                    netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
-                    taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
-                    totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
+                    invoiceNo={formState.no ?? certificate?.no ?? ''}
+                    taxId={formState.salesIdNumber ?? certificate?.salesIdNumber ?? undefined}
+                    netAmount={formState.netAmount ?? certificate?.netAmount ?? 0}
+                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? 0}
+                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? 0}
                   />
                 </div>
               )}
-              {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
+              {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
                 <div className="relative w-full lg:h-570px">
                   <ImageZoom
                     imageUrl={
@@ -534,7 +543,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto h-350px w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
+                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -550,7 +559,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
                       variant="tertiaryOutline"
-                      className="h-36px px-16px py-8px"
+                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
@@ -561,18 +570,22 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       type="button"
                       disabled={!hasNext}
                       variant="tertiary"
-                      className="h-36px px-16px py-8px"
+                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
                     </Button>
                   </div>
-                  {!certificate.voucherNo && (
+                  {!certificate?.voucherNo && (
                     <Button
                       id="certificate-delete-btn"
                       type="button"
-                      className="mt-10px h-36px w-full px-16px py-8px"
-                      onClick={() => onDelete(certificate.id)}
+                      className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
+                      onClick={() => {
+                        if (certificate?.id !== undefined) {
+                          onDelete(certificate.id);
+                        }
+                      }}
                       variant="errorOutline"
                     >
                       <LuTrash2 size={20} />
@@ -763,7 +776,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const prefix = latestNo.substring(0, 2);
                               handleInputChange('no', `${prefix}${e.target.value}`);
                             }}
-                            className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                            className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                             placeholder={t('certificate:EDIT.ENTER_ONE_INVOICE')}
                           />
                         </div>
@@ -810,7 +823,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
+                              className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
                               placeholder="12345678"
                               disabled={
                                 !!formState.otherCertificateNo ||
@@ -894,7 +907,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     formState.type === InvoiceType.INPUT_27 ? (
                       <div className="flex w-full flex-col justify-between lg:flex-row">
                         {/* Info: (20250429 - Anna) Representative Invoice No. */}
-                        <div className="flex flex-col gap-2 lg:w-52">
+                        <div className="flex min-w-0 flex-col gap-2 lg:w-52">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.REPRESENTATIVE_INVOICE')}
                             <span> </span>
@@ -928,24 +941,23 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                                 const prefix = latestNo.substring(0, 2);
                                 handleInputChange('no', `${prefix}${e.target.value}`);
                               }}
-                              className="h-44px w-full rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-36"
+                              className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="12345678"
                               disabled={!!formState.otherCertificateNo}
                             />
                           </div>
                         </div>
                         {/* Info: (20250429 - Anna) or */}
-                        <p className="mt-2 flex items-end justify-center text-neutral-400">
+                        <p className="mx-4 mt-2 flex items-end justify-center text-neutral-400">
                           {t('common:COMMON.OR')}
                         </p>
                         {/* Info: (20250429 - Anna) Other Certificate No. */}
-                        <div className="flex flex-col gap-2 lg:w-52">
+                        <div className="flex min-w-0 flex-col gap-2">
                           <p className="text-sm font-semibold text-neutral-300">
                             {t('certificate:EDIT.OTHER_CERTIFICATE_NO')}
                             <span> </span>
                             <span className="text-text-state-error">*</span>
                           </p>
-
                           <div className="flex w-full items-center">
                             <input
                               id="other-certificate-no"
@@ -954,7 +966,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               onChange={(e) => {
                                 handleInputChange('otherCertificateNo', e.target.value);
                               }}
-                              className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                              className="h-44px min-w-0 flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="CC12345678"
                               disabled={!!formState.no}
                             />
@@ -998,7 +1010,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const suffix = latestNo.substring(2);
                               handleInputChange('no', `${e.target.value.toUpperCase()}${suffix}`);
                             }}
-                            className="h-44px w-16 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
+                            className="h-44px w-14 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                             placeholder="AB"
                           />
 
@@ -1012,7 +1024,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               const prefix = latestNo.substring(0, 2);
                               handleInputChange('no', `${prefix}${e.target.value}`);
                             }}
-                            className="h-44px flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
+                            className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                             placeholder="12345678"
                           />
                         </div>
@@ -1133,13 +1145,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.netAmount && (
@@ -1201,13 +1213,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         />
                         <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                           <Image
-                            src={currencyAliasImageSrc}
+                            src={`/currencies/${currency.toLowerCase()}.svg`}
                             width={16}
                             height={16}
                             alt={currencyAliasImageAlt}
-                            className="rounded-full"
+                            className="aspect-square rounded-full object-cover"
                           />
-                          <p>{currencyAliasStr}</p>
+                          <p>{currency}</p>
                         </div>
                       </div>
                       {(formState.type === InvoiceType.INPUT_22 ||
@@ -1246,13 +1258,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       />
                       <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
-                          src={currencyAliasImageSrc}
+                          src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="rounded-full"
+                          className="aspect-square rounded-full object-cover"
                         />
-                        <p>{currencyAliasStr}</p>
+                        <p>{currency}</p>
                       </div>
                     </div>
                     {errors.taxAmount && (
@@ -1300,12 +1312,16 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             </div>
             {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以上) */}
             <div className="hidden items-center lg:flex">
-              {!certificate.voucherNo && (
+              {!certificate?.voucherNo && (
                 <Button
                   id="certificate-delete-btn"
                   type="button"
                   className="px-16px py-8px"
-                  onClick={() => onDelete(certificate.id)}
+                  onClick={() => {
+                    if (certificate?.id !== undefined) {
+                      onDelete(certificate.id);
+                    }
+                  }}
                   variant="errorOutline"
                 >
                   <LuTrash2 size={20} />

@@ -48,7 +48,7 @@
     "STRAIGHT_LINE": "直線折舊法",
     "DOUBLE_DECLINING": "雙倍餘額遞減法",
     "SUM_OF_YEAR_DIGIT": "年數總和法",
-    "NONE": "無",
+    "NONE": "不需折舊",
     "CONFIRM_MESSAGE_TITLE": "您確定要新增此資產嗎？",
     "CONFIRM_MESSAGE_CONTENT": "30 天後將無法刪除。",
     "CONFIRM_MESSAGE_BTN": "是的，新增資產",
