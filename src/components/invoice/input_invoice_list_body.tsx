@@ -260,6 +260,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
+      // Todo: (20250604 - Anna) Debug 後移除
       // eslint-disable-next-line no-console
       console.log('📥 API 回傳資料:', resData);
       try {
@@ -371,10 +372,16 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleDeleteItem = useCallback(
     (selectedId: number) => {
+      const selectedCertificate = certificates.find((certificate) => certificate.id === selectedId);
+      const displayStr =
+        selectedCertificate?.no ||
+        selectedCertificate?.otherCertificateNo ||
+        selectedCertificate?.carrierSerialNumber ||
+        '';
       messageModalDataHandler({
         title: t('certificate:DELETE.TITLE'),
         content: t('certificate:DELETE.CONTENT'),
-        notes: `${certificates.find((certificate) => certificate.id === selectedId)?.id || ''}?`,
+        notes: `${displayStr}?`,
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
