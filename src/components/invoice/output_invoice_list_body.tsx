@@ -385,6 +385,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
           await deleteSelectedCertificates([selectedId]);
+          setIsEditModalOpen(false); // Info: (20250604 - Anna) 關閉編輯 Modal
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
