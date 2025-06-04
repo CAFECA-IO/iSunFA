@@ -10,7 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
 import StepOneForm from '@/components/beta/account_books_page/step_one_form';
 import { step1FormReducer, createInitialStep1FormState } from '@/constants/account_book';
-import { IAccountBookWithTeam } from '@/interfaces/account_book';
+import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
 
 interface AccountBookInfoModalProps {
   closeAccountBookInfoModal: () => void;
@@ -42,38 +42,38 @@ const AccountBookInfoModal = ({
 
   const {
     companyName,
-    representativeName,
+    // representativeName,
     taxId,
     taxSerialNumber,
-    contactPerson,
-    phoneNumber,
-    tag,
+    // contactPerson,
+    // phoneNumber,
+    // tag,
     team,
-    city,
-    district,
-    enteredAddress,
+    // city,
+    // district,
+    // enteredAddress,
   } = step1FormState;
 
   // Info: (20250312 - Liz) 打 API 建立帳本(原為公司)
   const handleSubmit = async ({ passedFileId }: { passedFileId?: number }) => {
     if (isCreateLoading) return; // Info: (20250312 - Liz) 避免重複點擊
-    if (!companyName || !taxId || !tag || !team) return;
+    if (!companyName || !taxId || !team) return;
     setIsCreateLoading(true); // Info: (20250312 - Liz) 點擊後進入 loading 狀態
 
     try {
       const { success, code, errorMsg } = await createAccountBook({
         name: companyName,
         taxId,
-        tag,
+        tag: WORK_TAG.ALL, // ToDo: (20250604 - Liz) 目前不使用 tag 需通知後端修改 API
         teamId: team.id, // Info: (20250312 - Liz) 選擇團隊
         fileId: passedFileId, // Info: (20250527 - Liz) 上傳圖片的 ID
-        representativeName,
+        // representativeName,
         taxSerialNumber,
-        contactPerson,
-        phoneNumber,
-        city: city || '',
-        district: district || '',
-        enteredAddress,
+        // contactPerson,
+        // phoneNumber,
+        // city: city || '',
+        // district: district || '',
+        // enteredAddress,
       });
 
       // Info: (20250527 - Liz) 新增帳本失敗時顯示錯誤訊息
@@ -116,23 +116,23 @@ const AccountBookInfoModal = ({
     if (!accountBookToEdit) return;
     if (isEditLoading) return; // Info: (20250526 - Liz) 避免重複點擊
     setIsEditLoading(true); // Info: (20250526 - Liz) 點擊後進入 loading 狀態
-    if (!companyName || !taxId || !tag || !team) return; // Info: (20250526 - Liz) 確保必填欄位都有填寫
+    if (!companyName || !taxId || !team) return; // Info: (20250526 - Liz) 確保必填欄位都有填寫
 
     try {
       const { success, code, errorMsg } = await updateAccountBook({
         accountBookId: `${accountBookToEdit.id}`,
         name: companyName,
         taxId,
-        tag,
+        // tag,
         fromTeamId: accountBookToEdit.team.id, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
         toTeamId: team.id, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
-        representativeName,
+        // representativeName,
         taxSerialNumber,
-        contactPerson,
-        phoneNumber,
-        city: city ?? '',
-        district: district ?? '',
-        enteredAddress,
+        // contactPerson,
+        // phoneNumber,
+        // city: city ?? '',
+        // district: district ?? '',
+        // enteredAddress,
       });
 
       // Info: (20250526 - Liz) 更新帳本失敗時顯示錯誤訊息
