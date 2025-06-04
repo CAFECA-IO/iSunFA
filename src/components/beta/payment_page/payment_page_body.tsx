@@ -13,6 +13,9 @@ import { APIName } from '@/constants/api_connection';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastId } from '@/constants/toast_id';
 import { ToastType } from '@/interfaces/toastify';
+import { Button } from '@/components/button/button';
+import { TbArrowBackUp } from 'react-icons/tb';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
@@ -32,7 +35,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   // const [isConfirmLeaveModalOpen, setIsConfirmLeaveModalOpen] = useState(false);
   // const [nextRoute, setNextRoute] = useState<string | null>(null); // Info: (20250116 - Liz) 儲存即將導向的網址
   const router = useRouter();
-  const { retcode } = router.query;
+  const { retcode, teamId: teamIdStr } = router.query;
 
   // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
@@ -47,6 +50,8 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
     APIName.UPDATE_SUBSCRIPTION
   );
+
+  const goBack = () => router.push(`${ISUNFA_ROUTE.SUBSCRIPTIONS}/${teamIdStr}`);
 
   // Info: (20250120 - Liz) 打 API 開啟自動續約
   const turnOnAutoRenewal = async () => {
@@ -180,10 +185,20 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   }, [retcode]);
 
   return (
-    <main className="flex min-h-full gap-40px">
+    <main className="flex min-h-full flex-col gap-lv-6 tablet:flex-row tablet:gap-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('subscriptions:PAYMENT_PAGE.PAGE_TITLE')}
+        </p>
+      </div>
+
       <PlanInfo team={team} plan={plan} />
 
-      <section className="flex flex-auto flex-col gap-24px">
+      <section className="flex flex-auto flex-col gap-lv-4 tablet:gap-24px">
         <PaymentInfo plan={plan} />
 
         <CreditCardInfo
