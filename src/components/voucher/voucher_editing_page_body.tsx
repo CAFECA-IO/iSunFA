@@ -791,22 +791,24 @@ const VoucherEditingPageBody: React.FC<{
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        [newCertificate.id]: {
+          ...newCertificate,
+          isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
+          actions: !newCertificate.voucherNo
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        },
+      };
+
       setCertificates((prev) => {
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
-          [newCertificate.id]: {
-            ...newCertificate,
-            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
-            actions: !newCertificate.voucherNo
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-          },
-        };
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
             ...certificate,
+            isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
         return newCertificatesUI;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
-import { VscSettings } from 'react-icons/vsc';
 import AssetList from '@/components/asset/asset_list';
 import FilterSection from '@/components/filter_section/filter_section';
 import Pagination from '@/components/pagination/pagination';
@@ -10,7 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { IAssetItem } from '@/interfaces/asset';
+import { IAssetItem, IAssetItemUI } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
@@ -38,7 +37,7 @@ const AssetListPageBody: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
-  const [assetList, setAssetList] = useState<IAssetItem[]>([]);
+  const [assetList, setAssetList] = useState<IAssetItemUI[]>([]);
   // Info: (20241024 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [purchasePriceSort, setPurchasePriceSort] = useState<null | SortOrder>(null);
@@ -112,9 +111,14 @@ const AssetListPageBody: React.FC = () => {
   const assetStatusList = Object.values(AssetStatus);
 
   const handleApiResponse = (resData: IPaginatedData<IAssetItem[]>) => {
-    setAssetList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
+
+    const assetListUI: IAssetItemUI[] = resData.data.map((asset) => ({
+      ...asset,
+      isSelected: false,
+    }));
+    setAssetList(assetListUI);
   };
 
   return (
@@ -134,14 +138,6 @@ const AssetListPageBody: React.FC = () => {
           isShowSideMenu={isShowSideMenu}
           toggleSideMenu={toggleSideMenu}
         />
-        {/* Info: (20250529 - Julian) Filter button */}
-        <button
-          type="button"
-          onClick={toggleSideMenu}
-          className="block w-fit p-10px text-button-text-secondary tablet:hidden"
-        >
-          <VscSettings size={24} />
-        </button>
         {/* Info: (20240925 - Julian) Asset List */}
         <AssetList
           assetList={assetList}
@@ -155,6 +151,7 @@ const AssetListPageBody: React.FC = () => {
           setResidualSort={setResidualValueSort}
           remainingLifeSort={remainingLifeSort}
           setRemainingLifeSort={setRemainingLifeSort}
+          toggleSideMenu={toggleSideMenu}
         />
 
         {/* Info: (20240925 - Julian) Pagination */}
