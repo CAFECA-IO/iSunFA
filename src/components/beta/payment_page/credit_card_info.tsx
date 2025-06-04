@@ -37,13 +37,12 @@ const CreditCardInfo = ({
   const { toastHandler } = useModalContext();
   const router = useRouter();
 
+  // Info: (20250604 - Julian) 預設的信用卡資訊，取 paymentMethod 的最後一筆資料
+  const defaultCardInfo = paymentMethod ? paymentMethod[paymentMethod.length - 1] : null;
+
   const [isSubscribeBtnDisabled, setIsSubscribeBtnDisabled] = useState(false);
-
-  // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
-  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
-
-  // Info: (20250120 - Liz) 取得信用卡 number
-  const creditCardNumber = hasCreditCardInfo ? paymentMethod[paymentMethod.length - 1].number : '';
+  const [cardInfo, setCardInfo] = useState<IPaymentMethod | null>(defaultCardInfo);
+  const [hasCreditCardInfo, setHasCreditCardInfo] = useState<boolean>(false);
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
@@ -93,7 +92,14 @@ const CreditCardInfo = ({
 
       if (success) {
         // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state
+        const cardData = data ?? [];
         handlePaymentMethod(data);
+
+        // Info: (20250604 - Julian) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
+        setHasCreditCardInfo(cardData.length > 0);
+
+        // Info: (20250604 - Julian) 取得信用卡 number
+        setCardInfo(cardData[cardData.length - 1]);
       } else {
         toastHandler({
           id: 'GET_CREDIT_CARD_INFO_FAILED',
@@ -251,11 +257,11 @@ const CreditCardInfo = ({
         <span className="text-base font-semibold text-text-brand-secondary-lv3 tablet:text-lg">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
-        {hasCreditCardInfo && plan ? (
+        {hasCreditCardInfo && cardInfo && plan ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
             <span className="text-lg font-semibold text-text-neutral-primary">
-              {creditCardNumber}
+              {cardInfo.number}
             </span>
 
             <button type="button" className="pl-8px" onClick={bindCreditCard}>
