@@ -197,6 +197,28 @@ export async function findInvoiceRC2ById(data: {
   return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
 }
 
+async function countUnpostedInvoiceStats(accountBookId: number, direction: InvoiceDirection) {
+  const [withVoucher, withoutVoucher] = await Promise.all([
+    prisma.invoiceRC2.count({
+      where: {
+        accountBookId,
+        direction,
+        voucherId: { not: null },
+        deletedAt: null,
+      },
+    }),
+    prisma.invoiceRC2.count({
+      where: {
+        accountBookId,
+        direction,
+        voucherId: null,
+        deletedAt: null,
+      },
+    }),
+  ]);
+  return { withVoucher, withoutVoucher };
+}
+
 export async function listInvoiceRC2Input(
   userId: number,
   query: z.infer<typeof listInvoiceRC2QuerySchema>
@@ -267,14 +289,14 @@ export async function listInvoiceRC2Input(
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
-  const incompleteStats = {
-    withVoucher: transformed.filter((c) => c.voucherId !== null && c.incomplete).length,
-    withoutVoucher: transformed.filter((c) => c.voucherId === null && c.incomplete).length,
-  };
-
   const currencySet = new Set(transformed.map((c) => c.currencyCode));
   const currencies = Array.from(currencySet);
   const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+
+  const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
+    accountBookId,
+    InvoiceDirection.INPUT
+  );
 
   return toPaginatedData({
     ...query,
@@ -282,8 +304,11 @@ export async function listInvoiceRC2Input(
     data: transformed,
     note: JSON.stringify({
       totalCertificatePrice,
-      incomplete: incompleteStats,
       currency,
+      count: {
+        withVoucher,
+        withoutVoucher,
+      },
     }),
   });
 }
@@ -358,14 +383,15 @@ export async function listInvoiceRC2Output(
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
-  const incompleteStats = {
-    withVoucher: transformed.filter((c) => c.voucherId !== null && c.incomplete).length,
-    withoutVoucher: transformed.filter((c) => c.voucherId === null && c.incomplete).length,
-  };
-
   const currencySet = new Set(transformed.map((c) => c.currencyCode));
   const currencies = Array.from(currencySet);
+  // ToDo: (20250604 - Tzuhan) 從table AccountSetting 取得帳本的貨幣設定
   const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+
+  const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
+    accountBookId,
+    InvoiceDirection.OUTPUT
+  );
 
   return toPaginatedData({
     ...query,
@@ -373,7 +399,10 @@ export async function listInvoiceRC2Output(
     data: transformed,
     note: JSON.stringify({
       totalCertificatePrice,
-      incomplete: incompleteStats,
+      count: {
+        withVoucher,
+        withoutVoucher,
+      },
       currency,
     }),
   });

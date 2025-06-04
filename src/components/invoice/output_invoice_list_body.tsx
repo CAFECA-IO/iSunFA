@@ -83,7 +83,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
   const [selectedCertificates, setSelectedCertificates] = useState<IInvoiceRC2OutputUI[]>([]);
 
   const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
-  const [incomplete, setIncomplete] = useState<{
+  const [count, setCount] = useState<{
     withVoucher: number;
     withoutVoucher: number;
   }>({
@@ -271,14 +271,14 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalCertificatePrice: number;
-          incomplete: {
+          count: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
         setTotalCertificatePrice(note.totalCertificatePrice);
-        setIncomplete(note.incomplete);
+        setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
         setPage(resData.page);
@@ -534,7 +534,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     (data: { message: string }) => {
       const newCertificate: IInvoiceRC2Output = JSON.parse(data.message);
       handleNewCertificateComing(newCertificate);
-      setIncomplete((prev) => ({
+      setCount((prev) => ({
         ...prev,
         withoutVoucher: prev.withoutVoucher + 1,
       }));
@@ -658,7 +658,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
             tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
             activeTab={activeTab}
             onTabClick={onTabClick}
-            counts={incomplete ? [incomplete.withoutVoucher, incomplete.withVoucher] : [0, 0]}
+            counts={count ? [count.withoutVoucher, count.withVoucher] : [0, 0]}
           />
 
           {/* Info: (20240919 - Anna) Filter Section */}
