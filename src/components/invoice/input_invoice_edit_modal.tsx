@@ -89,10 +89,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     APIName.COUNTERPARTY_LIST
   );
   const [counterpartyList, setCounterpartyList] = useState<ICounterparty[]>([]);
-  // Info: (20240924 - Anna) 不顯示模態框時返回 null
-  if (!isOpen || !certificate) return null;
   const [date, setDate] = useState<IDatePeriod>({
-    startTimeStamp: certificate.issuedDate ?? 0,
+    startTimeStamp: certificate?.issuedDate ?? 0,
     endTimeStamp: 0,
   });
   const { isMessageModalVisible } = useModalContext();
@@ -101,24 +99,24 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       ({
         // Info: (20250414 - Anna) 這個組件改為全為進項
         direction: InvoiceDirection.INPUT,
-        date: certificate.issuedDate,
-        no: certificate.no,
-        netAmount: certificate.netAmount,
-        taxType: certificate.taxType,
-        taxRate: certificate.taxRate ?? undefined,
-        taxAmount: certificate.taxAmount,
-        totalAmount: certificate.totalAmount,
-        salesName: certificate.salesName,
-        salesIdNumber: certificate.salesIdNumber,
-        type: certificate.type ?? InvoiceType.INPUT_21,
+        date: certificate?.issuedDate,
+        no: certificate?.no,
+        netAmount: certificate?.netAmount,
+        taxType: certificate?.taxType,
+        taxRate: certificate?.taxRate ?? undefined,
+        taxAmount: certificate?.taxAmount,
+        totalAmount: certificate?.totalAmount,
+        salesName: certificate?.salesName,
+        salesIdNumber: certificate?.salesIdNumber,
+        type: certificate?.type ?? InvoiceType.INPUT_21,
         // Info: (20250422 - Anna)「扣抵類型」
-        deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
+        deductionType: certificate?.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
         // Info: (20250429 - Anna)「是否為彙總金額代表憑證」
-        isSharedAmount: certificate.isSharedAmount ?? false,
+        isSharedAmount: certificate?.isSharedAmount ?? false,
         // Info: (20250429 - Anna)「其他憑證編號」
-        otherCertificateNo: certificate.otherCertificateNo ?? '',
+        otherCertificateNo: certificate?.otherCertificateNo ?? '',
         // Info: (20250514 - Anna)「載具流水號」
-        carrierSerialNumber: certificate.carrierSerialNumber ?? '',
+        carrierSerialNumber: certificate?.carrierSerialNumber ?? '',
       }) as Partial<IInvoiceRC2Input>
   );
   const [errors] = useState<Record<string, string>>({});
@@ -219,7 +217,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   };
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
-
+    if (!certificate) return;
     const { isSelected, actions, ...rest } = certificate;
 
     const updatedCertificate = {
@@ -361,7 +359,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   };
 
   // Info: (20241206 - Julian) currency alias setting
-  const currencyAliasImageAlt = `currency-${(certificate.currencyCode || currencyAlias).toLowerCase()}-icon`;
+  const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
   const currentIndex = certificates.findIndex((c) => c.id === editingId);
@@ -475,18 +473,18 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
   }, [isOpen, certificate]);
 
-    useEffect(() => {
-      const fetchCurrency = async () => {
-        if (!accountBookId) return;
-        const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-        if (isSuccess && data?.currency) {
-          setCurrency(data.currency);
-        }
-      };
-      if (isOpen) {
-        fetchCurrency();
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
       }
-    }, [isOpen, accountBookId]);
+    };
+    if (isOpen) {
+      fetchCurrency();
+    }
+  }, [isOpen, accountBookId]);
 
   return (
     <div
@@ -527,17 +525,17 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     ref={certificateRef}
                     certificateType={InvoiceType.INPUT_25}
                     issuedDate={dayjs
-                      .unix(formState.issuedDate ?? certificate.issuedDate ?? 0)
+                      .unix(formState.issuedDate ?? certificate?.issuedDate ?? 0)
                       .format('YYYY-MM-DD')}
-                    invoiceNo={formState.no ?? certificate.no ?? ''}
-                    taxId={formState.salesIdNumber ?? certificate.salesIdNumber ?? undefined}
-                    netAmount={formState.netAmount ?? certificate.netAmount ?? 0}
-                    taxAmount={formState.taxAmount ?? certificate.taxAmount ?? 0}
-                    totalAmount={formState.totalAmount ?? certificate.totalAmount ?? 0}
+                    invoiceNo={formState.no ?? certificate?.no ?? ''}
+                    taxId={formState.salesIdNumber ?? certificate?.salesIdNumber ?? undefined}
+                    netAmount={formState.netAmount ?? certificate?.netAmount ?? 0}
+                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? 0}
+                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? 0}
                   />
                 </div>
               )}
-              {(certificate.file?.url || (certificate.isGenerated && eInvoiceImageUrl)) && (
+              {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
                 <div className="relative w-full lg:h-570px">
                   <ImageZoom
                     imageUrl={
@@ -578,12 +576,16 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <IoArrowForward size={20} />
                     </Button>
                   </div>
-                  {!certificate.voucherNo && (
+                  {!certificate?.voucherNo && (
                     <Button
                       id="certificate-delete-btn"
                       type="button"
                       className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
-                      onClick={() => onDelete(certificate.id)}
+                      onClick={() => {
+                        if (certificate?.id !== undefined) {
+                          onDelete(certificate.id);
+                        }
+                      }}
                       variant="errorOutline"
                     >
                       <LuTrash2 size={20} />
@@ -1310,12 +1312,16 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             </div>
             {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以上) */}
             <div className="hidden items-center lg:flex">
-              {!certificate.voucherNo && (
+              {!certificate?.voucherNo && (
                 <Button
                   id="certificate-delete-btn"
                   type="button"
                   className="px-16px py-8px"
-                  onClick={() => onDelete(certificate.id)}
+                  onClick={() => {
+                    if (certificate?.id !== undefined) {
+                      onDelete(certificate.id);
+                    }
+                  }}
                   variant="errorOutline"
                 >
                   <LuTrash2 size={20} />
