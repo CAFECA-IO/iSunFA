@@ -668,10 +668,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
       // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
-    } else if (
-      isCounterpartyRequired &&
-      (!counterparty || counterparty?.name === '')
-    ) {
+    } else if (isCounterpartyRequired && (!counterparty || counterparty?.name === '')) {
       setIsShowCounterpartyHint(true);
       toastHandler({
         id: ToastId.FILL_UP_VOUCHER_FORM,
@@ -921,6 +918,20 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
+
+      const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        [newCertificate.id]: {
+          ...newCertificate,
+          isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
+          actions: !newCertificate.voucherNo
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        },
+      };
+
       // Deprecated: (20241122 - tzuhan) Debugging purpose
       // eslint-disable-next-line no-console
       console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
@@ -928,21 +939,12 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         // Deprecated: (20241122 - tzuhan) Debugging purpose
         // eslint-disable-next-line no-console
         console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
-          [newCertificate.id]: {
-            ...newCertificate,
-            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
-            actions: !newCertificate.voucherNo
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-          },
-        };
+
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
             ...certificate,
+            // Info: (20250604 - Julian) 保留原有的 isSelected 狀態
+            isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
         // Deprecated: (20241122 - tzuhan) Debugging purpose
