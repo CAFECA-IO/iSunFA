@@ -215,18 +215,8 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   }
 
     /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
-  .force-desktop-style {
+    .force-desktop-style {
     width: 1024px !important;
-    min-width: 1024px !important;
-    max-width: 1024px !important;
-  }
-
-  /* Info: (20250604 - Anna) 匯出時隱藏手機版、顯示桌面版元件 */
-  .force-desktop-style .mobile-only {
-    display: none !important;
-  }
-  .force-desktop-style .desktop-only {
-    display: block !important;
   }
 `;
 
