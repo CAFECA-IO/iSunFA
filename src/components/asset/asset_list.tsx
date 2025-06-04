@@ -361,7 +361,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           {/* Info: (20241024 - Julian) Select All */}
           <button
             type="button"
-            className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
+            className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
             onClick={selectAllHandler}
             disabled={isNoData}
           >
@@ -371,7 +371,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           <button
             type="button"
             onClick={selectToggleHandler}
-            className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
+            className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
           >
             {t('asset:COMMON.CANCEL')}
           </button>
@@ -379,7 +379,7 @@ const AssetList: React.FC<IAssetListProps> = ({
           <button
             type="button"
             onClick={selectToggleHandler}
-            className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary enabled:hover:underline`}
+            className={`${isCheckBoxOpen ? 'hidden' : 'block'} text-sm font-semibold text-link-text-primary enabled:hover:underline`}
           >
             {t('asset:COMMON.SELECT')}
           </button>
