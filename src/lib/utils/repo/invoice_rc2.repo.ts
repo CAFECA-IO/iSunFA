@@ -261,25 +261,40 @@ export async function listInvoiceRC2ByDirection<
       : undefined,
   };
 
-  const invoices = await prisma.invoiceRC2.findMany({
-    where: whereClause,
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    orderBy: createOrderByList(sortOption || []),
-    include: {
-      file: { include: { thumbnail: true } },
-      voucher: true,
-      uploader: true,
-    },
-  });
+  const [totalCount, invoices, totalPrice] = await Promise.all([
+    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.findMany({
+      where: whereClause,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption || []),
+      include: {
+        file: { include: { thumbnail: true } },
+        voucher: true,
+        uploader: true,
+      },
+    }),
+    prisma.invoiceRC2.aggregate({
+      where: {
+        accountBookId,
+        direction,
+        deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
+        voucherId:
+          tab === InvoiceTab.WITHOUT_VOUCHER
+            ? null
+            : tab === InvoiceTab.WITH_VOUCHER
+              ? { not: null }
+              : undefined,
+      },
+      _sum: { totalAmount: true },
+    }),
+  ]);
+
   const transformer = direction === InvoiceDirection.INPUT ? transformInput : transformOutput;
 
   const transformed: InvoiceRC2MappedOutput<T>[] = invoices.map(
     (cert) => transformer(cert) as InvoiceRC2MappedOutput<T>
   );
-
-  const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
-
   const accountSetting: PrismaAccountingSetting | null =
     await getAccountingSettingByCompanyId(accountBookId);
   const currency = (accountSetting?.currency as CurrencyCode) || CurrencyCode.TWD;
@@ -308,10 +323,10 @@ export async function listInvoiceRC2ByDirection<
 
   return toPaginatedData<InvoiceRC2MappedOutput<T>[]>({
     ...query,
-    totalCount: tab === InvoiceTab.WITHOUT_VOUCHER ? withoutVoucher : withVoucher,
+    totalCount,
     data: transformed,
     note: JSON.stringify({
-      totalCertificatePrice,
+      totalPrice,
       currency,
       ...extraStats,
     }),

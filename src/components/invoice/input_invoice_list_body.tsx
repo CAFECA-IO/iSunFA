@@ -265,14 +265,14 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
       console.log('📥 API 回傳資料:', resData);
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalCertificatePrice: number;
+          totalPrice: number;
           count: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalCertificatePrice(note.totalCertificatePrice);
+        setTotalCertificatePrice(note.totalPrice);
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
