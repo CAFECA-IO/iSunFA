@@ -8,7 +8,7 @@ import {
   createInvoiceRC2QuerySchema,
   createInvoiceRC2BodySchema,
 } from '@/lib/utils/zod_schema/invoice_rc2';
-import { InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
+import { CurrencyCode, InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
@@ -18,6 +18,9 @@ import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { checkStorageLimit } from '@/lib/utils/plan/check_plan_limit';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -197,7 +200,107 @@ export async function findInvoiceRC2ById(data: {
   return cert.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
 }
 
-async function countUnpostedInvoiceStats(accountBookId: number, direction: InvoiceDirection) {
+type InvoiceRC2MappedOutput<T extends InvoiceDirection> = T extends InvoiceDirection.INPUT
+  ? z.infer<typeof InvoiceRC2InputSchema>
+  : z.infer<typeof InvoiceRC2OutputSchema>;
+
+export async function listInvoiceRC2ByDirection<
+  T extends InvoiceDirection.INPUT | InvoiceDirection.OUTPUT,
+>(
+  userId: number,
+  query: z.infer<typeof listInvoiceRC2QuerySchema>,
+  direction: T
+): Promise<IPaginatedData<InvoiceRC2MappedOutput<T>[]>> {
+  const {
+    accountBookId,
+    isDeleted,
+    tab,
+    type,
+    page,
+    pageSize,
+    startDate,
+    endDate,
+    searchQuery,
+    sortOption,
+  } = query;
+
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.VIEW_CERTIFICATE,
+  });
+
+  const whereClause: Prisma.InvoiceRC2WhereInput = {
+    accountBookId,
+    direction,
+    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
+    voucherId:
+      tab === InvoiceTab.WITHOUT_VOUCHER
+        ? null
+        : tab === InvoiceTab.WITH_VOUCHER
+          ? { not: null }
+          : undefined,
+    type: type ?? undefined,
+    issuedDate: {
+      gte: startDate || undefined,
+      lte: endDate || undefined,
+    },
+    OR: searchQuery
+      ? [
+          ...(direction === InvoiceDirection.INPUT
+            ? [
+                { salesName: { contains: searchQuery, mode: 'insensitive' as const } },
+                { salesIdNumber: { contains: searchQuery, mode: 'insensitive' as const } },
+              ]
+            : [
+                { buyerName: { contains: searchQuery, mode: 'insensitive' as const } },
+                { buyerIdNumber: { contains: searchQuery, mode: 'insensitive' as const } },
+              ]),
+          { no: { contains: searchQuery, mode: 'insensitive' as const } },
+        ]
+      : undefined,
+  };
+
+  const [totalCount, invoices, totalPrice] = await Promise.all([
+    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.findMany({
+      where: whereClause,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption || []),
+      include: {
+        file: { include: { thumbnail: true } },
+        voucher: true,
+        uploader: true,
+      },
+    }),
+    prisma.invoiceRC2.aggregate({
+      where: {
+        accountBookId,
+        direction,
+        deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
+        voucherId:
+          tab === InvoiceTab.WITHOUT_VOUCHER
+            ? null
+            : tab === InvoiceTab.WITH_VOUCHER
+              ? { not: null }
+              : undefined,
+      },
+      _sum: { totalAmount: true },
+    }),
+  ]);
+
+  const transformer = direction === InvoiceDirection.INPUT ? transformInput : transformOutput;
+
+  const transformed: InvoiceRC2MappedOutput<T>[] = invoices.map(
+    (cert) => transformer(cert) as InvoiceRC2MappedOutput<T>
+  );
+  const accountSetting: PrismaAccountingSetting | null =
+    await getAccountingSettingByCompanyId(accountBookId);
+  const currency = (accountSetting?.currency as CurrencyCode) || CurrencyCode.TWD;
+
+  let extraStats: Record<string, unknown> = {};
+
   const [withVoucher, withoutVoucher] = await Promise.all([
     prisma.invoiceRC2.count({
       where: {
@@ -216,197 +319,29 @@ async function countUnpostedInvoiceStats(accountBookId: number, direction: Invoi
       },
     }),
   ]);
-  return { withVoucher, withoutVoucher };
-}
+  extraStats = { count: { withVoucher, withoutVoucher } };
 
-export async function listInvoiceRC2Input(
-  userId: number,
-  query: z.infer<typeof listInvoiceRC2QuerySchema>
-) {
-  const {
-    accountBookId,
-    isDeleted,
-    tab,
-    type,
-    page,
-    pageSize,
-    startDate,
-    endDate,
-    searchQuery,
-    sortOption,
-  } = query;
-
-  await assertUserCanByAccountBook({
-    userId,
-    accountBookId,
-    action: TeamPermissionAction.VIEW_CERTIFICATE,
-  });
-
-  const whereClause = {
-    accountBookId,
-    direction: InvoiceDirection.INPUT,
-    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
-    voucherId:
-      tab === InvoiceTab.WITHOUT_VOUCHER
-        ? null
-        : tab === InvoiceTab.WITH_VOUCHER
-          ? { not: null }
-          : undefined,
-    type: type ?? undefined,
-    issuedDate: {
-      gte: startDate || undefined,
-      lte: endDate || undefined,
-    },
-    OR: searchQuery
-      ? [
-          { salesName: { contains: searchQuery, mode: 'insensitive' as const } },
-          { salesIdNumber: { contains: searchQuery, mode: 'insensitive' as const } },
-          { no: { contains: searchQuery, mode: 'insensitive' as const } },
-        ]
-      : undefined,
-  };
-
-  const [totalCount, invoices] = await Promise.all([
-    prisma.invoiceRC2.count({ where: whereClause }),
-    prisma.invoiceRC2.findMany({
-      where: whereClause,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: createOrderByList(sortOption || []),
-      include: {
-        file: {
-          include: {
-            thumbnail: true,
-          },
-        },
-        voucher: true,
-        uploader: true,
-      },
-    }),
-  ]);
-
-  const transformed = invoices.map(transformInput);
-
-  const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
-
-  const currencySet = new Set(transformed.map((c) => c.currencyCode));
-  const currencies = Array.from(currencySet);
-  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
-
-  const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
-    accountBookId,
-    InvoiceDirection.INPUT
-  );
-
-  return toPaginatedData({
+  return toPaginatedData<InvoiceRC2MappedOutput<T>[]>({
     ...query,
     totalCount,
     data: transformed,
     note: JSON.stringify({
-      totalCertificatePrice,
+      totalPrice,
       currency,
-      count: {
-        withVoucher,
-        withoutVoucher,
-      },
+      ...extraStats,
     }),
   });
 }
 
-export async function listInvoiceRC2Output(
+export const listInvoiceRC2Input = (
   userId: number,
   query: z.infer<typeof listInvoiceRC2QuerySchema>
-) {
-  const {
-    accountBookId,
-    isDeleted,
-    tab,
-    type,
-    page,
-    pageSize,
-    startDate,
-    endDate,
-    searchQuery,
-    sortOption,
-  } = query;
+) => listInvoiceRC2ByDirection(userId, query, InvoiceDirection.INPUT);
 
-  await assertUserCanByAccountBook({
-    userId,
-    accountBookId,
-    action: TeamPermissionAction.VIEW_CERTIFICATE,
-  });
-
-  const whereClause = {
-    accountBookId,
-    direction: InvoiceDirection.OUTPUT,
-    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
-    voucherId:
-      tab === InvoiceTab.WITHOUT_VOUCHER
-        ? null
-        : tab === InvoiceTab.WITH_VOUCHER
-          ? { not: null }
-          : undefined,
-    type: type ?? undefined,
-    issuedDate: {
-      gte: startDate || undefined,
-      lte: endDate || undefined,
-    },
-    OR: searchQuery
-      ? [
-          { buyerName: { contains: searchQuery, mode: 'insensitive' as const } },
-          { buyerIdNumber: { contains: searchQuery, mode: 'insensitive' as const } },
-          { no: { contains: searchQuery, mode: 'insensitive' as const } },
-        ]
-      : undefined,
-  };
-
-  const [totalCount, invoices] = await Promise.all([
-    prisma.invoiceRC2.count({ where: whereClause }),
-    prisma.invoiceRC2.findMany({
-      where: whereClause,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: createOrderByList(sortOption || []),
-      include: {
-        file: {
-          include: {
-            thumbnail: true,
-          },
-        },
-        voucher: true,
-        uploader: true,
-      },
-    }),
-  ]);
-
-  const transformed = invoices.map(transformOutput);
-
-  const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
-
-  const currencySet = new Set(transformed.map((c) => c.currencyCode));
-  const currencies = Array.from(currencySet);
-  // ToDo: (20250604 - Tzuhan) 從table AccountSetting 取得帳本的貨幣設定
-  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
-
-  const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
-    accountBookId,
-    InvoiceDirection.OUTPUT
-  );
-
-  return toPaginatedData({
-    ...query,
-    totalCount,
-    data: transformed,
-    note: JSON.stringify({
-      totalCertificatePrice,
-      count: {
-        withVoucher,
-        withoutVoucher,
-      },
-      currency,
-    }),
-  });
-}
+export const listInvoiceRC2Output = (
+  userId: number,
+  query: z.infer<typeof listInvoiceRC2QuerySchema>
+) => listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT);
 
 export async function createInvoiceRC2(
   userId: number,
