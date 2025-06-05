@@ -59,9 +59,12 @@ const PendingTaskForAll = () => {
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate =
-    userPendingTaskTotal.totalMissingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = Math.round(
+    userPendingTaskTotal.totalMissingCertificatePercentage * 100
+  );
+  const percentageForUnpostedVouchers = Math.round(
+    userPendingTaskTotal.totalUnpostedVoucherPercentage * 100
+  );
   const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
   const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
 
@@ -72,16 +75,14 @@ const PendingTaskForAll = () => {
       </h3>
 
       {/* Info: (20241209 - Liz) Chart Section */}
-      <section className="flex items-center gap-16px">
-        <div className="w-160px">
-          <DonutChart
-            percentageForMissingCertificate={percentageForMissingCertificate}
-            percentageForUnpostedVouchers={percentageForUnpostedVouchers}
-            isChartForTotal
-          />
-        </div>
+      <section className="flex items-center gap-24px">
+        <DonutChart
+          percentageForMissingCertificate={percentageForMissingCertificate}
+          percentageForUnpostedVouchers={percentageForUnpostedVouchers}
+          isChartForTotal
+        />
 
-        <div className="flex grow flex-col gap-16px">
+        <div className="flex flex-auto flex-col gap-16px">
           <div className="flex items-center justify-between">
             <TaskType
               iconName={PendingTaskIconName.MISSING_CERTIFICATE}
@@ -110,6 +111,7 @@ const PendingTaskForAll = () => {
           <TaskType
             iconName={PendingTaskIconName.MISSING_CERTIFICATE}
             title={TaskTitle.MISSING_CERTIFICATE}
+            alwaysNeedTitle
           />
           <p className="text-2xl font-bold text-text-brand-secondary-lv2">
             {countForMissingCertificate}
@@ -122,6 +124,7 @@ const PendingTaskForAll = () => {
           <TaskType
             iconName={PendingTaskIconName.UNPOSTED_VOUCHERS}
             title={TaskTitle.UNPOSTED_VOUCHERS}
+            alwaysNeedTitle
           />
           <p className="text-2xl font-bold text-text-brand-secondary-lv2">
             {countForUnpostedVouchers}

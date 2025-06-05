@@ -47,7 +47,8 @@
     "DELETE": "刪除",
     "DELETE_MESSAGE_TITLE": "刪除帳本",
     "DELETE_MESSAGE_CONTENT": "您確定要刪除此帳本嗎？",
-    "WAITING_FOR_TRANSFERRING": "等待轉移中"
+    "WAITING_FOR_TRANSFERRING": "等待轉移中",
+    "ADD_NEW_ACCOUNT_BOOK": "新增帳本"
   },
   "DELETE": {
     "TITLE": "刪除帳本",

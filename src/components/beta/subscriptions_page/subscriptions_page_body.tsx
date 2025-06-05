@@ -138,6 +138,10 @@ const SubscriptionsPageBody = ({
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
+      {/* Info: (20250529 - Julian) Page Title for mobile */}
+      <div className="block w-full text-left text-base font-semibold text-text-neutral-secondary tablet:hidden">
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_PLANS')}
+      </div>
       <div className="flex items-center gap-8px">
         <Image src="/icons/my_subscription.svg" alt="my_subscription_icon" width={16} height={16} />
         <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.MY_SUBSCRIPTIONS')}</h1>

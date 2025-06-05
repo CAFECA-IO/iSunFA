@@ -15,6 +15,7 @@ interface OutputInvoiceListIrops {
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
+  uploaderAvatarMap: Record<string, string>;
 }
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
@@ -39,8 +40,12 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
   currencyAlias,
   handleSelect,
   onEdit,
+  uploaderAvatarMap,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
+
+  // Info: (20250526 - Anna) 上傳者圖像的 url
+  const avatarSrc = uploaderAvatarMap[certificate.uploaderName];
 
   return (
     <div
@@ -158,13 +163,14 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
             </Link>
           )}
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-            {certificate?.file?.url ? (
+            {/* Info: (20250526 - Anna) 上傳者 */}
+            {avatarSrc ? (
               <Image
-                src={certificate.file.url}
+                src={avatarSrc}
                 alt="avatar"
                 width={14}
                 height={14}
-                className="rounded-full"
+                className="download-hidden rounded-full"
               />
             ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">

@@ -20,14 +20,29 @@ export enum NotificationType {
   PAYMENT = 'PAYMENT',
   SUBSCRIPTION = 'SUBSCRIPTION',
   TEAM_MEMBER = 'TEAM_MEMBER',
-  TEAM_INVITATION = 'TEAM_INVITATION',
+}
+
+export enum NotificationEvent {
+  TRANSFER = 'TRANSFER',
+  UPDATED = 'UPDATED',
+  EXPIRED = 'EXPIRED',
+  REVIEWED = 'REVIEWED',
+  REJECTED = 'REJECTED',
+  APPROVED = 'APPROVED',
+  RENEWED = 'RENEWED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+  DELETED = 'DELETED',
+  INVITED = 'INVITED',
 }
 
 export interface INotificationRC2 {
   id: number;
   userId: number;
   teamId?: number;
+  teamName?: string;
   type: NotificationType;
+  event: NotificationEvent;
   title: string;
   message: string;
   content: Record<string, string | number | boolean>;

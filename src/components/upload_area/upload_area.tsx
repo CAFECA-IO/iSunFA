@@ -64,7 +64,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex items-center justify-center rounded-lg border border-dashed py-10 ${
+      className={`flex flex-col items-center justify-center rounded-lg border border-dashed py-10 tablet:flex-row ${
         !isDisabled && isDragOver
           ? 'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover'
           : 'border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary'
@@ -72,7 +72,7 @@ const UploadArea: React.FC<UploadAreaProps> = ({
     >
       <button
         type="button"
-        className="group flex h-full flex-1 flex-col items-center justify-center rounded-l-lg"
+        className="group flex h-full flex-1 flex-col items-center justify-center rounded-l-lg tablet:pl-6"
         disabled={isDisabled}
         aria-disabled={isDisabled}
         onClick={openFileDialog}
@@ -110,14 +110,14 @@ const UploadArea: React.FC<UploadAreaProps> = ({
 
       {toggleQRCode && (
         <>
-          <h3 className="px-4 text-xl font-bold text-text-neutral-tertiary">
+          <h3 className="p-4 text-xl font-bold text-text-neutral-tertiary">
             {t('common:COMMON.OR')}
           </h3>
 
           <button
             type="button"
             onClick={toggleQRCode}
-            className="group flex h-full flex-1 flex-col items-center justify-center rounded-r-lg"
+            className="group flex h-full flex-1 flex-col items-center justify-center rounded-r-lg tablet:pr-6"
             disabled={isDisabled}
             aria-disabled={isDisabled}
           >
@@ -130,14 +130,6 @@ const UploadArea: React.FC<UploadAreaProps> = ({
               className="group-disabled:grayscale"
             />
             <div className="mt-4 flex items-center gap-2">
-              <Image
-                src="/icons/scan.svg"
-                width={20}
-                height={20}
-                alt="scan icon"
-                aria-hidden={isDisabled}
-                className="group-disabled:grayscale"
-              />
               <p className="font-semibold text-drag-n-drop-text-primary group-disabled:text-drag-n-drop-text-disable">
                 {t('certificate:UPLOAD.USE_YOUR_PHONE_AS')}
                 <span className="cursor-pointer text-link-text-primary group-disabled:cursor-not-allowed group-disabled:text-drag-n-drop-text-disable">

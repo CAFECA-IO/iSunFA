@@ -23,6 +23,7 @@ import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
 import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
 import { AssetDepreciationMethod } from '@/constants/asset';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -42,6 +43,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+  const [currency, setCurrency] = useState<string>('TWD');
 
   const { assetAccountList, modalType, assetData } = defaultData;
 
@@ -77,6 +79,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   } = APIHandler<IAssetDetails[]>(APIName.CREATE_ASSET_BULK);
 
   const accountInputRef = useRef<HTMLInputElement>(null);
+
+  // Info: (20250603 - Anna) 取得會計設定資料
+  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
+    APIName.ACCOUNTING_SETTING_GET
+  );
 
   // Info: (20241015 - Julian) Accounting 下拉選單
   const {
@@ -130,6 +137,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241028 - Julian) 重置 Modal
   useEffect(() => {
+    // Info: (20250603 - Anna) 為了打開 Modal 時翻譯不出錯
+    if (isModalVisible && modalType === AssetModalType.ADD) {
+      setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
+      // Info: (20250603 - Anna) 聚焦到第一個欄位
+      accountRef.current?.focus();
+    }
     if (!isModalVisible) {
       setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
       setSearchKeyword('');
@@ -286,11 +299,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
     // Info: (20241028 - Julian) 新增資產只需 companyId
     const addParams = { accountBookId };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     // Info: (20241028 - Julian) 更新資產需 assetId
     const updateParams = { accountBookId, assetId: assetData?.id };
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
 
     if (inputAmount > 1) {
       // Info: (20241210 - Julian) 若數量大於 1，則使用 createAssetBulk API
@@ -306,6 +317,28 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       });
     }
   };
+
+  // Info: (20250603 - Anna) 取得貨幣資訊
+  useEffect(() => {
+    const fetchCurrency = async () => {
+      if (!accountBookId) return;
+      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
+      if (isSuccess && data?.currency) {
+        setCurrency(data.currency);
+      }
+    };
+
+    if (isModalVisible) {
+      fetchCurrency();
+    }
+  }, [isModalVisible, accountBookId]);
+
+  useEffect(() => {
+    if (selectedDepreciationMethod === AssetDepreciationMethod.NONE) {
+      setInputResidualValue(inputTotal); // Info: (20250603 - Anna) 殘值自動設為總價
+      setInputUsefulLife(0); // Info: (20250603 - Anna) 壽命設為 0
+    }
+  }, [selectedDepreciationMethod, inputTotal]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -394,8 +427,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     } else if (depreciationStartDate.startTimeStamp === 0 && isLandCost === false) {
       // Info: (20241015 - Julian) 土地成本不需要 Depreciation Start Date
       setIsShowDepreciationStartDateHint(true);
-    } else if (inputUsefulLife === 0 && isLandCost === false) {
-      //  Info: (20241015 - Julian) 土地成本不需要 Useful Life
+    } else if (
+      inputUsefulLife === 0 &&
+      isLandCost === false &&
+      selectedDepreciationMethod !== AssetDepreciationMethod.NONE
+    ) {
+      // Info: (20250603 - Anna) 選擇 None 時不需要 Useful Life
+      // Info: (20241015 - Julian) 土地成本不需要 Useful Life
       setIsShowUsefulLifeHint(true);
     } else {
       messageModalDataHandler({
@@ -482,10 +520,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     <p className="truncate">{accountTitle}</p>
   );
 
-  // Info: (20241210 - Julian) 排除 NONE
-  const depreciationMethodList = Object.values(AssetDepreciationMethod).filter(
-    (method) => method !== AssetDepreciationMethod.NONE
-  );
+  const depreciationMethodList = Object.values(AssetDepreciationMethod);
 
   const depreciationMethodMenu = depreciationMethodList.map((method) => (
     <button
@@ -503,31 +538,31 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-450px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
+      <div className="flex max-h-600px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 tablet:max-h-450px md:max-h-90vh">
         {/* Info: (20241015 - Julian) title */}
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
           <h1 className="whitespace-nowrap text-xl font-bold text-card-text-primary">
             {modalTitle}
           </h1>
-          <p className="text-sm text-card-text-secondary">{modalSubtitle}</p>
+          <p className="text-xs text-card-text-secondary tablet:text-sm">{modalSubtitle}</p>
           {/* Info: (20241015 - Julian) close button */}
           <button
             type="button"
             onClick={modalVisibilityHandler}
             className="absolute right-20px top-16px text-icon-surface-single-color-primary"
           >
-            <RxCross2 size={20} />
+            <RxCross2 size={24} />
           </button>
         </div>
 
         {/* Info: (20241015 - Julian) content */}
         <form
           onSubmit={addAssetSubmitHandler}
-          className="flex w-full flex-col gap-y-40px px-30px py-24px text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-y-16px px-lv-4 py-16px text-sm text-input-text-primary tablet:gap-y-40px tablet:px-30px tablet:py-24px"
         >
           {/* Info: (20241015 - Julian) input fields */}
-          <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
+          <div className="grid max-h-400px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center tablet:max-h-500px md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
             {modalType === AssetModalType.ADD ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
@@ -619,10 +654,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             ) : null}
             {/* Info: (20241015 - Julian) Amount */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.AMOUNT')}</p>
+              <p className="font-semibold">
+                {t('asset:ADD_ASSET_MODAL.AMOUNT')}
+                <span className="text-text-state-error">*</span>
+              </p>
               <NumericInput
                 id="input-amount"
-                type="number"
                 value={inputAmount}
                 setValue={setInputAmount}
                 isDecimal
@@ -655,13 +692,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
-                    src="/currencies/twd.svg"
+                    src={`/currencies/${currency.toLowerCase()}.svg`}
                     width={16}
                     height={16}
                     alt="twd_icon"
-                    className="rounded-full"
+                    className="aspect-square rounded-full object-cover"
                   />
-                  <p>{t('asset:COMMON.TWD')}</p>
+                  <p>{currency}</p>
                 </div>
               </div>
             </div>
@@ -687,13 +724,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
-                    src="/currencies/twd.svg"
+                    src={`/currencies/${currency.toLowerCase()}.svg`}
                     width={16}
                     height={16}
                     alt="twd_icon"
-                    className="rounded-full"
+                    className="aspect-square rounded-full object-cover"
                   />
-                  <p>{t('asset:COMMON.TWD')}</p>
+                  <p>{currency}</p>
                 </div>
               </div>
             </div>
@@ -763,9 +800,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           </div>
 
           {/* Info: (20240503 - Julian) confirm buttons */}
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center gap-12px tablet:justify-end">
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="button"
               onClick={modalVisibilityHandler}
               variant="secondaryOutline"
@@ -773,7 +810,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="submit"
               variant="tertiary"
               disabled={isLoading} // Info: (20241202 - Julian) 避免重複送出

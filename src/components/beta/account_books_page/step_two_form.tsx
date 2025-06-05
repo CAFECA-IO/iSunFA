@@ -20,6 +20,13 @@ interface StepTwoBusinessTaxSettingProps {
   isLoading: boolean;
 }
 
+/**
+ * @deprecated Deprecated: (20250523 - Liz) 此元件目前不使用，之後會刪除
+ * @description
+ * 1. 這個元件是用來顯示第二步驟的表單，包含申報頻率、申報方式、申報人資料等欄位
+ * 2. 這個元件會接收一些 props，包括關閉 modal 的函式、表單的狀態、表單的 dispatch 函式、返回上一步的函式、提交表單的函式和是否正在載入的狀態
+ */
+
 const StepTwoForm = ({
   closeAccountBookInfoModal,
   step2FormState,
@@ -581,7 +588,7 @@ const StepTwoForm = ({
               disabled={isLoading}
               className="flex items-center gap-4px rounded-xs bg-button-surface-strong-secondary px-16px py-8px text-sm font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
             >
-              <p>{t('dashboard:COMMON.SAVE')}</p>
+              <span>{t('dashboard:COMMON.SAVE')}</span>
               <IoSaveOutline size={16} />
             </button>
           </section>

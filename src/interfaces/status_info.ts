@@ -1,11 +1,11 @@
-import { IAccountBookWithTeam } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { ITeam } from '@/interfaces/team';
-import { IUserRole } from './user_role';
+import { IAccountBookWithTeamEntity } from '@/lib/utils/zod_schema/account_book';
+import { IUserRole } from '@/interfaces/user_role';
 
 export interface IStatusInfo {
   user: IUser | null;
-  company: IAccountBookWithTeam | null;
+  company: IAccountBookWithTeamEntity | null;
   role: IUserRole | null;
   teams: ITeam[] | null;
 }

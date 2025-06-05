@@ -104,7 +104,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
       ? flattenAccounts(financialReport.general)
       : [];
 
-    const firstPageSize = 8; // Info: (20250214 - Anna) 第一頁最多顯示 8 項
+    const firstPageSize = 7; // Info: (20250214 - Anna) 第一頁最多顯示 7 項
     const groupSize = 12;
 
     // Info: (20250214 - Anna) 過濾掉沒有金額的項目
@@ -183,7 +183,6 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
                         <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                        <span className="pl-5">{t('reports:REPORTS.EPS_UNIT')}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>

@@ -3,20 +3,21 @@ import Link from 'next/link';
 import { PiGlobe } from 'react-icons/pi';
 import { Dispatch, SetStateAction } from 'react';
 import { INTERNATIONALIZATION_LIST } from '@/constants/i18n';
+import { cn } from '@/lib/utils/common';
 
 interface I18nProps {
-  isMenuVisible: boolean;
-  setIsMenuVisible: Dispatch<SetStateAction<boolean>>;
+  isMenuOpen: boolean;
+  setIsMenuOpen: Dispatch<SetStateAction<boolean>>;
   toggleI18nMenu?: () => void;
 }
 
 const I18n = ({
-  isMenuVisible,
-  setIsMenuVisible,
-  toggleI18nMenu = () => setIsMenuVisible((prev) => !prev),
+  isMenuOpen,
+  setIsMenuOpen,
+  toggleI18nMenu = () => setIsMenuOpen((prev) => !prev),
 }: I18nProps) => {
   const { asPath } = useRouter();
-  const closeMenu = () => setIsMenuVisible(false);
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <div className="relative">
@@ -32,9 +33,13 @@ const I18n = ({
       {/* Info: (20250513 - Liz) I18n Menu */}
       <div
         id="I18nMenuDesktop"
-        className={`absolute start-1/2 top-full z-50 mt-10px w-150px -translate-x-1/2 rounded-sm ${
-          isMenuVisible ? 'visible opacity-100' : 'invisible opacity-0'
-        } bg-white shadow-dropmenu transition-all duration-300`}
+        className={cn(
+          'absolute start-1/2 top-full z-50 mt-10px w-150px -translate-x-1/2 rounded-sm bg-white shadow-dropmenu transition-all duration-300',
+          {
+            'visible opacity-100': isMenuOpen,
+            'invisible opacity-0': !isMenuOpen,
+          }
+        )}
       >
         <ul className="py-1 text-base text-button-text-secondary" aria-labelledby="i18nButton">
           {INTERNATIONALIZATION_LIST.map((item) => (

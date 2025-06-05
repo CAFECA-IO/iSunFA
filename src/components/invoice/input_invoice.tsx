@@ -35,6 +35,7 @@ interface InputInvoiceProps {
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   isExporting: boolean;
+  uploaderAvatarMap: Record<string, string>;
 }
 
 // Deprecated: (20240919 - Anna) will be replaced by actual data type
@@ -65,6 +66,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
   setCertificateTypeSort,
   setCertificateNoSort,
   isExporting,
+  uploaderAvatarMap,
 }) => {
   return (
     <>
@@ -89,6 +91,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setCertificateTypeSort={setCertificateTypeSort}
           setCertificateNoSort={setCertificateNoSort}
           isExporting={isExporting}
+          uploaderAvatarMap={uploaderAvatarMap}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (

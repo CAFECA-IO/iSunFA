@@ -31,8 +31,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   setIsRecallApi,
   clearSearchWord,
 }) => {
-  const { t } = useTranslation('common');
-
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
 
@@ -67,13 +66,19 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   // Info: (20250212 - Julian) 取得會計科目列表的 API
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { accountBookId }, query: queryCondition }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    { params: { accountBookId }, query: queryCondition },
     false,
     true
   );
 
   // Info: (20250212 - Julian) 會計科目列表
   const accountList = accountTitleList?.data ?? [];
+
+  // Info: (20250521 - Julian) 如果翻譯名稱不存在，則使用原本的名稱
+  const getTranslatedName = (name: string) => {
+    const nameKey = `reports:ACCOUNTING_ACCOUNT.${name}`;
+    return i18n.exists(nameKey) ? t(nameKey) : name;
+  };
 
   // Info: (20250212 - Julian) Category 輸入狀態
   const {
@@ -100,7 +105,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   const [filteredAccountList, setFilteredAccountList] = useState<IAccount[]>([]);
 
   const formTitle =
-    formType === TitleFormType.add
+    formType === TitleFormType.ADD
       ? t('settings:ACCOUNTING_SETTING_MODAL.ADD_NEW_TITLE')
       : t('settings:ACCOUNTING_SETTING_MODAL.EDIT_TITLE');
 
@@ -118,7 +123,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       </p>
     );
   const subcategoryString = selectSubcategory
-    ? `${selectSubcategory?.code} ${selectSubcategory?.name}`
+    ? `${selectSubcategory?.code} ${getTranslatedName(selectSubcategory?.name)}`
     : t('settings:ACCOUNTING_SETTING_MODAL.DROPMENU_PLACEHOLDER');
 
   const submitDisabled = selectCategory === '' || selectSubcategory === null;
@@ -150,7 +155,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
 
   // Info: (20250212 - Julian) 從 API 取得會計科目列表
   useEffect(() => {
-    getAccountList({ params: { accountBookId }, query: queryCondition }); // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+    getAccountList({ params: { accountBookId }, query: queryCondition });
     setFilteredAccountList(accountList);
   }, []);
 
@@ -240,9 +245,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       setSelectCategory(selectedAccountTitle.type);
       setSelectSubcategory(selectedAccountTitle);
       // Info: (20241113 - Julian) 如果是新增，則名稱為空；如果是編輯，則名稱為原本的名稱
-      setTitleName(formType === TitleFormType.add ? '' : selectedAccountTitle.name);
+      setTitleName(formType === TitleFormType.ADD ? '' : selectedAccountTitle.name);
       // Info: (20241113 - Julian) 如果是新增，則代碼為空；如果是編輯，則代碼為原本的代碼
-      setTitleCode(formType === TitleFormType.add ? '-' : selectedAccountTitle.code);
+      setTitleCode(formType === TitleFormType.ADD ? '-' : selectedAccountTitle.code);
       // Info: (20241113 - Julian) 如果是新增，則備註為空；如果是編輯，則備註為原本的備註
       // ToDo: (20241113 - Julian) IAcount 的 note 欄位還沒有實作
       setTitleNote(selectedAccountTitle.note ?? ''); // Info: (20250120 - Shirley) @Julian 已串上後端實作的 note 功能
@@ -304,7 +309,9 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
       filteredAccountList
         .filter((title) => !title.code.includes('-'))
         .map((title) => {
+          const translatedName = getTranslatedName(title.name);
           const subcategoryClickHandler = () => setSelectSubcategory(title);
+
           return (
             <div
               key={title.id}
@@ -312,7 +319,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
               className="flex items-center gap-4px px-12px py-8px hover:bg-drag-n-drop-surface-hover"
             >
               <p className="text-sm text-dropdown-text-primary">{title.code}</p>
-              <p className="text-xs text-dropdown-text-secondary">{title.name}</p>
+              <p className="text-xs text-dropdown-text-secondary">{translatedName}</p>
             </div>
           );
         })
@@ -352,7 +359,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     if (selectSubcategory) {
       createNewAccount({
         params: { accountBookId },
-        // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
+
         body: {
           accountId: selectSubcategory.id,
           name: titleName,
@@ -376,7 +383,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
   };
 
   const submitBtn =
-    formType === TitleFormType.add ? (
+    formType === TitleFormType.ADD ? (
       // ToDo: (20241113 - Julian) Create API
       <Button
         type="button"
@@ -399,7 +406,7 @@ const AddNewTitleSection: React.FC<IAddNewTitleSectionProps> = ({
     );
 
   return (
-    <div className="flex h-550px flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS">
+    <div className="flex h-350px flex-col gap-24px rounded-sm bg-surface-neutral-surface-lv1 p-24px shadow-Dropshadow_XS tablet:h-500px">
       {/* Info: (20241112 - Julian) Title */}
       <div className="flex items-center gap-8px">
         <Image src="/icons/add_accounting_title.svg" width={16} height={16} alt="add_icon" />

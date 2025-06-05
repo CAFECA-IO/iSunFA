@@ -24,7 +24,7 @@ import Loader, { LoaderSize } from '@/components/loader/loader';
 interface ICounterpartyInputProps {
   counterparty: ICounterpartyOptional | undefined;
   onSelect: (counterparty: ICounterpartyOptional) => void;
-  flagOfSubmit?: boolean;
+  isShowRedHint: boolean;
   className?: string;
   onTriggerSave?: () => Promise<void>;
 }
@@ -35,7 +35,7 @@ export interface CounterpartyInputRef {
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
   (props, ref) => {
-    const { counterparty, onSelect, flagOfSubmit, className, onTriggerSave } = props;
+    const { counterparty, onSelect, isShowRedHint, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 
     const { connectedAccountBook } = useUserCtx();
@@ -50,7 +50,6 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     const [filteredCounterpartyList, setFilteredCounterpartyList] = useState<ICounterparty[]>([]);
     const [searchName, setSearchName] = useState<string>(counterparty?.name ?? '');
     const [searchTaxId, setSearchTaxId] = useState<string>(counterparty?.taxId ?? '');
-    const [isShowRedHint, setIsShowRedHint] = useState(false);
 
     const {
       isMessageModalVisible,
@@ -148,28 +147,21 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
         onSelect(newCounterparty);
       };
 
-      onSelect({
-        name: searchName,
-        taxId: searchTaxId,
-      });
+      // Info: (20250527 - Julian) 如果搜尋欄位有值，則觸發選擇事件
+      if (searchName || searchTaxId) {
+        onSelect({
+          name: searchName,
+          taxId: searchTaxId,
+        });
 
-      // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
-      addCounterPartyModalDataHandler({
-        onSave: handleAddCounterparty,
-        name: searchName,
-        taxId: searchTaxId,
-      });
+        // Info: (20241209 - Julian) 將資料傳入 AddCounterpartyModal
+        addCounterPartyModalDataHandler({
+          onSave: handleAddCounterparty,
+          name: searchName,
+          taxId: searchTaxId,
+        });
+      }
     }, [accountBookId, filteredCounterpartyList, searchName, searchTaxId]);
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 flagOfSubmit 改變，則顯示紅色提示
-      setIsShowRedHint(true);
-    }, [flagOfSubmit]);
-
-    useEffect(() => {
-      // Info: (20241209 - Julian) 如果 Counterparty 改變，則取消紅色提示
-      setIsShowRedHint(false);
-    }, [counterparty]);
 
     // Info: (20241209 - Julian) Counterparty 搜尋欄位事件
     const counterpartyInputHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +201,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             onChange={counterpartyInputHandler}
             type="text"
             placeholder={t('certificate:EDIT.ID_NUMBER')}
-            className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none"
+            className="w-100px truncate border-r bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           />
           <input
             id="counterparty-name"
@@ -218,12 +210,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             onChange={counterpartyInputHandler}
             type="text"
             placeholder={t('certificate:EDIT.NAME')}
-            className="flex-1 truncate bg-transparent px-12px py-10px outline-none"
+            className="flex-1 truncate bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           />
         </div>
       ) : (
         <div
-          className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-dropdown-text-secondary'}`}
+          className={`flex truncate ${counterparty ? 'text-dropdown-text-input-filled' : 'text-input-text-input-placeholder'}`}
         >
           <p className="h-44px w-100px border-r px-12px py-10px">
             {counterparty?.taxId ?? t('certificate:EDIT.ID_NUMBER')}

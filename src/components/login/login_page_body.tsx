@@ -1,3 +1,4 @@
+// Deprecated: (20250520 - Liz) 此元件已棄用，但先保留以備未來可以參考 Apple 登入的部分
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,8 +41,8 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
 
   const {
     targetRef: globalRef,
-    componentVisible: isMenuVisible,
-    setComponentVisible: setIsMenuVisible,
+    componentVisible: isMenuOpen,
+    setComponentVisible: setIsMenuOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   return (
@@ -50,7 +51,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
 
       <div className="absolute right-0 top-0 z-0 mr-40px mt-40px flex items-center gap-40px text-button-text-secondary">
         <div ref={globalRef}>
-          <I18n isMenuVisible={isMenuVisible} setIsMenuVisible={setIsMenuVisible} />
+          <I18n isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
         </div>
         <Link href={ISUNFA_ROUTE.LANDING_PAGE}>
           <FiHome size={22} />
@@ -82,7 +83,7 @@ const LoginPageBody = ({ invitation, action }: ILoginPageProps) => {
               </p>
             </button>
 
-            {/* // Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
+            {/* Info: (20241001 - Liz) 登入 Apple 功能待實作 */}
             {IS_APPLE_LOGIN_ENABLED && (
               <button
                 type="button"

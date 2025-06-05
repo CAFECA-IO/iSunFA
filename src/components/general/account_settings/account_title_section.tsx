@@ -98,11 +98,15 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   setSelectedAccountTitle,
   setIsRecallApi,
 }) => {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
+
+  // Info: (20250521 - Julian) 如果翻譯名稱不存在，則使用原本的名稱
+  const nameKey = `reports:ACCOUNTING_ACCOUNT.${titleAccount.name}`;
+  const translatedName = i18n.exists(nameKey) ? t(nameKey) : titleAccount.name;
 
   const {
     trigger: deleteAccount,
@@ -122,7 +126,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
 
   const toggleExpand = () => setIsExpanded(!isExpanded);
   const clickAddButton = () => {
-    setFormType(TitleFormType.add); // Info: (20241111 - Julian) 將 formType 設為 add
+    setFormType(TitleFormType.ADD); // Info: (20241111 - Julian) 將 formType 設為 add
     setSelectedAccountTitle(titleAccount); // Info: (20241111 - Julian) 將 title 傳到右邊的 <AddNewTitleSection />
   };
 
@@ -165,7 +169,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
           // Info: (20241114 - Julian) 點擊子項目時，將 activeChild 設為該子項目，並將 formType 設為 edit
           const clickChildHandler = () => {
             setActiveChild(child); // Info: (20241113 - Julian) 將 activeChild 設為該子項目
-            setFormType(TitleFormType.edit); // Info: (20241113 - Julian) 將 formType 設為 edit
+            setFormType(TitleFormType.EDIT); // Info: (20241113 - Julian) 將 formType 設為 edit
             setSelectedAccountTitle(child); // Info: (20241113 - Julian)  將 title 傳到右邊的 <AddNewTitleSection />
           };
 
@@ -201,7 +205,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
             <Image src="/icons/caret.svg" width={16} height={16} alt="caret_icon" />
           </div>
           <p>{titleAccount.code}</p>
-          <p className="truncate">{titleAccount.name}</p>
+          <p className="truncate">{translatedName}</p>
         </div>
         {/* Info: (20241111 - Julian) 新增按鈕 */}
         {addButton}
@@ -311,7 +315,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   });
 
   return (
-    <div className="h-550px rounded-sm bg-surface-brand-primary-5 p-24px shadow-Dropshadow_XS">
+    <div className="h-400px rounded-sm bg-surface-brand-primary-5 p-24px shadow-Dropshadow_XS tablet:h-500px">
       <div className="flex h-full flex-col overflow-y-auto overflow-x-hidden">
         {nestedAccountTitleMenu}
       </div>

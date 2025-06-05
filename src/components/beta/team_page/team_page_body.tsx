@@ -11,7 +11,7 @@ import NoData from '@/components/beta/account_books_page/no_data';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
-import UploadAccountBookPictureModal from '@/components/beta/account_books_page/upload_account_book_picture_modal';
+import ChangeAccountBookImageModal from '@/components/beta/account_books_page/change_account_book_image_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MemberListModal from '@/components/beta/team_page/member_list_modal';
@@ -42,7 +42,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
   const [accountBookToDelete, setAccountBookToDelete] = useState<
     IAccountBookWithTeam | undefined
   >();
-  const [accountBookToUploadPicture, setAccountBookToUploadPicture] = useState<
+  const [accountBookToChangeImage, setAccountBookToChangeImage] = useState<
     IAccountBookWithTeam | undefined
   >();
 
@@ -184,10 +184,10 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         />
       )}
 
-      {accountBookToUploadPicture && (
-        <UploadAccountBookPictureModal
-          accountBookToUploadPicture={accountBookToUploadPicture}
-          setAccountBookToUploadPicture={setAccountBookToUploadPicture}
+      {accountBookToChangeImage && (
+        <ChangeAccountBookImageModal
+          accountBookToChangeImage={accountBookToChangeImage}
+          setAccountBookToChangeImage={setAccountBookToChangeImage}
           getAccountBookListByTeamId={getAccountBookListByTeamId}
         />
       )}

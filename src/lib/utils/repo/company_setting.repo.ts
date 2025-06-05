@@ -5,6 +5,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { LeaveStatus } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { Prisma } from '@prisma/client';
 
 export async function createCompanySetting(companyId: number) {
   const nowInSecond = getTimestampNow();
@@ -67,52 +68,100 @@ export async function updateCompanySettingByCompanyId(options: {
   const nowInSecond = getTimestampNow();
 
   try {
-    // Info: (20250516 - Shirley) 構建 address 欄位（支援新舊格式）
+    // Info: (20250521 - Shirley) 獲取現有的 companySetting
+    const existingSetting = await prisma.companySetting.findUnique({
+      where: { companyId },
+      select: { address: true },
+    });
+
+    // Info: (20250521 - Shirley) 解析現有的 address 資料
+    const existingAddress = (existingSetting?.address as {
+      city: string;
+      district: string;
+      enteredAddress: string;
+    }) || { city: '', district: '', enteredAddress: '' };
+
+    // Info: (20250521 - Shirley) 構建 address 欄位（支援新舊格式），只在請求中包含欄位時更新
     const addressData = {
       city:
-        data.city ||
-        (data.address && typeof data.address === 'object' ? data.address.city : '') ||
-        '',
+        data.city !== undefined
+          ? data.city
+          : data.address && typeof data.address === 'object' && 'city' in data.address
+            ? data.address.city
+            : existingAddress.city,
+
       district:
-        data.district ||
-        (data.address && typeof data.address === 'object' ? data.address.district : '') ||
-        '',
+        data.district !== undefined
+          ? data.district
+          : data.address && typeof data.address === 'object' && 'district' in data.address
+            ? data.address.district
+            : existingAddress.district,
+
       enteredAddress:
-        data.enteredAddress ||
-        (data.address && typeof data.address === 'object' ? data.address.enteredAddress : '') ||
-        (typeof data.address === 'string' ? data.address : '') ||
-        '',
+        data.enteredAddress !== undefined
+          ? data.enteredAddress
+          : data.address && typeof data.address === 'object' && 'enteredAddress' in data.address
+            ? data.address.enteredAddress
+            : typeof data.address === 'string'
+              ? data.address
+              : existingAddress.enteredAddress,
     };
+
+    // Info: (20250521 - Shirley) 構建更新數據，只包含請求中實際提供的欄位
+    const updateData: Prisma.CompanySettingUpdateInput = {
+      address: addressData, // Info: (20250521 - Shirley) 已經考慮了現有值的地址物件
+      updatedAt: nowInSecond,
+      company: {
+        update: {},
+      },
+    };
+
+    // Info: (20250521 - Shirley) 只在請求中包含欄位時添加到更新數據中
+    if (data.taxSerialNumber !== undefined) updateData.taxSerialNumber = data.taxSerialNumber;
+    if (data.representativeName !== undefined) {
+      updateData.representativeName = data.representativeName;
+    }
+    if (data.country !== undefined) {
+      updateData.country = data.country;
+      updateData.countryCode = data.country;
+    }
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.contactPerson !== undefined) updateData.contactPerson = data.contactPerson;
+    if (data.filingFrequency !== undefined) updateData.filingFrequency = data.filingFrequency;
+    if (data.filingMethod !== undefined) updateData.filingMethod = data.filingMethod;
+    if (data.declarantFilingMethod !== undefined) {
+      updateData.declarantFilingMethod = data.declarantFilingMethod;
+    }
+    if (data.declarantName !== undefined) updateData.declarantName = data.declarantName;
+    if (data.declarantPersonalId !== undefined) {
+      updateData.declarantPersonalId = data.declarantPersonalId;
+    }
+    if (data.declarantPhoneNumber !== undefined) {
+      updateData.declarantPhoneNumber = data.declarantPhoneNumber;
+    }
+    if (data.agentFilingRole !== undefined) updateData.agentFilingRole = data.agentFilingRole;
+    if (data.licenseId !== undefined) updateData.licenseId = data.licenseId;
+
+    // Info: (20250521 - Shirley) 處理公司相關欄位
+    const companyUpdate: Prisma.CompanyUpdateInput = {};
+    if (data.companyName !== undefined) companyUpdate.name = data.companyName;
+    if (data.companyTaxId !== undefined) companyUpdate.taxId = data.companyTaxId;
+    if (data.companyStartDate !== undefined) companyUpdate.startDate = data.companyStartDate;
+
+    // Info: (20250521 - Shirley) 確保只在有實際變更時才觸發關聯表的更新操作
+    if (Object.keys(companyUpdate).length > 0) {
+      updateData.company = {
+        update: companyUpdate,
+      };
+    } else {
+      delete updateData.company; // 沒有欄位需要更新時刪除
+    }
 
     companySetting = await prisma.companySetting.update({
       where: {
         companyId,
       },
-      data: {
-        taxSerialNumber: data.taxSerialNumber,
-        representativeName: data.representativeName,
-        country: data.country,
-        countryCode: data.country,
-        phone: data.phone,
-        address: addressData, // Info: (20250516 - Shirley) 使用構建好的地址物件
-        contactPerson: data.contactPerson,
-        filingFrequency: data.filingFrequency,
-        filingMethod: data.filingMethod,
-        declarantFilingMethod: data.declarantFilingMethod,
-        declarantName: data.declarantName,
-        declarantPersonalId: data.declarantPersonalId,
-        declarantPhoneNumber: data.declarantPhoneNumber,
-        agentFilingRole: data.agentFilingRole,
-        licenseId: data.licenseId,
-        updatedAt: nowInSecond,
-        company: {
-          update: {
-            name: data.companyName,
-            taxId: data.companyTaxId,
-            ...(data.companyStartDate ? { startDate: data.companyStartDate } : {}),
-          },
-        },
-      },
+      data: updateData,
       include: {
         company: true,
       },

@@ -33,9 +33,9 @@ const CertificateSelectionPanel: React.FC<CertificateSelectionPanelProps> = ({
   }, [certificates]);
 
   return (
-    <div className="my-4 h-392px rounded-lg bg-surface-neutral-main-background px-8 py-4">
+    <div className="my-4 h-392px bg-surface-neutral-main-background py-lv-2 tablet:rounded-lg tablet:px-8 tablet:py-4">
       <div className="h-full overflow-y-auto">
-        <div className="grid grid-cols-5 place-items-center justify-start gap-2">
+        <div className="grid grid-cols-2 place-items-center justify-start tablet:grid-cols-5 tablet:gap-2">
           <div className="group h-182px py-2">
             <button
               type="button"

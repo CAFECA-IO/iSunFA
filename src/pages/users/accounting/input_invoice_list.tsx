@@ -19,6 +19,9 @@ const CertificateListPage: React.FC = () => {
       </Head>
 
       <Layout isDashboard={false} pageTitle={t('certificate:INPUT_CERTIFICATE.INPUT_CERTIFICATE')}>
+        <p className="mb-32px text-xl font-bold leading-8 text-neutral-400 tablet:hidden">
+          {t('layout:SIDE_MENU.INPUT_INVOICE')}
+        </p>
         <InputInvoiceListBody />
       </Layout>
     </>

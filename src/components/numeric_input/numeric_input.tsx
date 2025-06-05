@@ -98,8 +98,33 @@ const NumericInput: React.FC<INumericInputProps> = ({
     }
   };
 
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+
+    const pasteData = event.clipboardData.getData('text');
+    const cleanedValue = pasteData
+      .replace(/[^\d.]/g, '') // Info: (20250603 - Anna) 僅保留數字與小數點
+      .replace(/(\..*)\./g, '$1'); // Info: (20250603 - Anna) 僅允許一個小數點
+
+    const target = event.target as HTMLInputElement;
+
+    // Info: (20250603 - Anna) 將處理過的值送到 handleChange
+    handleChange({ target: { value: cleanedValue } } as React.ChangeEvent<HTMLInputElement>);
+
+    // Info: (20250603 - Anna) 將游標移到最後
+    requestAnimationFrame(() => {
+      target.selectionStart = cleanedValue.length;
+      target.selectionEnd = cleanedValue.length;
+    });
+  };
+
   // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
   function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Info: (20250603 - Anna)  忽略 Ctrl/Cmd + V（貼上）
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+      return;
+    }
+
     // Info: (20250313 - Julian) 執行預設行為: Tab, Backspace, Delete, ArrowLeft, ArrowRight
     if (
       event.code === KEYBOARD_EVENT_CODE.TAB ||
@@ -171,6 +196,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
       onBlur={handleBlur}
       onWheel={handleWheel}
       onKeyDown={convertInput}
+      onPaste={handlePaste}
       {...props}
     />
   );

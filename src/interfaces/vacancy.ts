@@ -1,19 +1,29 @@
-export interface IVacancy {
-  id: number;
-  title: string;
-  location: string;
-  date: number;
-  description: string;
-}
+import { z } from 'zod';
+import { IVacancyValidator, IVacancyDetailValidator } from '@/lib/utils/zod_schema/vacancy';
+
+// export interface IVacancy {
+//   id: number;
+//   title: string;
+//   location: string;
+//   date: number;
+//   description: string;
+// }
+
+// export interface IVacancyUI extends IVacancyDetail {
+//   isFavorite: boolean;
+// }
+
+// export interface IVacancyDetail extends IVacancy {
+//   responsibilities: string[];
+//   requirements: string[];
+//   extraSkills: string[];
+// }
+
+export type IVacancy = z.infer<typeof IVacancyValidator>;
+export type IVacancyDetail = z.infer<typeof IVacancyDetailValidator>;
 
 export interface IVacancyUI extends IVacancyDetail {
   isFavorite: boolean;
-}
-
-export interface IVacancyDetail extends IVacancy {
-  responsibilities: string[];
-  requirements: string[];
-  extraSkills: string[];
 }
 
 export const dummyVacancyList: IVacancyDetail[] = [
@@ -49,6 +59,7 @@ export const dummyVacancyList: IVacancyDetail[] = [
       'Performance optimization and accessibility best practices.',
       'Experience with CI/CD and testing frameworks.',
     ],
+    isOpen: true,
   },
   {
     id: 2,
@@ -82,6 +93,7 @@ export const dummyVacancyList: IVacancyDetail[] = [
       'Experience with CI/CD and testing frameworks.',
       'DevOps skills for deployment and monitoring.',
     ],
+    isOpen: true,
   },
   {
     id: 3,
@@ -115,5 +127,6 @@ export const dummyVacancyList: IVacancyDetail[] = [
       'Experience with CI/CD and testing frameworks.',
       'DevOps skills for deployment and monitoring.',
     ],
+    isOpen: true,
   },
 ];

@@ -9,8 +9,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { FaCheck } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
-import { DeductionType } from '@/constants/invoice_rc2';
-import { TaxType } from '@/constants/invoice_rc2';
+import { DeductionType, TaxType } from '@/constants/invoice_rc2';
 
 interface InputInvoiceListIrops {
   activeSelection: boolean;
@@ -18,6 +17,7 @@ interface InputInvoiceListIrops {
   currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
+  uploaderAvatarMap: Record<string, string>;
 }
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
@@ -42,12 +42,16 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
   currencyAlias,
   handleSelect,
   onEdit,
+  uploaderAvatarMap,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
 
   const isDeductible =
     certificate.deductionType === DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE ||
     certificate.deductionType === DeductionType.DEDUCTIBLE_FIXED_ASSETS;
+
+  // Info: (20250526 - Anna) 上傳者圖像的 url
+  const avatarSrc = uploaderAvatarMap[certificate.uploaderName];
 
   return (
     <div
@@ -194,13 +198,14 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             </Link>
           )}
           <div className="flex items-center gap-2 text-right text-text-neutral-primary">
-            {certificate?.file.url ? (
+            {/* Info: (20250526 - Anna) 上傳者 */}
+            {avatarSrc ? (
               <Image
-                src={certificate.file.url}
+                src={avatarSrc}
                 alt="avatar"
                 width={14}
                 height={14}
-                className="rounded-full"
+                className="rounded-full download-hidden"
               />
             ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">

@@ -16,7 +16,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { IDatePeriod } from '@/interfaces/date_period';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
-import AccountTitleSelector from '@/components/voucher/account_title_selector';
+import AccountTitleSelector from '@/components/ledger/account_title_selector';
 import { EVENT_TYPE } from '@/constants/account';
 import { ToastId } from '@/constants/toast_id';
 
@@ -220,7 +220,6 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
     };
     // Info: (20250102 - Julian) POST API
     createNewVoucher({ params: { accountBookId }, body });
-    // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
   };
 
   const submitDisabled =
@@ -395,7 +394,7 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
           {/* Info: (20241112 - Julian) table */}
           <div className="flex w-full flex-col">
-            <div className="max-h-300px overflow-y-auto rounded-md">{displayTable}</div>
+            <div className="max-h-300px overflow-y-auto rounded-md hide-scrollbar">{displayTable}</div>
           </div>
 
           {/* Info: (20250102 - Julian) Calculate total amount */}

@@ -13,6 +13,7 @@ export enum ToastId {
   UPLOAD_FILE_ERROR = 'toast-upload-file-error',
   NOTIFY_WEB_ERROR = 'toast-notify-web-error',
   ADD_COUNTERPARTY_SUCCESS = 'toast-add-counterparty-success',
+  UPDATE_COUNTERPARTY_SUCCESS = 'toast-update-counterparty-success',
   SAVE_CERTIFICATE_SUCCESS = 'toast-save-certificate-success',
   API_REQUEST_FAILED = 'toast-api-request-failed',
   LIST_CERTIFICATE_ERROR = 'toast-list-certificate-error',
@@ -65,4 +66,6 @@ export enum ToastId {
   ACCOUNT_BOOK_DELETE_ERROR = 'toast-account-book-delete-error',
   ACCOUNT_BOOK_DELETE_SUCCESS = 'toast-account-book-delete-success',
   VERIFY_CODE_ERROR = 'toast-verify-code-error',
+  CREATE_ACCOUNT_BOOK_FAILED = 'toast-create-account-book-failed',
+  EDIT_ACCOUNT_BOOK_FAILED = 'toast-edit-account-book-failed',
 }

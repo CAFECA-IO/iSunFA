@@ -157,8 +157,8 @@ export const PLANS: IPlan[] = [
       },
       {
         id: 'enterprise_2',
-        name: 'TAX_REPORTING',
-        value: 'SUPPORTED_REGIONS_EXPANDING',
+        name: 'AI_MODEL_ASSISTANCE',
+        value: 'META_LLAMA',
       },
       {
         id: 'enterprise_3',
@@ -180,7 +180,7 @@ export const PLANS: IPlan[] = [
       TECH_ADVANTAGE: 'TECH_ADVANTAGE',
       CONTINUOUS_AUDIT: 'CONTINUOUS_AUDIT',
       EARLY_ACCESS: 'EARLY_ACCESS',
-      TAX_REPORTING: 'TAX_REPORTING',
+      AI_MODEL_ASSISTANCE: 'AI_MODEL_ASSISTANCE',
       ENTERPRISE_SUPPORT: 'ENTERPRISE_SUPPORT',
       UNSUBSCRIBE: 'UNSUBSCRIBE',
     },

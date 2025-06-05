@@ -51,7 +51,8 @@
     "PARTNER_S_NAME": "Partner’s Name",
     "TAX_ID": "Tax ID",
     "SUBMIT": "Submit",
-    "BACK": "Back"
+    "BACK": "Back",
+    "FILTER": "Filter"
   },
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."
