@@ -8,7 +8,7 @@ import {
   createInvoiceRC2QuerySchema,
   createInvoiceRC2BodySchema,
 } from '@/lib/utils/zod_schema/invoice_rc2';
-import { InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
+import { CurrencyCode, InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getTimestampNow } from '@/lib/utils/common';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
@@ -18,6 +18,8 @@ import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { checkStorageLimit } from '@/lib/utils/plan/check_plan_limit';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
+import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -289,9 +291,9 @@ export async function listInvoiceRC2Input(
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
-  const currencySet = new Set(transformed.map((c) => c.currencyCode));
-  const currencies = Array.from(currencySet);
-  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+  const accountSetting: PrismaAccountingSetting | null =
+    await getAccountingSettingByCompanyId(accountBookId);
+  const currency = (accountSetting?.currency as CurrencyCode) || CurrencyCode.TWD;
 
   const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
     accountBookId,
@@ -383,10 +385,9 @@ export async function listInvoiceRC2Output(
 
   const totalCertificatePrice = transformed.reduce((acc, cert) => acc + (cert.totalAmount || 0), 0);
 
-  const currencySet = new Set(transformed.map((c) => c.currencyCode));
-  const currencies = Array.from(currencySet);
-  // ToDo: (20250604 - Tzuhan) 從table AccountSetting 取得帳本的貨幣設定
-  const currency = currencies.length === 1 ? currencies[0] : 'MULTI';
+  const accountSetting: PrismaAccountingSetting | null =
+    await getAccountingSettingByCompanyId(accountBookId);
+  const currency = (accountSetting?.currency as CurrencyCode) || CurrencyCode.TWD;
 
   const { withVoucher, withoutVoucher } = await countUnpostedInvoiceStats(
     accountBookId,
