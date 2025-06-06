@@ -487,6 +487,7 @@ export async function postVoucherV2({
   issuer,
   eventControlPanel: { revertEvent },
   certificateIds,
+  invoiceRC2Ids,
 }: {
   nowInSecond: number;
   company: ICompanyEntity;
@@ -498,6 +499,7 @@ export async function postVoucherV2({
     assetEvent: IEventEntity | null;
   };
   certificateIds: number[];
+  invoiceRC2Ids: number[];
 }): Promise<Voucher> {
   const isRevertEvent = !!revertEvent;
   const isAssetEvent = originalVoucher.asset.length > 0;
@@ -538,15 +540,24 @@ export async function postVoucherV2({
       issuer: {
         connect: { id: issuer.id },
       },
-      voucherCertificates: {
-        create: certificateIds.map((certificateId) => ({
-          certificate: {
-            connect: { id: certificateId },
-          },
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      },
+      voucherCertificates:
+        certificateIds.length > 0
+          ? {
+              create: certificateIds.map((certificateId) => ({
+                certificate: {
+                  connect: { id: certificateId },
+                },
+                createdAt: nowInSecond,
+                updatedAt: nowInSecond,
+              })),
+            }
+          : undefined,
+      InvoiceRC2:
+        invoiceRC2Ids && invoiceRC2Ids.length > 0
+          ? {
+              connect: invoiceRC2Ids.map((id) => ({ id })),
+            }
+          : undefined,
       counterparty: originalVoucher.counterPartyId
         ? { connect: { id: originalVoucher.counterPartyId } }
         : undefined,
@@ -930,6 +941,17 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
             },
           },
         },
+        InvoiceRC2: {
+          include: {
+            file: {
+              include: {
+                thumbnail: true,
+              },
+            },
+            voucher: true,
+            uploader: true,
+          },
+        },
         counterparty: true,
         originalVouchers: {
           include: {
@@ -1045,6 +1067,17 @@ export async function getOneVoucherByVoucherNoV2(options: {
                 file: true,
               },
             },
+          },
+        },
+        InvoiceRC2: {
+          include: {
+            file: {
+              include: {
+                thumbnail: true,
+              },
+            },
+            voucher: true,
+            uploader: true,
           },
         },
         counterparty: true,

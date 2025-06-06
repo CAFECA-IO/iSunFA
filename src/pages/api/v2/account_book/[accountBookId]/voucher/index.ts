@@ -222,6 +222,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const {
       actions,
       certificateIds,
+      invoiceRC2Ids,
       lineItems,
       recurringInfo,
       assetIds,
@@ -359,6 +360,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       company,
       issuer,
       certificateIds,
+      invoiceRC2Ids,
     });
     payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
     // Todo: (20250416 - Tzuhan) 先前的 zod 寫法似乎有問題，導致無法正確驗證輸出資料

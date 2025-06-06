@@ -1079,6 +1079,7 @@ export const voucherAPIPostUtils = {
       assetEvent: IEventEntity | null;
     };
     certificateIds: number[];
+    invoiceRC2Ids: number[];
   }) => {
     const newVoucher = await postVoucherV2(options);
 
