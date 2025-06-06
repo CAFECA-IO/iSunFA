@@ -418,7 +418,7 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
     id: z.number(),
     name: z.string(),
     size: z.number(),
-    url: z.string().optional(), // prisma 不會有 url，要 transform 時再補上
+    url: z.string().optional(), // Info: (20250606 - Tzuhan) prisma 不會有 url，要 transform 時再補上
     thumbnail: z
       .object({
         id: z.number(),
@@ -459,13 +459,13 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
   updatedAt: z.number(),
   deletedAt: z.number().nullable().optional(),
 
-  // Input fields
+  // Info: (20250606 - Tzuhan) Input fields
   deductionType: z.nativeEnum(DeductionType).nullable().optional(),
   salesName: z.string().nullable().optional(),
   salesIdNumber: z.string().nullable().optional(),
   isSharedAmount: z.boolean().nullable().optional(),
 
-  // Output fields
+  // Info: (20250606 - Tzuhan) Output fields
   buyerName: z.string().nullable().optional(),
   buyerIdNumber: z.string().nullable().optional(),
   isReturnOrAllowance: z.boolean().nullable().optional(),
