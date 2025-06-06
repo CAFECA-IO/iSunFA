@@ -41,6 +41,11 @@ import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
+import { CurrencyCode, DeductionType, InvoiceDirection, TaxType } from '@/constants/invoice_rc2';
+import { InvoiceType } from '@/constants/invoice';
+// TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
+// import { transformInput, transformOutput } from '@/lib/utils/repo/invoice_rc2.repo';
+// import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -318,6 +323,7 @@ const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
   actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
   certificateIds: z.array(z.number().int()),
+  invoiceRC2Ids: z.array(z.number().int()),
   voucherDate: z.number().int(), // Info: (20241105 - Murky) timestamp in Second
   type: z.nativeEnum(EventType),
   note: z.string(),
@@ -404,6 +410,75 @@ const voucherGetOneQueryValidatorV2 = z.object({
 
 const voucherGetOneBodyValidatorV2 = z.object({});
 
+export const InvoiceRC2WithFullRelationsValidator = z.object({
+  id: z.number(),
+  accountBookId: z.number(),
+  voucherId: z.number().nullable(),
+  file: z.object({
+    id: z.number(),
+    name: z.string(),
+    size: z.number(),
+    url: z.string().optional(), // prisma 不會有 url，要 transform 時再補上
+    thumbnail: z
+      .object({
+        id: z.number(),
+        name: z.string(),
+        size: z.number(),
+        url: z.string().optional(),
+      })
+      .nullable()
+      .optional(),
+  }),
+  uploader: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+  voucher: z
+    .object({
+      id: z.number(),
+      no: z.string(),
+    })
+    .nullable(),
+  direction: z.nativeEnum(InvoiceDirection),
+  type: z.nativeEnum(InvoiceType).nullable(),
+  no: z.string().nullable(),
+  issuedDate: z.number().nullable(),
+  taxType: z.nativeEnum(TaxType).nullable(),
+  currencyCode: z.nativeEnum(CurrencyCode),
+  netAmount: z.number().nullable(),
+  taxAmount: z.number().nullable(),
+  totalAmount: z.number().nullable(),
+  taxRate: z.number().nullable().optional(),
+  note: z
+    .union([z.record(z.any()), z.string()])
+    .nullable()
+    .optional(),
+  aiResultId: z.string().nullable(),
+  aiStatus: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable().optional(),
+
+  // Input fields
+  deductionType: z.nativeEnum(DeductionType).nullable().optional(),
+  salesName: z.string().nullable().optional(),
+  salesIdNumber: z.string().nullable().optional(),
+  isSharedAmount: z.boolean().nullable().optional(),
+
+  // Output fields
+  buyerName: z.string().nullable().optional(),
+  buyerIdNumber: z.string().nullable().optional(),
+  isReturnOrAllowance: z.boolean().nullable().optional(),
+
+  isGenerated: z.boolean(),
+  incomplete: z.boolean(),
+  description: z.string().nullable().optional(),
+
+  totalOfSummarizedInvoices: z.number().nullable().optional(),
+  carrierSerialNumber: z.string().nullable().optional(),
+  otherCertificateNo: z.string().nullable().optional(),
+});
+
 const voucherGetOneOutputValidatorV2 = z
   .object({
     ...voucherEntityValidator.shape,
@@ -420,6 +495,7 @@ const voucherGetOneOutputValidatorV2 = z
         file: fileEntityValidator,
       })
     ),
+    invoicesRC2List: z.array(InvoiceRC2WithFullRelationsValidator),
     lineItems: z.array(
       z.object({
         ...iLineItemBodyValidatorV2.shape,
@@ -608,6 +684,13 @@ const voucherGetOneOutputValidatorV2 = z
 
         return certificateInstance;
       }),
+      // TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
+      // invoiceRC2List: (data.invoicesRC2List ?? []).map((inv): IInvoiceRC2 => {
+      //   return inv.direction === InvoiceDirection.INPUT
+      //     ? transformInput(inv)
+      //     : transformOutput(inv);
+      // }),
+      invoiceRC2List: [],
       lineItems: data.lineItems.map((lineItem) => ({
         id: lineItem.id,
         description: lineItem.description,

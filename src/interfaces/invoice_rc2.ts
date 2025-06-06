@@ -57,8 +57,8 @@ export interface IInvoiceRC2Base {
 
 export interface IInvoiceRC2Input extends IInvoiceRC2Base {
   direction: InvoiceDirection.INPUT;
-  deductionType?: DeductionType;
-  salesName?: string;
+  deductionType?: DeductionType | null;
+  salesName?: string | null;
   salesIdNumber?: string;
   isSharedAmount?: boolean;
   buyerName?: never;

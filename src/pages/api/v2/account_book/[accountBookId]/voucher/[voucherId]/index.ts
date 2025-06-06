@@ -36,6 +36,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileEntity } from '@/interfaces/file';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
+import { InvoiceRC2WithFullRelations } from '@/lib/utils/repo/invoice_rc2.repo';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -48,6 +49,7 @@ type GetOneVoucherResponse = IVoucherEntity & {
     invoice: IInvoiceEntity;
     file: IFileEntity;
   })[];
+  invoiceRC2List: InvoiceRC2WithFullRelations[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   payableInfo?: {
     total: number;
@@ -122,6 +124,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       resultEvents,
       asset,
       certificates,
+      invoiceRC2List: [], // TODO: (20250606 - Tzuhan) 需要從 voucherFromPrisma 中取得 InvoiceRC2 資料
       lineItems,
       payableInfo,
       receivingInfo,
