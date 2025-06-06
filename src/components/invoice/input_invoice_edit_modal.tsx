@@ -1097,7 +1097,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       ref={counterpartyInputRef}
                       counterparty={{
                         taxId: formState.salesIdNumber,
-                        name: formState.salesName,
+                        name: formState.salesName ?? undefined,
                       }}
                       counterpartyList={counterpartyList}
                       onSelect={(cp: ICounterpartyOptional) => {
