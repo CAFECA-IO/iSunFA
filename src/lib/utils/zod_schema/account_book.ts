@@ -12,6 +12,7 @@ import {
 import { listByTeamIdQuerySchema, TeamSchema } from '@/lib/utils/zod_schema/team';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { LocaleKey } from '@/constants/normal_setting';
+import { CurrencyType } from '@/constants/currency';
 
 // ===================================================================================
 // Info: (20250422 - Shirley) 基礎 Schema 定義 (Core Schemas)
@@ -50,6 +51,8 @@ export const accountBookInfoSchema = accountBookSchema.extend({
   city: z.string().default(''),
   district: z.string().default(''),
   enteredAddress: z.string().default(''),
+  businessLocation: z.nativeEnum(LocaleKey).default(LocaleKey.tw), // Info: (20250606 - Shirley) 國家
+  accountingCurrency: z.nativeEnum(CurrencyType).default(CurrencyType.TWD), // Info: (20250606 - Shirley) 會計幣別
 
   filingFrequency: z.nativeEnum(FILING_FREQUENCY).nullable().default(null),
   filingMethod: z.nativeEnum(FILING_METHOD).nullable().default(null),
@@ -141,23 +144,6 @@ export const getAccountBookInfoSchema = {
 };
 
 // ===================================================================================
-// Info: (20250422 - Shirley) API Schema: List Account Book Info (User - Detailed)
-// ===================================================================================
-
-// // Info: (20250421 - Shirley) 定義獲取用戶所有帳本詳細信息的 schema
-// export const listAccountBookInfoSchema = {
-//   input: {
-//     querySchema: accountBookListQuerySchema, // Reuse list query schema
-//     bodySchema: accountBookNullSchema,
-//   },
-//   outputSchema: z.union([
-//     paginatedDataSchema(accountBookInfoWithTeamSchema),
-//     paginatedDataSchema(accountBookSchema),
-//   ]),
-//   frontend: accountBookNullSchema,
-// };
-
-// ===================================================================================
 // Info: (20250422 - Shirley) API Schema: Create Account Book (User)
 // ===================================================================================
 
@@ -171,6 +157,8 @@ const accountBookCreateBodySchema = z.object({
   tag: z.nativeEnum(WORK_TAG),
   teamId: z.number().int(),
   fileId: z.number().int().optional(),
+  businessLocation: z.nativeEnum(LocaleKey).optional(),
+  accountingCurrency: z.nativeEnum(CurrencyType).optional(),
   representativeName: z.string().optional(),
   taxSerialNumber: z.string().optional(),
   contactPerson: z.string().optional(),
@@ -262,6 +250,8 @@ export const updateAccountBookInfoBodySchema = z.object({
     })
     .optional(),
   startDate: z.number().optional(),
+  businessLocation: z.nativeEnum(LocaleKey).optional(), // Info: (20250606 - Shirley) 國家
+  accountingCurrency: z.nativeEnum(CurrencyType).optional(), // Info: (20250606 - Shirley) 會計幣別
 
   // Info: (20250731 - Shirley) 新增 tag 欄位
   tag: z.nativeEnum(WORK_TAG).optional(),
