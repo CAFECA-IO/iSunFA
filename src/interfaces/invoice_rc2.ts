@@ -87,6 +87,9 @@ export interface IInvoiceRC2OutputUI extends IInvoiceRC2Output {
   actions: CERTIFICATE_USER_INTERACT_OPERATION[];
 }
 
+export type IInvoiceRC2 = IInvoiceRC2Input | IInvoiceRC2Output;
+export type IInvoiceRC2UI = IInvoiceRC2InputUI | IInvoiceRC2OutputUI;
+
 export const isClassicCertificate = (
   data: ICertificateUI | IInvoiceRC2InputUI | IInvoiceRC2OutputUI
 ): data is ICertificateUI => {
