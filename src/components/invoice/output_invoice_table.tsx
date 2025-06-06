@@ -5,13 +5,11 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
 import { InvoiceTab } from '@/constants/invoice_rc2';
-import { CurrencyType } from '@/constants/currency';
 import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 
 interface OutputInvoiceTableProps {
   activeTab: InvoiceTab;
   certificates: IInvoiceRC2OutputUI[];
-  currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
   handleSelectAll: () => void;
@@ -35,7 +33,6 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
-  currencyAlias,
   handleSelect,
   handleSelectAll,
   isSelectedAll,
@@ -162,7 +159,6 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
           {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <OutputInvoiceItem
-              currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               certificate={certificate}

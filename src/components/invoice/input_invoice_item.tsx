@@ -4,17 +4,16 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
 import { FaCheck } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { DeductionType, TaxType } from '@/constants/invoice_rc2';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface InputInvoiceListIrops {
   activeSelection: boolean;
   certificate: IInvoiceRC2InputUI;
-  currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
   uploaderAvatarMap: Record<string, string>;
@@ -39,12 +38,12 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
   activeSelection,
   certificate,
-  currencyAlias,
   handleSelect,
   onEdit,
   uploaderAvatarMap,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
+  const { currency } = useCurrencyCtx();
 
   const isDeductible =
     certificate.deductionType === DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE ||
@@ -161,9 +160,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
-              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currencyCode ?? currencyAlias}
-              </span>
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">{currency}</span>
             </div>
           </div>
           <div className="flex justify-between">
@@ -177,9 +174,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
-              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currencyCode ?? currencyAlias}
-              </span>
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">{currency}</span>
             </div>
           </div>
         </div>
@@ -205,7 +200,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
                 alt="avatar"
                 width={14}
                 height={14}
-                className="rounded-full download-hidden"
+                className="download-hidden rounded-full"
               />
             ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">

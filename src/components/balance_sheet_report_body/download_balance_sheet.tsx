@@ -3,6 +3,7 @@ import { BalanceSheetReport } from '@/interfaces/report';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 let currentPage = 1;
 export const createRenderedFooter = () => {
@@ -37,6 +38,7 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   downloadRef,
 }) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   // Info: (20250401 - Anna) 每次渲染前先把頁碼重置為 1
   currentPage = 1;
 
@@ -369,7 +371,10 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           {renderedHeader(false)}
           <div className="download-header-label mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
             <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+            <p>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </p>
           </div>
           <div className={`relative overflow-y-hidden px-14px print:break-before-page`}>
             <section className="text-text-neutral-secondary">
@@ -488,7 +493,10 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
           {renderedHeader(true)}
           <div className="download-header-label relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+            <p>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </p>
           </div>
           {ItemSummary}
         </div>

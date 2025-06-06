@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import Rows from '@/components/income_statement_report_body/rows';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface FirstHeaderProps {
   financialReport: FinancialReport;
@@ -88,6 +89,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     ref
   ) => {
     const { t } = useTranslation(['reports']);
+    const { currency } = useCurrencyCtx();
     // const [totalPagesForSummary, setTotalPagesForSummary] = useState<number>(0);
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
@@ -201,7 +203,10 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+                        <span>
+                          {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                          {currency}
+                        </span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -293,7 +298,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}{currency}</span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>

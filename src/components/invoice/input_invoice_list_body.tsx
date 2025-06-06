@@ -711,7 +711,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
                 totalPages={totalPages}
                 totalCount={totalCount}
                 certificates={Object.values(certificates)}
-                currencyAlias={currency}
                 viewType={viewType}
                 activeSelection={activeSelection}
                 handleSelect={handleSelect}

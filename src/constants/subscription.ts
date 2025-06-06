@@ -165,6 +165,11 @@ export const PLANS: IPlan[] = [
         name: 'ENTERPRISE_SUPPORT',
         value: 'TURN_KEY_AND_MCP',
       },
+      {
+        id: 'enterprise_4',
+        name: 'EARLY_ACCESS',
+        value: 'LATEST_FEATURES_FIRST_ENTERPRISE',
+      },
     ],
     comparison: {
       PRICE: 'PRICE',
