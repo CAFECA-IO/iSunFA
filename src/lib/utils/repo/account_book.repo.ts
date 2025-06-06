@@ -292,6 +292,8 @@ export const createAccountBook = async (
     taxId: string;
     teamId: number;
     fileId?: number;
+    businessLocation?: string;
+    accountingCurrency?: string;
     representativeName?: string;
     taxSerialNumber?: string;
     contactPerson?: string;
@@ -316,6 +318,8 @@ export const createAccountBook = async (
     name,
     tag,
     fileId,
+    businessLocation = '',
+    accountingCurrency = '',
     representativeName = '',
     taxSerialNumber = '',
     contactPerson = '',
@@ -434,7 +438,7 @@ export const createAccountBook = async (
           country: '',
           phone: phoneNumber || '',
           address: addressJson,
-          countryCode: 'tw',
+          countryCode: businessLocation || 'tw',
           contactPerson: contactPerson || '',
           filingFrequency,
           filingMethod,
@@ -457,7 +461,7 @@ export const createAccountBook = async (
           purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
           purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
           returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
-          currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
+          currency: accountingCurrency || DEFAULT_ACCOUNTING_SETTING.CURRENCY,
           createdAt: nowInSecond,
           updatedAt: nowInSecond,
         },
@@ -576,6 +580,13 @@ export const listAccountBookByUserId = async (
         },
         take: 1,
       },
+      // Info: (20250606 - Shirley) 添加 accountingSettings 以獲取會計幣別
+      accountingSettings: {
+        where: {
+          deletedAt: null,
+        },
+        take: 1,
+      },
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -592,6 +603,7 @@ export const listAccountBookByUserId = async (
 
       // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
+      const accountingSetting = book.accountingSettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
           ? JSON.parse(setting.address)
@@ -619,6 +631,8 @@ export const listAccountBookByUserId = async (
         city: address.city || '',
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
+        businessLocation: setting.countryCode || '', // Info: (20250606 - Shirley) businessLocation 來自 country 欄位
+        accountingCurrency: accountingSetting.currency || '', // Info: (20250606 - Shirley) accountingCurrency 來自 accountingSetting
 
         // Info: (20250517 - Shirley) 添加選填欄位
         filingFrequency: setting.filingFrequency,

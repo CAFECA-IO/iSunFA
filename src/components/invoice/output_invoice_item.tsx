@@ -4,15 +4,14 @@ import CalendarIcon from '@/components/calendar_icon/calendar_icon';
 import { HiCheck } from 'react-icons/hi';
 import Image from 'next/image';
 import Link from 'next/link';
-import { CurrencyType } from '@/constants/currency';
 import { numberWithCommas } from '@/lib/utils/common';
 import { IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
 import { TaxType } from '@/constants/invoice_rc2';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface OutputInvoiceListIrops {
   activeSelection: boolean;
   certificate: IInvoiceRC2OutputUI;
-  currencyAlias: CurrencyType;
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
   uploaderAvatarMap: Record<string, string>;
@@ -37,12 +36,12 @@ const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; classN
 const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
   activeSelection,
   certificate,
-  currencyAlias,
   handleSelect,
   onEdit,
   uploaderAvatarMap,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
+   const { currency } = useCurrencyCtx();
 
   // Info: (20250526 - Anna) 上傳者圖像的 url
   const avatarSrc = uploaderAvatarMap[certificate.uploaderName];
@@ -126,9 +125,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.netAmount ?? 0)}
-              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currencyCode ?? currencyAlias}
-              </span>
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">{currency}</span>
             </div>
           </div>
           <div className="flex justify-between">
@@ -142,9 +139,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
             </div>
             <div className="text-text-neutral-primary">
               {numberWithCommas(certificate.totalAmount ?? 0)}
-              <span className="ml-1 w-full text-left text-text-neutral-tertiary">
-                {certificate.currencyCode ?? currencyAlias}
-              </span>
+              <span className="ml-1 w-full text-left text-text-neutral-tertiary">{currency}</span>
             </div>
           </div>
         </div>

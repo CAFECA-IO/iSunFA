@@ -136,6 +136,8 @@ const handlePostRequest = async (req: NextApiRequest) => {
     tag,
     teamId,
     fileId: fileIdFromBody,
+    businessLocation, // Info: (20250606 - Shirley) 國家
+    accountingCurrency, // Info: (20250606 - Shirley) 會計幣別
     representativeName,
     taxSerialNumber,
     contactPerson,
@@ -160,6 +162,8 @@ const handlePostRequest = async (req: NextApiRequest) => {
     tag,
     teamId,
     fileId: fileIdFromBody,
+    businessLocation, // Info: (20250606 - Shirley) 國家
+    accountingCurrency, // Info: (20250606 - Shirley) 會計幣別
     representativeName,
     taxSerialNumber,
     contactPerson,

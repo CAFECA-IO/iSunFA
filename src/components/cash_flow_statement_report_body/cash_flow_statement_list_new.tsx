@@ -18,6 +18,7 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
 import DownloadCashFlowStatement from '@/components/cash_flow_statement_report_body/download_cash_flow_statement';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -38,6 +39,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
+  const { currency } = useCurrencyCtx();
   const { isAuthLoading, connectedAccountBook } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
@@ -415,7 +417,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
 
     return (
       <div className="hide-scrollbar mt-4 overflow-x-auto">
-        <div className="min-w-900px">
+        <div className="min-w-900px print:min-w-0">
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr className="bg-surface-brand-primary-50">
@@ -459,6 +461,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </div>
           <p className="text-xs font-semibold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isSummaryCollapsed &&
@@ -479,6 +482,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           </div>
           <p className="text-xs font-semibold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isDetailCollapsed &&

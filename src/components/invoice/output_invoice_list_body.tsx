@@ -715,7 +715,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
                   totalPages={totalPages}
                   totalCount={totalCount}
                   certificates={Object.values(certificates)}
-                  currencyAlias={currency}
                   viewType={viewType}
                   activeSelection={activeSelection}
                   handleSelect={handleSelect}

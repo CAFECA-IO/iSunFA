@@ -485,7 +485,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         {/* Info: (20241101 - Anna) 幣別(md以上) */}
         <div className="mr-42px hidden w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary md:flex">
           <RiCoinsLine />
-          <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
+          <p className="whitespace-nowrap">{currencyAlias}</p>
         </div>
         {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
         <Toggle

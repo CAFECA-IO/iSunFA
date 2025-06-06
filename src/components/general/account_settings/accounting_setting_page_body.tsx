@@ -18,6 +18,7 @@ import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 type ITaxTypeForFrontend =
   | number
@@ -43,6 +44,7 @@ enum TaxPeriod {
 
 const AccountingSettingPageBody: React.FC = () => {
   const { t } = useTranslation('common');
+  const { refreshCurrency } = useCurrencyCtx();
 
   const { manualAccountOpeningModalVisibilityHandler } = useGlobalCtx();
   const { toastHandler } = useModalContext();
@@ -220,6 +222,7 @@ const AccountingSettingPageBody: React.FC = () => {
         });
 
         getAccountData();
+        refreshCurrency(); // Info: (20250606 - Anna) 同步更新 currency_context 的資料
         // ToDo: (20250211 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
       } else if (updatedError) {
         // Info: (20241114 - Julian) 更新失敗顯示 Toast
