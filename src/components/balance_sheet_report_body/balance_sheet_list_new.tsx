@@ -21,6 +21,7 @@ import DownloadButton from '@/components/button/download_button';
 import Toggle from '@/components/toggle/toggle';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -54,6 +55,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   downloadFn, // Info: (20250327 - Anna) 使用下載函數
 }) => {
   const { t, i18n } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
 
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
 
@@ -569,6 +571,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           </div>
           <p className="text-xs font-semibold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -623,7 +626,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
-            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}{currency}
           </p>
         </div>
         {!isDetailCollapsed && (

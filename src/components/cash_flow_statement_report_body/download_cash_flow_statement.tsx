@@ -1,6 +1,7 @@
 import React from 'react';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface DownloadCashFlowStatementProps {
   reportFinancial: CashFlowStatementReport | null;
@@ -12,6 +13,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
   downloadRef,
 }) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
 
   // Info: (20250314 - Anna) 將時間戳轉換為 YYYY-MM-DD
   const getFormattedDate = (timestamp: number | undefined) => {
@@ -217,7 +219,10 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
           <section className="mx-1 px-14px text-text-neutral-secondary">
             <div className="relative z-10 mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {table} {/* Info: (20250401 - Anna) Render the table content */}
           </section>
@@ -249,7 +254,10 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
           <section className="relative mx-1 px-14px text-text-neutral-secondary">
             <div className="mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {table}
           </section>

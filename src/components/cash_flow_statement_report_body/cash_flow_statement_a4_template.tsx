@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface CashFlowA4TemplateProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
   preDate,
 }) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 
@@ -253,7 +255,10 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             {renderedHeader(index === 0)}
             <div className="relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {renderTableWithRows(rows, firstTableHeaders, index >= 0)}
             {renderedFooter(index + 1)}
@@ -279,7 +284,10 @@ const CashFlowA4Template: React.FC<CashFlowA4TemplateProps> = ({
             {renderedHeader(false)}
             <div className="mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {renderTableWithRows(rows, secondTableHeaders, index >= 0)}
             {renderedFooter(firstBlockSplitPages.length + index + 1)}

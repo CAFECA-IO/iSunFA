@@ -18,6 +18,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { HiCheck } from 'react-icons/hi';
 import Toggle from '@/components/toggle/toggle';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IVoucherListProps {
   voucherList: IVoucherUI[];
@@ -55,6 +56,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   toggleSideMenu,
 }) => {
   const { t } = useTranslation('common');
+  const { currency } = useCurrencyCtx();
   const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
@@ -511,7 +513,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {displayedSelectArea}
 
       <p className="text-xs font-semibold uppercase text-text-neutral-tertiary tablet:ml-auto">
-        {t('journal:VOUCHER.CURRENCY')}: TWD
+        {t('journal:VOUCHER.CURRENCY')}: {currency}
       </p>
 
       {/* Info: (20250521 - Julian) Table for mobile */}

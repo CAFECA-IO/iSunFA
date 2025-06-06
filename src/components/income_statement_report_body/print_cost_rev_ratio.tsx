@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 const NormalHeader = () => {
   return (
@@ -38,6 +39,7 @@ const PrintCostRevRatio = ({
   useRawImg = false,
 }: CostRevRatioProps) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
@@ -67,6 +69,7 @@ const PrintCostRevRatio = ({
           </p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white text-xxs">
@@ -237,6 +240,7 @@ const PrintCostRevRatio = ({
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.REVENUE_TO_RD')}</p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white text-xxs">

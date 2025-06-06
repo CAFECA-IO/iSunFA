@@ -5,6 +5,7 @@ import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import CollapseButton from '@/components/button/collapse_button';
 import Rows from '@/components/income_statement_report_body/rows';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface ItemSummaryProps {
   financialReport: FinancialReport;
@@ -21,6 +22,7 @@ const ItemSummary = ({
   formattedPreToDate,
 }: ItemSummaryProps) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const toggleSummaryTable = () => {
     setIsSummaryCollapsed((prev) => !prev);
@@ -61,7 +63,10 @@ const ItemSummary = ({
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
-            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </span>
           </p>
         </div>
         {!isSummaryCollapsed && (
