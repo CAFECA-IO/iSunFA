@@ -37,6 +37,7 @@ export const ISUNFA_ROUTE = {
   MY_ACCOUNT_PAGE: '/users/my_account_page',
   TEAM_PAGE: '/users/team', // Info: (20250218 - Liz) /users/team/:teamId
   INPUT_INVOICE_LIST: '/users/accounting/input_invoice_list',
+
   OUTPUT_INVOICE_LIST: '/users/accounting/output_invoice_list',
   ADD_NEW_VOUCHER: '/users/accounting/add_new_voucher',
   VOUCHER_LIST: '/users/accounting/voucher_list',

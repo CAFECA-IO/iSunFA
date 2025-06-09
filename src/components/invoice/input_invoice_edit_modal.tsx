@@ -69,6 +69,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     InvoiceType.INPUT_29,
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
+
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
   const [currency, setCurrency] = useState<string>('TWD');
   const isLg = useIsLg();

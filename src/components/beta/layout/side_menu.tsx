@@ -17,7 +17,6 @@ import { TeamRole } from '@/interfaces/team';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { MENU_CONFIG } from '@/interfaces/side_menu';
 import { cn } from '@/lib/utils/common';
-import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IDefaultMenuOption {
   title: string;
@@ -84,7 +83,6 @@ const SubMenuOption = ({
   toggleOverlay = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
-  const { currency } = useCurrencyCtx();
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
   const notConnectAccountBook = !connectedAccountBook;
@@ -179,7 +177,6 @@ const SubMenuOption = ({
           <EmbedCodeModal
             isModalVisible={isEmbedCodeModalOpen}
             modalVisibilityHandler={toggleEmbedCodeModal}
-            currency={currency}
           />
         )}
       </>

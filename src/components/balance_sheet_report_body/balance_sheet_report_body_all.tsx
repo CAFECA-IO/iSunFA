@@ -13,6 +13,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -34,6 +35,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
+  const { currency } = useCurrencyCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -827,6 +829,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -882,7 +885,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -952,7 +958,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1008,7 +1017,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1064,7 +1076,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1120,7 +1135,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1176,7 +1194,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1232,7 +1253,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1288,7 +1312,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1529,7 +1556,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mt-30px flex justify-between !text-xs font-semibold text-surface-brand-secondary">
           <p className="mb-16px">五、{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
           <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>

@@ -25,7 +25,6 @@ interface IServerSideProps {
 
 const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => {
   const { t } = useTranslation(['reports']);
-
   const { toastHandler } = useModalContext();
   const [reportData] = React.useState<IReportOld>({
     reportTypesName: FinancialReportTypesMap[

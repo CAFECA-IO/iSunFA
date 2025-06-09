@@ -20,10 +20,9 @@ import { useModalContext } from '@/contexts/modal_context';
 interface IEmbedCodeModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
-  currency: string;
 }
 
-const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler, currency }: IEmbedCodeModal) => {
+const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
@@ -194,7 +193,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler, currency }: IE
             const reportId = report.data; // Info: (20241130 - Anna) 從 API 響應中拿 reportId
 
             // Info: (20241213 - Anna) 動態生成link，增加 id 不然只會顯示一張報表
-            const reportLink = `https://isunfa.tw/embed/view/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}&_id=${sequenceNumber}&currency=${currency}`;
+            const reportLink = `https://isunfa.tw/embed/view/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}&_id=${sequenceNumber}`;
 
             // Info: (20241213 - Anna) 增加序號
             sequenceNumber += 1;
