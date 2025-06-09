@@ -805,7 +805,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate}
                   <br />
-                  財務報告 - 資產負債表123
+                  財務報告 - 資產負債表
                 </p>
               </>
             )}
