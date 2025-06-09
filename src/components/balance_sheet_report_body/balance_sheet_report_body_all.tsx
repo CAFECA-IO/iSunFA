@@ -805,7 +805,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 <p className="text-left text-xs font-bold leading-5">
                   {curDate}
                   <br />
-                  財務報告 - 資產負債表
+                  財務報告 - 資產負債表123
                 </p>
               </>
             )}
@@ -825,7 +825,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+          </p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">

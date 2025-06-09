@@ -14,6 +14,7 @@ import {
   ISubMenuSection,
 } from '@/interfaces/side_menu';
 import { cn } from '@/lib/utils/common';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 type SubMenuOptionProps = TSubMenuOption & {
   closeMenu?: () => void;
@@ -29,6 +30,7 @@ const SubMenuOption = ({
   closeMenu = () => {},
 }: SubMenuOptionProps) => {
   const { t } = useTranslation(['layout']);
+  const { currency } = useCurrencyCtx();
   const { toastHandler } = useModalContext();
   const { connectedAccountBook } = useUserCtx();
   const notConnectAccountBook = !connectedAccountBook;
@@ -127,6 +129,7 @@ const SubMenuOption = ({
           <EmbedCodeModal
             isModalVisible={isEmbedCodeModalOpen}
             modalVisibilityHandler={toggleEmbedCodeModal}
+            currency={currency}
           />
         )}
       </>

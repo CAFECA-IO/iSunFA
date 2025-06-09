@@ -20,9 +20,10 @@ import { useModalContext } from '@/contexts/modal_context';
 interface IEmbedCodeModal {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  currency: string;
 }
 
-const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeModal) => {
+const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler, currency }: IEmbedCodeModal) => {
   const { t } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
@@ -193,7 +194,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
             const reportId = report.data; // Info: (20241130 - Anna) 從 API 響應中拿 reportId
 
             // Info: (20241213 - Anna) 動態生成link，增加 id 不然只會顯示一張報表
-            const reportLink = `https://isunfa.tw/embed/view/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}&_id=${sequenceNumber}`;
+            const reportLink = `https://isunfa.tw/embed/view/${reportId}?report_type=${ReportTypeToBaifaReportType[reportType]}&_id=${sequenceNumber}&currency=${currency}`;
 
             // Info: (20241213 - Anna) 增加序號
             sequenceNumber += 1;
@@ -457,7 +458,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3 max-w-90vw">
+      <div className="relative mx-auto flex max-w-90vw flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
         <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
