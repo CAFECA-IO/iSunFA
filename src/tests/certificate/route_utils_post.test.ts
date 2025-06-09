@@ -547,7 +547,7 @@ describe('Certificate API Post Utils 測試', () => {
   describe('getAndDecryptFile', () => {
     it('應該成功讀取和解密檔案', async () => {
       // Info: (20250609 - Shirley) 跳過這個測試，因為涉及檔案系統操作的複雜模擬
-      // 在實際使用中，這個函數需要正確的檔案路徑和加密設置
+      // Info: (20250609 - Shirley) 在實際使用中，這個函數需要正確的檔案路徑和加密設置
       expect(true).toBe(true); // Info: (20250609 - Shirley) 佔位符測試
     });
   });
