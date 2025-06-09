@@ -148,10 +148,10 @@ describe('Certificate API Get List Utils 測試', () => {
 
       // Info: (20250609 - Shirley) 測試正常日期排序
       const result1 = sortFunction(mockCertificateList[0], mockCertificateList[1]);
-      expect(result1).toBeLessThan(0); // certificate1 日期較早
+      expect(result1).toBeLessThan(0); // Info: (20250609 - Shirley) certificate1 日期較早
 
       const result2 = sortFunction(mockCertificateList[1], mockCertificateList[0]);
-      expect(result2).toBeGreaterThan(0); // certificate2 日期較晚
+      expect(result2).toBeGreaterThan(0); // Info: (20250609 - Shirley) certificate2 日期較晚
 
       // Info: (20250609 - Shirley) 測試 undefined 日期處理
       const certificateWithUndefinedDate = {
@@ -159,10 +159,10 @@ describe('Certificate API Get List Utils 測試', () => {
         invoice: { ...mockCertificateList[0].invoice, date: undefined },
       };
       const result3 = sortFunction(certificateWithUndefinedDate, mockCertificateList[1]);
-      expect(result3).toBe(-1); // undefined 日期排在前面
+      expect(result3).toBe(-1); // Info: (20250609 - Shirley) undefined 日期排在前面
 
       const result4 = sortFunction(mockCertificateList[1], certificateWithUndefinedDate);
-      expect(result4).toBe(1); // 有日期的排在後面
+      expect(result4).toBe(1); // Info: (20250609 - Shirley) 有日期的排在後面
     });
 
     it('應該依據憑證號碼正確排序（僅在 WITH_VOUCHER tab）', () => {
@@ -174,7 +174,7 @@ describe('Certificate API Get List Utils 測試', () => {
         mockCertificateList[2],
         InvoiceTabs.WITH_VOUCHER
       );
-      expect(result1).toBeLessThan(0); // V-001 < V-003
+      expect(result1).toBeLessThan(0); // Info: (20250609 - Shirley) V-001 < V-003
 
       // Info: (20250609 - Shirley) 在其他 tab 下不應該排序
       const result2 = sortFunction(
@@ -190,7 +190,7 @@ describe('Certificate API Get List Utils 測試', () => {
 
       // Info: (20250609 - Shirley) 使用 totalPrice 排序
       const result1 = sortFunction(mockCertificateList[0], mockCertificateList[1]);
-      expect(result1).toBeLessThan(0); // 1000 < 2000
+      expect(result1).toBeLessThan(0); // Info: (20250609 - Shirley) 1000 < 2000
 
       // Info: (20250609 - Shirley) 如果沒有 totalPrice，使用 priceBeforeTax
       const certificateWithoutTotalPrice = {
@@ -198,7 +198,7 @@ describe('Certificate API Get List Utils 測試', () => {
         invoice: { ...mockCertificateList[0].invoice, totalPrice: undefined },
       };
       const result2 = sortFunction(certificateWithoutTotalPrice, mockCertificateList[1]);
-      expect(result2).toBeLessThan(0); // 952 < 2000
+      expect(result2).toBeLessThan(0); // Info: (20250609 - Shirley) 952 < 2000
     });
 
     it('應該在未知排序類型時返回 0', () => {
@@ -221,7 +221,7 @@ describe('Certificate API Get List Utils 測試', () => {
       getListUtils.sortCertificateList(certificateList, { sortOption });
 
       // Info: (20250609 - Shirley) 驗證排序是否被正確應用
-      // 這裡主要測試函數是否被呼叫，實際排序邏輯在 getSortFunction 中已測試
+      // Info: (20250609 - Shirley) 這裡主要測試函數是否被呼叫，實際排序邏輯在 getSortFunction 中已測試
       expect(certificateList).toBeDefined();
     });
 
@@ -322,7 +322,7 @@ describe('Certificate API Get List Utils 測試', () => {
       const result = await getListUtils.getSumOfTotalInvoicePrice(options);
 
       expect(mockGetAllFilteredInvoice).toHaveBeenCalledWith(options);
-      expect(result).toBe(4500); // 1000 + 2000 + 1500
+      expect(result).toBe(4500); // Info: (20250609 - Shirley) 1000 + 2000 + 1500
     });
 
     it('應該正確處理沒有發票的憑證', async () => {
@@ -345,7 +345,7 @@ describe('Certificate API Get List Utils 測試', () => {
 
       const result = await getListUtils.getSumOfTotalInvoicePrice(options);
 
-      expect(result).toBe(1000); // 只計算有發票的憑證
+      expect(result).toBe(1000); // Info: (20250609 - Shirley) 只計算有發票的憑證
     });
 
     it('應該正確處理發票金額為 0 的情況', async () => {
@@ -366,7 +366,7 @@ describe('Certificate API Get List Utils 測試', () => {
 
       const result = await getListUtils.getSumOfTotalInvoicePrice(options);
 
-      expect(result).toBe(1000); // 0 + 1000
+      expect(result).toBe(1000); // Info: (20250609 - Shirley) 0 + 1000
     });
   });
 
