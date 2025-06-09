@@ -301,6 +301,26 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
     setIsInvoiceTypeMenuOpen(false);
+    setFormState((prev) => {
+      const updated = { ...prev, type: id };
+
+      // Info: (20250609 - Anna) 如果從格式20切換到其他格式，則重新預設扣抵類型 & 稅種
+      if (prev.type === InvoiceType.INPUT_20 && id !== InvoiceType.INPUT_20) {
+        updated.deductionType = DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE;
+        updated.taxType = TaxType.TAXABLE;
+      }
+
+      // Info: (20250609 - Anna) 清除不適用的欄位，避免殘留舊值
+      if (id !== InvoiceType.INPUT_22 && id !== InvoiceType.INPUT_27) {
+        updated.otherCertificateNo = '';
+      }
+
+      if (id !== InvoiceType.INPUT_25) {
+        updated.carrierSerialNumber = '';
+      }
+      formStateRef.current = updated;
+      return updated;
+    });
     handleInputChange('type', id);
   };
 
