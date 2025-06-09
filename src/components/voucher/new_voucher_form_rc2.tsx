@@ -51,8 +51,7 @@ import { TbArrowBackUp } from 'react-icons/tb';
 import { IInvoiceRC2, IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
 import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
-import CertificateSelection from '@/components/certificate/certificate_selection';
-import { ICertificateUI } from '@/interfaces/certificate';
+import InvoiceSelection from '@/components/voucher/invoice_selection';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -191,8 +190,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const [certificates, setInvoices] = useState<{ [id: string]: IInvoiceRC2UI }>({});
   const [selectedInvoices, setSelectedInvoices] = useState<IInvoiceRC2UI[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
   const {
@@ -1053,8 +1050,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         fillUpClickHandler={fillUpWithAIResult}
       /> */}
       {/* ToDo: (20240926 - Julian) Uploaded certificates */}
-      <CertificateSelection
-        selectedCertificates={selectedCertificates}
+      <InvoiceSelection
+        selectedInvoices={selectedInvoices}
         setOpenModal={handleOpenSelectorModal}
         isSelectable
         isDeletable
