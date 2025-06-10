@@ -44,8 +44,6 @@ import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
 import { CurrencyCode, DeductionType, InvoiceDirection, TaxType } from '@/constants/invoice_rc2';
 import { InvoiceType } from '@/constants/invoice';
 // TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
-// import { transformInput, transformOutput } from '@/lib/utils/repo/invoice_rc2.repo';
-// import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -413,7 +411,7 @@ const voucherGetOneBodyValidatorV2 = z.object({});
 export const InvoiceRC2WithFullRelationsValidator = z.object({
   id: z.number(),
   accountBookId: z.number(),
-  voucherId: z.number().nullable(),
+  voucherId: z.number().optional(),
   file: z.object({
     id: z.number(),
     name: z.string(),
@@ -426,57 +424,51 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
         size: z.number(),
         url: z.string().optional(),
       })
-      .nullable()
       .optional(),
   }),
   uploader: z.object({
     id: z.number(),
     name: z.string(),
   }),
-  voucher: z
-    .object({
-      id: z.number(),
-      no: z.string(),
-    })
-    .nullable(),
+  voucher: z.object({
+    id: z.number(),
+    no: z.string(),
+  }),
   direction: z.nativeEnum(InvoiceDirection),
-  type: z.nativeEnum(InvoiceType).nullable(),
-  no: z.string().nullable(),
-  issuedDate: z.number().nullable(),
-  taxType: z.nativeEnum(TaxType).nullable(),
+  type: z.nativeEnum(InvoiceType),
+  no: z.string(),
+  issuedDate: z.number(),
+  taxType: z.nativeEnum(TaxType),
   currencyCode: z.nativeEnum(CurrencyCode),
-  netAmount: z.number().nullable(),
-  taxAmount: z.number().nullable(),
-  totalAmount: z.number().nullable(),
-  taxRate: z.number().nullable().optional(),
-  note: z
-    .union([z.record(z.any()), z.string()])
-    .nullable()
-    .optional(),
-  aiResultId: z.string().nullable(),
+  netAmount: z.number(),
+  taxAmount: z.number(),
+  totalAmount: z.number(),
+  taxRate: z.number().optional(),
+  note: z.union([z.record(z.any()), z.string()]).optional(),
+  aiResultId: z.string(),
   aiStatus: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  deletedAt: z.number().nullable().optional(),
+  deletedAt: z.number().optional(),
 
   // Info: (20250606 - Tzuhan) Input fields
-  deductionType: z.nativeEnum(DeductionType).nullable().optional(),
-  salesName: z.string().nullable().optional(),
-  salesIdNumber: z.string().nullable().optional(),
-  isSharedAmount: z.boolean().nullable().optional(),
+  deductionType: z.nativeEnum(DeductionType).optional(),
+  salesName: z.string().optional(),
+  salesIdNumber: z.string().optional(),
+  isSharedAmount: z.boolean().optional(),
 
   // Info: (20250606 - Tzuhan) Output fields
-  buyerName: z.string().nullable().optional(),
-  buyerIdNumber: z.string().nullable().optional(),
-  isReturnOrAllowance: z.boolean().nullable().optional(),
+  buyerName: z.string().optional(),
+  buyerIdNumber: z.string().optional(),
+  isReturnOrAllowance: z.boolean().optional(),
 
   isGenerated: z.boolean(),
   incomplete: z.boolean(),
-  description: z.string().nullable().optional(),
+  description: z.string().optional(),
 
-  totalOfSummarizedInvoices: z.number().nullable().optional(),
-  carrierSerialNumber: z.string().nullable().optional(),
-  otherCertificateNo: z.string().nullable().optional(),
+  totalOfSummarizedInvoices: z.number().optional(),
+  carrierSerialNumber: z.string().optional(),
+  otherCertificateNo: z.string().optional(),
 });
 
 const voucherGetOneOutputValidatorV2 = z
@@ -723,18 +715,16 @@ const IVoucherDetailForFrontendValidator = z.object({
   voucherDate: z.number(),
   type: z.nativeEnum(EventType),
   note: z.string(),
-  counterParty: z
-    .object({
-      id: z.number().optional(),
-      companyId: z.number().optional(),
-      name: z.string().optional(),
-      taxId: z.string().optional(),
-      type: z.string().optional(),
-      note: z.string().optional(),
-      createdAt: z.number().optional(),
-      updatedAt: z.number().optional(),
-    })
-    .nullable(),
+  counterParty: z.object({
+    id: z.number().optional(),
+    companyId: z.number().optional(),
+    name: z.string().optional(),
+    taxId: z.string().optional(),
+    type: z.string().optional(),
+    note: z.string().optional(),
+    createdAt: z.number().optional(),
+    updatedAt: z.number().optional(),
+  }),
   recurringInfo: z.object({
     // Deprecated: (20241105 - Murky)
     type: z.string(),
