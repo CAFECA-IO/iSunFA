@@ -16,6 +16,7 @@ jest.mock('@/lib/utils/validator');
 jest.mock('@/lib/utils/repo/voucher.repo');
 jest.mock('@/lib/utils/permission/assert_user_team_permission');
 jest.mock('@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils');
+jest.mock('@/lib/utils/common');
 
 // Import mocked functions
 const mockGetSession = jest.mocked(getSession);
@@ -61,7 +62,7 @@ describe('Voucher API Integration Tests', () => {
     mockGetSession.mockResolvedValue(mockSession);
   });
 
-  describe('Repository Layer Tests', () => {
+  describe('基礎 Mock 驗證', () => {
     it('應該正確模擬 session 獲取', async () => {
       const mockRequest = {} as NextApiRequest;
       const result = await getSession(mockRequest);
@@ -82,9 +83,7 @@ describe('Voucher API Integration Tests', () => {
       expect(mockSession.teams).toHaveLength(1);
       expect(mockSession.teams[0].role).toBe(TeamRole.ADMIN);
     });
-  });
 
-  describe('Mock 設定驗證', () => {
     it('應該正確模擬 getSession 函數', () => {
       expect(jest.isMockFunction(getSession)).toBe(true);
     });
@@ -94,6 +93,45 @@ describe('Voucher API Integration Tests', () => {
       const session = await mockGetSession(mockRequest);
       expect(session).toBeDefined();
       expect(session.userId).toBe(2001);
+    });
+  });
+
+  describe('資料驗證', () => {
+    it('傳票應該有正確的基本屬性', () => {
+      expect(mockVoucher).toHaveProperty('id');
+      expect(mockVoucher).toHaveProperty('companyId');
+      expect(mockVoucher).toHaveProperty('no');
+      expect(mockVoucher).toHaveProperty('type');
+      expect(mockVoucher).toHaveProperty('status');
+    });
+
+    it('session 應該有正確的基本屬性', () => {
+      expect(mockSession).toHaveProperty('userId');
+      expect(mockSession).toHaveProperty('companyId');
+      expect(mockSession).toHaveProperty('teams');
+      expect(mockSession.teams).toBeInstanceOf(Array);
+    });
+
+    it('應該正確設定傳票編號格式', () => {
+      expect(mockVoucher.no).toMatch(/^\d{8}\d{3}$/);
+    });
+
+    it('應該正確設定時間戳', () => {
+      expect(mockVoucher.date).toBe(1703980800);
+      expect(mockVoucher.createdAt).toBe(1703980800);
+      expect(mockVoucher.updatedAt).toBe(1703980800);
+    });
+  });
+
+  describe('Mock 函數檢查', () => {
+    it('所有重要的函數都應該被正確 mock', () => {
+      expect(jest.isMockFunction(getSession)).toBe(true);
+    });
+
+    it('Mock 函數應該能正常調用', async () => {
+      const result = await mockGetSession({} as NextApiRequest);
+      expect(result).toBeDefined();
+      expect(result.userId).toBe(mockSession.userId);
     });
   });
 });
