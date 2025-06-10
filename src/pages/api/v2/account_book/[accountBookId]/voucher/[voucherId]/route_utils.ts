@@ -109,6 +109,9 @@ export const voucherAPIGetOneUtils = {
         voucher.counterparty.taxId = voucher.counterparty.taxId || noteData.taxId;
       }
     }
+    loggerBack.info(
+      `get voucher from prisma, voucherId: ${voucherId}, isVoucherNo: ${isVoucherNo}, voucher.InvoiceRC2: ${JSON.stringify(voucher?.InvoiceRC2)}`
+    );
     return voucher!;
   },
 

@@ -19,16 +19,16 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
 
-  await checkSessionUser(session, APIName.LIST_INVOICE_RC2_INPUT, req);
-  await checkUserAuthorization(APIName.LIST_INVOICE_RC2_INPUT, req, session);
+  await checkSessionUser(session, APIName.LIST_INVOICE_RC2, req);
+  await checkUserAuthorization(APIName.LIST_INVOICE_RC2, req, session);
 
-  const { query } = checkRequestData(APIName.LIST_INVOICE_RC2_INPUT, req, session);
+  const { query } = checkRequestData(APIName.LIST_INVOICE_RC2, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
   const certificateList = await listInvoiceRC2GroupedByDirection(session.userId, query);
 
   const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_INVOICE_RC2_INPUT,
+    APIName.LIST_INVOICE_RC2,
     certificateList
   );
 
@@ -69,6 +69,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, APIName.LIST_INVOICE_RC2_INPUT, req, statusMessage);
+  await logUserAction(session, APIName.LIST_INVOICE_RC2, req, statusMessage);
   res.status(httpCode).json(result);
 }
