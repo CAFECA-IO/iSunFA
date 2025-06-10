@@ -53,7 +53,8 @@
     "CONFIRM_MESSAGE_CONTENT": "30 天後將無法刪除。",
     "CONFIRM_MESSAGE_BTN": "是的，新增資產",
     "TOAST_SUCCESS": "已新增資產",
-    "TOAST_ERROR": "發生錯誤，請再試一次"
+    "TOAST_ERROR": "發生錯誤，請再試一次",
+    "PLEASE_FILL_UP_THIS_FORM": "請填寫此表格"
   },
   "ASSET_DETAIL_PAGE": {
     "TITLE": "資產",

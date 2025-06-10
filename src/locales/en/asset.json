@@ -53,7 +53,8 @@
     "CONFIRM_MESSAGE_CONTENT": "It can not be deleted after 30 days.",
     "CONFIRM_MESSAGE_BTN": "Yes, add the asset",
     "TOAST_SUCCESS": "New asset has been added",
-    "TOAST_ERROR": "Something went wrong, please try again"
+    "TOAST_ERROR": "Something went wrong, please try again",
+    "PLEASE_FILL_UP_THIS_FORM": "Please fill up this form"
   },
   "ASSET_DETAIL_PAGE": {
     "TITLE": "Asset",
