@@ -562,6 +562,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     messageModalVisibilityHandler();
   };
 
+  // Deprecated: (20250610 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fillUpWithAIResult = () => {
     setDate(aiDate);
@@ -583,6 +584,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     setLineItems(aiLineItemsUI);
   };
 
+  // Deprecated: (20250610 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const retryAIHandler = () => {
     setAiState(AIState.WORKING);
