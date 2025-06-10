@@ -323,7 +323,7 @@ const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
   actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
   certificateIds: z.array(z.number().int()),
-  invoiceRC2Ids: z.array(z.number().int()),
+  invoiceRC2Ids: z.array(z.number().int()).default([]),
   voucherDate: z.number().int(), // Info: (20241105 - Murky) timestamp in Second
   type: z.nativeEnum(EventType),
   note: z.string(),
@@ -495,7 +495,7 @@ const voucherGetOneOutputValidatorV2 = z
         file: fileEntityValidator,
       })
     ),
-    invoicesRC2List: z.array(InvoiceRC2WithFullRelationsValidator),
+    invoiceRC2List: z.array(InvoiceRC2WithFullRelationsValidator).optional().default([]),
     lineItems: z.array(
       z.object({
         ...iLineItemBodyValidatorV2.shape,
@@ -685,7 +685,7 @@ const voucherGetOneOutputValidatorV2 = z
         return certificateInstance;
       }),
       // TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
-      // invoiceRC2List: (data.invoicesRC2List ?? []).map((inv): IInvoiceRC2 => {
+      // invoiceRC2List: (data.invoiceRC2List ?? []).map((inv): IInvoiceRC2 => {
       //   return inv.direction === InvoiceDirection.INPUT
       //     ? transformInput(inv)
       //     : transformOutput(inv);

@@ -51,7 +51,10 @@ export enum InvoiceType {
 
 export enum CurrencyCode {
   TWD = 'TWD',
-  EUR = 'EUR',
+  USD = 'USD',
+  CNY = 'CNY',
+  HKD = 'HKD',
+  JPY = 'JPY',
 }
 
 export enum TaxType {

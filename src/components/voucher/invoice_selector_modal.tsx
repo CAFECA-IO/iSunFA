@@ -5,12 +5,12 @@ import { APIName } from '@/constants/api_connection';
 import InvoiceSelectionPanel from '@/components/voucher/invoice_selection_panel';
 import { Button } from '@/components/button/button';
 import { RxCross2 } from 'react-icons/rx';
-import { IPaginatedData } from '@/interfaces/pagination';
-import { InvoiceTabs } from '@/constants/invoice_rc2';
+import { InvoiceTab } from '@/constants/invoice_rc2';
 // import { InvoiceType } from '@/constants/invoice';
 import { DEFAULT_MAX_PAGE_LIMIT } from '@/constants/config';
 import { InvoiceType } from '@/constants/invoice';
 import { IInvoiceRC2, IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 interface InvoiceSelectorModalProps {
   isOpen: boolean;
@@ -105,7 +105,7 @@ const InvoiceSelectorModal: React.FC<InvoiceSelectorModalProps> = ({
             params={{ accountBookId }}
             page={1}
             pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
-            tab={InvoiceTabs.WITHOUT_VOUCHER}
+            tab={InvoiceTab.WITHOUT_VOUCHER}
             onApiResponse={handleApiResponse}
             types={Object.keys(InvoiceType)}
           />
