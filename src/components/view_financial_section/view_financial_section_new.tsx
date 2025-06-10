@@ -21,7 +21,6 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
-
   tokenContract: string;
   tokenId: string;
   reportLink: string;
@@ -81,7 +80,6 @@ function isValidCashFlowStatementReport(report: CashFlowStatementReport): boolea
 }
 const ViewFinancialSectionNew = ({
   reportId,
-
   reportTypesName,
   tokenContract,
   tokenId,

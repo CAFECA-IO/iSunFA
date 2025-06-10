@@ -349,30 +349,28 @@ export const listInvoiceRC2Output = (
 export async function listInvoiceRC2GroupedByDirection(
   userId: number,
   query: z.infer<typeof listInvoiceRC2Grouped.input.querySchema>
-): Promise<{
-  inputList: z.infer<typeof InvoiceRC2InputSchema>[];
-  outputList: z.infer<typeof InvoiceRC2OutputSchema>[];
-}> {
+): Promise<
+  IPaginatedData<(z.infer<typeof InvoiceRC2InputSchema> | z.infer<typeof InvoiceRC2OutputSchema>)[]>
+> {
   const { direction } = query;
 
   if (direction === InvoiceDirection.INPUT) {
     const input = await listInvoiceRC2ByDirection(userId, query, InvoiceDirection.INPUT);
-    return { inputList: input.data, outputList: [] };
+    return input;
   }
 
   if (direction === InvoiceDirection.OUTPUT) {
     const output = await listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT);
-    return { outputList: output.data, inputList: [] };
+    return output;
   }
   const [inputPaginated, outputPaginated] = await Promise.all([
     listInvoiceRC2ByDirection(userId, query, InvoiceDirection.INPUT),
     listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT),
   ]);
 
-  return {
-    inputList: inputPaginated.data,
-    outputList: outputPaginated.data,
-  };
+  return toPaginatedData({
+    data: [...inputPaginated.data, ...outputPaginated.data],
+  });
 }
 
 export async function createInvoiceRC2(

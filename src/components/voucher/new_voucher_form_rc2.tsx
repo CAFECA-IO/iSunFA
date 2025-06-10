@@ -34,7 +34,6 @@ import {
 import { /* AIWorkingArea, */ AIState } from '@/components/voucher/ai_working_area';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
-import { IPaginatedData } from '@/interfaces/pagination';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { CERTIFICATE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
@@ -52,6 +51,7 @@ import { IInvoiceRC2, IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
 import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import InvoiceSelection from '@/components/voucher/invoice_selection';
+import { IPaginatedData } from '@/interfaces/pagination';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -188,7 +188,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const [certificates, setInvoices] = useState<{ [id: string]: IInvoiceRC2UI }>({});
+  const [invoices, setInvoices] = useState<{ [id: string]: IInvoiceRC2UI }>({});
   const [selectedInvoices, setSelectedInvoices] = useState<IInvoiceRC2UI[]>([]);
 
   // Info: (20241108 - Julian) 取得 AI 分析結果
@@ -248,7 +248,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const handleSelect = useCallback(
     (ids: number[]) => {
       // Info: (20250312 - Julian) 複製一份資料
-      const updatedData = { ...certificates };
+      const updatedData = { ...invoices };
       // Info: (20250312 - Julian) 更新選擇狀態：包含在 ids 中的 isSelected 為 true，不在 ids 中的為 false
       Object.keys(updatedData).forEach((key) => {
         updatedData[key] = {
@@ -272,13 +272,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // Info: (20241021 - Julian) 呼叫 ask AI
       askAIAnalysis(targetIds);
     },
-    [certificates, selectedIds]
+    [invoices, selectedIds]
   );
 
   const handleDelete = useCallback(
     (id: number) => {
       const updatedData = {
-        ...certificates,
+        ...invoices,
       };
       updatedData[id] = {
         ...updatedData[id],
@@ -292,7 +292,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setInvoices(updatedData);
       setSelectedInvoices(selectedCerts);
     },
-    [certificates]
+    [invoices]
   );
 
   useEffect(() => {
@@ -317,7 +317,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const handleInvoiceApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2[]>) => {
       const { data } = resData;
-      const certificatesData = data.reduce(
+      const invoicesData = data.reduce(
         (acc, item) => {
           acc[item.id] = {
             ...item,
@@ -328,7 +328,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         },
         {} as { [id: string]: IInvoiceRC2UI }
       );
-      setInvoices(certificatesData);
+      setInvoices(invoicesData);
     },
     [selectedInvoices]
   );
@@ -638,7 +638,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
     const body = {
       actions,
-      certificateIds: selectedIds,
+      certificateIds: [],
+      invoiceRC2Ids: selectedIds,
       voucherDate: date.startTimeStamp,
       type: VOUCHER_TYPE_TO_EVENT_TYPE_MAP[type as VoucherType],
       note: JSON.stringify(note),
@@ -953,7 +954,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         return newInvoicesUI;
       });
     },
-    [certificates]
+    [invoices]
   );
 
   // Info: (20241022 - tzuhan) @Murky, 這裡是前端訂閱 PUSHER (CERTIFICATE_EVENT.CREATE) 的地方，當生成新的 certificate 要新增到列表中
@@ -1030,7 +1031,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         openUploaderModal={() => setOpenUploaderModal(true)}
         handleSelect={handleSelect}
         handleApiResponse={handleInvoiceApiResponse}
-        invoices={Object.values(certificates)}
+        invoices={Object.values(invoices)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
       />
@@ -1049,7 +1050,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         retryDisabled={isAskingAI || aiState === AIState.WORKING}
         fillUpClickHandler={fillUpWithAIResult}
       /> */}
-      {/* ToDo: (20240926 - Julian) Uploaded certificates */}
+      {/* ToDo: (20240926 - Julian) Uploaded invoices */}
       <InvoiceSelection
         selectedInvoices={selectedInvoices}
         setOpenModal={handleOpenSelectorModal}

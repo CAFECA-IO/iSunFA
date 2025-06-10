@@ -13,6 +13,7 @@ import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import useStateRef from 'react-usestateref';
 import { timestampToString } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface ICashFlowStatementReportBodyAllProps {
   reportId: string;
@@ -20,6 +21,7 @@ interface ICashFlowStatementReportBodyAllProps {
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
 
   const [financialReport, setFinancialReport] = useState<CashFlowStatementReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -420,7 +422,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <div className="flex items-center">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}{currency}</p>
         </div>
         {page1Table}
       </section>
@@ -444,7 +446,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page2Table}
         <div className="relative -z-10">
@@ -487,7 +492,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page3Table}
 
@@ -521,7 +529,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page4Table}
 
@@ -555,7 +566,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page5Table}
 
@@ -589,7 +603,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page6Table}
 
@@ -623,7 +640,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
+          </p>
         </div>
         {page7Table}
 

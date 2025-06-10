@@ -95,14 +95,8 @@ export const listInvoiceRC2Grouped = {
     }),
     bodySchema: nullSchema,
   },
-  outputSchema: z.object({
-    inputList: z.array(InvoiceRC2InputSchema),
-    outputList: z.array(InvoiceRC2OutputSchema),
-  }),
-  frontend: z.object({
-    inputList: z.array(InvoiceRC2InputSchema),
-    outputList: z.array(InvoiceRC2OutputSchema),
-  }),
+  outputSchema: paginatedDataSchema(z.union([InvoiceRC2OutputSchema, InvoiceRC2InputSchema])),
+  frontend: paginatedDataSchema(z.union([InvoiceRC2OutputSchema, InvoiceRC2InputSchema])),
 };
 
 export const listInvoiceRC2Input = {
