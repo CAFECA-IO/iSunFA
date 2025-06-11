@@ -266,6 +266,14 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     }
   }, [printRef]);
 
+  // Todo: (20250610 - Anna) 拿掉
+  useEffect(() => {
+    if (getReportFinancialSuccess && reportFinancial) {
+      // eslint-disable-next-line no-console
+      console.log('[DEBUG] reportFinancial 內容：', reportFinancial);
+    }
+  }, [getReportFinancialSuccess, reportFinancial]);
+
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
     return (
@@ -400,6 +408,85 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     return rows;
   };
 
+  // Info: (20250610 - Anna) 調整子項目百分比尾差
+  const adjustChildPercentages = (
+    children: IAccountReadyForFrontend[],
+    curPeriodParentAmount: number,
+    curPeriodTotalAsset: number
+  ): Array<IAccountReadyForFrontend & { curPeriodAdjustedPercentageString: string }> => {
+    // Info: (20250610 - Anna) 篩掉金額為 0 的子項
+    const noZeroChildren = children.filter((child) => child.curPeriodAmount !== 0);
+
+    // Info: (20250610 - Anna) 計算每個子項的原始百分比(含小數)
+    const childrenWithValues = noZeroChildren.map((child) => ({
+      ...child,
+      curPeriodRealPercentage: (child.curPeriodAmount / curPeriodTotalAsset) * 100,
+    }));
+
+    // Info: (20250610 - Anna) 子項百分比四捨五入為整數
+    const curPeriodRoundedPercentages = childrenWithValues.map((child) =>
+      Math.round(child.curPeriodRealPercentage)
+    );
+
+    // Info: (20250610 - Anna) 計算子項百分比總和、父項百分比（皆為四捨五入後的）
+    const curPeriodSumRounded = curPeriodRoundedPercentages.reduce((a, b) => a + b, 0);
+    const curPeriodParentRounded = Math.round((curPeriodParentAmount / curPeriodTotalAsset) * 100);
+
+    // Info: (20250610 - Anna) 計算尾差：正值表示子項加起來太小，負值表示子項加起來太大
+    let remaining = curPeriodParentRounded - curPeriodSumRounded;
+
+    // Info: (20250610 - Anna) 若有尾差，調整子項百分比
+    if (remaining !== 0 && childrenWithValues.length > 0) {
+      // Info: (20250610 - Anna) 根據「原始百分比 & 四捨五入」的差距，從大到小排序
+      const sortedCandidates = childrenWithValues
+        .map((child, i) => ({
+          i,
+          gap: Math.abs(child.curPeriodRealPercentage - curPeriodRoundedPercentages[i]),
+          childCurPeriodAmount: child.curPeriodAmount,
+          curPeriodRoundedPercentage: curPeriodRoundedPercentages[i],
+        }))
+        .sort((a, b) => b.gap - a.gap);
+
+      // Info: (20250610 - Anna) 用 for 依序處理候選子項，如果剩下的尾差已經為 0 就跳出
+      for (let j = 0; j < sortedCandidates.length && remaining !== 0; j += 1) {
+        const { i, childCurPeriodAmount, curPeriodRoundedPercentage } = sortedCandidates[j];
+        const defaultAdjustmentPercentage = curPeriodRoundedPercentage + remaining;
+
+        // Info: (20250610 - Anna) 百分比應該和數值同方向
+        const directionIsValid =
+          (childCurPeriodAmount >= 0 && defaultAdjustmentPercentage >= 0) ||
+          (childCurPeriodAmount < 0 && defaultAdjustmentPercentage <= 0);
+
+        if (directionIsValid) {
+          curPeriodRoundedPercentages[i] = defaultAdjustmentPercentage;
+          remaining = 0;
+        } else {
+          // Info: (20250610 - Anna) 最多只能調整至 0，剩餘尾差再傳給下一筆
+          const maxAdjust = -curPeriodRoundedPercentage; // Info: (20250610 - Anna) 讓目前這筆變成 0 所需的調整量
+          if (maxAdjust !== 0) {
+            curPeriodRoundedPercentages[i] = 0;
+            remaining -= maxAdjust; // Info: (20250610 - Anna) 將未能調整的部分繼續往下補
+          }
+        }
+      }
+    }
+
+    //  Info: (20250610 - Anna) 回傳陣列，格式化數字
+    return childrenWithValues.map((child, i) => {
+      const adjusted = curPeriodRoundedPercentages[i];
+
+      return {
+        ...child,
+        curPeriodAdjustedPercentageString:
+          adjusted === 0
+            ? '-'
+            : adjusted < 0
+              ? `(${Math.abs(adjusted).toLocaleString()})`
+              : `${adjusted.toLocaleString()}`,
+      };
+    });
+  };
+
   // Info: (20241021 - Anna) 要記得改interface
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
     const rows = items.map((item) => {
@@ -467,56 +554,66 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               {item.prePeriodPercentageString}
             </td>
           </tr>
-          {/* Info: (20241003 - Anna) 如果展開，新增子科目表格 */}
+          {/* Info: (20250610 - Anna) 如果展開，新增子科目表格 */}
           {!isSubAccountsCollapsed[item.code] &&
             item.children &&
             item.children.length > 0 &&
-            item.children
+            (() => {
+              const totalAsset =
+                reportFinancial?.general?.find((account) => account.code === '1XXX')
+                  ?.curPeriodAmount ?? 1;
+              const adjustedChildren = adjustChildPercentages(
+                item.children,
+                item.curPeriodAmount,
+                totalAsset
+              );
               // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
-              .filter(
-                (child) =>
-                  child.curPeriodAmountString !== '-' ||
-                  child.curPeriodPercentageString !== '-' ||
-                  child.prePeriodAmountString !== '-' ||
-                  child.prePeriodPercentageString !== '-'
-              )
-              .map((child) => (
-                <tr key={`sub-accounts-${child.code}`}>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
-                  <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
-                    <div className="flex items-center justify-between">
-                      <div className="justify-start">
-                        <span>{child.code}</span>
-                        <span className="ml-2">
-                          {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
-                        </span>
+              return adjustedChildren
+                .filter(
+                  (child) =>
+                    child.curPeriodAmountString !== '-' ||
+                    child.curPeriodPercentageString !== '-' ||
+                    child.prePeriodAmountString !== '-' ||
+                    child.prePeriodPercentageString !== '-'
+                )
+                .map((child) => (
+                  <tr key={`sub-accounts-${child.code}`}>
+                    <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
+                    <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
+                      <div className="flex items-center justify-between">
+                        <div className="justify-start">
+                          <span>{child.code}</span>
+                          <span className="ml-2">
+                            {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
+                          </span>
+                        </div>
+                        {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
+                                BalanceDetailsButton，用於顯示彈出視窗的標題 */}
+                        {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
+                        {child.code !== '3353' && child.code !== '3351' && (
+                          <BalanceDetailsButton
+                            accountName={child.name}
+                            accountId={child.accountId}
+                            className="print:hidden"
+                          />
+                        )}
                       </div>
-                      {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
-                    BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                      {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
-                      {child.code !== '3353' && child.code !== '3351' && (
-                        <BalanceDetailsButton
-                          accountName={child.name}
-                          accountId={child.accountId}
-                          className="print:hidden"
-                        />
-                      )}
-                    </div>
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                    {child.curPeriodAmountString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                    {child.curPeriodPercentageString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
-                    {child.prePeriodAmountString}
-                  </td>
-                  <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                    {child.prePeriodPercentageString}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                      {child.curPeriodAmountString}
+                    </td>
+                    <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                      {child.curPeriodAdjustedPercentageString}
+                    </td>
+                    <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-end text-sm">
+                      {child.prePeriodAmountString}
+                    </td>
+                    <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
+                      {child.prePeriodPercentageString}
+                    </td>
+                  </tr>
+                ));
+            })()}
         </React.Fragment>
       );
     });
@@ -626,7 +723,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
-            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}{currency}
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isDetailCollapsed && (
