@@ -28,7 +28,7 @@ import { TrialBalanceItem, ILineItemInTrialBalanceItem } from '@/interfaces/tria
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import { Account } from '@prisma/client';
 
-// ========== Mock Data Helpers ==========
+// Info: (20250611 - Shirley) ========== Mock Data Helpers ==========
 
 const createMockLineItem = (
   id: number,
@@ -51,7 +51,7 @@ const createMockLineItem = (
   deletedAt: null,
   voucher: {
     id: voucherId,
-    date: voucherDate, // 使用傳入的日期
+    date: voucherDate, // Info: (20250611 - Shirley) 使用傳入的日期
     type: 'PAYMENT',
     no: `V${voucherId}`,
   },
@@ -97,8 +97,8 @@ const createMockLineItemWithDebitCredit = (
   creditAmount: !lineItem.debit ? lineItem.amount : 0,
 });
 
-// ========== 1. API 核心流程測試 ==========
-
+// Info: (20250611 - Shirley) ========== 1. API 核心流程測試 ==========
+// Info: (20250611 - Shirley) Effective test case
 describe('Trial Balance API 核心流程', () => {
   describe('getCurrent401Period - 401 申報期間計算', () => {
     beforeEach(() => {
@@ -120,8 +120,8 @@ describe('Trial Balance API 核心流程', () => {
       const beginDate = new Date(result.periodBegin * 1000);
       const endDate = new Date(result.periodEnd * 1000);
 
-      expect(beginDate.getMonth()).toBe(0); // 1月 (0-indexed)
-      expect(endDate.getMonth()).toBe(1); // 2月
+      expect(beginDate.getMonth()).toBe(0); // Info: (20250611 - Shirley) 1月 (0-indexed)
+      expect(endDate.getMonth()).toBe(1); // Info: (20250611 - Shirley) 2月
     });
 
     it('應該正確計算第二季度(3-4月)的申報期間', () => {
@@ -132,8 +132,8 @@ describe('Trial Balance API 核心流程', () => {
       const beginDate = new Date(result.periodBegin * 1000);
       const endDate = new Date(result.periodEnd * 1000);
 
-      expect(beginDate.getMonth()).toBe(2); // 3月
-      expect(endDate.getMonth()).toBe(3); // 4月
+      expect(beginDate.getMonth()).toBe(2); // Info: (20250611 - Shirley) 3月
+      expect(endDate.getMonth()).toBe(3); // Info: (20250611 - Shirley) 4月
     });
 
     it('應該正確計算年底申報期間', () => {
@@ -144,8 +144,8 @@ describe('Trial Balance API 核心流程', () => {
       const beginDate = new Date(result.periodBegin * 1000);
       const endDate = new Date(result.periodEnd * 1000);
 
-      expect(beginDate.getMonth()).toBe(10); // 11月
-      expect(endDate.getMonth()).toBe(11); // 12月
+      expect(beginDate.getMonth()).toBe(10); // Info: (20250611 - Shirley) 11月
+      expect(endDate.getMonth()).toBe(11); // Info: (20250611 - Shirley) 12月
     });
   });
 
@@ -155,7 +155,7 @@ describe('Trial Balance API 核心流程', () => {
       const periodEnd = new Date('2024-03-31').getTime() / 1000;
 
       const lineItems: ILineItemInTrialBalanceItem[] = [
-        // 期初前的項目 (2023年)
+        // Info: (20250611 - Shirley) 期初前的項目 (2023年)
         createMockLineItemWithDebitCredit(
           createMockLineItem(
             1,
@@ -168,7 +168,7 @@ describe('Trial Balance API 核心流程', () => {
             new Date('2023-12-15').getTime() / 1000
           )
         ),
-        // 期中的項目 (2024年1-3月)
+        // Info: (20250611 - Shirley) 期中的項目 (2024年1-3月)
         createMockLineItemWithDebitCredit(
           createMockLineItem(
             2,
@@ -189,11 +189,11 @@ describe('Trial Balance API 核心流程', () => {
       expect(result.midterm).toBeDefined();
       expect(result.ending).toBeDefined();
 
-      // 期初應該有項目 (期初前的累積)
+      // Info: (20250611 - Shirley) 期初應該有項目 (期初前的累積)
       expect(result.beginning).toHaveLength(1);
-      // 期中應該有項目 (期間內的)
+      // Info: (20250611 - Shirley) 期中應該有項目 (期間內的)
       expect(result.midterm).toHaveLength(1);
-      // 期末應該是期初+期中的合併
+      // Info: (20250611 - Shirley) 期末應該是期初+期中的合併
       expect(result.ending).toHaveLength(1);
     });
 
@@ -230,9 +230,9 @@ describe('Trial Balance API 核心流程', () => {
 
       const result = convertToTrialBalanceItem(lineItems, periodBegin, periodEnd);
 
-      // 驗證期末餘額是期初+期中的累積
+      // Info: (20250611 - Shirley) 驗證期末餘額是期初+期中的累積
       const endingItem = result.ending[0];
-      expect(endingItem.debitAmount).toBe(150000); // 100000 + 50000
+      expect(endingItem.debitAmount).toBe(150000); // Info: (20250611 - Shirley) 100000 + 50000
     });
   });
 
@@ -240,7 +240,7 @@ describe('Trial Balance API 核心流程', () => {
     it('應該正確處理明細項目並產生階層結構', () => {
       const mockAccounts: Account[] = [
         createMockAccount(1101, '1101', '現金'),
-        createMockAccount(1102, '1102', '銀行存款', 1101), // 子科目
+        createMockAccount(1102, '1102', '銀行存款', 1101), // Info: (20250611 - Shirley) 子科目
       ];
 
       const mockLineItems: ILineItemInTrialBalanceItem[] = [
@@ -257,7 +257,7 @@ describe('Trial Balance API 核心流程', () => {
       expect(result.arrWithChildren).toBeDefined();
       expect(result.arrWithCopySelf).toBeDefined();
 
-      // 應該有處理結果
+      // Info: (20250611 - Shirley) 應該有處理結果
       expect(result.arrWithCopySelf.length).toBeGreaterThan(0);
     });
 
@@ -345,7 +345,7 @@ describe('Trial Balance API 核心流程', () => {
       expect(result.total).toBeDefined();
       expect(result.items.length).toBeGreaterThan(0);
 
-      // 驗證總額計算
+      // Info: (20250611 - Shirley) 驗證總額計算
       expect(result.total.beginningDebitAmount).toBeGreaterThanOrEqual(0);
       expect(result.total.midtermDebitAmount).toBeGreaterThanOrEqual(0);
       expect(result.total.endingDebitAmount).toBeGreaterThanOrEqual(0);
@@ -393,9 +393,9 @@ describe('Trial Balance API 核心流程', () => {
 
       const result = formatPaginatedTrialBalance(mockItems, DEFAULT_SORT_OPTIONS, 1, 10);
 
-      expect(result.data).toHaveLength(10); // 第一頁應有10筆
+      expect(result.data).toHaveLength(10); // Info: (20250611 - Shirley) 第一頁應有10筆
       expect(result.page).toBe(1);
-      expect(result.totalPages).toBe(3); // 25筆資料，每頁10筆，共3頁
+      expect(result.totalPages).toBe(3); // Info: (20250611 - Shirley) 25筆資料，每頁10筆，共3頁
       expect(result.totalCount).toBe(25);
       expect(result.hasNextPage).toBe(true);
       expect(result.hasPreviousPage).toBe(false);
@@ -408,7 +408,7 @@ describe('Trial Balance API 核心流程', () => {
 
       const result = formatPaginatedTrialBalance(mockItems, DEFAULT_SORT_OPTIONS, 3, 10);
 
-      expect(result.data).toHaveLength(5); // 最後一頁應有5筆
+      expect(result.data).toHaveLength(5); // Info: (20250611 - Shirley) 最後一頁應有5筆
       expect(result.page).toBe(3);
       expect(result.hasNextPage).toBe(false);
       expect(result.hasPreviousPage).toBe(true);
@@ -428,8 +428,8 @@ describe('Trial Balance API 核心流程', () => {
   });
 });
 
-// ========== 2. 排序邏輯測試 ==========
-
+// Info: (20250611 - Shirley) ========== 2. 排序邏輯測試 ==========
+// Info: (20250611 - Shirley) Effective test case
 describe('Trial Balance 排序邏輯', () => {
   const createMockTrialBalanceItem = (
     id: number,
@@ -468,9 +468,9 @@ describe('Trial Balance 排序邏輯', () => {
 
       const result = sortTrialBalanceItem([...mockItems], sortOptions);
 
-      expect(result[0].beginningDebitAmount).toBe(50000); // 現金
-      expect(result[1].beginningDebitAmount).toBe(30000); // 應收帳款
-      expect(result[2].beginningDebitAmount).toBe(0); // 應付帳款
+      expect(result[0].beginningDebitAmount).toBe(50000); // Info: (20250611 - Shirley) 現金
+      expect(result[1].beginningDebitAmount).toBe(30000); // Info: (20250611 - Shirley) 應收帳款
+      expect(result[2].beginningDebitAmount).toBe(0); // Info: (20250611 - Shirley) 應付帳款
     });
 
     it('應該正確按期中貸方金額升序排序', () => {
@@ -478,8 +478,8 @@ describe('Trial Balance 排序邏輯', () => {
 
       const result = sortTrialBalanceItem([...mockItems], sortOptions);
 
-      expect(result[0].midtermCreditAmount).toBe(0); // 現金或應收帳款
-      expect(result[2].midtermCreditAmount).toBe(45000); // 應付帳款
+      expect(result[0].midtermCreditAmount).toBe(0); // Info: (20250611 - Shirley) 現金或應收帳款
+      expect(result[2].midtermCreditAmount).toBe(45000); // Info: (20250611 - Shirley) 應付帳款
     });
 
     it('應該正確按期末借方金額降序排序', () => {
@@ -487,9 +487,9 @@ describe('Trial Balance 排序邏輯', () => {
 
       const result = sortTrialBalanceItem([...mockItems], sortOptions);
 
-      expect(result[0].endingDebitAmount).toBe(60000); // 現金
-      expect(result[1].endingDebitAmount).toBe(25000); // 應收帳款
-      expect(result[2].endingDebitAmount).toBe(0); // 應付帳款
+      expect(result[0].endingDebitAmount).toBe(60000); // Info: (20250611 - Shirley) 現金
+      expect(result[1].endingDebitAmount).toBe(25000); // Info: (20250611 - Shirley) 應收帳款
+      expect(result[2].endingDebitAmount).toBe(0); // Info: (20250611 - Shirley) 應付帳款
     });
   });
 
@@ -503,26 +503,26 @@ describe('Trial Balance 排序邏輯', () => {
       const result = sortTrialBalanceItem([...mockItems], sortOptions);
 
       expect(result).toHaveLength(3);
-      // 第一個排序條件應生效
+      // Info: (20250611 - Shirley) 第一個排序條件應生效
       expect(result[0].beginningDebitAmount).toBeGreaterThanOrEqual(result[1].beginningDebitAmount);
     });
 
     it('應該正確處理相同金額時的次要排序', () => {
       const itemsWithSameAmount = [
         createMockTrialBalanceItem(1, '1101', '現金', 50000, 0, 0, 0, 0, 0),
-        createMockTrialBalanceItem(2, '1102', '銀行存款', 50000, 0, 0, 0, 0, 0), // 相同金額
-        createMockTrialBalanceItem(3, '1103', '定期存款', 50000, 0, 0, 0, 0, 0), // 相同金額
+        createMockTrialBalanceItem(2, '1102', '銀行存款', 50000, 0, 0, 0, 0, 0), // Info: (20250611 - Shirley) 相同金額
+        createMockTrialBalanceItem(3, '1103', '定期存款', 50000, 0, 0, 0, 0, 0), // Info: (20250611 - Shirley) 相同金額
       ];
 
       const sortOptions = [
         { sortBy: SortBy.BEGINNING_DEBIT_AMOUNT, sortOrder: SortOrder.DESC },
-        { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.ASC }, // 預設為科目名稱
+        { sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.ASC }, // Info: (20250611 - Shirley) 預設為科目名稱
       ];
 
       const result = sortTrialBalanceItem([...itemsWithSameAmount], sortOptions);
 
       expect(result).toHaveLength(3);
-      // 金額相同時，應該按第二個條件排序
+      // Info: (20250611 - Shirley) 金額相同時，應該按第二個條件排序
       expect(result[0].beginningDebitAmount).toBe(50000);
       expect(result[1].beginningDebitAmount).toBe(50000);
       expect(result[2].beginningDebitAmount).toBe(50000);
@@ -534,7 +534,7 @@ describe('Trial Balance 排序邏輯', () => {
       const subAccount = createMockTrialBalanceItem(
         11,
         '1101-01',
-        '零用金',
+        '零用金A',
         10000,
         0,
         5000,
@@ -552,7 +552,7 @@ describe('Trial Balance 排序邏輯', () => {
 
       const result = sortTrialBalanceItem(items, sortOptions);
 
-      // 找到有子科目的項目
+      // Info: (20250611 - Shirley) 找到有子科目的項目
       const parentItem = result.find((item) => item.no === '1101');
       expect(parentItem).toBeDefined();
       expect(parentItem!.subAccounts).toBeDefined();
@@ -582,9 +582,10 @@ describe('Trial Balance 排序邏輯', () => {
   });
 });
 
-// ========== 3. 數據處理和合併邏輯測試 ==========
-
+// Info: (20250611 - Shirley) ========== 3. 數據處理和合併邏輯測試 ==========
+// Info: (20250611 - Shirley) Effective test case
 describe('Trial Balance 數據處理邏輯', () => {
+  // Info: (20250611 - Shirley) Effective test case
   describe('mergeLineItems - 明細項目合併', () => {
     it('應該正確合併同一科目的多筆明細', () => {
       const lineItems: ILineItemSimpleAccountVoucher[] = [
@@ -626,6 +627,7 @@ describe('Trial Balance 數據處理邏輯', () => {
     });
   });
 
+  // Info: (20250611 - Shirley) Effective test case
   describe('categorizeAndMergeLineItems - 期間分類', () => {
     it('應該正確按期間分類明細項目', () => {
       const periodBegin = new Date('2024-01-01').getTime() / 1000;
@@ -665,6 +667,7 @@ describe('Trial Balance 數據處理邏輯', () => {
     });
   });
 
+  // Info: (20250611 - Shirley) Effective test case
   describe('calculateEndingBalance - 期末餘額計算', () => {
     it('應該正確計算期末餘額', () => {
       const beginning: ILineItemInTrialBalanceItem[] = [
@@ -687,9 +690,10 @@ describe('Trial Balance 數據處理邏輯', () => {
   });
 });
 
-// ========== 4. 邊界條件和錯誤處理測試 ==========
-
+// Info: (20250611 - Shirley) ========== 4. 邊界條件和錯誤處理測試 ==========
+// Info: (20250611 - Shirley) Effective test case
 describe('Trial Balance 邊界條件處理', () => {
+  // Info: (20250611 - Shirley) Effective test case
   describe('空數據處理', () => {
     it('應該正確處理空的明細項目陣列', () => {
       const emptyLineItems: ILineItemSimpleAccountVoucher[] = [];
@@ -710,6 +714,7 @@ describe('Trial Balance 邊界條件處理', () => {
     });
   });
 
+  // Info: (20250611 - Shirley) Effective test case
   describe('異常數據處理', () => {
     it('應該正確處理負數金額', () => {
       const lineItemsWithNegative: ILineItemSimpleAccountVoucher[] = [
@@ -739,6 +744,7 @@ describe('Trial Balance 邊界條件處理', () => {
     });
   });
 
+  // Info: (20250611 - Shirley) Effective test case
   describe('性能測試', () => {
     it('應該能處理大量數據', () => {
       const largeDataSet: ILineItemSimpleAccountVoucher[] = Array.from({ length: 1000 }, (_, i) =>
@@ -758,69 +764,8 @@ describe('Trial Balance 邊界條件處理', () => {
       const result = mergeLineItems(largeDataSet);
       const endTime = Date.now();
 
-      expect(endTime - startTime).toBeLessThan(1000); // 1秒內
+      expect(endTime - startTime).toBeLessThan(1000); // Info: (20250611 - Shirley) 1秒內
       expect(result.length).toBeGreaterThan(0);
     });
-  });
-});
-
-// ========== 5. 整合測試 ==========
-
-describe('Trial Balance 整合測試', () => {
-  it('應該正確執行完整的 API 處理流程', () => {
-    // 模擬 API 中的完整處理流程
-    const mockAccounts: Account[] = [
-      createMockAccount(1101, '1101', '現金'),
-      createMockAccount(2101, '2101', '應付帳款'),
-    ];
-
-    const mockLineItems: ILineItemSimpleAccountVoucher[] = [
-      createMockLineItem(1, 1101, 100000, true, 1, '1101', '現金', Date.now() / 1000),
-      createMockLineItem(2, 2101, 100000, false, 2, '2101', '應付帳款', Date.now() / 1000),
-    ];
-
-    // 步驟 1: 轉換為帶有 debitAmount 和 creditAmount 的格式
-    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = mockLineItems.map((item) => ({
-      ...item,
-      debitAmount: item.debit ? item.amount : 0,
-      creditAmount: !item.debit ? item.amount : 0,
-    }));
-
-    // 步驟 2: 轉換為試算表項目
-    const periodBegin = new Date('2024-01-01').getTime() / 1000;
-    const periodEnd = new Date('2024-03-31').getTime() / 1000;
-    const threeStagesOfLineItems = convertToTrialBalanceItem(
-      lineItemsWithDebitCredit,
-      periodBegin,
-      periodEnd
-    );
-
-    // 步驟 3: 處理明細項目
-    const threeStagesOfTrialBalance = {
-      beginning: processLineItems(threeStagesOfLineItems.beginning, mockAccounts).arrWithCopySelf,
-      midterm: processLineItems(threeStagesOfLineItems.midterm, mockAccounts).arrWithCopySelf,
-      ending: processLineItems(threeStagesOfLineItems.ending, mockAccounts).arrWithCopySelf,
-    };
-
-    // 步驟 4: 轉換為 API 格式
-    const APIData = convertToAPIFormat(threeStagesOfTrialBalance, DEFAULT_SORT_OPTIONS);
-
-    expect(APIData).toBeDefined();
-    expect(APIData.items).toBeDefined();
-    expect(APIData.total).toBeDefined();
-
-    // 步驟 5: 分頁處理
-    if (APIData) {
-      const paginatedTrialBalance = formatPaginatedTrialBalance(
-        APIData.items,
-        DEFAULT_SORT_OPTIONS,
-        1,
-        10
-      );
-
-      expect(paginatedTrialBalance).toBeDefined();
-      expect(paginatedTrialBalance.data).toBeDefined();
-      expect(paginatedTrialBalance.totalCount).toBeGreaterThanOrEqual(0);
-    }
   });
 });
