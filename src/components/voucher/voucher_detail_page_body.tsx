@@ -510,7 +510,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
           className="disabled:cursor-not-allowed"
           onClick={() => {
             if (!(isReverseRelated || type === EventType.OPENING)) {
-              router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              if (certificates.length > 0 || (certificates.length === 0 && invoices.length === 0)) {
+                router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              } else if (certificates.length === 0 && invoices.length > 0) {
+                router.push(`/users/accounting/${voucherId}/editing_rc2?voucherNo=${voucherNo}`);
+              }
             }
           }}
         >
