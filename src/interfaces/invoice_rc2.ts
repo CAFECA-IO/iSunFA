@@ -12,6 +12,7 @@ export interface IInvoiceRC2Base {
   id: number;
   accountBookId: number;
   voucherId: number | null;
+  fileId: number;
   file: {
     id: number;
     name: string;
@@ -32,7 +33,7 @@ export interface IInvoiceRC2Base {
   updatedAt: number;
   deletedAt?: number | null;
 
-  type: InvoiceType;
+  type: InvoiceType | undefined;
   issuedDate: number;
   no: string;
   currencyCode: CurrencyCode;
