@@ -1,5 +1,5 @@
 /**
- * Info: (20250115 - Assistant) Trial Balance API 核心邏輯測試套件
+ * Info: (20250611 - Shirley) Trial Balance API 核心邏輯測試套件
  *
  * 本測試套件專注於測試 API 實際使用的核心業務邏輯函數，包括：
  * 1. getCurrent401Period - 獲取 401 申報期間
