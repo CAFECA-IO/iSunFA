@@ -7,6 +7,7 @@ jest.mock('@/lib/utils/repo/certificate.repo');
 // Info: (20250609 - Shirley) 設置模擬函數
 const mockDeleteMultipleCertificates = jest.mocked(deleteMultipleCertificates);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Certificate API Delete Utils 測試', () => {
   const mockTimestamp = 1640995200;
   const mockCertificateIds = [1, 2, 3];

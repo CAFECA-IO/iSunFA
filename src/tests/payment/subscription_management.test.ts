@@ -64,6 +64,7 @@ const mockUpdateTeamMemberSession = jest.mocked(updateTeamMemberSession);
 const mockAssertUserIsTeamMember = jest.mocked(assertUserIsTeamMember);
 const mockAssertUserCan = jest.mocked(assertUserCan);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('團隊訂閱管理 Repository 測試', () => {
   const mockUserId = 123;
   const mockTeamId = 456;

@@ -31,6 +31,8 @@ import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
 import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
+import { InvoiceDirection as PrismaInvoiceDirection } from '@prisma/client';
+import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
 import {
   certificateEntityValidator,
   ICertificateValidator,
@@ -41,8 +43,14 @@ import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
-import { CurrencyCode, DeductionType, InvoiceDirection, TaxType } from '@/constants/invoice_rc2';
-import { InvoiceType } from '@/constants/invoice';
+import {
+  InvoiceDirection,
+  InvoiceType,
+  CurrencyCode,
+  DeductionType,
+  TaxType,
+} from '@/constants/invoice_rc2';
+
 // TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
 
 const iVoucherValidator = z.object({
@@ -424,6 +432,7 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
         size: z.number(),
         url: z.string().optional(),
       })
+      .nullable()
       .optional(),
   }),
   uploader: z.object({
@@ -435,40 +444,41 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
     no: z.string(),
   }),
   direction: z.nativeEnum(InvoiceDirection),
-  type: z.nativeEnum(InvoiceType),
-  no: z.string(),
-  issuedDate: z.number(),
-  taxType: z.nativeEnum(TaxType),
+  type: z.nativeEnum(InvoiceType).nullable().optional(),
+  no: z.string().nullable().optional(),
+  issuedDate: z.number().nullable().optional(),
+  taxType: z.nativeEnum(TaxType).nullable().optional(),
   currencyCode: z.nativeEnum(CurrencyCode),
-  netAmount: z.number(),
-  taxAmount: z.number(),
-  totalAmount: z.number(),
-  taxRate: z.number().optional(),
-  note: z.union([z.record(z.any()), z.string()]).optional(),
+  netAmount: z.number().nullable().optional(),
+  taxAmount: z.number().nullable().optional(),
+  totalAmount: z.number().nullable().optional(),
+  taxRate: z.number().nullable().optional(),
+  note: z.union([z.record(z.any()), z.string(), z.null()]).optional(),
   aiResultId: z.string(),
   aiStatus: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
-  deletedAt: z.number().optional(),
+  deletedAt: z.number().nullable().optional(),
 
   // Info: (20250606 - Tzuhan) Input fields
-  deductionType: z.nativeEnum(DeductionType).optional(),
-  salesName: z.string().optional(),
-  salesIdNumber: z.string().optional(),
+  deductionType: z.nativeEnum(DeductionType).nullable().optional(),
+
+  salesName: z.string().nullable().optional(),
+  salesIdNumber: z.string().nullable().optional(),
   isSharedAmount: z.boolean().optional(),
 
   // Info: (20250606 - Tzuhan) Output fields
-  buyerName: z.string().optional(),
-  buyerIdNumber: z.string().optional(),
+  buyerName: z.string().nullable().optional(),
+  buyerIdNumber: z.string().nullable().optional(),
   isReturnOrAllowance: z.boolean().optional(),
 
   isGenerated: z.boolean(),
   incomplete: z.boolean(),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
 
-  totalOfSummarizedInvoices: z.number().optional(),
-  carrierSerialNumber: z.string().optional(),
-  otherCertificateNo: z.string().optional(),
+  totalOfSummarizedInvoices: z.number().nullable().optional(),
+  carrierSerialNumber: z.string().nullable().optional(),
+  otherCertificateNo: z.string().nullable().optional(),
 });
 
 const voucherGetOneOutputValidatorV2 = z
@@ -682,7 +692,76 @@ const voucherGetOneOutputValidatorV2 = z
       //     ? transformInput(inv)
       //     : transformOutput(inv);
       // }),
-      invoiceRC2List: [],
+      invoiceRC2List: data.invoiceRC2List.map((invoice) => {
+        const base = {
+          id: invoice.id,
+          accountBookId: invoice.accountBookId,
+          voucherId: invoice.voucherId,
+          fileId: invoice.file.id,
+          file: {
+            id: invoice.file.id,
+            name: invoice.file.name,
+            size: invoice.file.size,
+            url: invoice.file.url ?? '',
+            thumbnail: invoice.file.name
+              ? {
+                  id: invoice.file.id,
+                  name: '',
+                  size: 0,
+                  url: '',
+                }
+              : undefined,
+          },
+          uploaderId: invoice.uploader.id,
+          uploaderName: invoice.uploader.name,
+          direction: invoice.direction,
+          aiResultId: invoice.aiResultId ?? '0',
+          aiStatus: invoice.aiStatus ?? 'READY',
+          createdAt: invoice.createdAt,
+          updatedAt: invoice.updatedAt,
+          deletedAt: invoice.deletedAt ?? undefined,
+
+          type: (invoice.type ?? undefined) as InvoiceType | undefined,
+          issuedDate: invoice.issuedDate ?? undefined,
+          no: invoice.no ?? '',
+          currencyCode: invoice.currencyCode,
+          taxType: invoice.taxType ?? undefined,
+          taxRate: invoice.taxRate ?? undefined,
+          netAmount: invoice.netAmount ?? undefined,
+          taxAmount: invoice.taxAmount ?? undefined,
+          totalAmount: invoice.totalAmount ?? undefined,
+
+          isGenerated: invoice.isGenerated,
+          incomplete: invoice.incomplete,
+          description: invoice.description ?? undefined,
+          note: invoice.note ?? undefined,
+
+          totalOfSummarizedInvoices: invoice.totalOfSummarizedInvoices ?? undefined,
+          carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
+          otherCertificateNo: invoice.otherCertificateNo ?? undefined,
+
+          voucherNo: invoice.voucher?.no ?? null,
+        };
+
+        if (invoice.direction === PrismaInvoiceDirection.INPUT) {
+          return {
+            ...base,
+            direction: PrismaInvoiceDirection.INPUT as InvoiceDirection.INPUT,
+            deductionType: (invoice.deductionType ?? undefined) as DeductionType | undefined,
+            salesName: invoice.salesName ?? undefined,
+            salesIdNumber: invoice.salesIdNumber ?? undefined,
+            isSharedAmount: invoice.isSharedAmount ?? false,
+          } as IInvoiceRC2;
+        }
+
+        return {
+          ...base,
+          direction: PrismaInvoiceDirection.OUTPUT as InvoiceDirection,
+          buyerName: invoice.buyerName ?? undefined,
+          buyerIdNumber: invoice.buyerIdNumber ?? undefined,
+          isReturnOrAllowance: invoice.isReturnOrAllowance ?? false,
+        } as IInvoiceRC2;
+      }),
       lineItems: data.lineItems.map((lineItem) => ({
         id: lineItem.id,
         description: lineItem.description,

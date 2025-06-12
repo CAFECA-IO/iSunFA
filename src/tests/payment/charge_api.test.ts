@@ -127,6 +127,7 @@ const mockGenerateTeamPayment = jest.mocked(generateTeamPayment);
 const mockUpdateTeamPayment = jest.mocked(updateTeamPayment);
 const mockFormatApiResponse = jest.mocked(formatApiResponse);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Payment Charge API 測試', () => {
   const mockUserId = 123;
   const mockPaymentMethodId = 456;
