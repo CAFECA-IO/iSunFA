@@ -44,6 +44,7 @@
     "NOV_ABR": "十一月",
     "DEC_ABR": "十二月",
     "EVERY": "每",
-    "ISSUE_DATE": "开立日期"
+    "ISSUE_DATE": "开立日期",
+    "PERIOD": "期间"
   }
 }
