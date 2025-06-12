@@ -568,6 +568,7 @@ const VoucherEditingPageBody: React.FC<{
     messageModalVisibilityHandler();
   };
 
+  // Deprecated: (20250612 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const fillUpWithAIResult = () => {
     setDate(aiDate);
