@@ -46,7 +46,7 @@ const Invoice = ({ invoice }: InvoiceProps) => {
           {invoice.status ? (
             <div className="flex min-w-22px items-center justify-center gap-1px rounded-full bg-badge-surface-soft-success px-15px py-1px">
               <Image src="/icons/paid_check.svg" alt="check" width={14} height={14} />
-              <span className="px-2.5px text-xs font-medium leading-5 text-badge-text-success-solid">
+              <span className="whitespace-nowrap px-2.5px text-xs font-medium leading-5 text-badge-text-success-solid">
                 {t('subscriptions:BILLING_PAGE.PAID')}
               </span>
             </div>
@@ -86,7 +86,7 @@ const InvoiceList = ({
   const { t } = useTranslation(['subscriptions']);
 
   return (
-    <main className="flex flex-col gap-12px">
+    <main className="flex w-max flex-col gap-12px tablet:w-full">
       <section className="flex divide-x divide-stroke-neutral-quaternary border-b border-stroke-neutral-quaternary bg-surface-neutral-surface-lv1 py-8px">
         <div className="flex w-180px items-center justify-center px-16px">
           <p className="text-xs font-semibold text-text-neutral-tertiary">
@@ -120,7 +120,7 @@ const InvoiceList = ({
             />
           </p>
         </div>
-        <div className="flex flex-auto items-center justify-center">
+        <div className="flex w-180px items-center justify-center">
           <p className="text-xs font-semibold text-text-neutral-tertiary">
             {t('subscriptions:BILLING_PAGE.STATUS')}
           </p>
