@@ -693,8 +693,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 'curPeriod'
               );
 
-              /* Info: (20250610 - Anna) 如果展開，新增子科目表格 */
-
               const adjustedPreChildren = adjustChildPercentageTailGap(
                 item.children,
                 item.prePeriodAmount,
