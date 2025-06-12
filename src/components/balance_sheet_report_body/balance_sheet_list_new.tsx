@@ -350,7 +350,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       </td>
     </tr>
   );
-
+  type IAccountWithAdjustedPercentage = IAccountReadyForFrontend &
+    // Info: (20250610 - Anna) 兩個欄位可以只有一個被加上，不強制同時存在
+    Partial<{
+      curPeriodAdjustedPercentageString: string;
+      prePeriodAdjustedPercentageString: string;
+    }>;
   const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
     const rows = items.map((item) => {
       // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
@@ -403,6 +408,71 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     return rows;
   };
 
+  // Info: (20250610 - Anna) 調整父項百分比，使其加總不超過100
+  const adjustParentPercentageTailGap = (
+    parents: IAccountReadyForFrontend[],
+    key: 'curPeriod' | 'prePeriod',
+    totalAsset: number
+  ): IAccountWithAdjustedPercentage[] => {
+    // Info: (20250610 - Anna) 用 code 開頭分組(資產：'1'，負債與權益：'2'、'3')
+    const groupByCodePrefix = (prefixes: string[]) =>
+      parents.filter((parent) => prefixes.some((prefix) => parent.code?.startsWith(prefix)));
+
+    // Info: (20250610 - Anna) 輸入和輸出陣列的型別一致
+    const createDisplayPercentagesForGroup = (group: typeof parents): typeof group => {
+      const accountsWithPercentageMeta = group.map((parent) => {
+        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
+        const realPercentage = parentAmount && totalAsset ? (parentAmount / totalAsset) * 100 : 0;
+        const roundedPercentage = Math.round(realPercentage);
+        const gap = Math.abs(realPercentage - roundedPercentage);
+        return { ...parent, realPercentage, roundedPercentage, gap };
+      });
+
+      const roundedPercentageSum = accountsWithPercentageMeta.reduce(
+        (sum, parent) => sum + parent.roundedPercentage,
+        0
+      );
+      let diff = 100 - roundedPercentageSum;
+
+      // Info: (20250610 - Anna) 排序補尾差
+      const sorted = accountsWithPercentageMeta.slice().sort((a, b) => b.gap - a.gap);
+
+      for (let i = 0; i < sorted.length && diff !== 0; i += 1) {
+        if (diff > 0) {
+          sorted[i].roundedPercentage += 1;
+          diff -= 1;
+        } else {
+          sorted[i].roundedPercentage -= 1;
+          diff += 1;
+        }
+      }
+
+      return sorted.map(({ roundedPercentage, ...rest }) => {
+        const formattedPercentage =
+          roundedPercentage === 0
+            ? '-'
+            : roundedPercentage < 0
+              ? `(${Math.abs(roundedPercentage).toLocaleString()})`
+              : `${roundedPercentage.toLocaleString()}`;
+
+        return {
+          ...rest,
+          [`${key}AdjustedPercentageString`]: formattedPercentage,
+        };
+      });
+    };
+
+    const assets = createDisplayPercentagesForGroup(groupByCodePrefix(['1']));
+    const liabilitiesEquity = createDisplayPercentagesForGroup(groupByCodePrefix(['2', '3']));
+
+    // Info: (20250610 - Anna) 把兩組調整後的科目依 code 存入 map
+    const accountByCodeMap = new Map<string, IAccountReadyForFrontend>();
+    [...assets, ...liabilitiesEquity].forEach((parent) => {
+      if (parent.code) accountByCodeMap.set(parent.code, parent);
+    });
+    // Info: (20250610 - Anna) 依照原本的順序，把調整後的結果補回去，如果該項目沒有被調整，則保留原始值
+    return parents.map((parent) => accountByCodeMap.get(parent.code!) ?? parent);
+  };
   // Info: (20250610 - Anna) 調整子項目百分比尾差(支援當期與前期）
   type PeriodKey = 'curPeriod' | 'prePeriod';
   const adjustChildPercentageTailGap = (
@@ -410,14 +480,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     parentAmount: number,
     totalAsset: number,
     key: PeriodKey
-  ): Array<
-    IAccountReadyForFrontend &
-      // Info: (20250610 - Anna) 兩個欄位可以只有一個被加上，不強制同時存在
-      Partial<{
-        curPeriodAdjustedPercentageString: string;
-        prePeriodAdjustedPercentageString: string;
-      }>
-  > => {
+  ): IAccountWithAdjustedPercentage[] => {
     const amountKey = key === 'curPeriod' ? 'curPeriodAmount' : 'prePeriodAmount';
     const realPercentageKey =
       key === 'curPeriod' ? 'curPeriodRealPercentage' : 'prePeriodRealPercentage';
@@ -502,7 +565,28 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
   // Info: (20241021 - Anna) 要記得改interface
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
-    const rows = items.map((item) => {
+    // Info: (20250610 - Anna) 取出「當期總資產」與「前期總資產」
+    const curTotalAsset =
+      reportFinancial?.general?.find((account) => account.code === '1XXX')?.curPeriodAmount ?? 1;
+    const preTotalAsset =
+      reportFinancial?.general?.find((account) => account.code === '1XXX')?.prePeriodAmount ?? 1;
+
+    // Info: (20250610 - Anna) 呼叫「百分比總和不超過100」的調整函式
+    const adjustedCurParent = adjustParentPercentageTailGap(items, 'curPeriod', curTotalAsset);
+    const adjustedPreParent = adjustParentPercentageTailGap(items, 'prePeriod', preTotalAsset);
+
+    // Info: (20250610 - Anna) 根據 code 合併兩期結果
+    const mergedItems = adjustedCurParent.map((curItem) => {
+      const matchedPre = adjustedPreParent.find((parent) => parent.code === curItem.code);
+      return {
+        ...curItem,
+        prePeriodPercentageString:
+          matchedPre?.prePeriodPercentageString ?? curItem.prePeriodPercentageString,
+      };
+    });
+
+    // Info: (20250610 - Anna) 將 mergedItems 傳入 map
+    const rows = mergedItems.map((item) => {
       // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
       const isAllZeroOrDash =
         (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
@@ -558,13 +642,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               {item.curPeriodAmountString}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-              {item.curPeriodPercentageString}
+              {item.curPeriodAdjustedPercentageString ?? item.curPeriodPercentageString}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
               {item.prePeriodAmountString}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-              {item.prePeriodPercentageString}
+              {item.prePeriodAdjustedPercentageString ?? item.prePeriodPercentageString}
             </td>
           </tr>
           {/* Info: (20250610 - Anna) 如果展開，新增子科目表格 */}
@@ -572,12 +656,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             item.children &&
             item.children.length > 0 &&
             (() => {
-              const curTotalAsset =
-                reportFinancial?.general?.find((account) => account.code === '1XXX')
-                  ?.curPeriodAmount ?? 1;
-              const preTotalAsset =
-                reportFinancial?.general?.find((account) => account.code === '1XXX')
-                  ?.prePeriodAmount ?? 1;
               const adjustedCurChildren = adjustChildPercentageTailGap(
                 item.children,
                 item.curPeriodAmount,
