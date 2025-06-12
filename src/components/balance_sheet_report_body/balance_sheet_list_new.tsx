@@ -136,6 +136,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         // Info: (20241023 - Anna) 設定已成功請求過 API
         setHasFetchedOnce(true);
         prevSelectedDateRange.current = selectedDateRange;
+        // Todo: (20250610 - Anna) 印出 API 回傳結果
+        // eslint-disable-next-line no-console
+        console.log('[BalanceSheetList] API response:', response);
       }
     } catch (error) {
       (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
@@ -265,14 +268,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       console.log('BalanceSheetList printRef is currently null');
     }
   }, [printRef]);
-
-  // Todo: (20250610 - Anna) 拿掉
-  useEffect(() => {
-    if (getReportFinancialSuccess && reportFinancial) {
-      // eslint-disable-next-line no-console
-      console.log('[DEBUG] reportFinancial 內容：', reportFinancial);
-    }
-  }, [getReportFinancialSuccess, reportFinancial]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -408,32 +403,49 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     return rows;
   };
 
-  // Info: (20250610 - Anna) 調整子項目百分比尾差
-  const adjustChildPercentages = (
+  // Info: (20250610 - Anna) 調整子項目百分比尾差(支援當期與前期）
+  type PeriodKey = 'curPeriod' | 'prePeriod';
+  const adjustChildPercentageTailGap = (
     children: IAccountReadyForFrontend[],
-    curPeriodParentAmount: number,
-    curPeriodTotalAsset: number
-  ): Array<IAccountReadyForFrontend & { curPeriodAdjustedPercentageString: string }> => {
+    parentAmount: number,
+    totalAsset: number,
+    key: PeriodKey
+  ): Array<
+    IAccountReadyForFrontend &
+      // Info: (20250610 - Anna) 兩個欄位可以只有一個被加上，不強制同時存在
+      Partial<{
+        curPeriodAdjustedPercentageString: string;
+        prePeriodAdjustedPercentageString: string;
+      }>
+  > => {
+    const amountKey = key === 'curPeriod' ? 'curPeriodAmount' : 'prePeriodAmount';
+    const realPercentageKey =
+      key === 'curPeriod' ? 'curPeriodRealPercentage' : 'prePeriodRealPercentage';
+    const adjustedStringKey =
+      key === 'curPeriod'
+        ? 'curPeriodAdjustedPercentageString'
+        : 'prePeriodAdjustedPercentageString';
+
     // Info: (20250610 - Anna) 篩掉金額為 0 的子項
-    const noZeroChildren = children.filter((child) => child.curPeriodAmount !== 0);
+    const noZeroChildren = children.filter((child) => child[amountKey] !== 0);
 
     // Info: (20250610 - Anna) 計算每個子項的原始百分比(含小數)
     const childrenWithValues = noZeroChildren.map((child) => ({
       ...child,
-      curPeriodRealPercentage: (child.curPeriodAmount / curPeriodTotalAsset) * 100,
-    }));
+      [realPercentageKey]: (child[amountKey] / totalAsset) * 100,
+    })) as Array<IAccountReadyForFrontend & { [key in typeof realPercentageKey]: number }>;
 
     // Info: (20250610 - Anna) 子項百分比四捨五入為整數
-    const curPeriodRoundedPercentages = childrenWithValues.map((child) =>
-      Math.round(child.curPeriodRealPercentage)
+    const roundedPercentages = childrenWithValues.map((child) =>
+      Math.round(child[realPercentageKey])
     );
 
     // Info: (20250610 - Anna) 計算子項百分比總和、父項百分比（皆為四捨五入後的）
-    const curPeriodSumRounded = curPeriodRoundedPercentages.reduce((a, b) => a + b, 0);
-    const curPeriodParentRounded = Math.round((curPeriodParentAmount / curPeriodTotalAsset) * 100);
+    const sumRounded = roundedPercentages.reduce((a, b) => a + b, 0);
+    const parentRounded = Math.round((parentAmount / totalAsset) * 100);
 
     // Info: (20250610 - Anna) 計算尾差：正值表示子項加起來太小，負值表示子項加起來太大
-    let remaining = curPeriodParentRounded - curPeriodSumRounded;
+    let remaining = parentRounded - sumRounded;
 
     // Info: (20250610 - Anna) 若有尾差，調整子項百分比
     if (remaining !== 0 && childrenWithValues.length > 0) {
@@ -441,48 +453,49 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       const sortedCandidates = childrenWithValues
         .map((child, i) => ({
           i,
-          gap: Math.abs(child.curPeriodRealPercentage - curPeriodRoundedPercentages[i]),
-          childCurPeriodAmount: child.curPeriodAmount,
-          curPeriodRoundedPercentage: curPeriodRoundedPercentages[i],
+          gap: Math.abs(child[realPercentageKey] - roundedPercentages[i]),
+          childAmount: child[amountKey],
+          roundedPercentage: roundedPercentages[i],
         }))
         .sort((a, b) => b.gap - a.gap);
 
       // Info: (20250610 - Anna) 用 for 依序處理候選子項，如果剩下的尾差已經為 0 就跳出
       for (let j = 0; j < sortedCandidates.length && remaining !== 0; j += 1) {
-        const { i, childCurPeriodAmount, curPeriodRoundedPercentage } = sortedCandidates[j];
-        const defaultAdjustmentPercentage = curPeriodRoundedPercentage + remaining;
+        const { i, childAmount, roundedPercentage } = sortedCandidates[j];
+        const defaultAdjustmentPercentage = roundedPercentage + remaining;
 
         // Info: (20250610 - Anna) 百分比應該和數值同方向
         const directionIsValid =
-          (childCurPeriodAmount >= 0 && defaultAdjustmentPercentage >= 0) ||
-          (childCurPeriodAmount < 0 && defaultAdjustmentPercentage <= 0);
+          (childAmount >= 0 && defaultAdjustmentPercentage >= 0) ||
+          (childAmount < 0 && defaultAdjustmentPercentage <= 0);
 
         if (directionIsValid) {
-          curPeriodRoundedPercentages[i] = defaultAdjustmentPercentage;
+          roundedPercentages[i] = defaultAdjustmentPercentage;
           remaining = 0;
         } else {
           // Info: (20250610 - Anna) 最多只能調整至 0，剩餘尾差再傳給下一筆
-          const maxAdjust = -curPeriodRoundedPercentage; // Info: (20250610 - Anna) 讓目前這筆變成 0 所需的調整量
+          const maxAdjust = -roundedPercentage; // Info: (20250610 - Anna) 讓目前這筆變成 0 所需的調整量
           if (maxAdjust !== 0) {
-            curPeriodRoundedPercentages[i] = 0;
+            roundedPercentages[i] = 0;
             remaining -= maxAdjust; // Info: (20250610 - Anna) 將未能調整的部分繼續往下補
           }
         }
       }
     }
 
-    //  Info: (20250610 - Anna) 回傳陣列，格式化數字
+    // Info: (20250610 - Anna) 回傳陣列，格式化數字
     return childrenWithValues.map((child, i) => {
-      const adjusted = curPeriodRoundedPercentages[i];
+      const adjusted = roundedPercentages[i];
+      const adjustedStr: string =
+        adjusted === 0
+          ? '-'
+          : adjusted < 0
+            ? `(${Math.abs(adjusted).toLocaleString()})`
+            : `${adjusted.toLocaleString()}`;
 
       return {
         ...child,
-        curPeriodAdjustedPercentageString:
-          adjusted === 0
-            ? '-'
-            : adjusted < 0
-              ? `(${Math.abs(adjusted).toLocaleString()})`
-              : `${adjusted.toLocaleString()}`,
+        [adjustedStringKey]: adjustedStr,
       };
     });
   };
@@ -559,16 +572,36 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             item.children &&
             item.children.length > 0 &&
             (() => {
-              const totalAsset =
+              const curTotalAsset =
                 reportFinancial?.general?.find((account) => account.code === '1XXX')
                   ?.curPeriodAmount ?? 1;
-              const adjustedChildren = adjustChildPercentages(
+              const preTotalAsset =
+                reportFinancial?.general?.find((account) => account.code === '1XXX')
+                  ?.prePeriodAmount ?? 1;
+              const adjustedCurChildren = adjustChildPercentageTailGap(
                 item.children,
                 item.curPeriodAmount,
-                totalAsset
+                curTotalAsset,
+                'curPeriod'
               );
+              const adjustedPreChildren = adjustChildPercentageTailGap(
+                item.children,
+                item.prePeriodAmount,
+                preTotalAsset,
+                'prePeriod'
+              );
+
+              // Info: (20250610 - Anna) 根據 code 合併兩個陣列
+              const mergedChildren = adjustedCurChildren.map((child) => {
+                const match = adjustedPreChildren.find((c) => c.code === child.code);
+                return {
+                  ...child,
+                  prePeriodAdjustedPercentageString:
+                    match?.prePeriodAdjustedPercentageString ?? '-',
+                };
+              });
               // Info: (20241203 - Anna) 過濾掉數值為 "0" 或 "-" 的子科目
-              return adjustedChildren
+              return mergedChildren
                 .filter(
                   (child) =>
                     child.curPeriodAmountString !== '-' ||
@@ -587,9 +620,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                             {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
                           </span>
                         </div>
-                        {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給
-                                BalanceDetailsButton，用於顯示彈出視窗的標題 */}
-                        {/*  Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
+                        {/* Info: (20241107 - Anna) 將子項目的會計科目名稱傳遞給 BalanceDetailsButton，用於顯示彈出視窗的標題 */}
+                        {/* Info: (20241217 - Anna) 判斷 child.code 是否為 3353（本期損益（結轉來，沒有分錄）） or 3351（累積盈虧（結轉來，沒有分錄）），若不是才顯示按鈕 */}
                         {child.code !== '3353' && child.code !== '3351' && (
                           <BalanceDetailsButton
                             accountName={child.name}
@@ -609,7 +641,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                       {child.prePeriodAmountString}
                     </td>
                     <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-center text-sm">
-                      {child.prePeriodPercentageString}
+                      {child.prePeriodAdjustedPercentageString}
                     </td>
                   </tr>
                 ));
