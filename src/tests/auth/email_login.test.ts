@@ -11,6 +11,7 @@ interface IExtendedOneTimePasswordResult {
   coolDownAt: number;
 }
 
+// Info: (20250612 - Shirley) Effective test case
 describe('EmailLoginHandler', () => {
   const testEmail = 'test@example.com';
 
