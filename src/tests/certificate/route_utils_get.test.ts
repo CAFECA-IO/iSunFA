@@ -23,6 +23,7 @@ const mockGetCertificatesV2 = jest.mocked(getCertificatesV2);
 const mockGetAllFilteredInvoice = jest.mocked(getAllFilteredInvoice);
 const mockGetAccountingSettingByCompanyId = jest.mocked(getAccountingSettingByCompanyId);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Certificate API Get List Utils 測試', () => {
   const mockCompanyId = 1;
   const mockTimestamp = 1640995200;

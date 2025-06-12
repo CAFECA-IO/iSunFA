@@ -23,6 +23,7 @@ const mockPrisma = require('@/client').default;
 
 const mockTimestampInSeconds = jest.mocked(timestampInSeconds);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Authentication Repository', () => {
   const mockTimestamp = 1640995200;
   const testCredentialId = 'test-credential-123';

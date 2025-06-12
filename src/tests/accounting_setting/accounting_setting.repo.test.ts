@@ -41,6 +41,7 @@ const mockPrisma = jest.mocked(prisma);
 const mockGetTimestampNow = jest.mocked(getTimestampNow);
 const mockConvertTeamRoleCanDo = jest.mocked(convertTeamRoleCanDo);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('會計參數設定功能測試', () => {
   // Info: (20250603 - Shirley) 測試數據
   const mockTimestamp = 1640995200;

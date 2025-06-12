@@ -76,6 +76,7 @@ const mockCheckAccountBookLimit = jest.mocked(checkAccountBookLimit);
 const mockTransaction = jest.mocked(transaction);
 const mockConvertTeamRoleCanDo = jest.mocked(convertTeamRoleCanDo);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('帳本建立功能測試', () => {
   // Info: (20250603 - Shirley) 測試數據
   const mockTimestamp = 1640995200;

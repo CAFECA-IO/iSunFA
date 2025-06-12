@@ -41,6 +41,7 @@ const mockPrisma = jest.mocked(prisma);
 const mockGetTimestampNow = jest.mocked(getTimestampNow);
 const mockLoggerError = jest.mocked(loggerError);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('UserPaymentInfo Repository 測試', () => {
   const mockUserId = 123;
   const mockPaymentMethodId = 456;

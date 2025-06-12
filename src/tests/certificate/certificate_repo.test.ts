@@ -58,6 +58,7 @@ jest.mock('@/lib/utils/logger_back', () => ({
 const mockPrisma = jest.mocked(prisma);
 const mockGetTimestampNow = jest.mocked(getTimestampNow);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Certificate Repo 測試', () => {
   const mockTimestamp = 1640995200;
   const mockCompanyId = 1;
