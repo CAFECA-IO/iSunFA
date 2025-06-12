@@ -136,7 +136,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         // Info: (20241023 - Anna) 設定已成功請求過 API
         setHasFetchedOnce(true);
         prevSelectedDateRange.current = selectedDateRange;
-        // Todo: (20250610 - Anna) 印出 API 回傳結果
+        // Todo: (20250610 - Anna) Debug
         // eslint-disable-next-line no-console
         console.log('[BalanceSheetList] API response:', response);
       }
@@ -356,57 +356,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       curPeriodAdjustedPercentageString: string;
       prePeriodAdjustedPercentageString: string;
     }>;
-  const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
-    const rows = items.map((item) => {
-      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
-      const isAllZeroOrDash =
-        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
-        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
-        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
-        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
-
-      if (isAllZeroOrDash) {
-        return null; // Info: (20250213 - Anna) 這一列不顯示
-      }
-
-      if (!item.code) {
-        return (
-          <tr key={item.code}>
-            <td
-              colSpan={6}
-              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
-            >
-              {item.name}
-            </td>
-          </tr>
-        );
-      }
-
-      return (
-        <tr key={item.code}>
-          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-sm">
-            {item.code}
-          </td>
-          <td className="border border-stroke-neutral-quaternary p-10px text-sm">
-            <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
-          </td>
-          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-            {item.curPeriodAmountString}
-          </td>
-          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-            {item.curPeriodPercentageString}
-          </td>
-          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-            {item.prePeriodAmountString}
-          </td>
-          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-            {item.prePeriodPercentageString}
-          </td>
-        </tr>
-      );
-    });
-    return rows;
-  };
 
   // Info: (20250610 - Anna) 調整父項百分比，使其加總不超過100
   const adjustParentPercentageTailGap = (
@@ -427,6 +376,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         const gap = Math.abs(realPercentage - roundedPercentage);
         return { ...parent, realPercentage, roundedPercentage, gap };
       });
+
+      // Info: (20250610 - Anna) 如果全部 父項 & 子項 都是 0，就直接回傳 "-"，不進行補尾差
+      const allZero = accountsWithPercentageMeta.every((parent) => {
+        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
+        const children = parent.children ?? [];
+
+        const allChildrenZero = children.every(
+          (child) => (key === 'curPeriod' ? child.curPeriodAmount : child.prePeriodAmount) === 0
+        );
+
+        return parentAmount === 0 && allChildrenZero;
+      });
+      if (allZero) {
+        return group.map((parent) => ({
+          ...parent,
+          [`${key}AdjustedPercentageString`]: '-',
+        }));
+      }
 
       const roundedPercentageSum = accountsWithPercentageMeta.reduce(
         (sum, parent) => sum + parent.roundedPercentage,
@@ -479,6 +446,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     children: IAccountReadyForFrontend[],
     parentAmount: number,
     totalAsset: number,
+    parentAdjustedPercentage: number,
     key: PeriodKey
   ): IAccountWithAdjustedPercentage[] => {
     const amountKey = key === 'curPeriod' ? 'curPeriodAmount' : 'prePeriodAmount';
@@ -505,7 +473,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
     // Info: (20250610 - Anna) 計算子項百分比總和、父項百分比（皆為四捨五入後的）
     const sumRounded = roundedPercentages.reduce((a, b) => a + b, 0);
-    const parentRounded = Math.round((parentAmount / totalAsset) * 100);
+    const parentRounded = parentAdjustedPercentage;
 
     // Info: (20250610 - Anna) 計算尾差：正值表示子項加起來太小，負值表示子項加起來太大
     let remaining = parentRounded - sumRounded;
@@ -562,6 +530,67 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       };
     });
   };
+  // Info: (20250610 - Anna) 百分比字串解析為數值
+  const parseBracketPercentage = (str?: string): number => {
+    if (!str || str === '-') return 0;
+
+    const cleaned = str.replace(/[(),]/g, '');
+    const value = Number(cleaned);
+
+    // Info: (20250610 - Anna) 有括號表示是負數
+    return str.includes('(') ? -value : value;
+  };
+  const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
+    const rows = items.map((item) => {
+      // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
+      const isAllZeroOrDash =
+        (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
+        (item.curPeriodPercentageString === '0' || item.curPeriodPercentageString === '-') &&
+        (item.prePeriodAmountString === '0' || item.prePeriodAmountString === '-') &&
+        (item.prePeriodPercentageString === '0' || item.prePeriodPercentageString === '-');
+
+      if (isAllZeroOrDash) {
+        return null; // Info: (20250213 - Anna) 這一列不顯示
+      }
+
+      if (!item.code) {
+        return (
+          <tr key={item.code}>
+            <td
+              colSpan={6}
+              className="border border-stroke-neutral-quaternary p-10px text-sm font-bold"
+            >
+              {item.name}
+            </td>
+          </tr>
+        );
+      }
+
+      return (
+        <tr key={item.code}>
+          <td className="w-50px border border-stroke-neutral-quaternary p-10px text-sm">
+            {item.code}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-sm">
+            <p>{t(`reports:ACCOUNTING_ACCOUNT.${item.name}`)}</p>
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.curPeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.curPeriodPercentageString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
+            {item.prePeriodAmountString}
+          </td>
+          <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
+            {item.prePeriodPercentageString}
+          </td>
+        </tr>
+      );
+    });
+    return rows;
+  };
 
   // Info: (20241021 - Anna) 要記得改interface
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
@@ -580,8 +609,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       const matchedPre = adjustedPreParent.find((parent) => parent.code === curItem.code);
       return {
         ...curItem,
-        prePeriodPercentageString:
-          matchedPre?.prePeriodPercentageString ?? curItem.prePeriodPercentageString,
+        prePeriodAdjustedPercentageString:
+          matchedPre?.prePeriodAdjustedPercentageString ?? curItem.prePeriodPercentageString,
       };
     });
 
@@ -660,12 +689,17 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 item.children,
                 item.curPeriodAmount,
                 curTotalAsset,
+                parseBracketPercentage(item.curPeriodAdjustedPercentageString),
                 'curPeriod'
               );
+
+              /* Info: (20250610 - Anna) 如果展開，新增子科目表格 */
+
               const adjustedPreChildren = adjustChildPercentageTailGap(
                 item.children,
                 item.prePeriodAmount,
                 preTotalAsset,
+                parseBracketPercentage(item.prePeriodAdjustedPercentageString),
                 'prePeriod'
               );
 
