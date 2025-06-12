@@ -63,6 +63,7 @@ const mockCertificateAPIPostUtils = jest.mocked(certificateAPIPostUtils);
 const mockCertificateAPIGetListUtils = jest.mocked(certificateAPIGetListUtils);
 const mockCertificateAPIDeleteMultipleUtils = jest.mocked(certificateAPIDeleteMultipleUtils);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Certificate API 端點測試', () => {
   let req: Partial<NextApiRequest>;
   let res: Partial<NextApiResponse>;

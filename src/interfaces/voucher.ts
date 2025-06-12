@@ -496,6 +496,8 @@ export interface IVoucherEntity {
    * @description is this voucher deleted or reverse voucher
    */
   isReverseRelated?: boolean;
+
+  InvoiceRC2List?: InvoiceRC2WithFullRelations[];
 }
 
 export type PartialPrismaCounterparty = Partial<PrismaCounterParty> | null;

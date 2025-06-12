@@ -457,7 +457,10 @@ enum InvoiceType {
 
 enum CurrencyCode {
   TWD
-  EUR
+  USD
+  CNY
+  HKD
+  JPY
 }
 
 enum TaxType {

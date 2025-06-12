@@ -18,6 +18,7 @@ const mockGetSession = jest.mocked(getSession);
 const mockUpdateUserLastLoginAt = jest.mocked(updateUserLastLoginAt);
 const mockWithRequestValidation = jest.mocked(withRequestValidation);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('角色選擇功能測試', () => {
   let mockReq: Partial<NextApiRequest>;
   let mockRes: Partial<NextApiResponse>;

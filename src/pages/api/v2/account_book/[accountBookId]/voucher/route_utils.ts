@@ -7,7 +7,6 @@ import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
-
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
@@ -39,20 +38,17 @@ import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
 import { getOneAssetByIdWithoutInclude } from '@/lib/utils/repo/asset.repo';
 import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
-
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
-
 import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@prisma/client';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
 import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
-import { IFileEntity } from '@/interfaces/file';
 import { IAccountEntity } from '@/interfaces/accounting_account';
-
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
+import { IFileEntity } from '@/interfaces/file';
 
 /**
  * Info: (20241121 - Murky)

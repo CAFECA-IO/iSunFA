@@ -40,6 +40,7 @@ const mockGetUserTeams = jest.mocked(getUserTeams);
 const mockCreateUserActionLog = jest.mocked(createUserActionLog);
 const mockFetch = jest.mocked(fetch);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('SignIn Integration Tests', () => {
   let mockRequest: Partial<NextApiRequest>;
 

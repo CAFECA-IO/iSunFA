@@ -59,6 +59,7 @@ const mockParsePrismaCertificateToCertificateEntity = jest.mocked(
 const mockParsePrismaUserToUserEntity = jest.mocked(parsePrismaUserToUserEntity);
 const mockGetPusherInstance = jest.mocked(getPusherInstance);
 
+// ToDo: (20250612 - Shirley) Revise ineffective test cases
 describe('Certificate API Post Utils 測試', () => {
   const mockTimestamp = 1640995200;
   const mockCompanyId = 1;

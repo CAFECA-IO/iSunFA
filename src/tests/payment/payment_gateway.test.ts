@@ -51,6 +51,7 @@ jest.mock('@/lib/utils/formatter/order.formatter', () => ({
 
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
+// Info: (20250612 - Shirley) Effective test case
 describe('Payment Gateway 測試', () => {
   const mockOptions: IPaymentGatewayOptions = {
     platform: PAYMENT_GATEWAY.OEN,
