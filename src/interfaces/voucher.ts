@@ -497,7 +497,7 @@ export interface IVoucherEntity {
    */
   isReverseRelated?: boolean;
 
-  InvoiceRC2List?: IInvoiceRC2[];
+  InvoiceRC2List?: InvoiceRC2WithFullRelations[];
 }
 
 export type PartialPrismaCounterparty = Partial<PrismaCounterParty> | null;
