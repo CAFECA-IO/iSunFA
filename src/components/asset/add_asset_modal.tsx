@@ -337,8 +337,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     if (selectedDepreciationMethod === AssetDepreciationMethod.NONE) {
       setInputResidualValue(inputTotal); // Info: (20250603 - Anna) 殘值自動設為總價
       setInputUsefulLife(0); // Info: (20250603 - Anna) 壽命設為 0
+      setDepreciationStartDate(acquisitionDate); // Info: (20250610 - Anna) 折舊開始日期自動設為取得日期
     }
-  }, [selectedDepreciationMethod, inputTotal]);
+  }, [selectedDepreciationMethod, inputTotal, acquisitionDate]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -517,7 +518,15 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       className="w-full truncate bg-transparent outline-none"
     />
   ) : (
-    <p className="truncate">{accountTitle}</p>
+    <p
+      className={`truncate ${
+        accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+          ? 'text-input-text-input-placeholder'
+          : 'text-input-text-input-filled'
+      }`}
+    >
+      {accountTitle}
+    </p>
   );
 
   const depreciationMethodList = Object.values(AssetDepreciationMethod);
@@ -535,6 +544,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       <p>{translateMethod(method)}</p>
     </button>
   ));
+
+  const labelClassName = 'font-semibold text-neutral-300';
+  const getInputTextColorClass = (value: number) => {
+    return value > 0 ? 'text-input-text-input-filled' : 'text-input-text-input-placeholder';
+  };
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
@@ -566,7 +580,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Asset Type */}
             {modalType === AssetModalType.ADD ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">
+                <p className={labelClassName}>
                   {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -590,7 +604,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             ) : null}
             {/* Info: (20241015 - Julian) Asset no */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.ASSET_NO')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -607,7 +621,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             </div>
             {/* Info: (20241015 - Julian) Asset name */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.ASSET_NAME')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -621,40 +635,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
-            {/* Info: (20241015 - Julian) Acquisition Date */}
-            <div
-              className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
-            >
-              <p className="font-semibold">
-                {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <DatePicker
-                type={DatePickerType.TEXT_DATE}
-                period={acquisitionDate}
-                setFilteredPeriod={setAcquisitionDate}
-                btnClassName={isShowAcquisitionDateHint ? inputStyle.ERROR : ''}
-              />
-            </div>
-            {/* Info: (20241015 - Julian) Depreciation Start Date */}
-            {!isLandCost ? (
-              <div className="flex w-full flex-col items-start gap-y-8px">
-                <p className="font-semibold">
-                  {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
-                  <span className="text-text-state-error">*</span>
-                </p>
-                <DatePicker
-                  type={DatePickerType.TEXT_DATE}
-                  period={depreciationStartDate}
-                  setFilteredPeriod={setDepreciationStartDate}
-                  btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
-                  calenderClassName="right-0"
-                />
-              </div>
-            ) : null}
             {/* Info: (20241015 - Julian) Amount */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.AMOUNT')}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -672,10 +655,11 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             </div>
             {/* Info: (20241015 - Julian) Total Price */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
+
               <div
                 className={`flex h-46px w-full items-center justify-between divide-x ${isShowTotalHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
               >
@@ -688,7 +672,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   hasComma
                   required
                   min={1}
-                  className="flex-1 bg-transparent px-10px text-right outline-none disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
+                  className={`flex-1 bg-transparent px-10px text-right outline-none disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable ${getInputTextColorClass(inputTotal)}`}
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
@@ -701,15 +685,25 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   <p>{currency}</p>
                 </div>
               </div>
+
+              {selectedDepreciationMethod === AssetDepreciationMethod.NONE && (
+                <p className="w-full text-right text-text-state-error">
+                  {t('asset:ADD_ASSET_MODAL.PLEASE_FILL_UP_THIS_FORM')}
+                </p>
+              )}
             </div>
             {/* Info: (20241021 - Julian) Residual Value */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.RESIDUAL_VALUE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
               <div
-                className={`flex h-46px w-full items-center justify-between divide-x ${inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+                className={`flex h-46px w-full items-center justify-between divide-x rounded-sm border bg-input-surface-input-background text-neutral-300 placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder ${
+                  selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                    ? 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable'
+                    : 'divide-input-stroke-input border-input-stroke-input'
+                }`}
               >
                 <NumericInput
                   id="input-residual-value"
@@ -720,7 +714,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   hasComma
                   required
                   min={0}
-                  className="flex-1 bg-transparent px-10px text-right outline-none"
+                  className={`flex-1 bg-transparent px-10px text-right outline-none ${getInputTextColorClass(inputResidualValue)}`}
+                  disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
                 />
                 <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
                   <Image
@@ -734,15 +729,55 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 </div>
               </div>
             </div>
+            {/* Info: (20241015 - Julian) Acquisition Date */}
+            <div
+              className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
+            >
+              <p className={labelClassName}>
+                {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <DatePicker
+                type={DatePickerType.TEXT_DATE}
+                period={acquisitionDate}
+                setFilteredPeriod={setAcquisitionDate}
+                btnClassName={isShowAcquisitionDateHint ? inputStyle.ERROR : ''}
+              />
+            </div>
+            {/* Info: (20241015 - Julian) Depreciation Start Date */}
+            {!isLandCost ? (
+              <div className="flex w-full flex-col items-start gap-y-8px">
+                <p className={labelClassName}>
+                  {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
+                  <span className="text-text-state-error">*</span>
+                </p>
+                <DatePicker
+                  type={DatePickerType.TEXT_DATE}
+                  period={depreciationStartDate}
+                  setFilteredPeriod={setDepreciationStartDate}
+                  btnClassName={`${isShowDepreciationStartDateHint ? inputStyle.ERROR : ''} ${
+                    selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                      ? 'border-input-stroke-disable bg-input-surface-input-disable'
+                      : ''
+                  }`}
+                  calenderClassName="right-0"
+                  disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
+                />
+              </div>
+            ) : null}
             {/* Info: (20241015 - Julian) Useful Life (Month) */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">
+                <p className={labelClassName}>
                   {t('asset:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div
-                  className={`flex h-46px w-full items-center justify-between divide-x ${isShowUsefulLifeHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+                  className={`flex h-46px w-full items-center justify-between divide-x text-neutral-300 ${isShowUsefulLifeHint ? inputStyle.ERROR : 'text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder'} rounded-sm border ${
+                    selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                      ? 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable'
+                      : 'divide-input-stroke-input border-input-stroke-input bg-input-surface-input-background'
+                  }`}
                 >
                   <NumericInput
                     id="input-useful-life"
@@ -752,7 +787,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     isDecimal
                     hasComma
                     required={!isLandCost}
-                    className="flex-1 bg-transparent px-10px text-right outline-none"
+                    className={`flex-1 bg-transparent px-10px text-right outline-none ${getInputTextColorClass(inputUsefulLife)}`}
+                    disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
                   />
                   <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
                     <p>{t('asset:COMMON.M')}</p>
@@ -763,7 +799,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Depreciation Method */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
+                <p className={labelClassName}>{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
                 <div
                   ref={methodRef}
                   onClick={toggleMethodMenu}
@@ -787,7 +823,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             ) : null}
             {/* Info: (20241015 - Julian) Note */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.NOTE')}</p>
+              <p className={labelClassName}>{t('asset:ADD_ASSET_MODAL.NOTE')}</p>
               <input
                 id="input-note"
                 type="text"
