@@ -642,7 +642,8 @@ const VoucherEditingPageBody: React.FC<{
 
     const body = {
       actions,
-      invoiceIds: selectedIds,
+      certificateIds: [],
+      invoiceRC2Ids: selectedIds,
       voucherDate: resultDate,
       type: resultType,
       note: JSON.stringify(resultNote),
