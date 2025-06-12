@@ -7,7 +7,6 @@ import { initEventEntity } from '@/lib/utils/event';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
-
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
@@ -39,28 +38,17 @@ import { getCounterpartyById } from '@/lib/utils/repo/counterparty.repo';
 import { getOneLineItemWithoutInclude } from '@/lib/utils/repo/line_item.repo';
 import { getOneAssetByIdWithoutInclude } from '@/lib/utils/repo/asset.repo';
 import { getOneCertificateByIdWithoutInclude } from '@/lib/utils/repo/certificate.repo';
-
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedData } from '@/interfaces/pagination';
-
-import {
-  LineItem as PrismaLineItem,
-  Account as PrismaAccount,
-  Prisma,
-  InvoiceRC2,
-  InvoiceDirection as PrismaInvoiceDirection,
-} from '@prisma/client';
+import { LineItem as PrismaLineItem, Account as PrismaAccount, Prisma } from '@prisma/client';
 import { parsePrismaAccountToAccountEntity } from '@/lib/utils/formatter/account.formatter';
 import { parsePrismaFileToFileEntity } from '@/lib/utils/formatter/file.formatter';
 import { parsePrismaEventToEventEntity } from '@/lib/utils/formatter/event.formatter';
 import { voucherAPIGetOneUtils } from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/route_utils';
 import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
-import { IFileEntity } from '@/interfaces/file';
 import { IAccountEntity } from '@/interfaces/accounting_account';
-
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
-import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
-import { DeductionType, InvoiceDirection } from '@/constants/invoice_rc2';
+import { IFileEntity } from '@/interfaces/file';
 
 /**
  * Info: (20241121 - Murky)
@@ -155,82 +143,6 @@ export const voucherAPIGetUtils = {
       ...lineItemEntity,
       account: accountEntity,
     };
-  },
-
-  toInvoiceRC2Entity: (
-    invoice: InvoiceRC2 & {
-      file: IFileEntity;
-      uploader: IUserEntity;
-      voucher: { id: number; no: string } | null;
-    }
-  ): IInvoiceRC2 => {
-    const base = {
-      id: invoice.id,
-      accountBookId: invoice.accountBookId,
-      voucherId: invoice.voucherId,
-      file: {
-        id: invoice.file.id,
-        name: invoice.file.name,
-        size: invoice.file.size,
-        url: invoice.file.url ?? '',
-        thumbnail: invoice.file.name
-          ? {
-              id: invoice.file.thumbnailId,
-              name: '',
-              size: 0,
-              url: '',
-            }
-          : undefined,
-      },
-      uploaderId: invoice.uploaderId,
-      uploaderName: invoice.uploader.name,
-      direction: invoice.direction,
-      aiResultId: invoice.aiResultId ?? '0',
-      aiStatus: invoice.aiStatus ?? 'READY',
-      createdAt: invoice.createdAt,
-      updatedAt: invoice.updatedAt,
-      deletedAt: invoice.deletedAt ?? undefined,
-
-      type: invoice.type ?? undefined,
-      issuedDate: invoice.issuedDate ?? undefined,
-      no: invoice.no ?? '',
-      currencyCode: invoice.currencyCode,
-      taxType: invoice.taxType ?? undefined,
-      taxRate: invoice.taxRate ?? undefined,
-      netAmount: invoice.netAmount ?? undefined,
-      taxAmount: invoice.taxAmount ?? undefined,
-      totalAmount: invoice.totalAmount ?? undefined,
-
-      isGenerated: invoice.isGenerated,
-      incomplete: invoice.incomplete,
-      description: invoice.description ?? undefined,
-      note: invoice.note ?? undefined,
-
-      totalOfSummarizedInvoices: invoice.totalOfSummarizedInvoices ?? undefined,
-      carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
-      otherCertificateNo: invoice.otherCertificateNo ?? undefined,
-
-      voucherNo: invoice.voucher?.no ?? null,
-    };
-
-    if (invoice.direction === PrismaInvoiceDirection.INPUT) {
-      return {
-        ...base,
-        direction: PrismaInvoiceDirection.INPUT as InvoiceDirection.INPUT,
-        deductionType: (invoice.deductionType ?? undefined) as DeductionType | undefined,
-        salesName: invoice.salesName ?? undefined,
-        salesIdNumber: invoice.salesIdNumber ?? undefined,
-        isSharedAmount: invoice.isSharedAmount ?? false,
-      } as IInvoiceRC2;
-    }
-
-    return {
-      ...base,
-      direction: PrismaInvoiceDirection.OUTPUT as InvoiceDirection,
-      buyerName: invoice.buyerName ?? undefined,
-      buyerIdNumber: invoice.buyerIdNumber ?? undefined,
-      isReturnOrAllowance: invoice.isReturnOrAllowance ?? false,
-    } as IInvoiceRC2;
   },
 
   initLineItemAndAccountEntities: (voucher: IGetManyVoucherResponseButOne) => {

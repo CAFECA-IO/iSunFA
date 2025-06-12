@@ -124,7 +124,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       resultEvents,
       asset,
       certificates,
-      invoiceRC2List: [], // TODO: (20250606 - Tzuhan) 需要從 voucherFromPrisma 中取得 InvoiceRC2 資料
+      invoiceRC2List: voucherFromPrisma.InvoiceRC2,
       lineItems,
       payableInfo,
       receivingInfo,
