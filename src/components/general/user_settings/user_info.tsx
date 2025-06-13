@@ -52,7 +52,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
   };
 
   return (
-    <div className="bg-brand-gradient flex items-center justify-between gap-lv-7 rounded-md border border-stroke-brand-primary px-40px py-16px">
+    <div className="bg-brand-gradient flex flex-col items-center justify-between gap-lv-5 rounded-md border border-stroke-brand-primary px-40px py-16px tablet:flex-row tablet:gap-lv-7">
       {isIPModalOpen && (
         <IPModal userId={userId} toggleModal={toggleIPModal} pageData={loginDevices} />
       )}

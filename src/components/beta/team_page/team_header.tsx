@@ -40,31 +40,32 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
   }, [copied]);
 
   return (
-    <section className="flex flex-auto items-center gap-8px">
-      <button
-        type="button"
-        className="group relative"
-        onClick={() => setTeamToChangeImage(team)}
-        disabled={!modifyImagePermission.can}
-      >
-        <Image
-          src={team.imageId}
-          width={60}
-          height={60}
-          alt="team_image"
-          className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
-        ></Image>
+    <section className="flex flex-auto flex-col items-start gap-8px tablet:flex-row tablet:items-center">
+      <div className="flex items-center gap-lv-4 tablet:gap-8px">
+        <button
+          type="button"
+          className="group relative"
+          onClick={() => setTeamToChangeImage(team)}
+          disabled={!modifyImagePermission.can}
+        >
+          <Image
+            src={team.imageId}
+            width={60}
+            height={60}
+            alt="team_image"
+            className="h-60px w-60px rounded-sm border-2 border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
+          ></Image>
 
-        {modifyImagePermission.can && (
-          <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
-            <FiEdit2 size={24} />
-          </div>
-        )}
-      </button>
+          {modifyImagePermission.can && (
+            <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
+              <FiEdit2 size={24} />
+            </div>
+          )}
+        </button>
+        <h1 className="text-44px font-bold text-text-neutral-primary">{team.name.value}</h1>
+      </div>
 
-      <h1 className="text-44px font-bold text-text-neutral-primary">{team.name.value}</h1>
-
-      <div className="flex items-center text-text-neutral-tertiary">
+      <div className="ml-auto flex items-center text-text-neutral-tertiary tablet:ml-0">
         <span className="text-xl font-bold leading-8">#{team.id}</span>
         <button type="button" onClick={copyTeamId} className="flex items-center p-10px">
           {copied ? <TbCopyCheckFilled size={16} /> : <TbCopy size={16} />}
