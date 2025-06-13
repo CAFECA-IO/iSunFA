@@ -2203,6 +2203,20 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       });
     });
 
+    const invoiceRC2Ids = voucherDeleteOtherEntity.InvoiceRC2List?.map((i) => i.id) || [];
+
+    if (invoiceRC2Ids.length > 0) {
+      await tx.invoiceRC2.updateMany({
+        where: {
+          id: { in: invoiceRC2Ids },
+        },
+        data: {
+          voucherId: newVoucher.id,
+          updatedAt: nowInSecond,
+        },
+      });
+    }
+
     await Promise.all(transactionJobs);
 
     return {
