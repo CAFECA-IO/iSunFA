@@ -107,6 +107,15 @@ export const authFunctionsNew: AuthFunctionsNew = {
   superAdmin: checkUserCompanySuperAdmin,
   CompanyAdminMatch: checkCompanyAdminMatch,
   projectCompanyMatch: checkProjectCompanyMatch,
+  internal: async (_session: ISessionData, req: NextApiRequest) => {
+    const ip = req.socket.remoteAddress || req.headers['x-forwarded-for'];
+    const signature = req.headers['x-signature'];
+
+    const isLocalhost = ip === '127.0.0.1' || ip === '::1';
+    const isValidSignature = signature === process.env.BAIFS_CERT;
+
+    return isLocalhost && isValidSignature;
+  },
 };
 
 export async function checkAuthorizationNew<T extends APIName>(

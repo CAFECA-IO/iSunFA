@@ -2246,3 +2246,78 @@ export const findVouchersByVoucherIds = async (
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
 };
+
+export const listBaifaVouchers = async ({
+  page = 1,
+  pageSize = 20,
+  startDate = 0,
+  endDate = Math.floor(Date.now() / 1000),
+  // searchQuery = '',
+  sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+}): Promise<{
+  data: {
+    id: number;
+    no: string;
+    createdAt: number;
+    note: string | null;
+  }[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}> => {
+  const offset = pageToOffset(page, pageSize);
+
+  const where: Prisma.VoucherWhereInput = {
+    createdAt: {
+      gte: startDate,
+      lte: endDate,
+    },
+    AND: [
+      {
+        OR: [{ deletedAt: null }, { deletedAt: 0 }],
+      },
+      // ...(searchQuery
+      //   ? [
+      //       {
+      //         OR: [
+      //           { no: { contains: searchQuery, mode: 'insensitive' } },
+      //           { note: { contains: searchQuery, mode: 'insensitive' } },
+      //         ],
+      //       },
+      //     ]
+      //   : []),
+    ],
+  };
+
+  const orderBy = sortOption.map(({ sortBy, sortOrder }) => {
+    switch (sortBy) {
+      case SortBy.CREATED_AT:
+        return { createdAt: sortOrder };
+      default:
+        return { createdAt: SortOrder.DESC }; // fallback
+    }
+  });
+
+  const [data, totalCount] = await Promise.all([
+    prisma.voucher.findMany({
+      where,
+      orderBy,
+      skip: offset,
+      take: pageSize,
+      select: {
+        id: true,
+        no: true,
+        createdAt: true,
+        note: true,
+      },
+    }),
+    prisma.voucher.count({ where }),
+  ]);
+
+  return {
+    data,
+    page,
+    pageSize,
+    totalCount,
+  };
+};

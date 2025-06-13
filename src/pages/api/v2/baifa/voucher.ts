@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
-import { checkRequestData, logUserAction } from '@/lib/utils/middleware';
+import { checkRequestData, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
 import { formatApiResponse } from '@/lib/utils/common';
 import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import { listBaifaAccountBooks } from '@/lib/utils/repo/account_book.repo';
+import { listBaifaVouchers } from '@/lib/utils/repo/voucher.repo';
 import { validateOutputData } from '@/lib/utils/validator';
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -14,17 +14,16 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let payload = null;
   const session = await getSession(req);
 
-  const { query } = checkRequestData(APIName.LIST_BAIFA_ACCOUNT_BOOK, req, session);
+  await checkUserAuthorization(APIName.LIST_BAIFA_VOUCHER, req, session);
+
+  const { query } = checkRequestData(APIName.LIST_BAIFA_VOUCHER, req, session);
 
   if (!query) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const result = await listBaifaAccountBooks(query);
-  const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.LIST_BAIFA_ACCOUNT_BOOK,
-    result
-  );
+  const result = await listBaifaVouchers(query);
+  const { isOutputDataValid, outputData } = validateOutputData(APIName.LIST_BAIFA_VOUCHER, result);
 
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;
@@ -40,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let response;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   const session = await getSession(req);
-  const apiName = APIName.LIST_BAIFA_ACCOUNT_BOOK;
+  const apiName = APIName.LIST_BAIFA_VOUCHER;
 
   try {
     switch (method) {

@@ -1763,17 +1763,14 @@ export const getAccountBookTeamId = async (accountBookId: number): Promise<numbe
   }
 };
 
-export const listBaifaAccountBooks = async (
-  userId: number,
-  queryParams: {
-    page?: number;
-    pageSize?: number;
-    startDate?: number;
-    endDate?: number;
-    searchQuery?: string;
-    sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
-  }
-) => {
+export const listBaifaAccountBooks = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}) => {
   const {
     page = 1,
     pageSize = 10,
