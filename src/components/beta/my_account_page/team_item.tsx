@@ -19,17 +19,19 @@ const TeamItem: React.FC<ITeam> = ({ id, name, imageId, planType, role }) => {
       <div className="h-60px w-60px place-content-center overflow-hidden rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">
         <Image src={imageId} width={60} height={60} alt="team_avatar" />
       </div>
-      <div className="flex flex-1 items-center gap-lv-4">
+      <div className="flex flex-1 flex-col items-center gap-lv-2 tablet:flex-row tablet:gap-lv-4">
         {/* Info: (20250217 - Julian) Team name */}
         <div className="flex-1 text-xl font-semibold text-text-brand-secondary-lv2">
           {name.value}
         </div>
         {/* Info: (20250217 - Julian) Tags */}
-        <div className="rounded-full bg-badge-surface-strong-secondary px-lv-1 py-2px text-xs font-medium text-badge-text-invert">
-          {t(`team:MY_ACCOUNT_PAGE.PLAN_${planType.value.toUpperCase()}`)}
-        </div>
-        <div className="rounded-full bg-badge-surface-soft-primary px-lv-1 py-2px text-xs font-medium text-badge-text-primary-solid">
-          {t(`team:MY_ACCOUNT_PAGE.ROLE_${role.toUpperCase()}`)}
+        <div className="flex gap-8px tablet:gap-lv-4">
+          <div className="rounded-full bg-badge-surface-strong-secondary px-8px py-4px text-xs font-medium text-badge-text-invert">
+            {t(`team:MY_ACCOUNT_PAGE.PLAN_${planType.value.toUpperCase()}`)}
+          </div>
+          <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-xs font-medium text-badge-text-primary-solid">
+            {t(`team:MY_ACCOUNT_PAGE.ROLE_${role.toUpperCase()}`)}
+          </div>
         </div>
       </div>
     </Link>

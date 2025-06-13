@@ -83,7 +83,17 @@ const InvoiceList = ({
   amountSort,
   setAmountSort,
 }: InvoiceListProps) => {
-  const { t } = useTranslation(['subscriptions']);
+  const { t } = useTranslation(['subscriptions', 'common']);
+
+  const displayedList =
+    invoiceList.length > 0 ? (
+      invoiceList.map((invoice) => <Invoice key={invoice.id} invoice={invoice} />)
+    ) : (
+      // Info: (20250613 - Julian) 沒有發票時顯示的訊息
+      <div className="flex h-72px items-center justify-center bg-surface-neutral-surface-lv2 text-text-neutral-primary">
+        <p>{t('common:COMMON.NO_DATA')}</p>
+      </div>
+    );
 
   return (
     <main className="flex w-max flex-col gap-12px tablet:w-full">
@@ -127,9 +137,7 @@ const InvoiceList = ({
         </div>
       </section>
 
-      {invoiceList.map((invoice) => (
-        <Invoice key={invoice.id} invoice={invoice} />
-      ))}
+      {displayedList}
     </main>
   );
 };

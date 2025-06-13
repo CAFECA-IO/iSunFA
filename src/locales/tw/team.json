@@ -51,11 +51,15 @@
     "STEP_3": "訂閱方案",
     "TEAM_NAME": "團隊名稱",
     "MEMBER_EMAIL": "成員的電子郵件",
+    "MEMBER_EMAIL_PLACEHOLDER": "輸入成員的電子郵件",
     "EMAIL_HINT": "請輸入有效的電子郵件地址。",
     "PLAN_HINT": "如果您選擇跳過此步驟，我們將自動將您的團隊設置為免費版本。您可以選擇暫時使用服務的免費版本，享受基本功能，但可能會受到與高級方案相比的潛在限制。",
     "SKIP_BTN": "暫時跳過",
     "CONTINUE_BTN": "繼續",
-    "CREATE_BTN": "建立團隊"
+    "CREATE_BTN": "建立團隊",
+    "TOAST_CREATE_SUCCESS": "團隊建立成功！",
+    "TOAST_CREATE_FAILED": "建立團隊時發生錯誤： {{error}}",
+    "TOAST_SUBSCRIBE_FAILED": "訂閱時發生錯誤：{{error}}"
   },
   "TEAM_INFO_PAGE": {
     "EDIT_TEAM_NAME": "編輯團隊名稱",

@@ -315,7 +315,6 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
           team={team}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          isBillingButtonHidden
         />
 
         <CreditCardInfo team={team} />
