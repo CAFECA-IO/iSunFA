@@ -26,10 +26,10 @@ const TeamItem: React.FC<ITeam> = ({ id, name, imageId, planType, role }) => {
         </div>
         {/* Info: (20250217 - Julian) Tags */}
         <div className="flex gap-8px tablet:gap-lv-4">
-          <div className="rounded-full bg-badge-surface-strong-secondary px-lv-1 py-2px text-xs font-medium text-badge-text-invert">
+          <div className="rounded-full bg-badge-surface-strong-secondary px-8px py-4px text-xs font-medium text-badge-text-invert">
             {t(`team:MY_ACCOUNT_PAGE.PLAN_${planType.value.toUpperCase()}`)}
           </div>
-          <div className="rounded-full bg-badge-surface-soft-primary px-lv-1 py-2px text-xs font-medium text-badge-text-primary-solid">
+          <div className="rounded-full bg-badge-surface-soft-primary px-8px py-4px text-xs font-medium text-badge-text-primary-solid">
             {t(`team:MY_ACCOUNT_PAGE.ROLE_${role.toUpperCase()}`)}
           </div>
         </div>
