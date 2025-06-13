@@ -682,6 +682,10 @@ export async function putVoucherWithoutCreateNew(
       certificateIdsNeedToBeRemoved: number[];
       certificateIdsNeedToBeAdded: number[];
     };
+    invoiceRC2Options: {
+      invoiceRC2IdsNeedToBeRemoved: number[];
+      invoiceRC2IdsNeedToBeAdded: number[];
+    };
     assetOptions: {
       assetIdsNeedToBeRemoved: number[];
       assetIdsNeedToBeAdded: number[];
@@ -713,6 +717,7 @@ export async function putVoucherWithoutCreateNew(
     counterPartyId,
     voucherInfo,
     certificateOptions,
+    invoiceRC2Options,
     assetOptions,
     reverseRelationNeedToBeReplace,
   } = options;
@@ -756,6 +761,24 @@ export async function putVoucherWithoutCreateNew(
         }
       }
 
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.invoiceRC2.deleteMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved,
+              },
+              voucherId,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
       if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
         try {
           await tx.assetVoucher.deleteMany({
@@ -787,6 +810,27 @@ export async function putVoucherWithoutCreateNew(
         } catch (error) {
           loggerBack.error(
             'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.invoiceRC2.updateMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeAdded,
+              },
+            },
+            data: {
+              voucherId,
+              updatedAt: nowInSecond,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
             error as Error
           );
         }
