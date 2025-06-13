@@ -15,7 +15,6 @@ interface OwnedTeamProps {
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForCancelSubscription?: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  isBillingButtonHidden?: boolean;
 }
 
 const OwnedTeam = ({
@@ -23,7 +22,6 @@ const OwnedTeam = ({
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
   setTeamForCancelSubscription,
-  isBillingButtonHidden = false,
 }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
   const { id, plan, name, paymentStatus, enableAutoRenewal, expiredTimestamp } = team;
@@ -73,8 +71,6 @@ const OwnedTeam = ({
 
   // Info: (20250422 - Julian) 檢查是否顯示到期日等資訊
   const isShowExpiredDate = !isPlanBeginner && !isTrial;
-  // Info: (20250422 - Julian) 檢查是否顯示「帳單」按鈕
-  const isShowBillingButton = !isPlanBeginner && !isBillingButtonHidden && !isTrial;
 
   const changePlanBtn = (
     // ToDo: (20250425 - Julian) 暫時不會用到
@@ -189,17 +185,15 @@ const OwnedTeam = ({
           <section className="flex-auto"></section>
         )}
 
-        <section className="flex flex-none flex-col justify-center gap-16px">
+        <div className="flex flex-none flex-col justify-center gap-16px">
           {changePlanBtn}
 
-          {isShowBillingButton && (
-            <Link href={BILLING_PAGE}>
-              <Button type="button" className="w-full" variant="hollowYellow">
-                {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
-              </Button>
-            </Link>
-          )}
-        </section>
+          <Link href={BILLING_PAGE}>
+            <Button type="button" className="w-full" variant="hollowYellow">
+              {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
+            </Button>
+          </Link>
+        </div>
       </section>
     </main>
   );
