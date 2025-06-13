@@ -147,6 +147,7 @@ import {
   listNotificationByUserIdSchema,
   readNotificationSchema,
 } from '@/lib/utils/zod_schema/notification';
+import { ListBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/list_account_book';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -339,4 +340,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
   [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
   [APIName.READ_NOTIFICATION]: readNotificationSchema,
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: ListBaifaAccountBookSchema,
 };

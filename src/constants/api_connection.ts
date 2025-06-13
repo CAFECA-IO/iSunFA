@@ -175,6 +175,7 @@ export enum APIName {
   GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
   ACCEPT_TEAM_INVITATION = 'ACCEPT_TEAM_INVITATION',
   DECLINE_TEAM_INVITATION = 'DECLINE_TEAM_INVITATION',
+  LIST_BAIFA_ACCOUNT_BOOK = 'LIST_BAIFA_ACCOUNT_BOOK',
 }
 
 export enum APIPath {
@@ -327,6 +328,7 @@ export enum APIPath {
   GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
   READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
   GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  LIST_BAIFA_ACCOUNT_BOOK = `${apiPrefixV2}/baifa/account_book`,
 }
 
 const createConfig = ({
@@ -1074,5 +1076,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DECLINE_TEAM_INVITATION,
     method: HttpMethod.GET,
     path: APIPath.DECLINE_TEAM_INVITATION,
+  }),
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: createConfig({
+    name: APIName.LIST_BAIFA_ACCOUNT_BOOK,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_BAIFA_ACCOUNT_BOOK,
   }),
 };

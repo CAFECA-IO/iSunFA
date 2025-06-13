@@ -173,4 +173,5 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_NOTIFICATION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_NOTIFICATION_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.READ_NOTIFICATION]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
 };
