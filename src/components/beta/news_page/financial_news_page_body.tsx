@@ -60,7 +60,7 @@ const FinancialNewsPageBody = ({ newsId }: FinancialNewsPageBodyProps) => {
   // ToDo: (20241128 - Liz) api 提供的 news.imageId 是數字，但 Image component 需要的是 string，不確定要怎麼拿到圖片的 url
   return (
     <main className="flex min-h-full flex-col gap-lv-6 tablet:gap-40px">
-      {/* Info: (20250526 - Julian) Mobile title */}
+      {/* Info: (20250616 - Julian) Mobile title */}
       <p className="block text-base font-semibold text-text-neutral-secondary tablet:hidden">
         {t('dashboard:LATEST_NEWS_PAGE.FINANCIAL_NEWS')}
       </p>

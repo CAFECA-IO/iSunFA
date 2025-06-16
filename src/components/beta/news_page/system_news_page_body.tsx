@@ -6,6 +6,8 @@ import { JSX, ClassAttributes, HTMLAttributes, useEffect, useState } from 'react
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { INews } from '@/interfaces/news';
+import { useTranslation } from 'next-i18next';
+import { NewsType } from '@/constants/news';
 
 // Info: (20241024 - Liz) 在 Markdown 中，單個 Enter 不會換行，必須在行尾加上兩個空格來觸發換行。使用 remarkBreaks 可以實現直接按 Enter 來換行，不再需要在每行末尾加上兩個空格。
 
@@ -19,11 +21,21 @@ const CustomList = (
     ClassAttributes<HTMLUListElement> &
     HTMLAttributes<HTMLUListElement>
 ) => {
-  return <ul className="list-inside list-disc" {...props} />;
+  return <ul className="list-inside list-disc text-text-neutral-secondary" {...props} />;
 };
 
 const SystemNewsPageBody = ({ newsId }: SystemNewsPageBodyProps) => {
-  const [news, setNews] = useState<INews | null>(null);
+  const { t } = useTranslation(['dashboard']);
+
+  const [news, setNews] = useState<INews | null>({
+    id: 1,
+    title: 'Latest Financial News u98yjhkjl',
+    content: 'This is a description of the latest financial news.',
+    createdAt: 1768860863,
+    updatedAt: 1768860863,
+    type: NewsType.SYSTEM,
+    imageId: 24,
+  });
 
   // Info: (20241128 - Liz) 打 API 取得新聞內容
   const { trigger: getNewsByIdAPI } = APIHandler<INews>(APIName.NEWS_GET_BY_ID);
@@ -52,20 +64,27 @@ const SystemNewsPageBody = ({ newsId }: SystemNewsPageBodyProps) => {
     getNewsById();
   }, [newsId]);
 
-  if (!news) return null;
+  if (!news) return <div>News not found.</div>;
 
   // ToDo: (20241128 - Liz) api 提供的 news.imageId 是數字，但 Image component 需要的是 string，不確定要怎麼拿到圖片的 url
   return (
-    <main className="flex min-h-full flex-col gap-40px">
+    <main className="flex min-h-full flex-col gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250616 - Julian) Mobile title */}
+      <p className="block text-base font-semibold text-text-neutral-secondary tablet:hidden">
+        {t('dashboard:LATEST_NEWS_PAGE.SYSTEM_NEWS')}
+      </p>
+
       <Image
         src={`${news.imageId}`}
         width={800}
         height={600}
         alt="news_image"
         className="h-280px w-full rounded-lg object-cover"
-      ></Image>
+      />
 
-      <h1 className="text-center text-32px font-bold text-surface-brand-secondary">{news.title}</h1>
+      <h1 className="text-center text-xl font-bold text-surface-brand-secondary tablet:text-32px">
+        {news.title}
+      </h1>
 
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
