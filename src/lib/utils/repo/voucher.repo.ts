@@ -682,6 +682,10 @@ export async function putVoucherWithoutCreateNew(
       certificateIdsNeedToBeRemoved: number[];
       certificateIdsNeedToBeAdded: number[];
     };
+    invoiceRC2Options: {
+      invoiceRC2IdsNeedToBeRemoved: number[];
+      invoiceRC2IdsNeedToBeAdded: number[];
+    };
     assetOptions: {
       assetIdsNeedToBeRemoved: number[];
       assetIdsNeedToBeAdded: number[];
@@ -713,6 +717,7 @@ export async function putVoucherWithoutCreateNew(
     counterPartyId,
     voucherInfo,
     certificateOptions,
+    invoiceRC2Options,
     assetOptions,
     reverseRelationNeedToBeReplace,
   } = options;
@@ -756,6 +761,24 @@ export async function putVoucherWithoutCreateNew(
         }
       }
 
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.invoiceRC2.deleteMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved,
+              },
+              voucherId,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
       if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
         try {
           await tx.assetVoucher.deleteMany({
@@ -787,6 +810,27 @@ export async function putVoucherWithoutCreateNew(
         } catch (error) {
           loggerBack.error(
             'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.invoiceRC2.updateMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeAdded,
+              },
+            },
+            data: {
+              voucherId,
+              updatedAt: nowInSecond,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
             error as Error
           );
         }
@@ -2159,6 +2203,20 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       });
     });
 
+    const invoiceRC2Ids = voucherDeleteOtherEntity.InvoiceRC2List?.map((i) => i.id) || [];
+
+    if (invoiceRC2Ids.length > 0) {
+      await tx.invoiceRC2.updateMany({
+        where: {
+          id: { in: invoiceRC2Ids },
+        },
+        data: {
+          voucherId: newVoucher.id,
+          updatedAt: nowInSecond,
+        },
+      });
+    }
+
     await Promise.all(transactionJobs);
 
     return {
@@ -2187,4 +2245,79 @@ export const findVouchersByVoucherIds = async (
     });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
+};
+
+export const listBaifaVouchers = async ({
+  page = 1,
+  pageSize = 20,
+  startDate = 0,
+  endDate = Math.floor(Date.now() / 1000),
+  // searchQuery = '',
+  sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+}): Promise<{
+  data: {
+    id: number;
+    no: string;
+    createdAt: number;
+    note: string | null;
+  }[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}> => {
+  const offset = pageToOffset(page, pageSize);
+
+  const where: Prisma.VoucherWhereInput = {
+    createdAt: {
+      gte: startDate,
+      lte: endDate,
+    },
+    AND: [
+      {
+        OR: [{ deletedAt: null }, { deletedAt: 0 }],
+      },
+      // ...(searchQuery
+      //   ? [
+      //       {
+      //         OR: [
+      //           { no: { contains: searchQuery, mode: 'insensitive' } },
+      //           { note: { contains: searchQuery, mode: 'insensitive' } },
+      //         ],
+      //       },
+      //     ]
+      //   : []),
+    ],
+  };
+
+  const orderBy = sortOption.map(({ sortBy, sortOrder }) => {
+    switch (sortBy) {
+      case SortBy.CREATED_AT:
+        return { createdAt: sortOrder };
+      default:
+        return { createdAt: SortOrder.DESC }; // fallback
+    }
+  });
+
+  const [data, totalCount] = await Promise.all([
+    prisma.voucher.findMany({
+      where,
+      orderBy,
+      skip: offset,
+      take: pageSize,
+      select: {
+        id: true,
+        no: true,
+        createdAt: true,
+        note: true,
+      },
+    }),
+    prisma.voucher.count({ where }),
+  ]);
+
+  return {
+    data,
+    page,
+    pageSize,
+    totalCount,
+  };
 };

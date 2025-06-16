@@ -1762,3 +1762,31 @@ export const getAccountBookTeamId = async (accountBookId: number): Promise<numbe
     return null;
   }
 };
+
+export const listBaifaAccountBooks = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}) => {
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+  return prisma.company.findMany({
+    where: {
+      name: searchQuery ? { contains: searchQuery, mode: 'insensitive' } : undefined,
+      createdAt: { gte: startDate, lte: endDate },
+      AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+    },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    orderBy: createOrderByList(sortOption),
+  });
+};
