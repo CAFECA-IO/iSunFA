@@ -356,90 +356,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       curPeriodAdjustedPercentageString: string;
       prePeriodAdjustedPercentageString: string;
     }>;
-
-  // Info: (20250610 - Anna) 調整父項百分比，使其加總不超過100
-  const adjustParentPercentageTailGap = (
-    parents: IAccountReadyForFrontend[],
-    key: 'curPeriod' | 'prePeriod',
-    totalAsset: number
-  ): IAccountWithAdjustedPercentage[] => {
-    // Info: (20250610 - Anna) 用 code 開頭分組(資產：'1'，負債與權益：'2'、'3')
-    const groupByCodePrefix = (prefixes: string[]) =>
-      parents.filter((parent) => prefixes.some((prefix) => parent.code?.startsWith(prefix)));
-
-    // Info: (20250610 - Anna) 輸入和輸出陣列的型別一致
-    const createDisplayPercentagesForGroup = (group: typeof parents): typeof group => {
-      const accountsWithPercentageMeta = group.map((parent) => {
-        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
-        const realPercentage = parentAmount && totalAsset ? (parentAmount / totalAsset) * 100 : 0;
-        const roundedPercentage = Math.round(realPercentage);
-        const gap = Math.abs(realPercentage - roundedPercentage);
-        return { ...parent, realPercentage, roundedPercentage, gap };
-      });
-
-      // Info: (20250610 - Anna) 如果全部 父項 & 子項 都是 0，就直接回傳 "-"，不進行補尾差
-      const allZero = accountsWithPercentageMeta.every((parent) => {
-        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
-        const children = parent.children ?? [];
-
-        const allChildrenZero = children.every(
-          (child) => (key === 'curPeriod' ? child.curPeriodAmount : child.prePeriodAmount) === 0
-        );
-
-        return parentAmount === 0 && allChildrenZero;
-      });
-      if (allZero) {
-        return group.map((parent) => ({
-          ...parent,
-          [`${key}AdjustedPercentageString`]: '-',
-        }));
-      }
-
-      const roundedPercentageSum = accountsWithPercentageMeta.reduce(
-        (sum, parent) => sum + parent.roundedPercentage,
-        0
-      );
-      let diff = 100 - roundedPercentageSum;
-
-      // Info: (20250610 - Anna) 排序補尾差
-      const sorted = accountsWithPercentageMeta.slice().sort((a, b) => b.gap - a.gap);
-
-      for (let i = 0; i < sorted.length && diff !== 0; i += 1) {
-        if (diff > 0) {
-          sorted[i].roundedPercentage += 1;
-          diff -= 1;
-        } else {
-          sorted[i].roundedPercentage -= 1;
-          diff += 1;
-        }
-      }
-
-      return sorted.map(({ roundedPercentage, ...rest }) => {
-        const formattedPercentage =
-          roundedPercentage === 0
-            ? '-'
-            : roundedPercentage < 0
-              ? `(${Math.abs(roundedPercentage).toLocaleString()})`
-              : `${roundedPercentage.toLocaleString()}`;
-
-        return {
-          ...rest,
-          [`${key}AdjustedPercentageString`]: formattedPercentage,
-        };
-      });
-    };
-
-    const assets = createDisplayPercentagesForGroup(groupByCodePrefix(['1']));
-    const liabilitiesEquity = createDisplayPercentagesForGroup(groupByCodePrefix(['2', '3']));
-
-    // Info: (20250610 - Anna) 把兩組調整後的科目依 code 存入 map
-    const accountByCodeMap = new Map<string, IAccountReadyForFrontend>();
-    [...assets, ...liabilitiesEquity].forEach((parent) => {
-      if (parent.code) accountByCodeMap.set(parent.code, parent);
-    });
-    // Info: (20250610 - Anna) 依照原本的順序，把調整後的結果補回去，如果該項目沒有被調整，則保留原始值
-    return parents.map((parent) => accountByCodeMap.get(parent.code!) ?? parent);
-  };
   // Info: (20250610 - Anna) 調整子項目百分比尾差(支援當期與前期）
   type PeriodKey = 'curPeriod' | 'prePeriod';
   const adjustChildPercentageTailGap = (
@@ -530,6 +446,142 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       };
     });
   };
+
+  // Info: (20250616 - Anna) 調整百分比尾差的父科目與子科目對照表（general 區塊專用）
+  const parentChildMap: Record<string, string[]> = {
+    '1XXX': ['11XX', '15XX'],
+    '2XXX': ['21XX', '25XX'],
+    '3XXX': ['3100', '3200', '3300', '3400', '36XX'],
+  };
+
+  function adjustSummaryTailGap(
+    flatItems: IAccountReadyForFrontend[],
+    totalAsset: number,
+    key: PeriodKey
+  ): IAccountWithAdjustedPercentage[] {
+    const adjustedItems = [...flatItems];
+
+    Object.entries(parentChildMap).forEach(([parentCode, childCodes]) => {
+      const parent = adjustedItems.find((item) => item.code === parentCode);
+      if (!parent) return;
+
+      const children = adjustedItems.filter((item) => childCodes.includes(item.code || ''));
+      if (children.length === 0) return;
+
+      const parentAmountKey = key === 'curPeriod' ? 'curPeriodAmount' : 'prePeriodAmount';
+      const parentAmount = parent[parentAmountKey] ?? 0;
+
+      const parentPercentageStr =
+        key === 'curPeriod' ? parent.curPeriodPercentageString : parent.prePeriodPercentageString;
+      const parentPercentage = parseFloat(parentPercentageStr);
+
+      // Info: (20250616 - Anna) 呼叫尾差處理函式
+      const adjustedChildren = adjustChildPercentageTailGap(
+        children,
+        parentAmount,
+        totalAsset,
+        parentPercentage,
+        key
+      );
+
+      // Info: (20250616 - Anna) 將結果寫回 adjustedItems 中
+      adjustedChildren.forEach((adjChild) => {
+        const index = adjustedItems.findIndex((item) => item.code === adjChild.code);
+        if (index !== -1) {
+          adjustedItems[index] = {
+            ...adjustedItems[index],
+            ...adjChild,
+          };
+        }
+      });
+    });
+
+    return adjustedItems;
+  }
+
+  // Info: (20250610 - Anna) 調整父項百分比，使其加總不超過100
+  const adjustParentPercentageTailGap = (
+    parents: IAccountReadyForFrontend[],
+    key: 'curPeriod' | 'prePeriod',
+    totalAsset: number
+  ): IAccountWithAdjustedPercentage[] => {
+    // Info: (20250610 - Anna) 用 code 開頭分組(資產：'1'，負債與權益：'2'、'3')
+    const groupByCodePrefix = (prefixes: string[]) =>
+      parents.filter((parent) => prefixes.some((prefix) => parent.code?.startsWith(prefix)));
+
+    // Info: (20250610 - Anna) 輸入和輸出陣列的型別一致
+    const createDisplayPercentagesForGroup = (group: typeof parents): typeof group => {
+      const accountsWithPercentageMeta = group.map((parent) => {
+        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
+        const realPercentage = parentAmount && totalAsset ? (parentAmount / totalAsset) * 100 : 0;
+        const roundedPercentage = Math.round(realPercentage);
+        const gap = Math.abs(realPercentage - roundedPercentage);
+        return { ...parent, realPercentage, roundedPercentage, gap };
+      });
+
+      // Info: (20250610 - Anna) 如果全部 父項 & 子項 都是 0，就直接回傳 "-"，不進行補尾差
+      const allZero = accountsWithPercentageMeta.every((parent) => {
+        const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
+        const children = parent.children ?? [];
+
+        const allChildrenZero = children.every(
+          (child) => (key === 'curPeriod' ? child.curPeriodAmount : child.prePeriodAmount) === 0
+        );
+
+        return parentAmount === 0 && allChildrenZero;
+      });
+      if (allZero) {
+        return group.map((parent) => ({
+          ...parent,
+          [`${key}AdjustedPercentageString`]: '-',
+        }));
+      }
+
+      const roundedPercentageSum = accountsWithPercentageMeta.reduce(
+        (sum, parent) => sum + parent.roundedPercentage,
+        0
+      );
+      let diff = 100 - roundedPercentageSum;
+
+      // Info: (20250610 - Anna) 排序補尾差
+      const sorted = accountsWithPercentageMeta.slice().sort((a, b) => b.gap - a.gap);
+
+      for (let i = 0; i < sorted.length && diff !== 0; i += 1) {
+        if (diff > 0) {
+          sorted[i].roundedPercentage += 1;
+          diff -= 1;
+        } else {
+          sorted[i].roundedPercentage -= 1;
+          diff += 1;
+        }
+      }
+
+      return sorted.map(({ roundedPercentage, ...rest }) => {
+        const formattedPercentage =
+          roundedPercentage === 0
+            ? '-'
+            : roundedPercentage < 0
+              ? `(${Math.abs(roundedPercentage).toLocaleString()})`
+              : `${roundedPercentage.toLocaleString()}`;
+
+        return {
+          ...rest,
+          [`${key}AdjustedPercentageString`]: formattedPercentage,
+        };
+      });
+    };
+
+    const assets = createDisplayPercentagesForGroup(groupByCodePrefix(['1']));
+    const liabilitiesEquity = createDisplayPercentagesForGroup(groupByCodePrefix(['2', '3']));
+
+    // Info: (20250610 - Anna) 把兩組調整後的科目依 code 存入 map
+    const accountByCodeMap = new Map<string, IAccountReadyForFrontend>();
+    [...assets, ...liabilitiesEquity].forEach((parent) => {
+      if (parent.code) accountByCodeMap.set(parent.code, parent);
+    });
+    // Info: (20250610 - Anna) 依照原本的順序，把調整後的結果補回去，如果該項目沒有被調整，則保留原始值
+    return parents.map((parent) => accountByCodeMap.get(parent.code!) ?? parent);
+  };
   // Info: (20250610 - Anna) 百分比字串解析為數值
   const parseBracketPercentage = (str?: string): number => {
     if (!str || str === '-') return 0;
@@ -540,8 +592,22 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     // Info: (20250610 - Anna) 有括號表示是負數
     return str.includes('(') ? -value : value;
   };
+  // Info: (20250610 - Anna) 取出「當期總資產」與「前期總資產」
+  const curTotalAsset =
+    reportFinancial?.general?.find((account) => account.code === '1XXX')?.curPeriodAmount ?? 1;
+  const preTotalAsset =
+    reportFinancial?.general?.find((account) => account.code === '1XXX')?.prePeriodAmount ?? 1;
+
   const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
-    const rows = items.map((item) => {
+    // Info: (20250616 - Anna) 修正子科目百分比總和不等於父科目的尾差（含當期與前期）
+    const adjustedCur = adjustSummaryTailGap(items, curTotalAsset, 'curPeriod');
+    const adjustedFinal = adjustSummaryTailGap(adjustedCur, preTotalAsset, 'prePeriod') as Array<
+      IAccountReadyForFrontend & {
+        curPeriodAdjustedPercentageString?: string;
+        prePeriodAdjustedPercentageString?: string;
+      }
+    >;
+    const rows = adjustedFinal.map((item) => {
       // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"
       const isAllZeroOrDash =
         (item.curPeriodAmountString === '0' || item.curPeriodAmountString === '-') &&
@@ -578,13 +644,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             {item.curPeriodAmountString}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-            {item.curPeriodPercentageString}
+            {item.curPeriodAdjustedPercentageString ?? item.curPeriodPercentageString}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
             {item.prePeriodAmountString}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-sm">
-            {item.prePeriodPercentageString}
+            {item.prePeriodAdjustedPercentageString ?? item.prePeriodPercentageString}
           </td>
         </tr>
       );
@@ -594,12 +660,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
   // Info: (20241021 - Anna) 要記得改interface
   const rowsForDetail = (items: Array<IAccountReadyForFrontend>) => {
-    // Info: (20250610 - Anna) 取出「當期總資產」與「前期總資產」
-    const curTotalAsset =
-      reportFinancial?.general?.find((account) => account.code === '1XXX')?.curPeriodAmount ?? 1;
-    const preTotalAsset =
-      reportFinancial?.general?.find((account) => account.code === '1XXX')?.prePeriodAmount ?? 1;
-
     // Info: (20250610 - Anna) 呼叫「百分比總和不超過100」的調整函式
     const adjustedCurParent = adjustParentPercentageTailGap(items, 'curPeriod', curTotalAsset);
     const adjustedPreParent = adjustParentPercentageTailGap(items, 'prePeriod', preTotalAsset);
