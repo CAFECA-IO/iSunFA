@@ -50,7 +50,7 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
   };
 
   return (
-    <main className="flex gap-16px">
+    <main className="ml-auto flex gap-16px">
       <Button
         variant="tertiary"
         size="small"

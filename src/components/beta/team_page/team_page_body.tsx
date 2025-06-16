@@ -127,7 +127,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <div className="flex items-center">
+      <div className="flex flex-col items-stretch gap-lv-4 tablet:flex-row tablet:items-center">
         <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
         <TeamPageButtons team={team} openMemberListModal={openMemberListModal} />
       </div>

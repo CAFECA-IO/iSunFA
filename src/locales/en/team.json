@@ -22,9 +22,9 @@
   },
   "INVITE_MEMBERS_MODAL": {
     "INVITE_MEMBERS": "Invite Members",
-    "EMAIL": "Email",
-    "ENTER_EMAIL": "Enter an email address and press Enter or the plus button",
-    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "Please enter a valid email address",
+    "EMAIL": "E-mail",
+    "ENTER_EMAIL": "Enter an E-mail address and press Enter or the plus button",
+    "PLEASE_ENTER_A_VALID_EMAIL_ADDRESS": "Please enter a valid E-mail address",
     "CANCEL": "Cancel",
     "INVITE": "Invite"
   },
@@ -50,12 +50,16 @@
     "STEP_2": "Member",
     "STEP_3": "Sub Plan",
     "TEAM_NAME": "Team Name",
-    "MEMBER_EMAIL": "Member Email",
-    "EMAIL_HINT": "Please enter a valid email address.",
+    "MEMBER_EMAIL": "Member E-mail",
+    "MEMBER_EMAIL_PLACEHOLDER": "Enter member's E-mail",
+    "EMAIL_HINT": "Please enter a valid E-mail address.",
     "PLAN_HINT": "If you choose to skip this step, we will automatically set your team to the free version.You can opt to use the free version of the service temporarily, enjoying basic features with potential limitations compared to premium plans.",
     "SKIP_BTN": "Skip for Now",
     "CONTINUE_BTN": "Continue",
-    "CREATE_BTN": "Create Team"
+    "CREATE_BTN": "Create Team",
+    "TOAST_CREATE_SUCCESS": "Team created successfully!",
+    "TOAST_CREATE_FAILED": "A error occurred while creating the team: {{error}}",
+    "TOAST_SUBSCRIBE_FAILED": "An error occurred while subscribing: {{error}}"
   },
   "TEAM_INFO_PAGE": {
     "EDIT_TEAM_NAME": "Change Team Name",
