@@ -1,5 +1,6 @@
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
+import { TPlanType } from '@/interfaces/subscription';
 
 export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
 export const NO_ACCOUNT_BOOK_ID = 555;
@@ -238,4 +239,42 @@ export interface ICompanyEntity {
    * @note need to be in seconds, null if not
    */
   deletedAt: number | null;
+}
+
+export interface IBaifaAccountBook {
+  id: number;
+  teamId: number;
+  ownerId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+
+  businessLocation?: string;
+  accountingCurrency?: string;
+  representativeName: string;
+  taxSerialNumber: string;
+  contactPerson: string;
+  phoneNumber: string;
+  city: string;
+  district: string;
+  enteredAddress: string;
+
+  isTransferring: boolean;
+
+  team: {
+    id: number;
+    name: string;
+    imageId: string;
+    about: string;
+    profile: string;
+    planType: TPlanType;
+    expiredAt: number;
+    inGracePeriod: boolean;
+    gracePeriodEndAt: number;
+    bankAccount: string;
+  };
 }

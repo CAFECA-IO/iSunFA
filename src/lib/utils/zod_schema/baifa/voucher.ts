@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { nullSchema } from '@/lib/utils/zod_schema/common';
 
-export const ListBaifaVoucherQuerySchema = paginatedDataQuerySchema;
+export const listBaifaVoucherQuerySchema = paginatedDataQuerySchema;
 
-export const ListBaifaVoucherOutputSchema = z.array(
+export const listBaifaVoucherOutputSchema = paginatedDataSchema(
   z.object({
     id: z.number(),
     name: z.string(),
@@ -12,10 +13,11 @@ export const ListBaifaVoucherOutputSchema = z.array(
   })
 );
 
-export const ListBaifaVoucherSchema = {
+export const listBaifaVoucherSchema = {
   input: {
-    querySchema: ListBaifaVoucherQuerySchema,
+    querySchema: listBaifaVoucherQuerySchema,
+    bodySchema: nullSchema,
   },
-  outputSchema: ListBaifaVoucherOutputSchema,
-  frontend: ListBaifaVoucherOutputSchema,
+  outputSchema: listBaifaVoucherOutputSchema,
+  frontend: listBaifaVoucherOutputSchema,
 };

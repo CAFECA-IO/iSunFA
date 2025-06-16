@@ -8,6 +8,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { listBaifaVouchers } from '@/lib/utils/repo/voucher.repo';
 import { validateOutputData } from '@/lib/utils/validator';
+import { buildVoucherBeta } from '@/pages/api/v2/account_book/[accountBookId]/voucher';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
+import { IPaginatedData } from '@/interfaces/pagination';
+import { IGetManyVoucherBetaEntity } from '@/pages/api/v2/account_book/[accountBookId]/voucher/route_utils';
 
 const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -21,9 +25,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (!query) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
+  const paginationVouchers = await listBaifaVouchers(query);
+  const { data, where, ...pagination } = paginationVouchers;
 
-  const result = await listBaifaVouchers(query);
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.LIST_BAIFA_VOUCHER, result);
+  const voucherBetas = data.map(buildVoucherBeta);
+
+  const paginatedVoucher: IPaginatedData<IGetManyVoucherBetaEntity[]> = toPaginatedData({
+    ...pagination,
+    data: voucherBetas,
+  });
+
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.LIST_BAIFA_VOUCHER,
+    paginatedVoucher
+  );
 
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;

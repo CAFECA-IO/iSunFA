@@ -147,8 +147,8 @@ import {
   listNotificationByUserIdSchema,
   readNotificationSchema,
 } from '@/lib/utils/zod_schema/notification';
-import { ListBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/account_book';
-import { ListBaifaVoucherSchema } from '@/lib/utils/zod_schema/baifa/voucher';
+import { listBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/account_book';
+import { listBaifaVoucherSchema } from '@/lib/utils/zod_schema/baifa/voucher';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -341,6 +341,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
   [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
   [APIName.READ_NOTIFICATION]: readNotificationSchema,
-  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: ListBaifaAccountBookSchema,
-  [APIName.LIST_BAIFA_VOUCHER]: ListBaifaVoucherSchema,
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: listBaifaAccountBookSchema,
+  [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
 };

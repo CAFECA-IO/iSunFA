@@ -48,6 +48,7 @@ import {
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 interface DeepNestedLineItem extends PrismaLineItem {
   originalLineItem?: PrismaAssociateLineItem[];
@@ -1220,6 +1221,35 @@ export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems
   return lineItems.filter((li) => !isFullyReversed(li));
 }
 
+/**
+ * Info: (20250203 - Shirley) 建立排序條件列表
+ * 根據傳入的排序選項建立對應的排序條件
+ * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
+ */
+function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+  const orderBy: { [key: string]: SortOrder }[] = [];
+  sortOptions.forEach((sort) => {
+    const { sortBy, sortOrder } = sort;
+    switch (sortBy) {
+      case SortBy.DATE:
+        orderBy.push({
+          date: sortOrder,
+        });
+        break;
+      // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
+      case SortBy.PERIOD:
+      case SortBy.CREDIT:
+      case SortBy.DEBIT:
+      case SortBy.PAY_RECEIVE_TOTAL:
+      case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
+      case SortBy.PAY_RECEIVE_REMAIN:
+      default:
+        break;
+    }
+  });
+  return orderBy;
+}
+
 export async function getManyVoucherV2(options: {
   companyId: number;
   startDate: number;
@@ -1409,35 +1439,6 @@ export async function getManyVoucherV2(options: {
 
   const totalPages = Math.ceil(totalCount / pageSize);
   const offset = pageToOffset(page, pageSize);
-
-  /**
-   * Info: (20250203 - Shirley) 建立排序條件列表
-   * 根據傳入的排序選項建立對應的排序條件
-   * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
-   */
-  function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-    const orderBy: { [key: string]: SortOrder }[] = [];
-    sortOptions.forEach((sort) => {
-      const { sortBy, sortOrder } = sort;
-      switch (sortBy) {
-        case SortBy.DATE:
-          orderBy.push({
-            date: sortOrder,
-          });
-          break;
-        // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
-        case SortBy.PERIOD:
-        case SortBy.CREDIT:
-        case SortBy.DEBIT:
-        case SortBy.PAY_RECEIVE_TOTAL:
-        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
-        case SortBy.PAY_RECEIVE_REMAIN:
-        default:
-          break;
-      }
-    });
-    return orderBy;
-  }
 
   /**
    * Info: (20250203 - Shirley) 建立分頁查詢參數
@@ -1745,29 +1746,6 @@ export async function getManyVoucherByAccountV2(options: {
 
   const offset = pageToOffset(page, pageSize);
   // const orderBy = { [sortBy]: sortOrder };
-  function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-    const orderBy: { [key: string]: SortOrder }[] = [];
-    sortOptions.forEach((sort) => {
-      const { sortBy, sortOrder } = sort;
-      switch (sortBy) {
-        case SortBy.DATE:
-          orderBy.push({
-            date: sortOrder,
-          });
-          break;
-        // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
-        case SortBy.PERIOD:
-        case SortBy.CREDIT:
-        case SortBy.DEBIT:
-        case SortBy.PAY_RECEIVE_TOTAL:
-        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
-        case SortBy.PAY_RECEIVE_REMAIN:
-        default:
-          break;
-      }
-    });
-    return orderBy;
-  }
 
   const findManyArgs = {
     skip: offset,
@@ -2247,77 +2225,203 @@ export const findVouchersByVoucherIds = async (
   }
 };
 
-export const listBaifaVouchers = async ({
-  page = 1,
-  pageSize = 20,
-  startDate = 0,
-  endDate = Math.floor(Date.now() / 1000),
-  // searchQuery = '',
-  sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
-}): Promise<{
-  data: {
-    id: number;
-    no: string;
-    createdAt: number;
-    note: string | null;
-  }[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-}> => {
-  const offset = pageToOffset(page, pageSize);
+export const listBaifaVouchers = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}): Promise<
+  IPaginatedData<IGetManyVoucherResponseButOne[]> & {
+    where: Prisma.VoucherWhereInput;
+  }
+> => {
+  let modifyVouchers: IGetManyVoucherResponseButOne[] = [];
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
 
-  const where: Prisma.VoucherWhereInput = {
-    createdAt: {
+  const whereCondition: Prisma.VoucherWhereInput = {
+    date: {
       gte: startDate,
       lte: endDate,
     },
-    AND: [
+    OR: [
       {
-        OR: [{ deletedAt: null }, { deletedAt: 0 }],
+        issuer: {
+          name: {
+            contains: searchQuery,
+          },
+        },
       },
-      // ...(searchQuery
-      //   ? [
-      //       {
-      //         OR: [
-      //           { no: { contains: searchQuery, mode: 'insensitive' } },
-      //           { note: { contains: searchQuery, mode: 'insensitive' } },
-      //         ],
-      //       },
-      //     ]
-      //   : []),
+      {
+        counterparty: {
+          OR: [
+            {
+              name: {
+                contains: searchQuery,
+              },
+            },
+            {
+              taxId: {
+                contains: searchQuery,
+              },
+            },
+          ],
+        },
+      },
+      {
+        note: {
+          contains: searchQuery,
+        },
+      },
+      {
+        no: {
+          contains: searchQuery,
+        },
+      },
+      {
+        lineItems: {
+          some: {
+            OR: [
+              {
+                account: {
+                  name: {
+                    contains: searchQuery,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
     ],
   };
 
-  const orderBy = sortOption.map(({ sortBy, sortOrder }) => {
-    switch (sortBy) {
-      case SortBy.CREATED_AT:
-        return { createdAt: sortOrder };
-      default:
-        return { createdAt: SortOrder.DESC }; // fallback
-    }
-  });
-
-  const [data, totalCount] = await Promise.all([
+  const [totalCount, vouchers] = await prisma.$transaction([
+    prisma.voucher.count({ where: whereCondition }),
     prisma.voucher.findMany({
-      where,
-      orderBy,
-      skip: offset,
-      take: pageSize,
-      select: {
-        id: true,
-        no: true,
-        createdAt: true,
-        note: true,
+      where: whereCondition,
+      include: {
+        lineItems: {
+          include: {
+            account: true,
+            originalLineItem: {
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                    originalLineItem: {
+                      include: {
+                        resultLineItem: {
+                          include: {
+                            account: true,
+                          },
+                        },
+                        associateVoucher: {
+                          include: {
+                            event: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                    originalVoucher: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        counterparty: true,
+        issuer: {
+          include: {
+            imageFile: true,
+          },
+        },
+        originalVouchers: {
+          include: {
+            event: true,
+            resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
+      orderBy: createOrderByList(sortOption),
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
-    prisma.voucher.count({ where }),
   ]);
 
+  modifyVouchers = vouchers.map((voucher) => {
+    const noteData = parseNoteData(voucher.note ?? '');
+
+    return {
+      ...voucher,
+      lineItems: filterAvailableLineItems(voucher.lineItems),
+      note: noteData.note ?? voucher.note ?? '',
+      counterparty: voucher.counterparty
+        ? {
+            ...voucher.counterparty,
+            taxId: voucher.counterparty.taxId ?? '',
+          }
+        : null,
+    };
+  });
   return {
-    data,
-    page,
-    pageSize,
-    totalCount,
+    ...toPaginatedData({
+      data: modifyVouchers,
+      page,
+      pageSize,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
+      sort: sortOption,
+    }),
+    where: whereCondition,
   };
 };
