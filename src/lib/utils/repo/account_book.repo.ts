@@ -1772,16 +1772,15 @@ export const listBaifaAccountBooks = async (queryParams: {
   searchQuery?: string;
   sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
 }): Promise<IPaginatedOptions<IBaifaAccountBook[]>> => {
+  const nowInSecond = getTimestampNow();
   const {
     page = 1,
     pageSize = 10,
     startDate = 0,
-    endDate = Math.floor(Date.now() / 1000),
+    endDate = nowInSecond,
     searchQuery = '',
     sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
   } = queryParams;
-
-  const nowInSecond = getTimestampNow();
 
   const whereCondition = {
     name: searchQuery ? { contains: searchQuery, mode: Prisma.QueryMode.insensitive } : undefined,

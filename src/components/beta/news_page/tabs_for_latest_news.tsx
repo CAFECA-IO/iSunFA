@@ -33,7 +33,7 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
   return (
     <div
       className={cn('flex justify-between', {
-        'gap-40px': isPageStyle,
+        'gap-lv-5 tablet:gap-40px': isPageStyle,
         'gap-8px': !isPageStyle,
       })}
     >
@@ -51,11 +51,11 @@ const TabsForLatestNews = ({ activeTab, setActiveTab, isPageStyle, callBack }: T
             }
           )}
         >
-          {tab.icon}
+          <div className="hidden tablet:block">{tab.icon}</div>
 
-          <span className="hidden font-medium tablet:block laptop:text-xs screen1280:text-base">
+          <p className="whitespace-nowrap font-medium laptop:text-xs screen1280:text-base">
             {t(`dashboard:DASHBOARD.${tab.name.toUpperCase()}`)}
-          </span>
+          </p>
         </button>
       ))}
     </div>
