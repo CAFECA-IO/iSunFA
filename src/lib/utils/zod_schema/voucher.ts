@@ -314,7 +314,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   };
 });
 
-const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
+export const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
 
 export const voucherGetAllValidatorV2: IZodValidator<
   (typeof voucherGetAllQueryValidatorV2)['shape'],
