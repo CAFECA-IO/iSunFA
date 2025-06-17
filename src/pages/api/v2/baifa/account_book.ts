@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { getSession } from '@/lib/utils/session';
-import { checkRequestData, logUserAction } from '@/lib/utils/middleware';
+import { checkRequestData, checkUserAuthorization, logUserAction } from '@/lib/utils/middleware';
 import { formatApiResponse } from '@/lib/utils/common';
 import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -13,6 +13,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
   const session = await getSession(req);
+
+  await checkUserAuthorization(APIName.LIST_BAIFA_ACCOUNT_BOOK, req, session);
 
   const { query } = checkRequestData(APIName.LIST_BAIFA_ACCOUNT_BOOK, req, session);
 
