@@ -83,6 +83,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
 
+        // Todo: (20250617 - Anna) Debug
+        // eslint-disable-next-line no-console
+        console.log('🔍 REPORT_GET_BY_ID 回傳資料：', { data, code, getReportFinancialSuccess });
+
         if (!getReportFinancialSuccess) {
           // Deprecated: (20241128 - Liz)
           // eslint-disable-next-line no-console
