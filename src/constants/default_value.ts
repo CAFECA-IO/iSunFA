@@ -50,4 +50,8 @@ export const DefaultValue = {
   PAYMENT_METHOD_EXPIRATION_DATE: '**/**',
   PAYMENT_METHOD_CVV: '***',
   BASIC_MEMBER_COUNT: 3,
+  EMAIL_LOGIN: {
+    EMAIL: 'user@isunfa.com',
+    CODE: '555666',
+  },
 };
