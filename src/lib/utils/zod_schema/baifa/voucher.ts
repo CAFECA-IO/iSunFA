@@ -1,17 +1,13 @@
-import { z } from 'zod';
-import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
+import { paginatedDataQuerySchema } from '@/lib/utils/zod_schema/pagination';
 import { nullSchema } from '@/lib/utils/zod_schema/common';
+import {
+  voucherGetAllFrontendValidatorV2,
+  voucherGetAllOutputValidatorV2,
+} from '@/lib/utils/zod_schema/voucher';
 
 export const listBaifaVoucherQuerySchema = paginatedDataQuerySchema;
 
-export const listBaifaVoucherOutputSchema = paginatedDataSchema(
-  z.object({
-    id: z.number(),
-    name: z.string(),
-    createdAt: z.number(),
-    // TODO: (20250613 - Tzuhan) Add more fields as needed
-  })
-);
+export const listBaifaVoucherOutputSchema = voucherGetAllOutputValidatorV2; // TODO: (20250617 - Tzuhan) Define the output schema for the voucher list
 
 export const listBaifaVoucherSchema = {
   input: {
@@ -19,5 +15,5 @@ export const listBaifaVoucherSchema = {
     bodySchema: nullSchema,
   },
   outputSchema: listBaifaVoucherOutputSchema,
-  frontend: listBaifaVoucherOutputSchema,
+  frontend: voucherGetAllFrontendValidatorV2,
 };
