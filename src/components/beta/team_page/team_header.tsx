@@ -44,7 +44,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
       <div className="flex items-center gap-lv-4 tablet:gap-8px">
         <button
           type="button"
-          className="group relative"
+          className="group relative shrink-0"
           onClick={() => setTeamToChangeImage(team)}
           disabled={!modifyImagePermission.can}
         >
