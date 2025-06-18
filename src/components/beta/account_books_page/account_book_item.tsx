@@ -220,7 +220,7 @@ const AccountBookItem = ({
               width={60}
               height={60}
               className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
-            ></Image>
+            />
 
             <div className="flex items-center justify-between gap-8px">
               <p className="max-w-110px truncate text-base font-medium text-text-neutral-solid-dark laptop:max-w-170px">
@@ -326,7 +326,7 @@ const AccountBookItem = ({
         <div
           onClick={handleConnect}
           className={cn(
-            'flex flex-auto cursor-pointer items-center rounded-sm border border-stroke-neutral-quaternary px-24px py-12px',
+            'flex flex-auto cursor-pointer items-center rounded-sm border border-stroke-neutral-quaternary p-lv-5',
             {
               'border-stroke-brand-primary bg-surface-brand-primary-30': isAccountBookConnected,
               'hover:bg-surface-brand-primary-10': !isAccountBookConnected,
@@ -334,20 +334,23 @@ const AccountBookItem = ({
             }
           )}
         >
-          {/* Info: (20250326 - Liz) Account Book Image & Name 顯示帳本圖片 & 名稱 */}
-          <section className="flex flex-auto items-center gap-24px">
+          {/* Info: (20250326 - Liz) Account Book Image & Name 顯示帳本圖片 & 名稱 & Tag */}
+          <section className="mr-lv-7 flex flex-auto items-center gap-24px">
             <Image
               src={accountBook.imageId}
               alt={accountBook.name}
               width={60}
               height={60}
               className="h-60px w-60px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
-            ></Image>
+            />
 
-            <div className="flex items-center justify-between gap-8px">
-              <p className="max-w-50px truncate text-base font-medium text-text-neutral-solid-dark">
+            <div className="flex flex-col items-start justify-between gap-8px">
+              <p className="max-w-100px truncate text-base font-medium text-text-neutral-solid-dark">
                 {accountBook.name}
               </p>
+              <div>
+                <CompanyTag tag={accountBook.tag} />
+              </div>
             </div>
           </section>
 
