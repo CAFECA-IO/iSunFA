@@ -16,6 +16,12 @@ import { getPublicReportUtils as getUtils } from '@/pages/api/v2/company/[compan
 import { ReportSheetType } from '@/constants/report';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
+import {
+  createAccountingSetting,
+  getAccountingSettingByCompanyId,
+} from '@/lib/utils/repo/accounting_setting.repo';
+import { formatAccountingSetting } from '@/lib/utils/formatter/accounting_setting.formatter';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 type APIResponse = FinancialReport | null | IReport;
 
@@ -45,7 +51,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { reportId } = query;
+  const { accountBookId, reportId } = query;
 
   loggerBack.info(`User: ${userId} getting public report with ID: ${reportId}`);
 
@@ -53,9 +59,33 @@ const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250502 - Shirley) 獲取報表資料
     const { curPeriodReport, company } = await getUtils.getPeriodReport(reportId);
 
+    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
+    let payloadAccountingSetting: IAccountingSetting | null = null;
+    if (accountingSetting) {
+      payloadAccountingSetting = formatAccountingSetting(accountingSetting);
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+    } else {
+      const createdAccountingSetting = await createAccountingSetting(accountBookId);
+      if (createdAccountingSetting) {
+        payloadAccountingSetting = formatAccountingSetting(createdAccountingSetting);
+        statusMessage = STATUS_MESSAGE.SUCCESS_GET;
+      } else {
+        statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      }
+    }
+
     // Info: (20250502 - Shirley) 根據報表類型格式化回應
-    if (curPeriodReport && company && curPeriodReport.reportType !== ReportSheetType.REPORT_401) {
-      payload = getUtils.formatPayloadFromIReport(curPeriodReport, company);
+    if (
+      curPeriodReport &&
+      company &&
+      curPeriodReport.reportType !== ReportSheetType.REPORT_401 &&
+      payloadAccountingSetting !== null
+    ) {
+      payload = getUtils.formatPayloadFromIReport(
+        curPeriodReport,
+        company,
+        payloadAccountingSetting
+      );
     } else {
       payload = curPeriodReport;
     }

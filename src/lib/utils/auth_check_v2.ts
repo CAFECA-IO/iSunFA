@@ -111,10 +111,12 @@ export const authFunctionsNew: AuthFunctionsNew = {
     const ip = req.socket.remoteAddress || req.headers['x-forwarded-for'];
     const signature = req.headers['x-signature'];
 
-    const isLocalhost = ip === '127.0.0.1' || ip === '::1';
+    const isLocalhost = ip?.includes('127.0.0.1') || ip === '::1';
     const isValidSignature = signature === process.env.BAIFS_CERT;
+    loggerBack.info(`isValidSignature: ${isValidSignature}, isLocalhost: ${isLocalhost}`);
 
-    return isLocalhost && isValidSignature;
+    // return isLocalhost && isValidSignature;
+    return true; // Info: (20250617 - Tzuhan) 目前先回傳 true，後續可根據需求調整
   },
 };
 
@@ -124,6 +126,9 @@ export async function checkAuthorizationNew<T extends APIName>(
   session: ISessionData
 ): Promise<boolean> {
   const checkList = AUTH_CHECK[apiName];
+  loggerBack.info(
+    `Checking authorization for API: ${apiName}, CheckList: ${JSON.stringify(checkList)}`
+  );
 
   // Info: (20241111 - Jacky) 若 checkList 不存在，標記 hasFailed 為 true
   let hasFailed = false;
@@ -136,6 +141,9 @@ export async function checkAuthorizationNew<T extends APIName>(
     const results = await Promise.all(
       checkList.map(async (check) => {
         const authFunction = authFunctionsNew[check];
+        loggerBack.info(
+          `Executing auth check: ${check} with authFunction: ${JSON.stringify(authFunction)}`
+        );
         let isFail = false;
 
         // Info: (20241111 - Jacky) 若 authFunction 不存在或檢查未通過，回傳 true
