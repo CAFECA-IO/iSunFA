@@ -121,7 +121,8 @@
     "DELETE_BTN": "Yes, Delete Account",
     "NO_ACCOUNTING_FOUND": "No Accounting Title Found.",
     "LOADING_ERROR": "Loading Error.",
-    "TRY_AGAIN": "Please try again later."
+    "TRY_AGAIN": "Please try again later.",
+    "DELETE_ACCOUNT_TITLE_USED_IN_TRIAL_BALANCE": "This account title has existing transactions and cannot be deleted."
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "Manual Account Opening",

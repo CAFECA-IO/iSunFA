@@ -121,7 +121,8 @@
     "DELETE_BTN": "是的，刪除科目",
     "NO_ACCOUNTING_FOUND": "找不到会计科目。",
     "LOADING_ERROR": "加载错误。",
-    "TRY_AGAIN": "请稍后重试。"
+    "TRY_AGAIN": "请稍后重试。",
+    "DELETE_ACCOUNT_TITLE_USED_IN_TRIAL_BALANCE": "此会计科目已有交易记录，无法删除。"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手动开帐",

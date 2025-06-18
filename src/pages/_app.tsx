@@ -24,15 +24,15 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
           <UserProvider>
             <DashboardProvider>
               <AccountingProvider>
-                <ModalProvider>
-                  <HiringProvider>
-                    <GlobalProvider>
-                      <CurrencyProvider>
+                <CurrencyProvider>
+                  <ModalProvider>
+                    <HiringProvider>
+                      <GlobalProvider>
                         <Component {...pageProps} />
-                      </CurrencyProvider>
-                    </GlobalProvider>
-                  </HiringProvider>
-                </ModalProvider>
+                      </GlobalProvider>
+                    </HiringProvider>
+                  </ModalProvider>
+                </CurrencyProvider>
               </AccountingProvider>
             </DashboardProvider>
           </UserProvider>

@@ -29,6 +29,7 @@ import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2
 import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface OutputInvoiceEditModalProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const { currency } = useCurrencyCtx();
   const isLg = useIsLg();
 
   // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
@@ -449,19 +450,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       console.log('Modal initialized with certificate:', certificate);
     }
   }, [isOpen, certificate]);
-
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
-    };
-    if (isOpen) {
-      fetchCurrency();
-    }
-  }, [isOpen, accountBookId]);
 
   return (
     <div
