@@ -150,7 +150,7 @@ const CreateTodoModal = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="overflow-hidden rounded-lg">
+      <div className="w-90vw overflow-hidden rounded-lg tablet:w-auto">
         <header className="flex items-center justify-between bg-surface-neutral-surface-lv2 px-40px pb-24px pt-40px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:TODO_LIST_PAGE.ADD_NEW_EVENT')}
@@ -160,7 +160,7 @@ const CreateTodoModal = ({
           </button>
         </header>
 
-        <div className="max-h-65vh w-400px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
+        <div className="max-h-65vh overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px tablet:w-400px">
           <main className="flex flex-col gap-40px">
             <section className="flex flex-col gap-24px">
               <div className="flex flex-col gap-8px">
