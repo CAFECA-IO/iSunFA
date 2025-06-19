@@ -3,10 +3,11 @@ import OenPaymentGateway from '@/lib/utils/payment/oen';
 import { IPaymentGateway, IPaymentGatewayOptions } from '@/interfaces/payment_gateway';
 import HitrustPaymentGateway from '@/lib/utils/payment/hitrust';
 import { PAYMENT } from '@/constants/service';
+import { isProd } from '@/lib/utils/common';
 
 const paymentGatewayOptions: IPaymentGatewayOptions = {
   platform: PAYMENT.OEN,
-  prodMode: process.env.NEXT_PUBLIC_DOMAIN?.includes('isunfa.com') || false,
+  prodMode: isProd(),
   id: process.env.PAYMENT_ID as string,
   secret: process.env.PAYMENT_TOKEN as string,
 };
