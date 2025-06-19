@@ -1461,14 +1461,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {curAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {curAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (curAssetMixRatio[index] === 0) return null;
+                  if (
+                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1498,14 +1506,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {preAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {preAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (preAssetMixRatio[index] === 0) return null;
+                  if (
+                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
