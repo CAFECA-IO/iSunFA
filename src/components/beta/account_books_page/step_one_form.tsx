@@ -370,7 +370,7 @@ const StepOneForm = ({
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
-                className="group relative"
+                className="group relative shrink-0"
               >
                 <Image
                   src={savedImage || imageId}

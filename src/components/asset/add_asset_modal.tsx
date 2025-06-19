@@ -23,7 +23,7 @@ import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
 import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
 import { AssetDepreciationMethod } from '@/constants/asset';
-import { IAccountingSetting } from '@/interfaces/accounting_setting';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -37,13 +37,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   defaultData,
 }) => {
   const { t } = useTranslation(['common', 'journal', 'asset']);
+  const { currency } = useCurrencyCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { connectedAccountBook } = useUserCtx();
   const { addTemporaryAssetHandler } = useAccountingCtx();
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
-  const [currency, setCurrency] = useState<string>('TWD');
 
   const { assetAccountList, modalType, assetData } = defaultData;
 
@@ -79,11 +79,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   } = APIHandler<IAssetDetails[]>(APIName.CREATE_ASSET_BULK);
 
   const accountInputRef = useRef<HTMLInputElement>(null);
-
-  // Info: (20250603 - Anna) 取得會計設定資料
-  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
-    APIName.ACCOUNTING_SETTING_GET
-  );
 
   // Info: (20241015 - Julian) Accounting 下拉選單
   const {
@@ -317,21 +312,6 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       });
     }
   };
-
-  // Info: (20250603 - Anna) 取得貨幣資訊
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
-    };
-
-    if (isModalVisible) {
-      fetchCurrency();
-    }
-  }, [isModalVisible, accountBookId]);
 
   useEffect(() => {
     if (selectedDepreciationMethod === AssetDepreciationMethod.NONE) {

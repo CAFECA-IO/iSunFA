@@ -29,6 +29,7 @@ import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { InvoiceDirection, InvoiceType, DeductionType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface InputInvoiceEditModalProps {
   isOpen: boolean;
@@ -71,7 +72,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const { currency } = useCurrencyCtx();
   const isLg = useIsLg();
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
@@ -492,19 +493,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       console.log('Modal initialized with certificate:', certificate);
     }
   }, [isOpen, certificate]);
-
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
-    };
-    if (isOpen) {
-      fetchCurrency();
-    }
-  }, [isOpen, accountBookId]);
 
   return (
     <div

@@ -13,8 +13,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
-import { IAccountingSetting } from '@/interfaces/accounting_setting';
-import APIHandler from '@/lib/utils/api_handler';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -168,7 +167,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   modalData,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const { currency } = useCurrencyCtx();
   const { addReverseListHandler } = useAccountingCtx();
   const { connectedAccountBook } = useUserCtx();
 
@@ -184,13 +183,6 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   // Info: (20241104 - Julian) Select All
   const [isSelectedAll, setIsSelectedAll] = useState<boolean>(false);
   const [selectCount, setSelectCount] = useState<number>(0);
-
-  const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
-
-  // Info: (20250603 - Anna) 取得會計設定資料
-  const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
-    APIName.ACCOUNTING_SETTING_GET
-  );
 
   // Info: (20241104 - Julian) reverse item 數量
   const totalItems = uiReverseItemList.length;
@@ -261,19 +253,6 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
       });
     }
   }, [isModalVisible]);
-
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
-    };
-    if (isModalVisible) {
-      fetchCurrency();
-    }
-  }, [isModalVisible, accountBookId]);
 
   const reverseList =
     uiReverseItemList.length > 0 ? (

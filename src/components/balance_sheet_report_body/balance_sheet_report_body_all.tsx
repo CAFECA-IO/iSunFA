@@ -13,7 +13,6 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
-import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -35,7 +34,6 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
-  const { currency } = useCurrencyCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -82,6 +80,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         } = await getFinancialReportAPI({
           params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
         });
+
+        // Todo: (20250617 - Anna) Debug
+        // eslint-disable-next-line no-console
+        console.log('🔍 REPORT_GET_BY_ID 回傳資料：', { data, code, getReportFinancialSuccess });
 
         if (!getReportFinancialSuccess) {
           // Deprecated: (20241128 - Liz)
@@ -829,7 +831,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -887,7 +889,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -960,7 +962,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           </div>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1019,7 +1021,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1078,7 +1080,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1137,7 +1139,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1196,7 +1198,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1255,7 +1257,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">
@@ -1314,7 +1316,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
           <p>
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="w-full border-collapse bg-white">

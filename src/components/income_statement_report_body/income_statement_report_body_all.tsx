@@ -11,7 +11,6 @@ import CollapseButton from '@/components/button/collapse_button';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
 import { useTranslation } from 'next-i18next';
-import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -19,7 +18,6 @@ interface IIncomeStatementReportBodyAllProps {
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
   const { t } = useTranslation('reports');
-  const { currency } = useCurrencyCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
@@ -216,7 +214,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-bold leading-5">
-            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}{currency}</span>
+            <span>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {financialReport.company.accountingSetting?.currency}
+            </span>
           </p>
         </div>
         {!isSummaryCollapsed && (
@@ -294,7 +295,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -372,7 +373,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -469,7 +470,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -553,7 +554,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -635,7 +636,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -717,7 +718,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -797,7 +798,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">
             <span>
               {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-              {currency}
+              {financialReport.company.accountingSetting?.currency}
             </span>
           </p>
         </div>
@@ -914,7 +915,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           </p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white">
@@ -1089,7 +1090,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           <p className="text-xs font-bold leading-5">四、{t('reports:REPORTS.REVENUE_TO_RD')}</p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
-            {currency}
+            {financialReport.company.accountingSetting?.currency}
           </p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white">
