@@ -29,7 +29,7 @@ const SelectCountryDropdown = ({ countryCode, onSelect }: SelectCountryDropdownP
   };
 
   return (
-    <div className="flex flex-col space-y-3 max-md:max-w-full">
+    <div className="flex flex-col gap-8px max-md:max-w-full">
       <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
         {t('settings:NORMAL.SELECT_COUNTRY')}
       </div>
