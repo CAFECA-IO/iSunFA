@@ -1,7 +1,7 @@
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
-
+import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
+  const { connectedAccountBook } = useUserCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -78,7 +79,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           code,
           success: getReportFinancialSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
 
         // Todo: (20250617 - Anna) Debug
@@ -104,7 +109,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         setIsLoading(false);
       }
     };
-
     getFinancialReport();
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
