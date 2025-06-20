@@ -441,12 +441,12 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 稅務設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 稅務設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/money.svg" width={16} height={16} alt="money_icon" />
             <p>{t('settings:ACCOUNTING.TAX_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
         {/* Info: (20241106 - Julian) ===== 稅務設定內容 ===== */}
         <div className="grid grid-cols-1 gap-x-40px gap-y-24px tablet:grid-cols-2">
@@ -522,12 +522,12 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 貨幣設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 貨幣設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/coin.svg" width={16} height={16} alt="coin_icon" />
             <p>{t('settings:ACCOUNTING.CURRENCY_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
 
         <div className="grid grid-cols-1 tablet:grid-cols-2">
@@ -562,12 +562,12 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 會計設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 會計設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/division_sign.svg" width={16} height={16} alt="division_sign" />
             <p>{t('settings:ACCOUNTING.ACCOUNTING_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
         {/* Info: (20241106 - Julian) ===== 會計設定內容 ===== */}
         <div className="flex flex-col gap-40px">

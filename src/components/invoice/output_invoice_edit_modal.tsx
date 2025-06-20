@@ -209,21 +209,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   const invoicePrefixMenuClickHandler = () => {
     setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
   };
-
-  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
-    setIsInvoiceTypeMenuOpen(false);
-    handleInputChange('type', id);
-    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
-    setIsReturnOrAllowance(false);
-  };
-
-  // Info: (20250415 - Anna) 點選發票前綴的選項
-  const invoicePrefixOptionClickHandler = (prefix: string) => {
-    const latestNo = formStateRef.current.no ?? '';
-    const suffix = latestNo.substring(2);
-    handleInputChange('no', `${prefix}${suffix}`);
-    setIsInvoicePrefixMenuOpen(false);
-  };
   // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
   const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
@@ -267,6 +252,27 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
     savedInvoiceRC2Ref.current = updatedCertificate;
   }, [certificate, onSave]);
+  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    setIsInvoiceTypeMenuOpen(false);
+    // Info: (20250619 - Anna) 針對 OUTPUT_34 和 OUTPUT_36，清空 invoice number
+    if (id === InvoiceType.OUTPUT_34 || id === InvoiceType.OUTPUT_36) {
+      handleInputChange('no', '');
+      setTimeout(() => {
+        handleSave();
+      }, 0);
+    }
+    handleInputChange('type', id);
+    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
+    setIsReturnOrAllowance(false);
+  };
+
+  // Info: (20250415 - Anna) 點選發票前綴的選項
+  const invoicePrefixOptionClickHandler = (prefix: string) => {
+    const latestNo = formStateRef.current.no ?? '';
+    const suffix = latestNo.substring(2);
+    handleInputChange('no', `${prefix}${suffix}`);
+    setIsInvoicePrefixMenuOpen(false);
+  };
 
   const netAmountChangeHandler = (value: number) => {
     handleInputChange('netAmount', value);
@@ -656,7 +662,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <input
                         id="invoiceno"
                         type="text"
-                        value={formState.no}
+                        value={formState.otherCertificateNo}
                         onChange={(e) => handleInputChange('otherCertificateNo', e.target.value)}
                         className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                         placeholder={

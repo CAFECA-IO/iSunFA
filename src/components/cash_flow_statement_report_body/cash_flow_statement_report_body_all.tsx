@@ -1,4 +1,5 @@
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useEffect, useState } from 'react';
@@ -20,6 +21,7 @@ interface ICashFlowStatementReportBodyAllProps {
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { t } = useTranslation(['reports']);
+  const { connectedAccountBook } = useUserCtx();
 
   const [financialReport, setFinancialReport] = useState<CashFlowStatementReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -41,7 +43,11 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
 
         if (!getFRSuccess) {

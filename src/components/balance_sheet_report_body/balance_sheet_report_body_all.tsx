@@ -1,7 +1,7 @@
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
-
+import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
+  const { connectedAccountBook } = useUserCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -78,7 +79,11 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           code,
           success: getReportFinancialSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
 
         // Todo: (20250617 - Anna) Debug
@@ -104,7 +109,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         setIsLoading(false);
       }
     };
-
     getFinancialReport();
     // Deprecated: (20241128 - Liz)
     // eslint-disable-next-line no-console
@@ -1457,14 +1461,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {curAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {curAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (curAssetMixRatio[index] === 0) return null;
+                  if (
+                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1494,14 +1506,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {preAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {preAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (preAssetMixRatio[index] === 0) return null;
+                  if (
+                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
