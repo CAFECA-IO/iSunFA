@@ -1,11 +1,7 @@
-import { encodeRlp, decodeRlp, hexlify, toNumber, toUtf8String, toBeArray } from 'ethers';
+import { encodeRlp, decodeRlp, toNumber, toUtf8String, toUtf8Bytes, toBeHex } from 'ethers';
 
 export function encodeApplyData(url: string, hashcash: string, timestamp: number): string {
-  return encodeRlp([
-    url,
-    hashcash,
-    hexlify(toBeArray(timestamp)), // Info: (20250618 - Tzuhan) timestamp 必須轉為 hex 字串
-  ]);
+  return encodeRlp([toUtf8Bytes(url), toUtf8Bytes(hashcash), toBeHex(timestamp)]);
 }
 
 export function decodeApplyData(encoded: string): {

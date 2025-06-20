@@ -3,6 +3,7 @@
   "version": "0.10.4+17",
   "versionName": "RC1",
   "private": false,
+  "type": "commonjs",
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
@@ -18,7 +19,8 @@
     "prepare": "husky",
     "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
     "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
-    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
+    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts",
+    "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/test.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",

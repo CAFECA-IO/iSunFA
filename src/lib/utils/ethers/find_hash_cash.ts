@@ -1,4 +1,5 @@
-import { encodeRlp, hexlify, keccak256, toBeArray } from 'ethers';
+import { keccak256 } from 'ethers';
+import { encodeApplyData } from '@/lib/utils/ethers/rlp';
 
 /**
  * Info: (20250618 - Tzuhan)
@@ -26,7 +27,7 @@ export async function findValidHashcash(url: string): Promise<{
     const hashcash = generateHashcash();
     const timestamp = Math.floor(Date.now() / 1000); // Info: (20250618 - Tzuhan) UNIX 秒數
 
-    const encoded = encodeRlp([url, hashcash, hexlify(toBeArray(timestamp))]);
+    const encoded = encodeApplyData(url, hashcash, timestamp);
 
     const hash = keccak256(encoded);
 

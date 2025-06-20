@@ -1,4 +1,4 @@
-import { Wallet, hexlify, encodeRlp, toBeArray } from 'ethers';
+import { Wallet, hexlify, encodeRlp, toBeHex } from 'ethers';
 
 /**
  * Info: (20250618 - Tzuhan)
@@ -15,5 +15,5 @@ export function signApplyHash(
   const signatureHex =
     hexlify(signature.r) + hexlify(signature.s).slice(2) + signature.v.toString(16);
 
-  return encodeRlp([signatureHex, hashcash, hexlify(toBeArray(timestamp))]);
+  return encodeRlp([signatureHex, hashcash, toBeHex(timestamp)]);
 }
