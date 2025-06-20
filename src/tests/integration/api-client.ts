@@ -1,4 +1,4 @@
-import { IntegrationTestSetup } from './setup';
+import { IntegrationTestSetup } from '@/tests/integration/setup';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
