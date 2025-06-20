@@ -29,11 +29,11 @@ describe('Integration Test - API v2 status_info', () => {
   beforeAll(async () => {
     await IntegrationTestSetup.initialize();
     apiClient = new ApiClient();
-  }, 60000); // 60 second timeout for server startup
+  }, 60000); // Info: (20250620 - Shirley) 60 second timeout for server startup
 
   afterAll(async () => {
     await IntegrationTestSetup.cleanup();
-  }, 30000); // 30 second timeout for cleanup
+  }, 30000); // Info: (20250620 - Shirley) 30 second timeout for cleanup
 
   beforeEach(() => {
     apiClient.clearSession();
