@@ -1,7 +1,7 @@
 import prisma from '@/client';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { createHash } from 'crypto';
-import { getTimestampNow, randomCode } from '@/lib/utils/common';
+import { getTimestampNow, isProd, randomCode } from '@/lib/utils/common';
 import { IEmailLogin } from '@/interfaces/email';
 import { FIVE_MINUTES_IN_S } from '@/constants/time';
 import { STATUS_MESSAGE } from '@/constants/status_code';
@@ -13,7 +13,9 @@ export const createEmailLogin = async (
 ): Promise<IEmailLogin> => {
   const nowInSecond = getTimestampNow();
   const code =
-    email === DefaultValue.EMAIL_LOGIN.EMAIL ? DefaultValue.EMAIL_LOGIN.CODE : randomCode();
+    DefaultValue.EMAIL_LOGIN.EMAIL.includes(email) && !isProd()
+      ? DefaultValue.EMAIL_LOGIN.CODE
+      : randomCode();
   const hash = createHash('md5').update(code).digest('hex');
   const emailLoginData: IEmailLogin = {
     email,

@@ -51,7 +51,7 @@ export const DefaultValue = {
   PAYMENT_METHOD_CVV: '***',
   BASIC_MEMBER_COUNT: 3,
   EMAIL_LOGIN: {
-    EMAIL: 'user@isunfa.com',
+    EMAIL: ['user@isunfa.com', 'user1@isunfa.com', 'user2@isunfa.com', 'user3@isunfa.com'],
     CODE: '555666',
   },
 };

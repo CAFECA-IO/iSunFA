@@ -21,6 +21,11 @@ import { KYCFiles, UploadDocumentKeys } from '@/constants/kyc';
 import { ROCDate } from '@/interfaces/locale';
 import { ONE_DAY_IN_MS } from '@/constants/time';
 
+export const isProd = () => {
+  const result = process.env.NEXT_PUBLIC_DOMAIN?.includes('isunfa.com') || false;
+  return result;
+};
+
 export function isFloatsEqual(a: number, b: number, tolerance = Number.EPSILON): boolean {
   return Math.abs(a - b) < tolerance;
 }
