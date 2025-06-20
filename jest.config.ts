@@ -154,7 +154,12 @@ const config: Config = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: "node",
+  testEnvironment: 'node',
+
+  // Node options for running tests
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
