@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { spawn, ChildProcess } from 'child_process';
 
-// Info: (20250620) Integration test setup utilities with server lifecycle management
+// Info: (20250620 - Shirley) Integration test setup utilities with server lifecycle management
 export class IntegrationTestSetup {
   private static prisma: PrismaClient;
 
@@ -13,7 +13,7 @@ export class IntegrationTestSetup {
   private static isServerReady = false;
 
   static async initialize(): Promise<PrismaClient> {
-    // Initialize database connection
+    // Info: (20250620 - Shirley) Initialize database connection
     if (!IntegrationTestSetup.prisma) {
       IntegrationTestSetup.prisma = new PrismaClient({
         datasources: {
@@ -24,17 +24,17 @@ export class IntegrationTestSetup {
       });
     }
 
-    // Start server if not already running
+    // Info: (20250620 - Shirley) Start server if not already running
     await IntegrationTestSetup.startServer();
 
     return IntegrationTestSetup.prisma;
   }
 
   static async cleanup(): Promise<void> {
-    // Stop server
+    // Info: (20250620 - Shirley) Stop server
     await IntegrationTestSetup.stopServer();
 
-    // Disconnect database
+    // Info: (20250620 - Shirley) Disconnect database
     if (IntegrationTestSetup.prisma) {
       await IntegrationTestSetup.prisma.$disconnect();
     }
@@ -45,14 +45,15 @@ export class IntegrationTestSetup {
       return;
     }
 
+    // Deprecated: (20250620 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('🚀 Starting Next.js server for integration tests...');
 
     try {
-      // Set environment variable for test port
+      // Info: (20250620 - Shirley) Set environment variable for test port
       process.env.PORT = IntegrationTestSetup.TEST_PORT.toString();
 
-      // Spawn Next.js development server
+      // Info: (20250620 - Shirley) Spawn Next.js development server
       IntegrationTestSetup.serverProcess = spawn('npm', ['run', 'dev'], {
         env: {
           ...process.env,
@@ -61,19 +62,22 @@ export class IntegrationTestSetup {
         stdio: 'pipe',
       });
 
-      // Handle server process events
+      // Info: (20250620 - Shirley) Handle server process events
       IntegrationTestSetup.serverProcess.on('error', (error) => {
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error('❌ Server process error:', error);
       });
 
-      // Wait for server to be ready
+      // Info: (20250620 - Shirley) Wait for server to be ready
       await IntegrationTestSetup.waitForServerReady();
       IntegrationTestSetup.isServerReady = true;
 
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(`✅ Test server running on port ${IntegrationTestSetup.TEST_PORT}`);
     } catch (error) {
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.error('❌ Failed to start test server:', error);
       await IntegrationTestSetup.stopServer();
@@ -83,6 +87,7 @@ export class IntegrationTestSetup {
 
   private static async stopServer(): Promise<void> {
     if (IntegrationTestSetup.serverProcess) {
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('🛑 Stopping test server...');
 
@@ -103,6 +108,7 @@ export class IntegrationTestSetup {
       });
 
       IntegrationTestSetup.serverProcess = null;
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test server stopped');
     }
@@ -111,29 +117,34 @@ export class IntegrationTestSetup {
   }
 
   private static async waitForServerReady(): Promise<void> {
-    const maxAttempts = 60; // 60 attempts
-    const delayBetweenAttempts = 1000; // 1 second
+    const maxAttempts = 60; // Info: (20250620 - Shirley) 60 attempts
+    const delayBetweenAttempts = 1000; // Info: (20250620 - Shirley) 1 second
 
     let attempt = 1;
+    // Deprecated: (20250620 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-await-in-loop
     while (attempt <= maxAttempts) {
       try {
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         const response = await fetch(
           `http://localhost:${IntegrationTestSetup.TEST_PORT}/api/v2/status_info`
         );
         if (response.ok) {
+          // Deprecated: (20250620 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log(`✅ Server is ready after ${attempt} attempts`);
           return;
         }
       } catch (error) {
-        // Expected during startup
+        // Info: (20250620 - Shirley) Expected during startup
       }
 
       if (attempt < maxAttempts) {
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => {
           setTimeout(resolve, delayBetweenAttempts);
@@ -145,21 +156,21 @@ export class IntegrationTestSetup {
     throw new Error('Server failed to become ready within the expected time');
   }
 
-  // Info: (20250619) Default test emails for integration testing
+  // Info: (20250619 - Shirley) Default test emails for integration testing
   static getTestEmail(): string {
-    return DefaultValue.EMAIL_LOGIN.EMAIL[0]; // user@isunfa.com
+    return DefaultValue.EMAIL_LOGIN.EMAIL[0]; // Info: (20250619 - Shirley) user@isunfa.com
   }
 
   static getTestVerificationCode(): string {
-    return DefaultValue.EMAIL_LOGIN.CODE; // 555666
+    return DefaultValue.EMAIL_LOGIN.CODE; // Info: (20250619 - Shirley) 555666
   }
 
-  // Info: (20250620) API base URL for testing
+  // Info: (20250620 - Shirley) API base URL for testing
   static getApiBaseUrl(): string {
     return `http://localhost:${IntegrationTestSetup.TEST_PORT}`;
   }
 
-  // Info: (20250619) Generate test data helpers
+  // Info: (20250619 - Shirley) Generate test data helpers
   static generateTestTeamName(): string {
     return `Test Team ${Date.now()}`;
   }
