@@ -26,7 +26,6 @@
     "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
   },
   "dependencies": {
-    "jest": "^29.7.0",
     "@google-cloud/storage": "^7.11.1",
     "@next/third-parties": "^14.2.5",
     "@prisma/client": "^5.14.0",

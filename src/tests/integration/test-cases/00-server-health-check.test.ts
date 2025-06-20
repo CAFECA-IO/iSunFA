@@ -1,22 +1,25 @@
+import { ITeam } from '@/interfaces/team';
 import { ApiClient } from '@/tests/integration/api-client';
 import { IntegrationTestSetup } from '@/tests/integration/setup';
+
+interface StatusInfoPayload {
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    createdAt: number;
+    updatedAt: number;
+  } | null;
+  company: object | null;
+  role: object | null;
+  teams: ITeam[];
+}
 
 interface StatusInfoResponse {
   success: boolean;
   code: string;
   message: string;
-  payload: {
-    user: {
-      id: number;
-      email: string;
-      name: string;
-      createdAt: number;
-      updatedAt: number;
-    } | null;
-    company: object | null;
-    role: object | null;
-    teams: unknown[];
-  };
+  payload: StatusInfoPayload;
   powerby: string;
 }
 
