@@ -70,7 +70,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           value={phoneNumber}
           onChange={onUpdate}
           placeholder={t('settings:NORMAL.ENTER_NUMBER')}
-          className="block flex-1 outline-none placeholder:text-input-text-input-placeholder"
+          className="block flex-1 bg-transparent outline-none placeholder:text-input-text-input-placeholder"
         />
       </button>
       {/* Info: (20240425 - Shirley) CountryCode Menu */}

@@ -87,7 +87,7 @@ const CounterpartyPageBody = () => {
         <p className="text-base font-semibold leading-6 tracking-wide text-neutral-400 tablet:hidden">
           {t('settings:NORMAL.CLIENT_SUPPLIER_SETTINGS')}
         </p>
-        <div className="flex flex-col items-center gap-6 laptop:flex-row laptop:gap-10">
+        <div className="z-10 flex flex-col items-center gap-6 laptop:flex-row laptop:gap-10">
           <SearchInput
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

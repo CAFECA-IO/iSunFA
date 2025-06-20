@@ -4,7 +4,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { CounterpartyType } from '@/constants/counterparty';
 import { RxCross1 } from 'react-icons/rx';
-import { BiSave } from 'react-icons/bi';
+import { IoAdd } from 'react-icons/io5';
 import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
@@ -369,23 +369,25 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={modalVisibilityHandler}
-        >
-          <RxCross1 size={24} />
-        </button>
-        <h2 className="flex justify-center text-xl font-semibold">
-          {t('certificate:COUNTERPARTY.ADD_NEW')}
-        </h2>
+      <div className="flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-lv-7">
+        <div className="relative flex items-center justify-center">
+          {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+          <button
+            type="button"
+            className="absolute right-0 text-checkbox-text-primary"
+            onClick={modalVisibilityHandler}
+          >
+            <RxCross1 size={24} />
+          </button>
+          <h2 className="flex justify-center text-xl font-semibold text-text-neutral-primary">
+            {t('certificate:COUNTERPARTY.ADD_NEW')}
+          </h2>
+        </div>
         <form
           onSubmit={addNewCounterPartyHandler}
-          className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-lv-7 text-sm text-input-text-primary"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 tablet:gap-lv-7">
             {/* Info: (20241018 - tzuhan) name */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="counterparty-name" className="absolute -top-20"></div>
@@ -494,7 +496,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               />
             </div>
           </div>
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center justify-end gap-24px">
             <Button
               className="px-16px py-8px"
               type="button"
@@ -504,8 +506,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button className="px-16px py-8px" type="submit" variant="tertiary" disabled={disabled}>
-              <p>{t('common:COMMON.SAVE')}</p>
-              <BiSave size={20} />
+              <p>{t('common:COMMON.ADD')}</p>
+              <IoAdd size={16} />
             </Button>
           </div>
         </form>

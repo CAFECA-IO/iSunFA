@@ -60,7 +60,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
         <Image alt="avatar" src={imageId} width={80} height={80} />
       </div>
 
-      <div className="flex flex-col gap-16px">
+      <div className="flex flex-col gap-lv-4">
         <div className="flex items-center gap-3 text-sm">
           <TbUserCircle size={16} className="flex-none text-icon-surface-single-color-primary" />
           <div className="flex flex-wrap items-center gap-1">
