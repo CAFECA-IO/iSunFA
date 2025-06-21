@@ -10,6 +10,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
+import eventManager from '@/lib/utils/event_manager';
 
 const CounterpartyPageBody = () => {
   const { t } = useTranslation(['search', 'common', 'settings']);
@@ -69,6 +70,19 @@ const CounterpartyPageBody = () => {
   useEffect(() => {
     fetchCounterpartyData();
   }, [connectedAccountBook]);
+
+  useEffect(() => {
+    const refreshCounterpartyList = () => {
+      fetchCounterpartyData();
+    };
+    // Info: (20250621 - Anna) 當全域事件系統有 ‘counterparty:added’ 事件發生時，就執行 refreshCounterpartyList 函數;
+    eventManager.on('counterparty:added', refreshCounterpartyList);
+
+    return () => {
+      // Info: (20250621 - Anna) 元件卸載時，剛剛註冊的事件監聽取消掉
+      eventManager.off('counterparty:added', refreshCounterpartyList);
+    };
+  }, []);
 
   const handleSave = async () => {
     setSearchQuery(''); // Info: (20241113 - Anna) 清空搜尋條件

@@ -16,6 +16,7 @@ import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import eventManager from '@/lib/utils/event_manager';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -273,6 +274,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   useEffect(() => {
     if (success && data) {
+      // Info: (20250621 - Anna) 發送新增成功事件，讓外部重新抓取資料
+      eventManager.emit('counterparty:added');
       onSave(data);
       toastHandler({
         id: ToastId.ADD_COUNTERPARTY_SUCCESS,
