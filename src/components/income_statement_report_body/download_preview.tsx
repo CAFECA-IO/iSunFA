@@ -1,3 +1,5 @@
+// Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+/* eslint-disable tailwindcss/no-custom-classname */
 import React from 'react';
 import { FinancialReport } from '@/interfaces/report';
 import PrintCostRevRatio from '@/components/income_statement_report_body/print_cost_rev_ratio';
@@ -163,8 +165,6 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                 breakBefore: 'page',
                 breakAfter: 'page',
               }}
-              // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-              // eslint-disable-next-line tailwindcss/no-custom-classname
               className="download-page relative h-screen overflow-hidden border border-stroke-neutral-quaternary"
             >
               {index === 0 ? <FirstHeader financialReport={financialReport} /> : <NormalHeader />}
@@ -254,8 +254,6 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             </div>
           ))
         }
-        {/* Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式 */}
-        {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
         <div className="download-page border border-stroke-neutral-quaternary">
           <PrintCostRevRatio
             financialReport={financialReport}
