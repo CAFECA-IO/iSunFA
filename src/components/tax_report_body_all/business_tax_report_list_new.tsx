@@ -135,13 +135,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   //  Info: (20241204 - Anna) 新增 isReportGenerated 狀態
   const [isReportGenerated, setIsReportGenerated] = useState<boolean>(false);
 
-  // Info: (20241204 - Anna)
-  const {
-    trigger: generateFinancialReport,
-    code: generatedCode,
-    isLoading: generatedLoading,
-    success: generatedSuccess,
-  } = APIHandler<number | null>(APIName.REPORT_GENERATE);
+  const { trigger: generateFinancialReport } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
@@ -222,17 +216,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (generatedCode && !generatedLoading && generatedSuccess) {
-      // Deprecated: (20241204 - Anna)
-      // eslint-disable-next-line no-console
-      console.log('Report generation succeeded:', {
-        code: generatedCode,
-        message: 'The report is being generated.',
-      });
-    }
-  }, [generatedCode, generatedLoading, generatedSuccess]);
-
   // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
     if (isAuthLoading || !connectedAccountBook || !reportId || isLoading) return;
@@ -242,7 +225,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     getFinancialReport();
   }, [isAuthLoading, connectedAccountBook, reportId]);
 
-  // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
+  // Info: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
   useEffect(() => {
     if (!selectedDateRange || !connectedAccountBook?.id) return;
 

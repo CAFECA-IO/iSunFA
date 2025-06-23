@@ -157,7 +157,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
         </div>
 
         <div className="table-row-group">
-          {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
+          {/* Info: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <InputInvoiceItem
               activeSelection={activeSelection}

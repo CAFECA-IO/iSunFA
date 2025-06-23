@@ -161,9 +161,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when accountBookId and voucherId are ready
     if (accountBookId && voucherId) {
-      // Deprecated: (20250124 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('API Params:', { companyId: accountBookId, voucherId }); // Info: (20250122 - Anna) 檢查 accountBookId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [accountBookId, voucherId]);

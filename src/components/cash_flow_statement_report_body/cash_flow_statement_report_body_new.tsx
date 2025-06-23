@@ -146,20 +146,7 @@ const CashFlowStatementPageBody = () => {
   const [isPrinting, setIsPrinting] = useState(false);
 
   const handleOnBeforePrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'cash_flow_statement_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(true);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'cash_flow_statement_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
-      true
-    );
-
     // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
     return new Promise<void>((resolve) => {
       setTimeout(() => {
@@ -169,19 +156,7 @@ const CashFlowStatementPageBody = () => {
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'cash_flow_statement_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(false);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'cash_flow_statement_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
-      false
-    );
   }, [isPrinting]);
 
   const printFn = useReactToPrint({
@@ -217,7 +192,6 @@ const CashFlowStatementPageBody = () => {
         {/* Info: (20241017 - Anna) Balance Sheet List */}
         <CashFlowStatementList
           selectedDateRange={selectedDateRange}
-          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
           printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數

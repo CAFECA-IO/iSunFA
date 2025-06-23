@@ -176,10 +176,6 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
           // Info: (20250121 - Liz) 排序資料 (初次資料獲取後立即排序)
           const sortedInvoices = sortInvoices(newInvoices);
           setInvoiceList(sortedInvoices);
-        } else {
-          // Deprecated: (20250120 - Anna)
-          // eslint-disable-next-line no-console
-          console.error('取得發票清單失敗:', response.error || `API 錯誤碼: ${response.code}`);
         }
       } catch (error) {
         // Deprecated: (20250120 - Anna)
