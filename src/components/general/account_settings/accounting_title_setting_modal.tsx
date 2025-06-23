@@ -86,10 +86,6 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       if (response.success && response.data) {
         // Info: (20250214 - Shirley) @Anna 修改 list trial balance API 資料格式，array 的 data 放到 data 裡，非 array 的 data 放到 note 裡，解析 note 字串，並提供預設值
         setTbAccountList(response.data.data);
-      } else {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        // console.error('API response error: ', response);
       }
     } catch (err) {
       // Deprecate: (20241205 - Anna) remove eslint-disable

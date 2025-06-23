@@ -55,10 +55,6 @@ const CounterpartyPageBody = () => {
       if (responseData && Array.isArray(responseData.data)) {
         setCounterparties(responseData.data);
         setTotalCount(responseData.totalCount || 0);
-      } else {
-        // Deprecate: (20241118 - Anna) debug
-        // eslint-disable-next-line no-console
-        console.error('responseData 結構不正確:', responseData);
       }
     } catch (error) {
       // eslint-disable-next-line no-console

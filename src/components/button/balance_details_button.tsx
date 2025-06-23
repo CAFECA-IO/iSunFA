@@ -84,9 +84,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   // Info: (20241003 - Anna) 使用 useEffect 在打開 Modal 時記錄 API 請求參數
   useEffect(() => {
     if (isModalVisible && shouldFetch) {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.log('傳送 API 請求，參數:', params);
       setShouldFetch(false); // 避免多次觸發 API 請求
     }
   }, [isModalVisible, shouldFetch, params]);
@@ -102,15 +99,9 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     contentRef: modalRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
     documentTitle: `${accountName} - 科目餘額表`,
     onBeforePrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Preparing to print the modal content...');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
     onAfterPrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Printing completed.');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
   });
@@ -122,9 +113,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
       setDisplayedVoucherList([]); // Info: (20241107 - Anna) 在開啟 Modal 時，將資料重置
       setShouldFetch(true); // Info: (20241107 - Anna) 打開 Modal 時啟動請求
     }
-    // Deprecate: (20241203 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    // console.log('渲染的 Voucher List:', displayedVoucherList);
   };
 
   // Info: (20241003 - Anna) CSS 樣式

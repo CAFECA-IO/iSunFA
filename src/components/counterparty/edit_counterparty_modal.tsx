@@ -154,10 +154,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         note: inputNote,
       });
       onClose();
-    } else if (editError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update counterparty:', editError);
     }
   }, [success, editError, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
@@ -167,10 +163,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       // Info: (20241118 - Anna) 回傳空資料表示該項目已刪除
       onSave({ id: counterpartyId, name: '', taxId: '', type: CounterpartyType.BOTH, note: '' });
       onClose();
-    } else if (deleteError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to delete counterparty:', deleteError);
     }
   }, [deleteSuccess, deleteError, onSave, onClose, counterpartyId]);
 

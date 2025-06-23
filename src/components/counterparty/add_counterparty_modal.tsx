@@ -130,9 +130,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   const nameChangeHandler = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newName = event.target.value.trim();
-    // Deprecate: (20241223 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Input value:', newName); // Info: (20241223 - Anna) 確認輸入框值是否為空
     setInputName(newName);
     // setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
     setNameInputStyle(inputStyle.NORMAL); // Info: (20250121 - Anna) 用戶修改名稱時，恢復正常樣式
@@ -160,14 +157,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       requestCounterRef.current += 1; // Info: (20241223 - Anna) 使用 useRef 來持續增加計數器
       const requestId = requestCounterRef.current; // Info: (20241223 - Anna) 獲取當前請求的 ID
 
-      // Deprecate: (20241223 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`Sending API request #${requestId} with name: ${newName}`);
-
       // Info: (20241223 - Anna) 每輸入一個完整的中文字時觸發
       try {
-        // eslint-disable-next-line no-console
-        console.log(`Sending API request with name: ${newName}`); // Info: (20241223 - Anna) 打印請求參數
         const { data: companyData } = await fetchCompanyDataAPI({
           query: { name: newName, taxId: undefined },
           signal: controller.signal, // Info: (20241223 - Anna) 傳入控制器的信號
@@ -175,27 +166,10 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
         // Info: (20241223 - Anna) 比較輸入值，確保回傳對應的是最後一次的輸入
         if (requestId !== requestCounterRef.current) {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`Discarding stale response for request #${requestId}`); // Info: (20241223 - Anna) 丟棄過期的請求結果
           return;
         }
-
-        // Deprecate: (20241223 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('API response:', companyData); // Info: (20241223 - Anna) 輸出 API 回傳的數據
         setSuggestions(companyData ? [companyData] : []); // Info: (20241223 - Anna) 儲存 API 回傳的建議
         setDropdownOpen(true);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('Request aborted.'); // Info: (20241223 - Anna) 請求被中止時不需處理錯誤
-        } else {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.error('Error fetching suggestions:', err); // Info: (20241223 - Anna) 其他錯誤處理
-        }
       } finally {
         // Info: (20241223 - Anna) 清理控制器，避免干擾後續請求
         if (currentRequestController === controller) {

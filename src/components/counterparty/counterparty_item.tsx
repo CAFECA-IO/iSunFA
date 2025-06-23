@@ -87,9 +87,6 @@ const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterparty
         <EditCounterPartyModal
           onClose={closeEditModal}
           onSave={(data) => {
-            // Deprecate: (20241118 - Anna) debug
-            // eslint-disable-next-line no-console
-            console.log('Saved data:', data);
             closeEditModal();
             handleSave(data); // Info: (20241118 - Anna) 將更新資料傳遞給父組件
           }}
