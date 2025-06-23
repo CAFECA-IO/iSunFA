@@ -137,7 +137,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
           <Image src="/icons/team_info.svg" alt="team_info" width={16} height={16} />
           <span>{t('team:TEAM_PAGE.INFORMATION')}</span>
         </div>
-        <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+        <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
       </div>
 
       {isNoData && <NoData />}

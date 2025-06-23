@@ -124,7 +124,7 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
+      <div className="flex w-90vw flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 px-20px py-16px tablet:w-400px tablet:p-40px">
         <section className="flex items-center">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('account_book:UPLOAD_COMPANY_AVATAR_MODAL.TITLE')}
@@ -150,7 +150,7 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
           ) : (
             <div
               className={cn(
-                'flex h-320px w-320px flex-col items-center justify-center gap-20px rounded-md border border-dashed border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary p-40px',
+                'flex flex-col items-center justify-center gap-20px rounded-md border border-dashed border-drag-n-drop-stroke-primary bg-drag-n-drop-surface-primary p-40px tablet:h-320px tablet:w-320px',
                 {
                   'border-drag-n-drop-stroke-focus bg-drag-n-drop-surface-hover': isDragging,
                 }
@@ -169,22 +169,22 @@ const ChangePictureModal = ({ closeModal, onSave }: ChangePictureModalProps) => 
 
               <Image src="/icons/upload_file.svg" width={55} height={60} alt="upload file icon" />
 
-              <div className="flex items-center gap-4px">
-                <span className="text-base font-medium text-drag-n-drop-text-primary">
+              <div className="flex flex-col items-center gap-4px text-center text-sm font-medium tablet:text-base">
+                <p className="text-drag-n-drop-text-primary">
                   {t('common:UPLOAD_AREA.DROP_YOUR_FILES_HERE_OR')}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-base font-medium text-link-text-primary"
-                >
-                  {t('common:UPLOAD_AREA.BROWSE')}
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-link-text-primary"
+                  >
+                    {t('common:UPLOAD_AREA.BROWSE')}
+                  </button>
+                </p>
 
-              <p className="text-sm font-medium text-drag-n-drop-text-note">
-                {t('common:UPLOAD_AREA.MAXIMUM_SIZE')}
-              </p>
+                <p className="text-xs text-drag-n-drop-text-note tablet:text-sm">
+                  {t('common:UPLOAD_AREA.MAXIMUM_SIZE')}
+                </p>
+              </div>
             </div>
           )}
 
