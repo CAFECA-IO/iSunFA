@@ -1,3 +1,5 @@
+// Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+/* eslint-disable tailwindcss/no-custom-classname */
 import React from 'react';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
@@ -209,8 +211,6 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) Use a unique key
-        // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -246,8 +246,6 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) 直接用 pageIndex 來確保 key 唯一
-        // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -426,8 +424,6 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
       >
         <div
           id="additional-block-page"
-          // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-          // eslint-disable-next-line tailwindcss/no-custom-classname
           className={`${printContentClass} download-page relative h-a4-height overflow-y-hidden border border-stroke-neutral-quaternary`}
         >
           {renderedHeader(false)}
