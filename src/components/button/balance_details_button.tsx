@@ -75,9 +75,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const params = { companyId: accountBookId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法 const params = { accountBookId, accountId };
 
   const handleApiResponse = (resData: IPaginatedData<IVoucherForSingleAccount[]>) => {
-    // Deprecated: (20250120 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('API Response resData:', resData);
     // Info: (20241107 - Anna) 處理 API 回應
     setDisplayedVoucherList(resData.data);
     // Info: (20241107 - Anna) 請求完成後關閉 shouldFetch

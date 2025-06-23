@@ -25,7 +25,6 @@ import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
-  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
   downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
@@ -48,7 +47,6 @@ const COLOR_CLASSES = [
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   selectedDateRange,
-  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
@@ -237,34 +235,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
-
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList received isPrinting?', isPrinting);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList printRef is null');
-    }
-  }, [isPrinting]);
-
-  // Info: (20241122 - Anna) 打印 Ref 的內容
-  useEffect(() => {
-    if (printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList printRef is currently null');
-    }
-  }, [printRef]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -821,9 +791,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
   // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
   const displayedSelectArea = () => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <Toggle
