@@ -66,22 +66,17 @@ const Loading = () => {
 };
 interface IncomeStatementListProps {
   selectedDateRange: IDatePeriod | null;
-  isPrinting: boolean;
   printRef: React.RefObject<HTMLDivElement>;
   printFn: () => void;
 }
 
 const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   selectedDateRange,
-  isPrinting,
   printRef,
   printFn,
 }) => {
   const { t, i18n } = useTranslation('reports');
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
-  // Deprecated: (20241205 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('isPrinting:', isPrinting);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
   const prevSelectedDateRange = useRef<IDatePeriod | null>(null);
   const { isAuthLoading, connectedAccountBook } = useUserCtx();
@@ -138,15 +133,7 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
           setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
           setFinancialReport(data);
-          // Deprecated: (20241204 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('IncomeStatementList received data:', data);
         }
-      } catch (error) {
-        // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Error:', error);
       } finally {
         setIsGetReportAPILoading(false);
       }
@@ -203,8 +190,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
   const renderRows = (items: FinancialReportItemWithChildren[]): JSX.Element[] => {
     return items.flatMap((item) => {
       if (!item.code || !item.name) {
-        // eslint-disable-next-line no-console
-        console.warn('Skipped invalid item:', item);
         return [];
       }
 
@@ -324,10 +309,6 @@ const IncomeStatementList: React.FC<IncomeStatementListProps> = ({
       </section>
     </div>
   );
-
-  // Deprecated: (20241204 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('financialReport.general.slice(0, 10):', financialReport?.general.slice(0, 10));
 
   const ItemDetail = (
     <div id="2" className="relative overflow-hidden">

@@ -55,10 +55,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const [preDate, setPreDate] = useStateRef<string>('');
   const [preYear, setPreYear] = useStateRef<string>('');
 
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 BalanceSheetReportBodyAll');
-
   const [financialReport, setFinancialReport] = useState<BalanceSheetReport | null>(null);
   const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
   const [errorCode, setErrorCode] = useState<string>('');
@@ -86,28 +82,16 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           },
         });
         if (!getReportFinancialSuccess) {
-          // Deprecated: (20241128 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', code);
-
           setErrorCode(code);
           return;
         }
         setFinancialReport(data);
         setIsGetFinancialReportSuccess(getReportFinancialSuccess);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', financialReport);
-      } catch (error) {
-        // console.log('error:', error);
       } finally {
         setIsLoading(false);
       }
     };
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in BalanceSheetReportBodyAll');
   }, [reportId]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);

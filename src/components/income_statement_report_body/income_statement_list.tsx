@@ -219,15 +219,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
           setFinancialReport(data);
-          // Deprecated: (20241204 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('IncomeStatementList received data:', data);
         }
-      } catch (error) {
-        // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Error:', error);
       } finally {
         setIsGetReportAPILoading(false);
       }

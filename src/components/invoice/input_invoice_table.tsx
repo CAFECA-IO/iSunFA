@@ -1,3 +1,5 @@
+// Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+/* eslint-disable tailwindcss/no-custom-classname */
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import InputInvoiceItem from '@/components/invoice/input_invoice_item';
@@ -149,6 +151,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
             <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
+
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}

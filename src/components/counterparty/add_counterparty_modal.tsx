@@ -259,15 +259,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       });
       modalVisibilityHandler();
     } else if (error) {
-      // Info: (20250121 - Anna) 確認 error 的實際結構
-      // Deprecated: (20250122 - Shirley) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Error content:', error);
-      // Info: (20250122 - Anna) 嘗試從錯誤中提取 ErrorCode
-      const errorCode = (error as { code?: string })?.code || '';
-      // Deprecated: (20250122 - Shirley) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Error code:', errorCode);
       // Info: (20250121 - Anna) 檢查是否有內嵌的錯誤信息
       const apiErrorMessage = (error as { message?: string })?.message || '';
       // Info: (20250121 - Anna) 定義名稱重複的錯誤訊息
@@ -283,10 +274,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setTaxIdInputStyle(`${inputStyle.ERROR}`);
         // Info: (20250122 - Anna) 顯示統編錯誤訊息
         setTaxIdErrorMessage(errorTaxIdMessageContent);
-      } else {
-        // Deprecated: (20250122 - Shirley) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('Unexpected error:', error);
       }
     }
   }, [success, error, data]);

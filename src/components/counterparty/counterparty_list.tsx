@@ -36,10 +36,6 @@ const CounterpartyList: React.FC<CounterpartyListProps> = ({
     setSortOrder: setTypeSort,
   });
 
-  // Info: (20241113 - Anna) 確認傳入的 `counterparties` 是否正確
-  // eslint-disable-next-line no-console
-  console.log('Received counterparties:', counterparties);
-
   // Info: (20241112 - Anna) 過濾資料並計算頁數
   const filteredCounterparties = searchQuery
     ? counterparties.filter(

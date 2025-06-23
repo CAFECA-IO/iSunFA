@@ -13,9 +13,6 @@ interface ICounterpartyItemProps {
 
 const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterpartyItemProps) => {
   const { t } = useTranslation(['certificate']);
-  // Info: (20241115 - Anna)  添加 handleSave 解構
-  // eslint-disable-next-line no-console
-  console.log('Rendering CounterpartyItem with data:', counterparty);
   const { name, type, note, taxId, id: counterpartyId } = counterparty; // Info: (20241110 - Anna) 使用符合 ICounterparty 的屬性名稱，將 id 重命名為 counterpartyId
 
   // Info: (20241108 - Anna) 添加狀態來控制彈窗的開關
