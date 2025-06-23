@@ -136,9 +136,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         // Info: (20241023 - Anna) 設定已成功請求過 API
         setHasFetchedOnce(true);
         prevSelectedDateRange.current = selectedDateRange;
-        // Todo: (20250610 - Anna) Debug
-        // eslint-disable-next-line no-console
-        console.log('[BalanceSheetList] API response:', response);
       }
     } catch (error) {
       (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
@@ -1217,8 +1214,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         >
           {ItemSummary}
           {ItemDetail}
-          {/* {ProportionalTable} Todo: (20241203 - Anna) 圖表有問題 */}
-          {/* {AssetItem} Todo: (20241203 - Anna) 圖表有問題 */}
           {TurnoverDay}
         </BalanceSheetA4Template>
       </div>

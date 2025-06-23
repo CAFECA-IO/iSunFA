@@ -266,8 +266,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     generateReport();
   }, [selectedDateRange, connectedAccountBook?.id]);
 
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
-
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();
 

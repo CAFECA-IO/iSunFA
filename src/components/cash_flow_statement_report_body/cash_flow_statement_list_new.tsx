@@ -785,8 +785,6 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         >
           {ItemSummary}
           {ItemDetail}
-          {/* {operatingCF5Y} Todo: (20241202- Anna) 圖表列印有問題 */}
-          {/* {investmentRatio} Todo: (20241202- Anna) 圖表列印有問題 */}
           {freeCashFlow}
         </CashFlowA4Template>
       </div>
