@@ -72,17 +72,21 @@ const ChangeTagModal = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col rounded-lg bg-surface-neutral-surface-lv2">
-        <section className="flex items-center justify-between py-16px pl-40px pr-20px">
-          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+      <div className="flex w-90vw flex-col rounded-lg bg-surface-neutral-surface-lv2 tablet:w-400px">
+        <section className="relative flex items-center justify-center px-20px py-16px">
+          <h1 className="text-center text-xl font-bold text-card-text-primary">
             {t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}
           </h1>
-          <button type="button" onClick={closeChangeTagModal}>
+          <button
+            type="button"
+            onClick={closeChangeTagModal}
+            className="absolute right-20px text-icon-surface-single-color-primary"
+          >
             <IoCloseOutline size={24} />
           </button>
         </section>
 
-        <section className="flex flex-col gap-24px px-40px py-16px">
+        <section className="flex flex-col gap-lv-5 px-lv-7 py-lv-4">
           {/* Info: (20241025 - Liz) Company Name */}
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">
@@ -139,7 +143,7 @@ const ChangeTagModal = ({
           </div>
         </section>
 
-        <section className="flex justify-end gap-12px px-20px py-16px">
+        <section className="flex justify-end gap-12px px-40px py-16px">
           <button
             type="button"
             onClick={closeChangeTagModal}
