@@ -394,12 +394,7 @@ const StepOneForm = ({
                 onClick={openUploadCompanyPictureModal}
                 className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
               >
-                <Image
-                  src="/icons/upload_icon.svg"
-                  width={48}
-                  height={48}
-                  alt="upload_icon"
-                ></Image>
+                <Image src="/icons/upload_icon.svg" width={48} height={48} alt="upload_icon" />
               </button>
             )}
 
@@ -439,6 +434,7 @@ const StepOneForm = ({
                       placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
                       className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                       value={taxId}
+                      onWheel={(e) => e.currentTarget.blur()} // Info: (20250623 - Julian) 禁止滾輪改變數字輸入框的值
                       onChange={(e) => handleChange('taxId')(e.target.value)}
                     />
                     {taxIdError && !taxId && (
@@ -684,7 +680,7 @@ const StepOneForm = ({
 
           {/* Info: (20250409 - Liz) Divider */}
           <section className="flex items-center gap-lv-4">
-            <div className="flex items-center gap-lv-2 text-divider-text-lv-2">
+            <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
               <Image src="/icons/team_icon.svg" alt="team icon" width={16} height={16} />
               <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TEAM')}</span>
             </div>
