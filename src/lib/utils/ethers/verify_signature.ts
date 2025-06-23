@@ -42,6 +42,7 @@ export function verifyApplySignature(
 
     // Info: (20250619 - Tzuhan) 重建 ApplyData → ApplyHash
     const applyData = encodeApplyData(url, hashcash, timestamp);
+    loggerBack.info(`📦 [Verify] Reconstructed ApplyData: ${applyData}`);
     const applyHash = keccak256(applyData);
     loggerBack.info(`📦 [Verify] Reconstructed ApplyHash: ${applyHash}`);
 
