@@ -51,7 +51,9 @@ describe('Integration Test - API v2 status_info', () => {
     });
 
     it('should return payload with expected properties', async () => {
-      const response = await apiClient.get<StatusInfoResponse>('/api/v2/status_info');
+      const response = (await apiClient.get<StatusInfoResponse>(
+        '/api/v2/status_info'
+      )) as StatusInfoResponse;
 
       expect(response.payload).toHaveProperty('user');
       expect(response.payload).toHaveProperty('company');
@@ -61,7 +63,9 @@ describe('Integration Test - API v2 status_info', () => {
     });
 
     it('should validate user data structure when present', async () => {
-      const response = await apiClient.get<StatusInfoResponse>('/api/v2/status_info');
+      const response = (await apiClient.get<StatusInfoResponse>(
+        '/api/v2/status_info'
+      )) as StatusInfoResponse;
 
       if (response.payload.user !== null) {
         const { user } = response.payload;
