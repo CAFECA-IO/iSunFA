@@ -332,6 +332,8 @@ const PrintCostRevRatio = ({
         <p className="text-xs text-white">{defaultPageNumber + 1}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           {useRawImg ? (
+            // Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image>
+            // eslint-disable-next-line @next/next/no-img-element
             <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" width={80} height={20} />
           ) : (
             <Image

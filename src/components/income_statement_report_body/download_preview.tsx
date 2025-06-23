@@ -39,7 +39,8 @@ const FirstHeader = ({ financialReport }: FirstHeaderProps) => {
       </h1>
       <div className="absolute right-0 top-0 z-1 mt-60px h-10px w-212px bg-surface-brand-primary"></div>
       <div className="absolute right-0 top-0 z-1 mt-74px h-5px w-160px bg-surface-brand-secondary"></div>
-
+      {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
         src="/logo/watermark_logo.svg"
@@ -162,6 +163,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                 breakBefore: 'page',
                 breakAfter: 'page',
               }}
+              // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+              // eslint-disable-next-line tailwindcss/no-custom-classname
               className="download-page relative h-screen overflow-hidden border border-stroke-neutral-quaternary"
             >
               {index === 0 ? <FirstHeader financialReport={financialReport} /> : <NormalHeader />}
@@ -238,6 +241,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
               <footer className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px">
                 <p className="text-xs text-white">{index + 1}</p>
                 <div className="text-base font-bold text-surface-brand-secondary">
+                  {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     width={80}
                     height={20}
@@ -249,6 +254,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             </div>
           ))
         }
+        {/* Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式 */}
+        {/* eslint-disable-next-line tailwindcss/no-custom-classname */}
         <div className="download-page border border-stroke-neutral-quaternary">
           <PrintCostRevRatio
             financialReport={financialReport}

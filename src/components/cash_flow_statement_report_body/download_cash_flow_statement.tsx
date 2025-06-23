@@ -78,6 +78,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
+        {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
           src="/logo/watermark_logo.svg"
@@ -110,6 +112,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
       <p className="text-xs text-white">{page}</p>
       <div className="text-base font-bold text-surface-brand-secondary">
+        {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
       </div>
     </footer>
@@ -205,6 +209,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) Use a unique key
+        // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -240,6 +246,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) 直接用 pageIndex 來確保 key 唯一
+        // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+        // eslint-disable-next-line tailwindcss/no-custom-classname
         className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
@@ -418,6 +426,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
       >
         <div
           id="additional-block-page"
+          // Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
+          // eslint-disable-next-line tailwindcss/no-custom-classname
           className={`${printContentClass} download-page relative h-a4-height overflow-y-hidden border border-stroke-neutral-quaternary`}
         >
           {renderedHeader(false)}
