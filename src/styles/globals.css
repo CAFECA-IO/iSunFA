@@ -1268,7 +1268,8 @@ input[type='checkbox']:checked::before {
 /* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
 
 .pricing-header {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       49.58% 61.81% at 50% 100%,
       rgba(255, 255, 255, 0.24) 0%,
       rgba(255, 255, 255, 0.12) 43%,
@@ -1291,7 +1292,8 @@ input[type='checkbox']:checked::before {
 
 .bg-pricing {
   backdrop-filter: blur(6px);
-  background-image: url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
+  background-image:
+    url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
     url('/elements/bg_pricing_bottom.png');
   background-position:
     top center,
@@ -1339,7 +1341,8 @@ input[type='checkbox']:checked::before {
 }
 
 .bg-brand-gradient {
-  background: linear-gradient(
+  background:
+    linear-gradient(
       0deg,
       var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 0%,
       var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 100%
@@ -1375,4 +1378,14 @@ input[type='checkbox']:checked::before {
 /* Info: (20241217 - Liz) Handle on hover 把手懸停效果 */
 ::-webkit-scrollbar-thumb:hover {
   background: #304872;
+}
+
+@layer utilities {
+  /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
+  .force-desktop-style {
+    width: 1024px !important;
+  }
+  .download-pb-4 {
+    padding-bottom: 16px;
+  }
 }

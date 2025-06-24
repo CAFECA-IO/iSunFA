@@ -15,6 +15,7 @@ interface OutputInvoiceListIrops {
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
   uploaderAvatarMap: Record<string, string>;
+  isExporting: boolean;
 }
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
@@ -39,9 +40,10 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
   handleSelect,
   onEdit,
   uploaderAvatarMap,
+  isExporting,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
-   const { currency } = useCurrencyCtx();
+  const { currency } = useCurrencyCtx();
 
   // Info: (20250526 - Anna) 上傳者圖像的 url
   const avatarSrc = uploaderAvatarMap[certificate.uploaderName];
@@ -81,18 +83,22 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
           <div className="flex flex-col">
-            <div className="download-pb-4 text-text-neutral-primary">{certificate.no ?? ''}</div>
+            <div className={`${isExporting ? 'pb-4' : ''} text-text-neutral-primary`}>
+              {certificate.no ?? ''}
+            </div>
           </div>
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="download-pb-4 hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div
+          className={`${isExporting ? 'pb-4' : ''} hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary`}
+        >
           {certificate.type ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.type}`) : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`download-pb-4 w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`${isExporting ? 'pb-4' : ''} w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.taxType === TaxType.TAXABLE
             ? `${t('certificate:EDIT.TAXABLE_5')} ${certificate.taxRate} %`
@@ -102,7 +108,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="download-pb-4 flex flex-col items-center gap-2">
+        <div className={`${isExporting ? 'pb-4' : ''} flex flex-col items-center gap-2`}>
           <div className="w-full text-left text-text-neutral-tertiary">
             {certificate.buyerIdNumber ?? ''}
           </div>
@@ -172,7 +178,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
                 {certificate.uploaderName.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span className="download-pb-4">{certificate.uploaderName ?? ''}</span>
+            <span className={`${isExporting ? 'pb-4' : ''}`}>{certificate.uploaderName ?? ''}</span>
           </div>
         </div>
       </BorderCell>
