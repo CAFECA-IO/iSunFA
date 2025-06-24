@@ -450,6 +450,7 @@ const StepOneForm = ({
 
               <div className="flex flex-col items-start gap-x-lv-7 gap-y-lv-4 tablet:flex-row">
                 {/* Info: (20250604 - Liz) Business Location 商業地址 */}
+                {/* ToDo: (20250624 - Julian) 應改成「公司國籍」 */}
                 <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BUSINESS_LOCATION')}
