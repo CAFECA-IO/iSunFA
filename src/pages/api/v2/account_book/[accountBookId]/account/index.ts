@@ -87,7 +87,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_GET,
   });
 
   if (!assertResult.can) {
@@ -181,7 +181,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_CREATE,
   });
 
   if (!assertResult.can) {

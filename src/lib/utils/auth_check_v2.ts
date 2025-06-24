@@ -14,12 +14,14 @@ export async function checkUser(session: ISessionData, req: NextApiRequest) {
   const { userId: queryUserId } = req.query;
   if (queryUserId) {
     const queryUserIdNumber = convertStringToNumber(queryUserId);
+
     isAuth = session.userId === queryUserIdNumber;
   }
   if (isAuth) {
     const user = await getUserById(session.userId);
     isAuth = !!user;
   }
+  loggerBack.info(`User authorization check for userId isAuth: ${isAuth}`);
 
   return isAuth;
 }
@@ -175,6 +177,8 @@ export async function checkAuthorizationNew<T extends APIName>(
 
     hasFailed = results.some((result) => result === true);
   }
+
+  loggerBack.info(`Authorization check completed for API: ${apiName}, hasFailed: ${hasFailed}`);
 
   // Info: (20241111 - Jacky) 返回 hasFailed 的反向值，若 hasFailed 為 true 則回傳 false，反之亦然
   return !hasFailed;
