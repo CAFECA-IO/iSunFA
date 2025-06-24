@@ -198,7 +198,7 @@ const AccountBookItem = ({
   };
 
   const optionDropdown = hasPermission && (
-    <div ref={optionsDropdownRef} className="relative">
+    <div className="relative">
       <button type="button" onClick={toggleOptionsDropdown} className="p-8px">
         <FiMoreVertical size={22} />
       </button>

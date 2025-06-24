@@ -15,6 +15,8 @@ import { IFileUIBeta } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
+import LocationDropdown from '@/components/dropdown/location_dropdown';
 
 // Deprecated: (20250604 - Liz) 此元件正在修改中，請勿編輯內容或加入註解
 
@@ -448,18 +450,16 @@ const StepOneForm = ({
 
               <div className="flex flex-col items-start gap-x-lv-7 gap-y-lv-4 tablet:flex-row">
                 {/* Info: (20250604 - Liz) Business Location 商業地址 */}
+                {/* ToDo: (20250624 - Julian) 應改成「公司國籍」 */}
                 <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BUSINESS_LOCATION')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_BUSINESS_LOCATION')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={businessLocation}
-                      onChange={(e) => handleChange('businessLocation')(e.target.value)}
+                    <LocationDropdown
+                      currentLocation={businessLocation}
+                      setCurrentLocation={(value) => handleChange('businessLocation')(value)}
                     />
                     {businessLocationError && !businessLocation && (
                       <p className="text-right text-sm font-medium text-text-state-error">
@@ -476,13 +476,11 @@ const StepOneForm = ({
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_ACCOUNTING_CURRENCY')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={accountingCurrency}
-                      onChange={(e) => handleChange('accountingCurrency')(e.target.value)}
+                    <CurrencyDropdown
+                      currentCurrency={accountingCurrency}
+                      setCurrentCurrency={(value) => handleChange('accountingCurrency')(value)}
                     />
+
                     {accountingCurrencyError && !accountingCurrency && (
                       <p className="text-right text-sm font-medium text-text-state-error">
                         {accountingCurrencyError}

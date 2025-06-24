@@ -140,8 +140,9 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
         <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
       </div>
 
-      {isNoData && <NoData />}
-      {!isNoData && (
+      {isNoData ? (
+        <NoData />
+      ) : (
         <AccountBookList
           accountBookList={accountBookList}
           setAccountBookToEdit={setAccountBookToEdit}
