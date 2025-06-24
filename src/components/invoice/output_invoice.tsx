@@ -109,6 +109,7 @@ const OutputInvoice: React.FC<OutputInvoiceProps> = ({
           currentPage={page}
           totalPages={totalPages}
           setCurrentPage={setPage}
+          isExporting={isExporting}
         />
       </div>
     </>
