@@ -20,6 +20,9 @@ const BalanceSheetPageBody = () => {
   // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
   const [isPrinting, setIsPrinting] = useState(false);
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -33,39 +36,14 @@ const BalanceSheetPageBody = () => {
 
   // Info: (20250327 - Anna) 下載
   const handleDownload = async () => {
+    setIsDownloading(true);
     pageCountRef.current = 1; // Info: (20250327 - Anna) reset 頁數
 
     if (!downloadRef.current) return;
 
     //  Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-  /* Info: (20250401 - Anna) 子科目 */
-  .download-page .child-code-name-wrapper {
-    padding-bottom: 8px !important;
-  }
-
-  /* Info: (20250401 - Anna) 子科目名稱允許換行 */
-  .download-page .child-name {
-    white-space: normal !important;
-  }
-
-  /* Info: (20250401 - Anna) Balance Sheet (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
+    style.innerHTML = ``;
 
     document.head.appendChild(style);
 
@@ -151,6 +129,7 @@ const BalanceSheetPageBody = () => {
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
   const handleOnBeforePrint = React.useCallback(() => {
@@ -206,6 +185,7 @@ const BalanceSheetPageBody = () => {
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
           downloadFn={handleDownload} // Info: (20250327 - Anna) 傳遞下載函數
+          isDownloading={isDownloading}
         />
       </div>
     </div>

@@ -43,7 +43,7 @@ const CalendarIcon = ({ timestamp, incomplete = true, isExporting }: ICalendarIc
       </div>
 
       {/* Info: (20241004 - Julian) 未讀標記 */}
-      <div className="download-hidden">
+      <div className={`${isExporting ? 'hidden' : ''}`}>
         <div
           className={`absolute ${incompleteStyle} -bottom-1 -right-1 h-14px w-14px rounded-full border-2 border-avatar-stroke-primary bg-surface-state-error`}
         ></div>

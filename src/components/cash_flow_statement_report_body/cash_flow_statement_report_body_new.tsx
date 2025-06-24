@@ -35,29 +35,6 @@ const CashFlowStatementPageBody = () => {
 
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-
-  /* Info: (20250401 - Anna) Cash Flow Statement (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
-
-    document.head.appendChild(style);
-
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
     downloadRef.current.style.position = 'absolute';
@@ -129,9 +106,6 @@ const CashFlowStatementPageBody = () => {
         pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
       }
     }
-
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
 
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');

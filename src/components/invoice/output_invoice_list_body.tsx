@@ -202,23 +202,12 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     if (!downloadRef.current) return;
 
     // Info: (20250604 - Anna) 加上桌面樣式 class
-    downloadRef.current.classList.add('force-desktop-style');
+    downloadRef.current.classList.add('w-1024px');
 
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
     });
-
-    // Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .download-hidden {
-      display: none;
-    }
-    }
-  `;
-
-    document.head.appendChild(style);
 
     const canvas = await html2canvas(downloadRef.current, {
       scale: 2, // Info: (20250418 - Anna) 增加解析度
@@ -237,10 +226,8 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    style.remove();
-
     // Info: (20250604 - Anna) 移除 class，還原畫面
-    downloadRef.current.classList.remove('force-desktop-style');
+    downloadRef.current.classList.remove('w-1024px');
 
     pdf.save('output-certificates.pdf');
 
@@ -688,7 +675,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
               onDownload={handleDownload}
               toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
             />
-            <div ref={downloadRef} className="download-page">
+            <div ref={downloadRef}>
               <OutputInvoice
                 activeTab={activeTab}
                 page={page}

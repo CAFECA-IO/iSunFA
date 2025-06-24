@@ -1381,8 +1381,24 @@ input[type='checkbox']:checked::before {
 }
 
 @layer utilities {
-  /* Info: (20250604 - Anna) 匯出憑證時強制為桌面版寬度 */
-  .force-desktop-style {
-    width: 1024px !important;
+  /* Info: (20250624 - Anna) ===== 資產負債表下載樣式(start) ===== */
+  /* Info: (20250401 - Anna) 表格 */
+  .download-page td,
+  .download-page th {
+    padding-top: 0 !important;
   }
+
+  /* Info: (20250401 - Anna) Balance Sheet (header) 調整底部間距 */
+  .download-page h2 {
+    padding-bottom: 6px !important;
+  }
+  /* Info: (20250624 - Anna) ===== 資產負債表下載樣式(end) ===== */
+
+  /* Info: (20250624 - Anna) ===== 現金流量表下載樣式(start) ===== */
+
+  /* Info: (20250401 - Anna) 大標題與表格間距 */
+  .download-page .download-header-label {
+    padding-bottom: 8px !important;
+  }
+  /* Info: (20250624 - Anna) ===== 現金流量表下載樣式(end) ===== */
 }

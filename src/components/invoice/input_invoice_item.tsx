@@ -207,7 +207,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
                 alt="avatar"
                 width={14}
                 height={14}
-                className="download-hidden rounded-full"
+                className={`${isExporting ? 'hidden' : ''} rounded-full`}
               />
             ) : (
               <span className="rounded-full bg-avatar-surface-background-indigo p-1 text-xs font-bold text-avatar-text-in-dark-background">
