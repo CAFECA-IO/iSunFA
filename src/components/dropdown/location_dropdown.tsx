@@ -1,19 +1,21 @@
 import React from 'react';
 import Image from 'next/image';
-import { OEN_CURRENCY } from '@/constants/currency';
+import { LOCATION_OPTION, currencyByLocation, LocationType } from '@/constants/location';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
-interface ICurrencyDropdownProps {
-  currentCurrency: string;
-  setCurrentCurrency: (currency: string) => void;
+interface ILocationDropdownProps {
+  currentLocation: string;
+  setCurrentLocation: (location: string) => void;
 }
 
-const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
-  currentCurrency,
-  setCurrentCurrency,
+const LocationDropdown: React.FC<ILocationDropdownProps> = ({
+  currentLocation,
+  setCurrentLocation,
 }) => {
-  const currencyList = Object.values(OEN_CURRENCY);
+  const locationList = Object.values(LOCATION_OPTION);
+  const currStr =
+    currencyByLocation[currentLocation as LocationType] ?? currencyByLocation[LocationType.TW];
 
   const {
     targetRef,
@@ -21,26 +23,29 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
     setComponentVisible: setIsOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const toggleCurrencyMenu = () => setIsOpen((prev) => !prev);
+  const toggleLocationMenu = () => setIsOpen((prev) => !prev);
 
-  const imgSrc = `/currencies/${currentCurrency.toLowerCase()}.svg`;
+  const imgSrc = `/currencies/${currStr.toLowerCase()}.svg`;
 
-  const dropMenu = currencyList.map((curr) => {
-    const countryClickHandler = () => setCurrentCurrency(curr);
+  const dropMenu = locationList.map((local) => {
+    const countryClickHandler = () => setCurrentLocation(local);
+    const localSrc =
+      currencyByLocation[local as LocationType] ?? currencyByLocation[LocationType.TW];
+
     return (
       <div
-        key={curr}
+        key={local}
         onClick={countryClickHandler}
         className="flex items-center gap-12px px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-dropdown-surface-item-hover"
       >
         <Image
-          src={`/currencies/${curr.toLowerCase()}.svg`}
+          src={`/currencies/${localSrc.toLowerCase()}.svg`}
           width={16}
           height={16}
-          alt="currency_icon"
+          alt="location_icon"
           className="aspect-square rounded-full object-cover"
         />
-        <p>{curr.toLocaleUpperCase()}</p>
+        <p>{local}</p>
       </div>
     );
   });
@@ -51,19 +56,17 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
       className="relative flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background font-medium"
     >
       <div
-        onClick={toggleCurrencyMenu}
+        onClick={toggleLocationMenu}
         className="flex flex-1 items-center gap-24px px-12px py-10px hover:cursor-pointer"
       >
         <Image
           width={16}
           height={16}
-          alt="currency_icon"
+          alt="location_icon"
           src={imgSrc}
           className="aspect-square rounded-full object-cover"
         />
-        <div className="flex-1 text-input-text-input-filled">
-          {currentCurrency.toLocaleUpperCase()}
-        </div>
+        <div className="flex-1 text-input-text-input-filled">{currentLocation}</div>
         <div
           className={`text-icon-surface-single-color-primary ${isOpen ? 'rotate-180' : 'rotate-0'}`}
         >
@@ -85,4 +88,4 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
   );
 };
 
-export default CurrencyDropdown;
+export default LocationDropdown;
