@@ -57,14 +57,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       return;
     }
 
-    // Info: (20250401 - Anna) 插入修正樣式，避免文字向下偏移
-    const style = document.createElement('style');
-    style.innerHTML = `
-
-`;
-
-    document.head.appendChild(style); // Info: (20250401 - Anna) 加入樣式
-
     // Info: (20250326 - Anna) 等待 0.5 秒，DOM 完全渲染，再執行之後的程式碼
     await new Promise<void>((resolve) => {
       setTimeout(() => resolve(), 500);
@@ -100,8 +92,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     });
 
     await Promise.all(canvasPromises);
-
-    style.remove(); // Info: (20250401 - Anna) 移除修正樣式，避免影響畫面
 
     // Info: (20250326 - Anna) 下載 PDF
     pdf.save('Business_Tax_Report.pdf');
