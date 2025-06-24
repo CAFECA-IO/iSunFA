@@ -387,9 +387,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
         const { success, data: updatedCertificate } = await postOrPutAPI;
 
         if (success && updatedCertificate) {
-          // Deprecate: (20241218 - tzuhan) Debugging purpose
-          // eslint-disable-next-line no-console
-          console.log('updatedCertificate', updatedCertificate);
           let updatedData: ICertificateUI[] = [];
           setCertificates((prev) => {
             updatedData = [...prev];
@@ -402,12 +399,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
                 CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
               ],
             };
-            // Deprecate: (20241218 - tzuhan) Debugging purpose
-            // eslint-disable-next-line no-console
-            console.log(
-              `updatedData[certificate.id:${certificate.id}]`,
-              updatedData[certificate.id]
-            );
             return updatedData;
           });
           toastHandler({

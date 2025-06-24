@@ -135,13 +135,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   //  Info: (20241204 - Anna) 新增 isReportGenerated 狀態
   const [isReportGenerated, setIsReportGenerated] = useState<boolean>(false);
 
-  // Info: (20241204 - Anna)
-  const {
-    trigger: generateFinancialReport,
-    code: generatedCode,
-    isLoading: generatedLoading,
-    success: generatedSuccess,
-  } = APIHandler<number | null>(APIName.REPORT_GENERATE);
+  const { trigger: generateFinancialReport } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
@@ -177,10 +171,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
       if (response.success && response.data) {
         setReportId(String(response.data)); // Info: (20241204 - Anna) 保存報告 ID
-      } else {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        // console.error('Failed to generate report. Response:', response);
       }
 
       // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
@@ -222,17 +212,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (generatedCode && !generatedLoading && generatedSuccess) {
-      // Deprecated: (20241204 - Anna)
-      // eslint-disable-next-line no-console
-      console.log('Report generation succeeded:', {
-        code: generatedCode,
-        message: 'The report is being generated.',
-      });
-    }
-  }, [generatedCode, generatedLoading, generatedSuccess]);
-
   // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
     if (isAuthLoading || !connectedAccountBook || !reportId || isLoading) return;
@@ -242,7 +221,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     getFinancialReport();
   }, [isAuthLoading, connectedAccountBook, reportId]);
 
-  // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
+  // Info: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
   useEffect(() => {
     if (!selectedDateRange || !connectedAccountBook?.id) return;
 
@@ -265,8 +244,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     generateReport();
   }, [selectedDateRange, connectedAccountBook?.id]);
-
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -153,31 +153,8 @@ const BalanceSheetPageBody = () => {
     pdf.save(filename);
   };
 
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
-    }
-  }, [isPrinting]);
-
   const handleOnBeforePrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(true);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
-      true
-    );
 
     // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
     return new Promise<void>((resolve) => {
@@ -188,19 +165,7 @@ const BalanceSheetPageBody = () => {
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(false);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
-      false
-    );
   }, [isPrinting]);
 
   // Info: (20241122 - Anna)
@@ -237,7 +202,6 @@ const BalanceSheetPageBody = () => {
         {/* Info: (20241017 - Anna) Balance Sheet List */}
         <BalanceSheetList
           selectedDateRange={selectedDate} // Info: (20241212 - Anna) 傳遞單日期選擇結果
-          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
           printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數

@@ -149,6 +149,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
             <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
+
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
               <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
@@ -157,7 +158,7 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
         </div>
 
         <div className="table-row-group">
-          {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
+          {/* Info: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <InputInvoiceItem
               activeSelection={activeSelection}

@@ -260,9 +260,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
-      // Todo: (20250604 - Anna) Debug 後移除
-      // eslint-disable-next-line no-console
-      console.log('📥 API 回傳資料:', resData);
       try {
         const note = JSON.parse(resData.note || '{}') as {
           totalPrice: { _sum: { totalAmount: number } };

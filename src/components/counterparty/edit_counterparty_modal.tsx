@@ -154,10 +154,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         note: inputNote,
       });
       onClose();
-    } else if (editError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update counterparty:', editError);
     }
   }, [success, editError, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
@@ -167,10 +163,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       // Info: (20241118 - Anna) 回傳空資料表示該項目已刪除
       onSave({ id: counterpartyId, name: '', taxId: '', type: CounterpartyType.BOTH, note: '' });
       onClose();
-    } else if (deleteError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to delete counterparty:', deleteError);
     }
   }, [deleteSuccess, deleteError, onSave, onClose, counterpartyId]);
 
@@ -203,20 +195,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     });
     messageModalVisibilityHandler();
   };
-
-  // Todo:(20241110 - Anna) Id要改成動態
-  // const editCounterparty = async (counterpartyData: {
-  //   name: string;
-  //   taxId: string;
-  //   type: CounterpartyType;
-  //   note: string;
-  //   counterpartyId: number; // Info:(20241110 - Anna) 新增 counterpartyId 属性
-  // }) => {
-  //   await APIHandler(APIName.COUNTERPARTY_UPDATE, {
-  //     body: counterpartyData,
-  //     params: { companyId: connectedAccountBook?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
-  //   });
-  // };
 
   const editCounterparty = async () => {
     if (!hasChanges) return; // Info: (20241118 - Anna) 判斷是否有更動

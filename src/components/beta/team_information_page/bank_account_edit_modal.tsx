@@ -84,10 +84,6 @@ const TeamBankAccountEditModal: React.FC<TeamBankAccountEditModalProps> = ({
     if (success) {
       onSave(`${bankCode}-${teamBankAccount}`);
       onClose();
-    } else if (updateError) {
-      // Deprecate: (20250301 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update team teamBankAccount:', updateError);
     }
   }, [success, updateError, onSave, onClose, teamBankAccount]);
 

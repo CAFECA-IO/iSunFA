@@ -13,8 +13,6 @@ import { useReactToPrint } from 'react-to-print';
 import NoData from '@/components/income_statement_report_body/no_data';
 import Loading from '@/components/income_statement_report_body/loading';
 import ItemSummary from '@/components/income_statement_report_body/item_summary';
-// Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-// import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
 import { useTranslation } from 'next-i18next';
 import html2canvas from 'html2canvas';
@@ -221,15 +219,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
           setFinancialReport(data);
-          // Deprecated: (20241204 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('IncomeStatementList received data:', data);
         }
-      } catch (error) {
-        // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Error:', error);
       } finally {
         setIsGetReportAPILoading(false);
       }
@@ -275,14 +265,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           formattedPreFromDate={formattedPreFromDate}
           formattedPreToDate={formattedPreToDate}
         />
-        {/* Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail */}
-        {/* <ItemDetail
-          financialReport={financialReport}
-          formattedCurFromDate={formattedCurFromDate}
-          formattedCurToDate={formattedCurToDate}
-          formattedPreFromDate={formattedPreFromDate}
-          formattedPreToDate={formattedPreToDate}
-        /> */}
         <CostRevRatio
           financialReport={financialReport}
           formattedCurFromDate={formattedCurFromDate}

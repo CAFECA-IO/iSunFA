@@ -43,10 +43,6 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
     if (success) {
       onSave(teamDescription);
       onClose();
-    } else if (updateError) {
-      // Deprecate: (20250301 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update team description:', updateError);
     }
   }, [success, updateError, onSave, onClose, teamDescription]);
 

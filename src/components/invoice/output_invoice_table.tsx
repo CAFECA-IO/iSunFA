@@ -156,7 +156,7 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
         </div>
 
         <div className="table-row-group">
-          {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
+          {/* Info: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <OutputInvoiceItem
               activeSelection={activeSelection}

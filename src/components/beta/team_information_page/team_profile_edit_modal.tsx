@@ -44,10 +44,6 @@ const TeamProfileEditModal: React.FC<TeamProfileEditModalProps> = ({
     if (success) {
       onSave(teamProfile);
       onClose();
-    } else if (updateError) {
-      // Deprecate: (20250301 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update team profile:', updateError);
     }
   }, [success, updateError, onSave, onClose, teamProfile]);
 

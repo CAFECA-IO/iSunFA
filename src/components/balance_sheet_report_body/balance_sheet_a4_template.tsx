@@ -63,10 +63,6 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   };
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
-  const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
-  // Deprecated: (20241130 - Anna) remove eslint-disable
-  // eslint-disable-next-line no-console
-  console.log('FirstBlockSplitPages', FirstBlockSplitPages);
 
   // Info: (20241120 - Anna) 提取表格渲染邏輯，確保每頁表格結構完整
   const renderTableWithRows = (
@@ -83,10 +79,6 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   );
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
-  const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
-  // Deprecated: (20241130 - Anna) remove eslint-disable
-  // eslint-disable-next-line no-console
-  console.log('SecondBlockSplitPages', SecondBlockSplitPages);
 
   // Info: (20241130 - Anna) 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
   useEffect(() => {
