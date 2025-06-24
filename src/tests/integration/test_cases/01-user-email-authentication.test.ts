@@ -8,7 +8,7 @@ import { NextApiRequest } from 'next';
 import { ApiClient } from '@/tests/integration/api-client';
 import { IntegrationTestSetup } from '@/tests/integration/setup';
 
-/**
+/** Info: (20250624 - Shirley)
  * Integration Test - User Email Authentication (Ticket #1)
  *
  * Follows Test Case Time Estimation planning:
@@ -29,26 +29,26 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
   const testEmails = DefaultValue.EMAIL_LOGIN.EMAIL;
   const defaultCode = DefaultValue.EMAIL_LOGIN.CODE;
 
-  // 啟動實際的測試服務器
+  // Info: (20250624 - Shirley) 啟動實際的測試服務器
   beforeAll(async () => {
     await IntegrationTestSetup.initialize();
-    // 設置debug環境變數來看到API responses
+    // Info: (20250624 - Shirley) 設置 debug 環境變數來看到 API responses
     process.env.DEBUG_TESTS = 'true';
     process.env.DEBUG_API = 'true';
-  }, 120000); // 2分鐘timeout給服務器啟動
+  }, 120000); // Info: (20250624 - Shirley) 2 分鐘 timeout 給服務器啟動
 
   afterAll(async () => {
     await IntegrationTestSetup.cleanup();
   }, 30000);
 
   // ========================================
-  // Test Case 1.1: Email Authentication with Default Values Testing
+  // Info: (20250624 - Shirley) Test Case 1.1: Email Authentication with Default Values Testing
   // ========================================
 
   describe('Test Case 1.1: Email Authentication with Default Values Testing', () => {
     describe('POST /api/v2/email/{email}/one_time_password - Authentication with Default Values', () => {
       it('should successfully authenticate with default email and code', async () => {
-        // First create email login record
+        // Info: (20250624 - Shirley) First create email login record
         const getRequest = {
           query: { email: testEmails[0] },
           method: 'GET',
@@ -56,10 +56,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
 
         await handleGetRequest(getRequest);
 
-        // Then authenticate with POST request
+        // Info: (20250624 - Shirley) Then authenticate with POST request
         const mockRequest = {
-          query: { email: testEmails[0] }, // user@isunfa.com
-          body: { code: defaultCode }, // 555666
+          query: { email: testEmails[0] }, // Info: (20250624 - Shirley) user@isunfa.com
+          body: { code: defaultCode }, // Info: (20250624 - Shirley) 555666
           method: 'POST',
           headers: {
             'user-agent': 'test-agent',
@@ -78,7 +78,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should authenticate with all default email addresses', async () => {
-        // First create email login records for all test emails
+        // Info: (20250624 - Shirley) First create email login records for all test emails
         await Promise.all(
           testEmails.map(async (email) => {
             const getRequest = {
@@ -89,7 +89,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           })
         );
 
-        // Then test authentication for all emails
+        // Info: (20250624 - Shirley) Then test authentication for all emails
         const testResults = await Promise.all(
           testEmails.map(async (email) => {
             const mockRequest = {
@@ -121,7 +121,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       it('should create proper session data after successful authentication', async () => {
         const testEmail = testEmails[0];
 
-        // First create email login record
+        // Info: (20250624 - Shirley) First create email login record
         const getRequest = {
           query: { email: testEmail },
           method: 'GET',
@@ -147,8 +147,8 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         expect(result.result).toBeDefined();
         expect(result.result.email).toBe(testEmail);
 
-        // Verify the session data structure is correct
-        // Note: Session validation would require session testing infrastructure
+        // Info: (20250624 - Shirley) Verify the session data structure is correct
+        // Info: (20250624 - Shirley) Note: Session validation would require session testing infrastructure
       });
     });
   });
@@ -182,7 +182,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       it('should fail with wrong verification code', async () => {
         const mockRequest = {
           query: { email: testEmails[0] },
-          body: { code: '000000' }, // Wrong code
+          body: { code: '000000' }, // Info: (20250624 - Shirley) Wrong code
           method: 'POST',
         } as unknown as NextApiRequest;
 
@@ -204,7 +204,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       it('should handle cool-down period violations correctly', async () => {
         const testEmail = DefaultValue.EMAIL_LOGIN.EMAIL[0];
 
-        // First request should succeed
+        // Info: (20250624 - Shirley) First request should succeed
         const firstRequest = {
           query: { email: testEmail },
           method: 'GET',
@@ -213,8 +213,8 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         const firstResult = await handleGetRequest(firstRequest);
         expect(firstResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
 
-        // Note: Actual cool-down testing requires time manipulation or mocking
-        // This demonstrates the test structure for cool-down scenarios
+        // Info: (20250624 - Shirley) Note: Actual cool-down testing requires time manipulation or mocking
+        // Info: (20250624 - Shirley) This demonstrates the test structure for cool-down scenarios
       });
 
       it('should validate all default emails from constants', async () => {
@@ -245,7 +245,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
   });
 
   // =============================================
-  // Test Case 1.3: Session-based API Integration Testing
+  // Info: (20250624 - Shirley) Test Case 1.3: Session-based API Integration Testing
   // =============================================
 
   describe('Test Case 1.3: Session-based API Integration Testing', () => {
@@ -263,7 +263,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should get teams using same session after email authentication', async () => {
-        // Step 1: Perform email authentication (function calls to establish session)
+        // Info: (20250624 - Shirley) Step 1: Perform email authentication (function calls to establish session)
         const getRequest = {
           query: { email: userEmail },
           method: 'GET',
@@ -291,15 +291,17 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         expect(loginResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
         expect(loginResult.result.email).toBe(userEmail);
 
-        // Step 2: Use the same session to get teams via HTTP API
+        // Info: (20250624 - Shirley) Step 2: Use the same session to get teams via HTTP API
         try {
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('🔍 Attempting to get teams...');
           const teamsResponse = await apiClient.get('/api/v2/team');
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ teamsResponse SUCCESS:', JSON.stringify(teamsResponse, null, 2));
 
-          // Verify the request structure is correct
+          // (20250624 - Shirley) Verify the request structure is correct
           expect(teamsResponse).toBeDefined();
           expect(typeof teamsResponse.success).toBe('boolean');
 
@@ -309,6 +311,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             expect(teamsResponse.success).toBe(false);
           }
         } catch (error) {
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ teamsResponse ERROR:', error);
           expect(error).toBeDefined();
@@ -417,7 +420,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
   });
 
   // =============================================
-  // Test Case 1.4: Role Management API Testing
+  // Info: (20250624 - Shirley) Test Case 1.4: Role Management API Testing
   // =============================================
 
   describe('Test Case 1.4: Role Management API Testing', () => {
@@ -427,7 +430,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
 
       beforeAll(() => {
         apiClient = new ApiClient();
-        [userEmail] = testEmails; // Use first test email
+        [userEmail] = testEmails; // Info: (20250624 - Shirley) Use first test email
       });
 
       afterAll(() => {
@@ -435,7 +438,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should retrieve available USER type roles after authentication', async () => {
-        // First create email login record
+        // Info: (20250624 - Shirley) First create email login record
         const getRequest = {
           query: { email: userEmail },
           method: 'GET',
@@ -443,7 +446,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
 
         await handleGetRequest(getRequest);
 
-        // Then authenticate using default values
+        // Info: (20250624 - Shirley) Then authenticate using default values
         const postRequest = {
           query: { email: userEmail },
           body: { code: defaultCode },
@@ -459,11 +462,13 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         const loginResult = await handlePostRequest(postRequest);
         expect(loginResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
 
-        // Test role listing API with type=User parameter
+        // Info: (20250624 - Shirley) Test role listing API with type=User parameter
         try {
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('🔍 Attempting to get USER type roles...');
           const rolesResponse = await apiClient.get('/api/v2/role?type=USER');
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ USER roles response:', JSON.stringify(rolesResponse, null, 2));
           expect(rolesResponse).toBeDefined();
@@ -473,7 +478,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             expect(rolesResponse.payload || rolesResponse.data).toBeDefined();
             const roles = rolesResponse.payload || rolesResponse.data;
             expect(Array.isArray(roles)).toBe(true);
-            // Should contain INDIVIDUAL, ACCOUNTING_FIRMS, or ENTERPRISE
+            // Info: (20250624 - Shirley) Should contain INDIVIDUAL, ACCOUNTING_FIRMS, or ENTERPRISE
             if (Array.isArray(roles) && roles.length > 0) {
               const validRoles = ['INDIVIDUAL', 'ACCOUNTING_FIRMS', 'ENTERPRISE'];
               roles.forEach((role: string) => {
@@ -482,7 +487,8 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             }
           }
         } catch (error) {
-          // Handle network/connection errors gracefully in test environment
+          // Info: (20250624 - Shirley) Handle network/connection errors gracefully in test environment
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ USER roles response ERROR:', error);
           expect(error).toBeDefined();
@@ -490,7 +496,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should test user role creation with proper parameters', async () => {
-        // Authenticate first
+        // Info: (20250624 - Shirley) Authenticate first
         const getRequest = {
           query: { email: userEmail },
           method: 'GET',
@@ -512,7 +518,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         const loginResult = await handlePostRequest(postRequest);
         expect(loginResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
 
-        // Get userId from login result (fix compile error)
+        // Info: (20250624 - Shirley) Get userId from login result (fix compile error)
         let userId: string;
         if (
           loginResult.result &&
@@ -524,21 +530,23 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           userId = 'test-user-id';
         }
 
-        // Test user role creation API with INDIVIDUAL role (not OWNER)
-        const roleData = { roleName: 'INDIVIDUAL' }; // 正確的角色名稱
+        // Info: (20250624 - Shirley) Test user role creation API with INDIVIDUAL role (not OWNER)
+        const roleData = { roleName: 'INDIVIDUAL' }; // Info: (20250624 - Shirley) 正確的角色名稱
 
         try {
           // eslint-disable-next-line no-console
           console.log('🔍 Attempting to create user role with parameters:', { userId, roleData });
 
-          // Test getting user's existing roles first
+          // Info: (20250624 - Shirley) Test getting user's existing roles first
           const existingRolesResponse = await apiClient.get(`/api/v2/user/${userId}/role`);
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('📋 Existing user roles:', JSON.stringify(existingRolesResponse, null, 2));
           expect(existingRolesResponse).toBeDefined();
 
-          // Test creating new user role
+          // Info: (20250624 - Shirley) Test creating new user role
           const createRoleResponse = await apiClient.post(`/api/v2/user/${userId}/role`, roleData);
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log(
             '✅ User role creation response:',
@@ -551,7 +559,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           if (createRoleResponse.success) {
             const responseData = createRoleResponse.payload || createRoleResponse.data;
             if (responseData && typeof responseData === 'object') {
-              // 驗證創建的角色資料結構
+              // Info: (20250624 - Shirley) 驗證創建的角色資料結構
               const createdRole = responseData as { roleName?: string; type?: string };
               expect(createdRole).toHaveProperty('roleName');
               expect(createdRole.roleName).toBe('INDIVIDUAL');
@@ -560,6 +568,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             }
           }
         } catch (error) {
+          // Deprecated: (20250624 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ User role creation ERROR:', error);
           expect(error).toBeDefined();
@@ -567,11 +576,11 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should validate role API endpoints structure', () => {
-        // Validates the API endpoint structure matches actual implementation:
+        // Info: (20250624 - Shirley) Validates the API endpoint structure matches actual implementation:
         const expectedEndpoints = [
-          'GET /api/v2/role?type=USER', // List available USER type roles
-          'GET /api/v2/user/{userId}/role', // Get user's existing roles
-          'POST /api/v2/user/{userId}/role', // Create new user role
+          'GET /api/v2/role?type=USER', // Info: (20250624 - Shirley) List available USER type roles
+          'GET /api/v2/user/{userId}/role', // Info: (20250624 - Shirley) Get user's existing roles
+          'POST /api/v2/user/{userId}/role', // Info: (20250624 - Shirley) Create new user role
         ];
 
         expect(expectedEndpoints.length).toBe(3);
@@ -580,7 +589,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           expect(endpoint).toContain('/api/v2/');
         });
 
-        // Validate correct role names
+        // Info: (20250624 - Shirley) Validate correct role names
         const validRoleNames = ['INDIVIDUAL', 'ACCOUNTING_FIRMS', 'ENTERPRISE'];
         expect(validRoleNames.length).toBe(3);
         validRoleNames.forEach((roleName) => {
