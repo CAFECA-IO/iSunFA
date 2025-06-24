@@ -1381,7 +1381,7 @@ input[type='checkbox']:checked::before {
 }
 
 @layer utilities {
-  /* Info: (20250624 - Anna) ===== 資產負債表、現金流量表下載樣式(start) ===== */
+  /* Info: (20250624 - Anna) ===== 財務三表下載樣式(start) ===== */
   /* Info: (20250401 - Anna) 表格 */
   .download-page td,
   .download-page th {
@@ -1392,5 +1392,23 @@ input[type='checkbox']:checked::before {
   .download-page h2 {
     padding-bottom: 6px !important;
   }
-  /* Info: (20250624 - Anna) ===== 資產負債表、現金流量表下載樣式(end) ===== */
+  /* Info: (20250624 - Anna) ===== 財務三表下載樣式(end) ===== */
+
+  /* Info: (20250624 - Anna) ===== 401下載樣式(start) ===== */
+  .download-401-report td {
+    vertical-align: top !important;
+  }
+
+  .download-401-report h1,
+  .download-401-report p,
+  .download-401-report span {
+    vertical-align: top !important;
+    margin-top: -5px;
+    padding-bottom: 5px;
+  }
+
+  .download-401-report p span {
+    padding-top: 5px;
+  }
+  /* Info: (20250624 - Anna) ===== 401下載樣式(end) ===== */
 }

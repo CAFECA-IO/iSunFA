@@ -56,21 +56,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     // Info: (20250401 - Anna) 插入修正樣式，避免文字向下偏移
     const style = document.createElement('style');
     style.innerHTML = `
-  .download-page td {
-    vertical-align: top !important;
-  }
 
-  .download-page h1,
-  .download-page p,
-  .download-page span {
-    vertical-align: top !important;
-    margin-top: -5px;
-    padding-bottom: 5px;
-  }
-
-  .download-page p span {
-    padding-top: 5px;
-  }
 `;
 
     document.head.appendChild(style); // Info: (20250401 - Anna) 加入樣式
@@ -80,7 +66,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       setTimeout(() => resolve(), 500);
     });
 
-    const downloadPages = printRef.current.querySelectorAll('.download-page');
+    const downloadPages = printRef.current.querySelectorAll('.download-401-report');
     if (downloadPages.length === 0) {
       return;
     }
@@ -89,7 +75,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     // eslint-disable-next-line new-cap
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
-    // Info: (20250326 - Anna) 逐頁擷取 `.download-page` 並添加到 PDF
+    // Info: (20250326 - Anna) 逐頁擷取 `.download-401-report` 並添加到 PDF
     const canvasPromises = Array.from(downloadPages, async (page, index) => {
       const canvas = await html2canvas(page as HTMLElement, {
         scale: 2,
@@ -271,9 +257,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <Skeleton width={80} height={20} />
     </div>
   ) : (
-    /* Info: (20250326 - Anna) download-page 是自定義 class，用於轉 PDF 時選取每一頁，需關掉 tailwindcss/no-custom-classname */
+    /* Info: (20250326 - Anna) download-401-report 是自定義 class，用於轉 PDF 時選取每一頁，需關掉 tailwindcss/no-custom-classname */
     /* eslint-disable-next-line tailwindcss/no-custom-classname */
-    <div id="1" className="download-page relative overflow-y-hidden bg-white">
+    <div id="1" className="download-401-report relative overflow-y-hidden bg-white">
       <header className="flex w-full justify-between">
         <table className="border-collapse border border-black text-8px">
           <tbody>
