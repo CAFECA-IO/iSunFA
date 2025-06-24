@@ -1,5 +1,3 @@
-// Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-/* eslint-disable tailwindcss/no-custom-classname */
 import React from 'react';
 import { FinancialReport } from '@/interfaces/report';
 import PrintCostRevRatio from '@/components/income_statement_report_body/print_cost_rev_ratio';

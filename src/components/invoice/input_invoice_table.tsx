@@ -1,5 +1,3 @@
-// Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式
-/* eslint-disable tailwindcss/no-custom-classname */
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import InputInvoiceItem from '@/components/invoice/input_invoice_item';
