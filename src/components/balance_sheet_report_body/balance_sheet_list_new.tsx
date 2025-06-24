@@ -29,6 +29,7 @@ interface BalanceSheetListProps {
   downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
   downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
+  isDownloading: boolean;
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -51,6 +52,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
   downloadFn, // Info: (20250327 - Anna) 使用下載函數
+  isDownloading,
 }) => {
   const { t, i18n } = useTranslation(['reports']);
   const { currency } = useCurrencyCtx();
@@ -1196,7 +1198,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <hr className="break-before-page" />
         {TurnoverDay}
       </div>
-      <DownloadBalanceSheet reportFinancial={reportFinancial} downloadRef={downloadRef} />
+      <DownloadBalanceSheet
+        reportFinancial={reportFinancial}
+        downloadRef={downloadRef}
+        isDownloading={isDownloading}
+      />
     </div>
   );
 };
