@@ -39,7 +39,8 @@ const FirstHeader = ({ financialReport }: FirstHeaderProps) => {
       </h1>
       <div className="absolute right-0 top-0 z-1 mt-60px h-10px w-212px bg-surface-brand-primary"></div>
       <div className="absolute right-0 top-0 z-1 mt-74px h-5px w-160px bg-surface-brand-secondary"></div>
-
+      {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
         src="/logo/watermark_logo.svg"
@@ -74,6 +75,7 @@ interface DownloadPreviewProps {
   formattedPreFromDate: string;
   formattedPreToDate: string;
   className?: string;
+  isDownloading: boolean;
 }
 
 const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
@@ -85,11 +87,15 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
       formattedPreFromDate,
       formattedPreToDate,
       className,
+      isDownloading,
     },
     ref
   ) => {
     const { t } = useTranslation(['reports']);
     const { currency } = useCurrencyCtx();
+
+    // Info: (20241112 - Anna) 動態應用下載樣式
+    const downloadPage = `${isDownloading ? 'download-page' : ''}`;
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
       const result: IAccountReadyForFrontend[] = [];
@@ -162,7 +168,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                 breakBefore: 'page',
                 breakAfter: 'page',
               }}
-              className="download-page relative h-screen overflow-hidden border border-stroke-neutral-quaternary"
+              className={`${downloadPage} relative h-screen overflow-hidden border border-stroke-neutral-quaternary`}
             >
               {index === 0 ? <FirstHeader financialReport={financialReport} /> : <NormalHeader />}
 
@@ -238,6 +244,8 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
               <footer className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px">
                 <p className="text-xs text-white">{index + 1}</p>
                 <div className="text-base font-bold text-surface-brand-secondary">
+                  {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     width={80}
                     height={20}
@@ -249,7 +257,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             </div>
           ))
         }
-        <div className="download-page border border-stroke-neutral-quaternary">
+        <div className={`${downloadPage} border border-stroke-neutral-quaternary`}>
           <PrintCostRevRatio
             financialReport={financialReport}
             formattedCurFromDate={formattedCurFromDate}

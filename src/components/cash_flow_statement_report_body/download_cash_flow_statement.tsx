@@ -5,12 +5,14 @@ import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface DownloadCashFlowStatementProps {
   reportFinancial: CashFlowStatementReport | null;
-  downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250317 - Anna) `downloadRef`
+  downloadRef: React.RefObject<HTMLDivElement>;
+  isDownloading: boolean;
 }
 
 const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
   reportFinancial,
   downloadRef,
+  isDownloading,
 }) => {
   const { t } = useTranslation(['reports']);
   const { currency } = useCurrencyCtx();
@@ -45,8 +47,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     : 'N/A';
 
   // Info: (20241112 - Anna) 動態應用分頁樣式
-  const printContainerClass =
-    'mx-auto w-a4-width origin-top overflow-x-auto print:m-0  print:block  print:h-auto print:w-full print:p-0';
+  const printContainerClass = `mx-auto w-a4-width origin-top overflow-x-auto print:m-0  print:block  print:h-auto print:w-full print:p-0 ${isDownloading ? 'download-page' : ''}`;
 
   const printContentClass = 'relative h-a4-height overflow-hidden';
 
@@ -78,6 +79,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
             <span className="absolute -bottom-20px right-0 h-5px w-9/12 bg-surface-brand-secondary"></span>
           </h2>
         </div>
+        {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className="absolute right-0 top-0 z-0 mt-80px bg-transparent"
           src="/logo/watermark_logo.svg"
@@ -110,6 +113,8 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     <footer className="absolute bottom-0 left-0 right-0 z-10 flex items-center justify-between bg-surface-brand-secondary p-10px">
       <p className="text-xs text-white">{page}</p>
       <div className="text-base font-bold text-surface-brand-secondary">
+        {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image> */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img width={80} height={20} src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" />
       </div>
     </footer>
@@ -205,7 +210,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) Use a unique key
-        className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
+        className={`${printContainerClass} border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
           pageBreakAfter: 'auto',
@@ -240,7 +245,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
     return (
       <div
         key={tableKey} // Info: (20250401 - Anna) 直接用 pageIndex 來確保 key 唯一
-        className={`${printContainerClass} download-page border border-stroke-neutral-quaternary`}
+        className={`${printContainerClass} border border-stroke-neutral-quaternary`}
         style={{
           pageBreakBefore: 'auto',
           pageBreakAfter: 'auto',
@@ -418,7 +423,7 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
       >
         <div
           id="additional-block-page"
-          className={`${printContentClass} download-page relative h-a4-height overflow-y-hidden border border-stroke-neutral-quaternary`}
+          className={`${printContentClass} relative h-a4-height overflow-y-hidden border border-stroke-neutral-quaternary`}
         >
           {renderedHeader(false)}
           <div className="text-sm">{freeCashFlow}</div>

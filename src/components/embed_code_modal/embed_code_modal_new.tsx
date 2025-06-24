@@ -108,27 +108,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       if (isCashFlowStatementChecked) {
         selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
       }
-
-      selectedReportTypes.forEach((type) => {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Report generation succeeded:', {
-          code: generatedCode,
-          message: 'We received your application. The report will be ready in a few minutes.',
-          request: {
-            params: {
-              companyId: connectedAccountBook?.id,
-            },
-            body: {
-              type: FinancialReportTypesKeyReportSheetTypeMapping[type],
-              reportLanguage: selectedReportLanguage,
-              from: dayjs().unix(),
-              to: dayjs().unix(),
-              reportType: ReportType.FINANCIAL,
-            },
-          },
-        });
-      });
     }
 
     // Info: (20241130 - Anna) 確保返回 void
@@ -146,9 +125,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     const period = getPeriod();
 
     if (!period) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -162,9 +138,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
 
     if (selectedReportTypes.length === 0) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -212,10 +185,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
       if (iframeCodes.length > 0) {
         setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Anna) 設置 iframe 到狀態
-      } else {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('No matching reports found or no report type selected.');
       }
     }
 

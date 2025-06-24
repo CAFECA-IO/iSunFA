@@ -13,8 +13,6 @@ import { useReactToPrint } from 'react-to-print';
 import NoData from '@/components/income_statement_report_body/no_data';
 import Loading from '@/components/income_statement_report_body/loading';
 import ItemSummary from '@/components/income_statement_report_body/item_summary';
-// Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-// import ItemDetail from '@/components/income_statement_report_body/item_detail';
 import CostRevRatio from '@/components/income_statement_report_body/cost_rev_ratio';
 import { useTranslation } from 'next-i18next';
 import html2canvas from 'html2canvas';
@@ -49,6 +47,8 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
   const [reportAPICode, setReportAPICode] = useState<string>('');
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
   const { trigger: getReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
 
   // Info: (20250108 - Anna) 判斷當前語言是否為繁體或簡體中文
@@ -66,32 +66,10 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   });
 
   const handleDownload = async () => {
+    setIsDownloading(true);
     if (!downloadRef.current) {
       return;
     }
-
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-
-  /* Info: (20250401 - Anna) Income Statement (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
@@ -176,9 +154,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       }
     }
 
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
-
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');
     downloadRef.current.style.position = '';
@@ -186,6 +161,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
   useEffect(() => {
@@ -221,15 +197,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           setHasFetchedOnce(true); // Info: (20241024 - Anna) 設定已成功請求過 API
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241024 - Anna) 更新日期範圍
           setFinancialReport(data);
-          // Deprecated: (20241204 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('IncomeStatementList received data:', data);
         }
-      } catch (error) {
-        // (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Error:', error);
       } finally {
         setIsGetReportAPILoading(false);
       }
@@ -275,14 +243,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
           formattedPreFromDate={formattedPreFromDate}
           formattedPreToDate={formattedPreToDate}
         />
-        {/* Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail */}
-        {/* <ItemDetail
-          financialReport={financialReport}
-          formattedCurFromDate={formattedCurFromDate}
-          formattedCurToDate={formattedCurToDate}
-          formattedPreFromDate={formattedPreFromDate}
-          formattedPreToDate={formattedPreToDate}
-        /> */}
         <CostRevRatio
           financialReport={financialReport}
           formattedCurFromDate={formattedCurFromDate}
@@ -310,6 +270,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         formattedCurToDate={formattedCurToDate}
         formattedPreFromDate={formattedPreFromDate}
         formattedPreToDate={formattedPreToDate}
+        isDownloading={isDownloading}
       />
     </div>
   );

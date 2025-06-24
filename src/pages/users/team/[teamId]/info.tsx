@@ -35,9 +35,6 @@ const TeamInfoPage = () => {
       const { data: teamInfoData, success } = await getTeamInfoByTeamIdAPI({
         params: { teamId },
       });
-      // Info: (20250226 - Anna) 打印 API 回傳的資料（Debug）
-      // eslint-disable-next-line no-console
-      console.log('API 回傳資料:', teamInfoData);
       if (success && teamInfoData) {
         setTeam(teamInfoData);
       }

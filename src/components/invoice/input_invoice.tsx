@@ -36,7 +36,7 @@ interface InputInvoiceProps {
   uploaderAvatarMap: Record<string, string>;
 }
 
-// Deprecated: (20240919 - Anna) will be replaced by actual data type
+// Info: (20240919 - Anna) will be replaced by actual data type
 const InputInvoice: React.FC<InputInvoiceProps> = ({
   activeTab,
   page,
@@ -109,6 +109,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setCurrentPage={setPage}
           className="mt-4"
           totalCount={totalCount}
+          isExporting={isExporting}
         />
       </div>
     </>

@@ -46,7 +46,6 @@ interface InputInvoiceEditModalProps {
 }
 
 const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
-  isOpen,
   accountBookId,
   toggleModel,
   currencyAlias,
@@ -417,8 +416,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedInvoiceRC2Ref.current);
-      // eslint-disable-next-line no-console
-      console.log('isSame:', isSame, formStateRef.current, savedInvoiceRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -484,15 +481,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
     });
   }, [formState]);
-
-  // Info: (20250512 - Anna) Debug
-  useEffect(() => {
-    if (isOpen && certificate) {
-      // Deprecated: (20250512 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Modal initialized with certificate:', certificate);
-    }
-  }, [isOpen, certificate]);
 
   return (
     <div
