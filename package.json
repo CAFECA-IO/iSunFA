@@ -3,6 +3,7 @@
   "version": "0.10.4+27",
   "versionName": "RC1",
   "private": false,
+  "type": "commonjs",
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
@@ -23,7 +24,8 @@
     "prepare": "husky",
     "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
     "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
-    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts"
+    "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts",
+    "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/test.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
@@ -41,6 +43,7 @@
     "date-fns": "^3.6.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
+    "ethers": "^6.14.4",
     "formidable": "^3.5.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
