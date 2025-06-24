@@ -21,7 +21,7 @@ import { IntegrationTestSetup } from '@/tests/integration/setup';
  * - Uses default emails and verification codes for authentication testing
  * - Focuses on authentication logic without email sending functionality
  * - Tests session persistence across multiple API calls
- * - Tests team management and status APIs
+ * - Tests status and role APIs (team-related tests moved to 02-team-management.test.ts)
  * - Validates both success and failure scenarios
  * - Ensures proper error handling and status messages
  */
@@ -218,12 +218,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       });
 
       it('should validate all default emails from constants', async () => {
-        const expectedEmails = [
-          'user@isunfa.com',
-          'user1@isunfa.com',
-          'user2@isunfa.com',
-          'user3@isunfa.com',
-        ];
+        const expectedEmails = DefaultValue.EMAIL_LOGIN.EMAIL;
 
         const testResults = await Promise.all(
           expectedEmails.map(async (email) => {
@@ -262,7 +257,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         apiClient.clearSession();
       });
 
-      it('should get teams using same session after email authentication', async () => {
+      it('should use authenticated session for status API calls', async () => {
         // Step 1: Perform email authentication (function calls to establish session)
         const getRequest = {
           query: { email: userEmail },
@@ -271,9 +266,6 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
 
         const emailResult = await handleGetRequest(getRequest);
         expect(emailResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS_GET);
-
-        // const session = await getSession(getRequest);
-        // console.log('sessionInTestCase1', session);
 
         const postRequest = {
           query: { email: userEmail },
@@ -291,73 +283,11 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         expect(loginResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
         expect(loginResult.result.email).toBe(userEmail);
 
-        // Step 2: Use the same session to get teams via HTTP API
+        // Step 2: Use the same session to get status info via HTTP API
         try {
-          // eslint-disable-next-line no-console
-          console.log('🔍 Attempting to get teams...');
-          const teamsResponse = await apiClient.get('/api/v2/team');
-          // eslint-disable-next-line no-console
-          console.log('✅ teamsResponse SUCCESS:', JSON.stringify(teamsResponse, null, 2));
-
-          // Verify the request structure is correct
-          expect(teamsResponse).toBeDefined();
-          expect(typeof teamsResponse.success).toBe('boolean');
-
-          if (teamsResponse.success) {
-            expect(teamsResponse.payload).toBeDefined();
-          } else {
-            expect(teamsResponse.success).toBe(false);
-          }
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log('❌ teamsResponse ERROR:', error);
-          expect(error).toBeDefined();
-        }
-      });
-
-      it('should handle team member operations with authenticated session', async () => {
-        const getRequest = {
-          query: { email: userEmail },
-          method: 'GET',
-        } as unknown as NextApiRequest;
-
-        await handleGetRequest(getRequest);
-
-        const postRequest = {
-          query: { email: userEmail },
-          body: { code: defaultCode },
-          method: 'POST',
-          headers: {
-            'user-agent': 'test-agent',
-            'x-forwarded-for': '127.0.0.1',
-          },
-          cookies: {},
-          url: '/api/v2/email/test/one_time_password',
-        } as unknown as NextApiRequest;
-
-        const loginResult = await handlePostRequest(postRequest);
-        expect(loginResult.statusMessage).toBe(STATUS_MESSAGE.SUCCESS);
-
-        const teamData = {
-          name: `Test Team ${Date.now()}`,
-          description: 'Integration test team',
-        };
-
-        try {
-          const createTeamResponse = await apiClient.post('/api/v2/team', teamData);
-          expect(createTeamResponse).toBeDefined();
-          expect(typeof createTeamResponse.success).toBe('boolean');
-
-          if (createTeamResponse.success) {
-            const teamPayload = createTeamResponse.payload as { id: number };
-            const teamId = teamPayload.id;
-
-            if (teamId) {
-              const membersResponse = await apiClient.get(`/api/v2/team/${teamId}/member`);
-              expect(membersResponse).toBeDefined();
-              expect(typeof membersResponse.success).toBe('boolean');
-            }
-          }
+          const statusResponse = await apiClient.get('/api/v2/status_info');
+          expect(statusResponse).toBeDefined();
+          expect(typeof statusResponse.success).toBe('boolean');
         } catch (error) {
           expect(error).toBeDefined();
         }
@@ -389,7 +319,6 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         try {
           const apiCalls = [
             () => apiClient.get('/api/v2/status_info'),
-            () => apiClient.get('/api/v2/team'),
             () => apiClient.get('/api/v2/role'),
           ];
 
@@ -404,7 +333,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             })
           );
 
-          expect(results.length).toBe(3);
+          expect(results.length).toBe(2);
           results.forEach((result) => {
             expect(result).toBeDefined();
             expect(typeof result.success).toBe('boolean');

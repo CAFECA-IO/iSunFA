@@ -147,11 +147,11 @@ export class IntegrationTestSetup {
 
   // Info: (20250619) Default test emails for integration testing
   static getTestEmail(): string {
-    return DefaultValue.EMAIL_LOGIN.EMAIL[0]; // user@isunfa.com
+    return DefaultValue.EMAIL_LOGIN.EMAIL[0];
   }
 
   static getTestVerificationCode(): string {
-    return DefaultValue.EMAIL_LOGIN.CODE; // 555666
+    return DefaultValue.EMAIL_LOGIN.CODE;
   }
 
   // Info: (20250620) API base URL for testing
