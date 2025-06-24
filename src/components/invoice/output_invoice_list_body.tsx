@@ -212,9 +212,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-      .download-pb-3 {
-      padding-bottom: 12px;
-    }
       .download-hidden {
       display: none;
     }

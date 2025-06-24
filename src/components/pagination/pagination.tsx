@@ -220,7 +220,7 @@ const Pagination = forwardRef(
         </p>
 
         {totalCount !== undefined && (
-          <p className="pb-4 text-sm text-text-neutral-tertiary">
+          <p className="text-sm text-text-neutral-tertiary">
             {t('common:COMMON.TOTAL')}: {totalCount} {t('common:COMMON.DOCUMENT')}
           </p>
         )}

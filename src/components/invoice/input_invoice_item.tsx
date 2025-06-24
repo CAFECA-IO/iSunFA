@@ -1,5 +1,3 @@
-/* Info: (20250622 - Anna) 使用自訂樣式類別控制 PDF 下載頁面樣式 */
-/* eslint-disable tailwindcss/no-custom-classname */
 import React, { ReactElement } from 'react';
 import { useTranslation } from 'next-i18next';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
@@ -19,6 +17,7 @@ interface InputInvoiceListIrops {
   handleSelect: (ids: number[], isSelected: boolean) => void;
   onEdit: (id: number) => void;
   uploaderAvatarMap: Record<string, string>;
+  isExporting: boolean;
 }
 
 const BorderCell: React.FC<{ isSelected: boolean; children: ReactElement; className?: string }> = ({
@@ -43,6 +42,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
   handleSelect,
   onEdit,
   uploaderAvatarMap,
+  isExporting,
 }) => {
   const { t } = useTranslation(['common', 'certificate', 'filter_section_type']);
   const { currency } = useCurrencyCtx();
@@ -81,6 +81,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
           <CalendarIcon
             timestamp={certificate.issuedDate ?? 0}
             incomplete={!!certificate.incomplete}
+            isExporting={isExporting}
           />
         </div>
       </BorderCell>
@@ -89,7 +90,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
       <BorderCell isSelected={certificate.isSelected} className="flex w-120px gap-1">
         <div className="flex items-center gap-2">
           <div className="flex flex-col">
-            <div className="download-pb-4 text-text-neutral-primary">
+            <div className={`${isExporting ? 'pb-4' : ''} text-text-neutral-primary`}>
               {certificate.no ||
                 certificate.carrierSerialNumber ||
                 certificate.otherCertificateNo ||
@@ -99,12 +100,16 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div
+          className={`${isExporting ? 'pb-4' : ''} hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary`}
+        >
           {certificate.type ? t(`filter_section_type:FILTER_SECTION_TYPE.${certificate.type}`) : ''}
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="hide-scrollbar download-pb-4 max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary">
+        <div
+          className={`${isExporting ? 'pb-4' : ''} hide-scrollbar max-h-72px w-full overflow-y-auto text-left text-text-neutral-primary`}
+        >
           {/* Info: (20250421 - Anna) deductionType */}
           {isDeductible ? (
             <div className="flex items-center gap-2">
@@ -129,7 +134,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="w-100px">
         <div
-          className={`download-pb-4 w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
+          className={`${isExporting ? 'pb-4' : ''} w-full ${certificate.taxRate !== undefined ? 'text-left' : 'text-center'} text-text-neutral-primary`}
         >
           {certificate.taxType === TaxType.TAXABLE
             ? `${t('certificate:EDIT.TAXABLE_5')} ${certificate.taxRate} %`
@@ -139,7 +144,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
         </div>
       </BorderCell>
       <BorderCell isSelected={certificate.isSelected} className="row-span-full min-w-100px">
-        <div className="download-pb-4 flex flex-col items-center gap-2">
+        <div className={`${isExporting ? 'pb-4' : ''} flex flex-col items-center gap-2`}>
           <div className="w-full text-left text-text-neutral-tertiary">
             {certificate.salesIdNumber ?? ''}
           </div>
@@ -156,7 +161,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div className="download-pb-3 w-full pr-1 text-center">
+              <div className={`${isExporting ? 'pb-3' : ''} w-full pr-1 text-center`}>
                 {t(`certificate:TABLE.PRE_TAX`)}
               </div>
             </div>
@@ -170,7 +175,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div className="download-pb-3 w-full pr-1 text-center">
+              <div className={`${isExporting ? 'pb-3' : ''} w-full pr-1 text-center`}>
                 {t(`certificate:TABLE.AFTER_TAX`)}
               </div>
             </div>
@@ -209,7 +214,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
                 {certificate.uploaderName.slice(0, 2).toUpperCase()}
               </span>
             )}
-            <span className="download-pb-4">{certificate.uploaderName ?? ''}</span>
+            <span className={`${isExporting ? 'pb-4' : ''}`}>{certificate.uploaderName ?? ''}</span>
           </div>
         </div>
       </BorderCell>

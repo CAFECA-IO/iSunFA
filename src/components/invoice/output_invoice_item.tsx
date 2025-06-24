@@ -75,6 +75,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
           <CalendarIcon
             timestamp={certificate.issuedDate ?? 0}
             incomplete={!!certificate.incomplete}
+            isExporting={isExporting}
           />
         </div>
       </BorderCell>
@@ -125,7 +126,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-rose`}
               ></div>
-              <div className="download-pb-3 w-full pr-1 text-center">
+              <div className={`${isExporting ? 'pb-3' : ''} w-full pr-1 text-center`}>
                 {t(`certificate:TABLE.PRE_TAX`)}
               </div>
             </div>
@@ -139,7 +140,7 @@ const OutputInvoiceItem: React.FC<OutputInvoiceListIrops> = ({
               <div
                 className={`m-1 inline-block h-6px w-6px rounded-full bg-surface-support-strong-baby`}
               ></div>
-              <div className="download-pb-3 w-full pr-1 text-center">
+              <div className={`${isExporting ? 'pb-3' : ''} w-full pr-1 text-center`}>
                 {t(`certificate:TABLE.AFTER_TAX`)}
               </div>
             </div>

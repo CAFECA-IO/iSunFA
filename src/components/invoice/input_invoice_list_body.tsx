@@ -204,19 +204,8 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     // Info: (20250401 - Anna) 插入修正樣式
     const style = document.createElement('style');
     style.innerHTML = `
-    .download-pb-4 {
-    padding-bottom: 16px;
-  }
-    .download-pb-3 {
-    padding-bottom: 12px;
-  }
     .download-hidden {
     display: none;
-  }
-
-    /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
-    .force-desktop-style {
-    width: 1024px !important;
   }
 `;
 
