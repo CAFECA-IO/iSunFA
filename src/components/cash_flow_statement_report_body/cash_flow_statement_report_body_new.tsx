@@ -29,8 +29,12 @@ const CashFlowStatementPageBody = () => {
   // Info: (20250327 - Anna) 每次開始渲染時重置頁碼
   const pageCountRef = useRef(1);
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20250327 - Anna) 下載
   const handleDownload = async () => {
+    setIsDownloading(true);
     pageCountRef.current = 1; // Info: (20250327 - Anna) reset 頁數
 
     if (!downloadRef.current) return;
@@ -114,6 +118,7 @@ const CashFlowStatementPageBody = () => {
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
   // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
@@ -170,6 +175,7 @@ const CashFlowStatementPageBody = () => {
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
           downloadFn={handleDownload} // Info: (20250327 - Anna) 傳遞下載函數
+          isDownloading={isDownloading}
         />
       </div>
     </div>

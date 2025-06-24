@@ -26,6 +26,7 @@ interface CashFlowStatementListProps {
   downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
   downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
+  isDownloading: boolean;
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
@@ -34,6 +35,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
   downloadFn, // Info: (20250327 - Anna) 使用下載函數
+  isDownloading,
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
@@ -776,7 +778,11 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         {investmentRatio}
         {freeCashFlow}
       </div>
-      <DownloadCashFlowStatement reportFinancial={reportFinancial} downloadRef={downloadRef} />
+      <DownloadCashFlowStatement
+        reportFinancial={reportFinancial}
+        downloadRef={downloadRef}
+        isDownloading={isDownloading}
+      />
     </div>
   );
 };

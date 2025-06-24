@@ -1381,7 +1381,7 @@ input[type='checkbox']:checked::before {
 }
 
 @layer utilities {
-  /* Info: (20250624 - Anna) ===== 資產負債表下載樣式(start) ===== */
+  /* Info: (20250624 - Anna) ===== 資產負債表、現金流量表下載樣式(start) ===== */
   /* Info: (20250401 - Anna) 表格 */
   .download-page td,
   .download-page th {
@@ -1392,13 +1392,5 @@ input[type='checkbox']:checked::before {
   .download-page h2 {
     padding-bottom: 6px !important;
   }
-  /* Info: (20250624 - Anna) ===== 資產負債表下載樣式(end) ===== */
-
-  /* Info: (20250624 - Anna) ===== 現金流量表下載樣式(start) ===== */
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-  /* Info: (20250624 - Anna) ===== 現金流量表下載樣式(end) ===== */
+  /* Info: (20250624 - Anna) ===== 資產負債表、現金流量表下載樣式(end) ===== */
 }

@@ -41,12 +41,6 @@ const BalanceSheetPageBody = () => {
 
     if (!downloadRef.current) return;
 
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = ``;
-
-    document.head.appendChild(style);
-
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
     downloadRef.current.style.position = 'absolute';
@@ -118,9 +112,6 @@ const BalanceSheetPageBody = () => {
         pdf.addImage(imgData, 'PNG', 10, 10, 190, 270);
       }
     }
-
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
 
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');
