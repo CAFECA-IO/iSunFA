@@ -46,6 +46,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20250326 - Anna) 定義 handleDownload
   const handleDownload = async () => {
+    setIsDownloading(true);
     if (!printRef.current) {
       // Info: (20250326 - Anna) Debug
       // eslint-disable-next-line no-console
@@ -101,6 +102,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     // Info: (20250326 - Anna) 下載 PDF
     pdf.save('Business_Tax_Report.pdf');
+    setIsDownloading(false);
   };
 
   const displayedSelectArea = () => {
@@ -126,7 +128,11 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 保存後端返回的報告 ID
+
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const downloadReport = `${isDownloading ? 'download-401-report' : ''}`;
 
   const { trigger: getFinancialReportAPI } = APIHandler<TaxReport401Content>(
     APIName.REPORT_GET_BY_ID
@@ -257,9 +263,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <Skeleton width={80} height={20} />
     </div>
   ) : (
-    /* Info: (20250326 - Anna) download-401-report 是自定義 class，用於轉 PDF 時選取每一頁，需關掉 tailwindcss/no-custom-classname */
-    /* eslint-disable-next-line tailwindcss/no-custom-classname */
-    <div id="1" className="download-401-report relative overflow-y-hidden bg-white">
+    <div id="1" className={`${downloadReport} relative overflow-y-hidden bg-white`}>
       <header className="flex w-full justify-between">
         <table className="border-collapse border border-black text-8px">
           <tbody>
