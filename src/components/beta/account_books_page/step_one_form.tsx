@@ -15,6 +15,7 @@ import { IFileUIBeta } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
 
 // Deprecated: (20250604 - Liz) 此元件正在修改中，請勿編輯內容或加入註解
 
@@ -476,13 +477,11 @@ const StepOneForm = ({
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_ACCOUNTING_CURRENCY')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={accountingCurrency}
-                      onChange={(e) => handleChange('accountingCurrency')(e.target.value)}
+                    <CurrencyDropdown
+                      currentCurrency={accountingCurrency}
+                      setCurrentCurrency={(value) => handleChange('accountingCurrency')(value)}
                     />
+
                     {accountingCurrencyError && !accountingCurrency && (
                       <p className="text-right text-sm font-medium text-text-state-error">
                         {accountingCurrencyError}
