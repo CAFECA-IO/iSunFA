@@ -44,6 +44,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     },
   });
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20250326 - Anna) 定義 handleDownload
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -128,9 +131,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Info: (20250624 - Anna) 下載狀態
-  const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadReport = `${isDownloading ? 'download-401-report' : ''}`;
 
