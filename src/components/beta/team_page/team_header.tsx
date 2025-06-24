@@ -41,7 +41,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
 
   return (
     <section className="flex flex-auto flex-col items-start gap-8px tablet:flex-row tablet:items-center">
-      <div className="flex items-center gap-lv-4 tablet:gap-8px">
+      <div className="flex items-start gap-lv-4 tablet:gap-8px">
         <button
           type="button"
           className="group relative shrink-0"

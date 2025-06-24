@@ -89,6 +89,9 @@ const AccountBooksPageBody = () => {
 
   return (
     <>
+      {/* Info: (20250623 - Julian) 頁面標題 */}
+      {isNoData && <NoData />}
+
       {/* Info: (20250602 - Liz) Desktop Version */}
       <main className="hidden min-h-full flex-col gap-40px tablet:flex">
         <section className="flex flex-col gap-40px laptop:flex-row laptop:items-center">
@@ -126,7 +129,6 @@ const AccountBooksPageBody = () => {
           </div>
         </section>
 
-        {isNoData && <NoData />}
         {!isNoData && (
           <>
             <AccountBookList
@@ -145,46 +147,6 @@ const AccountBooksPageBody = () => {
             />
           </>
         )}
-
-        {/* Info: (20241108 - Liz) Modals */}
-        {isCreateAccountBookModalOpen && (
-          <AccountBookInfoModal
-            closeAccountBookInfoModal={closeCreateAccountBookModal}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
-
-        {accountBookToEdit && (
-          <AccountBookInfoModal
-            accountBookToEdit={accountBookToEdit}
-            closeAccountBookInfoModal={closeEditAccountBookModal}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
-
-        {accountBookToTransfer && (
-          <TransferAccountBookModal
-            accountBookToTransfer={accountBookToTransfer}
-            setAccountBookToTransfer={setAccountBookToTransfer}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
-
-        {accountBookToChangeTag && (
-          <ChangeTagModal
-            accountBookToChangeTag={accountBookToChangeTag}
-            setAccountBookToChangeTag={setAccountBookToChangeTag}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
-
-        {accountBookToDelete && (
-          <MessageModal
-            messageModalData={messageModalData}
-            isModalVisible={!!accountBookToDelete}
-            modalVisibilityHandler={closeDeleteModal}
-          />
-        )}
       </main>
 
       {/* Info: (20250602 - Liz) Mobile Version */}
@@ -193,21 +155,19 @@ const AccountBooksPageBody = () => {
           {t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}
         </h1>
 
-        <div>
-          {userId && (
-            <FilterSection<IAccountBookWithTeam[]>
-              key={refreshKey}
-              disableDateSearch
-              className="flex-auto"
-              params={{ userId }}
-              apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
-              onApiResponse={handleApiResponse}
-              page={currentPage}
-              pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
-              sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
-            />
-          )}
-        </div>
+        {userId && (
+          <FilterSection<IAccountBookWithTeam[]>
+            key={refreshKey}
+            disableDateSearch
+            className="flex-auto"
+            params={{ userId }}
+            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
+            onApiResponse={handleApiResponse}
+            page={currentPage}
+            pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
+            sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
+          />
+        )}
 
         <button
           type="button"
@@ -218,7 +178,6 @@ const AccountBooksPageBody = () => {
           <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW_ACCOUNT_BOOK')}</span>
         </button>
 
-        {isNoData && <NoData />}
         {!isNoData && (
           <>
             <AccountBookList
@@ -237,23 +196,56 @@ const AccountBooksPageBody = () => {
             />
           </>
         )}
-
-        {/* Info: (20250602 - Liz) Modals */}
-        {isCreateAccountBookModalOpen && (
-          <AccountBookInfoModal
-            closeAccountBookInfoModal={closeCreateAccountBookModal}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
-
-        {accountBookToEdit && (
-          <AccountBookInfoModal
-            accountBookToEdit={accountBookToEdit}
-            closeAccountBookInfoModal={closeEditAccountBookModal}
-            setRefreshKey={setRefreshKey}
-          />
-        )}
       </main>
+
+      {/* Info: (20250602 - Liz) Modals */}
+      {accountBookToEdit && (
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeEditAccountBookModal}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {/* Info: (20241108 - Liz) Modals */}
+      {isCreateAccountBookModalOpen && (
+        <AccountBookInfoModal
+          closeAccountBookInfoModal={closeCreateAccountBookModal}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToEdit && (
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeEditAccountBookModal}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToTransfer && (
+        <TransferAccountBookModal
+          accountBookToTransfer={accountBookToTransfer}
+          setAccountBookToTransfer={setAccountBookToTransfer}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToChangeTag && (
+        <ChangeTagModal
+          accountBookToChangeTag={accountBookToChangeTag}
+          setAccountBookToChangeTag={setAccountBookToChangeTag}
+          setRefreshKey={setRefreshKey}
+        />
+      )}
+
+      {accountBookToDelete && (
+        <MessageModal
+          messageModalData={messageModalData}
+          isModalVisible={!!accountBookToDelete}
+          modalVisibilityHandler={closeDeleteModal}
+        />
+      )}
     </>
   );
 };

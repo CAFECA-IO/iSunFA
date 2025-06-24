@@ -135,14 +135,14 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
         <div className="max-h-65vh overflow-y-auto tablet:min-w-480px">
           <main className="flex flex-col gap-24px">
             {/* Info: (20250220 - Liz) Divider */}
-            <div className="flex items-center gap-16px">
-              <div className="flex items-center gap-8px">
+            <div className="flex items-center gap-lv-4">
+              <div className="flex items-center gap-lv-2">
                 <Image src="/icons/member.svg" alt="member" width={16} height={14.29} />
                 <span className="text-sm font-medium leading-5 text-divider-text-lv-1">
                   {t('team:MEMBER_LIST_MODAL.MEMBER_LIST')}
                 </span>
               </div>
-              <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+              <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
             </div>
 
             {modalBody}
