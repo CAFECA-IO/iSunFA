@@ -14,6 +14,9 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
 import { cn } from '@/lib/utils/common';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookWithTeam;
@@ -38,6 +41,7 @@ const AccountBookItem = ({
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectAccountBook, connectedAccountBook, disconnectAccountBook } = useUserCtx();
+  const { toastHandler } = useModalContext();
   const [isLoading, setIsLoading] = useState(false);
   const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
   const teamRole = accountBook.team.role;
@@ -130,9 +134,13 @@ const AccountBookItem = ({
       const { success } = await disconnectAccountBook(accountBook.id);
 
       if (!success) {
-        // Deprecated: (20250422 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取消連結帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
+        // Info: (20250625 - Julian) 取消連結失敗的 toast
+        toastHandler({
+          id: ToastId.DISCONNECT_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_DISCONNECT_ACCOUNT_BOOK'),
+          closeable: true,
+        });
       }
     } catch (error) {
       // Deprecated: (20250422 - Liz)
@@ -158,9 +166,13 @@ const AccountBookItem = ({
       const { success } = await connectAccountBook(accountBookId);
 
       if (!success) {
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('連結帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
+        // Info: (20250625 - Julian) 連結失敗的 toast
+        toastHandler({
+          id: ToastId.CONNECT_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_CONNECT_ACCOUNT_BOOK'),
+          closeable: true,
+        });
       }
     } catch (error) {
       // Deprecated: (20241113 - Liz)
@@ -181,10 +193,13 @@ const AccountBookItem = ({
       });
 
       if (!success) {
-        // Deprecated: (20250326 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取消轉移帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
-        return;
+        // Info: (20250625 - Julian) 取消轉移失敗的 toast
+        toastHandler({
+          id: ToastId.CANCEL_TRANSFER_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_CANCEL_TRANSFER'),
+          closeable: true,
+        });
       }
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250326 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
