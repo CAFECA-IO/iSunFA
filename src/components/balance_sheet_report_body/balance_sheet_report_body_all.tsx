@@ -312,8 +312,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -326,8 +326,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -366,8 +366,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -380,8 +380,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -420,8 +420,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -434,8 +434,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -474,8 +474,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -488,8 +488,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -528,8 +528,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -542,8 +542,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -582,8 +582,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -596,8 +596,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -636,8 +636,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -650,8 +650,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -690,8 +690,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -704,8 +704,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -744,8 +744,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -758,8 +758,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
