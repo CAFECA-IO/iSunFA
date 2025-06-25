@@ -127,7 +127,7 @@ export const handlePostRequest = async (req: NextApiRequest, res?: NextApiRespon
   };
   const session = await handleSignInSession(req, user, account);
 
-  // Info: (20250624 - Claude) 設置 session cookie 到響應中
+  // Info: (20250625 - Shirley) 設置 session cookie 到響應中
   if (res && session) {
     setSessionCookie(res, session.isunfa);
   }
