@@ -79,6 +79,14 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) 使用者點擊登入按鈕後，會先進行 email 格式驗證，接著會打 API 寄送驗證信
   const sendLoginEmail = async () => {
+    /* Info: (20250625 - Luphia)
+     * 獲取外部服務參數 service, uid
+     */
+    const { service, uid } = router.query as { service?: string; uid?: string };
+    // Deprecated: (20250625 - Luphia) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(`Service: ${service}, UID: ${uid}`);
+
     const trimmedEmail = inputEmail.trim();
     if (!trimmedEmail) return;
 
@@ -95,7 +103,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     setIsSendingEmail(true);
     setSendEmailError('');
     try {
+      const query = service && uid ? { service, uid } : undefined;
       const { success, error, data } = await sendVerificationEmailAPI({
+        query,
         params: {
           email: trimmedEmail,
         },

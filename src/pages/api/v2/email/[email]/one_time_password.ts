@@ -67,7 +67,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     verificationCode: emailLogin.code,
     remainingMins,
   };
-  const emailResult = sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
+  const emailResult = await sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
   if (!emailResult) {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
