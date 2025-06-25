@@ -114,7 +114,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
       try {
         const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { page: 1, pageSize: 999 },
+          query: { page: 1, pageSize: 999, simple: true },
         });
         const accountBookListData = data?.data ?? []; // Info: (20250310 - Liz) 取出帳本清單
 
@@ -214,7 +214,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
 
                   {isDropdownOpen && (
                     <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
+                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
                         {accountBookList.map((item) => (
                           <button
                             key={item.id}

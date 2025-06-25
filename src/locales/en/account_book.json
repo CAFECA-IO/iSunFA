@@ -87,5 +87,10 @@
       "FROM_TEAM": "Transfer request for account book \"{{accountBookName}}\" was rejected",
       "TO_TEAM": "Your team has rejected the transfer request for account book \"{{accountBookName}}\""
     }
+  },
+  "TOAST": {
+    "FAILED_CONNECT_ACCOUNT_BOOK": "Failed to connect account book.",
+    "FAILED_DISCONNECT_ACCOUNT_BOOK": "Failed to disconnect account book.",
+    "FAILED_CANCEL_TRANSFER": "Failed to cancel transfer request."
   }
 }

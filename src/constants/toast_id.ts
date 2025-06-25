@@ -68,4 +68,7 @@ export enum ToastId {
   VERIFY_CODE_ERROR = 'toast-verify-code-error',
   CREATE_ACCOUNT_BOOK_FAILED = 'toast-create-account-book-failed',
   EDIT_ACCOUNT_BOOK_FAILED = 'toast-edit-account-book-failed',
+  CONNECT_ACCOUNT_BOOK_FAILED = 'toast-connect-account-book-failed',
+  DISCONNECT_ACCOUNT_BOOK_FAILED = 'toast-disconnect-account-book-failed',
+  CANCEL_TRANSFER_ACCOUNT_BOOK_FAILED = 'toast-cancel-transfer-account-book-failed',
 }

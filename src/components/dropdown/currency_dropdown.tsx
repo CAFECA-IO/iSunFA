@@ -13,6 +13,7 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
   currentCurrency,
   setCurrentCurrency,
 }) => {
+  const isSelected = currentCurrency !== '';
   const currencyList = Object.values(OEN_CURRENCY);
 
   const {
@@ -45,6 +46,23 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
     );
   });
 
+  const btnContent = isSelected ? (
+    <>
+      <Image
+        width={16}
+        height={16}
+        alt="currency_icon"
+        src={imgSrc}
+        className="aspect-square rounded-full object-cover"
+      />
+      <div className="flex-1 text-input-text-input-filled">
+        {currentCurrency.toLocaleUpperCase()}
+      </div>
+    </>
+  ) : (
+    <div className="flex-1 text-input-text-input-placeholder">請選擇幣別</div>
+  );
+
   return (
     <div
       ref={targetRef}
@@ -54,21 +72,14 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
         onClick={toggleCurrencyMenu}
         className="flex flex-1 items-center gap-24px px-12px py-10px hover:cursor-pointer"
       >
-        <Image
-          width={16}
-          height={16}
-          alt="currency_icon"
-          src={imgSrc}
-          className="aspect-square rounded-full object-cover"
-        />
-        <div className="flex-1 text-input-text-input-filled">
-          {currentCurrency.toLocaleUpperCase()}
-        </div>
+        {btnContent}
         <div
           className={`text-icon-surface-single-color-primary ${isOpen ? 'rotate-180' : 'rotate-0'}`}
         >
           <FaChevronDown />
         </div>
+
+        {/* Info: (20250625 - Julian) Dropdown menu */}
         <div
           className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${
             isOpen

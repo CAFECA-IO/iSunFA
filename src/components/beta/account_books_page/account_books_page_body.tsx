@@ -87,27 +87,26 @@ const AccountBooksPageBody = () => {
     if (resData.page !== currentPage) setCurrentPage(resData.page);
   };
 
+  const filterSection = userId && (
+    <FilterSection<IAccountBookWithTeam[]>
+      key={refreshKey}
+      disableDateSearch
+      className="flex-auto"
+      params={{ userId }}
+      apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
+      onApiResponse={handleApiResponse}
+      page={currentPage}
+      pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
+      sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
+    />
+  );
+
   return (
     <>
-      {/* Info: (20250623 - Julian) 頁面標題 */}
-      {isNoData && <NoData />}
-
       {/* Info: (20250602 - Liz) Desktop Version */}
       <main className="hidden min-h-full flex-col gap-40px tablet:flex">
         <section className="flex flex-col gap-40px laptop:flex-row laptop:items-center">
-          {userId && (
-            <FilterSection<IAccountBookWithTeam[]>
-              key={refreshKey}
-              disableDateSearch
-              className="flex-auto"
-              params={{ userId }}
-              apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
-              onApiResponse={handleApiResponse}
-              page={currentPage}
-              pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
-              sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
-            />
-          )}
+          {filterSection}
 
           <div className="flex items-center gap-16px">
             <button
@@ -129,7 +128,9 @@ const AccountBooksPageBody = () => {
           </div>
         </section>
 
-        {!isNoData && (
+        {isNoData ? (
+          <NoData />
+        ) : (
           <>
             <AccountBookList
               accountBookList={accountBookList}
@@ -154,21 +155,7 @@ const AccountBooksPageBody = () => {
         <h1 className="text-base font-semibold text-text-neutral-secondary">
           {t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}
         </h1>
-
-        {userId && (
-          <FilterSection<IAccountBookWithTeam[]>
-            key={refreshKey}
-            disableDateSearch
-            className="flex-auto"
-            params={{ userId }}
-            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
-            onApiResponse={handleApiResponse}
-            page={currentPage}
-            pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
-            sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
-          />
-        )}
-
+        {filterSection}
         <button
           type="button"
           onClick={openCreateAccountBookModal}
@@ -178,7 +165,9 @@ const AccountBooksPageBody = () => {
           <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW_ACCOUNT_BOOK')}</span>
         </button>
 
-        {!isNoData && (
+        {isNoData ? (
+          <NoData />
+        ) : (
           <>
             <AccountBookList
               accountBookList={accountBookList}
