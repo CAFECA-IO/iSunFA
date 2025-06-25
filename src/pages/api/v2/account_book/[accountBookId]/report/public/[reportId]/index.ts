@@ -51,7 +51,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountBookId, reportId } = query;
+  const { reportId } = query;
 
   loggerBack.info(`User: ${userId} getting public report with ID: ${reportId}`);
 
@@ -59,13 +59,17 @@ const handleGetRequest = async (req: NextApiRequest) => {
     // Info: (20250502 - Shirley) 獲取報表資料
     const { curPeriodReport, company } = await getUtils.getPeriodReport(reportId);
 
-    const accountingSetting = await getAccountingSettingByCompanyId(accountBookId);
+    const accountingSetting = await getAccountingSettingByCompanyId(
+      curPeriodReport?.companyId || -1
+    );
     let payloadAccountingSetting: IAccountingSetting | null = null;
     if (accountingSetting) {
       payloadAccountingSetting = formatAccountingSetting(accountingSetting);
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     } else {
-      const createdAccountingSetting = await createAccountingSetting(accountBookId);
+      const createdAccountingSetting = await createAccountingSetting(
+        curPeriodReport?.companyId || -1
+      );
       if (createdAccountingSetting) {
         payloadAccountingSetting = formatAccountingSetting(createdAccountingSetting);
         statusMessage = STATUS_MESSAGE.SUCCESS_GET;

@@ -103,7 +103,6 @@ export const generatePublicReportSchemaV2 = {
 };
 
 const getPublicReportQuerySchemaV2 = z.object({
-  accountBookId: zodStringToNumber,
   reportId: zodStringToNumber,
 });
 
