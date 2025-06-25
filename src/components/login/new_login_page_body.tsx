@@ -34,6 +34,14 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { toastHandler } = useModalContext();
   const router = useRouter();
 
+  /* Info: (20250625 - Luphia)
+   * 獲取外部服務參數 service, uid
+   */
+  const { service, uid } = router.query as { service?: string; uid?: string };
+  // Deprecated: (20250625 - Luphia) remove eslint-disable
+  // eslint-disable-next-line no-console
+  console.log(`Service: ${service}, UID: ${uid}`);
+
   const [step, setStep] = useState<LOGIN_STEP.INPUT_EMAIL | LOGIN_STEP.VERIFY_CODE>(
     LOGIN_STEP.INPUT_EMAIL
   ); // Info: (20250509 - Liz) 當前步驟
@@ -79,14 +87,6 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) 使用者點擊登入按鈕後，會先進行 email 格式驗證，接著會打 API 寄送驗證信
   const sendLoginEmail = async () => {
-    /* Info: (20250625 - Luphia)
-     * 獲取外部服務參數 service, uid
-     */
-    const { service, uid } = router.query as { service?: string; uid?: string };
-    // Deprecated: (20250625 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(`Service: ${service}, UID: ${uid}`);
-
     const trimmedEmail = inputEmail.trim();
     if (!trimmedEmail) return;
 
@@ -208,6 +208,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) Google 登入
   const googleAuthSignIn = () => {
+    // Deprecated: (20250625 - Luphia) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(action);
     authenticateUser(Provider.GOOGLE, {
       invitation,
       action,

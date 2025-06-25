@@ -33,6 +33,10 @@ import { handleSignInSession } from '@/lib/utils/signIn';
 export const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = req;
   const { email } = query;
+  // ToDo: (20250625 - Luphia) 根據 session 登記外部使用者
+  const session = await getSession(req);
+  loggerBack.info(session);
+  loggerBack.info(query);
   const isValidEmail = emailVerifier(email as string);
   if (!isValidEmail) {
     // Info: (20250429 - Luphia) email 格式不正確
