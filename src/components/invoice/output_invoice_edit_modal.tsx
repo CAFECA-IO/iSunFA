@@ -46,7 +46,6 @@ interface OutputInvoiceEditModalProps {
 }
 
 const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
-  isOpen,
   accountBookId,
   toggleModel,
   currencyAlias,
@@ -447,15 +446,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
     });
   }, [formState]);
-
-  // Info: (20250512 - Anna) Debug
-  useEffect(() => {
-    if (isOpen && certificate) {
-      // Deprecated: (20250512 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Modal initialized with certificate:', certificate);
-    }
-  }, [isOpen, certificate]);
 
   return (
     <div

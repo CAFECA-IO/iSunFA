@@ -35,18 +35,6 @@ const UserInfo: React.FC<UserInfoProps> = ({
   const currentDevice = loginDevices?.data.find((device) => device.userAgent === loginDevice);
   const isAbnormal = currentDevice?.normal === false;
 
-  // eslint-disable-next-line no-console
-  // console.log('登入裝置列表', loginDevices);
-
-  // eslint-disable-next-line no-console
-  // console.log('當前裝置:', currentDevice);
-
-  // eslint-disable-next-line no-console
-  // console.log('loginDevice', loginDevice);
-
-  // eslint-disable-next-line no-console
-  // console.log('是否異常登入:', isAbnormal);
-
   const toggleIPModal = () => {
     setIsIPModalOpen((prev) => !prev);
   };

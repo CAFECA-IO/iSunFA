@@ -51,9 +51,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   const handleDownload = async () => {
     setIsDownloading(true);
     if (!printRef.current) {
-      // Info: (20250326 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.error('Print reference is null!');
       return;
     }
 
@@ -170,7 +167,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     try {
       const {
         data: report,
-        code: getFRCode,
         success: getFRSuccess,
       } = await getFinancialReportAPI({
         params: {
@@ -180,9 +176,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       });
 
       if (!getFRSuccess) {
-        // Deprecated: (20241129 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch report. Code:', getFRCode, 'Response:', report);
         return null; // Info: (20241204 - Anna) 添加返回值，避免報錯
       }
       setFinancialReport(report);

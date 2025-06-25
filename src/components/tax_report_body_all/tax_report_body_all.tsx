@@ -53,7 +53,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
       try {
         const {
           data: report,
-          code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
           params: {
@@ -63,16 +62,10 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
         setFinancialReport(report);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', report);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -81,9 +74,6 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in TaxReportBodyAll');
   }, [isAuthLoading, reportId, connectedAccountBook]);
 
   // Info: (20240730 - Anna) 格式化數字為千分位
