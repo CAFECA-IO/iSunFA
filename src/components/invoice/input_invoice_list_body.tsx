@@ -440,9 +440,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<IInvoiceRC2InputUI>) => {
-      // Deprecated: (20250509 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('handleEditItem', certificate);
       try {
         const postOrPutAPI = certificate.id
           ? updateCertificateAPI({

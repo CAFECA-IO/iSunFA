@@ -63,18 +63,12 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
 
         setFinancialReport(reportFinancial);
         setIsGetFinancialReportSuccess(getFRSuccess);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
       } catch (error) {
         // console.log('error:', error);
       }
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in ViewFinancialReportPage');
   }, [reportId, reportType, t, toastHandler]);
 
   const displayedBody = !isGetFinancialReportSuccess ? (

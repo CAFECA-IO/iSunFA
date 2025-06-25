@@ -180,23 +180,16 @@ const ViewFinancialSection = ({
       try {
         const {
           data: reportFinancial,
-          code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
           params: { companyId: connectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
         setFinancialReport(reportFinancial);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -205,9 +198,6 @@ const ViewFinancialSection = ({
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
   }, [isAuthLoading, reportId, connectedAccountBook]);
 
   const isInvalidReport = useMemo(() => {
@@ -318,28 +308,6 @@ const ViewFinancialSection = ({
     //   window.open(pdfFile, '_blank');
     // }
   };
-
-  // TODO: (20240802 - Shirley) [Beta] get PDF file
-  // const fetchPDF = async () => {
-  //   try {
-  //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
-
-  //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
-
-  //     // TODO: (20240502 - Shirley) use API service
-  //     const response = await fetch(apiUrl, {
-  //       method: 'GET',
-  //     });
-
-  //     const blob = await response.blob();
-  //     const pdfUrl = URL.createObjectURL(blob);
-
-  //     setPdfFile(pdfUrl);
-  //   } catch (error) {
-  //     // TODO: (20240502 - Shirley) error handling
-  //     console.error(error);
-  //   }
-  // };
 
   useEffect(() => {
     switch (reportTypesName?.id ?? '') {

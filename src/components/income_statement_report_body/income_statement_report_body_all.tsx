@@ -31,9 +31,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 IncomeStatementReportBodyAll');
 
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -61,9 +58,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
@@ -102,9 +96,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         }
         setIsGetFinancialReportSuccess(getFRSuccess);
         setErrorCode(getFRCode);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', report);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -113,9 +104,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in IncomeStatementReportBodyAll');
   }, [reportId]);
 
   if (isLoading) {

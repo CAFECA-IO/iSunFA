@@ -112,23 +112,16 @@ const ViewFinancialSectionNew = ({
       try {
         const {
           data: reportFinancial,
-          code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
           params: { companyId: 1, reportId },
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
         setFinancialReport(reportFinancial);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -137,9 +130,6 @@ const ViewFinancialSectionNew = ({
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
   }, [reportId]);
 
   const isInvalidReport = useMemo(() => {
