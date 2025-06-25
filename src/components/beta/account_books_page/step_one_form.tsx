@@ -394,7 +394,7 @@ const StepOneForm = ({
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
-                className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
+                className="flex h-168px w-168px shrink-0 items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
               >
                 <Image src="/icons/upload_icon.svg" width={48} height={48} alt="upload_icon" />
               </button>

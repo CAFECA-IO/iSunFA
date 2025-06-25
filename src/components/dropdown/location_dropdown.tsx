@@ -13,6 +13,8 @@ const LocationDropdown: React.FC<ILocationDropdownProps> = ({
   currentLocation,
   setCurrentLocation,
 }) => {
+  const isSelected = currentLocation !== '';
+
   const locationList = Object.values(LOCATION_OPTION);
   const currStr =
     currencyByLocation[currentLocation as LocationType] ?? currencyByLocation[LocationType.TW];
@@ -50,28 +52,38 @@ const LocationDropdown: React.FC<ILocationDropdownProps> = ({
     );
   });
 
+  const btnContent = isSelected ? (
+    <>
+      <Image
+        width={16}
+        height={16}
+        alt="location_icon"
+        src={imgSrc}
+        className="aspect-square rounded-full object-cover"
+      />
+      <div className="flex-1 text-input-text-input-filled">{currentLocation}</div>
+    </>
+  ) : (
+    <div className="flex-1 text-input-text-input-placeholder">請選擇地區</div>
+  );
+
   return (
     <div
       ref={targetRef}
-      className="relative flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background font-medium"
+      className="relative flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background font-medium hover:border-input-stroke-selected"
     >
       <div
         onClick={toggleLocationMenu}
         className="flex flex-1 items-center gap-24px px-12px py-10px hover:cursor-pointer"
       >
-        <Image
-          width={16}
-          height={16}
-          alt="location_icon"
-          src={imgSrc}
-          className="aspect-square rounded-full object-cover"
-        />
-        <div className="flex-1 text-input-text-input-filled">{currentLocation}</div>
+        {btnContent}
         <div
           className={`text-icon-surface-single-color-primary ${isOpen ? 'rotate-180' : 'rotate-0'}`}
         >
           <FaChevronDown />
         </div>
+
+        {/* Info: (20250625 - Julian) Dropdown menu */}
         <div
           className={`absolute left-0 top-50px z-10 grid w-full rounded-sm ${
             isOpen
