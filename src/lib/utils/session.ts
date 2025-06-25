@@ -215,7 +215,11 @@ const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
  * 5. 回傳 session 資料
  */
 export const getSession = async (req: NextApiRequest) => {
-  const options = req.headers as unknown as ISessionOption;
+  const options: ISessionOption = {
+    'x-forwarded-for': req.headers['x-forwarded-for'] as string,
+    'user-agent': req.headers['user-agent'] as string,
+    cookie: req.headers.cookie as string,
+  };
   const defaultSession = sessionOptionToSession(options);
   const sessionId = parseSessionId(options);
   const currentSession = await sessionHandler.read(sessionId);

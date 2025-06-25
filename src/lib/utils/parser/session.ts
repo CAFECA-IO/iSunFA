@@ -23,6 +23,8 @@ export const parseSessionId = (options: ISessionOption | ISessionData) => {
   const cookieData = parseCookie(cookieHeader);
   // Info: (20250122 - Luphia) step 2
   const isunfaInSession = (options as ISessionData).isunfa;
+  // Info: (20250625 - Shirley) step 2.5 - Check for isunfa in parsed cookies
+  const isunfaInCookie = (cookieData as { [key: string]: string }).isunfa;
   const findCsrfKeyInHeader = Object.keys(options).find((key) => key.includes('csrf')) as string;
   // Info: (20250122 - Luphia) step 3
   const crsfInHeader = (options as { [key: string]: string })[findCsrfKeyInHeader];
@@ -31,6 +33,6 @@ export const parseSessionId = (options: ISessionOption | ISessionData) => {
   const crsfInCookie = (cookieData as { [key: string]: string })[findCsrfKeyInCookie];
   // Info: (20250122 - Luphia) step 5
   const randomId = randomSessionId();
-  const sessionId = isunfaInSession || isunfaInHeader || crsfInHeader || crsfInCookie || randomId;
+  const sessionId = isunfaInSession || isunfaInHeader || isunfaInCookie || crsfInHeader || crsfInCookie || randomId;
   return sessionId;
 };

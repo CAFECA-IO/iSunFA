@@ -57,6 +57,7 @@ export class IntegrationTestSetup {
         env: {
           ...process.env,
           PORT: IntegrationTestSetup.TEST_PORT.toString(),
+          INTEGRATION_TEST: 'true',
         },
         stdio: 'pipe',
       });

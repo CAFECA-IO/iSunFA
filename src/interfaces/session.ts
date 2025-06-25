@@ -5,7 +5,7 @@ export interface ISessionOption {
   jwt?: string;
   'x-forwarded-for'?: string;
   'user-agent'?: string;
-  cookie?: {
+  cookie?: string | {
     jwt?: string;
     isunfa?: string;
     httpOnly?: boolean;

@@ -66,11 +66,18 @@ export class ApiClient {
     });
 
     // Store cookies from response
-    const setCookieHeader = response.headers.get('set-cookie');
-    if (setCookieHeader) {
+    const setCookieHeaders = response.headers.getSetCookie?.() || [];
+    if (setCookieHeaders.length > 0) {
       // Parse cookies and store them
-      const cookies = setCookieHeader.split(',').map((cookie) => cookie.trim().split(';')[0]);
-      this.cookies.push(...cookies);
+      const newCookies = setCookieHeaders.map((cookie) => cookie.trim().split(';')[0]);
+      this.cookies.push(...newCookies);
+    } else {
+      // Fallback for older browsers
+      const setCookieHeader = response.headers.get('set-cookie');
+      if (setCookieHeader) {
+        const cookies = setCookieHeader.split(',').map((cookie) => cookie.trim().split(';')[0]);
+        this.cookies.push(...cookies);
+      }
     }
 
     const responseData = await response.json();
