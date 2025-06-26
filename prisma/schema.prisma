@@ -1873,11 +1873,10 @@ model ResumeCertificateSkills {
 model ExternalUser {
   id                Int      @id @default(autoincrement())
   sessionId         String   @map("session_id")         // Info: (20250626 - Luphia) 外部用戶轉址的 session ID
-  email             String
   userId            Int?     @map("user_id")            // Info: (20250626 - Luphia) 關聯到系統內的用戶 ID，可能為 null
   externalId        String   @map("external_id")        // Info: (20250626 - Luphia) 外部系統的用戶 ID
   externalProvider  String   @map("external_provider")  // Info: (20250626 - Luphia) 外部系統的提供者名稱（如 Fundswap、TigerTrade、POTEX）
-  expiredAt         Int?     @map("expired_at")         // Info: (20250626 - Luphia) 外部用戶的註冊有效時間
+  expiredAt         Int      @map("expired_at")         // Info: (20250626 - Luphia) 外部用戶的註冊有效時間
   createdAt         Int      @map("created_at")
   updatedAt         Int      @map("updated_at")
 

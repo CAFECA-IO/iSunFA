@@ -8,7 +8,7 @@ REDIRECT https://isunfa.com/users/login?external=<external>&uid=<uid>
 ```
 | 參數名稱       | 說明                          |
 | ---------- | --------------------------- |
-| `external` | 外部系統名稱（如：`potex.com`）       |
+| `external` | 外部系統名稱（如：`fundswap.com.tw`）       |
 | `uid`      | 外部系統中對應的用戶識別碼（如：`12345678`） |
 
 ## 登入行為
@@ -19,7 +19,7 @@ REDIRECT https://isunfa.com/users/login?external=<external>&uid=<uid>
 登入完成後，可使用以下 API 查詢該用戶對應的公開財務報表清單。
 ```typescript
 GET https://isunfa.com/api/v2/external/:external/uid/:uid
-// EX: https://isunfa.com/api/v2/external/potex.com/uid/12345678
+// EX: https://isunfa.com/api/v2/external/fundswap.com.tw/uid/12345678
 ```
 
 ### 回傳格式
@@ -27,9 +27,9 @@ GET https://isunfa.com/api/v2/external/:external/uid/:uid
 [
   {
     "name": "2024 Q1 財務報表",
-    "balance": "https://isunfa.tw/embed/view/10002751?report_type=balance",
-    "cashFlow": "https://isunfa.tw/embed/view/10002750?report_type=cash-flow",
-    "comprehensiveIncome": "https://isunfa.tw/embed/view/10002749?report_type=comprehensive-income"
+    "balance": "https://isunfa.com/embed/view/10002751?report_type=balance",
+    "cashFlow": "https://isunfa.com/embed/view/10002750?report_type=cash-flow",
+    "comprehensiveIncome": "https://isunfa.com/embed/view/10002749?report_type=comprehensive-income"
   }
 ]
 ```
@@ -43,7 +43,7 @@ GET https://isunfa.com/api/v2/external/:external/uid/:uid
 ### 嵌入報表建議
 ```html
 <iframe
-  src="https://isunfa.tw/embed/view/10002751?report_type=balance"
+  src="https://isunfa.com/embed/view/10002751?report_type=balance"
   width="100%"
   height="600"
   frameborder="0">
@@ -54,5 +54,5 @@ GET https://isunfa.com/api/v2/external/:external/uid/:uid
 如需合作或技術整合協助，請聯繫 iSunFA 技術支援團隊
 contact@isunfa.com
 
-> 讓財報嵌入更簡單，讓數據公開更透明。
+> 讓財報嵌入更簡單，讓數據公開更透明  
 > iSunFA - 為信任打造的智慧會計雲平台
