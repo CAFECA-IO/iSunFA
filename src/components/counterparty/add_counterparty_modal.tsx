@@ -21,6 +21,7 @@ import eventManager from '@/lib/utils/event_manager';
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
   modalVisibilityHandler: () => void;
+  onAddCounterpartySuccess?: () => void;
 }
 
 const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({

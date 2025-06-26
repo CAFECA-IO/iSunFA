@@ -89,6 +89,12 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
       }
 
       debounceTimer = setTimeout(async () => {
+        // Info: (20250626 - Anna) 檢查目前輸入是否已經在列表中
+        const alreadyInList = counterpartyList.some(
+          (party) => party.name === name || party.taxId === taxId
+        );
+        if (alreadyInList) return;
+
         const { success, data } = await fetchCompanyDataAPI({ query: { name, taxId } });
 
         if (success && data) {
@@ -139,7 +145,9 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
               backBtnStr: t('certificate:COUNTERPARTY.NO'),
               backBtnFunction: onCancelAddCounterparty,
               submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-              submitBtnFunction: () => onAddCounterparty(),
+              submitBtnFunction: async () => {
+                await onAddCounterparty();
+              },
             });
             messageModalVisibilityHandler();
           }
@@ -324,7 +332,13 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={() => counterpartySearchHandler(true)}
+              onClick={() => {
+                // Info: (20250626 - Anna) 檢查目前輸入是否已經在列表中
+                const isInCounterpartyList = counterpartyList.some(
+                  (party) => party.name === searchName || party.taxId === searchTaxId
+                );
+                counterpartySearchHandler(!isInCounterpartyList);
+              }}
             />
           </div>
           {displayedCounterpartyMenu}

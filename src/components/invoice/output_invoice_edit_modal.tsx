@@ -30,6 +30,7 @@ import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2'
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import eventManager from '@/lib/utils/event_manager';
 
 interface OutputInvoiceEditModalProps {
   isOpen: boolean;
@@ -446,6 +447,19 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       setEInvoiceImageUrl(dataUrl); // Info: (20250430 - Anna) 給 <ImageZoom /> 用
     });
   }, [formState]);
+
+  useEffect(() => {
+    const refreshCounterpartyList = () => {
+      listCounterparty();
+    };
+    // Info: (20250621 - Anna) 當全域事件系統有 ‘counterparty:added’ 事件發生時，就執行 refreshCounterpartyList 函數;
+    eventManager.on('counterparty:added', refreshCounterpartyList);
+
+    return () => {
+      // Info: (20250621 - Anna) 元件卸載時，剛剛註冊的事件監聽取消掉
+      eventManager.off('counterparty:added', refreshCounterpartyList);
+    };
+  }, [listCounterparty]);
 
   return (
     <div
