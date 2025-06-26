@@ -1340,8 +1340,6 @@ module.exports = {
         '4px': 'var(--stroke-width-lv-4)',
         '5px': 'var(--stroke-width-lv-5)',
         '6px': 'var(--stroke-width-lv-6)',
-
-        '16px': '16px',
       },
       // Info: (20240424 - Shirley) 如果設定 `s`, `m`，會造成左上左下沒有圓弧角的問題，要設定 `sm`, `md` 才行
       borderRadius: {

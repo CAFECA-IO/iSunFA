@@ -29,7 +29,10 @@ const Tooltip = ({ children }: TooltipProps) => {
         >
           {/* Info: (20240416 - Shirley) triangle arrow svg */}
           <div className="absolute -right-6">
-            <div className="border-16px h-0 w-0 border-transparent border-l-white"></div>
+            <div
+              style={{ borderWidth: '16px' }}
+              className="h-0 w-0 border-transparent border-l-white"
+            ></div>
           </div>
 
           {children}
