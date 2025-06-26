@@ -1110,6 +1110,7 @@ model User {
   Notification        Notification[]
 
   @@map("user")
+  ExternalUser ExternalUser[]
 }
 
 model UserAgreement {
@@ -1867,4 +1868,20 @@ model ResumeCertificateSkills {
   file                       File    @relation("resume_certificate_file", fields: [fileId], references: [id])
 
   @@map("resume_certificate_skills")
+}
+
+model ExternalUser {
+  id                Int      @id @default(autoincrement())
+  sessionId         String   @map("session_id")         // Info: (20250626 - Luphia) 外部用戶轉址的 session ID
+  email             String
+  userId            Int?     @map("user_id")            // Info: (20250626 - Luphia) 關聯到系統內的用戶 ID，可能為 null
+  externalId        String   @map("external_id")        // Info: (20250626 - Luphia) 外部系統的用戶 ID
+  externalProvider  String   @map("external_provider")  // Info: (20250626 - Luphia) 外部系統的提供者名稱（如 Fundswap、TigerTrade、POTEX）
+  expiredAt         Int?     @map("expired_at")         // Info: (20250626 - Luphia) 外部用戶的註冊有效時間
+  createdAt         Int      @map("created_at")
+  updatedAt         Int      @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("external_user")
 }
