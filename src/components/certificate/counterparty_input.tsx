@@ -145,9 +145,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
               backBtnStr: t('certificate:COUNTERPARTY.NO'),
               backBtnFunction: onCancelAddCounterparty,
               submitBtnStr: t('certificate:COUNTERPARTY.YES'),
-              submitBtnFunction: async () => {
-                await onAddCounterparty();
-              },
+              submitBtnFunction: () => onAddCounterparty(),
             });
             messageModalVisibilityHandler();
           }
