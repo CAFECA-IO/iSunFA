@@ -8,6 +8,7 @@ import { IAccountBook } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { useTranslation } from 'next-i18next';
+import { RxCross2 } from 'react-icons/rx';
 
 interface ITeamSettingModal {
   isModalVisible: boolean;
@@ -81,26 +82,7 @@ const TeamSettingModal = ({ isModalVisible, modalVisibilityHandler }: ITeamSetti
               onClick={modalVisibilityHandler}
               className="flex items-center justify-center"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M6.224 6.22a.75.75 0 011.06 0l10.5 10.5a.75.75 0 11-1.06 1.061l-10.5-10.5a.75.75 0 010-1.06z"
-                  clipRule="evenodd"
-                ></path>
-                <path
-                  fill="#314362"
-                  fillRule="evenodd"
-                  d="M17.784 6.22a.75.75 0 010 1.061l-10.5 10.5a.75.75 0 01-1.06-1.06l10.5-10.5a.75.75 0 011.06 0z"
-                  clipRule="evenodd"
-                ></path>
-              </svg>
+              <RxCross2 size={24} />
             </Button>
           </div>
         </div>
