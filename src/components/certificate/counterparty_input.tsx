@@ -324,7 +324,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
             <FiSearch
               size={20}
               className={`absolute right-3 top-3 cursor-pointer ${!searchName && !searchTaxId ? 'text-input-text-primary' : 'text-input-text-input-filled'}`}
-              onClick={() => counterpartySearchHandler(false)}
+              onClick={() => counterpartySearchHandler(true)}
             />
           </div>
           {displayedCounterpartyMenu}

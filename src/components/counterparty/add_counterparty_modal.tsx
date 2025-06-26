@@ -332,7 +332,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/50">
       <div className="flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-lv-7">
         <div className="relative flex items-center justify-center">
           {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
