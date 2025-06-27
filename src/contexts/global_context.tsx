@@ -16,7 +16,6 @@ import FilterOptionsModal from '@/components/filter_options_modal/filter_options
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
-import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
 import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
@@ -43,9 +42,6 @@ interface IGlobalContext {
 
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
-
-  isSalaryBookConfirmModalVisible: boolean;
-  salaryBookConfirmModalVisibilityHandler: () => void;
 
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
@@ -132,8 +128,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
   const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
-  const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
-
   // const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
 
   const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
@@ -190,10 +184,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const profileUploadModalDataHandler = (type: UploadType) => {
     setUploadImageType(type);
-  };
-
-  const salaryBookConfirmModalVisibilityHandler = () => {
-    setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
   };
 
   const transferCompanyModalVisibilityHandler = () => {
@@ -306,8 +296,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       addAssetModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isSalaryBookConfirmModalVisible,
-      salaryBookConfirmModalVisibilityHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -351,8 +339,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       addAssetModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isSalaryBookConfirmModalVisible,
-      salaryBookConfirmModalVisibilityHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -446,11 +432,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
         uploadType={uploadImageType}
-      />
-
-      <SalaryBookConfirmModal
-        isModalVisible={isSalaryBookConfirmModalVisible}
-        modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
       />
 
       <TransferCompanyModal
