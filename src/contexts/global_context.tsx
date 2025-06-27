@@ -17,7 +17,6 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
 import { useTranslation } from 'next-i18next';
-import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
@@ -57,12 +56,6 @@ interface IGlobalContext {
   isFilterOptionsModalForPendingVisible: boolean;
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
-
-  // isTeamSettingModalVisible: boolean;
-  // teamSettingModalVisibilityHandler: () => void;
-
-  isTransferCompanyModalVisible: boolean;
-  transferCompanyModalVisibilityHandler: () => void;
 
   isExportVoucherModalVisible: boolean;
   exportVoucherModalVisibilityHandler: () => void;
@@ -128,10 +121,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
   const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
-  // const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
-
-  const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
-
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
@@ -184,10 +173,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const profileUploadModalDataHandler = (type: UploadType) => {
     setUploadImageType(type);
-  };
-
-  const transferCompanyModalVisibilityHandler = () => {
-    setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -311,9 +296,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
 
-      isTransferCompanyModalVisible,
-      transferCompanyModalVisibilityHandler,
-
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
 
@@ -354,9 +336,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisible,
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
-
-      isTransferCompanyModalVisible,
-      transferCompanyModalVisibilityHandler,
 
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
@@ -432,11 +411,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
         uploadType={uploadImageType}
-      />
-
-      <TransferCompanyModal
-        isModalVisible={isTransferCompanyModalVisible}
-        modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
       <ExportVoucherModal
