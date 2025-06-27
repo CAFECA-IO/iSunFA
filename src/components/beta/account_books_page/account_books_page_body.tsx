@@ -16,6 +16,7 @@ import ChangeTagModal from '@/components/beta/account_books_page/change_tag_moda
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import { SortBy, SortOrder } from '@/constants/sort';
+import loggerFront from '@/lib/utils/logger_front';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -55,17 +56,13 @@ const AccountBooksPageBody = () => {
       const success = await deleteAccountBook(accountBookToDelete.id);
 
       if (!success) {
-        // Deprecated: (20241115 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('刪除帳本失敗');
+        loggerFront.log('刪除帳本失敗');
         return;
       }
 
       setRefreshKey((prev) => prev + 1); // Info: (20250418 - Liz) 更新帳本清單
     } catch (error) {
-      // Deprecated: (20241115 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
+      loggerFront.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
     }
   };
 

@@ -25,6 +25,7 @@ import { useReactToPrint } from 'react-to-print';
 import { ISortOption } from '@/interfaces/sort';
 import { CurrencyType } from '@/constants/currency';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
@@ -465,9 +466,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       window.URL.revokeObjectURL(fileUrl);
       link.parentNode?.removeChild(link);
     } catch (error) {
-      // Deprecate: (20241218 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
+      loggerFront.error('Download failed:', error);
     }
   };
 

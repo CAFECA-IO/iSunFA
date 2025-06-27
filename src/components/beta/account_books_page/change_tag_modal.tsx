@@ -3,6 +3,7 @@ import { IoCloseOutline, IoChevronDown, IoChevronUp, IoSaveOutline } from 'react
 import { useTranslation } from 'next-i18next';
 import { useUserCtx } from '@/contexts/user_context';
 import { WORK_TAG, IAccountBookWithTeam } from '@/interfaces/account_book';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ChangeTagModalProps {
   accountBookToChangeTag: IAccountBookWithTeam;
@@ -47,9 +48,7 @@ const ChangeTagModal = ({
       });
 
       if (!success) {
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('變更公司標籤失敗');
+        loggerFront.log('變更公司標籤失敗');
         return;
       }
 
@@ -61,9 +60,7 @@ const ChangeTagModal = ({
 
       if (getAccountBookListByTeamId) await getAccountBookListByTeamId();
     } catch (error) {
-      // Deprecated: (20241113 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('ChangeTagModal handleChangeTag error:', error);
+      loggerFront.error('ChangeTagModal handleChangeTag error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsLoading(false);

@@ -27,9 +27,6 @@ import SelectionToolbar, {
 import OutputInvoice from '@/components/invoice/output_invoice';
 import OutputInvoiceEditModal from '@/components/invoice/output_invoice_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// Deprecated: (20250513 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -177,14 +174,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Deprecated: (20250513 - Luphia) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
-
-  const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
-  }, []);
-
   // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
   const waitForNextFrame = () => {
     return new Promise((resolve) => {
@@ -234,14 +223,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     // Info: (20250506 - Anna) 匯出後還原畫面
     setIsExporting(false);
   };
-
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
 
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Output[]>) => {
@@ -410,7 +391,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       setActiveTab(tab as InvoiceTab);
       setActiveSelection(false);
     },
-    [activeTab, handleAddVoucher, handleExport]
+    [activeTab, handleAddVoucher]
   );
 
   const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
@@ -670,7 +651,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
-              exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
               onDownload={handleDownload}
               toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關

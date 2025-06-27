@@ -15,6 +15,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface EditCounterPartyModalProps {
   onClose: () => void;
@@ -185,9 +186,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         try {
           await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除
         } catch (error) {
-          // Deprecate: (20241118 - Anna) debug
-          // eslint-disable-next-line no-console
-          console.error('Error deleting counterparty:', error);
+          loggerFront.error('Error deleting counterparty:', error);
         }
       },
       backBtnStr: t('common:COMMON.CANCEL'),
@@ -218,9 +217,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         onClose();
       }
     } catch (error) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Error updating counterparty:', error);
+      loggerFront.error('Error updating counterparty:', error);
     }
   };
 

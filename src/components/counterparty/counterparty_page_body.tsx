@@ -11,6 +11,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ICounterparty } from '@/interfaces/counterparty';
 import { IPaginatedData } from '@/interfaces/pagination';
 import eventManager from '@/lib/utils/event_manager';
+import loggerFront from '@/lib/utils/logger_front';
 
 const CounterpartyPageBody = () => {
   const { t } = useTranslation(['search', 'common', 'settings']);
@@ -57,8 +58,7 @@ const CounterpartyPageBody = () => {
         setTotalCount(responseData.totalCount || 0);
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching data:', error);
+      loggerFront.error('Error fetching data:', error);
     }
   };
 

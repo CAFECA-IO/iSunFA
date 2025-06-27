@@ -6,6 +6,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { IPersonalInfo } from '@/interfaces/resume';
 import { useHiringCtx } from '@/contexts/hiring_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ITFQuestionProps {
   id: string;
@@ -189,9 +190,7 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
       // Info: (20250410 - Julian) 進行到下一步
       toNextStep();
     } catch (error) {
-      // Info: (20250410 - Julian) 處理錯誤
-      // eslint-disable-next-line no-console
-      console.error('Error submitting form:', error);
+      loggerFront.error('Error submitting form:', error);
     }
   };
 

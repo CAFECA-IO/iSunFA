@@ -11,6 +11,7 @@ import { Button } from '@/components/button/button';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { useRouter } from 'next/router';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 // Info: (20241024 - Liz) 在 Markdown 中，單個 Enter 不會換行，必須在行尾加上兩個空格來觸發換行。使用 remarkBreaks 可以實現直接按 Enter 來換行，不再需要在每行末尾加上兩個空格。
 
@@ -48,14 +49,10 @@ const MatchNewsPageBody = ({ newsId }: MatchNewsPageBodyProps) => {
         if (success && data) {
           setNews(data);
         } else {
-          // Deprecated: (20241128 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getNewsByIdAPI failed:', code);
+          loggerFront.log('getNewsByIdAPI failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(error);
+        loggerFront.error(error);
       }
     };
 

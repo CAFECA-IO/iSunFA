@@ -6,6 +6,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useRouter } from 'next/router';
 import { RoleName } from '@/constants/role';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IntroButtonsProps {
   displayedRole: RoleName | undefined;
@@ -27,9 +28,7 @@ const IntroButtons = ({ displayedRole, togglePreviewModal }: IntroButtonsProps) 
       const { success: createSuccess, userRole } = await createRole(displayedRole);
 
       if (!createSuccess || !userRole) {
-        // Deprecated: (20250329 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('角色建立失敗');
+        loggerFront.log('角色建立失敗');
         return;
       }
 
@@ -38,9 +37,7 @@ const IntroButtons = ({ displayedRole, togglePreviewModal }: IntroButtonsProps) 
 
       // Info: (20241107 - Liz) 檢查選擇角色是否成功，失敗則顯示錯誤訊息
       if (!selectSuccess) {
-        // Deprecated: (20241107 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('選擇角色失敗');
+        loggerFront.log('選擇角色失敗');
         return;
       }
 

@@ -110,12 +110,6 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   // Info: (20250122 - Julian) 資產類別代碼
   const assetCode = assetType.split(' ')[0];
 
-  // ToDo: (20241016 - Julian) Call API to undo delete asset
-  // const undoDeleteAssetHandler = async () => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Asset restored');
-  // };
-
   const goBack = () => router.push(ISUNFA_ROUTE.ASSET_LIST);
 
   const deleteClickHandler = () => {
