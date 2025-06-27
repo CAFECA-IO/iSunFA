@@ -157,24 +157,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
     }
   }, [exportModalData]);
 
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
-
-  // {
-  //   totalInvoicePrice: number;
-  //   incomplete: {
-  //     withVoucher: number;
-  //     withoutVoucher: number;
-  //   };
-  //   currency: string;
-  //   certificates: ICertificate[];
-  // }
-
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<ICertificate[]>) => {
       try {
@@ -574,7 +556,6 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
-              exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
             />
             <Certificate
