@@ -18,6 +18,7 @@ import { useTranslation } from 'next-i18next';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import DownloadPreview from '@/components/income_statement_report_body/download_preview';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface FilterBarProps {
   printFn: () => void;
@@ -132,9 +133,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         useCORS: true,
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
       }).catch((err) => {
-        // Info: (20250327 - Anna) Debug
-        // eslint-disable-next-line no-console
-        console.error('html2canvas 擷取錯誤:', err);
+        loggerFront.error('html2canvas 擷取錯誤:', err);
         return null;
       });
 

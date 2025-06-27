@@ -6,6 +6,7 @@ import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { numberWithCommas } from '@/lib/utils/common';
+import loggerFront from '@/lib/utils/logger_front';
 
 export interface ISelectionToolBarOperation {
   operation: string;
@@ -62,9 +63,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
   // Info: (20240920 - tzuhan) 取消操作
   const handleCancel = () => {
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Cancel operation');
+    loggerFront.log('Cancel operation');
     handleUnselectAll();
     onActiveChange(false);
   };

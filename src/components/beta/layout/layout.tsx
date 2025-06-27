@@ -8,6 +8,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,10 +36,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
 
   useEffect(() => {
     if (!userAuth?.deletedAt) return;
-
-    // Deprecated: (20241121 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('useEffect for warning deleted user in Layout is called!');
+    loggerFront.log('useEffect for warning deleted user in Layout is called!');
 
     toastHandler({
       id: ToastId.USER_DELETE_WARNING,

@@ -16,6 +16,7 @@ import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 const NoData = () => {
   const { t } = useTranslation('dashboard');
@@ -72,14 +73,10 @@ const TodoListPageBody = () => {
 
         setTodoList(userTodoList);
       } else {
-        // Deprecated: (20241121 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得待辦事項清單失敗');
+        loggerFront.log('取得待辦事項清單失敗');
       }
     } catch (error) {
-      // Deprecated: (20241121 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得待辦事項清單失敗');
+      loggerFront.error('取得待辦事項清單失敗');
     }
   }, [userId]);
 
@@ -103,9 +100,7 @@ const TodoListPageBody = () => {
         getTodoList();
       }
     } catch (error) {
-      // Deprecated: (20241125 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('刪除待辦事項失敗');
+      loggerFront.error('刪除待辦事項失敗');
     } finally {
       setIsLoading(false);
     }

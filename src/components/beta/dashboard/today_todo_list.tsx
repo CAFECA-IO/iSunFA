@@ -9,6 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { IAccountBook, IAccountBookWithTeam } from '@/interfaces/account_book';
 import { ITodoAccountBook } from '@/interfaces/todo';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 const ToDoListNotLink = () => {
   const { t } = useTranslation('dashboard');
@@ -65,14 +66,10 @@ const TodayTodoList = ({ todayTodoList }: TodayTodoListProps) => {
         setAccountBookList(accountBookListData);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得使用者擁有的帳本清單 failed:', code);
+        loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
       }
     } catch (error) {
-      // Deprecated: (20241120 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('取得使用者擁有的帳本清單 error:', error);
+      loggerFront.error('取得使用者擁有的帳本清單 error:', error);
     }
   }, [userAuth]);
 

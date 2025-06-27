@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { FiUpload } from 'react-icons/fi';
 import { MdArrowBack } from 'react-icons/md';
 import { ImFilePicture } from 'react-icons/im';
+import loggerFront from '@/lib/utils/logger_front';
 
 export enum UploadMode {
   CAMERA = 'CAMERA',
@@ -78,9 +79,7 @@ const CameraWithFrame: React.FC<CameraWithFrameProps> = ({
         setCameraStream(stream);
       }
     } catch (error) {
-      // Deprecated: (20241019 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.error('Camera error:', error);
+      loggerFront.error('Camera error:', error);
 
       messageModalDataHandler({
         title: 'Camera Error', // ToDo: (20240823 - Julian) i18n

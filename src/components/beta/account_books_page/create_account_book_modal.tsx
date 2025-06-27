@@ -9,6 +9,7 @@ import { ITeam } from '@/interfaces/team';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface CreateCompanyModalProps {
   closeCreateAccountBookModal: () => void;
@@ -108,9 +109,7 @@ const CreateAccountBookModal = ({
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
-      // Deprecated: (20241104 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('CreateAccountBookModal handleSubmit error:', error);
+      loggerFront.error('CreateAccountBookModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsLoading(false);
@@ -135,9 +134,7 @@ const CreateAccountBookModal = ({
           setTeamList(data?.data ?? []);
         }
       } catch (error) {
-        // Deprecated: (20250303 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('CreateAccountBookModal getTeamList error:', error);
+        loggerFront.error('CreateAccountBookModal getTeamList error:', error);
       }
     };
 

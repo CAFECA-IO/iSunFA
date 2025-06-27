@@ -10,6 +10,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface CreateTodoModalProps {
   toggleModal: () => void;
@@ -95,9 +96,7 @@ const CreateTodoModal = ({
         closeModal();
         if (getTodoList) await getTodoList();
 
-        // Deprecated: (20241119 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('createTodoAPI success:', createdTodo);
+        loggerFront.log('createTodoAPI success:', createdTodo);
       } else {
         // Info: (20241119 - Liz) 新增待辦事項失敗時顯示錯誤訊息
         toastHandler({
@@ -109,9 +108,7 @@ const CreateTodoModal = ({
         });
       }
     } catch (error) {
-      // Deprecated: (20241119 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('createTodoAPI error:', error);
+      loggerFront.error('createTodoAPI error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -134,14 +131,10 @@ const CreateTodoModal = ({
           setAccountBookList(accountBookListData);
         } else {
           // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息
-          // Deprecated: (20241120 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('取得使用者擁有的帳本清單 failed:', code);
+          loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('取得使用者擁有的帳本清單 error:', error);
+        loggerFront.log('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
