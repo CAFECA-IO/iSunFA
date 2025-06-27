@@ -75,7 +75,7 @@ const CreateRolePage = () => {
         // Info: (20250523 - Liz) Case 5: 準備顯示角色介紹
         setStatus(RolePageStatus.READY);
       } catch (error) {
-        loggerFront.log('Failed to fetch or compute roles:', error);
+        loggerFront.error('Failed to fetch or compute roles:', error);
         setStatus(RolePageStatus.ERROR);
       }
     };

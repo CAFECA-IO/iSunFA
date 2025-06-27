@@ -134,7 +134,7 @@ const CreateTodoModal = ({
           loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
-        loggerFront.log('取得使用者擁有的帳本清單 error:', error);
+        loggerFront.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 

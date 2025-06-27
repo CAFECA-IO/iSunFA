@@ -47,7 +47,7 @@ const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
       });
 
       if (!success) {
-        loggerFront.log('刪除成員失敗!');
+        loggerFront.error('刪除成員失敗!');
       }
       getMemberList();
     } catch (error) {
