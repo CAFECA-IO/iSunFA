@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle } from '@/constants/display';
 import { IExperienceDate, IWorkExperience } from '@/interfaces/experience';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { useHiringCtx } from '@/contexts/hiring_context';
+import { IoClose } from 'react-icons/io5';
 
 interface IWorkExperienceModalProps {
   modalVisibilityHandler: () => void;
@@ -166,7 +166,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
           </h2>
           {/* Info: (20250415 - Julian) Close Button */}
           <button type="button" className="p-12px" onClick={modalVisibilityHandler}>
-            <Image src="/icons/x_close.svg" width={24} height={24} alt="close_icon" />
+            <IoClose size={24} />
           </button>
         </div>
         {/* Info: (20250415 - Julian) Form Content */}
