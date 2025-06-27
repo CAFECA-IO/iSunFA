@@ -8,6 +8,7 @@ import { ITodoAccountBook } from '@/interfaces/todo';
 import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import loggerFront from '@/lib/utils/logger_front';
 
 const DashboardBody = () => {
   const { userAuth } = useUserCtx();
@@ -46,14 +47,10 @@ const DashboardBody = () => {
 
         setTodayTodoList(todayTodoListData);
       } else {
-        // Deprecated: (20241121 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得待辦事項清單失敗');
+        loggerFront.log('取得待辦事項清單失敗');
       }
     } catch (error) {
-      // Deprecated: (20241121 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得待辦事項清單失敗');
+      loggerFront.error('取得待辦事項清單失敗');
     }
   }, [userAuth]);
 

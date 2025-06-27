@@ -7,6 +7,7 @@ import { IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 import { Button } from '@/components/button/button';
 // import Magnifier from '@/components/magnifier/magifier';
 import ImageZoom from '@/components/image_zoom/image_zoom';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface InvoicePreviewModalProps {
   isOpen: boolean;
@@ -55,9 +56,7 @@ const InvoicePreviewModal: React.FC<InvoicePreviewModalProps> = ({
       window.URL.revokeObjectURL(blobUrl); // Info: (20250311 - Julian) 釋放 URL 資源
       link.parentNode?.removeChild(link);
     } catch (error) {
-      // Deprecated: (20250311 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
+      loggerFront.error('Download failed:', error);
     }
   };
 

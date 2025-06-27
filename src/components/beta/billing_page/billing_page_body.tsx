@@ -19,6 +19,7 @@ import SearchInput from '@/components/filter_section/search_input';
 import { SortOrder } from '@/constants/sort';
 import { VscSettings } from 'react-icons/vsc';
 import { RxCross2 } from 'react-icons/rx';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
@@ -178,9 +179,7 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
           setInvoiceList(sortedInvoices);
         }
       } catch (error) {
-        // Deprecated: (20250120 - Anna)
-        // eslint-disable-next-line no-console
-        console.error('發票 API 呼叫發生錯誤:', error);
+        loggerFront.error('發票 API 呼叫發生錯誤:', error);
       }
     };
 

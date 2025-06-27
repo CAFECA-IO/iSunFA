@@ -17,6 +17,7 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
 import LocationDropdown from '@/components/dropdown/location_dropdown';
+import loggerFront from '@/lib/utils/logger_front';
 
 // Deprecated: (20250604 - Liz) 此元件正在修改中，請勿編輯內容或加入註解
 
@@ -233,17 +234,13 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return undefined;
         }
 
         return fileMeta.id ?? undefined;
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
         return undefined;
       } finally {
         setIsLoading(false);
@@ -272,9 +269,7 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -285,18 +280,12 @@ const StepOneForm = ({
         });
 
         if (!success) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新帳本圖片失敗! error message:', error?.message);
+          loggerFront.error('更新帳本圖片失敗! error message:', error?.message);
         }
 
-        // Deprecated: (20250527 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('帳本圖片更新成功:', fileMeta.id);
+        loggerFront.log('帳本圖片更新成功:', fileMeta.id);
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }

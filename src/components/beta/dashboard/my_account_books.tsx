@@ -13,6 +13,7 @@ import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
 import MyAccountBookList from '@/components/beta/dashboard/my_account_book_list';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 const MyAccountBooks = () => {
   const { t } = useTranslation('dashboard');
@@ -42,14 +43,10 @@ const MyAccountBooks = () => {
     try {
       const { success } = await connectAccountBook(accountBookToSelect.id);
       if (!success) {
-        // Deprecated: (20250314 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('連結帳本失敗');
+        loggerFront.log('連結帳本失敗');
       }
     } catch (error) {
-      // Deprecated: (20241126 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('AccountBookList handleConnect error:', error);
+      loggerFront.error('AccountBookList handleConnect error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -106,14 +103,10 @@ const MyAccountBooks = () => {
         setAccountBookList(accountBookListData);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得使用者擁有的帳本清單 failed:', code);
+        loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
       }
     } catch (error) {
-      // Deprecated: (20241120 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('取得使用者擁有的帳本清單 error:', error);
+      loggerFront.error('取得使用者擁有的帳本清單 error:', error);
     }
   }, [connectedAccountBook, userAuth]);
 

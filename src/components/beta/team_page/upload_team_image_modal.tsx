@@ -7,6 +7,7 @@ import { APIName } from '@/constants/api_connection';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { useTranslation } from 'next-i18next';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface UploadTeamImageModalProps {
   teamToChangeImage: ITeam;
@@ -46,9 +47,7 @@ const UploadTeamImageModal = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20250218 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -59,23 +58,17 @@ const UploadTeamImageModal = ({
         });
 
         if (!success) {
-          // Deprecated: (20250218 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新團隊的圖片失敗! error message:', error?.message);
+          loggerFront.error('更新團隊的圖片失敗! error message:', error?.message);
           return;
         }
 
-        // Deprecated: (20250310 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('success:', success, 'data:', data);
+        loggerFront.log('success:', success, 'data:', data);
 
         closeUploadTeamPictureModal();
         // Info: (20250310 - Liz) 更新畫面(重新取得團隊資料)
         getTeamData();
       } catch (error) {
-        // Deprecated: (20250218 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }

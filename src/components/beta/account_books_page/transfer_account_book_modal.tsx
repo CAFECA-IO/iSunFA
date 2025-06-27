@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TransferAccountBookModalProps {
   accountBookToTransfer: IAccountBookWithTeam;
@@ -48,9 +49,7 @@ const TransferAccountBookModal = ({
       });
 
       if (!success) {
-        // Deprecated: (20250311 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 API 轉移帳本失敗');
+        loggerFront.log('打 API 轉移帳本失敗');
         return;
       }
       closeTransferAccountBookModal();
@@ -59,9 +58,7 @@ const TransferAccountBookModal = ({
 
       if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
     } catch (error) {
-      // Deprecated: (20250311 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('打 API 轉移帳本失敗 error:', error);
+      loggerFront.error('打 API 轉移帳本失敗 error:', error);
     } finally {
       setIsLoading(false);
     }

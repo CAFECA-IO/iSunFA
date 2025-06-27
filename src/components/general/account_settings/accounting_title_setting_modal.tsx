@@ -15,6 +15,7 @@ import { TitleFormType } from '@/constants/accounting_setting';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { Button } from '@/components/button/button';
 import { ITrialBalancePayload, TrialBalanceItem } from '@/interfaces/trial_balance';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -88,9 +89,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
         setTbAccountList(response.data.data);
       }
     } catch (err) {
-      // Deprecate: (20241205 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.error('Error fetching trial balance data:', error);
+      loggerFront.error('Error fetching trial balance data:', err);
     }
   }, [fetchTrialBalance]);
 

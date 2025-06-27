@@ -25,6 +25,7 @@ import { ITeam, ITransferAccountBook, TeamRole } from '@/interfaces/team';
 import { RoleName } from '@/constants/role';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { IStatusInfo } from '@/interfaces/status_info';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface UserContextType {
   credential: string | null;
@@ -248,14 +249,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20250108 - Liz) 前往登入頁面
   const goToLoginPage = () => {
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToLoginPage (尚未導向)');
+    loggerFront.log('呼叫 goToLoginPage (尚未導向)');
 
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
+      loggerFront.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
@@ -263,9 +260,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20250108 - Liz) 前往選擇角色頁面
   const goToSelectRolePage = () => {
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
+    loggerFront.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
 
     router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
@@ -276,17 +271,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
-    // Deprecated: (20241111 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
+    loggerFront.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
   };
 
   const goBackToOriginalPath = () => {
     const redirectPath = localStorage.getItem('redirectPath');
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
+    loggerFront.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
     if (redirectPath && redirectPath !== ISUNFA_ROUTE.LOGIN) {
       router.push(redirectPath);
@@ -304,9 +295,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Deprecated: (20241111 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
+    loggerFront.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
 
     await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
@@ -328,9 +317,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasLocalStorageData = userId && expiredAt;
     const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
-    // Deprecated: (20250329 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('userId:', userId, 'expiredAt:', expiredAt, 'isSessionExpired:', isSessionExpired);
+    loggerFront.log(
+      'userId:',
+      userId,
+      'expiredAt:',
+      expiredAt,
+      'isSessionExpired:',
+      isSessionExpired
+    );
 
     if (isSessionExpired) {
       signOut();
@@ -443,9 +437,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname === ISUNFA_ROUTE.LANDING_PAGE) return; // Info: (20250329 - Liz) 在首頁不獲取使用者資料
 
     if (!isProfileFetchNeeded()) {
-      // Deprecated: (20241113 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
+      loggerFront.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
       return;
     }
 
@@ -456,9 +448,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const currentPath = router.asPath;
       localStorage.setItem('redirectPath', currentPath);
 
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
+      loggerFront.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
 
       const {
         data: statusInfo,
@@ -466,9 +456,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         code: getStatusInfoCode,
       } = await getStatusInfoAPI();
 
-      // Deprecated: (20241001 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+      loggerFront.log(
+        'getStatusInfo data:',
+        statusInfo,
+        'getStatusInfoSuccess:',
+        getStatusInfoSuccess
+      );
 
       if (getStatusInfoSuccess && statusInfo) {
         handleProcessData(statusInfo);
@@ -480,9 +473,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setErrorCode(getStatusInfoCode ?? '');
       }
     } catch (error) {
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('getStatusInfo 發生錯誤:', error);
+      loggerFront.error('getStatusInfo 發生錯誤:', error);
       clearStates();
       clearLocalStorage();
       goToLoginPage();
@@ -516,9 +507,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return response.success;
     } catch (error) {
-      // Deprecated: (20241116 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('Error handling user agreement:', error);
+      loggerFront.error('Error handling user agreement:', error);
       return false;
     } finally {
       setIsAuthLoading(false);
@@ -559,9 +548,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
       if (success && userRole) {
-        // Deprecated: (20241111 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
+        loggerFront.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
         return { success, userRole };
       }
 
@@ -763,9 +750,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         params: { teamId: data.teamId },
       });
       if (!getTeamSuccess || !team) return { success: false };
-      // Deprecated: (20250329 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('connectAccountBook 取得團隊資訊成功: team', team);
+      loggerFront.log('connectAccountBook 取得團隊資訊成功: team', team);
       setTeam(team);
       return { success: true };
     } catch (error) {
@@ -826,9 +811,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
       throttledGetStatusInfo();
-      // Deprecated: (20241107 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動');
+      loggerFront.log(
+        'handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動'
+      );
     }
   }, [throttledGetStatusInfo, router.pathname]);
 
@@ -837,9 +822,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Deprecated: (20241004 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
+    loggerFront.log(
       '觸發 useEffect (dependency: handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete)'
     );
 
@@ -856,30 +839,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
   useEffect(() => {
-    // Deprecated: (20250108 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
+    loggerFront.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
 
     let isSigningOut = false;
 
     const handleUnauthorizedAccess = async () => {
       if (isSigningOut) {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.warn('正在執行 signOut 所以跳過此次觸發');
+        loggerFront.warn('正在執行 signOut 所以跳過此次觸發');
         return;
       }
       isSigningOut = true;
 
       try {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('觸發 useEffect 並且呼叫 signOut 函數');
+        loggerFront.log('觸發 useEffect 並且呼叫 signOut 函數');
         await signOut();
       } catch (error) {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Sign out failed:', error);
+        loggerFront.error('Sign out failed:', error);
 
         isSigningOut = false; // Info: (20250108 - Liz) 失敗後重置狀態，允許再次嘗試
       }

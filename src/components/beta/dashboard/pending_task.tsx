@@ -8,6 +8,7 @@ import PendingTaskForAccountBook from '@/components/beta/dashboard/pending_task_
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import { IPaginatedData } from '@/interfaces/pagination';
 import PendingTaskForAll from '@/components/beta/dashboard/pending_task_for_all';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface PendingTasksProps {
   getTodoList: () => Promise<void>;
@@ -46,14 +47,10 @@ const PendingTask = ({ getTodoList }: PendingTasksProps) => {
           setAccountBookList(accountBookListData);
         } else {
           // Info: (20241127 - Liz)  取得使用者擁有的帳本清單失敗時顯示錯誤訊息
-          // Deprecated: (20241127 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('取得使用者擁有的帳本清單 failed:', code);
+          loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241127 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('取得使用者擁有的帳本清單 error:', error);
+        loggerFront.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 

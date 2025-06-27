@@ -16,6 +16,7 @@ import { PiCopySimpleBold } from 'react-icons/pi';
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -86,8 +87,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           content: t('layout:EMBED_CODE_MODAL.COPY_FAILED'),
           closeable: true,
         });
-        // eslint-disable-next-line no-console
-        console.error('Failed to copy iframe code:', error);
+        loggerFront.error('Failed to copy iframe code:', error);
       }
     );
   };
@@ -176,9 +176,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               `<iframe src="${reportLink}" title="${reportType}" width="1280" height="720"></iframe>`
             );
           } catch (error) {
-            // Deprecated: (20241130 - Anna) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.error(`Failed to generate report for type: ${reportType}`, error);
+            loggerFront.error(`Failed to generate report for type: ${reportType}`, error);
           }
         })
       );

@@ -11,6 +11,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 import StepOneForm from '@/components/beta/account_books_page/step_one_form';
 import { step1FormReducer, createInitialStep1FormState } from '@/constants/account_book';
 import { IAccountBookWithTeam, WORK_TAG } from '@/interfaces/account_book';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface AccountBookInfoModalProps {
   closeAccountBookInfoModal: () => void;
@@ -102,9 +103,7 @@ const AccountBookInfoModal = ({
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20241114 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
-      // Deprecated: (20241104 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('AccountBookInfoModal handleSubmit error:', error);
+      loggerFront.error('AccountBookInfoModal handleSubmit error:', error);
     } finally {
       // Info: (20241104 - Liz) API 回傳後解除 loading 狀態
       setIsCreateLoading(false);
@@ -157,17 +156,13 @@ const AccountBookInfoModal = ({
       step1FormDispatch({ type: 'RESET' });
       closeAccountBookInfoModal();
 
-      // Deprecated: (20250527 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('帳本更新成功');
+      loggerFront.log('帳本更新成功');
 
       if (getAccountBookList) getAccountBookList(); // Info: (20250526 - Liz) 重新取得帳本清單
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250526 - Liz) This is a workaround to refresh the account book list after editing an account book (if use filterSection)
     } catch (error) {
-      // Deprecated: (20250526 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('AccountBookInfoModal handleEdit error:', error);
+      loggerFront.error('AccountBookInfoModal handleEdit error:', error);
     } finally {
       // Info: (20250526 - Liz) API 回傳後解除 loading 狀態
       setIsEditLoading(false);
@@ -192,9 +187,7 @@ const AccountBookInfoModal = ({
           setTeamList(data?.data ?? []);
         }
       } catch (error) {
-        // Deprecated: (20250303 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('AccountBookInfoModal getTeamList error:', error);
+        loggerFront.error('AccountBookInfoModal getTeamList error:', error);
       }
     };
 

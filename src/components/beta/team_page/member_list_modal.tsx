@@ -14,6 +14,7 @@ import Skeleton from '@/components/skeleton/skeleton';
 import InviteMembersModal from '@/components/beta/team_page/invite_members_modal';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface MemberListModalProps {
   team: ITeam;
@@ -66,9 +67,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
         setTotalPage(memberListData.totalPages);
       }
     } catch (error) {
-      // Deprecated: (20250304 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得成員清單失敗');
+      loggerFront.error('取得成員清單失敗');
     } finally {
       setIsLoading(false);
     }

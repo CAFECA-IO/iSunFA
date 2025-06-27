@@ -227,14 +227,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     setIsExporting(false);
   };
 
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
-
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
       try {
@@ -670,7 +662,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
-              exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
               onDownload={handleDownload}
               toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關

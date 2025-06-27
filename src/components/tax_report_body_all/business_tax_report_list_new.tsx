@@ -19,6 +19,7 @@ import { Button } from '@/components/button/button';
 import { TiExport } from 'react-icons/ti';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface BusinessTaxListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -155,9 +156,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
       setIsReportGenerated(true);
     } catch (error) {
-      // Deprecate: (20241205 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.error('Error generating report:', error);
+      loggerFront.error('Error generating report:', error);
     }
   };
 
@@ -211,9 +210,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       try {
         await handleGenerateReport();
       } catch (error) {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('Error in auto-generating report:', error);
+        loggerFront.error('Error in auto-generating report:', error);
       }
     };
 
