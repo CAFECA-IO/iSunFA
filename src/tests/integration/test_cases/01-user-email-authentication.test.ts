@@ -15,7 +15,7 @@ import { IntegrationTestSetup } from '@/tests/integration/setup';
  * - Test Case 1.1: Email Authentication with Default Values Testing (2h)
  * - Test Case 1.2: Authentication Failure Scenarios Testing (2h)
  * - Test Case 1.3: Session-based API Integration Testing (3h)
- * - Test Case 1.4: Role Management API Testing (1h)
+ * - Test Case 1.4: Role Management API Testing (1h) TODO: After refining email login logic, we can test this test case
  *
  * Testing Philosophy:
  * - Uses default emails and verification codes for authentication testing
