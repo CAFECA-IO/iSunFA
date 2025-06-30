@@ -1,4 +1,4 @@
-import { SharedTestServer } from './shared_server';
+import { SharedTestServer } from '@/tests/shared_server';
 
 /** Info: (20250630 - Shirley)
  * Global setup for integration tests
