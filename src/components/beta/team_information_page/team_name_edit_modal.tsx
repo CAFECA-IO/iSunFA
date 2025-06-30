@@ -43,10 +43,6 @@ const TeamNameEditModal: React.FC<TeamNameEditModalProps> = ({
     if (success) {
       onSave(teamName);
       onClose();
-    } else if (updateError) {
-      // Deprecate: (20250301 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update team name:', updateError);
     }
   }, [success, updateError, onSave, onClose, teamName]);
 

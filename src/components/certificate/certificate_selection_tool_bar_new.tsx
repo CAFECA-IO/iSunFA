@@ -30,9 +30,6 @@ interface SelectionToolbarProps {
   handleSelectAll: () => void; // Info: (20240920 - Anna) 全選
   onDelete?: () => void; // Info: (20240920 - Anna) 添加刪除的回調函數
   addOperations?: ISelectionToolBarOperation[];
-  // Deprecated: (20250116 - Julian) remove eslint-disable
-  // eslint-disable-next-line react/no-unused-prop-types
-  exportOperations?: ISelectionToolBarOperation[];
   onDownload?: () => void;
   toggleSideMenu: () => void;
 }

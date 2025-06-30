@@ -24,7 +24,7 @@ export class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  // Info: (20250619) Make HTTP request with cookie management
+  // Info: (20250619 - Shirley) Make HTTP request with cookie management
   private async makeRequest<T>(
     method: string,
     endpoint: string,
@@ -38,21 +38,24 @@ export class ApiClient {
       ...headers,
     };
 
-    // Debug logging if enabled
+    // Info: (20250619 - Shirley) Debug logging if enabled
     if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(`🔥 API Request [${method} ${endpoint}]: ${url}`);
       if (body) {
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('📦 Request Body:', JSON.stringify(body, null, 2));
       }
       if (this.cookies.length > 0) {
+        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('🍪 Cookies:', this.cookies);
       }
     }
 
-    // Add cookies if available
+    // Info: (20250620 - Shirley) Add cookies if available
     if (this.cookies.length > 0) {
       requestHeaders.Cookie = this.cookies.join('; ');
     }
@@ -80,8 +83,9 @@ export class ApiClient {
 
     const responseData = await response.json();
 
-    // Debug logging for response if enabled
+    // Info: (20250620 - Shirley) Debug logging for response if enabled
     if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
+      // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
         `📨 API Response [${method} ${endpoint}]: ${response.status} ${response.statusText}, \n📋 Response Data: ${JSON.stringify(
@@ -95,7 +99,7 @@ export class ApiClient {
     return responseData;
   }
 
-  // Info: (20250619) GET request
+  // Info: (20250619 - Shirley) GET request
   async get<T>(
     endpoint: string,
     headers?: Record<string, string>
@@ -103,7 +107,7 @@ export class ApiClient {
     return this.makeRequest<T>('GET', endpoint, undefined, headers);
   }
 
-  // Info: (20250619) POST request
+  // Info: (20250619 - Shirley) POST request
   async post<T>(
     endpoint: string,
     body?: unknown,
@@ -112,7 +116,7 @@ export class ApiClient {
     return this.makeRequest<T>('POST', endpoint, body, headers);
   }
 
-  // Info: (20250619) PUT request
+  // Info: (20250619 - Shirley) PUT request
   async put<T>(
     endpoint: string,
     body?: unknown,
@@ -121,7 +125,7 @@ export class ApiClient {
     return this.makeRequest<T>('PUT', endpoint, body, headers);
   }
 
-  // Info: (20250619) DELETE request
+  // Info: (20250619 - Shirley) DELETE request
   async delete<T>(
     endpoint: string,
     headers?: Record<string, string>
@@ -129,12 +133,12 @@ export class ApiClient {
     return this.makeRequest<T>('DELETE', endpoint, undefined, headers);
   }
 
-  // Info: (20250619) Clear session cookies
+  // Info: (20250619 - Shirley) Clear session cookies
   clearSession(): void {
     this.cookies = [];
   }
 
-  // Info: (20250619) Get current cookies for debugging
+  // Info: (20250619 - Shirley) Get current cookies for debugging
   getCookies(): string[] {
     return [...this.cookies];
   }

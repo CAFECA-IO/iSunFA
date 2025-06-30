@@ -52,6 +52,7 @@ import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
+import loggerFront from '@/lib/utils/logger_front';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -932,13 +933,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         },
       };
 
-      // Deprecated: (20241122 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
+      loggerFront.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
       setCertificates((prev) => {
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
+        loggerFront.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
 
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
@@ -947,9 +944,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(
+        loggerFront.log(
           `NewVoucherForm handleNewCertificateComing: newCertificates`,
           newCertificatesUI
         );
@@ -977,9 +972,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // const aiResultHandler = useCallback(
   //   (data: { message: string }) => {
   //     const aiResult: IAIResultVoucher = JSON.parse(data.message);
-  //     // Deprecated: (20241127 - Julian) Debugging purpose
-  //     // eslint-disable-next-line no-console
-  //     console.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
+  // loggerFront.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
   //     setAiVoucherResult(aiResult);
   //     setAiState(AIState.FINISH);
   //   },

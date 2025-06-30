@@ -14,6 +14,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
@@ -76,9 +77,7 @@ const CreditCardInfo = ({
       },
     });
 
-    // Deprecated: (20250418 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('sendEmailHandler');
+    loggerFront.log('sendEmailHandler');
   };
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state

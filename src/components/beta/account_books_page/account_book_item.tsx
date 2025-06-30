@@ -14,6 +14,10 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
 import { cn } from '@/lib/utils/common';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface AccountBookItemProps {
   accountBook: IAccountBookWithTeam;
@@ -38,6 +42,7 @@ const AccountBookItem = ({
 }: AccountBookItemProps) => {
   const { t } = useTranslation(['account_book']);
   const { connectAccountBook, connectedAccountBook, disconnectAccountBook } = useUserCtx();
+  const { toastHandler } = useModalContext();
   const [isLoading, setIsLoading] = useState(false);
   const isAccountBookConnected = accountBook.id === connectedAccountBook?.id;
   const teamRole = accountBook.team.role;
@@ -130,14 +135,16 @@ const AccountBookItem = ({
       const { success } = await disconnectAccountBook(accountBook.id);
 
       if (!success) {
-        // Deprecated: (20250422 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取消連結帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
+        // Info: (20250625 - Julian) 取消連結失敗的 toast
+        toastHandler({
+          id: ToastId.DISCONNECT_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_DISCONNECT_ACCOUNT_BOOK'),
+          closeable: true,
+        });
       }
     } catch (error) {
-      // Deprecated: (20250422 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('disconnectAccountBook error:', error);
+      loggerFront.error('disconnectAccountBook error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -158,14 +165,16 @@ const AccountBookItem = ({
       const { success } = await connectAccountBook(accountBookId);
 
       if (!success) {
-        // Deprecated: (20241113 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('連結帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
+        // Info: (20250625 - Julian) 連結失敗的 toast
+        toastHandler({
+          id: ToastId.CONNECT_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_CONNECT_ACCOUNT_BOOK'),
+          closeable: true,
+        });
       }
     } catch (error) {
-      // Deprecated: (20241113 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('connectAccountBook error:', error);
+      loggerFront.error('connectAccountBook error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -181,21 +190,82 @@ const AccountBookItem = ({
       });
 
       if (!success) {
-        // Deprecated: (20250326 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取消轉移帳本失敗'); // ToDo: (20250326 - Liz) 之後可以改成用 toast 顯示
-        return;
+        // Info: (20250625 - Julian) 取消轉移失敗的 toast
+        toastHandler({
+          id: ToastId.CANCEL_TRANSFER_ACCOUNT_BOOK_FAILED,
+          type: ToastType.ERROR,
+          content: t('account_book:TOAST.FAILED_CANCEL_TRANSFER'),
+          closeable: true,
+        });
       }
 
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250326 - Liz) This is a workaround to refresh the account book list after creating a new account book (if use filterSection)
     } catch (error) {
-      // Deprecated: (20250326 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('cancelTransferAPI error:', error);
+      loggerFront.error('cancelTransferAPI error:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const optionDropdown = hasPermission && (
+    <div className="relative">
+      <button type="button" onClick={toggleOptionsDropdown} className="p-8px">
+        <FiMoreVertical size={22} />
+      </button>
+
+      {isOptionsDropdownOpen && (
+        <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
+          {/* Info: (20250428 - Liz) 編輯帳本 */}
+          {editPermission.can && (
+            <button
+              type="button"
+              onClick={openEditAccountBookModal}
+              className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+            >
+              <TbBuilding size={16} className="text-icon-surface-single-color-primary" />
+              <span>{t('account_book:EDIT_ACCOUNT_BOOK_MODAL.EDIT_ACCOUNT_BOOK')}</span>
+            </button>
+          )}
+
+          {/* Info: (20250213 - Liz) 轉移帳本 */}
+          {requestTransferPermission.can && (
+            <button
+              type="button"
+              onClick={openAccountBookTransferModal}
+              className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+            >
+              <PiShareFatBold size={16} className="text-icon-surface-single-color-primary" />
+              <span>{t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}</span>
+            </button>
+          )}
+
+          {/* Info: (20250213 - Liz) 變更工作標籤 */}
+          {editTagPermission.can && (
+            <button
+              type="button"
+              onClick={openChangeTagModal}
+              className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+            >
+              <FiTag size={16} className="text-icon-surface-single-color-primary" />
+              <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
+            </button>
+          )}
+
+          {/* Info: (20250213 - Liz) 刪除帳本 */}
+          {deletePermission.can && (
+            <button
+              type="button"
+              className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+              onClick={openDeleteCompanyModal}
+            >
+              <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
+              <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -254,70 +324,7 @@ const AccountBookItem = ({
           )}
 
           {/* Info: (20250407 - Liz) OptionsDropdown 選單 */}
-          {hasPermission && (
-            <div ref={optionsDropdownRef} className="relative">
-              <button type="button" onClick={toggleOptionsDropdown} className="p-8px">
-                <FiMoreVertical size={22} />
-              </button>
-
-              {isOptionsDropdownOpen && (
-                <div className="absolute right-0 top-full z-10 flex h-max w-max translate-y-8px flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_XS">
-                  {/* Info: (20250428 - Liz) 編輯帳本 */}
-                  {editPermission.can && (
-                    <button
-                      type="button"
-                      onClick={openEditAccountBookModal}
-                      className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-                    >
-                      <TbBuilding size={16} className="text-icon-surface-single-color-primary" />
-                      <span>{t('account_book:EDIT_ACCOUNT_BOOK_MODAL.EDIT_ACCOUNT_BOOK')}</span>
-                    </button>
-                  )}
-
-                  {/* Info: (20250213 - Liz) 轉移帳本 */}
-                  {requestTransferPermission.can && (
-                    <button
-                      type="button"
-                      onClick={openAccountBookTransferModal}
-                      className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-                    >
-                      <PiShareFatBold
-                        size={16}
-                        className="text-icon-surface-single-color-primary"
-                      />
-                      <span>
-                        {t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}
-                      </span>
-                    </button>
-                  )}
-
-                  {/* Info: (20250213 - Liz) 變更工作標籤 */}
-                  {editTagPermission.can && (
-                    <button
-                      type="button"
-                      onClick={openChangeTagModal}
-                      className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-                    >
-                      <FiTag size={16} className="text-icon-surface-single-color-primary" />
-                      <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.CHANGE_WORK_TAG')}</span>
-                    </button>
-                  )}
-
-                  {/* Info: (20250213 - Liz) 刪除帳本 */}
-                  {deletePermission.can && (
-                    <button
-                      type="button"
-                      className="flex items-center gap-12px rounded-xs px-12px py-8px text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-                      onClick={openDeleteCompanyModal}
-                    >
-                      <FiTrash2 size={16} className="text-icon-surface-single-color-primary" />
-                      <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.DELETE')}</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {optionDropdown}
         </div>
       </main>
 
@@ -354,18 +361,6 @@ const AccountBookItem = ({
             </div>
           </section>
 
-          {/* Info: (20250602 - Liz) 編輯帳本按鈕 */}
-          {editPermission.can && !accountBook.isTransferring && (
-            <button type="button" onClick={openEditAccountBookModal} className="p-8px">
-              <Image
-                src="/icons/edit_account_book_icon.svg"
-                alt="edit_account_book_icon"
-                width={16}
-                height={16}
-              />
-            </button>
-          )}
-
           {/* Info: (20250326 - Liz) Transferring 顯示正在轉移中 */}
           {accountBook.isTransferring && (
             <section className="flex w-140px items-center justify-center gap-8px">
@@ -384,6 +379,9 @@ const AccountBookItem = ({
               )}
             </section>
           )}
+
+          {/* Info: (20250623 - Julian) OptionsDropdown 選單 */}
+          {optionDropdown}
         </div>
       </main>
     </>

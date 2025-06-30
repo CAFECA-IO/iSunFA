@@ -25,6 +25,7 @@ import { useReactToPrint } from 'react-to-print';
 import { ISortOption } from '@/interfaces/sort';
 import { CurrencyType } from '@/constants/currency';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
@@ -128,15 +129,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           setTotalPages(response.data.totalPages || 1); // Info: (20250312 - Anna) 設定 `totalPages`，確保分頁正常
           setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
-        } else {
-          // Deprecate: (20241205 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          // console.error('API response error: ', response);
         }
-      } catch (error) {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        // console.error('Error fetching trial balance data:', error);
       } finally {
         setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
       }
@@ -473,9 +466,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       window.URL.revokeObjectURL(fileUrl);
       link.parentNode?.removeChild(link);
     } catch (error) {
-      // Deprecate: (20241218 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
+      loggerFront.error('Download failed:', error);
     }
   };
 

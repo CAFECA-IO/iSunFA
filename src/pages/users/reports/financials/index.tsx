@@ -15,10 +15,6 @@ interface IFinancialsReportsPageProps {
 }
 
 const FinancialsReportsPage = ({ reportType }: IFinancialsReportsPageProps) => {
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger
-  // ('reportType on FinancialsReportsPage',reportType,
-  //   FinancialReportTypesKey[reportType as keyof typeof FinancialReportTypesKey])
-
   const { t } = useTranslation(['common', 'reports']);
   const { isAuthLoading } = useUserCtx();
   const displayedBody = isAuthLoading ? (
@@ -78,7 +74,6 @@ export const getServerSideProps: GetServerSideProps = async ({ locale, query }) 
         'project',
         'settings',
         'terms',
-        'salary',
         'asset',
       ])),
     },

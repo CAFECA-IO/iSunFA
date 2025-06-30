@@ -19,6 +19,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
 
 type ITaxTypeForFrontend =
   | number
@@ -57,7 +58,6 @@ const AccountingSettingPageBody: React.FC = () => {
   const closeAccountingTitleSettingModal = () => setIsAccountingTitleSettingModalVisible(false);
 
   const accountBookId = connectedAccountBook?.id;
-  const currencyList = ['TWD', 'USD', 'CNY', 'HKD', 'JPY'];
 
   // Info: (20241113 - Julian) 取得會計設定資料
   const { trigger: getAccountSetting } = APIHandler<IAccountingSetting>(
@@ -104,12 +104,6 @@ const AccountingSettingPageBody: React.FC = () => {
     setComponentVisible: setPeriodVisible,
   } = useOuterClick<HTMLDivElement>(false);
 
-  const {
-    targetRef: currencyMenuRef,
-    componentVisible: currencyMenuVisible,
-    setComponentVisible: setCurrencyMenuVisible,
-  } = useOuterClick<HTMLDivElement>(false);
-
   // Info: (20250425 - Julian) 判斷保存紐是否禁用: 1. 更新中 2. 用戶沒有修改項目
   const saveDisabled =
     isUpdating ||
@@ -121,7 +115,6 @@ const AccountingSettingPageBody: React.FC = () => {
   const toggleSalesTaxMenu = () => setSalesTaxVisible(!salesTaxVisible);
   const togglePurchaseTaxMenu = () => setPurchaseTaxVisible(!purchaseTaxVisible);
   const togglePeriodMenu = () => setPeriodVisible(!periodVisible);
-  const toggleCurrencyMenu = () => setCurrencyMenuVisible(!currencyMenuVisible);
 
   // Info: (20250520 - Julian) call API after get connectedAccountBook
   const getAccountData = useCallback(async () => {
@@ -400,39 +393,6 @@ const AccountingSettingPageBody: React.FC = () => {
     </div>
   );
 
-  // Info: (20241113 - Julian) 貨幣的下拉選單內容
-  const currencyDropdown = (
-    <div
-      className={`absolute left-0 top-50px grid w-full rounded-sm ${
-        currencyMenuVisible
-          ? 'grid-rows-1 border-dropdown-stroke-menu shadow-dropmenu'
-          : 'grid-rows-0 border-transparent'
-      } overflow-hidden transition-all duration-300 ease-in-out`}
-    >
-      <div className="flex flex-col rounded-sm border border-input-stroke-input bg-input-surface-input-background p-8px">
-        {currencyList.map((currency) => {
-          const countryClickHandler = () => setCurrentCurrency(currency);
-          return (
-            <div
-              key={currency}
-              onClick={countryClickHandler}
-              className="flex items-center gap-12px px-12px py-8px text-dropdown-text-primary hover:cursor-pointer hover:bg-dropdown-surface-item-hover"
-            >
-              <Image
-                src={`/currencies/${currency.toLowerCase()}.svg`}
-                width={16}
-                height={16}
-                alt="currency_icon"
-                className="aspect-square rounded-full object-cover"
-              />
-              <p>{currency}</p>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col items-center gap-40px tablet:p-40px">
       <div className="block w-full text-left text-base font-bold text-text-neutral-secondary tablet:hidden">
@@ -441,12 +401,12 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 稅務設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 稅務設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/money.svg" width={16} height={16} alt="money_icon" />
             <p>{t('settings:ACCOUNTING.TAX_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
         {/* Info: (20241106 - Julian) ===== 稅務設定內容 ===== */}
         <div className="grid grid-cols-1 gap-x-40px gap-y-24px tablet:grid-cols-2">
@@ -522,39 +482,21 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 貨幣設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 貨幣設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/coin.svg" width={16} height={16} alt="coin_icon" />
             <p>{t('settings:ACCOUNTING.CURRENCY_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
 
-        <div className="grid grid-cols-1 tablet:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-40px gap-y-24px tablet:grid-cols-2">
           {/* Info: (20241106 - Julian) ===== 貨幣下拉選單 ===== */}
-          <div
-            ref={currencyMenuRef}
-            className="relative flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background"
-          >
-            <div
-              onClick={toggleCurrencyMenu}
-              className="flex flex-1 items-center gap-24px px-12px py-10px hover:cursor-pointer"
-            >
-              <Image
-                width={16}
-                height={16}
-                alt="currency_icon"
-                src={`/currencies/${currentCurrency.toLowerCase()}.svg`}
-                className="aspect-square rounded-full object-cover"
-              />
-              <div className="flex-1 text-input-text-input-filled">{currentCurrency}</div>
-              <div
-                className={`text-icon-surface-single-color-primary ${currencyMenuVisible ? 'rotate-180' : 'rotate-0'}`}
-              >
-                <FaChevronDown />
-              </div>
-              {currencyDropdown}
-            </div>
+          <div>
+            <CurrencyDropdown
+              currentCurrency={currentCurrency}
+              setCurrentCurrency={setCurrentCurrency}
+            />
           </div>
         </div>
       </div>
@@ -562,12 +504,12 @@ const AccountingSettingPageBody: React.FC = () => {
       {/* Info: (20241106 - Julian) ===== 會計設定 ===== */}
       <div className="flex w-full flex-col gap-40px">
         {/* Info: (20241106 - Julian) ===== 會計設定標題 ===== */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+        <div className="flex items-center gap-lv-4">
+          <div className="flex items-center gap-lv-2 text-sm text-divider-text-lv-1">
             <Image src="/icons/division_sign.svg" width={16} height={16} alt="division_sign" />
             <p>{t('settings:ACCOUNTING.ACCOUNTING_SETTING_TITLE')}</p>
           </div>
-          <hr className="flex-1 border-divider-stroke-lv-1" />
+          <hr className="flex-1 border-divider-stroke-lv-4" />
         </div>
         {/* Info: (20241106 - Julian) ===== 會計設定內容 ===== */}
         <div className="flex flex-col gap-40px">

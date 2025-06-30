@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { ITransferAccountBook } from '@/interfaces/team';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TransferAccountBookModalProps {
   accountBookToTransfer: IAccountBookWithTeam;
@@ -48,9 +49,7 @@ const TransferAccountBookModal = ({
       });
 
       if (!success) {
-        // Deprecated: (20250311 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 API 轉移帳本失敗');
+        loggerFront.log('打 API 轉移帳本失敗');
         return;
       }
       closeTransferAccountBookModal();
@@ -59,9 +58,7 @@ const TransferAccountBookModal = ({
 
       if (getAccountBookListByTeamId) getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
     } catch (error) {
-      // Deprecated: (20250311 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('打 API 轉移帳本失敗 error:', error);
+      loggerFront.error('打 API 轉移帳本失敗 error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -69,26 +66,26 @@ const TransferAccountBookModal = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
-        <section className="flex items-center">
-          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+      <div className="flex w-90vw flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 px-40px py-16px tablet:w-400px tablet:p-lv-7">
+        <section className="relative flex items-center justify-center">
+          <h1 className="text-center text-xl font-bold text-text-neutral-primary">
             {t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.ACCOUNT_BOOK_TRANSFER')}
           </h1>
-          <button type="button" onClick={closeTransferAccountBookModal}>
+          <button
+            type="button"
+            onClick={closeTransferAccountBookModal}
+            className="absolute right-0"
+          >
             <IoCloseOutline size={24} />
           </button>
         </section>
 
-        <main className="flex flex-col gap-40px">
-          <div className="flex items-start gap-10px">
-            <div className="flex h-24px items-center">
-              <div className="h-8px w-8px rounded-full bg-surface-support-strong-maple"></div>
-            </div>
-
-            <p className="text-base font-normal text-text-neutral-primary">
+        <main className="flex flex-col gap-lv-4 tablet:gap-lv-7">
+          <ul className="ml-20px list-disc marker:text-surface-support-strong-maple">
+            <li className="text-xs font-normal text-text-neutral-primary tablet:text-base">
               {t('account_book:ACCOUNT_BOOK_TRANSFER_MODAL.CONTENT')}
-            </p>
-          </div>
+            </li>
+          </ul>
 
           <div className="flex flex-col gap-8px">
             <h4 className="font-semibold text-input-text-primary">

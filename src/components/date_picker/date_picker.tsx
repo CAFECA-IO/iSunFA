@@ -203,8 +203,7 @@ const YearDropdown = ({ setSelectedYear, setViewMode, selectedYear }: IYearDropd
   const startYear = selectedYear - 5;
   const endYear = selectedYear + 6;
   const years = [];
-  // eslint-disable-next-line no-plusplus
-  for (let y = startYear; y <= endYear; y++) {
+  for (let y = startYear; y <= endYear; y += 1) {
     years.push(y);
   }
 

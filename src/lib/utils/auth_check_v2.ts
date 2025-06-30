@@ -7,18 +7,21 @@ import { ISessionData } from '@/interfaces/session';
 import { convertStringToNumber } from '@/lib/utils/common';
 import loggerBack from '@/lib/utils/logger_back';
 import { APIName } from '@/constants/api_connection';
+import { verifyApplySignature } from '@/lib/utils/ethers/verify_signature';
 
 export async function checkUser(session: ISessionData, req: NextApiRequest) {
   let isAuth = true;
   const { userId: queryUserId } = req.query;
   if (queryUserId) {
     const queryUserIdNumber = convertStringToNumber(queryUserId);
+
     isAuth = session.userId === queryUserIdNumber;
   }
   if (isAuth) {
     const user = await getUserById(session.userId);
     isAuth = !!user;
   }
+  loggerBack.info(`User authorization check for userId isAuth: ${isAuth}`);
 
   return isAuth;
 }
@@ -108,15 +111,25 @@ export const authFunctionsNew: AuthFunctionsNew = {
   CompanyAdminMatch: checkCompanyAdminMatch,
   projectCompanyMatch: checkProjectCompanyMatch,
   internal: async (_session: ISessionData, req: NextApiRequest) => {
-    const ip = req.socket.remoteAddress || req.headers['x-forwarded-for'];
-    const signature = req.headers['x-signature'];
+    loggerBack.info(
+      `[internal verify] req.headers: ${JSON.stringify(req.headers)}, req.url: ${req.url}`
+    );
+    const rlpEncoded = req.headers['x-signature'];
+    loggerBack.info(`[internal verify] rlpEncoded: ${rlpEncoded}`);
+    const url = `http://${req.headers.host}${req.url}`;
 
-    const isLocalhost = ip?.includes('127.0.0.1') || ip === '::1';
-    const isValidSignature = signature === process.env.BAIFS_CERT;
-    loggerBack.info(`isValidSignature: ${isValidSignature}, isLocalhost: ${isLocalhost}`);
+    if (typeof rlpEncoded !== 'string' || typeof url !== 'string') {
+      loggerBack.warn('驗證失敗：缺少 x-signature 或 x-url header');
+      return false;
+    }
 
-    // return isLocalhost && isValidSignature;
-    return true; // Info: (20250617 - Tzuhan) 目前先回傳 true，後續可根據需求調整
+    const result = verifyApplySignature(url, rlpEncoded);
+
+    loggerBack.info(
+      `[internal verify] url=${url}, isValid=${result.isValid}, signer=${result.address}`
+    );
+
+    return result.isValid;
   },
 };
 
@@ -164,6 +177,8 @@ export async function checkAuthorizationNew<T extends APIName>(
 
     hasFailed = results.some((result) => result === true);
   }
+
+  loggerBack.info(`Authorization check completed for API: ${apiName}, hasFailed: ${hasFailed}`);
 
   // Info: (20241111 - Jacky) 返回 hasFailed 的反向值，若 hasFailed 為 true 則回傳 false，反之亦然
   return !hasFailed;

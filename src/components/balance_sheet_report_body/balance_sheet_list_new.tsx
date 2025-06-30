@@ -25,11 +25,11 @@ import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
-  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
   downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
   downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
+  isDownloading: boolean;
 }
 
 // Info: (20241022 - Anna) 定義圓餅圖顏色（紅、藍、紫）
@@ -48,11 +48,11 @@ const COLOR_CLASSES = [
 
 const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   selectedDateRange,
-  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
   downloadFn, // Info: (20250327 - Anna) 使用下載函數
+  isDownloading,
 }) => {
   const { t, i18n } = useTranslation(['reports']);
   const { currency } = useCurrencyCtx();
@@ -136,9 +136,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         // Info: (20241023 - Anna) 設定已成功請求過 API
         setHasFetchedOnce(true);
         prevSelectedDateRange.current = selectedDateRange;
-        // Todo: (20250610 - Anna) Debug
-        // eslint-disable-next-line no-console
-        console.log('[BalanceSheetList] API response:', response);
       }
     } catch (error) {
       (() => {})(); // Info: (20241023 - Anna) Empty function, does nothing
@@ -240,34 +237,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       setIsSubAccountsCollapsed(initialCollapseState);
     }
   }, [reportFinancial, totalSubAccountsToggle]); // Info: (20241029 - Anna) 新增 totalSubAccountsToggle 作為依賴項
-
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_list 觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList received isPrinting?', isPrinting);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList printRef is null');
-    }
-  }, [isPrinting]);
-
-  // Info: (20241122 - Anna) 打印 Ref 的內容
-  useEffect(() => {
-    if (printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_list 觀察 Current printRef content:', printRef.current);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('BalanceSheetList printRef is currently null');
-    }
-  }, [printRef]);
 
   // Info: (20241023 - Anna) 顯示圖片或報告資料
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -824,9 +793,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
   // Info: (20241029 - Anna) 子科目 Toggle 開關、列印及下載按鈕
   // const displayedSelectArea = (ref: React.RefObject<HTMLDivElement>) => {
   const displayedSelectArea = () => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <Toggle
@@ -1035,16 +1001,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <p className="text-base font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {curAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-100px text-sm lg:w-auto">
-                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
-                    </span>
-                  </li>
-                ))}
+                {curAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (curAssetMixRatio[index] === 0) return null;
+                  if (
+                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={label} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-100px text-sm lg:w-auto">
+                        {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1074,16 +1048,24 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             <p className="text-base font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {preAssetMixLabels.map((label, index) => (
-                  <li key={label} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-100px text-sm lg:w-auto">
-                      {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
-                    </span>
-                  </li>
-                ))}
+                {preAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (preAssetMixRatio[index] === 0) return null;
+                  if (
+                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={label} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-100px text-sm lg:w-auto">
+                        {t(`reports:ACCOUNTING_ACCOUNT.${label}`)}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1201,8 +1183,6 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         >
           {ItemSummary}
           {ItemDetail}
-          {/* {ProportionalTable} Todo: (20241203 - Anna) 圖表有問題 */}
-          {/* {AssetItem} Todo: (20241203 - Anna) 圖表有問題 */}
           {TurnoverDay}
         </BalanceSheetA4Template>
       </div>
@@ -1218,7 +1198,11 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         <hr className="break-before-page" />
         {TurnoverDay}
       </div>
-      <DownloadBalanceSheet reportFinancial={reportFinancial} downloadRef={downloadRef} />
+      <DownloadBalanceSheet
+        reportFinancial={reportFinancial}
+        downloadRef={downloadRef}
+        isDownloading={isDownloading}
+      />
     </div>
   );
 };

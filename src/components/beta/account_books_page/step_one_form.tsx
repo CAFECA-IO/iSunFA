@@ -15,6 +15,9 @@ import { IFileUIBeta } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
+import LocationDropdown from '@/components/dropdown/location_dropdown';
+import loggerFront from '@/lib/utils/logger_front';
 
 // Deprecated: (20250604 - Liz) 此元件正在修改中，請勿編輯內容或加入註解
 
@@ -231,17 +234,13 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return undefined;
         }
 
         return fileMeta.id ?? undefined;
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
         return undefined;
       } finally {
         setIsLoading(false);
@@ -270,9 +269,7 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -283,18 +280,12 @@ const StepOneForm = ({
         });
 
         if (!success) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新帳本圖片失敗! error message:', error?.message);
+          loggerFront.error('更新帳本圖片失敗! error message:', error?.message);
         }
 
-        // Deprecated: (20250527 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('帳本圖片更新成功:', fileMeta.id);
+        loggerFront.log('帳本圖片更新成功:', fileMeta.id);
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }
@@ -337,22 +328,26 @@ const StepOneForm = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="overflow-hidden rounded-md bg-surface-neutral-surface-lv1">
-        <header className="flex items-center justify-between px-40px pb-24px pt-40px">
-          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+      <div className="w-90vw overflow-hidden rounded-md bg-surface-neutral-surface-lv1 tablet:w-auto">
+        <header className="flex items-center justify-between px-20px py-16px tablet:px-40px tablet:pb-24px tablet:pt-40px">
+          <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {accountBookToEdit
               ? t('dashboard:ACCOUNT_BOOK_INFO_MODAL.EDIT_ACCOUNT_BOOK')
               : t('dashboard:ACCOUNT_BOOK_INFO_MODAL.CREATE_NEW_ACCOUNT_BOOK')}
           </h1>
-          <button type="button" onClick={closeAccountBookInfoModal}>
+          <button
+            type="button"
+            onClick={closeAccountBookInfoModal}
+            className="text-icon-surface-single-color-primary"
+          >
             <IoCloseOutline size={24} />
           </button>
         </header>
 
-        <div className="flex max-h-65vh flex-col gap-24px overflow-y-auto px-40px pb-40px">
+        <div className="flex max-h-65vh flex-col gap-40px overflow-y-auto px-lv-4 pb-40px tablet:gap-24px tablet:px-40px">
           {/* Info: (20250409 - Liz) Divider - Basic info */}
-          <section className="flex items-center gap-16px">
-            <div className="flex items-center gap-8px">
+          <section className="flex items-center gap-lv-4">
+            <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
               <Image
                 src="/icons/asset_management_icon.svg"
                 width={16}
@@ -361,10 +356,10 @@ const StepOneForm = ({
               />
               <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BASIC_INFO')}</span>
             </div>
-            <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+            <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
           </section>
 
-          <section className="flex items-center gap-24px">
+          <section className="flex flex-col items-center gap-24px tablet:flex-row">
             {/* Info: (20250428 - Liz) 帳本圖片 */}
             {savedImage || imageId ? (
               <button
@@ -378,7 +373,7 @@ const StepOneForm = ({
                   height={168}
                   alt="account book image"
                   className="h-168px w-168px rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-surface-lv2 object-contain"
-                ></Image>
+                />
 
                 <div className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-sm border border-stroke-neutral-quaternary text-sm text-black opacity-0 backdrop-blur-sm group-hover:opacity-100">
                   <FiEdit2 size={24} />
@@ -388,21 +383,16 @@ const StepOneForm = ({
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
-                className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
+                className="flex h-168px w-168px shrink-0 items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
               >
-                <Image
-                  src="/icons/upload_icon.svg"
-                  width={48}
-                  height={48}
-                  alt="upload_icon"
-                ></Image>
+                <Image src="/icons/upload_icon.svg" width={48} height={48} alt="upload_icon" />
               </button>
             )}
 
-            <section className="flex flex-col gap-24px">
-              <div className="flex items-start gap-40px">
+            <section className="flex w-full flex-col gap-24px">
+              <div className="flex flex-col items-start gap-x-lv-7 gap-y-lv-4 tablet:flex-row">
                 {/* Info: (20250409 - Liz) 公司名稱 */}
-                <div className="flex w-250px flex-col gap-8px">
+                <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.COMPANY_NAME')}
                     <span className="text-text-state-error"> *</span>
@@ -424,7 +414,7 @@ const StepOneForm = ({
                 </div>
 
                 {/* Info: (20250409 - Liz) 統一編號 */}
-                <div className="flex w-250px flex-col gap-8px">
+                <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TAX_ID')}
                     <span className="text-text-state-error"> *</span>
@@ -435,6 +425,7 @@ const StepOneForm = ({
                       placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_TAX_ID')}
                       className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
                       value={taxId}
+                      onWheel={(e) => e.currentTarget.blur()} // Info: (20250623 - Julian) 禁止滾輪改變數字輸入框的值
                       onChange={(e) => handleChange('taxId')(e.target.value)}
                     />
                     {taxIdError && !taxId && (
@@ -446,20 +437,18 @@ const StepOneForm = ({
                 </div>
               </div>
 
-              <div className="flex items-start gap-40px">
+              <div className="flex flex-col items-start gap-x-lv-7 gap-y-lv-4 tablet:flex-row">
                 {/* Info: (20250604 - Liz) Business Location 商業地址 */}
-                <div className="flex w-250px flex-col gap-8px">
+                {/* ToDo: (20250624 - Julian) 應改成「公司國籍」 */}
+                <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BUSINESS_LOCATION')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_BUSINESS_LOCATION')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={businessLocation}
-                      onChange={(e) => handleChange('businessLocation')(e.target.value)}
+                    <LocationDropdown
+                      currentLocation={businessLocation}
+                      setCurrentLocation={(value) => handleChange('businessLocation')(value)}
                     />
                     {businessLocationError && !businessLocation && (
                       <p className="text-right text-sm font-medium text-text-state-error">
@@ -470,19 +459,17 @@ const StepOneForm = ({
                 </div>
 
                 {/* Info: (20250409 - Liz) Accounting Currency 會計幣別 */}
-                <div className="flex w-250px flex-col gap-8px">
+                <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ACCOUNTING_CURRENCY')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_ACCOUNTING_CURRENCY')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={accountingCurrency}
-                      onChange={(e) => handleChange('accountingCurrency')(e.target.value)}
+                    <CurrencyDropdown
+                      currentCurrency={accountingCurrency}
+                      setCurrentCurrency={(value) => handleChange('accountingCurrency')(value)}
                     />
+
                     {accountingCurrencyError && !accountingCurrency && (
                       <p className="text-right text-sm font-medium text-text-state-error">
                         {accountingCurrencyError}
@@ -679,12 +666,12 @@ const StepOneForm = ({
           </section> */}
 
           {/* Info: (20250409 - Liz) Divider */}
-          <section className="flex items-center gap-16px">
-            <div className="flex items-center gap-8px">
+          <section className="flex items-center gap-lv-4">
+            <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
               <Image src="/icons/team_icon.svg" alt="team icon" width={16} height={16} />
               <span>{t('dashboard:ACCOUNT_BOOK_INFO_MODAL.TEAM')}</span>
             </div>
-            <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+            <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
           </section>
 
           <section className="flex items-start gap-24px">

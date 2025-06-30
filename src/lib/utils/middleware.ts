@@ -1,7 +1,7 @@
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { NextApiRequest } from 'next';
-import { loggerError } from '@/lib/utils/logger_back';
+import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { getSession } from '@/lib/utils/session';
 import { output, validateOutputData, validateRequestData } from '@/lib/utils/validator';
 import { createUserActionLog } from '@/lib/utils/repo/user_action_log.repo';
@@ -51,6 +51,7 @@ export async function checkUserAuthorization<T extends APIName>(
     });
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
+  loggerBack.info(`User authorization check for ${apiName}: ${isAuth}`);
   return isAuth;
 }
 

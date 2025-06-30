@@ -1,4 +1,5 @@
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import { useUserCtx } from '@/contexts/user_context';
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
@@ -18,6 +19,7 @@ interface IIncomeStatementReportBodyAllProps {
 
 const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAllProps) => {
   const { t } = useTranslation('reports');
+  const { connectedAccountBook } = useUserCtx();
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
@@ -29,9 +31,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const toggleDetailTable = () => {
     setIsDetailCollapsed(!isDetailCollapsed);
   };
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 IncomeStatementReportBodyAll');
 
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -51,13 +50,14 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
@@ -96,9 +96,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         }
         setIsGetFinancialReportSuccess(getFRSuccess);
         setErrorCode(getFRCode);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', report);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -107,9 +104,6 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in IncomeStatementReportBodyAll');
   }, [reportId]);
 
   if (isLoading) {

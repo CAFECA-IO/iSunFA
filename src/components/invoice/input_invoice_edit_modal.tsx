@@ -30,6 +30,7 @@ import { InvoiceDirection, InvoiceType, DeductionType, TaxType } from '@/constan
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import eventManager from '@/lib/utils/event_manager';
 
 interface InputInvoiceEditModalProps {
   isOpen: boolean;
@@ -46,7 +47,6 @@ interface InputInvoiceEditModalProps {
 }
 
 const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
-  isOpen,
   accountBookId,
   toggleModel,
   currencyAlias,
@@ -417,8 +417,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedInvoiceRC2Ref.current);
-      // eslint-disable-next-line no-console
-      console.log('isSame:', isSame, formStateRef.current, savedInvoiceRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -485,14 +483,18 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     });
   }, [formState]);
 
-  // Info: (20250512 - Anna) Debug
   useEffect(() => {
-    if (isOpen && certificate) {
-      // Deprecated: (20250512 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Modal initialized with certificate:', certificate);
-    }
-  }, [isOpen, certificate]);
+    const refreshCounterpartyList = () => {
+      listCounterparty();
+    };
+    // Info: (20250621 - Anna) 當全域事件系統有 ‘counterparty:added’ 事件發生時，就執行 refreshCounterpartyList 函數;
+    eventManager.on('counterparty:added', refreshCounterpartyList);
+
+    return () => {
+      // Info: (20250621 - Anna) 元件卸載時，剛剛註冊的事件監聽取消掉
+      eventManager.off('counterparty:added', refreshCounterpartyList);
+    };
+  }, [listCounterparty]);
 
   return (
     <div

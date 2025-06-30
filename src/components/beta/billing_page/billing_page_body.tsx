@@ -19,6 +19,7 @@ import SearchInput from '@/components/filter_section/search_input';
 import { SortOrder } from '@/constants/sort';
 import { VscSettings } from 'react-icons/vsc';
 import { RxCross2 } from 'react-icons/rx';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface BillingPageBodyProps {
   team: IUserOwnedTeam;
@@ -176,15 +177,9 @@ const BillingPageBody = ({ team, getOwnedTeam }: BillingPageBodyProps) => {
           // Info: (20250121 - Liz) 排序資料 (初次資料獲取後立即排序)
           const sortedInvoices = sortInvoices(newInvoices);
           setInvoiceList(sortedInvoices);
-        } else {
-          // Deprecated: (20250120 - Anna)
-          // eslint-disable-next-line no-console
-          console.error('取得發票清單失敗:', response.error || `API 錯誤碼: ${response.code}`);
         }
       } catch (error) {
-        // Deprecated: (20250120 - Anna)
-        // eslint-disable-next-line no-console
-        console.error('發票 API 呼叫發生錯誤:', error);
+        loggerFront.error('發票 API 呼叫發生錯誤:', error);
       }
     };
 

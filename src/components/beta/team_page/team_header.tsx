@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import { ITeam } from '@/interfaces/team';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TeamHeaderProps {
   team: ITeam;
@@ -26,9 +27,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
       await navigator.clipboard.writeText(team.id.toString());
       setCopied(true);
     } catch (error) {
-      // Deprecated: (20250218 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('Failed to copy:', error);
+      loggerFront.error('Failed to copy:', error);
     }
   };
 
@@ -41,7 +40,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
 
   return (
     <section className="flex flex-auto flex-col items-start gap-8px tablet:flex-row tablet:items-center">
-      <div className="flex items-center gap-lv-4 tablet:gap-8px">
+      <div className="flex items-start gap-lv-4 tablet:gap-8px">
         <button
           type="button"
           className="group relative shrink-0"

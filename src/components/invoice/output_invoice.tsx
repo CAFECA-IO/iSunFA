@@ -36,7 +36,7 @@ interface OutputInvoiceProps {
   uploaderAvatarMap: Record<string, string>;
 }
 
-// Deprecated: (20240919 - Anna) will be replaced by actual data type
+// Info: (20240919 - Anna) will be replaced by actual data type
 const OutputInvoice: React.FC<OutputInvoiceProps> = ({
   activeTab,
   page,
@@ -109,6 +109,7 @@ const OutputInvoice: React.FC<OutputInvoiceProps> = ({
           currentPage={page}
           totalPages={totalPages}
           setCurrentPage={setPage}
+          isExporting={isExporting}
         />
       </div>
     </>

@@ -46,7 +46,7 @@ const SelectLanguageDropdown: React.FC<SelectLanguageDropdownProps> = ({ languag
   );
 
   return (
-    <div className="flex flex-col space-y-3 max-md:max-w-full">
+    <div className="col-span-2 flex flex-col gap-8px max-md:max-w-full tablet:col-span-1">
       <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
         {t('settings:NORMAL.SELECT_LANGUAGE')}
       </div>
