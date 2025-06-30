@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "jest",
+    "test:all": "npm run test:unit && npm run test:integration",
     "test:integration": "TEST_TYPE=integration jest --config=jest.integration.config.ts",
     "test:unit": "jest --testPathIgnorePatterns=integration",
     "test:debug": "DEBUG_TESTS=true jest --verbose --silent=false",

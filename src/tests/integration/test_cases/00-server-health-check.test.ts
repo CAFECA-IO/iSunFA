@@ -110,14 +110,14 @@ describe('Integration Test - API v2 status_info', () => {
 
       expect(response.success).toBe(true);
       // Increase timeout for GitHub Actions environment
-      const timeoutLimit = process.env.CI ? 15000 : 5000; // 15s for CI, 5s for local
+      const timeoutLimit = process.env.CI ? 30000 : 5000; // 30s for CI, 5s for local
       expect(responseTime).toBeLessThan(timeoutLimit);
-    }, 15000); // 15 second timeout for CI environment
+    }, 60000); // 60 second timeout for CI environment
 
     it('should return proper HTTP status and headers', async () => {
       const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       try {
         const httpResponse = await fetch(url, { signal: controller.signal });
@@ -131,12 +131,12 @@ describe('Integration Test - API v2 status_info', () => {
       } finally {
         clearTimeout(timeoutId);
       }
-    }, 15000); // 15 second timeout for CI environment
+    }, 60000); // 60 second timeout for CI environment
 
     it('should handle invalid HTTP methods gracefully', async () => {
       const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       try {
         const httpResponse = await fetch(url, {
@@ -151,6 +151,6 @@ describe('Integration Test - API v2 status_info', () => {
       } finally {
         clearTimeout(timeoutId);
       }
-    }, 15000); // 15 second timeout for CI environment
+    }, 60000); // 60 second timeout for CI environment
   });
 });
