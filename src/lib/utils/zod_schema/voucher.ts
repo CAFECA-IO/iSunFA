@@ -117,6 +117,7 @@ export const voucherEntityValidator = z.object({
  */
 export const IVoucherBetaValidator = z.object({
   id: z.number(),
+  accountBookId: z.number(),
   voucherDate: z.number(),
   voucherNo: z.string(),
   voucherType: z.nativeEnum(VoucherType),
@@ -265,6 +266,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
 
     const parsedVoucher = {
       id: voucher.id,
+      accountBookId: voucher.companyId,
       status: voucher.status,
       voucherDate: voucher.date,
       voucherNo: voucher.no,
