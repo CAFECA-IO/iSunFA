@@ -1,6 +1,5 @@
 import { DefaultValue } from '@/constants/default_value';
 import { ApiClient } from '@/tests/integration/api-client';
-import { setupIntegrationTest } from '@/tests/integration/test-setup';
 import { SharedTestServer } from '@/tests/integration/shared-server';
 
 /**
@@ -26,7 +25,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
   // 使用共享測試服務器
   beforeAll(async () => {
-    sharedServer = await setupIntegrationTest();
+    sharedServer = await SharedTestServer.getInstance();
     // 只在 debug 模式下啟用詳細 API 輸出
     if (process.env.DEBUG_TESTS === 'true') {
       process.env.DEBUG_API = 'true';

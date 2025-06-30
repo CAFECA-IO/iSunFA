@@ -6,7 +6,7 @@ import {
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest } from 'next';
 import { ApiClient } from '@/tests/integration/api-client';
-import { IntegrationTestSetup } from '@/tests/integration/setup';
+import { SharedTestServer } from '@/tests/integration/shared-server';
 
 /**
  * Integration Test - User Email Authentication (Ticket #1)
@@ -28,19 +28,16 @@ import { IntegrationTestSetup } from '@/tests/integration/setup';
 describe('Integration Test - User Email Authentication (Ticket #1)', () => {
   const testEmails = DefaultValue.EMAIL_LOGIN.EMAIL;
   const defaultCode = DefaultValue.EMAIL_LOGIN.CODE;
+  let sharedServer: SharedTestServer;
 
   // 啟動實際的測試服務器
   beforeAll(async () => {
-    await IntegrationTestSetup.initialize();
+    sharedServer = await SharedTestServer.getInstance();
     // 只在 debug 模式下啟用詳細 API 輸出
     if (process.env.DEBUG_TESTS === 'true') {
       process.env.DEBUG_API = 'true';
     }
   }, 120000); // 2分鐘timeout給服務器啟動
-
-  afterAll(async () => {
-    await IntegrationTestSetup.cleanup();
-  }, 30000);
 
   // ========================================
   // Test Case 1.1: Email Authentication with Default Values Testing
@@ -260,7 +257,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       let userEmail: string;
 
       beforeAll(() => {
-        apiClient = new ApiClient();
+        apiClient = new ApiClient(sharedServer.getBaseUrl());
         [userEmail] = testEmails; // Use first test email
       });
 
@@ -385,7 +382,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
       let userEmail: string;
 
       beforeAll(() => {
-        apiClient = new ApiClient();
+        apiClient = new ApiClient(sharedServer.getBaseUrl());
         [userEmail] = testEmails; // Use first test email
       });
 

@@ -37,15 +37,13 @@ const config: Config = {
 
   // Test file patterns - only integration tests (explicit order)
   testMatch: [
-    '<rootDir>/src/tests/integration/test_cases/00-*.test.ts',
-    '<rootDir>/src/tests/integration/test_cases/01-*.test.ts',
-    '<rootDir>/src/tests/integration/test_cases/02-*.test.ts',
+    '<rootDir>/src/tests/integration/test_cases/*.ts',
     '<rootDir>/src/tests/integration/**/*.test.ts',
     '<rootDir>/src/tests/integration/**/*.test.tsx',
   ],
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/src/tests/integration/test-setup.ts'],
+  // setupFilesAfterEnv: ['<rootDir>/src/tests/integration/test-setup.ts'],
 
   // Global setup and teardown for shared server
   globalSetup: '<rootDir>/src/tests/integration/global-setup.ts',

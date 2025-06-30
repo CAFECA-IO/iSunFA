@@ -1,6 +1,6 @@
 import { ITeam } from '@/interfaces/team';
 import { ApiClient } from '@/tests/integration/api-client';
-import { IntegrationTestSetup } from '@/tests/integration/setup';
+import { SharedTestServer } from '@/tests/integration/shared-server';
 
 interface StatusInfoPayload {
   user: {
@@ -25,15 +25,12 @@ interface StatusInfoResponse {
 
 describe('Integration Test - API v2 status_info', () => {
   let apiClient: ApiClient;
+  let sharedServer: SharedTestServer;
 
   beforeAll(async () => {
-    await IntegrationTestSetup.initialize();
-    apiClient = new ApiClient();
+    sharedServer = await SharedTestServer.getInstance();
+    apiClient = new ApiClient(sharedServer.getBaseUrl());
   }, 60000); // 60 second timeout for server startup
-
-  afterAll(async () => {
-    await IntegrationTestSetup.cleanup();
-  }, 30000); // 30 second timeout for cleanup
 
   beforeEach(() => {
     apiClient.clearSession();
@@ -115,7 +112,7 @@ describe('Integration Test - API v2 status_info', () => {
     }, 60000); // 60 second timeout for CI environment
 
     it('should return proper HTTP status and headers', async () => {
-      const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
+      const url = `${sharedServer.getBaseUrl()}/api/v2/status_info`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -134,7 +131,7 @@ describe('Integration Test - API v2 status_info', () => {
     }, 60000); // 60 second timeout for CI environment
 
     it('should handle invalid HTTP methods gracefully', async () => {
-      const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
+      const url = `${sharedServer.getBaseUrl()}/api/v2/status_info`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 

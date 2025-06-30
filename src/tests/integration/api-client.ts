@@ -1,5 +1,3 @@
-import { IntegrationTestSetup } from './setup';
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   code: string;
@@ -22,8 +20,8 @@ export class ApiClient {
 
   private cookies: string[] = [];
 
-  constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || IntegrationTestSetup.getApiBaseUrl();
+  constructor(baseUrl: string = 'http://localhost:3001') {
+    this.baseUrl = baseUrl;
   }
 
   // Info: (20250619) Make HTTP request with cookie management
