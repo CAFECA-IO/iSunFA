@@ -26,25 +26,7 @@ export const generateTeamInvoice = async (
   const payerAddress = payer.email;
   const payerPhone = payer.email;
   if (!teamOrderId || !teamPaymentTransactionId) throw new Error(STATUS_MESSAGE.INVALID_INVOICE_GENERATION_DATA);
-  /**
- *   id?: number;
-  teamOrderId: number;
-  teamPaymentTransactionId: number;
-  invoiceCode: string;
-  price: number;
-  tax: number;
-  total: number;
-  currency: string;
-  payerId?: string;
-  payerName?: string;
-  payerEmail?: string;
-  payerAddress?: string;
-  payerPhone?: string;
-  status: string;
-  issuedAt: number;
-  createdAt: number;
-  updatedAt?: number;
- */
+
   const invoice: ITeamInvoice = {
     id: order.id,
     teamOrderId,
