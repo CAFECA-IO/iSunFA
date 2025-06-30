@@ -29,34 +29,15 @@ const CashFlowStatementPageBody = () => {
   // Info: (20250327 - Anna) 每次開始渲染時重置頁碼
   const pageCountRef = useRef(1);
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20250327 - Anna) 下載
   const handleDownload = async () => {
+    setIsDownloading(true);
     pageCountRef.current = 1; // Info: (20250327 - Anna) reset 頁數
 
     if (!downloadRef.current) return;
-
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-
-  /* Info: (20250401 - Anna) Cash Flow Statement (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
@@ -130,9 +111,6 @@ const CashFlowStatementPageBody = () => {
       }
     }
 
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
-
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');
     downloadRef.current.style.position = '';
@@ -140,6 +118,7 @@ const CashFlowStatementPageBody = () => {
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
   // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
@@ -196,6 +175,7 @@ const CashFlowStatementPageBody = () => {
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
           downloadFn={handleDownload} // Info: (20250327 - Anna) 傳遞下載函數
+          isDownloading={isDownloading}
         />
       </div>
     </div>

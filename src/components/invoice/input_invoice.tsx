@@ -109,6 +109,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setCurrentPage={setPage}
           className="mt-4"
           totalCount={totalCount}
+          isExporting={isExporting}
         />
       </div>
     </>

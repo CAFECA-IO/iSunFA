@@ -18,6 +18,7 @@ import { SortOrder, SortBy } from '@/constants/sort';
 import { ISortOption } from '@/interfaces/sort';
 import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface FilterSectionProps<T> {
   className?: string;
@@ -142,9 +143,7 @@ const FilterSection = <T,>({
 
   // Info: (20240919 - tzuhan) 發送 API 請求
   const fetchData = useCallback(async () => {
-    // Deprecated: (20241115 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('call FilterSection fetchData');
+    loggerFront.log('call FilterSection fetchData');
 
     try {
       if (isLoading) return;

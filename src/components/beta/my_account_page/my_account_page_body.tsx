@@ -36,12 +36,12 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
         </p>
       </div>
       {/* Info: (20250217 - Julian) 使用者資訊 */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
+      <div className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
           <Image src="/icons/user-identifier-card.svg" width={16} height={16} alt="info_icon" />
           <p>{t('team:MY_ACCOUNT_PAGE.USER_INFO_TITLE')}</p>
         </div>
-        <hr className="flex-1 border-divider-stroke-lv-1" />
+        <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
 
       <UserInfo
@@ -55,12 +55,12 @@ const MyAccountPageBody: React.FC<MyAccountPageBodyProps> = ({ loginDevices }) =
       />
 
       {/* Info: (20250217 - Julian) 我的團隊 */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-sm font-medium text-divider-text-lv-1">
+      <div className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
           <Image src="/icons/building.svg" width={16} height={16} alt="info_icon" />
           <p>{t('team:MY_ACCOUNT_PAGE.MY_TEAM_TITLE')}</p>
         </div>
-        <hr className="flex-1 border-divider-stroke-lv-1" />
+        <hr className="flex-1 border-divider-stroke-lv-4" />
       </div>
 
       {/* Info: (20250217 - Julian) 團隊清單 */}

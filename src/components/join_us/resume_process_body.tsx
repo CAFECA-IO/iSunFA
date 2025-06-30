@@ -9,6 +9,7 @@ import PreferenceForm from '@/components/join_us/preference_form';
 import AttachmentForm from '@/components/join_us/attachment_form';
 import { useHiringCtx } from '@/contexts/hiring_context';
 import { IResume } from '@/interfaces/resume';
+import loggerFront from '@/lib/utils/logger_front';
 
 const ResumeProcessBody: React.FC = () => {
   const router = useRouter();
@@ -54,9 +55,7 @@ const ResumeProcessBody: React.FC = () => {
       attachment: tempAttachment,
     };
 
-    // Deprecated: (20250506 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Resume Data:', resumeData);
+    loggerFront.log('Resume Data:', resumeData);
 
     // Info: (20250502 - Julian) 提交後跳轉到完成頁面
     // router.push(ISUNFA_ROUTE.FINISH_PAGE);

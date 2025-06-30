@@ -17,6 +17,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 import eventManager from '@/lib/utils/event_manager';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -77,9 +78,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setDropdownOpen(false);
       }
     } catch (fetchError) {
-      // Deprecate: (20241212 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Error fetching company data by Tax ID:', fetchError);
+      loggerFront.error('Error fetching company data by Tax ID:', fetchError);
     }
   };
 
@@ -206,9 +205,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
     // Info: (20241212 - Anna) 當輸入的統一編號滿 8 碼時，觸發 API
     if (newTaxId.length === 8 && /^[0-9]{8}$/.test(newTaxId)) {
-      // Deprecate: (20241212 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      fetchCompanyNameByTaxId(newTaxId).catch(console.error);
+      fetchCompanyNameByTaxId(newTaxId).catch(loggerFront.error);
     } else {
       setDropdownOpen(false);
     }
@@ -332,7 +329,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/50">
       <div className="flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-lv-7">
         <div className="relative flex items-center justify-center">
           {/* Info: (20240924 - tzuhan) 關閉按鈕 */}

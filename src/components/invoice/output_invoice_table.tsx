@@ -129,27 +129,53 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {isExporting ? t('certificate:TABLE.DATE') : displayedIssuedDate}
             </div>
-            <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedCertificateNo}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedCertificateType}
             </div>
 
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {t('certificate:EDIT.TAX_TYPE')}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {t('certificate:EDIT.BUYER')}
             </div>
-            <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
+                isExporting ? 'pb-4' : ''
+              }`}
+            >
               {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
+              <div className={`${isExporting ? 'pb-4' : ''}`}>
+                {t('certificate:TABLE.UPLOADER')}
+              </div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
@@ -165,6 +191,7 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
               key={`certificate-item-${index + 1}`}
               onEdit={onEdit}
               uploaderAvatarMap={uploaderAvatarMap}
+              isExporting={isExporting}
             />
           ))}
         </div>

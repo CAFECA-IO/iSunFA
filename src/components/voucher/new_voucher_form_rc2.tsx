@@ -52,6 +52,7 @@ import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
 import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import InvoiceSelection from '@/components/voucher/invoice_selection';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -935,13 +936,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         },
       };
 
-      // Deprecated: (20241122 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`NewVoucherForm handleNewInvoiceComing: newInvoice`, newInvoice);
+      loggerFront.log(`NewVoucherForm handleNewInvoiceComing: newInvoice`, newInvoice);
       setInvoices((prev) => {
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`NewVoucherForm handleNewInvoiceComing: prev`, prev);
+        loggerFront.log(`NewVoucherForm handleNewInvoiceComing: prev`, prev);
 
         Object.values(prev).forEach((certificate) => {
           newInvoicesUI[certificate.id] = {
@@ -950,9 +947,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             isSelected: newInvoicesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`NewVoucherForm handleNewInvoiceComing: newInvoices`, newInvoicesUI);
+        loggerFront.log(`NewVoucherForm handleNewInvoiceComing: newInvoices`, newInvoicesUI);
         return newInvoicesUI;
       });
     },
@@ -977,9 +972,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // const aiResultHandler = useCallback(
   //   (data: { message: string }) => {
   //     const aiResult: IAIResultVoucher = JSON.parse(data.message);
-  //     // Deprecated: (20241127 - Julian) Debugging purpose
-  //     // eslint-disable-next-line no-console
-  //     console.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
+  // loggerFront.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
   //     setAiVoucherResult(aiResult);
   //     setAiState(AIState.FINISH);
   //   },

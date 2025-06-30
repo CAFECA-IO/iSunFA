@@ -75,6 +75,7 @@ interface DownloadPreviewProps {
   formattedPreFromDate: string;
   formattedPreToDate: string;
   className?: string;
+  isDownloading: boolean;
 }
 
 const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
@@ -86,11 +87,15 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
       formattedPreFromDate,
       formattedPreToDate,
       className,
+      isDownloading,
     },
     ref
   ) => {
     const { t } = useTranslation(['reports']);
     const { currency } = useCurrencyCtx();
+
+    // Info: (20241112 - Anna) 動態應用下載樣式
+    const downloadPage = `${isDownloading ? 'download-page' : ''}`;
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
       const result: IAccountReadyForFrontend[] = [];
@@ -163,7 +168,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
                 breakBefore: 'page',
                 breakAfter: 'page',
               }}
-              className="download-page relative h-screen overflow-hidden border border-stroke-neutral-quaternary"
+              className={`${downloadPage} relative h-screen overflow-hidden border border-stroke-neutral-quaternary`}
             >
               {index === 0 ? <FirstHeader financialReport={financialReport} /> : <NormalHeader />}
 
@@ -252,7 +257,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
             </div>
           ))
         }
-        <div className="download-page border border-stroke-neutral-quaternary">
+        <div className={`${downloadPage} border border-stroke-neutral-quaternary`}>
           <PrintCostRevRatio
             financialReport={financialReport}
             formattedCurFromDate={formattedCurFromDate}

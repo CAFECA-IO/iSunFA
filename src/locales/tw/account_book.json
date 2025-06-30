@@ -69,5 +69,10 @@
   },
   "EDIT_ACCOUNT_BOOK_MODAL": {
     "EDIT_ACCOUNT_BOOK": "編輯帳本"
+  },
+  "TOAST": {
+    "FAILED_CONNECT_ACCOUNT_BOOK": "連結帳本失敗",
+    "FAILED_DISCONNECT_ACCOUNT_BOOK": "取消連結失敗",
+    "FAILED_CANCEL_TRANSFER": "取消轉移帳本失敗"
   }
 }

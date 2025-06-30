@@ -6,6 +6,7 @@ import { ITeamInvoice } from '@/interfaces/subscription';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
+import loggerFront from '@/lib/utils/logger_front';
 
 const InvoicePrintPage = () => {
   const router = useRouter();
@@ -32,9 +33,7 @@ const InvoicePrintPage = () => {
           setInvoice(invoiceData);
         }
       } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得發票資料失敗');
+        loggerFront.error('取得發票資料失敗');
       }
     };
 

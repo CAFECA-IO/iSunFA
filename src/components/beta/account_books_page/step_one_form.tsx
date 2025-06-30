@@ -15,6 +15,9 @@ import { IFileUIBeta } from '@/interfaces/file';
 import APIHandler from '@/lib/utils/api_handler';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
+import LocationDropdown from '@/components/dropdown/location_dropdown';
+import loggerFront from '@/lib/utils/logger_front';
 
 // Deprecated: (20250604 - Liz) 此元件正在修改中，請勿編輯內容或加入註解
 
@@ -231,17 +234,13 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return undefined;
         }
 
         return fileMeta.id ?? undefined;
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
         return undefined;
       } finally {
         setIsLoading(false);
@@ -270,9 +269,7 @@ const StepOneForm = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -283,18 +280,12 @@ const StepOneForm = ({
         });
 
         if (!success) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新帳本圖片失敗! error message:', error?.message);
+          loggerFront.error('更新帳本圖片失敗! error message:', error?.message);
         }
 
-        // Deprecated: (20250527 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('帳本圖片更新成功:', fileMeta.id);
+        loggerFront.log('帳本圖片更新成功:', fileMeta.id);
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }
@@ -392,7 +383,7 @@ const StepOneForm = ({
               <button
                 type="button"
                 onClick={openUploadCompanyPictureModal}
-                className="flex h-168px w-168px items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
+                className="flex h-168px w-168px shrink-0 items-center justify-center rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-mute"
               >
                 <Image src="/icons/upload_icon.svg" width={48} height={48} alt="upload_icon" />
               </button>
@@ -448,18 +439,16 @@ const StepOneForm = ({
 
               <div className="flex flex-col items-start gap-x-lv-7 gap-y-lv-4 tablet:flex-row">
                 {/* Info: (20250604 - Liz) Business Location 商業地址 */}
+                {/* ToDo: (20250624 - Julian) 應改成「公司國籍」 */}
                 <div className="flex w-full flex-col gap-8px tablet:w-250px">
                   <h4 className="font-semibold text-input-text-primary">
                     {t('dashboard:ACCOUNT_BOOK_INFO_MODAL.BUSINESS_LOCATION')}
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_BUSINESS_LOCATION')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={businessLocation}
-                      onChange={(e) => handleChange('businessLocation')(e.target.value)}
+                    <LocationDropdown
+                      currentLocation={businessLocation}
+                      setCurrentLocation={(value) => handleChange('businessLocation')(value)}
                     />
                     {businessLocationError && !businessLocation && (
                       <p className="text-right text-sm font-medium text-text-state-error">
@@ -476,13 +465,11 @@ const StepOneForm = ({
                     <span className="text-text-state-error"> *</span>
                   </h4>
                   <div>
-                    <input
-                      type="text"
-                      placeholder={t('dashboard:ACCOUNT_BOOK_INFO_MODAL.ENTER_ACCOUNTING_CURRENCY')}
-                      className="w-full rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px text-base font-medium shadow-Dropshadow_SM outline-none placeholder:text-input-text-input-placeholder"
-                      value={accountingCurrency}
-                      onChange={(e) => handleChange('accountingCurrency')(e.target.value)}
+                    <CurrencyDropdown
+                      currentCurrency={accountingCurrency}
+                      setCurrentCurrency={(value) => handleChange('accountingCurrency')(value)}
                     />
+
                     {accountingCurrencyError && !accountingCurrency && (
                       <p className="text-right text-sm font-medium text-text-state-error">
                         {accountingCurrencyError}

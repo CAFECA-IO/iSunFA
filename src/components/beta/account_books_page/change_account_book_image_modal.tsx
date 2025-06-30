@@ -8,6 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import UploadArea from '@/components/upload_area/upload_area';
 import { useUserCtx } from '@/contexts/user_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ChangeAccountBookImageModalProps {
   accountBookToChangeImage: IAccountBookWithTeam;
@@ -52,9 +53,7 @@ const ChangeAccountBookImageModal = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -65,9 +64,7 @@ const ChangeAccountBookImageModal = ({
         });
 
         if (!success) {
-          // Deprecated: (20241212 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新帳本圖片失敗! error message:', error?.message);
+          loggerFront.error('更新帳本圖片失敗! error message:', error?.message);
           return;
         }
 
@@ -83,9 +80,7 @@ const ChangeAccountBookImageModal = ({
           connectAccountBook(accountBookToChangeImage.id);
         }
       } catch (error) {
-        // Deprecated: (20241212 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }

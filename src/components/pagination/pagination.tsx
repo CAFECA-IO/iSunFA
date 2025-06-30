@@ -25,6 +25,7 @@ export interface IPaginationProps {
   totalPages: number;
   pagePrefix?: string;
   paginationHandler?: (newPage: number) => void;
+  isExporting?: boolean;
 }
 
 const Pagination = forwardRef(
@@ -37,6 +38,7 @@ const Pagination = forwardRef(
       totalPages,
       pagePrefix = 'page',
       paginationHandler,
+      isExporting,
     }: IPaginationProps,
     ref
   ) => {
@@ -199,7 +201,7 @@ const Pagination = forwardRef(
     );
 
     return (
-      <div className="download-pb-4 flex flex-col items-center gap-2">
+      <div className={`${isExporting ? 'pb-4' : ''} flex flex-col items-center gap-2`}>
         <ul className={`flex items-start gap-10px text-input-text-input-hover ${className || ''}`}>
           {/* Info: (20240419 - Julian) 最前一頁 */}
           <li>{displayFirstButton}</li>

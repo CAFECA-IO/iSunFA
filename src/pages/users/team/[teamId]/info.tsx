@@ -11,6 +11,7 @@ import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { ITeam } from '@/interfaces/team';
 import TeamInformationPageBody from '@/components/beta/team_information_page/team_info_page_body';
+import loggerFront from '@/lib/utils/logger_front';
 
 const TeamInfoPage = () => {
   const { t } = useTranslation(['team']);
@@ -40,9 +41,7 @@ const TeamInfoPage = () => {
       }
       setIsLoading(false);
     } catch (error) {
-      // Deprecated: (20250226 - Anna) 打印錯誤訊息（Debug）
-      // eslint-disable-next-line no-console
-      console.log('取得團隊資訊失敗');
+      loggerFront.error('取得團隊資訊失敗');
     }
   }, []);
 

@@ -194,33 +194,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     if (!downloadRef.current) return;
 
     // Info: (20250604 - Anna) 加上桌面樣式 class
-    downloadRef.current.classList.add('force-desktop-style');
+    downloadRef.current.classList.add('w-1024px');
 
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
     });
-
-    // Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-    .download-pb-4 {
-    padding-bottom: 16px;
-  }
-    .download-pb-3 {
-    padding-bottom: 12px;
-  }
-    .download-hidden {
-    display: none;
-  }
-
-    /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
-    .force-desktop-style {
-    width: 1024px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     const canvas = await html2canvas(downloadRef.current, {
       scale: 2, // Info: (20250418 - Anna) 增加解析度
@@ -239,24 +218,14 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    style.remove();
-
     // Info: (20250604 - Anna) 移除 class，還原畫面
-    downloadRef.current.classList.remove('force-desktop-style');
+    downloadRef.current.classList.remove('w-1024px');
 
     pdf.save('input-certificates.pdf');
 
     // Info: (20250506 - Anna) 匯出後還原畫面
     setIsExporting(false);
   };
-
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
 
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
@@ -463,9 +432,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<IInvoiceRC2InputUI>) => {
-      // Deprecated: (20250509 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('handleEditItem', certificate);
       try {
         const postOrPutAPI = certificate.id
           ? updateCertificateAPI({
@@ -696,13 +662,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
-              exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
               onDownload={handleDownload}
               toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
             />
 
-            <div ref={downloadRef} className="download-page">
+            <div ref={downloadRef}>
               <InputInvoice
                 activeTab={activeTab}
                 page={page}

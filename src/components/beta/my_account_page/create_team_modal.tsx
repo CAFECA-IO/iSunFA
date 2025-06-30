@@ -32,6 +32,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -254,8 +255,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // deprecated: (20250326 - Julian) for testing
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const printResult = () => {
-    // eslint-disable-next-line no-console
-    console.log('createTeamBody:', {
+    loggerFront.log('createTeamBody:', {
       name: teamNameInput,
       members: teamMembers,
       planType: selectedPlan,

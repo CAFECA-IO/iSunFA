@@ -18,6 +18,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ICoolDown, IOneTimePasswordResult } from '@/interfaces/email';
 import { IUser } from '@/interfaces/user';
 import { useRouter } from 'next/router';
+import loggerFront from '@/lib/utils/logger_front';
 
 enum LOGIN_STEP {
   INPUT_EMAIL = 'inputEmail',
@@ -114,9 +115,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
       if (!success) {
         setSendEmailError('驗證信寄送失敗');
-        // Deprecated: (20250509 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(`寄送驗證信失敗: ${error?.message}`);
+        loggerFront.log(`寄送驗證信失敗: ${error?.message}`);
 
         if (coolDown) setResendCountdown(coolDown);
         return;
@@ -149,9 +148,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
       if (!success) {
         setVerifyCodeError('驗證碼錯誤');
-        // Deprecated: (20250509 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(`驗證碼錯誤: ${error?.message}`);
+        loggerFront.log(`驗證碼錯誤: ${error?.message}`);
 
         if (maxAttempts > 0) {
           toastHandler({
@@ -192,9 +189,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
       if (!success) {
         setVerifyCodeError('重新寄送驗證信失敗');
-        // Deprecated: (20250509 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(`重新寄送驗證信失敗: ${error?.message}`);
+        loggerFront.log(`重新寄送驗證信失敗: ${error?.message}`);
         return;
       }
 

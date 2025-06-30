@@ -10,6 +10,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface UpdateTodoModalProps {
   todoToUpdate: ITodoAccountBook;
@@ -85,9 +86,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
         setTodoToUpdate(undefined); // Info: (20241125 - Liz) 關閉 modal
         getTodoList(); // Info: (20241125 - Liz) 重新取得待辦事項清單
 
-        // Deprecated: (20241125 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('updateTodoAPI success:', updatedTodo);
+        loggerFront.log('updateTodoAPI success:', updatedTodo);
       } else {
         // Info: (20241125 - Liz) 更新待辦事項失敗時顯示錯誤訊息
         toastHandler({
@@ -99,9 +98,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
         });
       }
     } catch (error) {
-      // Deprecated: (20241125 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('updateTodoAPI error:', error);
+      loggerFront.error('updateTodoAPI error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -114,7 +111,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
       try {
         const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { page: 1, pageSize: 999 },
+          query: { page: 1, pageSize: 999, simple: true },
         });
         const accountBookListData = data?.data ?? []; // Info: (20250310 - Liz) 取出帳本清單
 
@@ -123,14 +120,10 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
           setAccountBookList(accountBookListData);
         } else {
           // Info: (20250310 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息
-          // Deprecated: (20250310 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('取得使用者擁有的帳本清單 failed:', code);
+          loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('取得使用者擁有的帳本清單 error:', error);
+        loggerFront.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
@@ -214,7 +207,7 @@ const UpdateTodoModal = ({ todoToUpdate, setTodoToUpdate, getTodoList }: UpdateT
 
                   {isDropdownOpen && (
                     <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
+                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
                         {accountBookList.map((item) => (
                           <button
                             key={item.id}

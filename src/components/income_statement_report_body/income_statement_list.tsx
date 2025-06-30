@@ -18,6 +18,7 @@ import { useTranslation } from 'next-i18next';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import DownloadPreview from '@/components/income_statement_report_body/download_preview';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface FilterBarProps {
   printFn: () => void;
@@ -47,6 +48,8 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   const [isGetReportAPISuccess, setIsGetReportAPISuccess] = useState<boolean>(false);
   const [reportAPICode, setReportAPICode] = useState<string>('');
   const [financialReport, setFinancialReport] = useState<FinancialReport | null>(null);
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
   const { trigger: getReportAPI } = APIHandler<FinancialReport>(APIName.REPORT_GET_V2);
 
   // Info: (20250108 - Anna) 判斷當前語言是否為繁體或簡體中文
@@ -64,32 +67,10 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
   });
 
   const handleDownload = async () => {
+    setIsDownloading(true);
     if (!downloadRef.current) {
       return;
     }
-
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-
-  /* Info: (20250401 - Anna) Income Statement (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
@@ -152,9 +133,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         useCORS: true,
         logging: true, // Info: (20250327 - Anna) 「顯示除錯訊息」到 console
       }).catch((err) => {
-        // Info: (20250327 - Anna) Debug
-        // eslint-disable-next-line no-console
-        console.error('html2canvas 擷取錯誤:', err);
+        loggerFront.error('html2canvas 擷取錯誤:', err);
         return null;
       });
 
@@ -174,9 +153,6 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
       }
     }
 
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
-
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');
     downloadRef.current.style.position = '';
@@ -184,6 +160,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
   useEffect(() => {
@@ -292,6 +269,7 @@ const IncomeStatementList = ({ selectedDateRange }: IncomeStatementListProps) =>
         formattedCurToDate={formattedCurToDate}
         formattedPreFromDate={formattedPreFromDate}
         formattedPreToDate={formattedPreToDate}
+        isDownloading={isDownloading}
       />
     </div>
   );
