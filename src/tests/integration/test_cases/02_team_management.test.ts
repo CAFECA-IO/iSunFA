@@ -1,6 +1,6 @@
 import { DefaultValue } from '@/constants/default_value';
-import { ApiClient } from '@/tests/integration/api-client';
-import { SharedTestServer } from '@/tests/integration/shared-server';
+import { ApiClient } from '@/tests/integration/api_client';
+import { SharedTestServer } from '@/tests/integration/shared_server';
 
 /**
  * Integration Test - Team Management & Setup (Ticket #2)

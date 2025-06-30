@@ -5,8 +5,8 @@ import {
 } from '@/pages/api/v2/email/[email]/one_time_password';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest } from 'next';
-import { ApiClient } from '@/tests/integration/api-client';
-import { SharedTestServer } from '@/tests/integration/shared-server';
+import { ApiClient } from '@/tests/integration/api_client';
+import { SharedTestServer } from '@/tests/integration/shared_server';
 
 /**
  * Integration Test - User Email Authentication (Ticket #1)

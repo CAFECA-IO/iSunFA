@@ -37,17 +37,19 @@ const config: Config = {
 
   // Test file patterns - only integration tests (explicit order)
   testMatch: [
-    '<rootDir>/src/tests/integration/test_cases/*.ts',
+    '<rootDir>/src/tests/integration/test_cases/00_*.test.ts',
+    '<rootDir>/src/tests/integration/test_cases/01_*.test.ts',
+    '<rootDir>/src/tests/integration/test_cases/02_*.test.ts',
     '<rootDir>/src/tests/integration/**/*.test.ts',
     '<rootDir>/src/tests/integration/**/*.test.tsx',
   ],
 
   // Setup files
-  // setupFilesAfterEnv: ['<rootDir>/src/tests/integration/test-setup.ts'],
+  // setupFilesAfterEnv: ['<rootDir>/src/tests/integration/test_setup.ts'],
 
   // Global setup and teardown for shared server
-  globalSetup: '<rootDir>/src/tests/integration/global-setup.ts',
-  globalTeardown: '<rootDir>/src/tests/integration/global-teardown.ts',
+  globalSetup: '<rootDir>/src/tests/integration/global_setup.ts',
+  globalTeardown: '<rootDir>/src/tests/integration/global_teardown.ts',
 
   // Resource management optimizations
   maxWorkers: 1, // Force serial execution to avoid server conflicts

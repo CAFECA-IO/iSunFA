@@ -1,6 +1,6 @@
 import { ITeam } from '@/interfaces/team';
-import { ApiClient } from '@/tests/integration/api-client';
-import { SharedTestServer } from '@/tests/integration/shared-server';
+import { ApiClient } from '@/tests/integration/api_client';
+import { SharedTestServer } from '@/tests/integration/shared_server';
 
 interface StatusInfoPayload {
   user: {
