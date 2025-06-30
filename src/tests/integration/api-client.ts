@@ -22,8 +22,8 @@ export class ApiClient {
 
   private cookies: string[] = [];
 
-  constructor() {
-    this.baseUrl = IntegrationTestSetup.getApiBaseUrl();
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || IntegrationTestSetup.getApiBaseUrl();
   }
 
   // Info: (20250619) Make HTTP request with cookie management
@@ -43,7 +43,7 @@ export class ApiClient {
     // Debug logging if enabled
     if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
       // eslint-disable-next-line no-console
-      console.log(`🔥 API Request: ${method} ${url}`);
+      console.log(`🔥 API Request [${method} ${endpoint}]: ${url}`);
       if (body) {
         // eslint-disable-next-line no-console
         console.log('📦 Request Body:', JSON.stringify(body, null, 2));
@@ -85,9 +85,13 @@ export class ApiClient {
     // Debug logging for response if enabled
     if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
       // eslint-disable-next-line no-console
-      console.log(`📨 API Response: ${response.status} ${response.statusText}`);
-      // eslint-disable-next-line no-console
-      console.log('📋 Response Data:', JSON.stringify(responseData, null, 2));
+      console.log(
+        `📨 API Response [${method} ${endpoint}]: ${response.status} ${response.statusText}, \n📋 Response Data: ${JSON.stringify(
+          responseData,
+          null,
+          2
+        )}`
+      );
     }
 
     return responseData;

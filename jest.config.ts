@@ -74,7 +74,8 @@ const config: Config = {
   // globals: {},
 
   // The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
-  // maxWorkers: "50%",
+  // For integration tests, limit to 1 worker to avoid server resource conflicts
+  maxWorkers: process.env.TEST_TYPE === 'integration' ? 1 : '50%',
 
   // An array of directory names to be searched recursively up from the requiring module's location
   // moduleDirectories: [
@@ -149,6 +150,15 @@ const config: Config = {
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
+
+  // Test timeout - longer for integration tests
+  testTimeout: process.env.TEST_TYPE === 'integration' ? 120000 : 5000, // 2 minutes for integration, 5 seconds for unit
+
+  // Force Jest to exit when tests complete to prevent hanging
+  forceExit: true,
+
+  // Detect open handles to prevent hanging
+  detectOpenHandles: true,
 
   // A list of paths to snapshot serializer modules Jest should use for snapshot testing
   // snapshotSerializers: [],
