@@ -3,25 +3,21 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow } from '@/lib/utils/common';
 import { IExternalUser } from '@/interfaces/external_user';
-import { FIVE_MINUTES_IN_S } from '@/constants/time';
 
 export const createExternalUser = async (
   options: IExternalUser,
   tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IExternalUser> => {
-  if (!options.sessionId || !options.externalId || !options.externalProvider) {
+  if (!options.userId || !options.externalId || !options.externalProvider) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
   }
   const nowInSecond = getTimestampNow();
-  // Info: (20250626 - Luphia) 外部用戶資料有效期為 5 分鐘，需在五分鐘內綁定內部用戶
-  const expiredAt = nowInSecond + FIVE_MINUTES_IN_S;
   const data = {
-    sessionId: options.sessionId,
+    userId: options.userId,
     externalId: options.externalId,
     externalProvider: options.externalProvider,
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
-    expiredAt,
   };
 
   try {
@@ -34,7 +30,7 @@ export const createExternalUser = async (
   }
 };
 
-export const getExternalUserByExternalAndUid = async (
+export const getExternalUserByProviderAndUid = async (
   externalProvider: string,
   externalId: string
 ) => {
@@ -51,26 +47,5 @@ export const getExternalUserByExternalAndUid = async (
     return externalUser;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
-  }
-};
-
-export const bindExternalUserToUser = async (sessionId: string, userId: number) => {
-  const nowInSecond = getTimestampNow();
-  try {
-    const externalUser = await prisma.externalUser.updateMany({
-      where: {
-        sessionId,
-        expiredAt: {
-          gte: nowInSecond,
-        },
-      },
-      data: {
-        userId,
-        updatedAt: nowInSecond,
-      },
-    });
-    return externalUser;
-  } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_UPDATE_FAILED_ERROR);
   }
 };

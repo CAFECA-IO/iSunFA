@@ -38,11 +38,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   /* Info: (20250625 - Luphia)
    * 獲取外部服務參數 service, uid
    */
-  const { service, uid } = router.query as { service?: string; uid?: string };
-  // Deprecated: (20250625 - Luphia) remove eslint-disable
-  // eslint-disable-next-line no-console
-  console.log(`Service: ${service}, UID: ${uid}`);
-
+  const { provider, uid } = router.query as { provider?: string; uid?: string };
   const [step, setStep] = useState<LOGIN_STEP.INPUT_EMAIL | LOGIN_STEP.VERIFY_CODE>(
     LOGIN_STEP.INPUT_EMAIL
   ); // Info: (20250509 - Liz) 當前步驟
@@ -104,7 +100,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     setIsSendingEmail(true);
     setSendEmailError('');
     try {
-      const query = service && uid ? { service, uid } : undefined;
+      const query = provider && uid ? { provider, uid } : undefined;
       const { success, error, data } = await sendVerificationEmailAPI({
         query,
         params: {

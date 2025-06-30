@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 // Deprecated: (20250509 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getSession } from '@/lib/utils/session';
+import { getSession, setSession } from '@/lib/utils/session';
 // Deprecated: (20250509 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { APIName, HttpMethod } from '@/constants/api_connection';
@@ -33,10 +33,16 @@ import { handleSignInSession } from '@/lib/utils/signIn';
 export const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = req;
   const { email } = query;
-  // ToDo: (20250625 - Luphia) 根據 session 登記外部使用者
   const session = await getSession(req);
-  loggerBack.info(session);
-  loggerBack.info(query);
+  if (query.provider && query.uid) {
+    // Info: (20250630 - Luphia) 若存在 External User 參數，將資訊設定到 session 備用
+    await setSession(session, {
+      external: {
+        provider: query.provider as string,
+        uid: query.uid as string,
+      },
+    });
+  }
   const isValidEmail = emailVerifier(email as string);
   if (!isValidEmail) {
     // Info: (20250429 - Luphia) email 格式不正確
