@@ -66,14 +66,14 @@ export class ApiClient {
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    // Store cookies from response
+    // Info: (20250630 - Shirley) Store cookies from response
     const setCookieHeaders = response.headers.getSetCookie?.() || [];
     if (setCookieHeaders.length > 0) {
-      // Parse cookies and store them
+      // Info: (20250630 - Shirley) Parse cookies and store them
       const newCookies = setCookieHeaders.map((cookie) => cookie.trim().split(';')[0]);
       this.cookies.push(...newCookies);
     } else {
-      // Fallback for older browsers
+      // Info: (20250630 - Shirley) Fallback for older browsers
       const setCookieHeader = response.headers.get('set-cookie');
       if (setCookieHeader) {
         const cookies = setCookieHeader.split(',').map((cookie) => cookie.trim().split(';')[0]);
