@@ -27,9 +27,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
   // 使用共享測試服務器
   beforeAll(async () => {
     sharedServer = await setupIntegrationTest();
-    // 設置debug環境變數來看到API responses
-    process.env.DEBUG_TESTS = 'true';
-    process.env.DEBUG_API = 'true';
+    // 只在 debug 模式下啟用詳細 API 輸出
+    if (process.env.DEBUG_TESTS === 'true') {
+      process.env.DEBUG_API = 'true';
+    }
   }, 30000); // 減少timeout因為服務器已經在運行
 
   // 不需要afterAll因為全局清理會處理

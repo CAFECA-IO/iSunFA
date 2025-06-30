@@ -109,29 +109,48 @@ describe('Integration Test - API v2 status_info', () => {
       const responseTime = Date.now() - startTime;
 
       expect(response.success).toBe(true);
-      expect(responseTime).toBeLessThan(5000);
-    });
+      // Increase timeout for GitHub Actions environment
+      const timeoutLimit = process.env.CI ? 15000 : 5000; // 15s for CI, 5s for local
+      expect(responseTime).toBeLessThan(timeoutLimit);
+    }, 15000); // 15 second timeout for CI environment
 
     it('should return proper HTTP status and headers', async () => {
       const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
-      const httpResponse = await fetch(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      expect(httpResponse.status).toBe(200);
-      expect(httpResponse.ok).toBe(true);
-      expect(httpResponse.headers.get('content-type')).toContain('application/json');
+      try {
+        const httpResponse = await fetch(url, { signal: controller.signal });
 
-      const jsonResponse = await httpResponse.json();
-      expect(jsonResponse.success).toBe(true);
-    });
+        expect(httpResponse.status).toBe(200);
+        expect(httpResponse.ok).toBe(true);
+        expect(httpResponse.headers.get('content-type')).toContain('application/json');
+
+        const jsonResponse = await httpResponse.json();
+        expect(jsonResponse.success).toBe(true);
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }, 15000); // 15 second timeout for CI environment
 
     it('should handle invalid HTTP methods gracefully', async () => {
       const url = `${IntegrationTestSetup.getApiBaseUrl()}/api/v2/status_info`;
-      const httpResponse = await fetch(url, { method: 'DELETE' });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-      expect(httpResponse.status).toBe(405);
-      const jsonResponse = await httpResponse.json();
-      expect(jsonResponse.success).toBe(false);
-      expect(jsonResponse.code).toBe('405ISF0000');
-    });
+      try {
+        const httpResponse = await fetch(url, {
+          method: 'DELETE',
+          signal: controller.signal,
+        });
+
+        expect(httpResponse.status).toBe(405);
+        const jsonResponse = await httpResponse.json();
+        expect(jsonResponse.success).toBe(false);
+        expect(jsonResponse.code).toBe('405ISF0000');
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }, 15000); // 15 second timeout for CI environment
   });
 });

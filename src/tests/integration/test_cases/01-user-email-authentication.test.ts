@@ -32,9 +32,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
   // 啟動實際的測試服務器
   beforeAll(async () => {
     await IntegrationTestSetup.initialize();
-    // 設置debug環境變數來看到API responses
-    process.env.DEBUG_TESTS = 'true';
-    process.env.DEBUG_API = 'true';
+    // 只在 debug 模式下啟用詳細 API 輸出
+    if (process.env.DEBUG_TESTS === 'true') {
+      process.env.DEBUG_API = 'true';
+    }
   }, 120000); // 2分鐘timeout給服務器啟動
 
   afterAll(async () => {

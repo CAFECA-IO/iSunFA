@@ -35,8 +35,11 @@ const config: Config = {
   },
   transformIgnorePatterns: ['/node_modules/(?!@passwordless-id/webauthn)'],
 
-  // Test file patterns - only integration tests
+  // Test file patterns - only integration tests (explicit order)
   testMatch: [
+    '<rootDir>/src/tests/integration/test_cases/00-*.test.ts',
+    '<rootDir>/src/tests/integration/test_cases/01-*.test.ts',
+    '<rootDir>/src/tests/integration/test_cases/02-*.test.ts',
     '<rootDir>/src/tests/integration/**/*.test.ts',
     '<rootDir>/src/tests/integration/**/*.test.tsx',
   ],
@@ -50,7 +53,7 @@ const config: Config = {
 
   // Resource management optimizations
   maxWorkers: 1, // Force serial execution to avoid server conflicts
-  testTimeout: 120000, // 2 minutes timeout for integration tests
+  testTimeout: process.env.CI ? 180000 : 120000, // 3 minutes for CI, 2 minutes locally
 
   // Disable coverage for integration tests (focus on functionality)
   collectCoverage: false,
@@ -58,8 +61,8 @@ const config: Config = {
   // Longer timeouts for server operations
   slowTestThreshold: 30, // 30 seconds before marking as slow
 
-  // Verbose output for better debugging
-  verbose: true,
+  // Verbose output only in debug mode
+  verbose: process.env.DEBUG_TESTS === 'true',
 
   // Don't exit on first test failure - run all tests to get full picture
   bail: false,

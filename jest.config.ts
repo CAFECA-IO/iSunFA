@@ -151,8 +151,8 @@ const config: Config = {
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
 
-  // Test timeout - longer for integration tests
-  testTimeout: process.env.TEST_TYPE === 'integration' ? 120000 : 5000, // 2 minutes for integration, 5 seconds for unit
+  // Test timeout - longer for integration tests and CI environment
+  testTimeout: process.env.TEST_TYPE === 'integration' ? 120000 : process.env.CI ? 15000 : 5000, // 15 seconds for CI, 5 seconds for unit tests locally
 
   // Force Jest to exit when tests complete to prevent hanging
   forceExit: true,
