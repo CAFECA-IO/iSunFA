@@ -1,12 +1,18 @@
 // Info: (20240701 - Shirley) Supertest wrapper for Next.js API handlers
-import { createServer, RequestListener } from 'http';
+import { createServer, RequestListener, IncomingMessage, ServerResponse } from 'http';
 import { NextApiHandler } from 'next';
 import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import request from 'supertest';
+
+// Info: (20240701 - Shirley) Extended request interface for Next.js API handling
+interface ExtendedIncomingMessage extends IncomingMessage {
+  query?: Record<string, string | string[]>;
+}
 
 // Info: (20240701 - Shirley) Create a supertest client for testing Next.js API routes
 export const createTestClient = (handler: NextApiHandler) => {
-  const listener: RequestListener = (req, res) => {
+  const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
     return apiResolver(
       req,
       res,
@@ -28,7 +34,7 @@ export const createDynamicTestClient = (
   handler: NextApiHandler,
   routeParams: Record<string, string>
 ) => {
-  const listener: RequestListener = (req, res) => {
+  const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
     // Info: (20240701 - Shirley) Parse the URL to extract path and query
     const url = new URL(req.url || '/', 'http://localhost');
 
@@ -38,12 +44,18 @@ export const createDynamicTestClient = (
     }
 
     // Info: (20240701 - Shirley) Add URL query parameters to req.query
-    for (const [key, value] of url.searchParams.entries()) {
-      req.query[key] = value;
-    }
+    url.searchParams.forEach((value, key) => {
+      if (req.query) {
+        req.query[key] = value;
+      }
+    });
 
     // Info: (20240701 - Shirley) Add dynamic route parameters to query
-    Object.assign(req.query, routeParams);
+    if (req.query) {
+      Object.assign(req.query, routeParams);
+    } else {
+      req.query = routeParams;
+    }
 
     // Info: (20240701 - Shirley) Add required headers for testing
     if (!req.headers) {

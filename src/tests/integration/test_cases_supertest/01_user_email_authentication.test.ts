@@ -44,9 +44,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20240701 - Shirley) Complete authentication flow: OTP request -> authentication
       const { otpResponse, authResponse } = await apiHelper.completeAuthenticationFlow();
 
-      // eslint-disable-next-line no-console
-      console.log('authResponse11111', JSON.stringify(authResponse, null, 2));
-
       // Info: (20240701 - Shirley) Verify OTP request was successful
       expect(otpResponse.status).toBe(200);
       expect(otpResponse.body.success).toBe(true);
@@ -79,17 +76,44 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(authResponse.body.success).toBe(true);
       expect(statusResponse.body.success).toBe(true);
 
-      // Info: (20240701 - Shirley) If user is authenticated, status should reflect it
-      if (
-        statusResponse.body.payload &&
-        statusResponse.body.payload.user !== null &&
-        typeof statusResponse.body.payload.user === 'object' &&
-        'email' in statusResponse.body.payload.user
-      ) {
-        expect((statusResponse.body.payload.user as { email: string }).email).toBe(
-          TestDataFactory.PRIMARY_TEST_EMAIL
-        );
+      // Info: (20240701 - Shirley) Verify user is authenticated in status response
+      expect(statusResponse.body.payload).toBeDefined();
+      expect(statusResponse.body.payload?.user).toBeDefined();
+      expect(statusResponse.body.payload?.user).not.toBeNull();
+
+      if (statusResponse.body.payload && typeof statusResponse.body.payload === 'object') {
+        const payload = statusResponse.body.payload as {
+          user: { email: string; id: number; name: string };
+        };
+        const { user } = payload;
+        expect(user.email).toBe(TestDataFactory.PRIMARY_TEST_EMAIL);
+        expect(user.id).toBeDefined();
+        expect(typeof user.id).toBe('number');
+        expect(user.name).toBeDefined();
       }
+
+      // Info: (20240701 - Shirley) Verify session persists in subsequent calls
+      const statusResponse2 = await apiHelper.getStatusInfo();
+      expect(statusResponse2.body.success).toBe(true);
+      expect(statusResponse2.body.payload?.user).toBeDefined();
+      expect(statusResponse2.body.payload?.user).not.toBeNull();
+      if (statusResponse2.body.payload && typeof statusResponse2.body.payload === 'object') {
+        const payload2 = statusResponse2.body.payload as { user: { email: string } };
+        expect(payload2.user.email).toBe(TestDataFactory.PRIMARY_TEST_EMAIL);
+      }
+    });
+
+    it('should complete email authentication flow successfully', async () => {
+      // Info: (20240701 - Shirley) Test complete authentication flow
+      const { authResponse, statusResponse } = await apiHelper.completeAuthenticationFlow();
+
+      // Info: (20240701 - Shirley) Verify authentication response
+      expect(authResponse.body.success).toBe(true);
+      expect(authResponse.body.payload).toBeDefined();
+
+      // Info: (20240701 - Shirley) Verify the complete flow worked
+      expect(statusResponse.body.success).toBe(true);
+      expect(statusResponse.body.payload).toBeDefined();
     });
   });
 
@@ -157,9 +181,63 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.4: Performance and Reliability
+  // Info: (20240701 - Shirley) Test Case 1.4: Session and Status Validation
   // ========================================
-  describe('Test Case 1.4: Performance and Reliability', () => {
+  describe('Test Case 1.4: Session and Status Validation', () => {
+    it('should return status info with proper structure', async () => {
+      // Info: (20240701 - Shirley) Test status info endpoint structure
+      const statusResponse = await apiHelper.getStatusInfo();
+
+      // Info: (20240701 - Shirley) Verify status info structure
+      expect(statusResponse.body.success).toBe(true);
+      expect(statusResponse.body.payload).toBeDefined();
+
+      if (statusResponse.body.payload && typeof statusResponse.body.payload === 'object') {
+        const payload = statusResponse.body.payload as {
+          user: unknown;
+          company: unknown;
+          role: unknown;
+          teams: unknown;
+        };
+        expect(payload.user).toBeDefined();
+        expect(payload.company).toBeDefined();
+        expect(payload.role).toBeDefined();
+        expect(payload.teams).toBeDefined();
+      }
+    });
+
+    it('should handle authentication flow with status verification', async () => {
+      // Info: (20240701 - Shirley) Complete authentication flow and verify structure
+      const { authResponse, statusResponse } = await apiHelper.completeAuthenticationFlow();
+
+      // Info: (20240701 - Shirley) Verify authentication succeeded
+      expect(authResponse.body.success).toBe(true);
+      expect(authResponse.body.payload).toBeDefined();
+
+      // Info: (20240701 - Shirley) Verify status response structure
+      expect(statusResponse.body.success).toBe(true);
+      expect(statusResponse.body.payload).toBeDefined();
+
+      if (statusResponse.body.payload && typeof statusResponse.body.payload === 'object') {
+        const payload = statusResponse.body.payload as {
+          user: unknown;
+          company: unknown;
+          role: unknown;
+          teams: unknown[];
+        };
+        expect(payload.user).toBeDefined();
+        expect(payload.company).toBeDefined();
+        expect(payload.role).toBeDefined();
+        expect(payload.teams).toBeDefined();
+        expect(Array.isArray(payload.teams)).toBe(true);
+      }
+    });
+  });
+
+  // ========================================
+  // Info: (20240701 - Shirley) Test Case 1.5: Performance and Reliability
+  // ========================================
+  describe('Test Case 1.5: Performance and Reliability', () => {
     it('should handle concurrent OTP requests', async () => {
       const requests = Array(3)
         .fill(null)

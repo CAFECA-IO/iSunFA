@@ -35,14 +35,29 @@ interface EmailTestResult {
 export class APITestHelper {
   private statusClient: TestClient;
 
+  private sessionCookies: string[] = [];
+
   constructor() {
     // Info: (20240701 - Shirley) Create test clients for different API endpoints
     this.statusClient = createTestClient(statusInfoHandler);
   }
 
+  // Info: (20240701 - Shirley) Extract and store session cookies from response
+  private extractSessionCookies(response: { headers: { 'set-cookie'?: string[] } }): void {
+    const setCookieHeaders = response.headers['set-cookie'];
+    if (setCookieHeaders) {
+      const sessionCookies = setCookieHeaders
+        .filter((cookie: string) => cookie.includes('isunfa='))
+        .map((cookie: string) => cookie.split(';')[0]);
+      this.sessionCookies.push(...sessionCookies);
+    }
+  }
+
   // Info: (20240701 - Shirley) Create dynamic OTP client for specific email
   private createOTPClient(email: string): TestClient {
-    return createDynamicTestClient(otpHandler, { email });
+    // Info: (20240701 - Shirley) Method accesses instance sessionCookies
+    const client = createDynamicTestClient(otpHandler, { email });
+    return this.sessionCookies.length > 0 ? client : client;
   }
 
   // Info: (20240701 - Shirley) Simulate user requesting OTP through API
@@ -58,12 +73,21 @@ export class APITestHelper {
     const authData = TestDataFactory.createAuthenticationRequest(email, code);
     const otpClient = this.createOTPClient(authData.email);
 
-    return otpClient.post('/').send({ code: authData.code }).expect(200);
+    const response = await otpClient.post('/').send({ code: authData.code }).expect(200);
+
+    // Info: (20240701 - Shirley) Extract session cookies from authentication response
+    this.extractSessionCookies(response);
+
+    return response;
   }
 
   // Info: (20240701 - Shirley) Get current user status through API
   async getStatusInfo(): Promise<TestResponse> {
-    return this.statusClient.get('/api/v2/status_info').expect(200);
+    let request = this.statusClient.get('/api/v2/status_info');
+    if (this.sessionCookies.length > 0) {
+      request = request.set('Cookie', this.sessionCookies.join('; '));
+    }
+    return request.expect(200) as Promise<TestResponse>;
   }
 
   // Info: (20240701 - Shirley) Test authentication flow - request OTP then authenticate

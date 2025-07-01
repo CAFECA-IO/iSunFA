@@ -2,20 +2,20 @@
 // Info: (20240701 - Shirley) Focus on API functionality without database dependencies
 import { createTestClient, TestClient } from '@/tests/integration/supertest/test_client';
 import statusInfoHandler from '@/pages/api/v2/status_info';
-import { ITeam } from '@/interfaces/team';
+// import { ITeam } from '@/interfaces/team';
 
-interface StatusInfoPayload {
-  user: {
-    id: number;
-    email: string;
-    name: string;
-    createdAt: number;
-    updatedAt: number;
-  } | null;
-  company: Record<string, unknown> | null;
-  role: Record<string, unknown> | null;
-  teams: ITeam[];
-}
+// interface StatusInfoPayload {
+//   user: {
+//     id: number;
+//     email: string;
+//     name: string;
+//     createdAt: number;
+//     updatedAt: number;
+//   } | null;
+//   company: Record<string, unknown> | null;
+//   role: Record<string, unknown> | null;
+//   teams: ITeam[];
+// }
 
 describe('Integration Test - API v2 status_info (Supertest)', () => {
   let testClient: TestClient;
