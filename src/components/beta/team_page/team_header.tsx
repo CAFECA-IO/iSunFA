@@ -65,7 +65,7 @@ const TeamHeader = ({ team, setTeamToChangeImage }: TeamHeaderProps) => {
       </div>
 
       <div className="ml-auto flex items-center text-text-neutral-tertiary tablet:ml-0">
-        <span className="text-xl font-bold leading-8">#{team.id}</span>
+        <span className="text-xl font-semibold leading-8">#{team.id}</span>
         <button type="button" onClick={copyTeamId} className="flex items-center p-10px">
           {copied ? <TbCopyCheckFilled size={16} /> : <TbCopy size={16} />}
           {copied && <span className="text-sm">{t('team:TEAM_PAGE.COPIED')}!</span>}

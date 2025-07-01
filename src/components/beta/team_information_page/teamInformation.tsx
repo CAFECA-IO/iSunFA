@@ -88,6 +88,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               size="defaultSquare"
               disabled={!modifyName.can}
               onClick={openNameEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -107,6 +108,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               size="defaultSquare"
               disabled={!modifyAbout.can}
               onClick={openDescriptionEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -133,6 +135,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               size="defaultSquare"
               disabled={!modifyProfile.can}
               onClick={openProfileEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -154,6 +157,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               size="defaultSquare"
               disabled={!modifyPlan.can}
               onClick={() => router.push(`/users/subscriptions/${teamInfo.id}`)} // Info:(20250226 - Anna) 點擊後導航
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -199,6 +203,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
                   size="defaultSquare"
                   disabled={!modifyBankAccount.can}
                   onClick={openBankAccountEditModal}
+                  className="shrink-0"
                 >
                   <FiEdit size={16} />
                 </Button>
