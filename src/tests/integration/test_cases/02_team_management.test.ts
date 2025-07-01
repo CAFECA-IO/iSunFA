@@ -1,14 +1,7 @@
 import { DefaultValue } from '@/constants/default_value';
 import { ApiClient } from '@/tests/integration/api_client';
 import { SharedTestServer } from '@/tests/integration/shared_server';
-
-// Info: (20250701 - Shirley) Utility function for debug logging
-function debugLog(...args: unknown[]): void {
-  if (process.env.DEBUG_TESTS === 'true') {
-    // eslint-disable-next-line no-console
-    console.log(...args);
-  }
-}
+import { testLoggers } from '@/tests/integration/utils/test_logger';
 
 /**
  * Integration Test - Team Management & Setup (Ticket #2)
@@ -66,7 +59,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
 
-          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+          testLoggers.team.debug(
+            '📧 Email authentication response:',
+            JSON.stringify(emailResponse, null, 2)
+          );
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -78,14 +74,17 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             }
           );
 
-          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+          testLoggers.team.debug('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
 
-          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+          testLoggers.team.debug(
+            '📋 Status info response:',
+            JSON.stringify(statusResponse, null, 2)
+          );
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -95,10 +94,13 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
 
-            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
+            testLoggers.team.debug(
+              '✅ Successfully retrieved user info for:',
+              statusData.user?.email
+            );
           }
         } catch (error) {
-          debugLog('❌ Authentication or status check failed:', error);
+          testLoggers.team.debug('❌ Authentication or status check failed:', error);
           expect(error).toBeDefined();
         }
       });
@@ -186,7 +188,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         try {
           const createTeamResponse = await apiClient.post('/api/v2/team', teamData);
 
-          debugLog('🏢 Create team response:', JSON.stringify(createTeamResponse, null, 2));
+          testLoggers.team.debug(
+            '🏢 Create team response:',
+            JSON.stringify(createTeamResponse, null, 2)
+          );
 
           expect(createTeamResponse).toBeDefined();
           expect(typeof createTeamResponse.success).toBe('boolean');
@@ -206,14 +211,14 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               expect(teamPayload.imageId).toBeDefined();
             }
 
-            debugLog('✅ Successfully created team with ID:', teamPayload.id);
+            testLoggers.team.debug('✅ Successfully created team with ID:', teamPayload.id);
           } else {
             // If team creation fails, log the error for debugging
 
-            debugLog('❌ Team creation failed:', createTeamResponse);
+            testLoggers.team.debug('❌ Team creation failed:', createTeamResponse);
           }
         } catch (error) {
-          debugLog('❌ Team creation error:', error);
+          testLoggers.team.debug('❌ Team creation error:', error);
           expect(error).toBeDefined();
         }
       });
@@ -241,7 +246,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           // Expect unauthorized error
           expect(error).toBeDefined();
 
-          debugLog('✅ Correctly rejected unauthorized team creation');
+          testLoggers.team.debug('✅ Correctly rejected unauthorized team creation');
         }
       });
 
@@ -269,7 +274,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         // eslint-disable-next-line no-restricted-syntax
         for (const testCase of invalidTestCases) {
           try {
-            debugLog(`🧪 Testing: ${testCase.name}`);
+            testLoggers.team.debug(`🧪 Testing: ${testCase.name}`);
             // eslint-disable-next-line no-await-in-loop
             const createTeamResponse = await apiClient.post('/api/v2/team', testCase.data);
 
@@ -278,13 +283,15 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               expect(createTeamResponse.success).toBe(false);
               expect(createTeamResponse.code).toContain(testCase.expectedErrorPattern);
 
-              debugLog(`✅ ${testCase.name}: Correctly returned error ${createTeamResponse.code}`);
+              testLoggers.team.debug(
+                `✅ ${testCase.name}: Correctly returned error ${createTeamResponse.code}`
+              );
             }
           } catch (error) {
             // API might throw exception for invalid data
             expect(error).toBeDefined();
 
-            debugLog(`✅ ${testCase.name}: Correctly threw exception`);
+            testLoggers.team.debug(`✅ ${testCase.name}: Correctly threw exception`);
           }
         }
       });
@@ -316,7 +323,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
 
-          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+          testLoggers.team.debug(
+            '📧 Email authentication response:',
+            JSON.stringify(emailResponse, null, 2)
+          );
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -328,14 +338,17 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             }
           );
 
-          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+          testLoggers.team.debug('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
 
-          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+          testLoggers.team.debug(
+            '📋 Status info response:',
+            JSON.stringify(statusResponse, null, 2)
+          );
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -345,7 +358,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
 
-            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
+            testLoggers.team.debug(
+              '✅ Successfully retrieved user info for:',
+              statusData.user?.email
+            );
           }
 
           // Create a test team for invitation testing
@@ -359,17 +375,20 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             const teamPayload = createTeamResponse.payload as { id: number };
             testTeamId = teamPayload.id;
 
-            debugLog('✅ Created test team with ID:', testTeamId);
+            testLoggers.team.debug('✅ Created test team with ID:', testTeamId);
           }
         } catch (error) {
-          debugLog('❌ Authentication, status check, or team creation failed:', error);
+          testLoggers.team.debug(
+            '❌ Authentication, status check, or team creation failed:',
+            error
+          );
           expect(error).toBeDefined();
         }
       });
 
       it('should successfully invite team members with valid emails', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -398,7 +417,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should fail invitation with invalid email formats', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -424,7 +443,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should handle empty email list in invitation', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -448,7 +467,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate invitation permission requirements', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -475,7 +494,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should track invitation status and workflow', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -530,7 +549,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
 
-          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+          testLoggers.team.debug(
+            '📧 Email authentication response:',
+            JSON.stringify(emailResponse, null, 2)
+          );
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -542,14 +564,17 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             }
           );
 
-          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+          testLoggers.team.debug('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
 
-          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+          testLoggers.team.debug(
+            '📋 Status info response:',
+            JSON.stringify(statusResponse, null, 2)
+          );
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -559,7 +584,10 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
 
-            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
+            testLoggers.team.debug(
+              '✅ Successfully retrieved user info for:',
+              statusData.user?.email
+            );
           }
 
           // Create a test team for member management testing
@@ -573,17 +601,20 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             const teamPayload = createTeamResponse.payload as { id: number };
             testTeamId = teamPayload.id;
 
-            debugLog('✅ Created test team with ID:', testTeamId);
+            testLoggers.team.debug('✅ Created test team with ID:', testTeamId);
           }
         } catch (error) {
-          debugLog('❌ Authentication, status check, or team creation failed:', error);
+          testLoggers.team.debug(
+            '❌ Authentication, status check, or team creation failed:',
+            error
+          );
           expect(error).toBeDefined();
         }
       });
 
       it('should list team members with proper pagination', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -615,7 +646,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate LIST_MEMBER_BY_TEAM_ID permission', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -635,7 +666,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should update member roles with proper permissions', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -677,7 +708,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should test role hierarchy restrictions', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -713,7 +744,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should remove team members with proper validation', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -739,7 +770,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate REMOVE_MEMBER permission requirements', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 
@@ -763,7 +794,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should enforce business rules for member removal', async () => {
         if (!testTeamId) {
-          debugLog('Skipping test: No test team created');
+          testLoggers.team.debug('Skipping test: No test team created');
           return;
         }
 

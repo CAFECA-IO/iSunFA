@@ -1,14 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { spawn, ChildProcess } from 'child_process';
-
-// Info: (20250701 - Shirley) Utility function for debug logging
-function debugLog(...args: unknown[]): void {
-  if (process.env.DEBUG_TESTS === 'true') {
-    // eslint-disable-next-line no-console
-    console.log(...args);
-  }
-}
+import { testLoggers } from '@/tests/integration/utils/test_logger';
 
 // Info: (20250620 - Shirley) Integration test setup utilities with server lifecycle management
 export class IntegrationTestSetup {
@@ -53,7 +46,7 @@ export class IntegrationTestSetup {
       return;
     }
 
-    debugLog('🚀 Starting Next.js server for integration tests...');
+    testLoggers.setup.debug('🚀 Starting Next.js server for integration tests...');
 
     try {
       // Info: (20250620 - Shirley) Set environment variable for test port
@@ -70,16 +63,16 @@ export class IntegrationTestSetup {
 
       // Info: (20250620 - Shirley) Handle server process events
       IntegrationTestSetup.serverProcess.on('error', (error) => {
-        debugLog('❌ Server process error:', error);
+        testLoggers.setup.debug('❌ Server process error:', error);
       });
 
       // Info: (20250620 - Shirley) Wait for server to be ready
       await IntegrationTestSetup.waitForServerReady();
       IntegrationTestSetup.isServerReady = true;
 
-      debugLog(`✅ Test server running on port ${IntegrationTestSetup.TEST_PORT}`);
+      testLoggers.setup.debug(`✅ Test server running on port ${IntegrationTestSetup.TEST_PORT}`);
     } catch (error) {
-      debugLog('❌ Failed to start test server:', error);
+      testLoggers.setup.debug('❌ Failed to start test server:', error);
       await IntegrationTestSetup.stopServer();
       throw error;
     }
@@ -87,7 +80,7 @@ export class IntegrationTestSetup {
 
   private static async stopServer(): Promise<void> {
     if (IntegrationTestSetup.serverProcess) {
-      debugLog('🛑 Stopping test server...');
+      testLoggers.setup.debug('🛑 Stopping test server...');
 
       IntegrationTestSetup.serverProcess.kill('SIGTERM');
 
@@ -107,7 +100,7 @@ export class IntegrationTestSetup {
 
       IntegrationTestSetup.serverProcess = null;
 
-      debugLog('✅ Test server stopped');
+      testLoggers.setup.debug('✅ Test server stopped');
     }
 
     IntegrationTestSetup.isServerReady = false;
@@ -127,7 +120,7 @@ export class IntegrationTestSetup {
           `http://localhost:${IntegrationTestSetup.TEST_PORT}/api/v2/status_info`
         );
         if (response.ok) {
-          debugLog(`✅ Server is ready after ${attempt} attempts`);
+          testLoggers.setup.debug(`✅ Server is ready after ${attempt} attempts`);
           return;
         }
       } catch (error) {
@@ -135,7 +128,9 @@ export class IntegrationTestSetup {
       }
 
       if (attempt < maxAttempts) {
-        debugLog(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
+        testLoggers.setup.debug(
+          `⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`
+        );
 
         // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => {

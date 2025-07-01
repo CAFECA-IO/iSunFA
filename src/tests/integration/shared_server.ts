@@ -3,14 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { spawn, ChildProcess } from 'child_process';
 import net from 'net';
-
-// Info: (20250701 - Shirley) Utility function for debug logging
-function debugLog(...args: unknown[]): void {
-  if (process.env.DEBUG_TESTS === 'true') {
-    // eslint-disable-next-line no-console
-    console.log(...args);
-  }
-}
+import { testLoggers } from '@/tests/integration/utils/test_logger';
 
 /**
  * Shared Test Server for Integration Tests
@@ -75,7 +68,7 @@ export class SharedTestServer {
       // Start server if not already running
       await SharedTestServer.startServer();
     } catch (error) {
-      debugLog('❌ Failed to initialize shared test server:', error);
+      testLoggers.server.debug('❌ Failed to initialize shared test server:', error);
       await SharedTestServer.cleanup();
       throw error;
     }
@@ -119,12 +112,14 @@ export class SharedTestServer {
 
     while (attempt <= maxRetries) {
       try {
-        debugLog(`🚀 Starting shared test server (attempt ${attempt}/${maxRetries})...`);
+        testLoggers.server.debug(
+          `🚀 Starting shared test server (attempt ${attempt}/${maxRetries})...`
+        );
 
         // Find available port
         SharedTestServer.serverPort = await SharedTestServer.findAvailablePort(3001);
 
-        debugLog(`🔌 Using port ${SharedTestServer.serverPort} for test server`);
+        testLoggers.server.debug(`🔌 Using port ${SharedTestServer.serverPort} for test server`);
 
         // Set environment variables
         process.env.PORT = SharedTestServer.serverPort.toString();
@@ -144,12 +139,12 @@ export class SharedTestServer {
 
         // Handle server process events
         SharedTestServer.serverProcess.on('error', (error) => {
-          debugLog('❌ Server process error:', error);
+          testLoggers.server.debug('❌ Server process error:', error);
         });
 
         SharedTestServer.serverProcess.on('exit', (code) => {
           if (code !== 0) {
-            debugLog(`❌ Server process exited with code ${code}`);
+            testLoggers.server.debug(`❌ Server process exited with code ${code}`);
           }
           SharedTestServer.isServerReady = false;
         });
@@ -158,13 +153,15 @@ export class SharedTestServer {
         await SharedTestServer.waitForServerReady();
         SharedTestServer.isServerReady = true;
 
-        debugLog(`✅ Shared test server running on port ${SharedTestServer.serverPort}`);
+        testLoggers.server.debug(
+          `✅ Shared test server running on port ${SharedTestServer.serverPort}`
+        );
 
         // Warm up the server
         await SharedTestServer.warmupServer();
         return;
       } catch (error) {
-        debugLog(`❌ Failed to start server (attempt ${attempt}):`, error);
+        testLoggers.server.debug(`❌ Failed to start server (attempt ${attempt}):`, error);
 
         // Cleanup failed attempt
         if (SharedTestServer.serverProcess) {
@@ -199,7 +196,7 @@ export class SharedTestServer {
         );
 
         if (response.ok) {
-          debugLog(`✅ Server is ready after ${attempt} attempts`);
+          testLoggers.server.debug(`✅ Server is ready after ${attempt} attempts`);
           return;
         }
       } catch (error) {
@@ -209,7 +206,9 @@ export class SharedTestServer {
       if (attempt < maxAttempts) {
         if (attempt % 10 === 0) {
           // Log every 10 attempts to reduce noise
-          debugLog(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
+          testLoggers.server.debug(
+            `⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, delayBetweenAttempts));
       }
@@ -232,9 +231,9 @@ export class SharedTestServer {
       ];
 
       await Promise.allSettled(warmupRequests);
-      debugLog('🔥 Server warmup completed');
+      testLoggers.server.debug('🔥 Server warmup completed');
     } catch (error) {
-      debugLog('⚠️ Server warmup failed, but continuing:', error);
+      testLoggers.server.debug('⚠️ Server warmup failed, but continuing:', error);
     }
   }
 
@@ -249,7 +248,7 @@ export class SharedTestServer {
       // Clear any temporary files or cached data if needed
       // This is where you'd add cleanup logic for test artifacts
     } catch (error) {
-      debugLog('⚠️ Test state cleanup failed:', error);
+      testLoggers.server.debug('⚠️ Test state cleanup failed:', error);
     }
   }
 
@@ -299,7 +298,7 @@ export class SharedTestServer {
     try {
       // Stop server
       if (SharedTestServer.serverProcess) {
-        debugLog('🛑 Stopping shared test server...');
+        testLoggers.server.debug('🛑 Stopping shared test server...');
 
         SharedTestServer.serverProcess.kill('SIGTERM');
 
@@ -318,7 +317,7 @@ export class SharedTestServer {
         });
 
         SharedTestServer.serverProcess = null;
-        debugLog('✅ Shared test server stopped');
+        testLoggers.server.debug('✅ Shared test server stopped');
       }
 
       // Disconnect database
@@ -332,7 +331,7 @@ export class SharedTestServer {
       SharedTestServer.instance = null;
       SharedTestServer.startupPromise = null;
     } catch (error) {
-      debugLog('❌ Cleanup failed:', error);
+      testLoggers.server.debug('❌ Cleanup failed:', error);
     }
   }
 }

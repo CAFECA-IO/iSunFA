@@ -1,3 +1,5 @@
+import { testLoggers } from '@/tests/integration/utils/test_logger';
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   code: string;
@@ -38,21 +40,17 @@ export class ApiClient {
       ...headers,
     };
 
-    // Info: (20250619 - Shirley) Debug logging if enabled
-    if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`🔥 API Request [${method} ${endpoint}]: ${url}`);
-      if (body) {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('📦 Request Body:', JSON.stringify(body, null, 2));
-      }
-      if (this.cookies.length > 0) {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🍪 Cookies:', this.cookies);
-      }
+    // Info: (20250701 - Shirley) Enhanced debug logging with context
+    const logger = testLoggers.apiClient.withContext({
+      operation: `${method} ${endpoint}`,
+    });
+
+    logger.debug(`🔥 API Request: ${url}`);
+    if (body) {
+      logger.debug('📦 Request Body:', JSON.stringify(body, null, 2));
+    }
+    if (this.cookies.length > 0) {
+      logger.debug('🍪 Cookies:', this.cookies);
     }
 
     // Info: (20250620 - Shirley) Add cookies if available
@@ -83,18 +81,11 @@ export class ApiClient {
 
     const responseData = await response.json();
 
-    // Info: (20250620 - Shirley) Debug logging for response if enabled
-    if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `📨 API Response [${method} ${endpoint}]: ${response.status} ${response.statusText}, \n📋 Response Data: ${JSON.stringify(
-          responseData,
-          null,
-          2
-        )}`
-      );
-    }
+    // Info: (20250701 - Shirley) Enhanced response logging
+    logger.debug(
+      `📨 API Response: ${response.status} ${response.statusText}`,
+      `\n📋 Response Data: ${JSON.stringify(responseData, null, 2)}`
+    );
 
     return responseData;
   }

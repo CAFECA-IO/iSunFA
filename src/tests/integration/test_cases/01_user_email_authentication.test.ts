@@ -7,14 +7,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { NextApiRequest } from 'next';
 import { ApiClient } from '@/tests/integration/api_client';
 import { SharedTestServer } from '@/tests/integration/shared_server';
-
-// Info: (20250701 - Shirley) Utility function for debug logging
-function debugLog(...args: unknown[]): void {
-  if (process.env.DEBUG_TESTS === 'true') {
-    // eslint-disable-next-line no-console
-    console.log(...args);
-  }
-}
+import { testLoggers } from '@/tests/integration/utils/test_logger';
 
 /** Info: (20250624 - Shirley)
  * Integration Test - User Email Authentication (Ticket #1)
@@ -278,7 +271,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         try {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
-          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+          testLoggers.auth.debug(
+            '📧 Email authentication response:',
+            JSON.stringify(emailResponse, null, 2)
+          );
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -289,13 +285,16 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
               code: defaultCode,
             }
           );
-          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+          testLoggers.auth.debug('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Step 2: Use the same session to get status info via HTTP API
           const statusResponse = await apiClient.get('/api/v2/status_info');
-          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+          testLoggers.auth.debug(
+            '📋 Status info response:',
+            JSON.stringify(statusResponse, null, 2)
+          );
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -304,10 +303,13 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             const statusData = statusResponse.payload as { user?: { email?: string } };
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
-            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
+            testLoggers.auth.debug(
+              '✅ Successfully retrieved user info for:',
+              statusData.user?.email
+            );
           }
         } catch (error) {
-          debugLog('❌ Authentication or status check failed:', error);
+          testLoggers.auth.debug('❌ Authentication or status check failed:', error);
           expect(error).toBeDefined();
         }
       });
@@ -351,7 +353,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             expect(typeof result.success).toBe('boolean');
 
             // Log result for debugging
-            debugLog(`API Call ${index + 1} result:`, JSON.stringify(result, null, 2));
+            testLoggers.auth.debug(
+              `API Call ${index + 1} result:`,
+              JSON.stringify(result, null, 2)
+            );
 
             // If successful, check if we're not getting unauthorized errors
             if (result.success && result.response) {
@@ -366,7 +371,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
             }
           });
         } catch (error) {
-          debugLog('❌ Session validation failed:', error);
+          testLoggers.auth.debug('❌ Session validation failed:', error);
           expect(error).toBeDefined();
         }
       });
@@ -408,10 +413,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           expect(loginResponse.success).toBe(true);
 
           // Step 2: Test role listing API with type=User parameter
-          debugLog('🔍 Attempting to get USER type roles...');
+          testLoggers.auth.debug('🔍 Attempting to get USER type roles...');
           const rolesResponse = await apiClient.get('/api/v2/role?type=USER');
           // Deprecated: (20250624 - Luphia) remove eslint-disable
-          debugLog('✅ USER roles response:', JSON.stringify(rolesResponse, null, 2));
+          testLoggers.auth.debug('✅ USER roles response:', JSON.stringify(rolesResponse, null, 2));
           expect(rolesResponse).toBeDefined();
           expect(typeof rolesResponse.success).toBe('boolean');
 
@@ -437,7 +442,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
         } catch (error) {
           // Info: (20250624 - Shirley) Handle network/connection errors gracefully in test environment
           // Deprecated: (20250624 - Luphia) remove eslint-disable
-          debugLog('❌ USER roles response ERROR:', error);
+          testLoggers.auth.debug('❌ USER roles response ERROR:', error);
           expect(error).toBeDefined();
         }
       });
@@ -465,17 +470,23 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           const statusData = statusResponse.payload as { user?: { id?: number } };
           const userId = statusData.user?.id;
           expect(userId).toBeDefined();
-          debugLog('🆔 User ID from status_info:', userId);
+          testLoggers.auth.debug('🆔 User ID from status_info:', userId);
 
           // Test user role creation API with INDIVIDUAL role
           const roleData = { roleName: 'INDIVIDUAL' };
 
-          debugLog('🔍 Attempting to create user role with parameters:', { userId, roleData });
+          testLoggers.auth.debug('🔍 Attempting to create user role with parameters:', {
+            userId,
+            roleData,
+          });
 
           // Info: (20250624 - Shirley) Test getting user's existing roles first
           const existingRolesResponse = await apiClient.get(`/api/v2/user/${userId}/role`);
           // Deprecated: (20250624 - Luphia) remove eslint-disable
-          debugLog('📋 Existing user roles:', JSON.stringify(existingRolesResponse, null, 2));
+          testLoggers.auth.debug(
+            '📋 Existing user roles:',
+            JSON.stringify(existingRolesResponse, null, 2)
+          );
           expect(existingRolesResponse).toBeDefined();
 
           // Verify we're not getting unauthorized errors
@@ -495,7 +506,10 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           // Info: (20250624 - Shirley) Test creating new user role
           const createRoleResponse = await apiClient.post(`/api/v2/user/${userId}/role`, roleData);
           // Deprecated: (20250624 - Luphia) remove eslint-disable
-          debugLog('✅ User role creation response:', JSON.stringify(createRoleResponse, null, 2));
+          testLoggers.auth.debug(
+            '✅ User role creation response:',
+            JSON.stringify(createRoleResponse, null, 2)
+          );
 
           expect(createRoleResponse).toBeDefined();
           expect(typeof createRoleResponse.success).toBe('boolean');
@@ -520,7 +534,7 @@ describe('Integration Test - User Email Authentication (Ticket #1)', () => {
           }
         } catch (error) {
           // Deprecated: (20250624 - Luphia) remove eslint-disable
-          debugLog('❌ User role creation ERROR:', error);
+          testLoggers.auth.debug('❌ User role creation ERROR:', error);
           expect(error).toBeDefined();
         }
       });
