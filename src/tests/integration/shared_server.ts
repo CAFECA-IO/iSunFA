@@ -4,6 +4,14 @@ import { DefaultValue } from '@/constants/default_value';
 import { spawn, ChildProcess } from 'child_process';
 import net from 'net';
 
+// Info: (20250701 - Shirley) Utility function for debug logging
+function debugLog(...args: unknown[]): void {
+  if (process.env.DEBUG_TESTS === 'true') {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
+}
+
 /**
  * Shared Test Server for Integration Tests
  * Manages a single server instance across all integration tests to avoid resource conflicts
@@ -67,8 +75,7 @@ export class SharedTestServer {
       // Start server if not already running
       await SharedTestServer.startServer();
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Failed to initialize shared test server:', error);
+      debugLog('❌ Failed to initialize shared test server:', error);
       await SharedTestServer.cleanup();
       throw error;
     }
@@ -112,14 +119,12 @@ export class SharedTestServer {
 
     while (attempt <= maxRetries) {
       try {
-        // eslint-disable-next-line no-console
-        console.log(`🚀 Starting shared test server (attempt ${attempt}/${maxRetries})...`);
+        debugLog(`🚀 Starting shared test server (attempt ${attempt}/${maxRetries})...`);
 
         // Find available port
         SharedTestServer.serverPort = await SharedTestServer.findAvailablePort(3001);
 
-        // eslint-disable-next-line no-console
-        console.log(`🔌 Using port ${SharedTestServer.serverPort} for test server`);
+        debugLog(`🔌 Using port ${SharedTestServer.serverPort} for test server`);
 
         // Set environment variables
         process.env.PORT = SharedTestServer.serverPort.toString();
@@ -139,14 +144,12 @@ export class SharedTestServer {
 
         // Handle server process events
         SharedTestServer.serverProcess.on('error', (error) => {
-          // eslint-disable-next-line no-console
-          console.error('❌ Server process error:', error);
+          debugLog('❌ Server process error:', error);
         });
 
         SharedTestServer.serverProcess.on('exit', (code) => {
           if (code !== 0) {
-            // eslint-disable-next-line no-console
-            console.error(`❌ Server process exited with code ${code}`);
+            debugLog(`❌ Server process exited with code ${code}`);
           }
           SharedTestServer.isServerReady = false;
         });
@@ -155,15 +158,13 @@ export class SharedTestServer {
         await SharedTestServer.waitForServerReady();
         SharedTestServer.isServerReady = true;
 
-        // eslint-disable-next-line no-console
-        console.log(`✅ Shared test server running on port ${SharedTestServer.serverPort}`);
+        debugLog(`✅ Shared test server running on port ${SharedTestServer.serverPort}`);
 
         // Warm up the server
         await SharedTestServer.warmupServer();
         return;
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error(`❌ Failed to start server (attempt ${attempt}):`, error);
+        debugLog(`❌ Failed to start server (attempt ${attempt}):`, error);
 
         // Cleanup failed attempt
         if (SharedTestServer.serverProcess) {
@@ -198,8 +199,7 @@ export class SharedTestServer {
         );
 
         if (response.ok) {
-          // eslint-disable-next-line no-console
-          console.log(`✅ Server is ready after ${attempt} attempts`);
+          debugLog(`✅ Server is ready after ${attempt} attempts`);
           return;
         }
       } catch (error) {
@@ -209,8 +209,7 @@ export class SharedTestServer {
       if (attempt < maxAttempts) {
         if (attempt % 10 === 0) {
           // Log every 10 attempts to reduce noise
-          // eslint-disable-next-line no-console
-          console.log(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
+          debugLog(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
         }
         await new Promise((resolve) => setTimeout(resolve, delayBetweenAttempts));
       }
@@ -233,11 +232,9 @@ export class SharedTestServer {
       ];
 
       await Promise.allSettled(warmupRequests);
-      // eslint-disable-next-line no-console
-      console.log('🔥 Server warmup completed');
+      debugLog('🔥 Server warmup completed');
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('⚠️ Server warmup failed, but continuing:', error);
+      debugLog('⚠️ Server warmup failed, but continuing:', error);
     }
   }
 
@@ -252,8 +249,7 @@ export class SharedTestServer {
       // Clear any temporary files or cached data if needed
       // This is where you'd add cleanup logic for test artifacts
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.warn('⚠️ Test state cleanup failed:', error);
+      debugLog('⚠️ Test state cleanup failed:', error);
     }
   }
 
@@ -303,8 +299,7 @@ export class SharedTestServer {
     try {
       // Stop server
       if (SharedTestServer.serverProcess) {
-        // eslint-disable-next-line no-console
-        console.log('🛑 Stopping shared test server...');
+        debugLog('🛑 Stopping shared test server...');
 
         SharedTestServer.serverProcess.kill('SIGTERM');
 
@@ -323,8 +318,7 @@ export class SharedTestServer {
         });
 
         SharedTestServer.serverProcess = null;
-        // eslint-disable-next-line no-console
-        console.log('✅ Shared test server stopped');
+        debugLog('✅ Shared test server stopped');
       }
 
       // Disconnect database
@@ -338,8 +332,7 @@ export class SharedTestServer {
       SharedTestServer.instance = null;
       SharedTestServer.startupPromise = null;
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('❌ Cleanup failed:', error);
+      debugLog('❌ Cleanup failed:', error);
     }
   }
 }

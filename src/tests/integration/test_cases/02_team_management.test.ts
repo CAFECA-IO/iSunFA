@@ -2,6 +2,14 @@ import { DefaultValue } from '@/constants/default_value';
 import { ApiClient } from '@/tests/integration/api_client';
 import { SharedTestServer } from '@/tests/integration/shared_server';
 
+// Info: (20250701 - Shirley) Utility function for debug logging
+function debugLog(...args: unknown[]): void {
+  if (process.env.DEBUG_TESTS === 'true') {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
+}
+
 /**
  * Integration Test - Team Management & Setup (Ticket #2)
  *
@@ -57,8 +65,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         try {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
-          // eslint-disable-next-line no-console
-          console.log('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+
+          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -69,15 +77,15 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               code: defaultCode,
             }
           );
-          // eslint-disable-next-line no-console
-          console.log('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+
+          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
-          // eslint-disable-next-line no-console
-          console.log('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+
+          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -86,12 +94,11 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             const statusData = statusResponse.payload as { user?: { email?: string } };
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
-            // eslint-disable-next-line no-console
-            console.log('✅ Successfully retrieved user info for:', statusData.user?.email);
+
+            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log('❌ Authentication or status check failed:', error);
+          debugLog('❌ Authentication or status check failed:', error);
           expect(error).toBeDefined();
         }
       });
@@ -178,8 +185,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
         try {
           const createTeamResponse = await apiClient.post('/api/v2/team', teamData);
-          // eslint-disable-next-line no-console
-          console.log('🏢 Create team response:', JSON.stringify(createTeamResponse, null, 2));
+
+          debugLog('🏢 Create team response:', JSON.stringify(createTeamResponse, null, 2));
 
           expect(createTeamResponse).toBeDefined();
           expect(typeof createTeamResponse.success).toBe('boolean');
@@ -199,16 +206,14 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               expect(teamPayload.imageId).toBeDefined();
             }
 
-            // eslint-disable-next-line no-console
-            console.log('✅ Successfully created team with ID:', teamPayload.id);
+            debugLog('✅ Successfully created team with ID:', teamPayload.id);
           } else {
             // If team creation fails, log the error for debugging
-            // eslint-disable-next-line no-console
-            console.log('❌ Team creation failed:', createTeamResponse);
+
+            debugLog('❌ Team creation failed:', createTeamResponse);
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log('❌ Team creation error:', error);
+          debugLog('❌ Team creation error:', error);
           expect(error).toBeDefined();
         }
       });
@@ -235,8 +240,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         } catch (error) {
           // Expect unauthorized error
           expect(error).toBeDefined();
-          // eslint-disable-next-line no-console
-          console.log('✅ Correctly rejected unauthorized team creation');
+
+          debugLog('✅ Correctly rejected unauthorized team creation');
         }
       });
 
@@ -264,8 +269,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         // eslint-disable-next-line no-restricted-syntax
         for (const testCase of invalidTestCases) {
           try {
-            // eslint-disable-next-line no-console
-            console.log(`🧪 Testing: ${testCase.name}`);
+            debugLog(`🧪 Testing: ${testCase.name}`);
             // eslint-disable-next-line no-await-in-loop
             const createTeamResponse = await apiClient.post('/api/v2/team', testCase.data);
 
@@ -273,16 +277,14 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             if (createTeamResponse.success === false) {
               expect(createTeamResponse.success).toBe(false);
               expect(createTeamResponse.code).toContain(testCase.expectedErrorPattern);
-              // eslint-disable-next-line no-console
-              console.log(
-                `✅ ${testCase.name}: Correctly returned error ${createTeamResponse.code}`
-              );
+
+              debugLog(`✅ ${testCase.name}: Correctly returned error ${createTeamResponse.code}`);
             }
           } catch (error) {
             // API might throw exception for invalid data
             expect(error).toBeDefined();
-            // eslint-disable-next-line no-console
-            console.log(`✅ ${testCase.name}: Correctly threw exception`);
+
+            debugLog(`✅ ${testCase.name}: Correctly threw exception`);
           }
         }
       });
@@ -313,8 +315,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         try {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
-          // eslint-disable-next-line no-console
-          console.log('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+
+          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -325,15 +327,15 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               code: defaultCode,
             }
           );
-          // eslint-disable-next-line no-console
-          console.log('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+
+          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
-          // eslint-disable-next-line no-console
-          console.log('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+
+          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -342,8 +344,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             const statusData = statusResponse.payload as { user?: { email?: string } };
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
-            // eslint-disable-next-line no-console
-            console.log('✅ Successfully retrieved user info for:', statusData.user?.email);
+
+            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
           }
 
           // Create a test team for invitation testing
@@ -356,21 +358,18 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           if (createTeamResponse.success) {
             const teamPayload = createTeamResponse.payload as { id: number };
             testTeamId = teamPayload.id;
-            // eslint-disable-next-line no-console
-            console.log('✅ Created test team with ID:', testTeamId);
+
+            debugLog('✅ Created test team with ID:', testTeamId);
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log('❌ Authentication, status check, or team creation failed:', error);
+          debugLog('❌ Authentication, status check, or team creation failed:', error);
           expect(error).toBeDefined();
         }
       });
 
       it('should successfully invite team members with valid emails', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -399,9 +398,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should fail invitation with invalid email formats', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -427,9 +424,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should handle empty email list in invitation', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -453,9 +448,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate invitation permission requirements', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -482,9 +475,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should track invitation status and workflow', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -538,8 +529,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
         try {
           // First, create email login record via HTTP API
           const emailResponse = await apiClient.get(`/api/v2/email/${userEmail}/one_time_password`);
-          // eslint-disable-next-line no-console
-          console.log('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
+
+          debugLog('📧 Email authentication response:', JSON.stringify(emailResponse, null, 2));
           expect(emailResponse).toBeDefined();
           expect(emailResponse.success).toBe(true);
 
@@ -550,15 +541,15 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
               code: defaultCode,
             }
           );
-          // eslint-disable-next-line no-console
-          console.log('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
+
+          debugLog('🔐 Login response:', JSON.stringify(loginResponse, null, 2));
           expect(loginResponse).toBeDefined();
           expect(loginResponse.success).toBe(true);
 
           // Verify session state with status_info after login
           const statusResponse = await apiClient.get('/api/v2/status_info');
-          // eslint-disable-next-line no-console
-          console.log('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
+
+          debugLog('📋 Status info response:', JSON.stringify(statusResponse, null, 2));
           expect(statusResponse).toBeDefined();
           expect(statusResponse.success).toBe(true);
 
@@ -567,8 +558,8 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
             const statusData = statusResponse.payload as { user?: { email?: string } };
             expect(statusData.user).toBeDefined();
             expect(statusData.user?.email).toBe(userEmail);
-            // eslint-disable-next-line no-console
-            console.log('✅ Successfully retrieved user info for:', statusData.user?.email);
+
+            debugLog('✅ Successfully retrieved user info for:', statusData.user?.email);
           }
 
           // Create a test team for member management testing
@@ -581,21 +572,18 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
           if (createTeamResponse.success) {
             const teamPayload = createTeamResponse.payload as { id: number };
             testTeamId = teamPayload.id;
-            // eslint-disable-next-line no-console
-            console.log('✅ Created test team with ID:', testTeamId);
+
+            debugLog('✅ Created test team with ID:', testTeamId);
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log('❌ Authentication, status check, or team creation failed:', error);
+          debugLog('❌ Authentication, status check, or team creation failed:', error);
           expect(error).toBeDefined();
         }
       });
 
       it('should list team members with proper pagination', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -627,9 +615,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate LIST_MEMBER_BY_TEAM_ID permission', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -649,9 +635,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should update member roles with proper permissions', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -693,9 +677,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should test role hierarchy restrictions', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -731,9 +713,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should remove team members with proper validation', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -759,9 +739,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should validate REMOVE_MEMBER permission requirements', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 
@@ -785,9 +763,7 @@ describe('Integration Test - Team Management & Setup (Ticket #2)', () => {
 
       it('should enforce business rules for member removal', async () => {
         if (!testTeamId) {
-          // eslint-disable-next-line no-console
-          // eslint-disable-next-line no-console
-          console.log('Skipping test: No test team created');
+          debugLog('Skipping test: No test team created');
           return;
         }
 

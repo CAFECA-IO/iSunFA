@@ -64,6 +64,9 @@ const config: Config = {
   // Info: (20250630 - Shirley) Verbose output only in debug mode
   verbose: process.env.DEBUG_TESTS === 'true',
 
+  // Info: (20250701 - Shirley) Silent mode when not debugging
+  silent: process.env.DEBUG_TESTS !== 'true',
+
   // Info: (20250630 - Shirley) Don't exit on first test failure - run all tests to get full picture
   bail: false,
 

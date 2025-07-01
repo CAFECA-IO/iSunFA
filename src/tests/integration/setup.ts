@@ -2,6 +2,14 @@ import { PrismaClient } from '@prisma/client';
 import { DefaultValue } from '@/constants/default_value';
 import { spawn, ChildProcess } from 'child_process';
 
+// Info: (20250701 - Shirley) Utility function for debug logging
+function debugLog(...args: unknown[]): void {
+  if (process.env.DEBUG_TESTS === 'true') {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
+}
+
 // Info: (20250620 - Shirley) Integration test setup utilities with server lifecycle management
 export class IntegrationTestSetup {
   private static prisma: PrismaClient;
@@ -45,9 +53,7 @@ export class IntegrationTestSetup {
       return;
     }
 
-    // Deprecated: (20250620 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('🚀 Starting Next.js server for integration tests...');
+    debugLog('🚀 Starting Next.js server for integration tests...');
 
     try {
       // Info: (20250620 - Shirley) Set environment variable for test port
@@ -64,22 +70,16 @@ export class IntegrationTestSetup {
 
       // Info: (20250620 - Shirley) Handle server process events
       IntegrationTestSetup.serverProcess.on('error', (error) => {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('❌ Server process error:', error);
+        debugLog('❌ Server process error:', error);
       });
 
       // Info: (20250620 - Shirley) Wait for server to be ready
       await IntegrationTestSetup.waitForServerReady();
       IntegrationTestSetup.isServerReady = true;
 
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`✅ Test server running on port ${IntegrationTestSetup.TEST_PORT}`);
+      debugLog(`✅ Test server running on port ${IntegrationTestSetup.TEST_PORT}`);
     } catch (error) {
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('❌ Failed to start test server:', error);
+      debugLog('❌ Failed to start test server:', error);
       await IntegrationTestSetup.stopServer();
       throw error;
     }
@@ -87,9 +87,7 @@ export class IntegrationTestSetup {
 
   private static async stopServer(): Promise<void> {
     if (IntegrationTestSetup.serverProcess) {
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('🛑 Stopping test server...');
+      debugLog('🛑 Stopping test server...');
 
       IntegrationTestSetup.serverProcess.kill('SIGTERM');
 
@@ -108,9 +106,8 @@ export class IntegrationTestSetup {
       });
 
       IntegrationTestSetup.serverProcess = null;
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test server stopped');
+
+      debugLog('✅ Test server stopped');
     }
 
     IntegrationTestSetup.isServerReady = false;
@@ -121,19 +118,16 @@ export class IntegrationTestSetup {
     const delayBetweenAttempts = 1000; // Info: (20250620 - Shirley) 1 second
 
     let attempt = 1;
-    // Deprecated: (20250620 - Luphia) remove eslint-disable
+
     // eslint-disable-next-line no-await-in-loop
     while (attempt <= maxAttempts) {
       try {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         const response = await fetch(
           `http://localhost:${IntegrationTestSetup.TEST_PORT}/api/v2/status_info`
         );
         if (response.ok) {
-          // Deprecated: (20250620 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`✅ Server is ready after ${attempt} attempts`);
+          debugLog(`✅ Server is ready after ${attempt} attempts`);
           return;
         }
       } catch (error) {
@@ -141,10 +135,8 @@ export class IntegrationTestSetup {
       }
 
       if (attempt < maxAttempts) {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
+        debugLog(`⏳ Waiting for server to be ready... (attempt ${attempt}/${maxAttempts})`);
+
         // eslint-disable-next-line no-await-in-loop
         await new Promise((resolve) => {
           setTimeout(resolve, delayBetweenAttempts);
