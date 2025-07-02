@@ -69,6 +69,7 @@ const ModeSwitch = () => {
 
   const handleModeSwitch = () => {
     setIsDarkMode((prev) => !prev);
+    document.documentElement.classList.toggle('dark');
   };
 
   return (
