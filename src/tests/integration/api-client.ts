@@ -120,9 +120,10 @@ export class ApiClient {
   // Info: (20250619 - Shirley) DELETE request
   async delete<T>(
     endpoint: string,
+    body?: unknown,
     headers?: Record<string, string>
   ): Promise<ApiResponse<T> | ApiErrorResponse> {
-    return this.makeRequest<T>('DELETE', endpoint, undefined, headers);
+    return this.makeRequest<T>('DELETE', endpoint, body, headers);
   }
 
   // Info: (20250619 - Shirley) Clear session cookies
