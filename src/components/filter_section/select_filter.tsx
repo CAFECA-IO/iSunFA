@@ -55,7 +55,7 @@ const SelectFilter: React.FC<SelectFilterProps> = ({
             ? t(`filter_section_type:FILTER_SECTION_TYPE.${selectedValue.toUpperCase()}`)
             : selectedValue}
         </p>
-        <div className="flex h-20px w-20px items-center justify-center">
+        <div className="flex h-20px w-20px items-center justify-center text-icon-surface-single-color-primary">
           <FaChevronDown className={menuVisibility ? 'rotate-180' : 'rotate-0'} />
         </div>
         <div

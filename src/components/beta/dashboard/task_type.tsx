@@ -19,7 +19,7 @@ const TaskType = ({ iconName, title, alwaysNeedTitle }: TaskTypeProps) => {
         width={22}
         height={22}
         className="h-22px w-22px flex-none"
-      ></Image>
+      />
       <h4
         className={cn('hidden text-xs font-semibold text-text-neutral-primary tablet:block', {
           block: alwaysNeedTitle,

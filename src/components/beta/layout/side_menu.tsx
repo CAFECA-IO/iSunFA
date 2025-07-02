@@ -230,7 +230,7 @@ const SubMenu = ({ selectedMenuOption, toggleOverlay }: SubMenuProps) => {
   if (!subMenu) return null;
 
   return (
-    <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+    <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-shadow-lv-4 before:to-transparent">
       <div className="flex flex-col gap-24px">
         {subMenu.map((item) => (
           <SubMenuSection key={item.caption} subMenuSection={item} toggleOverlay={toggleOverlay} />
@@ -348,7 +348,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         >
           {/* Info: (20241121 - Liz) Side Menu Icon */}
           <div>
-            <button type="button" onClick={toggleSideMenu} className="p-10px">
+            <button
+              type="button"
+              onClick={toggleSideMenu}
+              className="p-10px text-button-text-secondary"
+            >
               <FiLayout size={24} />
             </button>
           </div>
@@ -432,7 +436,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         </section>
       ) : (
         <section className="h-full w-66px flex-none px-12px py-32px">
-          <button type="button" onClick={toggleSideMenu} className="p-10px">
+          <button
+            type="button"
+            onClick={toggleSideMenu}
+            className="p-10px text-button-text-secondary"
+          >
             <FiLayout size={24} />
           </button>
         </section>
