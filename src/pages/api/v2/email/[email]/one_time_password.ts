@@ -1,6 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-// Deprecated: (20250509 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { getSession, setSession } from '@/lib/utils/session';
 // Deprecated: (20250509 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -168,6 +166,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     switch (method) {
       case HttpMethod.POST:
         ({ statusMessage, result } = await handlePostRequest(req));
+        break;
+      case HttpMethod.DELETE:
+        ({ statusMessage, result } = await handleDeleteRequest(req));
         break;
       case HttpMethod.GET:
       default:
