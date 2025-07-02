@@ -61,44 +61,20 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20240702 - Shirley) At least one email should work (system default)
       const successfulAuths = results.filter((result) => result.success);
       expect(successfulAuths.length).toBeGreaterThan(0);
-
-      // Info: (20240702 - Shirley) Log results for debugging
-      // eslint-disable-next-line no-console
-      console.log('Authentication results:', results);
     });
 
     it('should test individual email authentication and verify with statusInfo', async () => {
       // Info: (20240702 - Shirley) Test each default email individually
       const defaultEmails = TestDataFactory.DEFAULT_TEST_EMAILS;
 
-      // eslint-disable-next-line no-console
-      console.log('Testing individual emails:', defaultEmails);
-
       // Info: (20240702 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
       const emailTests = defaultEmails.map(async (email) => {
         // Info: (20240702 - Shirley) Create a fresh API helper for each email test
         const emailApiHelper = new APITestHelper();
 
-        // eslint-disable-next-line no-console
-        console.log(`Testing authentication for email: ${email}`);
-
         // Info: (20240702 - Shirley) Complete authentication flow
         const { otpResponse, authResponse, statusResponse } =
           await emailApiHelper.completeAuthenticationFlow(email);
-
-        // eslint-disable-next-line no-console
-        console.log(`OTP Response for ${email}:`, {
-          status: otpResponse.status,
-          success: otpResponse.body.success,
-          code: otpResponse.body.code,
-        });
-
-        // eslint-disable-next-line no-console
-        console.log(`Auth Response for ${email}:`, {
-          status: authResponse.status,
-          success: authResponse.body.success,
-          payload: authResponse.body.payload,
-        });
 
         // Info: (20240702 - Shirley) Verify authentication responses
         expect(otpResponse.status).toBe(200);
@@ -111,13 +87,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         expect(statusResponse.body.success).toBe(true);
         expect(statusResponse.body.payload).toBeDefined();
 
-        // eslint-disable-next-line no-console
-        console.log(`Status Response for ${email}:`, {
-          status: statusResponse.status,
-          success: statusResponse.body.success,
-          payload: statusResponse.body.payload,
-        });
-
         if (statusResponse.body.payload && typeof statusResponse.body.payload === 'object') {
           const payload = statusResponse.body.payload as {
             user: { email: string; id: number; name: string };
@@ -128,14 +97,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
           expect(payload.user.id).toBeDefined();
           expect(typeof payload.user.id).toBe('number');
           expect(payload.user.name).toBeDefined();
-
-          // eslint-disable-next-line no-console
-          console.log(
-            `✅ Successfully authenticated and verified ${email} - User ID: ${payload.user.id}, Name: ${payload.user.name}`
-          );
         } else {
-          // eslint-disable-next-line no-console
-          console.log(`❌ StatusInfo payload is invalid for ${email}`);
           throw new Error(`StatusInfo payload is invalid for ${email}`);
         }
       });

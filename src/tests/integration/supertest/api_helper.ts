@@ -95,34 +95,14 @@ export class APITestHelper {
     const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
     const testCode = code || TestDataFactory.DEFAULT_VERIFICATION_CODE;
 
-    // eslint-disable-next-line no-console
-    console.log(`Starting authentication flow for ${testEmail} with code ${testCode}`);
-
     // Info: (20240702 - Shirley) Step 1: Request OTP
     const otpResponse = await this.requestOTP(testEmail);
-    // eslint-disable-next-line no-console
-    console.log(`OTP Request completed for ${testEmail}:`, {
-      status: otpResponse.status,
-      success: otpResponse.body.success,
-    });
 
     // Info: (20240702 - Shirley) Step 2: Authenticate with OTP
     const authResponse = await this.authenticateWithOTP(testEmail, testCode);
-    // eslint-disable-next-line no-console
-    console.log(`Authentication completed for ${testEmail}:`, {
-      status: authResponse.status,
-      success: authResponse.body.success,
-      sessionCookies: this.sessionCookies.length,
-    });
 
     // Info: (20240702 - Shirley) Step 3: Verify authentication by checking status
     const statusResponse = await this.getStatusInfo();
-    // eslint-disable-next-line no-console
-    console.log(`Status check completed for ${testEmail}:`, {
-      status: statusResponse.status,
-      success: statusResponse.body.success,
-      hasPayload: !!statusResponse.body.payload,
-    });
 
     return {
       otpResponse,
@@ -141,20 +121,12 @@ export class APITestHelper {
         // Info: (20240702 - Shirley) Create a fresh helper for each email to avoid session conflicts
         const emailHelper = new APITestHelper();
         const response = await emailHelper.completeAuthenticationFlow(email);
-        // eslint-disable-next-line no-console
-        console.log(`Email test result for ${email}:`, {
-          success: true,
-          authSuccess: response.authResponse.body.success,
-          statusSuccess: response.statusResponse.body.success,
-        });
         return {
           email,
           success: true,
           response,
         };
       } catch (error) {
-        // eslint-disable-next-line no-console
-        console.log(`Email test failed for ${email}:`, error);
         return {
           email,
           success: false,
