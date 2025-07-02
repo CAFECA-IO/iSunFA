@@ -281,6 +281,7 @@ const FilterSection = <T,>({
           selectedValue={selectedStatus}
           onChange={setSelectedStatus}
           containerClassName={`${isSideMenuStyle ? 'hidden tablet:flex' : ''} basis-1/5`}
+          labelClassName={labelClassName}
         />
       )}
 

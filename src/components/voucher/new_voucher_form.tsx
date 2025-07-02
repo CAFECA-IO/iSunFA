@@ -1114,7 +1114,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             value={note.note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+            className={`rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}

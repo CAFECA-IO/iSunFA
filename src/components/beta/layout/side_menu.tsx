@@ -348,7 +348,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         >
           {/* Info: (20241121 - Liz) Side Menu Icon */}
           <div>
-            <button type="button" onClick={toggleSideMenu} className="p-10px">
+            <button
+              type="button"
+              onClick={toggleSideMenu}
+              className="p-10px text-button-text-secondary"
+            >
               <FiLayout size={24} />
             </button>
           </div>
@@ -432,7 +436,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         </section>
       ) : (
         <section className="h-full w-66px flex-none px-12px py-32px">
-          <button type="button" onClick={toggleSideMenu} className="p-10px">
+          <button
+            type="button"
+            onClick={toggleSideMenu}
+            className="p-10px text-button-text-secondary"
+          >
             <FiLayout size={24} />
           </button>
         </section>
