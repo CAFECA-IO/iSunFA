@@ -218,6 +218,7 @@ const VoucherListPageBody: React.FC = () => {
           initialPage={queryPage}
           isShowSideMenu={isShowSideMenu}
           toggleSideMenu={toggleSideMenu}
+          labelClassName="text-input-text-primary"
         />
         {/* Info: (20240920 - Julian) Voucher List */}
         <VoucherList

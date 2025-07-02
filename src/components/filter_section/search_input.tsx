@@ -23,7 +23,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       <input
         type="text"
         id="search"
-        className={`relative flex-1 bg-transparent p-10px outline-none`}
+        className={`relative flex-1 bg-transparent p-10px text-input-text-input-filled outline-none`}
         placeholder={t('search:COMMON.SEARCH')}
         defaultValue={searchQuery}
         onKeyDown={(e) => {

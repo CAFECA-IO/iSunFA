@@ -137,6 +137,7 @@ const AssetListPageBody: React.FC = () => {
           sort={selectedSort}
           isShowSideMenu={isShowSideMenu}
           toggleSideMenu={toggleSideMenu}
+          labelClassName="text-input-text-primary"
         />
         {/* Info: (20240925 - Julian) Asset List */}
         <AssetList
