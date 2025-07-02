@@ -18,7 +18,10 @@ export class TestDataFactory {
   }
 
   // Info: (20240701 - Shirley) Generate authentication request for email login
-  static createAuthenticationRequest(email?: string, code?: string): { email: string; code: string } {
+  static createAuthenticationRequest(
+    email?: string,
+    code?: string
+  ): { email: string; code: string } {
     return {
       email: email || this.PRIMARY_TEST_EMAIL,
       code: code || this.DEFAULT_VERIFICATION_CODE,

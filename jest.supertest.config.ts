@@ -10,11 +10,11 @@ const config: Config = {
   // Info: (20240701 - Shirley) Test environment configuration
   testEnvironment: 'node',
 
-  // Info: (20240701 - Shirley) Test file patterns for supertest integration tests
-  testMatch: ['<rootDir>/src/tests/integration/test_cases_supertest/**/*.test.ts'],
+  // Info: (20240701 - Shirley) Test file patterns for integration tests
+  testMatch: ['<rootDir>/src/tests/integration/test_cases/**/*.test.ts'],
 
   // Info: (20240701 - Shirley) Setup files
-  setupFilesAfterEnv: ['<rootDir>/src/tests/integration/supertest/jest_setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/integration/jest_setup.ts'],
 
   // Info: (20240701 - Shirley) Module path mapping
   moduleNameMapper: {

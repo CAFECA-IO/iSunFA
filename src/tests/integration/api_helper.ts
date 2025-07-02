@@ -3,8 +3,8 @@ import {
   createTestClient,
   createDynamicTestClient,
   TestClient,
-} from '@/tests/integration/supertest/test_client';
-import { TestDataFactory } from '@/tests/integration/supertest/test_data_factory';
+} from '@/tests/integration/test_client';
+import { TestDataFactory } from '@/tests/integration/test_data_factory';
 
 // Info: (20240701 - Shirley) Import API handlers for testing
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
@@ -139,5 +139,26 @@ export class APITestHelper {
     results.push(...promiseResults);
 
     return results;
+  }
+
+  // Info: (20240702 - Shirley) Clear session cookies for fresh authentication
+  clearSession(): void {
+    this.sessionCookies = [];
+  }
+
+  // Info: (20240702 - Shirley) Get current session cookies for debugging
+  getCurrentSession(): string[] {
+    return [...this.sessionCookies];
+  }
+
+  // Info: (20240702 - Shirley) Check if user is currently authenticated
+  isAuthenticated(): boolean {
+    return this.sessionCookies.length > 0;
+  }
+
+  // Info: (20240702 - Shirley) Auto-login helper - automatically authenticate with primary email
+  async autoLogin(): Promise<AuthFlowResult> {
+    this.clearSession();
+    return this.completeAuthenticationFlow();
   }
 }
