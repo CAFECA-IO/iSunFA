@@ -199,9 +199,6 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) Google 登入
   const googleAuthSignIn = () => {
-    // Deprecated: (20250625 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(action);
     authenticateUser(Provider.GOOGLE, {
       invitation,
       action,
