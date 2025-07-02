@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
-import { RxCross1 } from 'react-icons/rx';
+import { RxCross2 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
@@ -111,7 +111,7 @@ const TeamBankAccountEditModal: React.FC<TeamBankAccountEditModalProps> = ({
             className="absolute right-0 text-icon-surface-single-color-primary"
             onClick={onClose}
           >
-            <RxCross1 size={16} />
+            <RxCross2 size={24} />
           </button>
 
           {/* Info:(20250225 - Anna) 標題 */}
