@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+import { FaCodepen } from 'react-icons/fa';
+import { CgShoppingBag } from 'react-icons/cg';
 import { FiSend } from 'react-icons/fi';
 import Toggle from '@/components/toggle/toggle';
 import APIHandler from '@/lib/utils/api_handler';
@@ -80,12 +82,12 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const settings = [
     {
       key: 'systemNotification',
-      icon: '/icons/codepen.svg',
+      icon: <FaCodepen size={16} className="text-icon-surface-single-color-primary" />,
       label: t('settings:NORMAL.SYSTEM_NOTIFICATION'),
     },
     {
       key: 'updateAndSubscriptionNotification',
-      icon: '/icons/bag.svg',
+      icon: <CgShoppingBag size={16} className="text-icon-surface-single-color-primary" />,
       label: t('settings:NORMAL.UPDATES_N_SUBSCRIPTION_NOTIFICATION'),
     },
     {
