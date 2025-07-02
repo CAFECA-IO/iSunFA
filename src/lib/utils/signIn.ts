@@ -14,6 +14,7 @@ import { DefaultValue } from '@/constants/default_value';
 import { createDefaultTeamForUser } from '@/lib/utils/repo/team.repo';
 import { handleInviteTeamMember } from '@/lib/utils/repo/user.repo';
 import { getUserTeams } from '@/lib/utils/repo/team_member.repo';
+import { createExternalUser } from '@/lib/utils/repo/external_user.repo';
 
 export const fetchImageInfo = async (
   imageUrl: string
@@ -120,6 +121,17 @@ export const handleSignInSession = async (
       teams: userTeams,
     });
   }
+
+  // Info: (20250630 - Luphia) 若 Session 存在 External User，於資料庫內登記外部用戶綁定
+  if (session.external && session.userId) {
+    const externalUser = {
+      userId: session.userId,
+      externalId: session.external.uid,
+      externalProvider: session.external.provider,
+    };
+    await createExternalUser(externalUser);
+  }
+
   const log = {
     sessionId: session.isunfa,
     userId: session.userId || DefaultValue.USER_ID.UNKNOWN,

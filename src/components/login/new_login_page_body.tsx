@@ -35,6 +35,10 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
   const { toastHandler } = useModalContext();
   const router = useRouter();
 
+  /* Info: (20250625 - Luphia)
+   * 獲取外部服務參數 service, uid
+   */
+  const { provider, uid } = router.query as { provider?: string; uid?: string };
   const [step, setStep] = useState<LOGIN_STEP.INPUT_EMAIL | LOGIN_STEP.VERIFY_CODE>(
     LOGIN_STEP.INPUT_EMAIL
   ); // Info: (20250509 - Liz) 當前步驟
@@ -96,7 +100,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
     setIsSendingEmail(true);
     setSendEmailError('');
     try {
+      const query = provider && uid ? { provider, uid } : undefined;
       const { success, error, data } = await sendVerificationEmailAPI({
+        query,
         params: {
           email: trimmedEmail,
         },
@@ -152,8 +158,8 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
         return;
       }
 
-      // Info: (20250509 - Liz) 驗證成功後，進行登入或其他操作 (例如打 API 登入、打 API 獲取使用者資料、跳轉頁面等)
-      router.push(ISUNFA_ROUTE.DASHBOARD); // Info: (20250508 - Liz) 跳轉到儀表板頁面
+      // Info: (20250630 - Luphia) 驗證成功跳轉回到登入頁面，該頁面會處理服務條款確認、角色創建、角色選擇等流程
+      router.push(ISUNFA_ROUTE.LOGIN);
     } catch (err) {
       setVerifyCodeError('驗證失敗，請稍後再試');
     } finally {
@@ -193,6 +199,9 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
   // Info: (20250508 - Liz) Google 登入
   const googleAuthSignIn = () => {
+    // Deprecated: (20250625 - Luphia) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log(action);
     authenticateUser(Provider.GOOGLE, {
       invitation,
       action,

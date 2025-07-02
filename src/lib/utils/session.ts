@@ -242,6 +242,7 @@ export const setSession = async (
     companyId?: number;
     challenge?: string;
     roleId?: number;
+    external?: { provider: string; uid: string };
     teams?: { id: number; role: string }[];
   }
 ) => {
