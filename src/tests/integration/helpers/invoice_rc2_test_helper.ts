@@ -114,6 +114,7 @@ export class InvoiceRC2TestHelper {
 
   static async uploadEncryptedFileFake(accountBookId: number) {
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
+    // Deprecated: (20250702 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('File Path:', filePath);
 
