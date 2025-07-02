@@ -90,19 +90,39 @@ export class APITestHelper {
     return request.expect(200) as Promise<TestResponse>;
   }
 
-  // Info: (20240701 - Shirley) Test authentication flow - request OTP then authenticate
+  // Info: (20240702 - Shirley) Test authentication flow - request OTP then authenticate
   async completeAuthenticationFlow(email?: string, code?: string): Promise<AuthFlowResult> {
     const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
     const testCode = code || TestDataFactory.DEFAULT_VERIFICATION_CODE;
 
-    // Info: (20240701 - Shirley) Step 1: Request OTP
+    // eslint-disable-next-line no-console
+    console.log(`Starting authentication flow for ${testEmail} with code ${testCode}`);
+
+    // Info: (20240702 - Shirley) Step 1: Request OTP
     const otpResponse = await this.requestOTP(testEmail);
+    // eslint-disable-next-line no-console
+    console.log(`OTP Request completed for ${testEmail}:`, {
+      status: otpResponse.status,
+      success: otpResponse.body.success,
+    });
 
-    // Info: (20240701 - Shirley) Step 2: Authenticate with OTP
+    // Info: (20240702 - Shirley) Step 2: Authenticate with OTP
     const authResponse = await this.authenticateWithOTP(testEmail, testCode);
+    // eslint-disable-next-line no-console
+    console.log(`Authentication completed for ${testEmail}:`, {
+      status: authResponse.status,
+      success: authResponse.body.success,
+      sessionCookies: this.sessionCookies.length,
+    });
 
-    // Info: (20240701 - Shirley) Step 3: Verify authentication by checking status
+    // Info: (20240702 - Shirley) Step 3: Verify authentication by checking status
     const statusResponse = await this.getStatusInfo();
+    // eslint-disable-next-line no-console
+    console.log(`Status check completed for ${testEmail}:`, {
+      status: statusResponse.status,
+      success: statusResponse.body.success,
+      hasPayload: !!statusResponse.body.payload,
+    });
 
     return {
       otpResponse,
@@ -111,20 +131,30 @@ export class APITestHelper {
     };
   }
 
-  // Info: (20240701 - Shirley) Test all default emails for authentication
-  async testAllDefaultEmails(): Promise<EmailTestResult[]> {
-    const results: EmailTestResult[] = [];
+  // Info: (20240702 - Shirley) Test all default emails for authentication
+  static async testAllDefaultEmails(): Promise<Array<EmailTestResult>> {
+    const results: Array<EmailTestResult> = [];
 
-    // Info: (20240701 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
+    // Info: (20240702 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
     const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
       try {
-        const response = await this.completeAuthenticationFlow(email);
+        // Info: (20240702 - Shirley) Create a fresh helper for each email to avoid session conflicts
+        const emailHelper = new APITestHelper();
+        const response = await emailHelper.completeAuthenticationFlow(email);
+        // eslint-disable-next-line no-console
+        console.log(`Email test result for ${email}:`, {
+          success: true,
+          authSuccess: response.authResponse.body.success,
+          statusSuccess: response.statusResponse.body.success,
+        });
         return {
           email,
           success: true,
           response,
         };
       } catch (error) {
+        // eslint-disable-next-line no-console
+        console.log(`Email test failed for ${email}:`, error);
         return {
           email,
           success: false,
