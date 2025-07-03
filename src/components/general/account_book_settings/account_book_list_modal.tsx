@@ -64,7 +64,7 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
           setRefreshKey={setRefreshKey}
         />
       )}
-      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 tablet:p-lv-7">
+      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 px-20px py-16px tablet:p-lv-7">
         <section className="relative flex items-center justify-center">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
@@ -113,7 +113,7 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
                   <div className="table-cell min-w-134px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
                     <div>{t('account_book:INFO.COMPANY_NAME')}</div>
                   </div>
-                  <div className="table-cell min-w-84px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
+                  <div className="table-cell min-w-84px whitespace-nowrap border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
                     <div>{t('account_book:INFO.TAX_ID')}</div>
                   </div>
                   <div className="table-cell w-full border-b border-stroke-neutral-quaternary"></div>

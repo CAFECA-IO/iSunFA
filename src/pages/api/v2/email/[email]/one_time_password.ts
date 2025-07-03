@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-// Deprecated: (20250509 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getSession } from '@/lib/utils/session';
+import { getSession, setSession } from '@/lib/utils/session';
 // Deprecated: (20250509 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { APIName, HttpMethod } from '@/constants/api_connection';
@@ -39,6 +37,16 @@ function setSessionCookie(res: NextApiResponse, sessionId: string) {
 export const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = req;
   const { email } = query;
+  const session = await getSession(req);
+  if (query.provider && query.uid) {
+    // Info: (20250630 - Luphia) 若存在 External User 參數，將資訊設定到 session 備用
+    await setSession(session, {
+      external: {
+        provider: query.provider as string,
+        uid: query.uid as string,
+      },
+    });
+  }
   const isValidEmail = emailVerifier(email as string);
   if (!isValidEmail) {
     // Info: (20250429 - Luphia) email 格式不正確
@@ -73,7 +81,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     verificationCode: emailLogin.code,
     remainingMins,
   };
-  const emailResult = sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
+  const emailResult = await sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
   if (!emailResult) {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -169,6 +177,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     switch (method) {
       case HttpMethod.POST:
         ({ statusMessage, result } = await handlePostRequest(req, res));
+        break;
+      case HttpMethod.DELETE:
+        ({ statusMessage, result } = await handleDeleteRequest(req));
         break;
       case HttpMethod.GET:
       default:

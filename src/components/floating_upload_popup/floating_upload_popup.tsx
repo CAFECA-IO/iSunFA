@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import UploadCertificateItem from '@/components/upload_certificate/upload_file_item';
 import Image from 'next/image';
+import { FaChevronDown } from 'react-icons/fa6';
 import { useModalContext } from '@/contexts/modal_context';
 import { useTranslation } from 'next-i18next';
 import { MessageType } from '@/interfaces/message_modal';
@@ -103,7 +104,7 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
             className={`${expanded ? '' : 'rotate-180'}`}
             onClick={() => setExpanded(!expanded)}
           >
-            <Image src="/elements/arrow_down.svg" alt="arrow_down" width={20} height={20} />
+            <FaChevronDown size={20} />
           </button>
         </div>
 

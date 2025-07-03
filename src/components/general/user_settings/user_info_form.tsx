@@ -133,7 +133,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
               value={formState[field as 'firstName' | 'lastName']}
               onChange={(e) => handleInputChange(field as keyof typeof formState, e.target.value)}
               placeholder={t(`settings:NORMAL.EX_${field === 'firstName' ? 'JOHN' : 'DOE'}`)}
-              className="rounded-sm border border-input-stroke-input px-3 py-2 outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-3 py-2 outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
         ))}
