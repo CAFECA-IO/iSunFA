@@ -23,10 +23,10 @@ export const parseSessionId = (options: ISessionOption | ISessionData) => {
   const cookieHeader = (data as ISessionOption).cookie;
   const cookieData = parseCookie(cookieHeader);
   // Info: (20250122 - Luphia) step 2
-  const isunfaInSession = (data as ISessionData).isunfa;
-  const findCsrfKeyInHeader = Object.keys(data).find((key) => key.includes('csrf')) as string;
+  const isunfaInSession = (options as ISessionData).isunfa;
   // Info: (20250625 - Shirley) step 2.5 - Check for isunfa in parsed cookies
   const isunfaInCookie = (cookieData as { [key: string]: string }).isunfa;
+  const findCsrfKeyInHeader = Object.keys(options).find((key) => key.includes('csrf')) as string;
   // Info: (20250122 - Luphia) step 3
   const crsfInHeader = (data as { [key: string]: string })[findCsrfKeyInHeader];
   const findCsrfKeyInCookie = Object.keys(cookieData).find((key) => key.includes('csrf')) as string;
