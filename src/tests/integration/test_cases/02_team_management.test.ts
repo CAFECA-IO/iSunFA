@@ -41,7 +41,6 @@ describe('Integration Test - Team Management Authentication', () => {
     teamListClient = createDynamicTestClient(teamListHandler, { userId: currentUserId });
   });
 
-
   // ========================================
   // Info: (20240702 - Shirley) Test Case 2.1: Team API Authentication
   // ========================================
