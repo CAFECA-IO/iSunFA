@@ -393,4 +393,85 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(statusPayload.user.email).toBe(testUsers.user1);
     });
   });
+
+  // ========================================
+  // Info: (20250102 - Shirley) Test Case 1.7: Authentication Helper Factory Methods
+  // ========================================
+  describe('Test Case 1.7: Authentication Helper Factory Methods', () => {
+    it('should create authenticated helper with auto-authentication', async () => {
+      const helper = await APITestHelper.createHelper({ autoAuth: true });
+
+      expect(helper.isAuthenticated()).toBe(true);
+      const cookies = helper.getCurrentSession();
+      expect(cookies.length).toBeGreaterThan(0);
+
+      // Info: (20250102 - Shirley) Verify session cookies contain auth data
+      const sessionCookie = cookies.find((cookie) => cookie.includes('isunfa='));
+      expect(sessionCookie).toBeDefined();
+    });
+
+    it('should efficiently re-authenticate when session is cleared', async () => {
+      const helper = await APITestHelper.createHelper({ autoAuth: true });
+
+      // Info: (20250102 - Shirley) Clear session and test re-authentication
+      helper.clearSession();
+      expect(helper.isAuthenticated()).toBe(false);
+
+      // Info: (20250102 - Shirley) Measure re-authentication time
+      const startTime = Date.now();
+      await helper.ensureAuthenticated();
+      const authTime = Date.now() - startTime;
+
+      expect(helper.isAuthenticated()).toBe(true);
+      expect(authTime).toBeLessThan(5000); // Should complete within 5 seconds
+    });
+
+    it('should create helper with specific user auto-login', async () => {
+      const specificUserHelper = await APITestHelper.createHelper({
+        email: 'user1@isunfa.com',
+      });
+
+      expect(specificUserHelper.isAuthenticated()).toBe(true);
+      expect(specificUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+
+      // Info: (20250102 - Shirley) Verify the helper can make authenticated API calls
+      const statusResponse = await specificUserHelper.getStatusInfo();
+      expect(statusResponse.body.success).toBe(true);
+
+      const userPayload = statusResponse.body.payload as {
+        user: { email: string; id: number };
+      };
+      expect(userPayload.user.email).toBe('user1@isunfa.com');
+    });
+
+    it('should create multi-user helper with auto-authentication', async () => {
+      const factoryMultiUserHelper = await APITestHelper.createHelper({
+        emails: ['user@isunfa.com', 'user1@isunfa.com'],
+      });
+
+      const authenticatedUsers = factoryMultiUserHelper.getAllAuthenticatedUsers();
+      expect(authenticatedUsers).toHaveLength(2);
+      expect(authenticatedUsers).toContain('user@isunfa.com');
+      expect(authenticatedUsers).toContain('user1@isunfa.com');
+
+      // Info: (20250102 - Shirley) Should start with first user as current
+      expect(factoryMultiUserHelper.getCurrentUser()).toBe('user@isunfa.com');
+
+      // Info: (20250102 - Shirley) Test switching between users
+      factoryMultiUserHelper.switchToUser('user1@isunfa.com');
+      expect(factoryMultiUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+
+      const statusResponse = await factoryMultiUserHelper.getStatusInfo();
+      expect(statusResponse.body.success).toBe(true);
+    });
+
+    it('should create new authenticated helpers efficiently', async () => {
+      const startTime = Date.now();
+      const newHelper = await APITestHelper.createHelper({ autoAuth: true });
+      const creationTime = Date.now() - startTime;
+
+      expect(newHelper.isAuthenticated()).toBe(true);
+      expect(creationTime).toBeLessThan(5000); // Should complete within 5 seconds
+    });
+  });
 });

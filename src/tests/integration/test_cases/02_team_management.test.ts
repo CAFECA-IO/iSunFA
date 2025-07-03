@@ -41,89 +41,11 @@ describe('Integration Test - Team Management Authentication', () => {
     teamListClient = createDynamicTestClient(teamListHandler, { userId: currentUserId });
   });
 
-  // ========================================
-  // Info: (20240702 - Shirley) Test Case 2.1: Authentication Automation
-  // ========================================
-  describe('Test Case 2.1: Authentication Automation', () => {
-    it('should automatically authenticate and maintain session', async () => {
-      // Info: (20240702 - Shirley) Verify helper is authenticated after creation
-      expect(authenticatedHelper.isAuthenticated()).toBe(true);
-
-      const cookies = authenticatedHelper.getCurrentSession();
-      expect(cookies.length).toBeGreaterThan(0);
-
-      // Info: (20240702 - Shirley) Verify session cookies contain auth data
-      const sessionCookie = cookies.find((cookie) => cookie.includes('isunfa='));
-      expect(sessionCookie).toBeDefined();
-    });
-
-    it('should efficiently re-authenticate when needed', async () => {
-      // Info: (20240702 - Shirley) Clear session and test re-authentication
-      authenticatedHelper.clearSession();
-      expect(authenticatedHelper.isAuthenticated()).toBe(false);
-
-      // Info: (20240702 - Shirley) Measure re-authentication time
-      const startTime = Date.now();
-      await authenticatedHelper.ensureAuthenticated();
-      const authTime = Date.now() - startTime;
-
-      expect(authenticatedHelper.isAuthenticated()).toBe(true);
-      expect(authTime).toBeLessThan(5000); // Should complete within 5 seconds
-    });
-
-    it('should create new authenticated helpers efficiently', async () => {
-      const startTime = Date.now();
-      const newHelper = await APITestHelper.createHelper({ autoAuth: true });
-      const creationTime = Date.now() - startTime;
-
-      expect(newHelper.isAuthenticated()).toBe(true);
-      expect(creationTime).toBeLessThan(5000); // Should complete within 5 seconds
-    });
-
-    it('should create helper with specific user auto-login', async () => {
-      const specificUserHelper = await APITestHelper.createHelper({
-        email: 'user1@isunfa.com',
-      });
-
-      expect(specificUserHelper.isAuthenticated()).toBe(true);
-      expect(specificUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
-
-      // Info: (20250102 - Shirley) Verify the helper can make authenticated API calls
-      const statusResponse = await specificUserHelper.getStatusInfo();
-      expect(statusResponse.body.success).toBe(true);
-
-      const userPayload = statusResponse.body.payload as {
-        user: { email: string; id: number };
-      };
-      expect(userPayload.user.email).toBe('user1@isunfa.com');
-    });
-
-    it('should create multi-user helper with auto-authentication', async () => {
-      const multiUserHelper = await APITestHelper.createHelper({
-        emails: ['user@isunfa.com', 'user1@isunfa.com'],
-      });
-
-      const authenticatedUsers = multiUserHelper.getAllAuthenticatedUsers();
-      expect(authenticatedUsers).toHaveLength(2);
-      expect(authenticatedUsers).toContain('user@isunfa.com');
-      expect(authenticatedUsers).toContain('user1@isunfa.com');
-
-      // Info: (20250102 - Shirley) Should start with first user as current
-      expect(multiUserHelper.getCurrentUser()).toBe('user@isunfa.com');
-
-      // Info: (20250102 - Shirley) Test switching between users
-      multiUserHelper.switchToUser('user1@isunfa.com');
-      expect(multiUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
-
-      const statusResponse = await multiUserHelper.getStatusInfo();
-      expect(statusResponse.body.success).toBe(true);
-    });
-  });
 
   // ========================================
-  // Info: (20240702 - Shirley) Test Case 2.2: Team API Authentication
+  // Info: (20240702 - Shirley) Test Case 2.1: Team API Authentication
   // ========================================
-  describe('Test Case 2.2: Team API Success Cases', () => {
+  describe('Test Case 2.1: Team API Authentication', () => {
     it('should reject unauthenticated team listing requests', async () => {
       const response = await teamListClient.get(`/api/v2/user/${currentUserId}/team`).expect(401);
 

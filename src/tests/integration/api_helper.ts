@@ -106,7 +106,7 @@ export class APITestHelper {
     return request.expect(200) as Promise<TestResponse>;
   }
 
-  // Info: (20240702 - Shirley) Test authentication flow - request OTP then authenticate
+  // Info: (20240702 - Shirley) Complete authentication flow - request OTP then authenticate
   async completeAuthenticationFlow(email?: string, code?: string): Promise<AuthFlowResult> {
     return this.performAuthentication(email, code);
   }
@@ -177,27 +177,15 @@ export class APITestHelper {
     return { otpResponse, authResponse, statusResponse };
   }
 
-  // Info: (20240702 - Shirley) Auto-login helper - automatically authenticate with primary email
-  async autoLogin(): Promise<AuthFlowResult> {
-    this.clearSession();
-    return this.performAuthentication();
-  }
-
   // Info: (20240702 - Shirley) Quick authentication for test setup - throws if authentication fails
   async ensureAuthenticated(): Promise<void> {
     if (!this.isAuthenticated()) {
-      const result = await this.autoLogin();
+      this.clearSession();
+      const result = await this.performAuthentication();
       if (!result.authResponse.body.success) {
         throw new Error(`Authentication failed: ${result.authResponse.body.code}`);
       }
     }
-  }
-
-  // Info: (20240702 - Shirley) Create authenticated helper instance for test reuse
-  static async createAuthenticatedHelper(): Promise<APITestHelper> {
-    const helper = new APITestHelper();
-    await helper.ensureAuthenticated();
-    return helper;
   }
 
   // Info: (20250102 - Shirley) Multi-user authentication methods
@@ -279,6 +267,21 @@ export class APITestHelper {
     return helper;
   }
 
+  // Info: (20250102 - Shirley) Create helper with specific user already authenticated
+  static async createWithEmail(email: string): Promise<APITestHelper> {
+    return APITestHelper.createHelper({ email });
+  }
+
+  // Info: (20250102 - Shirley) Create helper with multiple users authenticated
+  static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
+    return APITestHelper.createHelper({ emails });
+  }
+
+  // Info: (20240702 - Shirley) Create authenticated helper instance for test reuse
+  static async createAuthenticatedHelper(): Promise<APITestHelper> {
+    return APITestHelper.createHelper({ autoAuth: true });
+  }
+
   // Info: (20250102 - Shirley) Helper method for multi-user authentication
   private async authenticateMultipleUsers(emails: string[]): Promise<void> {
     // Info: (20250102 - Shirley) Login users sequentially to avoid server creation race conditions
@@ -286,20 +289,10 @@ export class APITestHelper {
       await previousPromise;
       await this.loginWithEmail(email);
     }, Promise.resolve());
-
     // Info: (20250102 - Shirley) Set first user as current
     if (emails.length > 0) {
       this.switchToUser(emails[0]);
     }
   }
 
-  // Info: (20250102 - Shirley) Create helper with specific user already authenticated (legacy)
-  static async createWithEmail(email: string): Promise<APITestHelper> {
-    return APITestHelper.createHelper({ email });
-  }
-
-  // Info: (20250102 - Shirley) Create helper with multiple users authenticated (legacy)
-  static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
-    return APITestHelper.createHelper({ emails });
-  }
 }
