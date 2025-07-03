@@ -5,7 +5,10 @@ import { APIName, HttpMethod } from '@/constants/api_connection';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import { getExternalUserByProviderAndUid } from '@/lib/utils/repo/external_user.repo';
+import {
+  getExternalUserByProviderAndUid,
+  getAccountBookByUserId,
+} from '@/lib/utils/repo/external_user.repo';
 
 /* Info: (20250702 - Luphia) 根據外部用戶資料取得公開帳本路徑
  * 1. 根據 external provider 與 uid 取得 user 與其擁有 team 資訊
@@ -28,11 +31,25 @@ export const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250702 - Luphia) Step 1: 根據 external 與 uid 取得 External User 資訊
   const externalUser = await getExternalUserByProviderAndUid(external as string, uid as string);
+  const userId = externalUser?.user?.id || 0;
+
+  // Info: (20250703 - Julian) Step 2: 根據 User Id 取得帳本資訊
+  const accountBooks = await getAccountBookByUserId(userId);
+
+  // Info: (20250703 - Julian) Step 3: 將帳本資訊整理為指定格式
+  const reportLinks = accountBooks.map((accountBook) => {
+    return {
+      name: accountBook.name,
+      balance: `https://isunfa.com/embed/view/${accountBook.id}?report_type=balance`,
+      cashFlow: `https://isunfa.com/embed/view/${accountBook.id}?report_type=cash-flow`,
+      comprehensiveIncome: `https://isunfa.com/embed/view/${accountBook.id}?report_type=comprehensive-income`,
+    };
+  });
 
   // ToDo: (20250702 - Luphia) 繼續完成其他流程
   const result = {
     statusMessage: STATUS_MESSAGE.SUCCESS_GET,
-    result: externalUser,
+    result: reportLinks,
   };
   return result;
 };

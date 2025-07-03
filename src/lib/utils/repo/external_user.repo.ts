@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { LeaveStatus, Prisma, PrismaClient } from '@prisma/client';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow } from '@/lib/utils/common';
 import { IExternalUser } from '@/interfaces/external_user';
@@ -45,6 +45,39 @@ export const getExternalUserByProviderAndUid = async (
       },
     });
     return externalUser;
+  } catch (error) {
+    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+  }
+};
+
+// Info: (20250703 - Julian) 從 userId 獲取帳本資訊
+export const getAccountBookByUserId = async (userId: number) => {
+  try {
+    // Info: (20250703 - Julian) 取得 user 擁有的 team
+    const teams = await prisma.teamMember.findMany({
+      where: {
+        userId,
+        status: LeaveStatus.IN_TEAM,
+      },
+      select: { teamId: true },
+    });
+    // Info: (20250703 - Julian) 抽取 teamId
+    const teamIds = teams.map((team) => team.teamId);
+
+    // Info: (20250703 - Julian) 再從 team 取得 accountBook
+    const accountBooks = await prisma.company.findMany({
+      where: {
+        teamId: {
+          in: teamIds,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    return accountBooks;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
