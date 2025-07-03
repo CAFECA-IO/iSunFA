@@ -14,13 +14,26 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
  * - Tests session persistence across multiple API calls
  * - Validates both success and failure scenarios
  * - Simulates real user behavior without direct database manipulation
+ * - Tests multi-user authentication and session switching
  */
 describe('Integration Test - User Email Authentication (Supertest)', () => {
   let apiHelper: APITestHelper;
+  let multiUserHelper: APITestHelper;
+
+  const testUsers = {
+    user1: 'user@isunfa.com',
+    user2: 'user1@isunfa.com',
+    user3: 'user2@isunfa.com',
+  };
 
   beforeAll(async () => {
     // Info: (20240701 - Shirley) Initialize API helpers for testing
     apiHelper = new APITestHelper();
+
+    // Info: (20250102 - Shirley) Initialize multi-user helper for multi-user tests
+    multiUserHelper = await APITestHelper.createHelper({
+      emails: [testUsers.user1, testUsers.user2, testUsers.user3],
+    });
   });
 
   // Info: (20240701 - Shirley) Helper function to create OTP client for specific email
@@ -295,6 +308,89 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20240701 - Shirley) API should respond quickly in test environment
       const timeoutLimit = process.env.CI ? 5000 : 2000;
       expect(responseTime).toBeLessThan(timeoutLimit);
+    });
+  });
+
+  // ========================================
+  // Info: (20250102 - Shirley) Test Case 1.6: Multi-User Authentication
+  // ========================================
+  describe('Test Case 1.6: Multi-User Authentication', () => {
+    it('should authenticate multiple users successfully', async () => {
+      const authenticatedUsers = multiUserHelper.getAllAuthenticatedUsers();
+
+      expect(authenticatedUsers).toHaveLength(3);
+      expect(authenticatedUsers).toContain(testUsers.user1);
+      expect(authenticatedUsers).toContain(testUsers.user2);
+      expect(authenticatedUsers).toContain(testUsers.user3);
+    });
+
+    it('should switch between users and maintain separate sessions', async () => {
+      // Info: (20250102 - Shirley) Switch to user2
+      multiUserHelper.switchToUser(testUsers.user2);
+      expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user2);
+
+      // Info: (20250102 - Shirley) Get status for user2
+      const user2Status = await multiUserHelper.getStatusInfo();
+      expect(user2Status.body.success).toBe(true);
+
+      const user2Payload = user2Status.body.payload as {
+        user: { email: string; id: number; name: string };
+      };
+      expect(user2Payload.user.email).toBe(testUsers.user2);
+
+      // Info: (20250102 - Shirley) Switch to user3
+      multiUserHelper.switchToUser(testUsers.user3);
+      expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user3);
+
+      // Info: (20250102 - Shirley) Get status for user3
+      const user3Status = await multiUserHelper.getStatusInfo();
+      expect(user3Status.body.success).toBe(true);
+
+      const user3Payload = user3Status.body.payload as {
+        user: { email: string; id: number; name: string };
+      };
+      expect(user3Payload.user.email).toBe(testUsers.user3);
+
+      // Info: (20250102 - Shirley) Verify different user IDs
+      const user2Id = user2Payload.user.id;
+      const user3Id = user3Payload.user.id;
+      expect(user2Id).not.toBe(user3Id);
+    });
+
+    it('should handle individual user session management', async () => {
+      // Info: (20250102 - Shirley) Verify user is authenticated before clearing
+      expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(true);
+
+      // Info: (20250102 - Shirley) Clear specific user session
+      multiUserHelper.clearUserSession(testUsers.user2);
+      expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(false);
+
+      // Info: (20250102 - Shirley) Other users should still be authenticated
+      expect(multiUserHelper.isUserAuthenticated(testUsers.user1)).toBe(true);
+      expect(multiUserHelper.isUserAuthenticated(testUsers.user3)).toBe(true);
+
+      // Info: (20250102 - Shirley) Re-authenticate cleared user
+      await multiUserHelper.loginWithEmail(testUsers.user2);
+      expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(true);
+    });
+
+    it('should create single-user helper using factory method', async () => {
+      const singleUserHelper = await APITestHelper.createHelper({
+        email: testUsers.user1,
+      });
+
+      expect(singleUserHelper.getCurrentUser()).toBe(testUsers.user1);
+      expect(singleUserHelper.isUserAuthenticated(testUsers.user1)).toBe(true);
+      expect(singleUserHelper.getAllAuthenticatedUsers()).toHaveLength(1);
+
+      // Info: (20250102 - Shirley) Verify it can make API calls
+      const statusResponse = await singleUserHelper.getStatusInfo();
+      expect(statusResponse.body.success).toBe(true);
+
+      const statusPayload = statusResponse.body.payload as {
+        user: { email: string; id: number; name: string };
+      };
+      expect(statusPayload.user.email).toBe(testUsers.user1);
     });
   });
 });

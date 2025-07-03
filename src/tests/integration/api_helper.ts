@@ -70,16 +70,15 @@ export class APITestHelper {
   }
 
   // Info: (20240701 - Shirley) Create dynamic OTP client for specific email
-  private createOTPClient(email: string): TestClient {
-    // Info: (20240701 - Shirley) Method accesses instance sessionCookies
-    const client = createDynamicTestClient(otpHandler, { email });
-    return this.sessionCookies.length > 0 ? client : client;
+  private static createOTPClient(email: string): TestClient {
+    return createDynamicTestClient(otpHandler, { email });
   }
 
   // Info: (20240701 - Shirley) Simulate user requesting OTP through API
+  // eslint-disable-next-line class-methods-use-this
   async requestOTP(email?: string): Promise<TestResponse> {
     const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
-    const otpClient = this.createOTPClient(testEmail);
+    const otpClient = APITestHelper.createOTPClient(testEmail);
 
     return otpClient.get('/').expect(200);
   }
@@ -87,7 +86,7 @@ export class APITestHelper {
   // Info: (20240701 - Shirley) Simulate user authentication through API
   async authenticateWithOTP(email?: string, code?: string): Promise<TestResponse> {
     const authData = TestDataFactory.createAuthenticationRequest(email, code);
-    const otpClient = this.createOTPClient(authData.email);
+    const otpClient = APITestHelper.createOTPClient(authData.email);
 
     const response = await otpClient.post('/').send({ code: authData.code }).expect(200);
 
@@ -109,23 +108,7 @@ export class APITestHelper {
 
   // Info: (20240702 - Shirley) Test authentication flow - request OTP then authenticate
   async completeAuthenticationFlow(email?: string, code?: string): Promise<AuthFlowResult> {
-    const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
-    const testCode = code || TestDataFactory.DEFAULT_VERIFICATION_CODE;
-
-    // Info: (20240702 - Shirley) Step 1: Request OTP
-    const otpResponse = await this.requestOTP(testEmail);
-
-    // Info: (20240702 - Shirley) Step 2: Authenticate with OTP
-    const authResponse = await this.authenticateWithOTP(testEmail, testCode);
-
-    // Info: (20240702 - Shirley) Step 3: Verify authentication by checking status
-    const statusResponse = await this.getStatusInfo();
-
-    return {
-      otpResponse,
-      authResponse,
-      statusResponse,
-    };
+    return this.performAuthentication(email, code);
   }
 
   // Info: (20240702 - Shirley) Test all default emails for authentication
@@ -182,10 +165,22 @@ export class APITestHelper {
     return this.sessionCookies.length > 0;
   }
 
+  // Info: (20250102 - Shirley) Core authentication method to avoid duplication
+  private async performAuthentication(email?: string, code?: string): Promise<AuthFlowResult> {
+    const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
+    const testCode = code || TestDataFactory.DEFAULT_VERIFICATION_CODE;
+
+    const otpResponse = await this.requestOTP(testEmail);
+    const authResponse = await this.authenticateWithOTP(testEmail, testCode);
+    const statusResponse = await this.getStatusInfo();
+
+    return { otpResponse, authResponse, statusResponse };
+  }
+
   // Info: (20240702 - Shirley) Auto-login helper - automatically authenticate with primary email
   async autoLogin(): Promise<AuthFlowResult> {
     this.clearSession();
-    return this.completeAuthenticationFlow();
+    return this.performAuthentication();
   }
 
   // Info: (20240702 - Shirley) Quick authentication for test setup - throws if authentication fails
@@ -214,7 +209,7 @@ export class APITestHelper {
       throw new Error(`Email ${email} is not in the default test emails list`);
     }
 
-    const result = await this.completeAuthenticationFlow(email);
+    const result = await this.performAuthentication(email);
     if (!result.authResponse.body.success) {
       throw new Error(`Authentication failed for ${email}: ${result.authResponse.body.code}`);
     }
@@ -262,28 +257,49 @@ export class APITestHelper {
     this.sessionCookies = [];
   }
 
-  // Info: (20250102 - Shirley) Create helper with specific user already authenticated
-  static async createWithEmail(email: string): Promise<APITestHelper> {
+  // Info: (20250102 - Shirley) Unified helper creation method
+  static async createHelper(options?: {
+    email?: string;
+    emails?: string[];
+    autoAuth?: boolean;
+  }): Promise<APITestHelper> {
     const helper = new APITestHelper();
-    await helper.loginWithEmail(email);
+
+    if (options?.emails?.length) {
+      // Multi-user mode
+      await helper.authenticateMultipleUsers(options.emails);
+    } else if (options?.email) {
+      // Single user mode
+      await helper.loginWithEmail(options.email);
+    } else if (options?.autoAuth !== false) {
+      // Default auto authentication
+      await helper.ensureAuthenticated();
+    }
+
     return helper;
   }
 
-  // Info: (20250102 - Shirley) Create helper with multiple users authenticated
-  static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
-    const helper = new APITestHelper();
-
+  // Info: (20250102 - Shirley) Helper method for multi-user authentication
+  private async authenticateMultipleUsers(emails: string[]): Promise<void> {
     // Info: (20250102 - Shirley) Login users sequentially to avoid server creation race conditions
     await emails.reduce(async (previousPromise, email) => {
       await previousPromise;
-      await helper.loginWithEmail(email);
+      await this.loginWithEmail(email);
     }, Promise.resolve());
 
     // Info: (20250102 - Shirley) Set first user as current
     if (emails.length > 0) {
-      helper.switchToUser(emails[0]);
+      this.switchToUser(emails[0]);
     }
+  }
 
-    return helper;
+  // Info: (20250102 - Shirley) Create helper with specific user already authenticated (legacy)
+  static async createWithEmail(email: string): Promise<APITestHelper> {
+    return APITestHelper.createHelper({ email });
+  }
+
+  // Info: (20250102 - Shirley) Create helper with multiple users authenticated (legacy)
+  static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
+    return APITestHelper.createHelper({ emails });
   }
 }

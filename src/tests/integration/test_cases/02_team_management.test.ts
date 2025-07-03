@@ -28,8 +28,8 @@ describe('Integration Test - Team Management Authentication', () => {
   let currentUserId: string;
 
   beforeAll(async () => {
-    // Info: (20240702 - Shirley) Use enhanced authentication helper
-    authenticatedHelper = await APITestHelper.createAuthenticatedHelper();
+    // Info: (20250102 - Shirley) Use new unified factory method for auto-authentication
+    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     // Info: (20240702 - Shirley) Get user info from status to get real userId
     const statusResponse = await authenticatedHelper.getStatusInfo();
@@ -73,11 +73,50 @@ describe('Integration Test - Team Management Authentication', () => {
 
     it('should create new authenticated helpers efficiently', async () => {
       const startTime = Date.now();
-      const newHelper = await APITestHelper.createAuthenticatedHelper();
+      const newHelper = await APITestHelper.createHelper({ autoAuth: true });
       const creationTime = Date.now() - startTime;
 
       expect(newHelper.isAuthenticated()).toBe(true);
       expect(creationTime).toBeLessThan(5000); // Should complete within 5 seconds
+    });
+
+    it('should create helper with specific user auto-login', async () => {
+      const specificUserHelper = await APITestHelper.createHelper({
+        email: 'user1@isunfa.com',
+      });
+
+      expect(specificUserHelper.isAuthenticated()).toBe(true);
+      expect(specificUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+
+      // Info: (20250102 - Shirley) Verify the helper can make authenticated API calls
+      const statusResponse = await specificUserHelper.getStatusInfo();
+      expect(statusResponse.body.success).toBe(true);
+
+      const userPayload = statusResponse.body.payload as {
+        user: { email: string; id: number };
+      };
+      expect(userPayload.user.email).toBe('user1@isunfa.com');
+    });
+
+    it('should create multi-user helper with auto-authentication', async () => {
+      const multiUserHelper = await APITestHelper.createHelper({
+        emails: ['user@isunfa.com', 'user1@isunfa.com'],
+      });
+
+      const authenticatedUsers = multiUserHelper.getAllAuthenticatedUsers();
+      expect(authenticatedUsers).toHaveLength(2);
+      expect(authenticatedUsers).toContain('user@isunfa.com');
+      expect(authenticatedUsers).toContain('user1@isunfa.com');
+
+      // Info: (20250102 - Shirley) Should start with first user as current
+      expect(multiUserHelper.getCurrentUser()).toBe('user@isunfa.com');
+
+      // Info: (20250102 - Shirley) Test switching between users
+      multiUserHelper.switchToUser('user1@isunfa.com');
+      expect(multiUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+
+      const statusResponse = await multiUserHelper.getStatusInfo();
+      expect(statusResponse.body.success).toBe(true);
     });
   });
 
