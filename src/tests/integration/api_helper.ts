@@ -1,9 +1,9 @@
-// Info: (20240701 - Shirley) API helper for integration tests - simulates real user behavior through API calls
+// Info: (20250701 - Shirley) API helper for integration tests - simulates real user behavior through API calls
 import { createTestClient, createDynamicTestClient } from '@/tests/integration/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/test_data_factory';
 
-// Info: (20240701 - Shirley) Import API handlers for testing
+// Info: (20250701 - Shirley) Import API handlers for testing
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 
@@ -40,11 +40,11 @@ export class APITestHelper {
   private currentUser: string | null = null;
 
   constructor() {
-    // Info: (20240701 - Shirley) Create test clients for different API endpoints
+    // Info: (20250701 - Shirley) Create test clients for different API endpoints
     this.statusClient = createTestClient(statusInfoHandler);
   }
 
-  // Info: (20240701 - Shirley) Extract and store session cookies from response
+  // Info: (20250701 - Shirley) Extract and store session cookies from response
   private extractSessionCookies(
     response: { headers: { 'set-cookie'?: string[] } },
     email?: string
@@ -66,12 +66,12 @@ export class APITestHelper {
     }
   }
 
-  // Info: (20240701 - Shirley) Create dynamic OTP client for specific email
+  // Info: (20250701 - Shirley) Create dynamic OTP client for specific email
   private static createOTPClient(email: string): TestClient {
     return createDynamicTestClient(otpHandler, { email });
   }
 
-  // Info: (20240701 - Shirley) Simulate user requesting OTP through API
+  // Info: (20250701 - Shirley) Simulate user requesting OTP through API
   // eslint-disable-next-line class-methods-use-this
   async requestOTP(email?: string): Promise<TestResponse> {
     const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
@@ -80,20 +80,20 @@ export class APITestHelper {
     return otpClient.get('/').expect(200);
   }
 
-  // Info: (20240701 - Shirley) Simulate user authentication through API
+  // Info: (20250701 - Shirley) Simulate user authentication through API
   async authenticateWithOTP(email?: string, code?: string): Promise<TestResponse> {
     const authData = TestDataFactory.createAuthenticationRequest(email, code);
     const otpClient = APITestHelper.createOTPClient(authData.email);
 
     const response = await otpClient.post('/').send({ code: authData.code }).expect(200);
 
-    // Info: (20240701 - Shirley) Extract session cookies from authentication response
+    // Info: (20250701 - Shirley) Extract session cookies from authentication response
     this.extractSessionCookies(response, authData.email);
 
     return response;
   }
 
-  // Info: (20240701 - Shirley) Get current user status through API
+  // Info: (20250701 - Shirley) Get current user status through API
   async getStatusInfo(): Promise<TestResponse> {
     let request = this.statusClient.get('/api/v2/status_info');
     const currentSession = this.getCurrentSession();

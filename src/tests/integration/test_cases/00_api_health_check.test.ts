@@ -1,28 +1,12 @@
-// Info: (20240701 - Shirley) Supertest-based API health check integration tests
-// Info: (20240701 - Shirley) Focus on API functionality without database dependencies
 import { createTestClient } from '@/tests/integration/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import statusInfoHandler from '@/pages/api/v2/status_info';
-// import { ITeam } from '@/interfaces/team';
-
-// interface StatusInfoPayload {
-//   user: {
-//     id: number;
-//     email: string;
-//     name: string;
-//     createdAt: number;
-//     updatedAt: number;
-//   } | null;
-//   company: Record<string, unknown> | null;
-//   role: Record<string, unknown> | null;
-//   teams: ITeam[];
-// }
 
 describe('Integration Test - API v2 status_info (Supertest)', () => {
   let testClient: TestClient;
 
   beforeAll(async () => {
-    // Info: (20240701 - Shirley) Initialize test client for status API
+    // Info: (20250701 - Shirley) Initialize test client for status API
     testClient = createTestClient(statusInfoHandler);
   });
 
@@ -81,7 +65,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     });
 
     it('should handle concurrent requests properly', async () => {
-      // Info: (20240701 - Shirley) Create multiple concurrent requests
+      // Info: (20250701 - Shirley) Create multiple concurrent requests
       const requests = Array(3)
         .fill(null)
         .map(() => testClient.get('/api/v2/status_info').expect(200));
@@ -102,8 +86,8 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
       const responseTime = Date.now() - startTime;
       expect(response.body.success).toBe(true);
 
-      // Info: (20240701 - Shirley) Supertest should be faster than HTTP requests
-      const timeoutLimit = process.env.CI ? 10000 : 2000; // Info: (20240701 - Shirley) 10s for CI, 2s for local
+      // Info: (20250701 - Shirley) Supertest should be faster than HTTP requests
+      const timeoutLimit = process.env.CI ? 10000 : 2000; // Info: (20250701 - Shirley) 10s for CI, 2s for local
       expect(responseTime).toBeLessThan(timeoutLimit);
     });
 

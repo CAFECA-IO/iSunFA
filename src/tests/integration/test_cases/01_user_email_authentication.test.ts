@@ -1,5 +1,3 @@
-// Info: (20250703 - Shirley) Supertest-based user email authentication integration tests
-// Info: (20250703 - Shirley) Following the original test philosophy: simulate real user behavior using default values
 import { APITestHelper } from '@/tests/integration/api_helper';
 import { TestDataFactory } from '@/tests/integration/test_data_factory';
 import { createTestClient } from '@/tests/integration/test_client';
@@ -7,7 +5,7 @@ import { TestClient } from '@/interfaces/test_client';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 
 /**
- * Info: (20240701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
+ * Info: (20250701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
  *
  * Testing Philosophy:
  * - Uses system default emails and verification codes for authentication testing
@@ -28,7 +26,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   };
 
   beforeAll(async () => {
-    // Info: (20240701 - Shirley) Initialize API helpers for testing
+    // Info: (20250701 - Shirley) Initialize API helpers for testing
     apiHelper = new APITestHelper();
 
     // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
@@ -37,13 +35,13 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
   });
 
-  // Info: (20240701 - Shirley) Helper function to create OTP client for specific email
+  // Info: (20250701 - Shirley) Helper function to create OTP client for specific email
   const createOTPClient = (email: string): TestClient => {
     return createTestClient({ handler: otpHandler, routeParams: { email } });
   };
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.1: Email Authentication with Default Values
+  // Info: (20250701 - Shirley) Test Case 1.1: Email Authentication with Default Values
   // ========================================
   describe('Test Case 1.1: Email Authentication with Default Values', () => {
     it('should successfully request OTP for primary test email', async () => {
@@ -55,14 +53,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should successfully authenticate with default email and code', async () => {
-      // Info: (20240701 - Shirley) Complete authentication flow: OTP request -> authentication
+      // Info: (20250701 - Shirley) Complete authentication flow: OTP request -> authentication
       const { otpResponse, authResponse } = await apiHelper.completeAuthenticationFlow();
 
-      // Info: (20240701 - Shirley) Verify OTP request was successful
+      // Info: (20250701 - Shirley) Verify OTP request was successful
       expect(otpResponse.status).toBe(200);
       expect(otpResponse.body.success).toBe(true);
 
-      // Info: (20240701 - Shirley) Verify authentication was successful
+      // Info: (20250701 - Shirley) Verify authentication was successful
       expect(authResponse.status).toBe(200);
       expect(authResponse.body.success).toBe(true);
       expect(authResponse.body.payload?.email).toBe(TestDataFactory.PRIMARY_TEST_EMAIL);
@@ -120,13 +118,13 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should maintain session after authentication', async () => {
-      // Info: (20240701 - Shirley) Complete authentication
+      // Info: (20250701 - Shirley) Complete authentication
       const { authResponse, statusResponse } = await apiHelper.completeAuthenticationFlow();
 
       expect(authResponse.body.success).toBe(true);
       expect(statusResponse.body.success).toBe(true);
 
-      // Info: (20240701 - Shirley) Verify user is authenticated in status response
+      // Info: (20250701 - Shirley) Verify user is authenticated in status response
       expect(statusResponse.body.payload).toBeDefined();
       expect(statusResponse.body.payload?.user).toBeDefined();
       expect(statusResponse.body.payload?.user).not.toBeNull();
@@ -142,7 +140,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         expect(user.name).toBeDefined();
       }
 
-      // Info: (20240701 - Shirley) Verify session persists in subsequent calls
+      // Info: (20250701 - Shirley) Verify session persists in subsequent calls
       const statusResponse2 = await apiHelper.getStatusInfo();
       expect(statusResponse2.body.success).toBe(true);
       expect(statusResponse2.body.payload?.user).toBeDefined();
@@ -154,28 +152,28 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should complete email authentication flow successfully', async () => {
-      // Info: (20240701 - Shirley) Test complete authentication flow
+      // Info: (20250701 - Shirley) Test complete authentication flow
       const { authResponse, statusResponse } = await apiHelper.completeAuthenticationFlow();
 
-      // Info: (20240701 - Shirley) Verify authentication response
+      // Info: (20250701 - Shirley) Verify authentication response
       expect(authResponse.body.success).toBe(true);
       expect(authResponse.body.payload).toBeDefined();
 
-      // Info: (20240701 - Shirley) Verify the complete flow worked
+      // Info: (20250701 - Shirley) Verify the complete flow worked
       expect(statusResponse.body.success).toBe(true);
       expect(statusResponse.body.payload).toBeDefined();
     });
   });
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.2: Authentication Failure Scenarios (skipped due to non-functional SMTP in the test environment)
+  // Info: (20250701 - Shirley) Test Case 1.2: Authentication Failure Scenarios (skipped due to non-functional SMTP in the test environment)
   // ========================================
   xdescribe('Test Case 1.2: Authentication Failure Scenarios', () => {
     it('should fail with invalid verification code', async () => {
-      // Info: (20240701 - Shirley) Request OTP first
+      // Info: (20250701 - Shirley) Request OTP first
       await apiHelper.requestOTP();
 
-      // Info: (20240701 - Shirley) Try to authenticate with wrong code
+      // Info: (20250701 - Shirley) Try to authenticate with wrong code
       const otpClient = createOTPClient(TestDataFactory.PRIMARY_TEST_EMAIL);
       const response = await otpClient.post('/').send({ code: 'wrong_code' }).expect(422);
 
@@ -203,11 +201,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.3: API Method Validation
+  // Info: (20250701 - Shirley) Test Case 1.3: API Method Validation
   // ========================================
   describe('Test Case 1.3: API Method Validation', () => {
     it('should handle invalid HTTP methods for OTP endpoint (defaults to GET)', async () => {
-      // Info: (20240701 - Shirley) Test unsupported methods default to GET handler
+      // Info: (20250701 - Shirley) Test unsupported methods default to GET handler
       const otpClient = createOTPClient(TestDataFactory.PRIMARY_TEST_EMAIL);
 
       await otpClient.delete('/').expect(200);
@@ -216,14 +214,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should validate request body for POST authentication (empty code may succeed)', async () => {
-      // Info: (20240701 - Shirley) Request OTP first
+      // Info: (20250701 - Shirley) Request OTP first
       await apiHelper.requestOTP();
 
-      // Info: (20240701 - Shirley) Try authentication with missing code
+      // Info: (20250701 - Shirley) Try authentication with missing code
       const otpClient = createOTPClient(TestDataFactory.PRIMARY_TEST_EMAIL);
       const response = await otpClient
         .post('/')
-        .send({}) // Info: (20240701 - Shirley) Empty body
+        .send({}) // Info: (20250701 - Shirley) Empty body
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -231,14 +229,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.4: Session and Status Validation
+  // Info: (20250701 - Shirley) Test Case 1.4: Session and Status Validation
   // ========================================
   describe('Test Case 1.4: Session and Status Validation', () => {
     it('should return status info with proper structure', async () => {
-      // Info: (20240701 - Shirley) Test status info endpoint structure
+      // Info: (20250701 - Shirley) Test status info endpoint structure
       const statusResponse = await apiHelper.getStatusInfo();
 
-      // Info: (20240701 - Shirley) Verify status info structure
+      // Info: (20250701 - Shirley) Verify status info structure
       expect(statusResponse.body.success).toBe(true);
       expect(statusResponse.body.payload).toBeDefined();
 
@@ -257,14 +255,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should handle authentication flow with status verification', async () => {
-      // Info: (20240701 - Shirley) Complete authentication flow and verify structure
+      // Info: (20250701 - Shirley) Complete authentication flow and verify structure
       const { authResponse, statusResponse } = await apiHelper.completeAuthenticationFlow();
 
-      // Info: (20240701 - Shirley) Verify authentication succeeded
+      // Info: (20250701 - Shirley) Verify authentication succeeded
       expect(authResponse.body.success).toBe(true);
       expect(authResponse.body.payload).toBeDefined();
 
-      // Info: (20240701 - Shirley) Verify status response structure
+      // Info: (20250701 - Shirley) Verify status response structure
       expect(statusResponse.body.success).toBe(true);
       expect(statusResponse.body.payload).toBeDefined();
 
@@ -285,7 +283,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20240701 - Shirley) Test Case 1.5: Performance and Reliability
+  // Info: (20250701 - Shirley) Test Case 1.5: Performance and Reliability
   // ========================================
   describe('Test Case 1.5: Performance and Reliability', () => {
     it('should handle concurrent OTP requests', async () => {
@@ -306,7 +304,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       await apiHelper.requestOTP();
 
       const responseTime = Date.now() - startTime;
-      // Info: (20240701 - Shirley) API should respond quickly in test environment
+      // Info: (20250701 - Shirley) API should respond quickly in test environment
       const timeoutLimit = process.env.CI ? 5000 : 2000;
       expect(responseTime).toBeLessThan(timeoutLimit);
     });
