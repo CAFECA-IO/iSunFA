@@ -164,10 +164,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   const getFinancialReport = async () => {
     setIsLoading(true);
     try {
-      const {
-        data: report,
-        success: getFRSuccess,
-      } = await getFinancialReportAPI({
+      const { data: report, success: getFRSuccess } = await getFinancialReportAPI({
         params: {
           companyId: connectedAccountBook?.id,
           reportId: reportId ?? NON_EXISTING_REPORT_ID,

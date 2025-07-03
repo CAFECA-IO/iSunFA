@@ -5,14 +5,16 @@ export interface ISessionOption {
   jwt?: string;
   'x-forwarded-for'?: string;
   'user-agent'?: string;
-  cookie?: {
-    jwt?: string;
-    isunfa?: string;
-    httpOnly?: boolean;
-    path?: string;
-    secure?: boolean;
-    sameSite?: 'Strict' | 'Lax' | 'None';
-  };
+  cookie?:
+    | string
+    | {
+        jwt?: string;
+        isunfa?: string;
+        httpOnly?: boolean;
+        path?: string;
+        secure?: boolean;
+        sameSite?: 'Strict' | 'Lax' | 'None';
+      };
 }
 
 export interface ISessionHandlerOption {

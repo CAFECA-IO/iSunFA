@@ -51,10 +51,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
 
     const getFinancialReport = async () => {
       try {
-        const {
-          data: report,
-          success: getFRSuccess,
-        } = await getFinancialReportAPI({
+        const { data: report, success: getFRSuccess } = await getFinancialReportAPI({
           params: {
             companyId: connectedAccountBook.id,
             reportId: reportId ?? NON_EXISTING_REPORT_ID,
@@ -164,8 +161,8 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               {financialReport?.content.basicInfo.currentYear ?? 'N/A'}
               {/* Info: (20240814 - Anna) 年 */}
               {t('reports:COMMON.Y')}
-              {financialReport?.content.basicInfo.startMonth ??
-                'N/A'}-{financialReport?.content.basicInfo.endMonth ?? 'N/A'}
+              {financialReport?.content.basicInfo.startMonth ?? 'N/A'}-
+              {financialReport?.content.basicInfo.endMonth ?? 'N/A'}
               {/* Info: (20240814 - Anna) 月 */}
               {t('reports:COMMON.M')}
             </p>
@@ -620,9 +617,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
             <td className="border border-black px-1 py-0">14</td>
             <td className="flex items-center text-nowrap border border-black px-1 py-0">
               {/* Info: (20240814 - Anna) 本期(月)應退稅額 */}
-              {t(
-                'reports:TAX_REPORT.REFUNDABLE_TAX'
-              )}({/* 如 */}
+              {t('reports:TAX_REPORT.REFUNDABLE_TAX')}({/* 如 */}
               {t('reports:TAX_REPORT.IF')}
               <div>
                 <span>12&gt;13</span>
@@ -993,9 +988,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
               {/* Info: (20240814 - Anna) 載有稅額之其他憑證 */}
               {t('reports:TAX_REPORT.OTHER_VOUCHERS')}
               <br />({/* Info: (20240814 - Anna) 包括二聯式收銀機發票 */}
-              {t(
-                'reports:TAX_REPORT.INCLUDING_CASH_REGISTER'
-              )})
+              {t('reports:TAX_REPORT.INCLUDING_CASH_REGISTER')})
             </td>
             <td className="text-nowrap border border-black px-1 py-0 text-center">
               {/* Info: (20240814 - Anna) 進貨及費用 */}
