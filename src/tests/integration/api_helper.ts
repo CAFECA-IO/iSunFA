@@ -161,4 +161,21 @@ export class APITestHelper {
     this.clearSession();
     return this.completeAuthenticationFlow();
   }
+
+  // Info: (20240702 - Shirley) Quick authentication for test setup - throws if authentication fails
+  async ensureAuthenticated(): Promise<void> {
+    if (!this.isAuthenticated()) {
+      const result = await this.autoLogin();
+      if (!result.authResponse.body.success) {
+        throw new Error(`Authentication failed: ${result.authResponse.body.code}`);
+      }
+    }
+  }
+
+  // Info: (20240702 - Shirley) Create authenticated helper instance for test reuse
+  static async createAuthenticatedHelper(): Promise<APITestHelper> {
+    const helper = new APITestHelper();
+    await helper.ensureAuthenticated();
+    return helper;
+  }
 }
