@@ -107,9 +107,14 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
+      // Info: (20250102 - Shirley) Get fresh user ID to ensure proper authorization
+      const statusResponse = await authenticatedHelper.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      const userId = userData?.id?.toString() || '1';
+
       // Info: (20240702 - Shirley) Test with minimal query parameters for success
       const response = await teamListClient
-        .get(`/api/v2/user/${currentUserId}/team`)
+        .get(`/api/v2/user/${userId}/team`)
         .query({
           page: 1,
           pageSize: 10,

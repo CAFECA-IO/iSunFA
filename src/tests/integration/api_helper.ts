@@ -37,19 +37,35 @@ export class APITestHelper {
 
   private sessionCookies: string[] = [];
 
+  // Info: (20250102 - Shirley) Multi-user session management
+  private userSessions: Map<string, string[]> = new Map();
+
+  private currentUser: string | null = null;
+
   constructor() {
     // Info: (20240701 - Shirley) Create test clients for different API endpoints
     this.statusClient = createTestClient(statusInfoHandler);
   }
 
   // Info: (20240701 - Shirley) Extract and store session cookies from response
-  private extractSessionCookies(response: { headers: { 'set-cookie'?: string[] } }): void {
+  private extractSessionCookies(
+    response: { headers: { 'set-cookie'?: string[] } },
+    email?: string
+  ): void {
     const setCookieHeaders = response.headers['set-cookie'];
     if (setCookieHeaders) {
       const sessionCookies = setCookieHeaders
         .filter((cookie: string) => cookie.includes('isunfa='))
         .map((cookie: string) => cookie.split(';')[0]);
-      this.sessionCookies.push(...sessionCookies);
+
+      // Info: (20250102 - Shirley) Store cookies for specific user if email provided
+      if (email) {
+        this.userSessions.set(email, [...sessionCookies]);
+        this.currentUser = email;
+      } else {
+        // Info: (20250102 - Shirley) Fallback to legacy behavior
+        this.sessionCookies.push(...sessionCookies);
+      }
     }
   }
 
@@ -76,7 +92,7 @@ export class APITestHelper {
     const response = await otpClient.post('/').send({ code: authData.code }).expect(200);
 
     // Info: (20240701 - Shirley) Extract session cookies from authentication response
-    this.extractSessionCookies(response);
+    this.extractSessionCookies(response, authData.email);
 
     return response;
   }
@@ -84,8 +100,9 @@ export class APITestHelper {
   // Info: (20240701 - Shirley) Get current user status through API
   async getStatusInfo(): Promise<TestResponse> {
     let request = this.statusClient.get('/api/v2/status_info');
-    if (this.sessionCookies.length > 0) {
-      request = request.set('Cookie', this.sessionCookies.join('; '));
+    const currentSession = this.getCurrentSession();
+    if (currentSession.length > 0) {
+      request = request.set('Cookie', currentSession.join('; '));
     }
     return request.expect(200) as Promise<TestResponse>;
   }
@@ -144,15 +161,24 @@ export class APITestHelper {
   // Info: (20240702 - Shirley) Clear session cookies for fresh authentication
   clearSession(): void {
     this.sessionCookies = [];
+    // Info: (20250102 - Shirley) Also clear multi-user session data for complete reset
+    this.currentUser = null;
+    this.userSessions.clear();
   }
 
   // Info: (20240702 - Shirley) Get current session cookies for debugging
   getCurrentSession(): string[] {
+    if (this.currentUser && this.userSessions.has(this.currentUser)) {
+      return [...this.userSessions.get(this.currentUser)!];
+    }
     return [...this.sessionCookies];
   }
 
   // Info: (20240702 - Shirley) Check if user is currently authenticated
   isAuthenticated(): boolean {
+    if (this.currentUser && this.userSessions.has(this.currentUser)) {
+      return this.userSessions.get(this.currentUser)!.length > 0;
+    }
     return this.sessionCookies.length > 0;
   }
 
@@ -176,6 +202,88 @@ export class APITestHelper {
   static async createAuthenticatedHelper(): Promise<APITestHelper> {
     const helper = new APITestHelper();
     await helper.ensureAuthenticated();
+    return helper;
+  }
+
+  // Info: (20250102 - Shirley) Multi-user authentication methods
+
+  // Info: (20250102 - Shirley) Login with specific email
+  async loginWithEmail(email: string): Promise<AuthFlowResult> {
+    // Info: (20250102 - Shirley) Validate email is in default list
+    if (!TestDataFactory.DEFAULT_TEST_EMAILS.includes(email)) {
+      throw new Error(`Email ${email} is not in the default test emails list`);
+    }
+
+    const result = await this.completeAuthenticationFlow(email);
+    if (!result.authResponse.body.success) {
+      throw new Error(`Authentication failed for ${email}: ${result.authResponse.body.code}`);
+    }
+
+    return result;
+  }
+
+  // Info: (20250102 - Shirley) Switch to a specific user
+  switchToUser(email: string): void {
+    if (!this.userSessions.has(email)) {
+      throw new Error(`User ${email} is not authenticated. Please login first.`);
+    }
+    this.currentUser = email;
+  }
+
+  // Info: (20250102 - Shirley) Get current user email
+  getCurrentUser(): string | null {
+    return this.currentUser;
+  }
+
+  // Info: (20250102 - Shirley) Check if specific user is authenticated
+  isUserAuthenticated(email: string): boolean {
+    return this.userSessions.has(email) && this.userSessions.get(email)!.length > 0;
+  }
+
+  // Info: (20250102 - Shirley) Get all authenticated users
+  getAllAuthenticatedUsers(): string[] {
+    return Array.from(this.userSessions.keys()).filter(
+      (email) => this.userSessions.get(email)!.length > 0
+    );
+  }
+
+  // Info: (20250102 - Shirley) Clear session for specific user
+  clearUserSession(email: string): void {
+    this.userSessions.delete(email);
+    if (this.currentUser === email) {
+      this.currentUser = null;
+    }
+  }
+
+  // Info: (20250102 - Shirley) Clear all user sessions
+  clearAllUserSessions(): void {
+    this.userSessions.clear();
+    this.currentUser = null;
+    this.sessionCookies = [];
+  }
+
+  // Info: (20250102 - Shirley) Create helper with specific user already authenticated
+  static async createWithEmail(email: string): Promise<APITestHelper> {
+    const helper = new APITestHelper();
+    await helper.loginWithEmail(email);
+    return helper;
+  }
+
+  // Info: (20250102 - Shirley) Create helper with multiple users authenticated
+  static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
+    const helper = new APITestHelper();
+
+    // Info: (20250102 - Shirley) Login users sequentially to avoid server creation race conditions
+    await emails.reduce(async (previousPromise, email) => {
+      await previousPromise;
+      await helper.loginWithEmail(email);
+    }, Promise.resolve());
+
+    // Info: (20250102 - Shirley) Set first user as current
+    if (emails.length > 0) {
+      helper.switchToUser(emails[0]);
+    }
+
     return helper;
   }
 }

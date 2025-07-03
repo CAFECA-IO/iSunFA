@@ -67,8 +67,10 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20240702 - Shirley) Test each default email individually
       const defaultEmails = TestDataFactory.DEFAULT_TEST_EMAILS;
 
-      // Info: (20240702 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
-      const emailTests = defaultEmails.map(async (email) => {
+      // Info: (20250102 - Shirley) Test emails sequentially to avoid server connection issues
+      await defaultEmails.reduce(async (previousPromise, email) => {
+        await previousPromise;
+
         // Info: (20240702 - Shirley) Create a fresh API helper for each email test
         const emailApiHelper = new APITestHelper();
 
@@ -100,10 +102,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         } else {
           throw new Error(`StatusInfo payload is invalid for ${email}`);
         }
-      });
-
-      // Info: (20240702 - Shirley) Wait for all email tests to complete
-      await Promise.all(emailTests);
+      }, Promise.resolve());
     });
 
     it('should maintain session after authentication', async () => {

@@ -1,6 +1,8 @@
 // Info: (20240701 - Shirley) Jest setup for supertest-based integration tests
 // Info: (20240701 - Shirley) Focus on API testing without direct database manipulation
 
+import { closeAllTestServers } from '@/tests/integration/test_client';
+
 // Info: (20240701 - Shirley) Setup before all tests
 beforeAll(async () => {
   // Info: (20240701 - Shirley) Set test environment variables
@@ -15,6 +17,9 @@ beforeAll(async () => {
 
 // Info: (20240701 - Shirley) Cleanup after all tests
 afterAll(async () => {
+  // Info: (20250102 - Shirley) Close all test servers to prevent connection reset errors
+  await closeAllTestServers();
+  
   // Info: (20240701 - Shirley) Clean up environment variables
   delete process.env.DEBUG_API;
 });
@@ -24,6 +29,12 @@ afterAll(async () => {
 beforeEach(() => {
   // Info: (20240701 - Shirley) Clear any test-specific environment variables if needed
 });
+
+// Info: (20250102 - Shirley) Don't close servers after each test since they're reused across tests in beforeAll
+// afterEach(async () => {
+//   // Info: (20250102 - Shirley) Close test servers after each test
+//   await closeAllTestServers();
+// });
 
 // Info: (20240701 - Shirley) Extend Jest timeout for integration tests
 jest.setTimeout(30000);
