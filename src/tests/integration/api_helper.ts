@@ -37,7 +37,7 @@ export class APITestHelper {
 
   private sessionCookies: string[] = [];
 
-  // Info: (20250102 - Shirley) Multi-user session management
+  // Info: (20250703 - Shirley) Multi-user session management
   private userSessions: Map<string, string[]> = new Map();
 
   private currentUser: string | null = null;
@@ -58,12 +58,12 @@ export class APITestHelper {
         .filter((cookie: string) => cookie.includes('isunfa='))
         .map((cookie: string) => cookie.split(';')[0]);
 
-      // Info: (20250102 - Shirley) Store cookies for specific user if email provided
+      // Info: (20250703 - Shirley) Store cookies for specific user if email provided
       if (email) {
         this.userSessions.set(email, [...sessionCookies]);
         this.currentUser = email;
       } else {
-        // Info: (20250102 - Shirley) Fallback to legacy behavior
+        // Info: (20250703 - Shirley) Fallback to legacy behavior
         this.sessionCookies.push(...sessionCookies);
       }
     }
@@ -106,19 +106,19 @@ export class APITestHelper {
     return request.expect(200) as Promise<TestResponse>;
   }
 
-  // Info: (20240702 - Shirley) Complete authentication flow - request OTP then authenticate
+  // Info: (20250703 - Shirley) Complete authentication flow - request OTP then authenticate
   async completeAuthenticationFlow(email?: string, code?: string): Promise<AuthFlowResult> {
     return this.performAuthentication(email, code);
   }
 
-  // Info: (20240702 - Shirley) Test all default emails for authentication
+  // Info: (20250703 - Shirley) Test all default emails for authentication
   static async testAllDefaultEmails(): Promise<Array<EmailTestResult>> {
     const results: Array<EmailTestResult> = [];
 
-    // Info: (20240702 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
+    // Info: (20250703 - Shirley) Use Promise.all instead of for loop to avoid eslint warnings
     const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
       try {
-        // Info: (20240702 - Shirley) Create a fresh helper for each email to avoid session conflicts
+        // Info: (20250703 - Shirley) Create a fresh helper for each email to avoid session conflicts
         const emailHelper = new APITestHelper();
         const response = await emailHelper.completeAuthenticationFlow(email);
         return {
@@ -141,15 +141,15 @@ export class APITestHelper {
     return results;
   }
 
-  // Info: (20240702 - Shirley) Clear session cookies for fresh authentication
+  // Info: (20250703 - Shirley) Clear session cookies for fresh authentication
   clearSession(): void {
     this.sessionCookies = [];
-    // Info: (20250102 - Shirley) Also clear multi-user session data for complete reset
+    // Info: (20250703 - Shirley) Also clear multi-user session data for complete reset
     this.currentUser = null;
     this.userSessions.clear();
   }
 
-  // Info: (20240702 - Shirley) Get current session cookies for debugging
+  // Info: (20250703 - Shirley) Get current session cookies for debugging
   getCurrentSession(): string[] {
     if (this.currentUser && this.userSessions.has(this.currentUser)) {
       return [...this.userSessions.get(this.currentUser)!];
@@ -157,7 +157,7 @@ export class APITestHelper {
     return [...this.sessionCookies];
   }
 
-  // Info: (20240702 - Shirley) Check if user is currently authenticated
+  // Info: (20250703 - Shirley) Check if user is currently authenticated
   isAuthenticated(): boolean {
     if (this.currentUser && this.userSessions.has(this.currentUser)) {
       return this.userSessions.get(this.currentUser)!.length > 0;
@@ -165,7 +165,7 @@ export class APITestHelper {
     return this.sessionCookies.length > 0;
   }
 
-  // Info: (20250102 - Shirley) Core authentication method to avoid duplication
+  // Info: (20250703 - Shirley) Core authentication method to avoid duplication
   private async performAuthentication(email?: string, code?: string): Promise<AuthFlowResult> {
     const testEmail = email || TestDataFactory.PRIMARY_TEST_EMAIL;
     const testCode = code || TestDataFactory.DEFAULT_VERIFICATION_CODE;
@@ -177,7 +177,7 @@ export class APITestHelper {
     return { otpResponse, authResponse, statusResponse };
   }
 
-  // Info: (20240702 - Shirley) Quick authentication for test setup - throws if authentication fails
+  // Info: (20250703 - Shirley) Quick authentication for test setup - throws if authentication fails
   async ensureAuthenticated(): Promise<void> {
     if (!this.isAuthenticated()) {
       this.clearSession();
@@ -188,11 +188,11 @@ export class APITestHelper {
     }
   }
 
-  // Info: (20250102 - Shirley) Multi-user authentication methods
+  // Info: (20250703 - Shirley) Multi-user authentication methods
 
-  // Info: (20250102 - Shirley) Login with specific email
+  // Info: (20250703 - Shirley) Login with specific email
   async loginWithEmail(email: string): Promise<AuthFlowResult> {
-    // Info: (20250102 - Shirley) Validate email is in default list
+    // Info: (20250703 - Shirley) Validate email is in default list
     if (!TestDataFactory.DEFAULT_TEST_EMAILS.includes(email)) {
       throw new Error(`Email ${email} is not in the default test emails list`);
     }
@@ -205,7 +205,7 @@ export class APITestHelper {
     return result;
   }
 
-  // Info: (20250102 - Shirley) Switch to a specific user
+  // Info: (20250703 - Shirley) Switch to a specific user
   switchToUser(email: string): void {
     if (!this.userSessions.has(email)) {
       throw new Error(`User ${email} is not authenticated. Please login first.`);
@@ -213,24 +213,24 @@ export class APITestHelper {
     this.currentUser = email;
   }
 
-  // Info: (20250102 - Shirley) Get current user email
+  // Info: (20250703 - Shirley) Get current user email
   getCurrentUser(): string | null {
     return this.currentUser;
   }
 
-  // Info: (20250102 - Shirley) Check if specific user is authenticated
+  // Info: (20250703 - Shirley) Check if specific user is authenticated
   isUserAuthenticated(email: string): boolean {
     return this.userSessions.has(email) && this.userSessions.get(email)!.length > 0;
   }
 
-  // Info: (20250102 - Shirley) Get all authenticated users
+  // Info: (20250703 - Shirley) Get all authenticated users
   getAllAuthenticatedUsers(): string[] {
     return Array.from(this.userSessions.keys()).filter(
       (email) => this.userSessions.get(email)!.length > 0
     );
   }
 
-  // Info: (20250102 - Shirley) Clear session for specific user
+  // Info: (20250703 - Shirley) Clear session for specific user
   clearUserSession(email: string): void {
     this.userSessions.delete(email);
     if (this.currentUser === email) {
@@ -238,14 +238,14 @@ export class APITestHelper {
     }
   }
 
-  // Info: (20250102 - Shirley) Clear all user sessions
+  // Info: (20250703 - Shirley) Clear all user sessions
   clearAllUserSessions(): void {
     this.userSessions.clear();
     this.currentUser = null;
     this.sessionCookies = [];
   }
 
-  // Info: (20250102 - Shirley) Unified helper creation method
+  // Info: (20250703 - Shirley) Unified helper creation method
   static async createHelper(options?: {
     email?: string;
     emails?: string[];
@@ -267,29 +267,29 @@ export class APITestHelper {
     return helper;
   }
 
-  // Info: (20250102 - Shirley) Create helper with specific user already authenticated
+  // Info: (20250703 - Shirley) Create helper with specific user already authenticated
   static async createWithEmail(email: string): Promise<APITestHelper> {
     return APITestHelper.createHelper({ email });
   }
 
-  // Info: (20250102 - Shirley) Create helper with multiple users authenticated
+  // Info: (20250703 - Shirley) Create helper with multiple users authenticated
   static async createWithMultipleUsers(emails: string[]): Promise<APITestHelper> {
     return APITestHelper.createHelper({ emails });
   }
 
-  // Info: (20240702 - Shirley) Create authenticated helper instance for test reuse
+  // Info: (20250703 - Shirley) Create authenticated helper instance for test reuse
   static async createAuthenticatedHelper(): Promise<APITestHelper> {
     return APITestHelper.createHelper({ autoAuth: true });
   }
 
-  // Info: (20250102 - Shirley) Helper method for multi-user authentication
+  // Info: (20250703 - Shirley) Helper method for multi-user authentication
   private async authenticateMultipleUsers(emails: string[]): Promise<void> {
-    // Info: (20250102 - Shirley) Login users sequentially to avoid server creation race conditions
+    // Info: (20250703 - Shirley) Login users sequentially to avoid server creation race conditions
     await emails.reduce(async (previousPromise, email) => {
       await previousPromise;
       await this.loginWithEmail(email);
     }, Promise.resolve());
-    // Info: (20250102 - Shirley) Set first user as current
+    // Info: (20250703 - Shirley) Set first user as current
     if (emails.length > 0) {
       this.switchToUser(emails[0]);
     }

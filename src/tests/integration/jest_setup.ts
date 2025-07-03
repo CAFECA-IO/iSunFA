@@ -17,7 +17,7 @@ beforeAll(async () => {
 
 // Info: (20240701 - Shirley) Cleanup after all tests
 afterAll(async () => {
-  // Info: (20250102 - Shirley) Close all test servers to prevent connection reset errors
+  // Info: (20250703 - Shirley) Close all test servers to prevent connection reset errors
   await closeAllTestServers();
 
   // Info: (20240701 - Shirley) Clean up environment variables
@@ -30,9 +30,9 @@ beforeEach(() => {
   // Info: (20240701 - Shirley) Clear any test-specific environment variables if needed
 });
 
-// Info: (20250102 - Shirley) Don't close servers after each test since they're reused across tests in beforeAll
+// Info: (20250703 - Shirley) Don't close servers after each test since they're reused across tests in beforeAll
 // afterEach(async () => {
-//   // Info: (20250102 - Shirley) Close test servers after each test
+//   // Info: (20250703 - Shirley) Close test servers after each test
 //   await closeAllTestServers();
 // });
 

@@ -1,5 +1,3 @@
-// Info: (20240702 - Shirley) Team management integration tests
-// Info: (20240702 - Shirley) Focus: Testing authentication automation for team-related APIs
 import { APITestHelper } from '@/tests/integration/api_helper';
 import {
   createTestClient,
@@ -8,9 +6,11 @@ import {
 } from '@/tests/integration/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import teamCreateHandler from '@/pages/api/v2/team/index';
+import { SortBy, SortOrder } from '@/constants/sort';
+import { TPlanType } from '@/interfaces/subscription';
 
 /**
- * Info: (20240702 - Shirley) Integration Test - Team Management Authentication
+ * Info: (20250703 - Shirley) Integration Test - Team Management Authentication
  *
  * Primary Purpose:
  * - Test automated login functionality for team-related endpoints
@@ -20,6 +20,7 @@ import teamCreateHandler from '@/pages/api/v2/team/index';
  *
  * Note: This test focuses on authentication behavior rather than deep API functionality,
  * since the main goal is to verify login automation works correctly.
+ * TODO: Focus on deep API functionality in future test cases
  */
 describe('Integration Test - Team Management Authentication', () => {
   let authenticatedHelper: APITestHelper;
@@ -28,21 +29,18 @@ describe('Integration Test - Team Management Authentication', () => {
   let currentUserId: string;
 
   beforeAll(async () => {
-    // Info: (20250102 - Shirley) Use new unified factory method for auto-authentication
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
-    // Info: (20240702 - Shirley) Get user info from status to get real userId
     const statusResponse = await authenticatedHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
-    // Info: (20240702 - Shirley) Create test clients for team APIs with real userId
     teamCreateClient = createTestClient(teamCreateHandler);
     teamListClient = createDynamicTestClient(teamListHandler, { userId: currentUserId });
   });
 
   // ========================================
-  // Info: (20240702 - Shirley) Test Case 2.1: Team API Authentication
+  // Info: (20250703 - Shirley) Test Case 2.1: Team API Authentication
   // ========================================
   describe('Test Case 2.1: Team API Authentication', () => {
     it('should reject unauthenticated team listing requests', async () => {
@@ -67,19 +65,19 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250102 - Shirley) Get fresh user ID to ensure proper authorization
+      // Info: (20250703 - Shirley) Get fresh user ID to ensure proper authorization
       const statusResponse = await authenticatedHelper.getStatusInfo();
       const userData = statusResponse.body.payload?.user as { id?: number };
       const userId = userData?.id?.toString() || '1';
 
-      // Info: (20240702 - Shirley) Test with minimal query parameters for success
+      // Info: (20250703 - Shirley) Test with minimal query parameters for success
       const response = await teamListClient
         .get(`/api/v2/user/${userId}/team`)
         .query({
           page: 1,
           pageSize: 10,
         })
-        .send({}) // Info: (20240702 - Shirley) Send empty object for body schema validation
+        .send({}) // Info: (20250703 - Shirley) Send empty object for body schema validation
         .set('Cookie', cookies.join('; '))
         .expect(200);
 
@@ -88,8 +86,9 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.body.payload).toBeDefined();
       expect(response.body.payload.data).toBeDefined();
       expect(Array.isArray(response.body.payload.data)).toBe(true);
+      expect(response.body.payload.data.length).toBeGreaterThan(0);
 
-      // Info: (20240702 - Shirley) Verify pagination structure
+      // Info: (20250703 - Shirley) Verify pagination structure
       expect(response.body.payload).toHaveProperty('page');
       expect(response.body.payload).toHaveProperty('totalPages');
       expect(response.body.payload).toHaveProperty('totalCount');
@@ -98,11 +97,12 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.body.payload).toHaveProperty('hasPreviousPage');
     });
 
+    // TODO: (20250703 - Shirley) test case WIP
     //   it('should successfully create a new team', async () => {
     //     await authenticatedHelper.ensureAuthenticated();
     //     const cookies = authenticatedHelper.getCurrentSession();
 
-    //     // Info: (20240702 - Shirley) Use proper team data structure
+    //     // Info: (20250703 - Shirley) Use proper team data structure
     //     const teamData = {
     //       name: `Integration Test Team ${Date.now()}`,
     //       about: 'Team created by integration tests',
@@ -115,9 +115,9 @@ describe('Integration Test - Team Management Authentication', () => {
     //       .send(teamData)
     //       .set('Cookie', cookies.join('; '));
 
-    //     // Info: (20240702 - Shirley) Check if team creation works or skip due to environment issues
+    //     // Info: (20250703 - Shirley) Check if team creation works or skip due to environment issues
     //     if (response.status === 500) {
-    //       // Info: (20240702 - Shirley) Environment issue: Database not properly seeded with team plans
+    //       // Info: (20250703 - Shirley) Environment issue: Database not properly seeded with team plans
     //       // TODO: Fix database seeding for team plans in integration test environment
     //       console.warn(
     //         'Team creation failed due to environment setup. Response:',
@@ -131,7 +131,7 @@ describe('Integration Test - Team Management Authentication', () => {
     //     expect(response.body.code).toBe('201ISF0000');
     //     expect(response.body.payload).toBeDefined();
 
-    //     // Info: (20240702 - Shirley) Verify team structure
+    //     // Info: (20250703 - Shirley) Verify team structure
     //     expect(response.body.payload.name.value).toBe(teamData.name);
     //     expect(response.body.payload.about.value).toBe(teamData.about);
     //     expect(response.body.payload.profile.value).toBe(teamData.profile);
@@ -144,8 +144,9 @@ describe('Integration Test - Team Management Authentication', () => {
   });
 
   // ========================================
-  // Info: (20240702 - Shirley) Test Case 2.3: Authentication Performance
+  // Info: (20250703 - Shirley) Test Case 2.3: Authentication Performance
   // ========================================
+  // TODO: (20250703 - Shirley) test case WIP
   xdescribe('Test Case 2.3: Authentication Performance', () => {
     it('should handle concurrent authenticated requests', async () => {
       await authenticatedHelper.ensureAuthenticated();
@@ -156,14 +157,14 @@ describe('Integration Test - Team Management Authentication', () => {
         .map(() =>
           teamListClient
             .get(`/api/v2/user/${currentUserId}/team`)
-            .send({}) // Info: (20240702 - Shirley) Send empty object for body schema validation
+            .send({}) // Info: (20250703 - Shirley) Send empty object for body schema validation
             .set('Cookie', cookies.join('; '))
         );
 
       const responses = await Promise.all(requests);
 
       responses.forEach((response) => {
-        // Info: (20240702 - Shirley) All should be authenticated (not 401)
+        // Info: (20250703 - Shirley) All should be authenticated (not 401)
         expect(response.status).not.toBe(401);
       });
     });
@@ -172,15 +173,15 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20240702 - Shirley) Make multiple API calls with same session
+      // Info: (20250703 - Shirley) Make multiple API calls with same session
       const listResponse = await teamListClient
         .get(`/api/v2/user/${currentUserId}/team`)
         .query({
           page: 1,
           pageSize: 5,
-          sortOption: 'CreatedAt:desc',
+          sortOption: `${SortBy.CREATED_AT}:${SortOrder.DESC}`,
         })
-        .send({}) // Info: (20240702 - Shirley) Send empty object for body schema validation
+        .send({}) // Info: (20250703 - Shirley) Send empty object for body schema validation
         .set('Cookie', cookies.join('; '));
 
       const createResponse = await teamCreateClient
@@ -188,15 +189,15 @@ describe('Integration Test - Team Management Authentication', () => {
         .send({
           name: `Multi-call Team ${Date.now()}`,
           about: 'Test team for concurrent calls',
-          planType: 'PROFESSIONAL',
+          planType: TPlanType.BEGINNER,
         })
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20240702 - Shirley) Both should succeed
+      // Info: (20250703 - Shirley) Both should succeed
       expect(listResponse.status).toBe(200);
       expect(listResponse.body.success).toBe(true);
 
-      // Info: (20240702 - Shirley) Skip create response check if 500 error
+      // Info: (20250703 - Shirley) Skip create response check if 500 error
       if (createResponse.status !== 500) {
         expect(createResponse.status).toBe(201);
         expect(createResponse.body.success).toBe(true);
@@ -205,14 +206,15 @@ describe('Integration Test - Team Management Authentication', () => {
   });
 
   // ========================================
-  // Info: (20240702 - Shirley) Test Case 2.4: Authentication Methods
+  // Info: (20250703 - Shirley) Test Case 2.4: Authentication Methods
   // ========================================
+  // TODO: (20250703 - Shirley) test case WIP
   xdescribe('Test Case 2.4: Authentication Methods', () => {
     it('should handle method validation for team endpoints', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20240702 - Shirley) Test wrong HTTP method - should get 405, not 401
+      // Info: (20250703 - Shirley) Test wrong HTTP method - should get 405, not 401
       const listWrongMethod = await teamListClient
         .post(`/api/v2/user/${currentUserId}/team`)
         .set('Cookie', cookies.join('; '))

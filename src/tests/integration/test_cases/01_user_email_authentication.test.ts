@@ -1,5 +1,5 @@
-// Info: (20240702 - Shirley) Supertest-based user email authentication integration tests
-// Info: (20240702 - Shirley) Following the original test philosophy: simulate real user behavior using default values
+// Info: (20250703 - Shirley) Supertest-based user email authentication integration tests
+// Info: (20250703 - Shirley) Following the original test philosophy: simulate real user behavior using default values
 import { APITestHelper } from '@/tests/integration/api_helper';
 import { TestDataFactory } from '@/tests/integration/test_data_factory';
 import { createDynamicTestClient, TestClient } from '@/tests/integration/test_client';
@@ -30,7 +30,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     // Info: (20240701 - Shirley) Initialize API helpers for testing
     apiHelper = new APITestHelper();
 
-    // Info: (20250102 - Shirley) Initialize multi-user helper for multi-user tests
+    // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
     multiUserHelper = await APITestHelper.createHelper({
       emails: [testUsers.user1, testUsers.user2, testUsers.user3],
     });
@@ -68,36 +68,36 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should authenticate with all default email addresses', async () => {
-      // Info: (20240702 - Shirley) Test all default emails in the system
+      // Info: (20250703 - Shirley) Test all default emails in the system
       const results = await APITestHelper.testAllDefaultEmails();
 
-      // Info: (20240702 - Shirley) At least one email should work (system default)
+      // Info: (20250703 - Shirley) At least one email should work (system default)
       const successfulAuths = results.filter((result) => result.success);
       expect(successfulAuths.length).toBeGreaterThan(0);
     });
 
     it('should test individual email authentication and verify with statusInfo', async () => {
-      // Info: (20240702 - Shirley) Test each default email individually
+      // Info: (20250703 - Shirley) Test each default email individually
       const defaultEmails = TestDataFactory.DEFAULT_TEST_EMAILS;
 
-      // Info: (20250102 - Shirley) Test emails sequentially to avoid server connection issues
+      // Info: (20250703 - Shirley) Test emails sequentially to avoid server connection issues
       await defaultEmails.reduce(async (previousPromise, email) => {
         await previousPromise;
 
-        // Info: (20240702 - Shirley) Create a fresh API helper for each email test
+        // Info: (20250703 - Shirley) Create a fresh API helper for each email test
         const emailApiHelper = new APITestHelper();
 
-        // Info: (20240702 - Shirley) Complete authentication flow
+        // Info: (20250703 - Shirley) Complete authentication flow
         const { otpResponse, authResponse, statusResponse } =
           await emailApiHelper.completeAuthenticationFlow(email);
 
-        // Info: (20240702 - Shirley) Verify authentication responses
+        // Info: (20250703 - Shirley) Verify authentication responses
         expect(otpResponse.status).toBe(200);
         expect(otpResponse.body.success).toBe(true);
         expect(authResponse.status).toBe(200);
         expect(authResponse.body.success).toBe(true);
 
-        // Info: (20240702 - Shirley) Verify statusInfo contains the correct email
+        // Info: (20250703 - Shirley) Verify statusInfo contains the correct email
         expect(statusResponse.status).toBe(200);
         expect(statusResponse.body.success).toBe(true);
         expect(statusResponse.body.payload).toBeDefined();
@@ -312,7 +312,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20250102 - Shirley) Test Case 1.6: Multi-User Authentication
+  // Info: (20250703 - Shirley) Test Case 1.6: Multi-User Authentication
   // ========================================
   describe('Test Case 1.6: Multi-User Authentication', () => {
     it('should authenticate multiple users successfully', async () => {
@@ -325,11 +325,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
 
     it('should switch between users and maintain separate sessions', async () => {
-      // Info: (20250102 - Shirley) Switch to user2
+      // Info: (20250703 - Shirley) Switch to user2
       multiUserHelper.switchToUser(testUsers.user2);
       expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user2);
 
-      // Info: (20250102 - Shirley) Get status for user2
+      // Info: (20250703 - Shirley) Get status for user2
       const user2Status = await multiUserHelper.getStatusInfo();
       expect(user2Status.body.success).toBe(true);
 
@@ -338,11 +338,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       };
       expect(user2Payload.user.email).toBe(testUsers.user2);
 
-      // Info: (20250102 - Shirley) Switch to user3
+      // Info: (20250703 - Shirley) Switch to user3
       multiUserHelper.switchToUser(testUsers.user3);
       expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user3);
 
-      // Info: (20250102 - Shirley) Get status for user3
+      // Info: (20250703 - Shirley) Get status for user3
       const user3Status = await multiUserHelper.getStatusInfo();
       expect(user3Status.body.success).toBe(true);
 
@@ -351,25 +351,25 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       };
       expect(user3Payload.user.email).toBe(testUsers.user3);
 
-      // Info: (20250102 - Shirley) Verify different user IDs
+      // Info: (20250703 - Shirley) Verify different user IDs
       const user2Id = user2Payload.user.id;
       const user3Id = user3Payload.user.id;
       expect(user2Id).not.toBe(user3Id);
     });
 
     it('should handle individual user session management', async () => {
-      // Info: (20250102 - Shirley) Verify user is authenticated before clearing
+      // Info: (20250703 - Shirley) Verify user is authenticated before clearing
       expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(true);
 
-      // Info: (20250102 - Shirley) Clear specific user session
+      // Info: (20250703 - Shirley) Clear specific user session
       multiUserHelper.clearUserSession(testUsers.user2);
       expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(false);
 
-      // Info: (20250102 - Shirley) Other users should still be authenticated
+      // Info: (20250703 - Shirley) Other users should still be authenticated
       expect(multiUserHelper.isUserAuthenticated(testUsers.user1)).toBe(true);
       expect(multiUserHelper.isUserAuthenticated(testUsers.user3)).toBe(true);
 
-      // Info: (20250102 - Shirley) Re-authenticate cleared user
+      // Info: (20250703 - Shirley) Re-authenticate cleared user
       await multiUserHelper.loginWithEmail(testUsers.user2);
       expect(multiUserHelper.isUserAuthenticated(testUsers.user2)).toBe(true);
     });
@@ -383,7 +383,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(singleUserHelper.isUserAuthenticated(testUsers.user1)).toBe(true);
       expect(singleUserHelper.getAllAuthenticatedUsers()).toHaveLength(1);
 
-      // Info: (20250102 - Shirley) Verify it can make API calls
+      // Info: (20250703 - Shirley) Verify it can make API calls
       const statusResponse = await singleUserHelper.getStatusInfo();
       expect(statusResponse.body.success).toBe(true);
 
@@ -395,7 +395,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20250102 - Shirley) Test Case 1.7: Authentication Helper Factory Methods
+  // Info: (20250703 - Shirley) Test Case 1.7: Authentication Helper Factory Methods
   // ========================================
   describe('Test Case 1.7: Authentication Helper Factory Methods', () => {
     it('should create authenticated helper with auto-authentication', async () => {
@@ -405,7 +405,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const cookies = helper.getCurrentSession();
       expect(cookies.length).toBeGreaterThan(0);
 
-      // Info: (20250102 - Shirley) Verify session cookies contain auth data
+      // Info: (20250703 - Shirley) Verify session cookies contain auth data
       const sessionCookie = cookies.find((cookie) => cookie.includes('isunfa='));
       expect(sessionCookie).toBeDefined();
     });
@@ -413,11 +413,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     it('should efficiently re-authenticate when session is cleared', async () => {
       const helper = await APITestHelper.createHelper({ autoAuth: true });
 
-      // Info: (20250102 - Shirley) Clear session and test re-authentication
+      // Info: (20250703 - Shirley) Clear session and test re-authentication
       helper.clearSession();
       expect(helper.isAuthenticated()).toBe(false);
 
-      // Info: (20250102 - Shirley) Measure re-authentication time
+      // Info: (20250703 - Shirley) Measure re-authentication time
       const startTime = Date.now();
       await helper.ensureAuthenticated();
       const authTime = Date.now() - startTime;
@@ -434,7 +434,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(specificUserHelper.isAuthenticated()).toBe(true);
       expect(specificUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
 
-      // Info: (20250102 - Shirley) Verify the helper can make authenticated API calls
+      // Info: (20250703 - Shirley) Verify the helper can make authenticated API calls
       const statusResponse = await specificUserHelper.getStatusInfo();
       expect(statusResponse.body.success).toBe(true);
 
@@ -454,10 +454,10 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(authenticatedUsers).toContain('user@isunfa.com');
       expect(authenticatedUsers).toContain('user1@isunfa.com');
 
-      // Info: (20250102 - Shirley) Should start with first user as current
+      // Info: (20250703 - Shirley) Should start with first user as current
       expect(factoryMultiUserHelper.getCurrentUser()).toBe('user@isunfa.com');
 
-      // Info: (20250102 - Shirley) Test switching between users
+      // Info: (20250703 - Shirley) Test switching between users
       factoryMultiUserHelper.switchToUser('user1@isunfa.com');
       expect(factoryMultiUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
 
