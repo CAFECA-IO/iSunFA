@@ -19,7 +19,7 @@ beforeAll(async () => {
 afterAll(async () => {
   // Info: (20250102 - Shirley) Close all test servers to prevent connection reset errors
   await closeAllTestServers();
-  
+
   // Info: (20240701 - Shirley) Clean up environment variables
   delete process.env.DEBUG_API;
 });
