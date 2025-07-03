@@ -21,9 +21,9 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   let multiUserHelper: APITestHelper;
 
   const testUsers = {
-    user1: 'user@isunfa.com',
-    user2: 'user1@isunfa.com',
-    user3: 'user2@isunfa.com',
+    user1: TestDataFactory.TEST_EMAIL[0],
+    user2: TestDataFactory.TEST_EMAIL[1],
+    user3: TestDataFactory.TEST_EMAIL[2],
   };
 
   beforeAll(async () => {

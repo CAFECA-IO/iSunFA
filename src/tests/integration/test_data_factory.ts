@@ -10,6 +10,8 @@ export class TestDataFactory {
   // Info: (20240701 - Shirley) Primary test email (first in the list)
   static readonly PRIMARY_TEST_EMAIL = DefaultValue.EMAIL_LOGIN.EMAIL[0]; // user@isunfa.com
 
+  static readonly TEST_EMAIL = DefaultValue.EMAIL_LOGIN.EMAIL;
+
   // Info: (20240701 - Shirley) Generate one-time password request for email login
   static createOTPRequest(email?: string): { email: string } {
     return {
