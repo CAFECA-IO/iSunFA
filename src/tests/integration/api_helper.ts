@@ -1,9 +1,6 @@
 // Info: (20240701 - Shirley) API helper for integration tests - simulates real user behavior through API calls
-import {
-  createTestClient,
-  createDynamicTestClient,
-  TestClient,
-} from '@/tests/integration/test_client';
+import { createTestClient, createDynamicTestClient } from '@/tests/integration/test_client';
+import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/test_data_factory';
 
 // Info: (20240701 - Shirley) Import API handlers for testing

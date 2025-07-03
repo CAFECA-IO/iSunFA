@@ -1,9 +1,6 @@
 import { APITestHelper } from '@/tests/integration/api_helper';
-import {
-  createTestClient,
-  createDynamicTestClient,
-  TestClient,
-} from '@/tests/integration/test_client';
+import { createTestClient } from '@/tests/integration/test_client';
+import { TestClient } from '@/interfaces/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import teamCreateHandler from '@/pages/api/v2/team/index';
 import { SortBy, SortOrder } from '@/constants/sort';
@@ -36,7 +33,10 @@ describe('Integration Test - Team Management Authentication', () => {
     currentUserId = userData?.id?.toString() || '1';
 
     teamCreateClient = createTestClient(teamCreateHandler);
-    teamListClient = createDynamicTestClient(teamListHandler, { userId: currentUserId });
+    teamListClient = createTestClient({
+      handler: teamListHandler,
+      routeParams: { userId: currentUserId },
+    });
   });
 
   // ========================================
@@ -237,11 +237,8 @@ describe('Integration Test - Team Management Authentication', () => {
 // Info: (20250703 - Shirley) Focus on actual business scenarios requiring multiple users
 
 import { APITestHelper } from '@/tests/integration/api_helper';
-import {
-  createTestClient,
-  createDynamicTestClient,
-  TestClient,
-} from '@/tests/integration/test_client';
+import { createTestClient } from '@/tests/integration/test_client';
+import { TestClient } from '@/interfaces/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 
@@ -338,7 +335,7 @@ import statusInfoHandler from '@/pages/api/v2/status_info';
 //         const userId = userData.id;
 
 //         // Info: (20250703 - Shirley) Test team listing for this user
-//         const teamListClient = createDynamicTestClient(teamListHandler, {
+//         const teamListClient = createTestClient({ handler: teamListHandler, routeParams: {
 //           userId: userId.toString(),
 //         });
 
@@ -402,7 +399,7 @@ import statusInfoHandler from '@/pages/api/v2/status_info';
 
 //         // Info: (20250703 - Shirley) Try to access other users' resources
 //         const crossAccessTests = otherUsers.map(async (otherUser) => {
-//           const teamListClient = createDynamicTestClient(teamListHandler, {
+//           const teamListClient = createTestClient({ handler: teamListHandler, routeParams: {
 //             userId: otherUser.id.toString(),
 //           });
 

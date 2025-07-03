@@ -1,6 +1,7 @@
 // Info: (20240701 - Shirley) Supertest-based API health check integration tests
 // Info: (20240701 - Shirley) Focus on API functionality without database dependencies
-import { createTestClient, TestClient } from '@/tests/integration/test_client';
+import { createTestClient } from '@/tests/integration/test_client';
+import { TestClient } from '@/interfaces/test_client';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 // import { ITeam } from '@/interfaces/team';
 

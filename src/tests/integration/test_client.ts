@@ -1,37 +1,29 @@
 /**
  * Integration Test Client for Next.js API Routes
  *
- * This module provides a singleton-based HTTP server wrapper for testing Next.js API handlers
- * using Supertest. It implements server caching to prevent race conditions and improve performance
- * during parallel test execution.
+ * Provides a singleton-based HTTP server wrapper for testing Next.js API handlers using Supertest.
+ * Implements server caching to prevent race conditions during parallel test execution.
  *
- * Main Features:
- * - Singleton pattern: Each API handler gets exactly one server instance to prevent conflicts
- * - Server caching: Reuses existing servers to avoid resource duplication
- * - Dynamic route support: Handles parameterized routes like [email] with proper query injection
- * - Race condition prevention: Uses Map-based caching to ensure thread-safe server creation
- * - Proper cleanup: Provides utilities to close all active servers and clear caches
- *
- * Architecture:
- * - createTestClient: Creates cached HTTP servers for standard API routes
- * - createDynamicTestClient: Creates cached servers for dynamic routes with parameters
- * - closeAllTestServers: Cleanup function to properly close all active servers
- *
- * Singleton Benefits:
- * - Prevents port conflicts during parallel test execution
- * - Improves test performance through server reuse
- * - Ensures consistent test environment across test suites
- * - Reduces memory footprint by eliminating duplicate servers
+ * Purpose:
+ * - Test Next.js API routes without full server startup
+ * - Singleton pattern prevents port conflicts in parallel tests
+ * - Automatic route type detection (static vs dynamic)
  *
  * Usage:
+ * // Static route: /api/users
  * const client = createTestClient(handler);
- * const response = await client.get('/api/endpoint');
+ * const response = await client.get('/api/users');
+ *
+ * // Dynamic route: /api/users/[email]
+ * const client = createTestClient({ handler, routeParams: { email: 'test@example.com' } });
+ * const response = await client.get('/api/users/test@example.com');
  */
 import { createServer, RequestListener, IncomingMessage, ServerResponse, Server } from 'http';
 import { NextApiHandler } from 'next';
 import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import request from 'supertest';
+import { TestClientOptions } from '@/interfaces/test_client';
 
 interface ExtendedIncomingMessage extends IncomingMessage {
   query?: Record<string, string | string[]>;
@@ -40,7 +32,7 @@ interface ExtendedIncomingMessage extends IncomingMessage {
 const activeServers = new Set<Server>();
 const serverCache = new Map<NextApiHandler, Server>();
 
-export const createTestClient = (handler: NextApiHandler) => {
+export const createSingleTestClient = (handler: NextApiHandler) => {
   let server = serverCache.get(handler);
 
   if (!server) {
@@ -124,7 +116,17 @@ export const createDynamicTestClient = (
   return request(server);
 };
 
-export type TestClient = ReturnType<typeof createTestClient>;
+export const createTestClient = (options: TestClientOptions | NextApiHandler) => {
+  if (typeof options === 'function') {
+    return createSingleTestClient(options);
+  }
+
+  if (options.routeParams && Object.keys(options.routeParams).length > 0) {
+    return createDynamicTestClient(options.handler, options.routeParams);
+  }
+
+  return createSingleTestClient(options.handler);
+};
 
 export const closeAllTestServers = (): Promise<void> => {
   return Promise.all(

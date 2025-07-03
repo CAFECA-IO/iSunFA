@@ -2,7 +2,8 @@
 // Info: (20250703 - Shirley) Following the original test philosophy: simulate real user behavior using default values
 import { APITestHelper } from '@/tests/integration/api_helper';
 import { TestDataFactory } from '@/tests/integration/test_data_factory';
-import { createDynamicTestClient, TestClient } from '@/tests/integration/test_client';
+import { createTestClient } from '@/tests/integration/test_client';
+import { TestClient } from '@/interfaces/test_client';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 
 /**
@@ -38,7 +39,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
   // Info: (20240701 - Shirley) Helper function to create OTP client for specific email
   const createOTPClient = (email: string): TestClient => {
-    return createDynamicTestClient(otpHandler, { email });
+    return createTestClient({ handler: otpHandler, routeParams: { email } });
   };
 
   // ========================================
