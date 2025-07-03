@@ -20,7 +20,7 @@ const serverCache = new Map<NextApiHandler, Server>();
 export const createTestClient = (handler: NextApiHandler) => {
   // Info: (20250102 - Shirley) Reuse existing server for the same handler
   let server = serverCache.get(handler);
-  
+
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
       return apiResolver(
@@ -40,7 +40,7 @@ export const createTestClient = (handler: NextApiHandler) => {
     serverCache.set(handler, server);
     activeServers.add(server);
   }
-  
+
   return request(server);
 };
 
@@ -55,7 +55,7 @@ export const createDynamicTestClient = (
   // Info: (20250102 - Shirley) Create cache key from handler and params
   const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
   let server = dynamicServerCache.get(cacheKey);
-  
+
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
       // Info: (20240701 - Shirley) Parse the URL to extract path and query
@@ -107,7 +107,7 @@ export const createDynamicTestClient = (
     dynamicServerCache.set(cacheKey, server);
     activeServers.add(server);
   }
-  
+
   return request(server);
 };
 

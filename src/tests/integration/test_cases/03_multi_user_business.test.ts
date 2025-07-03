@@ -109,10 +109,13 @@ describe('Integration Test - Multi-User Business Logic', () => {
 
         const teamResponse = await teamListClient
           .get(`/api/v2/user/${userId}/team`)
+          .query({
+            page: 1,
+            pageSize: 10,
+          })
+          .send({}) // Info: (20240702 - Shirley) Send empty object for body schema validation
           .set('Cookie', cookies.join('; '))
           .expect(200);
-
-        console.log('teamResponse', teamResponse.body);
 
         expect(teamResponse.body.success).toBe(true);
 
@@ -171,6 +174,11 @@ describe('Integration Test - Multi-User Business Logic', () => {
           // Info: (20250102 - Shirley) This should either fail or return empty results
           const teamResponse = await teamListClient
             .get(`/api/v2/user/${otherUser.id}/team`)
+            .query({
+              page: 1,
+              pageSize: 10,
+            })
+            .send({}) // Info: (20240702 - Shirley) Send empty object for body schema validation
             .set('Cookie', cookies.join('; '));
 
           // Info: (20250102 - Shirley) The API should either return 403/401 or empty results

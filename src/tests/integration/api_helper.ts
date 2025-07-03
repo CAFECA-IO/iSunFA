@@ -294,5 +294,4 @@ export class APITestHelper {
       this.switchToUser(emails[0]);
     }
   }
-
 }
