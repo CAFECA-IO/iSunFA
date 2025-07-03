@@ -1,5 +1,5 @@
 // invoice_rc2_test_helper.ts
-
+/* Info: (20250703 - Shirley) plz refer to `src/tests/integration/test_cases/02_team_management.test.ts` for the example because the api client (test real server) is not working, we need to use the supertest client for stable and fast tests instead
 import { DefaultValue } from '@/constants/default_value';
 import { UploadType } from '@/constants/file';
 import { InvoiceDirection, CurrencyCode } from '@/constants/invoice_rc2';
@@ -234,3 +234,4 @@ export class InvoiceRC2TestHelper {
     return this.apiClient.get(`/api/v2/account_book/${accountBookId}/invoice/${invoiceId}/output`);
   }
 }
+*/
