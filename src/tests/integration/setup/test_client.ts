@@ -1,4 +1,4 @@
-/**
+/** Info: (20250703 - Shirley)
  * Integration Test Client for Next.js API Routes
  *
  * Provides a singleton-based HTTP server wrapper for testing Next.js API handlers using Supertest.
@@ -21,6 +21,7 @@
 import { createServer, RequestListener, IncomingMessage, ServerResponse, Server } from 'http';
 import { NextApiHandler } from 'next';
 import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
+// Info: (20250703 - Shirley) Supertest is test library and not a dependency of the project
 // eslint-disable-next-line import/no-extraneous-dependencies
 import request from 'supertest';
 import { TestClientOptions } from '@/interfaces/test_client';

@@ -1,6 +1,6 @@
-import { APITestHelper } from '@/tests/integration/api_helper';
-import { TestDataFactory } from '@/tests/integration/test_data_factory';
-import { createTestClient } from '@/tests/integration/test_client';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
+import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 

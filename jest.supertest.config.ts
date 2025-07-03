@@ -14,7 +14,7 @@ const config: Config = {
   testMatch: ['<rootDir>/src/tests/integration/test_cases/**/*.test.ts'],
 
   // Info: (20250701 - Shirley) Setup files
-  setupFilesAfterEnv: ['<rootDir>/src/tests/integration/jest_setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/integration/setup/jest_setup.ts'],
 
   // Info: (20250701 - Shirley) Module path mapping
   moduleNameMapper: {

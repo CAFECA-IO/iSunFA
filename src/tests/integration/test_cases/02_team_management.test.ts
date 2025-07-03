@@ -1,5 +1,5 @@
-import { APITestHelper } from '@/tests/integration/api_helper';
-import { createTestClient } from '@/tests/integration/test_client';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
+import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import teamCreateHandler from '@/pages/api/v2/team/index';
@@ -236,8 +236,8 @@ describe('Integration Test - Team Management Authentication', () => {
 // Info: (20250703 - Shirley) Multi-user business logic integration tests
 // Info: (20250703 - Shirley) Focus on actual business scenarios requiring multiple users
 
-import { APITestHelper } from '@/tests/integration/api_helper';
-import { createTestClient } from '@/tests/integration/test_client';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
+import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import statusInfoHandler from '@/pages/api/v2/status_info';

@@ -1,7 +1,24 @@
-// Info: (20250701 - Shirley) API helper for integration tests - simulates real user behavior through API calls
-import { createTestClient, createDynamicTestClient } from '@/tests/integration/test_client';
+/** Info: (20250703 - Shirley)
+ * Implements necessary utilities for integration test, including session management, authentication flow, and multi-user testing capabilities.
+ *
+ * Purpose:
+ * - Simulate real user behavior through API calls
+ * - Manage authentication sessions and cookies
+ * - Support multi-user testing scenarios
+ * - Abstract common API testing patterns
+ *
+ * Usage:
+ * // Single user authentication
+ * const helper = await APITestHelper.createWithEmail('user@isunfa.com');
+ * const response = await helper.getStatusInfo();
+ *
+ * // Multi-user authentication
+ * const helper = await APITestHelper.createWithMultipleUsers(['user1@isunfa.com', 'user2@isunfa.com']);
+ * helper.switchToUser('user2@isunfa.com');
+ */
+import { createTestClient, createDynamicTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
-import { TestDataFactory } from '@/tests/integration/test_data_factory';
+import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 
 // Info: (20250701 - Shirley) Import API handlers for testing
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';

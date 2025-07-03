@@ -1,4 +1,4 @@
-import { createTestClient } from '@/tests/integration/test_client';
+import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 
