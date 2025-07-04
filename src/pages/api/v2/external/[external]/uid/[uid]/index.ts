@@ -33,18 +33,8 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   const externalUser = await getExternalUserByProviderAndUid(external as string, uid as string);
   const userId = externalUser?.user?.id || 0;
 
-  // Info: (20250703 - Julian) Step 2: 根據 User Id 取得帳本資訊
-  const accountBooks = await getAccountBookByUserId(userId);
-
-  // Info: (20250703 - Julian) Step 3: 將帳本資訊整理為指定格式
-  const reportLinks = accountBooks.map((accountBook) => {
-    return {
-      name: accountBook.name,
-      balance: `https://isunfa.com/embed/view/${accountBook.id}?report_type=balance`,
-      cashFlow: `https://isunfa.com/embed/view/${accountBook.id}?report_type=cash-flow`,
-      comprehensiveIncome: `https://isunfa.com/embed/view/${accountBook.id}?report_type=comprehensive-income`,
-    };
-  });
+  // Info: (20250703 - Julian) Step 2: 根據 User Id 取得報表資料
+  const reportLinks = await getAccountBookByUserId(userId);
 
   // ToDo: (20250702 - Luphia) 繼續完成其他流程
   const result = {
