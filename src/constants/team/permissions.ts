@@ -131,8 +131,18 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   [TeamPermissionAction.MODIFY_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.DELETE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.RESTORE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
-  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
-  [TeamPermissionAction.VIEW_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.VIEW_VOUCHER]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
 };
 
 // Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理
