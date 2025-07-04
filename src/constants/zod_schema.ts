@@ -343,4 +343,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.READ_NOTIFICATION]: readNotificationSchema,
   [APIName.LIST_BAIFA_ACCOUNT_BOOK]: listBaifaAccountBookSchema,
   [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
+  [APIName.GET_VACANCY_BY_ID]: nullAPISchema, // ToDo: (20250704 - Julian) need to define the schema for get vacancy by id
 };

@@ -1,6 +1,7 @@
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import statusInfoHandler from '@/pages/api/v2/status_info';
+import { APIPath } from '@/constants/api_connection';
 
 describe('Integration Test - API v2 status_info (Supertest)', () => {
   let testClient: TestClient;
@@ -13,7 +14,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
   describe('GET /api/v2/status_info', () => {
     it('should return successful response with correct structure', async () => {
       const response = await testClient
-        .get('/api/v2/status_info')
+        .get(APIPath.STATUS_INFO_GET)
         .expect(200)
         .expect('Content-Type', /json/);
 
@@ -26,7 +27,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     });
 
     it('should return payload with expected properties', async () => {
-      const response = await testClient.get('/api/v2/status_info').expect(200);
+      const response = await testClient.get(APIPath.STATUS_INFO_GET).expect(200);
 
       const { body } = response;
       expect(body.payload).toHaveProperty('user');
@@ -37,7 +38,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     });
 
     it('should validate user data structure when present', async () => {
-      const response = await testClient.get('/api/v2/status_info').expect(200);
+      const response = await testClient.get(APIPath.STATUS_INFO_GET).expect(200);
 
       const { body } = response;
       if (body.payload.user !== null) {
@@ -55,9 +56,9 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     });
 
     it('should return consistent data across multiple requests', async () => {
-      const response1 = await testClient.get('/api/v2/status_info').expect(200);
+      const response1 = await testClient.get(APIPath.STATUS_INFO_GET).expect(200);
 
-      const response2 = await testClient.get('/api/v2/status_info').expect(200);
+      const response2 = await testClient.get(APIPath.STATUS_INFO_GET).expect(200);
 
       expect(response1.body.success).toBe(true);
       expect(response2.body.success).toBe(true);
@@ -68,7 +69,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
       // Info: (20250701 - Shirley) Create multiple concurrent requests
       const requests = Array(3)
         .fill(null)
-        .map(() => testClient.get('/api/v2/status_info').expect(200));
+        .map(() => testClient.get(APIPath.STATUS_INFO_GET).expect(200));
 
       const responses = await Promise.all(requests);
 
@@ -81,7 +82,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     it('should respond within reasonable time', async () => {
       const startTime = Date.now();
 
-      const response = await testClient.get('/api/v2/status_info').expect(200);
+      const response = await testClient.get(APIPath.STATUS_INFO_GET).expect(200);
 
       const responseTime = Date.now() - startTime;
       expect(response.body.success).toBe(true);
@@ -92,21 +93,21 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
     });
 
     it('should handle invalid HTTP methods gracefully', async () => {
-      const response = await testClient.delete('/api/v2/status_info').expect(405);
+      const response = await testClient.delete(APIPath.STATUS_INFO_GET).expect(405);
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('405ISF0000');
     });
 
     it('should handle POST method gracefully', async () => {
-      const response = await testClient.post('/api/v2/status_info').send({}).expect(405);
+      const response = await testClient.post(APIPath.STATUS_INFO_GET).send({}).expect(405);
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('405ISF0000');
     });
 
     it('should handle PUT method gracefully', async () => {
-      const response = await testClient.put('/api/v2/status_info').send({}).expect(405);
+      const response = await testClient.put(APIPath.STATUS_INFO_GET).send({}).expect(405);
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('405ISF0000');
@@ -114,7 +115,7 @@ describe('Integration Test - API v2 status_info (Supertest)', () => {
 
     it('should return proper content type header', async () => {
       await testClient
-        .get('/api/v2/status_info')
+        .get(APIPath.STATUS_INFO_GET)
         .expect(200)
         .expect('Content-Type', /application\/json/);
     });

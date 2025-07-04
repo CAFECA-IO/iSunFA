@@ -61,10 +61,7 @@ export const createSingleTestClient = (handler: NextApiHandler) => {
 
 const dynamicServerCache = new Map<string, Server>();
 
-export const createDynamicTestClient = (
-  handler: NextApiHandler,
-  routeParams: Record<string, string>
-) => {
+const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<string, string>) => {
   const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
   let server = dynamicServerCache.get(cacheKey);
 
