@@ -36,6 +36,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     });
   });
 
+  afterAll(() => {
+    apiHelper.clearAllUserSessions();
+    multiUserHelper.clearAllUserSessions();
+  });
+
   // Info: (20250701 - Shirley) Helper function to create OTP client for specific email
   const createOTPClient = (email: string): TestClient => {
     return createTestClient({ handler: otpHandler, routeParams: { email } });

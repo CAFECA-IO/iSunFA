@@ -42,6 +42,10 @@ describe('Integration Test - Team Management Authentication', () => {
     });
   });
 
+  afterAll(() => {
+    authenticatedHelper.clearAllUserSessions();
+  });
+
   // ========================================
   // Info: (20250703 - Shirley) Test Case 2.1: Team API Authentication
   // ========================================
