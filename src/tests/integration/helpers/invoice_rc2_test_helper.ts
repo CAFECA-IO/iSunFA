@@ -1,150 +1,86 @@
-/** Info: (20250704 - Tzuhan) This file is used to test the Invoice RC2 API endpoints in integration tests.
 import fs from 'fs';
 import path from 'path';
-import FormData from 'form-data';
 import request from 'supertest';
-import { DefaultValue } from '@/constants/default_value';
 import { UploadType } from '@/constants/file';
 import { InvoiceDirection, CurrencyCode } from '@/constants/invoice_rc2';
 import { IAccountBook } from '@/interfaces/account_book';
 import { IFileBeta } from '@/interfaces/file';
-import {
-  IInvoiceRC2Input,
-  IInvoiceRC2InputUI,
-  IInvoiceRC2Output,
-  IInvoiceRC2OutputUI,
-} from '@/interfaces/invoice_rc2';
-import { IStatusInfo } from '@/interfaces/status_info';
+import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { ITeam } from '@/interfaces/team';
 import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
-import { ApiClient } from '@/tests/integration/api-client';
-import { IntegrationTestSetup } from '@/tests/integration/setup';
+import { createTestClient } from '@/tests/integration/setup/test_client';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
+import teamCreateHandler from '@/pages/api/v2/team/index';
+import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
+import publicKeyGetHandler from '@/pages/api/v2/account_book/[accountBookId]/public_key';
+// import fileUploadHandler from '@/pages/api/v2/file';
+import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
+import invoiceInputModifyHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/[invoiceId]/input';
 
 export class InvoiceRC2TestHelper {
-  static apiClient = new ApiClient();
+  constructor(private helper: APITestHelper) {}
 
-  static async init() {
-    await IntegrationTestSetup.initialize();
-    process.env.DEBUG_TESTS = 'true';
-    process.env.DEBUG_API = 'true';
+  static async create(email = 'user@isunfa.com') {
+    const helper = await APITestHelper.createWithEmail(email);
+    return new InvoiceRC2TestHelper(helper);
   }
 
-  static async teardown() {
-    await IntegrationTestSetup.cleanup();
+  async createTeam(name?: string): Promise<ITeam> {
+    const teamCreateClient = createTestClient(teamCreateHandler);
+    const response = await teamCreateClient
+      .post('/api/v2/team')
+      .send({ name: name ?? `Test Team ${Date.now()}`, description: 'Test team' })
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(201);
+
+    return response.body.payload;
   }
 
-  static async createUser(
-    email: string = DefaultValue.EMAIL_LOGIN.EMAIL[0],
-    code: string = DefaultValue.EMAIL_LOGIN.CODE
-  ) {
-    await this.apiClient.get(`/api/v2/email/${email}/one_time_password`);
-    const response = await this.apiClient.post(`/api/v2/email/${email}/one_time_password`, {
-      code,
+  async createAccountBookWithTeam(teamId: number, userId: number): Promise<IAccountBook> {
+    const handler = accountBookCreateHandler;
+    const client = createTestClient({ handler, routeParams: { userId: userId.toString() } });
+    const response = await client
+      .post(`/api/v2/user/${userId}/account_book`)
+      .send({
+        name: 'Integration帳本',
+        tag: 'ALL',
+        taxId: '12345678',
+        teamId,
+        taxSerialNumber: '',
+      })
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(201);
+
+    return response.body.payload;
+  }
+
+  async getPublicKey(accountBookId: number): Promise<{ jwk: JsonWebKey; publicKey: CryptoKey }> {
+    const handler = publicKeyGetHandler;
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: accountBookId.toString() },
     });
-    if (!response.success) {
-      throw new Error(`Failed to create user: ${response.message}`);
-    }
-    return response.payload as {
-      email: string;
-    };
-  }
+    const response = await client
+      .get(`/api/v2/account_book/${accountBookId}/public_key`)
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(200);
 
-  static async getStatusInfo() {
-    const res = await this.apiClient.get(`/api/v2/status_info`);
-    return res.payload as IStatusInfo;
-  }
-
-  static async createTeam(name?: string) {
-    const teamName = name ?? `Test Team ${Date.now()}`;
-    const response = await this.apiClient.post(`/api/v2/team`, {
-      name: teamName,
-      description: 'Integration test team',
-    });
-
-    if (!response.success) {
-      throw new Error(`Create team failed: ${response.message}`);
-    }
-
-    return response.payload as ITeam;
-  }
-
-  static async createAccountBookWithTeam(teamId: number, userId: number, name = 'SnowWhite') {
-    const response = await this.apiClient.post(`/api/v2/user/${userId}/account_book`, {
-      name,
-      taxId: '12345678',
-      tag: 'ALL',
-      teamId,
-      taxSerialNumber: '',
-    });
-    if (!response.success) {
-      throw new Error(`Failed to create account book: ${response.message}`);
-    }
-    return response.payload as IAccountBook;
-  }
-
-  static async connectAccountBook(accountBookId: number) {
-    const response = await this.apiClient.get(`/api/v2/account_book/${accountBookId}/connect`);
-    if (!response.success) {
-      throw new Error(`Failed to connect account book: ${response.message}`);
-    }
-    return response.payload as IAccountBook;
-  }
-
-  static async uploadEncryptedFile(
-    fileBuffer: Buffer,
-    filename: string,
-    accountBookId: number,
-    encryptedSymmetricKey: number[],
-    iv: number[],
-    publicKey: Record<string, unknown> = {}
-  ) {
-    const formData = new FormData();
-    formData.append('file', new Blob([fileBuffer]), filename);
-    formData.append('encryptedSymmetricKey', JSON.stringify(encryptedSymmetricKey));
-    formData.append('iv', iv.join(','));
-    formData.append('publicKey', JSON.stringify(publicKey));
-
-    const response = await this.apiClient.post(
-      `/api/v2/file?type=invoice&targetId=${accountBookId}`,
-      formData
-    );
-    if (!response.success) {
-      throw new Error(`Failed to upload file: ${response.message}`);
-    }
-    return response.payload as IFileBeta;
-  }
-
-  static async getPublicKey(accountBookId: number) {
-    const response = await this.apiClient.get(`/api/v2/account_book/${accountBookId}/public_key`);
-    if (!response.success) {
-      throw new Error(`Failed to get public key: ${response.message}`);
-    }
-    const jwk = response.payload as JsonWebKey;
+    const jwk = response.body.payload as JsonWebKey;
     const publicKey = await importPublicKey(jwk);
     return { jwk, publicKey };
   }
 
-  static async uploadEncryptedFileFake(accountBookId: number) {
+  async uploadEncryptedFileFake(accountBookId: number): Promise<IFileBeta> {
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
-    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('File Path:', filePath);
-
     const fileBuffer = fs.readFileSync(filePath);
     const file = new File([fileBuffer], 'mock_invoice.png', { type: 'image/png' });
 
     const { jwk, publicKey } = await this.getPublicKey(accountBookId);
-
-    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Using public key for encryption:', publicKey);
     const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
       file,
       publicKey
     );
-
-    const encryptedArrayBuffer = await encryptedFile.arrayBuffer();
-    const encryptedBuffer = Buffer.from(encryptedArrayBuffer);
+    const encryptedBuffer = Buffer.from(await encryptedFile.arrayBuffer());
 
     const tempEncryptedPath = path.resolve(
       __dirname,
@@ -153,22 +89,7 @@ export class InvoiceRC2TestHelper {
     fs.writeFileSync(tempEncryptedPath, encryptedBuffer); // 先寫入加密檔案
     const fileStream = fs.createReadStream(tempEncryptedPath);
 
-    // const formData = new FormData();
-    // formData.append('file', Readable.from(encryptedBuffer), {
-    //   filename: file.name,
-    //   contentType: file.type,
-    // });
-    // // formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
-    // formData.append('encryptedSymmetricKey', Buffer.from(encryptedSymmetricKey).toString('base64'));
-    // formData.append('publicKey', JSON.stringify(jwk));
-    // formData.append('iv', Array.from(iv).join(','));
-
-    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Uploading file to account book:', accountBookId);
-    const appUrl = IntegrationTestSetup.getApiBaseUrl();
-
-    const response = await request(appUrl)
+    const response = await request(`http://localhost:3001}`)
       .post(`/api/v2/file?type=${UploadType.INVOICE}&targetId=${accountBookId}`)
       .attach('file', fileStream, {
         filename: file.name,
@@ -183,102 +104,79 @@ export class InvoiceRC2TestHelper {
     }
 
     return response.body.payload as IFileBeta;
+
+    // const handler = fileUploadHandler;
+    // const client = createTestClient({
+    //   handler,
+    //   routeParams: { type: UploadType.INVOICE, targetId: accountBookId.toString() },
+    // });
+    // const response = await client
+    //   .attach('file', fs.createReadStream(tempPath), {
+    //     filename: file.name,
+    //     contentType: file.type,
+    //   })
+    //   .field('encryptedSymmetricKey', Buffer.from(encryptedSymmetricKey).toString('base64'))
+    //   .field('iv', Array.from(iv).join(','))
+    //   .field('publicKey', JSON.stringify(jwk))
+    //   .set('Cookie', this.helper.getCurrentSession().join('; '));
+
+    return response.body.payload;
   }
 
-  static async createInvoiceRC2Input(accountBookId: number, fileId: number) {
-    const response = await this.apiClient.post(
-      `/api/rc2/account_book/${accountBookId}/invoice/input`,
-      {
+  async createInvoiceRC2Input(accountBookId: number, fileId: number): Promise<IInvoiceRC2Input> {
+    const handler = invoiceInputCreateHandler;
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const response = await client
+      .post(`/api/rc2/account_book/${accountBookId}/invoice/input`)
+      .send({
         fileId,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
-      }
-    );
-    if (!response.success) {
-      throw new Error(`Failed to create invoice input: ${response.message}`);
-    }
-    return response.payload as IInvoiceRC2Input;
+      })
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(201);
+
+    return response.body.payload;
   }
 
-  static async updateInvoiceRC2Input(
+  async updateInvoiceRC2Input(
     accountBookId: number,
     invoiceId: number,
     data: Partial<IInvoiceRC2InputUI>
-  ) {
-    const response = await this.apiClient.put(
-      `/api/rc2/account_book/${accountBookId}/invoice/${invoiceId}/input`,
-      data
-    );
-    if (!response.success) {
-      throw new Error(`Failed to update invoice input: ${response.message}`);
-    }
-    return response.payload as IInvoiceRC2Input;
+  ): Promise<IInvoiceRC2Input> {
+    const handler = invoiceInputModifyHandler;
+    const client = createTestClient({
+      handler,
+      routeParams: {
+        accountBookId: accountBookId.toString(),
+        invoiceId: invoiceId.toString(),
+      },
+    });
+    const response = await client
+      .put(`/api/rc2/account_book/${accountBookId}/invoice/${invoiceId}/input`)
+      .send(data)
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(200);
+
+    return response.body.payload;
   }
 
-  static async deleteInvoiceRC2Input(accountBookId: number, invoiceIds: number[]) {
-    const response = await this.apiClient.delete(
-      `/api/rc2/account_book/${accountBookId}/invoice/undefined/input`,
-      {
-        invoiceIds,
-      }
-    );
-    if (!response.success) {
-      throw new Error('Failed to delete invoice input');
-    }
-    return response.payload as { success: boolean; deletedIds: number[] };
-  }
+  async deleteInvoiceRC2Input(accountBookId: number, invoiceIds: number[]): Promise<number[]> {
+    const handler = invoiceInputModifyHandler;
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const response = await client
+      .delete(`/api/rc2/account_book/${accountBookId}/invoice/undefined/input`)
+      .send({ invoiceIds })
+      .set('Cookie', this.helper.getCurrentSession().join('; '))
+      .expect(200);
 
-  static async getInvoiceRC2Input(accountBookId: number, invoiceId: number) {
-    return this.apiClient.get(`/api/v2/account_book/${accountBookId}/invoice/${invoiceId}/input`);
-  }
-
-  static async createInvoiceRC2Output(accountBookId: number, fileId: number) {
-    const response = await this.apiClient.post(
-      `/api/v2/account_book/${accountBookId}/invoice/output`,
-      {
-        fileId,
-        direction: InvoiceDirection.OUTPUT,
-        isGenerated: false,
-        currencyCode: CurrencyCode.TWD,
-      }
-    );
-    if (!response.success) {
-      throw new Error('Failed to create invoice output');
-    }
-    return response.payload as IInvoiceRC2Output;
-  }
-
-  static async updateInvoiceRC2Output(
-    accountBookId: number,
-    invoiceId: number,
-    data: Partial<IInvoiceRC2OutputUI>
-  ) {
-    const response = await this.apiClient.put(
-      `/api/rc2/account_book/${accountBookId}/invoice/${invoiceId}/output`,
-      data
-    );
-    if (!response.success) {
-      throw new Error('Failed to update invoice output');
-    }
-    return response.payload as IInvoiceRC2Output;
-  }
-
-  static async deleteInvoiceRC2Output(accountBookId: number, invoiceIds: number[]) {
-    const response = await this.apiClient.delete(
-      `/api/rc2/account_book/${accountBookId}/invoice/undefined/output`,
-      {
-        invoiceIds,
-      }
-    );
-    if (!response.success) {
-      throw new Error('Failed to delete invoice output');
-    }
-    return response.payload as { success: boolean; deletedIds: number[] };
-  }
-
-  static async getInvoiceRC2Output(accountBookId: number, invoiceId: number) {
-    return this.apiClient.get(`/api/v2/account_book/${accountBookId}/invoice/${invoiceId}/output`);
+    return response.body.payload.deletedIds;
   }
 }
-*/
