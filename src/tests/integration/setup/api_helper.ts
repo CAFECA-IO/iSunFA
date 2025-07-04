@@ -16,7 +16,7 @@
  * const helper = await APITestHelper.createWithMultipleUsers(['user1@isunfa.com', 'user2@isunfa.com']);
  * helper.switchToUser('user2@isunfa.com');
  */
-import { createTestClient, createDynamicTestClient } from '@/tests/integration/setup/test_client';
+import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 
@@ -85,7 +85,7 @@ export class APITestHelper {
 
   // Info: (20250701 - Shirley) Create dynamic OTP client for specific email
   private static createOTPClient(email: string): TestClient {
-    return createDynamicTestClient(otpHandler, { email });
+    return createTestClient({ handler: otpHandler, routeParams: { email } });
   }
 
   // Info: (20250701 - Shirley) Simulate user requesting OTP through API
