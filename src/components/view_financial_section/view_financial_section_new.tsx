@@ -110,10 +110,7 @@ const ViewFinancialSectionNew = ({
 
     const getFinancialReport = async () => {
       try {
-        const {
-          data: reportFinancial,
-          success: getFRSuccess,
-        } = await getFinancialReportAPI({
+        const { data: reportFinancial, success: getFRSuccess } = await getFinancialReportAPI({
           params: { companyId: 1, reportId },
         });
 

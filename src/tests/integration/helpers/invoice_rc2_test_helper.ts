@@ -1,3 +1,4 @@
+/** Info: (20250704 - Tzuhan) This file is used to test the Invoice RC2 API endpoints in integration tests.
 import fs from 'fs';
 import path from 'path';
 import FormData from 'form-data';
@@ -280,3 +281,4 @@ export class InvoiceRC2TestHelper {
     return this.apiClient.get(`/api/v2/account_book/${accountBookId}/invoice/${invoiceId}/output`);
   }
 }
+*/
