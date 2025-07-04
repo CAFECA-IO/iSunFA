@@ -32,19 +32,24 @@ export const createExternalUser = async (
 };
 
 export const getExternalUserByProviderAndUid = async (
-  externalProvider: string,
-  externalId: string
+  options: { externalProvider: string; externalId: string },
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ) => {
+  if (!options.externalId || !options.externalProvider) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
+  }
+
   try {
-    const externalUser = await prisma.externalUser.findFirst({
+    const externalUser = await tx.externalUser.findFirst({
       where: {
-        externalProvider,
-        externalId,
+        externalProvider: options.externalProvider,
+        externalId: options.externalId,
       },
       include: {
         user: true,
       },
     });
+
     return externalUser;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
@@ -52,12 +57,19 @@ export const getExternalUserByProviderAndUid = async (
 };
 
 // Info: (20250703 - Julian) 從 userId 獲取帳本資訊
-export const getAccountBookByUserId = async (userId: number) => {
+export const getAccountBookByUserId = async (
+  options: { userId: number },
+  tx: Prisma.TransactionClient | PrismaClient = prisma
+) => {
+  if (!options.userId) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
+  }
+
   try {
     // Info: (20250703 - Julian) Step 1: 取得 user 擁有的 team
-    const teams = await prisma.teamMember.findMany({
+    const teams = await tx.teamMember.findMany({
       where: {
-        userId,
+        userId: options.userId,
         status: LeaveStatus.IN_TEAM,
       },
       select: { teamId: true },
@@ -66,7 +78,7 @@ export const getAccountBookByUserId = async (userId: number) => {
     const teamIds = teams.map((team) => team.teamId);
 
     // Info: (20250703 - Julian) Step 2: 再從 team 取得 accountBook
-    const accountBooks = await prisma.company.findMany({
+    const accountBooks = await tx.company.findMany({
       where: {
         teamId: {
           in: teamIds,
@@ -81,7 +93,7 @@ export const getAccountBookByUserId = async (userId: number) => {
     const accountBookIds = accountBooks.map((accountBook) => accountBook.id);
 
     // Info: (20250704 - Julian) Step 3: 最後從 accountBook 取得 report id
-    const reports = await prisma.report.findMany({
+    const reports = await tx.report.findMany({
       where: {
         companyId: {
           in: accountBookIds,

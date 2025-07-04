@@ -30,11 +30,14 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250702 - Luphia) Step 1: 根據 external 與 uid 取得 External User 資訊
-  const externalUser = await getExternalUserByProviderAndUid(external as string, uid as string);
+  const externalUser = await getExternalUserByProviderAndUid({
+    externalProvider: external as string,
+    externalId: uid as string,
+  });
   const userId = externalUser?.user?.id || 0;
 
   // Info: (20250703 - Julian) Step 2: 根據 User Id 取得報表資料
-  const reportLinks = await getAccountBookByUserId(userId);
+  const reportLinks = await getAccountBookByUserId({ userId });
 
   // ToDo: (20250702 - Luphia) 繼續完成其他流程
   const result = {
