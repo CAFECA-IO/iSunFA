@@ -150,7 +150,8 @@ export type IAPIName =
   | 'ACCEPT_TEAM_INVITATION'
   | 'DECLINE_TEAM_INVITATION'
   | 'LIST_BAIFA_ACCOUNT_BOOK'
-  | 'LIST_BAIFA_VOUCHER';
+  | 'LIST_BAIFA_VOUCHER'
+  | 'GET_VACANCY_BY_ID';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 

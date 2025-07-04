@@ -177,6 +177,8 @@ export enum APIName {
   DECLINE_TEAM_INVITATION = 'DECLINE_TEAM_INVITATION',
   LIST_BAIFA_ACCOUNT_BOOK = 'LIST_BAIFA_ACCOUNT_BOOK',
   LIST_BAIFA_VOUCHER = 'LIST_BAIFA_VOUCHER',
+  // Info: (20250704 - Julian) 新增 Vacancy API
+  GET_VACANCY_BY_ID = 'GET_VACANCY_BY_ID',
 }
 
 export enum APIPath {
@@ -331,6 +333,7 @@ export enum APIPath {
   GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
   LIST_BAIFA_ACCOUNT_BOOK = `${apiPrefixV2}/baifa/account_book`,
   LIST_BAIFA_VOUCHER = `${apiPrefixV2}/baifa/voucher`,
+  GET_VACANCY_BY_ID = `${apiPrefixV2}/vacancy/:vacancyId`,
 }
 
 const createConfig = ({
@@ -1088,5 +1091,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.LIST_BAIFA_VOUCHER,
     method: HttpMethod.GET,
     path: APIPath.LIST_BAIFA_VOUCHER,
+  }),
+  [APIName.GET_VACANCY_BY_ID]: createConfig({
+    name: APIName.GET_VACANCY_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_VACANCY_BY_ID,
   }),
 };

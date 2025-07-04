@@ -31,7 +31,7 @@ export class TestDataFactory {
   static readonly TEST_EMAIL = DefaultValue.EMAIL_LOGIN.EMAIL;
 
   // Info: (20250701 - Shirley) Primary test email (first in the list)
-  static readonly PRIMARY_TEST_EMAIL = this.TEST_EMAIL[0]; // user@isunfa.com
+  static readonly PRIMARY_TEST_EMAIL = this.TEST_EMAIL[0]; // Info: (20250701 - Shirley) user@isunfa.com
 
   // Info: (20250701 - Shirley) Generate authentication request for email login
   static createAuthenticationRequest(
