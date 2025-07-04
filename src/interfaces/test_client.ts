@@ -1,4 +1,5 @@
 import { NextApiHandler } from 'next';
+// Info: (20250703 - Shirley) Supertest is test library and not a dependency of the project
 // eslint-disable-next-line import/no-extraneous-dependencies
 import request from 'supertest';
 

@@ -31,19 +31,24 @@ export const createExternalUser = async (
 };
 
 export const getExternalUserByProviderAndUid = async (
-  externalProvider: string,
-  externalId: string
+  options: { externalProvider: string; externalId: string },
+  tx: Prisma.TransactionClient | PrismaClient = prisma
 ) => {
+  if (!options.externalId || !options.externalProvider) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_DATA);
+  }
+
   try {
-    const externalUser = await prisma.externalUser.findFirst({
+    const externalUser = await tx.externalUser.findFirst({
       where: {
-        externalProvider,
-        externalId,
+        externalProvider: options.externalProvider,
+        externalId: options.externalId,
       },
       include: {
         user: true,
       },
     });
+
     return externalUser;
   } catch (error) {
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
