@@ -5,10 +5,8 @@ import { APIName, HttpMethod } from '@/constants/api_connection';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import {
-  getExternalUserByProviderAndUid,
-  getAccountBookByUserId,
-} from '@/lib/utils/repo/external_user.repo';
+import { getExternalUserByProviderAndUid } from '@/lib/utils/repo/external_user.repo';
+import { getReportByUserId } from '@/lib/utils/repo/report.repo';
 
 /* Info: (20250702 - Luphia) 根據外部用戶資料取得公開帳本路徑
  * 1. 根據 external provider 與 uid 取得 user 與其擁有 team 資訊
@@ -37,7 +35,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   const userId = externalUser?.user?.id || 0;
 
   // Info: (20250703 - Julian) Step 2: 根據 User Id 取得報表資料
-  const reportLinks = await getAccountBookByUserId({ userId });
+  const reportLinks = await getReportByUserId({ userId });
 
   // ToDo: (20250702 - Luphia) 繼續完成其他流程
   const result = {
