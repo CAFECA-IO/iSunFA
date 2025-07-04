@@ -86,7 +86,7 @@ export class InvoiceRC2TestHelper {
       __dirname,
       '../test_files/temp_encrypted_mock_invoice.png'
     );
-    fs.writeFileSync(tempEncryptedPath, encryptedBuffer); // 先寫入加密檔案
+    fs.writeFileSync(tempEncryptedPath, encryptedBuffer); // Info: (20250704 - Tzuhan) 先寫入加密檔案
     const fileStream = fs.createReadStream(tempEncryptedPath);
 
     const response = await request(`http://localhost:3001}`)
