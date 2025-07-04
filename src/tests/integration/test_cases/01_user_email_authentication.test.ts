@@ -23,6 +23,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     user1: TestDataFactory.TEST_EMAIL[0],
     user2: TestDataFactory.TEST_EMAIL[1],
     user3: TestDataFactory.TEST_EMAIL[2],
+    user4: TestDataFactory.TEST_EMAIL[3],
   };
 
   beforeAll(async () => {
@@ -31,7 +32,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
     multiUserHelper = await APITestHelper.createHelper({
-      emails: [testUsers.user1, testUsers.user2, testUsers.user3],
+      emails: [testUsers.user1, testUsers.user2, testUsers.user3, testUsers.user4],
     });
   });
 
@@ -317,10 +318,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     it('should authenticate multiple users successfully', async () => {
       const authenticatedUsers = multiUserHelper.getAllAuthenticatedUsers();
 
-      expect(authenticatedUsers).toHaveLength(3);
+      expect(authenticatedUsers).toHaveLength(4);
       expect(authenticatedUsers).toContain(testUsers.user1);
       expect(authenticatedUsers).toContain(testUsers.user2);
       expect(authenticatedUsers).toContain(testUsers.user3);
+      expect(authenticatedUsers).toContain(testUsers.user4);
     });
 
     it('should switch between users and maintain separate sessions', async () => {
