@@ -1,5 +1,7 @@
-// invoice_rc2_test_helper.ts
-
+import fs from 'fs';
+import path from 'path';
+import FormData from 'form-data';
+import request from 'supertest';
 import { DefaultValue } from '@/constants/default_value';
 import { UploadType } from '@/constants/file';
 import { InvoiceDirection, CurrencyCode } from '@/constants/invoice_rc2';
@@ -13,10 +15,9 @@ import {
 } from '@/interfaces/invoice_rc2';
 import { IStatusInfo } from '@/interfaces/status_info';
 import { ITeam } from '@/interfaces/team';
+import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
 import { ApiClient } from '@/tests/integration/api-client';
 import { IntegrationTestSetup } from '@/tests/integration/setup';
-import fs from 'fs';
-import path from 'path';
 
 export class InvoiceRC2TestHelper {
   static apiClient = new ApiClient();
@@ -112,30 +113,75 @@ export class InvoiceRC2TestHelper {
     return response.payload as IFileBeta;
   }
 
+  static async getPublicKey(accountBookId: number) {
+    const response = await this.apiClient.get(`/api/v2/account_book/${accountBookId}/public_key`);
+    if (!response.success) {
+      throw new Error(`Failed to get public key: ${response.message}`);
+    }
+    const jwk = response.payload as JsonWebKey;
+    const publicKey = await importPublicKey(jwk);
+    return { jwk, publicKey };
+  }
+
   static async uploadEncryptedFileFake(accountBookId: number) {
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
-    // Deprecated: (20250702 - Luphia) remove eslint-disable
+    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('File Path:', filePath);
 
     const fileBuffer = fs.readFileSync(filePath);
+    const file = new File([fileBuffer], 'mock_invoice.png', { type: 'image/png' });
 
-    const formData = new FormData();
-    formData.append('file', new Blob([fileBuffer]), 'mock_invoice.pdf');
-    formData.append('encryptedSymmetricKey', 'dummy-key');
-    formData.append('publicKey', JSON.stringify({ dummy: true }));
-    formData.append('iv', '1,2,3,4,5,6,7,8,9,10,11,12');
+    const { jwk, publicKey } = await this.getPublicKey(accountBookId);
 
-    const response = await this.apiClient.post(
-      `/api/v2/file?type=${UploadType.INVOICE}&targetId=${accountBookId}`,
-      formData
+    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('Using public key for encryption:', publicKey);
+    const { encryptedFile, iv, encryptedSymmetricKey } = await encryptFileWithPublicKey(
+      file,
+      publicKey
     );
 
-    if (!response.success) {
-      throw new Error(`Failed to upload file: ${response.message}`);
+    const encryptedArrayBuffer = await encryptedFile.arrayBuffer();
+    const encryptedBuffer = Buffer.from(encryptedArrayBuffer);
+
+    const tempEncryptedPath = path.resolve(
+      __dirname,
+      '../test_files/temp_encrypted_mock_invoice.png'
+    );
+    fs.writeFileSync(tempEncryptedPath, encryptedBuffer); // 先寫入加密檔案
+    const fileStream = fs.createReadStream(tempEncryptedPath);
+
+    // const formData = new FormData();
+    // formData.append('file', Readable.from(encryptedBuffer), {
+    //   filename: file.name,
+    //   contentType: file.type,
+    // });
+    // // formData.append('encryptedSymmetricKey', encryptedSymmetricKey);
+    // formData.append('encryptedSymmetricKey', Buffer.from(encryptedSymmetricKey).toString('base64'));
+    // formData.append('publicKey', JSON.stringify(jwk));
+    // formData.append('iv', Array.from(iv).join(','));
+
+    // Deprecated: (20250703 - Tzuhan) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('Uploading file to account book:', accountBookId);
+    const appUrl = IntegrationTestSetup.getApiBaseUrl();
+
+    const response = await request(appUrl)
+      .post(`/api/v2/file?type=${UploadType.INVOICE}&targetId=${accountBookId}`)
+      .attach('file', fileStream, {
+        filename: file.name,
+        contentType: file.type,
+      })
+      .field('encryptedSymmetricKey', Buffer.from(encryptedSymmetricKey).toString('base64'))
+      .field('iv', Array.from(iv).join(','))
+      .field('publicKey', JSON.stringify(jwk));
+
+    if (!response.body.success) {
+      throw new Error(`Failed to upload file: ${response.body.message}`);
     }
 
-    return response.payload as IFileBeta;
+    return response.body.payload as IFileBeta;
   }
 
   static async createInvoiceRC2Input(accountBookId: number, fileId: number) {

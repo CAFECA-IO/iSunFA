@@ -35,29 +35,17 @@ export class ApiClient {
   ): Promise<ApiResponse<T> | ApiErrorResponse> {
     const url = `${this.baseUrl}${endpoint}`;
 
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
     const requestHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...headers,
     };
 
-    // Info: (20250619 - Shirley) Debug logging if enabled
-    if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
-      // Deprecated: (20250620 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`🔥 API Request: ${method} ${url}`);
-      if (body) {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('📦 Request Body:', JSON.stringify(body, null, 2));
-      }
-      if (this.cookies.length > 0) {
-        // Deprecated: (20250620 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🍪 Cookies:', this.cookies);
-      }
+    // Info: (20250703 - Tzuhan) 僅當不是 FormData 時才指定 json header
+    if (!isFormData) {
+      requestHeaders['Content-Type'] = 'application/json';
     }
 
-    // Info: (20250620 - Shirley) Add cookies if available
     if (this.cookies.length > 0) {
       requestHeaders.Cookie = this.cookies.join('; ');
     }
@@ -65,7 +53,7 @@ export class ApiClient {
     const response = await fetch(url, {
       method,
       headers: requestHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? (body as FormData) : body ? JSON.stringify(body) : undefined,
     });
 
     // Info: (20250620 - Shirley) Store cookies from response
@@ -80,6 +68,12 @@ export class ApiClient {
 
     // Info: (20250620 - Shirley) Debug logging for response if enabled
     if (process.env.DEBUG_TESTS || process.env.DEBUG_API) {
+      // Deprecated: (20250703 - Tzuhan) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('🔍 Request Headers:', headers);
+      // Deprecated: (20250703 - Tzuhan) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('🔍 Request Body:', body instanceof FormData ? '[FormData]' : body);
       // Deprecated: (20250620 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(`📨 API Response: ${response.status} ${response.statusText}`);

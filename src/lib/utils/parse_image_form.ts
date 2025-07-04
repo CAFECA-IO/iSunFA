@@ -1,4 +1,4 @@
-import { IncomingForm, Fields, Files } from 'formidable';
+import { IncomingForm, Fields, Files, Part } from 'formidable';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextApiRequest } from 'next';
@@ -25,6 +25,14 @@ export const parseForm = async (
   };
 
   const form = new IncomingForm(options);
+
+  form.onPart = function onPart(part: Part) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: 使用私有方法處理所有 part
+    // eslint-disable-next-line no-underscore-dangle
+    form._handlePart(part);
+  };
+
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
