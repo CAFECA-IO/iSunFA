@@ -1,3 +1,7 @@
+## 前言
+
+本文件為 iSunFA 整合測試的 Cookie/Session 管理原理說明。
+
 ## Cookie/Session 管理原理
 
 ### 為什麼需要手動管理 Cookie？
