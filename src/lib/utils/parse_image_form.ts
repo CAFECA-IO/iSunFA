@@ -27,6 +27,7 @@ export const parseForm = async (
   const form = new IncomingForm(options);
 
   form.onPart = function onPart(part: Part) {
+    // Info: (20250704 - Luphia) 無法規避的例外函式命名
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore: 使用私有方法處理所有 part
     // eslint-disable-next-line no-underscore-dangle
