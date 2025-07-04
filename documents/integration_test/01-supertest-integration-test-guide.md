@@ -1,20 +1,22 @@
-iSunFA 整合測試開發者指南本指南說明如何用 Supertest 測試 API。
+## 前言
+
+iSunFA 整合測試開發者指南主要說明如何用 Supertest 測試 API。
 
 ## 目錄
 
-1. [測試架構概覽](#%E6%B8%AC%E8%A9%A6%E6%9E%B6%E6%A7%8B%E6%A6%82%E8%A6%BD)
+1. [測試架構概覽](#測試架構概覽)
 
-2. [核心組件說明](#%E6%A0%B8%E5%BF%83%E7%B5%84%E4%BB%B6%E8%AA%AA%E6%98%8E)
+2. [核心組件說明](#核心組件說明)
 
-3. [生產 Validator 直接使用](#%E7%94%9F%E7%94%A2-validator-%E7%9B%B4%E6%8E%A5%E4%BD%BF%E7%94%A8)
+3. [生產 Validator 直接使用](#生產-validator-直接使用)
 
-4. [編寫新測試的步驟](#%E7%B7%A8%E5%AF%AB%E6%96%B0%E6%B8%AC%E8%A9%A6%E7%9A%84%E6%AD%A5%E9%A9%9F)
+4. [編寫新測試的步驟](#編寫新測試的步驟)
 
-5. [可重複使用的模塊](#%E5%8F%AF%E9%87%8D%E8%A4%87%E4%BD%BF%E7%94%A8%E7%9A%84%E6%A8%A1%E5%A1%8A)
+5. [可重複使用的模塊](#可重複使用的模塊)
 
-6. [最佳實踐](#%E6%9C%80%E4%BD%B3%E5%AF%A6%E8%B8%90)
+6. [最佳實踐](#最佳實踐)
 
-7. [測試範例](#%E6%B8%AC%E8%A9%A6%E7%AF%84%E4%BE%8B)
+7. [測試範例](#測試範例)
 
 ## 測試架構概覽
 
@@ -26,7 +28,7 @@ src/tests/integration/
 ├── setup/
 │   ├── api_helper.ts          # 核心 API 測試輔助類，大多 API 需要用到的邏輯，包含登入
 │   ├── test_client.ts         # SuperTest 客戶端
-│   ├── test_data_factory.ts   # 測試資料工廠
+│   ├── test_data_factory.ts   # 測試資料工廠，通用資料 (e.g. 登入 email)，可以放在這裡方便共用
 │   └── jest_setup.ts          # Jest 環境設置
 ├── test_cases/
 │   ├── 00_*.test.ts          # 健康檢查測試
@@ -191,12 +193,14 @@ const cookies = helper.getCurrentSession();
 
 // 在請求中設定 cookies 進行認證
 const response = await client
-  .get('/api/v2/user/1/team')
+  .get(APIPath.LIST_TEAM.replace(':userId', currentUserId))
   .set('Cookie', cookies.join('; ')) // 重要：設定認證 cookies
   .expect(200);
 
 // 無認證請求 (測試權限控制)
-const unauthResponse = await client.get('/api/v2/user/1/team').expect(401); // 應該返回未授權
+const unauthResponse = await client
+  .get(APIPath.LIST_TEAM.replace(':userId', currentUserId))
+  .expect(401); // 應該返回未授權
 ```
 
 ##### D. 客戶端生命週期管理
@@ -205,7 +209,7 @@ const unauthResponse = await client.get('/api/v2/user/1/team').expect(401); // �
 // TestClient 使用 singleton 快取，自動管理伺服器生命週期
 // 每個不同的 handler + routeParams 組合都會有獨立的伺服器實例
 
-// 測試結束時清理所有伺服器 (通常在 afterAll 中)
+// 測試結束時清理所有伺服器 (已經設定在 jest_setup.ts 中，test case 裡不需要再設定)
 import { closeAllTestServers } from '@/tests/integration/setup/test_client';
 
 afterAll(async () => {
@@ -631,7 +635,7 @@ if (process.env.DEBUG_TESTS === 'true') {
 
 ### 完整的 Team API 測試
 
-參考 `src/tests/integration/test_cases/04_team_direct_validation.test.ts` 的完整實作，包含：
+參考 `src/tests/integration/test_cases/02_team_management.test.ts` 的完整實作，包含：
 
 - ✅ 直接使用 `validateOutputData` 驗證 API 回應
 
@@ -660,7 +664,7 @@ if (process.env.DEBUG_TESTS === 'true') {
 npm run test:integration -- --testPathPattern="01"
 
 # 運行特定測試案例
-npm run test:integration:debug -- --testPathPattern="02" --testNamePattern="should successfully list teams with proper parameters"
+npm run test:integration -- --testPathPattern="02" --testNamePattern="should successfully list teams with proper parameters"
 
 # 運行所有整合測試
 npm run test:integration
@@ -670,8 +674,14 @@ npm run test:integration
 
 ### 必要檔案
 
-- `src/constants/api_connection.ts` - API 名稱定義
+- 在撰寫整合測試時的參考檔案如以下，用 api_connection 去找到真的 API 檔案位置，用 zod_schema 去找到
+  API 對應的 type guard，作為型別驗證，用 team/permission 作為團隊角色權限的參考，用 validator 作為
+  驗證 function
 
-- `src/constants/zod_schema.ts` - Schema 註冊
+  - src/constants/api_connection.ts
 
-- `src/lib/utils/validator.ts` - **核心驗證邏輯**
+  - src/constants/zod_schema.ts
+
+  - src/constants/team/permissions.ts
+
+  - src/lib/utils/validator.ts
