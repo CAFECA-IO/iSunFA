@@ -5,7 +5,9 @@ import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import teamCreateHandler from '@/pages/api/v2/team/index';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
-import { APIPath } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
+import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
+import { z } from 'zod';
 
 /**
  * Info: (20250703 - Shirley) Integration Test - Team Management Authentication
@@ -44,24 +46,52 @@ describe('Integration Test - Team Management Authentication', () => {
   // Info: (20250703 - Shirley) Test Case 2.1: Team API Authentication
   // ========================================
   describe('Test Case 2.1: Team API Authentication', () => {
-    it('should reject unauthenticated team listing requests', async () => {
+    it('should reject unauthenticated team listing requests with Zod validation', async () => {
       const response = await teamListClient
         .get(APIPath.LIST_TEAM.replace(':userId', currentUserId))
         .expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('401ISF0000');
+      // Info: (20250704 - Shirley) Validate error response structure with Zod
+      const errorSchema = z.object({
+        success: z.literal(false),
+        code: z.string(),
+        message: z.string(),
+        payload: z.null(),
+      });
+
+      const validatedError = validateAndFormatData(errorSchema, response.body);
+      expect(validatedError.success).toBe(false);
+      expect(validatedError.code).toBe('401ISF0000');
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Error response validated with Zod successfully');
+      }
     });
 
-    it('should reject unauthenticated team creation requests', async () => {
+    it('should reject unauthenticated team creation requests with Zod validation', async () => {
       const teamData = {
         name: 'Unauthorized Team',
       };
 
       const response = await teamCreateClient.post(APIPath.CREATE_TEAM).send(teamData).expect(401);
 
-      expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('401ISF0000');
+      // Info: (20250704 - Shirley) Validate error response structure with Zod
+      const errorSchema = z.object({
+        success: z.literal(false),
+        code: z.string(),
+        message: z.string(),
+        payload: z.null(),
+      });
+
+      const validatedError = validateAndFormatData(errorSchema, response.body);
+      expect(validatedError.success).toBe(false);
+      expect(validatedError.code).toBe('401ISF0000');
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Team creation error response validated with Zod successfully');
+      }
     });
 
     it('should successfully list teams with proper parameters', async () => {
@@ -84,17 +114,35 @@ describe('Integration Test - Team Management Authentication', () => {
         .set('Cookie', cookies.join('; '))
         .expect(200);
 
+      // Info: (20250704 - Shirley) Validate basic response structure
       expect(response.body.success).toBe(true);
       expect(response.body.code).toBe('200ISF0000');
       expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.data).toBeDefined();
-      expect(Array.isArray(response.body.payload.data)).toBe(true);
-      expect(response.body.payload.data.length).toBeGreaterThan(0);
 
-      // Info: (20250703 - Shirley) Verify pagination structure
-      expect(response.body.payload).toHaveProperty('page');
-      expect(response.body.payload).toHaveProperty('totalPages');
-      expect(response.body.payload).toHaveProperty('totalCount');
+      // Info: (20250704 - Shirley) Use production validateOutputData for team list validation
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.LIST_TEAM,
+        response.body.payload
+      );
+
+      expect(isOutputDataValid).toBe(true);
+      expect(outputData).toBeDefined();
+      expect(outputData?.data).toBeDefined();
+      expect(Array.isArray(outputData?.data)).toBe(true);
+      expect(outputData?.data.length).toBeGreaterThan(0);
+
+      // Info: (20250704 - Shirley) Verify pagination structure with production validator
+      expect(outputData).toHaveProperty('page');
+      expect(outputData).toHaveProperty('totalPages');
+      expect(outputData).toHaveProperty('totalCount');
+      expect(outputData).toHaveProperty('pageSize');
+      expect(outputData).toHaveProperty('hasNextPage');
+      expect(outputData).toHaveProperty('hasPreviousPage');
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Team list validated with production validator successfully');
+      }
       expect(response.body.payload).toHaveProperty('pageSize');
       expect(response.body.payload).toHaveProperty('hasNextPage');
       expect(response.body.payload).toHaveProperty('hasPreviousPage');
