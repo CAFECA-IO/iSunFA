@@ -68,6 +68,7 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(validatedError.code).toBe('401ISF0000');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250704 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Error response validated with Zod successfully');
       }
@@ -93,6 +94,7 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(validatedError.code).toBe('401ISF0000');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250704 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Team creation error response validated with Zod successfully');
       }
@@ -144,6 +146,7 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(outputData).toHaveProperty('hasPreviousPage');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250704 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Team list validated with production validator successfully');
       }
