@@ -108,7 +108,7 @@ async function handleFileUpload(
   });
 
   if (!fileInDB) {
-    throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+    throw new Error(STATUS_MESSAGE.FAILED_TO_SAVE_FILE);
   }
 
   let thumbnailInfo = null;
@@ -439,7 +439,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
 
     if (!file) {
-      statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
+      statusMessage = STATUS_MESSAGE.UPLOAD_FILE_IS_EMPTY;
       loggerBack.info(`API POST File: No file uploaded`);
     } else {
       const returnFile = await handleFileUpload(
@@ -462,9 +462,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   } catch (error) {
     const err = error as Error;
     loggerBack.error(`Error uploading file: ${err.message}`);
-    statusMessage =
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
-      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    statusMessage = err.message || STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
   }
 
   return { response: formatApiResponse(statusMessage, payload), statusMessage };

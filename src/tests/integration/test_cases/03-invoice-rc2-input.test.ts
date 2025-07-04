@@ -1,18 +1,17 @@
-/** Info: (20250702 - Tzuhan) 暫時不測試，有錯誤
-import { DeductionType, InvoiceType, TaxType } from '@/constants/invoice_rc2';
-import { IAccountBook } from '@/interfaces/account_book';
-import { IFileBeta } from '@/interfaces/file';
-import { IInvoiceRC2Input } from '@/interfaces/invoice_rc2';
-import { ITeam } from '@/interfaces/team';
-import { IUser } from '@/interfaces/user';
-import { InvoiceRC2TestHelper } from '@/tests/integration/helpers/invoice_rc2_test_helper';
-*/
+// import { DeductionType, InvoiceType, TaxType } from '@/constants/invoice_rc2';
+// import { IAccountBook } from '@/interfaces/account_book';
+// import { IFileBeta } from '@/interfaces/file';
+// import { IInvoiceRC2Input } from '@/interfaces/invoice_rc2';
+// import { ITeam } from '@/interfaces/team';
+// import { IUser } from '@/interfaces/user';
+// import { InvoiceRC2TestHelper } from '@/tests/integration/helpers/invoice_rc2_test_helper';
 
 describe('Integration Test - Invoice RC2 API Flow', () => {
   it('should run this dummy test to retain file structure', () => {
     expect(true).toBe(true);
   });
-  /** Info: (20250702 - Tzuhan) 暫時不測試，有錯誤
+
+  /** Info: (20250703- Tzuhan) Full invoice input flow test
   let user: IUser;
   let team: ITeam;
   let accountBook: IAccountBook;
@@ -28,12 +27,13 @@ describe('Integration Test - Invoice RC2 API Flow', () => {
 
   it('should complete full invoice input flow', async () => {
     // Info: (20250702 - Tzuhan) Step 1: Create user via OTP login
-    await InvoiceRC2TestHelper.createUser();
+    const createdUser = await InvoiceRC2TestHelper.createUser();
+    // eslint-disable-next-line no-console
+    console.log('Created User:', createdUser);
 
     // Info: (20250702 - Tzuhan) Step 2: Get session info to extract default team
     const statusInfo = await InvoiceRC2TestHelper.getStatusInfo();
-    // eslint-disable-next-line no-console
-    console.log('Status Info:', statusInfo);
+
     expect(statusInfo).toBeDefined();
     user = statusInfo.user!;
     expect(user?.id).toBeDefined();
@@ -42,7 +42,7 @@ describe('Integration Test - Invoice RC2 API Flow', () => {
     const teamId = team.id;
 
     // Info: (20250702 - Tzuhan) Step 3: Create account book
-    accountBook = await InvoiceRC2TestHelper.createAccountBookWithTeam(teamId, user.id!);
+    accountBook = await InvoiceRC2TestHelper.createAccountBookWithTeam(teamId, 10001200);
     expect(accountBook?.id).toBeDefined();
 
     // Info: (20250702 - Tzuhan) Step 4: Connect account book

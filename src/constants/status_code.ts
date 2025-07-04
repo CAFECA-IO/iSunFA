@@ -55,6 +55,8 @@ enum ErrorCode {
   INVALID_ONE_TIME_PASSWORD = '422ISF0016',
   INTERNAL_SERVICE_ERROR = '500ISF0000',
   IMAGE_UPLOAD_FAILED_ERROR = '500ISF0001',
+  UPLOAD_FILE_IS_EMPTY = '500ISF0012', // Deprecated: (20250703 - Tzuhan) use IMAGE_UPLOAD_FAILED_ERROR instead
+  FAILED_TO_SAVE_FILE = '500ISF0013', // Deprecated: (20250703 - Tzuhan) use IMAGE_UPLOAD_FAILED_ERROR instead
   DATABASE_CREATE_FAILED_ERROR = '500ISF0002',
   DATABASE_READ_FAILED_ERROR = '500ISF0003',
   PARSE_JSON_FAILED_ERROR = '500ISF0004',
@@ -174,6 +176,8 @@ enum ErrorMessage {
   PAYMENT_FAILED_TO_COMPLETE = 'Payment failed to complete',
   INTERNAL_SERVICE_ERROR = 'Internal service error',
   IMAGE_UPLOAD_FAILED_ERROR = 'Image upload failed',
+  UPLOAD_FILE_IS_EMPTY = 'Upload file is empty',
+  FAILED_TO_SAVE_FILE = 'Failed to save file',
   DATABASE_CREATE_FAILED_ERROR = 'Database create failed',
   DATABASE_READ_FAILED_ERROR = 'Database read failed',
   DATABASE_UPDATE_FAILED_ERROR = 'Database update failed',
