@@ -16,6 +16,8 @@ import publicKeyGetHandler from '@/pages/api/v2/account_book/[accountBookId]/pub
 // import fileUploadHandler from '@/pages/api/v2/file';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceInputModifyHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/[invoiceId]/input';
+import { APIPath } from '@/constants/api_connection';
+import { TeamPlanType } from '@prisma/client';
 
 export class InvoiceRC2TestHelper {
   constructor(private helper: APITestHelper) {}
@@ -28,8 +30,13 @@ export class InvoiceRC2TestHelper {
   async createTeam(name?: string): Promise<ITeam> {
     const teamCreateClient = createTestClient(teamCreateHandler);
     const response = await teamCreateClient
-      .post('/api/v2/team')
-      .send({ name: name ?? `Test Team ${Date.now()}`, description: 'Test team' })
+      .post(APIPath.CREATE_TEAM)
+      .send({
+        name: name ?? `Test Team ${Date.now()}`,
+        about: 'Test team created in invoice test',
+        profile: 'Invoice RC2 Integration Testing',
+        planType: TeamPlanType.TRIAL,
+      })
       .set('Cookie', this.helper.getCurrentSession().join('; '))
       .expect(201);
 

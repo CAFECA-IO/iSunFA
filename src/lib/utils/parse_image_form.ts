@@ -11,6 +11,7 @@ export const parseForm = async (
   subDir: FileFolder = FileFolder.TMP, // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
   subSubDir?: string // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，則使用subSubDir
 ) => {
+  loggerBack.debug(`parseForm called with subDir: ${subDir}, subSubDir: ${subSubDir}`);
   let uploadDir = getFileFolder(subDir);
 
   // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，更新 uploadDir

@@ -108,6 +108,16 @@ async function handleFileUpload(
   });
 
   if (!fileInDB) {
+    loggerBack.error('createFile() returned null');
+    loggerBack.debug('File meta:', {
+      name: fileName,
+      size: fileSize,
+      mimeType: fileMimeType,
+      url: fileUrl,
+      isEncrypted,
+      encryptedSymmetricKey,
+      iv: ivBuffer.toString('hex'),
+    });
     throw new Error(STATUS_MESSAGE.FAILED_TO_SAVE_FILE);
   }
 
@@ -358,6 +368,7 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 }
 
 const handlePostRequest = async (req: NextApiRequest) => {
+  loggerBack.debug(`Handling POST request for file upload: ${req.url}`);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFileBeta | null = null;
 
@@ -371,6 +382,9 @@ const handlePostRequest = async (req: NextApiRequest) => {
   // Info: (20250522 - Shirley) type 和 targetId 都是可選的
   const type = query?.type as UploadType | undefined;
   const targetId = query?.targetId;
+
+  loggerBack.debug('TargetId:', targetId);
+  loggerBack.debug('Upload type:', type);
 
   // Info: (20250522 - Shirley) 只有當同時提供 type 和 targetId 時才進行權限檢查
   if (type && targetId) {
@@ -436,7 +450,13 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const parsedForm = await parseForm(req, folder);
     const { files, fields } = parsedForm;
     const { file } = files;
+
+    loggerBack.debug('Uploaded file meta:', file);
+    loggerBack.debug('Fields received:', fields);
     const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
+
+    loggerBack.debug('IV after parsing:', iv);
+    loggerBack.debug('Encrypted symmetric key:', encryptedSymmetricKey);
 
     if (!file) {
       statusMessage = STATUS_MESSAGE.UPLOAD_FILE_IS_EMPTY;
@@ -472,10 +492,12 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<IFileBeta | null>>
 ) {
+  loggerBack.debug(`UPLOAD_FILE is called API Request: ${req.method} ${req.url}`);
+
   const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
-  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+  let statusMessage: string = STATUS_MESSAGE.INVALID_FILE_FORMAT;
   let apiName: APIName = APIName.FILE_UPLOAD;
   const session = await getSession(req);
 
@@ -495,7 +517,7 @@ export default async function handler(
     }
   } catch (error) {
     const err = error as Error;
-    statusMessage = STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] || err.message;
+    statusMessage = err.message || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 

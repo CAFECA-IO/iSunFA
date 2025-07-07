@@ -74,6 +74,31 @@ export function checkRequestData<T extends APIName>(
   return { query, body };
 }
 
+function toStringRecord(input: unknown): Record<string, string> {
+  const record: Record<string, string> = {};
+
+  if (typeof input !== 'object' || input === null) {
+    return record;
+  }
+
+  Object.entries(input).forEach(([key, value]) => {
+    try {
+      if (typeof value === 'string') {
+        record[key] = value;
+      } else if (typeof value === 'number' || typeof value === 'boolean' || value === null) {
+        record[key] = String(value);
+      } else {
+        // Info: (20250707 - tzuhan) 對於非原始型別（例如 Buffer, Uint8Array, Object），嘗試轉 JSON
+        record[key] = JSON.stringify(value);
+      }
+    } catch (err) {
+      record[key] = '[Unserializable]';
+    }
+  });
+
+  return record;
+}
+
 export async function logUserAction<T extends APIName>(
   session: ISessionData,
   apiName: T,
@@ -99,7 +124,7 @@ export async function logUserAction<T extends APIName>(
       userAgent: (req.headers['user-agent'] as string) || '',
       apiEndpoint: APIPath[apiName as keyof typeof APIPath],
       httpMethod: req.method || '',
-      requestPayload: req.body || '',
+      requestPayload: toStringRecord(req.body),
       statusMessage,
     };
     await createUserActionLog(userActionLog);
