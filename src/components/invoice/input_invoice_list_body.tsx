@@ -194,33 +194,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     if (!downloadRef.current) return;
 
     // Info: (20250604 - Anna) 加上桌面樣式 class
-    downloadRef.current.classList.add('force-desktop-style');
+    downloadRef.current.classList.add('w-1024px');
 
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
     });
-
-    // Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-    .download-pb-4 {
-    padding-bottom: 16px;
-  }
-    .download-pb-3 {
-    padding-bottom: 12px;
-  }
-    .download-hidden {
-    display: none;
-  }
-
-    /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
-    .force-desktop-style {
-    width: 1024px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     const canvas = await html2canvas(downloadRef.current, {
       scale: 2, // Info: (20250418 - Anna) 增加解析度
@@ -239,10 +218,8 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    style.remove();
-
     // Info: (20250604 - Anna) 移除 class，還原畫面
-    downloadRef.current.classList.remove('force-desktop-style');
+    downloadRef.current.classList.remove('w-1024px');
 
     pdf.save('input-certificates.pdf');
 
@@ -250,29 +227,20 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     setIsExporting(false);
   };
 
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
-
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
-      // Todo: (20250604 - Anna) Debug 後移除
-      // eslint-disable-next-line no-console
-      console.log('📥 API 回傳資料:', resData);
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalPrice: number;
+          totalPrice: { _sum: { totalAmount: number } };
           count: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalCertificatePrice(note.totalPrice);
+        // Info: (20250616 - Anna) 因為後端回傳的欄位名稱為 "_sum"，需暫時忽略 ESLint 的 no-underscore-dangle 規則
+        // eslint-disable-next-line no-underscore-dangle
+        setTotalCertificatePrice(note.totalPrice?._sum?.totalAmount ?? 0);
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
@@ -464,9 +432,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
   const handleEditItem = useCallback(
     async (certificate: Partial<IInvoiceRC2InputUI>) => {
-      // Deprecated: (20250509 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('handleEditItem', certificate);
       try {
         const postOrPutAPI = certificate.id
           ? updateCertificateAPI({
@@ -697,13 +662,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
               addOperations={addOperations}
-              exportOperations={exportOperations}
               onDelete={handleDeleteSelectedItems}
               onDownload={handleDownload}
               toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
             />
 
-            <div ref={downloadRef} className="download-page">
+            <div ref={downloadRef}>
               <InputInvoice
                 activeTab={activeTab}
                 page={page}
@@ -711,7 +675,6 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
                 totalPages={totalPages}
                 totalCount={totalCount}
                 certificates={Object.values(certificates)}
-                currencyAlias={currency}
                 viewType={viewType}
                 activeSelection={activeSelection}
                 handleSelect={handleSelect}

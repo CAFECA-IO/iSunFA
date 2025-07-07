@@ -100,7 +100,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_GET,
   });
 
   if (!assertResult.can) {
@@ -184,7 +184,7 @@ async function handlePutRequest(req: NextApiRequest) {
   // Info: (20250425 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
   const permissionResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_UPDATE,
   });
 
   if (!permissionResult.can) {
@@ -282,7 +282,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
   // Info: (20250425 - Shirley) 檢查用戶是否有 ACCOUNTING_SETTING 權限
   const permissionResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_DELETE,
   });
 
   if (!permissionResult.can) {

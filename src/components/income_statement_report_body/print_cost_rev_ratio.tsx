@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { numberBeDashIfFalsy } from '@/lib/utils/common';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 const NormalHeader = () => {
   return (
@@ -38,6 +39,7 @@ const PrintCostRevRatio = ({
   useRawImg = false,
 }: CostRevRatioProps) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
@@ -67,6 +69,7 @@ const PrintCostRevRatio = ({
           </p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         <table className="relative z-10 w-full border-collapse bg-white text-xxs">
@@ -237,6 +240,7 @@ const PrintCostRevRatio = ({
           <p className="text-xs font-bold leading-5">{t('reports:REPORTS.REVENUE_TO_RD')}</p>
           <p className="text-xs font-bold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         <table className="relative z-10 mb-75px w-full border-collapse bg-white text-xxs">
@@ -328,6 +332,8 @@ const PrintCostRevRatio = ({
         <p className="text-xs text-white">{defaultPageNumber + 1}</p>
         <div className="text-base font-bold text-surface-brand-secondary">
           {useRawImg ? (
+            // Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉生成 PDF，使用 <img> 而不是 <Image>
+            // eslint-disable-next-line @next/next/no-img-element
             <img src="/logo/white_isunfa_logo_light.svg" alt="iSunFA Logo" width={80} height={20} />
           ) : (
             <Image

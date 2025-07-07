@@ -29,6 +29,8 @@ import { IInvoiceRC2Output, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2
 import { InvoiceDirection, InvoiceType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
+import { useCurrencyCtx } from '@/contexts/currency_context';
+import eventManager from '@/lib/utils/event_manager';
 
 interface OutputInvoiceEditModalProps {
   isOpen: boolean;
@@ -45,7 +47,6 @@ interface OutputInvoiceEditModalProps {
 }
 
 const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
-  isOpen,
   accountBookId,
   toggleModel,
   currencyAlias,
@@ -67,7 +68,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const { currency } = useCurrencyCtx();
   const isLg = useIsLg();
 
   // Info: (20250514 - Anna) 記錄勾選退回折讓前的 InvoiceType
@@ -208,21 +209,6 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   const invoicePrefixMenuClickHandler = () => {
     setIsInvoicePrefixMenuOpen(!isInvoicePrefixMenuOpen);
   };
-
-  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
-    setIsInvoiceTypeMenuOpen(false);
-    handleInputChange('type', id);
-    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
-    setIsReturnOrAllowance(false);
-  };
-
-  // Info: (20250415 - Anna) 點選發票前綴的選項
-  const invoicePrefixOptionClickHandler = (prefix: string) => {
-    const latestNo = formStateRef.current.no ?? '';
-    const suffix = latestNo.substring(2);
-    handleInputChange('no', `${prefix}${suffix}`);
-    setIsInvoicePrefixMenuOpen(false);
-  };
   // Info: (20250414 - Anna) 處理保存
   // Info: (20250414 - Anna) 檢查兩個表單物件是否淺層相等（不比較巢狀物件，特別處理 counterParty）
   const shallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): boolean => {
@@ -266,6 +252,27 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
     savedInvoiceRC2Ref.current = updatedCertificate;
   }, [certificate, onSave]);
+  const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
+    setIsInvoiceTypeMenuOpen(false);
+    // Info: (20250619 - Anna) 針對 OUTPUT_34 和 OUTPUT_36，清空 invoice number
+    if (id === InvoiceType.OUTPUT_34 || id === InvoiceType.OUTPUT_36) {
+      handleInputChange('no', '');
+      setTimeout(() => {
+        handleSave();
+      }, 0);
+    }
+    handleInputChange('type', id);
+    // Info: (20250414 - Anna) 如果用戶手動切換下拉選單，重設折讓勾選
+    setIsReturnOrAllowance(false);
+  };
+
+  // Info: (20250415 - Anna) 點選發票前綴的選項
+  const invoicePrefixOptionClickHandler = (prefix: string) => {
+    const latestNo = formStateRef.current.no ?? '';
+    const suffix = latestNo.substring(2);
+    handleInputChange('no', `${prefix}${suffix}`);
+    setIsInvoicePrefixMenuOpen(false);
+  };
 
   const netAmountChangeHandler = (value: number) => {
     handleInputChange('netAmount', value);
@@ -441,27 +448,18 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     });
   }, [formState]);
 
-  // Info: (20250512 - Anna) Debug
   useEffect(() => {
-    if (isOpen && certificate) {
-      // Deprecated: (20250512 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Modal initialized with certificate:', certificate);
-    }
-  }, [isOpen, certificate]);
-
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
+    const refreshCounterpartyList = () => {
+      listCounterparty();
     };
-    if (isOpen) {
-      fetchCurrency();
-    }
-  }, [isOpen, accountBookId]);
+    // Info: (20250621 - Anna) 當全域事件系統有 ‘counterparty:added’ 事件發生時，就執行 refreshCounterpartyList 函數;
+    eventManager.on('counterparty:added', refreshCounterpartyList);
+
+    return () => {
+      // Info: (20250621 - Anna) 元件卸載時，剛剛註冊的事件監聽取消掉
+      eventManager.off('counterparty:added', refreshCounterpartyList);
+    };
+  }, [listCounterparty]);
 
   return (
     <div
@@ -668,7 +666,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <input
                         id="invoiceno"
                         type="text"
-                        value={formState.no}
+                        value={formState.otherCertificateNo}
                         onChange={(e) => handleInputChange('otherCertificateNo', e.target.value)}
                         className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                         placeholder={

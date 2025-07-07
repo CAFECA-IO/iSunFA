@@ -4,7 +4,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import { CounterpartyType } from '@/constants/counterparty';
 import { RxCross1 } from 'react-icons/rx';
-import { BiSave } from 'react-icons/bi';
+import { IoAdd } from 'react-icons/io5';
 import { FaChevronDown } from 'react-icons/fa6';
 import { inputStyle } from '@/constants/display';
 import { APIName } from '@/constants/api_connection';
@@ -16,6 +16,8 @@ import { ICompanyTaxIdAndName } from '@/interfaces/account_book';
 import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import eventManager from '@/lib/utils/event_manager';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IAddCounterPartyModalProps extends IAddCounterPartyModalData {
   isModalVisible: boolean;
@@ -76,9 +78,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setDropdownOpen(false);
       }
     } catch (fetchError) {
-      // Deprecate: (20241212 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Error fetching company data by Tax ID:', fetchError);
+      loggerFront.error('Error fetching company data by Tax ID:', fetchError);
     }
   };
 
@@ -129,9 +129,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   const nameChangeHandler = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newName = event.target.value.trim();
-    // Deprecate: (20241223 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('Input value:', newName); // Info: (20241223 - Anna) 確認輸入框值是否為空
     setInputName(newName);
     // setIsOptionSelected(false); // Info: (20241223 - Anna) 清空選擇狀態
     setNameInputStyle(inputStyle.NORMAL); // Info: (20250121 - Anna) 用戶修改名稱時，恢復正常樣式
@@ -159,14 +156,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       requestCounterRef.current += 1; // Info: (20241223 - Anna) 使用 useRef 來持續增加計數器
       const requestId = requestCounterRef.current; // Info: (20241223 - Anna) 獲取當前請求的 ID
 
-      // Deprecate: (20241223 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`Sending API request #${requestId} with name: ${newName}`);
-
       // Info: (20241223 - Anna) 每輸入一個完整的中文字時觸發
       try {
-        // eslint-disable-next-line no-console
-        console.log(`Sending API request with name: ${newName}`); // Info: (20241223 - Anna) 打印請求參數
         const { data: companyData } = await fetchCompanyDataAPI({
           query: { name: newName, taxId: undefined },
           signal: controller.signal, // Info: (20241223 - Anna) 傳入控制器的信號
@@ -174,27 +165,10 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
         // Info: (20241223 - Anna) 比較輸入值，確保回傳對應的是最後一次的輸入
         if (requestId !== requestCounterRef.current) {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`Discarding stale response for request #${requestId}`); // Info: (20241223 - Anna) 丟棄過期的請求結果
           return;
         }
-
-        // Deprecate: (20241223 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('API response:', companyData); // Info: (20241223 - Anna) 輸出 API 回傳的數據
         setSuggestions(companyData ? [companyData] : []); // Info: (20241223 - Anna) 儲存 API 回傳的建議
         setDropdownOpen(true);
-      } catch (err) {
-        if (err instanceof DOMException && err.name === 'AbortError') {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('Request aborted.'); // Info: (20241223 - Anna) 請求被中止時不需處理錯誤
-        } else {
-          // Deprecate: (20241223 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.error('Error fetching suggestions:', err); // Info: (20241223 - Anna) 其他錯誤處理
-        }
       } finally {
         // Info: (20241223 - Anna) 清理控制器，避免干擾後續請求
         if (currentRequestController === controller) {
@@ -231,9 +205,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
     // Info: (20241212 - Anna) 當輸入的統一編號滿 8 碼時，觸發 API
     if (newTaxId.length === 8 && /^[0-9]{8}$/.test(newTaxId)) {
-      // Deprecate: (20241212 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      fetchCompanyNameByTaxId(newTaxId).catch(console.error);
+      fetchCompanyNameByTaxId(newTaxId).catch(loggerFront.error);
     } else {
       setDropdownOpen(false);
     }
@@ -273,6 +245,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
 
   useEffect(() => {
     if (success && data) {
+      // Info: (20250621 - Anna) 發送新增成功事件，讓外部重新抓取資料
+      eventManager.emit('counterparty:added');
       onSave(data);
       toastHandler({
         id: ToastId.ADD_COUNTERPARTY_SUCCESS,
@@ -282,15 +256,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
       });
       modalVisibilityHandler();
     } else if (error) {
-      // Info: (20250121 - Anna) 確認 error 的實際結構
-      // Deprecated: (20250122 - Shirley) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Error content:', error);
-      // Info: (20250122 - Anna) 嘗試從錯誤中提取 ErrorCode
-      const errorCode = (error as { code?: string })?.code || '';
-      // Deprecated: (20250122 - Shirley) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Error code:', errorCode);
       // Info: (20250121 - Anna) 檢查是否有內嵌的錯誤信息
       const apiErrorMessage = (error as { message?: string })?.message || '';
       // Info: (20250121 - Anna) 定義名稱重複的錯誤訊息
@@ -306,10 +271,6 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
         setTaxIdInputStyle(`${inputStyle.ERROR}`);
         // Info: (20250122 - Anna) 顯示統編錯誤訊息
         setTaxIdErrorMessage(errorTaxIdMessageContent);
-      } else {
-        // Deprecated: (20250122 - Shirley) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('Unexpected error:', error);
       }
     }
   }, [success, error, data]);
@@ -368,24 +329,26 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
     ) : null;
 
   const isDisplayModal = isModalVisible ? (
-    <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={modalVisibilityHandler}
-        >
-          <RxCross1 size={24} />
-        </button>
-        <h2 className="flex justify-center text-xl font-semibold">
-          {t('certificate:COUNTERPARTY.ADD_NEW')}
-        </h2>
+    <div className="fixed inset-0 z-130 flex items-center justify-center bg-black/50">
+      <div className="flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-lv-7">
+        <div className="relative flex items-center justify-center">
+          {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+          <button
+            type="button"
+            className="absolute right-0 text-checkbox-text-primary"
+            onClick={modalVisibilityHandler}
+          >
+            <RxCross1 size={24} />
+          </button>
+          <h2 className="flex justify-center text-xl font-semibold text-text-neutral-primary">
+            {t('certificate:COUNTERPARTY.ADD_NEW')}
+          </h2>
+        </div>
         <form
           onSubmit={addNewCounterPartyHandler}
-          className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-lv-7 text-sm text-input-text-primary"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 tablet:gap-lv-7">
             {/* Info: (20241018 - tzuhan) name */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="counterparty-name" className="absolute -top-20"></div>
@@ -494,7 +457,7 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               />
             </div>
           </div>
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center justify-end gap-24px">
             <Button
               className="px-16px py-8px"
               type="button"
@@ -504,8 +467,8 @@ const AddCounterPartyModal: React.FC<IAddCounterPartyModalProps> = ({
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button className="px-16px py-8px" type="submit" variant="tertiary" disabled={disabled}>
-              <p>{t('common:COMMON.SAVE')}</p>
-              <BiSave size={20} />
+              <p>{t('common:COMMON.ADD')}</p>
+              <IoAdd size={16} />
             </Button>
           </div>
         </form>

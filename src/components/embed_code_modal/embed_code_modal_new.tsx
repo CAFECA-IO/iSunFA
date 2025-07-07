@@ -16,6 +16,7 @@ import { PiCopySimpleBold } from 'react-icons/pi';
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -86,8 +87,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           content: t('layout:EMBED_CODE_MODAL.COPY_FAILED'),
           closeable: true,
         });
-        // eslint-disable-next-line no-console
-        console.error('Failed to copy iframe code:', error);
+        loggerFront.error('Failed to copy iframe code:', error);
       }
     );
   };
@@ -108,27 +108,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       if (isCashFlowStatementChecked) {
         selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
       }
-
-      selectedReportTypes.forEach((type) => {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Report generation succeeded:', {
-          code: generatedCode,
-          message: 'We received your application. The report will be ready in a few minutes.',
-          request: {
-            params: {
-              companyId: connectedAccountBook?.id,
-            },
-            body: {
-              type: FinancialReportTypesKeyReportSheetTypeMapping[type],
-              reportLanguage: selectedReportLanguage,
-              from: dayjs().unix(),
-              to: dayjs().unix(),
-              reportType: ReportType.FINANCIAL,
-            },
-          },
-        });
-      });
     }
 
     // Info: (20241130 - Anna) 確保返回 void
@@ -146,9 +125,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     const period = getPeriod();
 
     if (!period) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -162,9 +138,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
 
     if (selectedReportTypes.length === 0) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -203,19 +176,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               `<iframe src="${reportLink}" title="${reportType}" width="1280" height="720"></iframe>`
             );
           } catch (error) {
-            // Deprecated: (20241130 - Anna) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.error(`Failed to generate report for type: ${reportType}`, error);
+            loggerFront.error(`Failed to generate report for type: ${reportType}`, error);
           }
         })
       );
 
       if (iframeCodes.length > 0) {
         setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Anna) 設置 iframe 到狀態
-      } else {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('No matching reports found or no report type selected.');
       }
     }
 
@@ -457,7 +424,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3 max-w-90vw">
+      <div className="relative mx-auto flex max-w-90vw flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
         <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">

@@ -708,7 +708,7 @@
     --text-neutral-link: var(--support-baby-400);
     --text-neutral-link-hover: var(--support-baby-400);
     --text-neutral-mute: var(--neutral-300);
-    --text-neutral-primary: var(--neutral-600);
+    --text-neutral-primary: var(--neutral-25);
     --text-neutral-secondary: var(--neutral-50);
     --text-neutral-solid-dark: var(--neutral-600);
     --text-neutral-solid-light: var(--neutral-25);
@@ -1375,4 +1375,37 @@ input[type='checkbox']:checked::before {
 /* Info: (20241217 - Liz) Handle on hover 把手懸停效果 */
 ::-webkit-scrollbar-thumb:hover {
   background: #304872;
+}
+
+@layer utilities {
+  /* Info: (20250624 - Anna) ===== 財務三表下載樣式(start) ===== */
+  /* Info: (20250401 - Anna) 表格 */
+  .download-page td,
+  .download-page th {
+    padding-top: 0 !important;
+  }
+
+  /* Info: (20250401 - Anna) Balance Sheet (header) 調整底部間距 */
+  .download-page h2 {
+    padding-bottom: 6px !important;
+  }
+  /* Info: (20250624 - Anna) ===== 財務三表下載樣式(end) ===== */
+
+  /* Info: (20250624 - Anna) ===== 401下載樣式(start) ===== */
+  .download-401-report td {
+    vertical-align: top !important;
+  }
+
+  .download-401-report h1,
+  .download-401-report p,
+  .download-401-report span {
+    vertical-align: top !important;
+    margin-top: -5px;
+    padding-bottom: 5px;
+  }
+
+  .download-401-report p span {
+    padding-top: 5px;
+  }
+  /* Info: (20250624 - Anna) ===== 401下載樣式(end) ===== */
 }

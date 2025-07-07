@@ -27,9 +27,6 @@ import SelectionToolbar, {
 import OutputInvoice from '@/components/invoice/output_invoice';
 import OutputInvoiceEditModal from '@/components/invoice/output_invoice_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
-// Deprecated: (20250513 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import CertificateExportModal from '@/components/certificate/certificate_export_modal';
 import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
@@ -177,14 +174,6 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
   const [isExporting, setIsExporting] = useState<boolean>(false);
 
-  // Deprecated: (20250513 - Luphia) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
-
-  const handleExport = useCallback(() => {
-    setIsExportModalOpen(true);
-  }, []);
-
   // Info: (20250506 - Anna) 等待畫面更新完成，避免截到尚未變更的畫面
   const waitForNextFrame = () => {
     return new Promise((resolve) => {
@@ -202,33 +191,12 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     if (!downloadRef.current) return;
 
     // Info: (20250604 - Anna) 加上桌面樣式 class
-    downloadRef.current.classList.add('force-desktop-style');
+    downloadRef.current.classList.add('w-1024px');
 
     // Info: (20250506 - Anna) 移除下載區塊內所有 h-54px 限制（例如日曆格子）
     downloadRef.current.querySelectorAll('.h-54px').forEach((el) => {
       el.classList.remove('h-54px');
     });
-
-    // Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-      .download-pb-4 {
-      padding-bottom: 16px;
-    }
-      .download-pb-3 {
-      padding-bottom: 12px;
-    }
-      .download-hidden {
-      display: none;
-    }
-
-      /* Info: (20250604 - Anna) 匯出時強制桌面版寬度 */
-      .force-desktop-style {
-      width: 1024px !important;
-    }
-  `;
-
-    document.head.appendChild(style);
 
     const canvas = await html2canvas(downloadRef.current, {
       scale: 2, // Info: (20250418 - Anna) 增加解析度
@@ -247,10 +215,8 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-    style.remove();
-
     // Info: (20250604 - Anna) 移除 class，還原畫面
-    downloadRef.current.classList.remove('force-desktop-style');
+    downloadRef.current.classList.remove('w-1024px');
 
     pdf.save('output-certificates.pdf');
 
@@ -258,26 +224,20 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
     setIsExporting(false);
   };
 
-  const [exportOperations] = useState<ISelectionToolBarOperation[]>([
-    {
-      operation: CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-      buttonStr: 'certificate:EXPORT.TITLE',
-      onClick: handleExport,
-    },
-  ]);
-
   const handleApiResponse = useCallback(
     (resData: IPaginatedData<IInvoiceRC2Output[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalPrice: number;
+          totalPrice: { _sum: { totalAmount: number } };
           count: {
             withVoucher: number;
             withoutVoucher: number;
           };
           currency: string;
         };
-        setTotalCertificatePrice(note.totalPrice);
+        // Info: (20250616 - Anna) 因為後端回傳的欄位名稱為 "_sum"，需暫時忽略 ESLint 的 no-underscore-dangle 規則
+        // eslint-disable-next-line no-underscore-dangle
+        setTotalCertificatePrice(note.totalPrice?._sum?.totalAmount ?? 0);
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
@@ -431,7 +391,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       setActiveTab(tab as InvoiceTab);
       setActiveSelection(false);
     },
-    [activeTab, handleAddVoucher, handleExport]
+    [activeTab, handleAddVoucher]
   );
 
   const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
@@ -609,144 +569,130 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
       <div>{t('certificate:UPLOAD.LOADING')}</div>
     </div>
   ) : (
-    <>
-      {/* Info: (20250508 - Tzuhan) @Anna 需要請你協助
-       {isExportModalOpen && (
-        <CertificateExportModal
-          isOpen={isExportModalOpen}
-          onClose={() => setIsExportModalOpen(false)}
-          handleApiResponse={handleExportModalApiResponse}
-          handleExport={onExport}
-          certificates={exportModalData}
+    <div ref={sideMenuRef}>
+      {isEditModalOpen && editingId !== null && (
+        <OutputInvoiceEditModal
+          accountBookId={accountBookId}
+          isOpen={isEditModalOpen}
+          toggleModel={() => setIsEditModalOpen((prev) => !prev)}
+          currencyAlias={currency}
+          certificate={currentEditingCertificate}
+          onUpdateFilename={onUpdateFilename}
+          onSave={handleEditItem}
+          onDelete={handleDeleteItem}
+          certificates={certificates} // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
+          editingId={editingId} // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
+          setEditingId={setEditingId} // Info: (20250415 - Anna) 前後筆切換時用
         />
-      )} */}
-      <div ref={sideMenuRef}>
-        {isEditModalOpen && editingId !== null && (
-          <OutputInvoiceEditModal
-            accountBookId={accountBookId}
-            isOpen={isEditModalOpen}
-            toggleModel={() => setIsEditModalOpen((prev) => !prev)}
-            currencyAlias={currency}
-            certificate={currentEditingCertificate}
-            onUpdateFilename={onUpdateFilename}
-            onSave={handleEditItem}
-            onDelete={handleDeleteItem}
-            certificates={certificates} // Info: (20250415 - Anna) 傳入目前這頁的所有憑證清單（為了做前後筆切換）
-            editingId={editingId} // Info: (20250415 - Anna) 傳入正在編輯的這筆 ID
-            setEditingId={setEditingId} // Info: (20250415 - Anna) 前後筆切換時用
-          />
-        )}
-        {/* Info: (20240919 - Anna) Main Content */}
-        <div
-          // Info: (20241210 - Anna) 隱藏 scrollbar
-          className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
-        >
-          {/* Info: (20240919 - Anna) Upload Area */}
-          <CertificateFileUpload
-            isDisabled={false}
-            setFiles={setFiles}
-            direction={InvoiceDirection.OUTPUT}
-          />
-          <FloatingUploadPopup
-            files={files}
-            pauseFileUpload={pauseFileUpload}
-            deleteFile={deleteFile}
-          />
-          {/* Info: (20240919 - Anna) Tabs */}
-          <Tabs
-            tabs={Object.values(InvoiceTab)}
-            tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
-            activeTab={activeTab}
-            onTabClick={onTabClick}
-            counts={count ? [count.withoutVoucher, count.withVoucher] : [0, 0]}
-          />
+      )}
+      {/* Info: (20240919 - Anna) Main Content */}
+      <div
+        // Info: (20241210 - Anna) 隱藏 scrollbar
+        className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
+      >
+        {/* Info: (20240919 - Anna) Upload Area */}
+        <CertificateFileUpload
+          isDisabled={false}
+          setFiles={setFiles}
+          direction={InvoiceDirection.OUTPUT}
+        />
+        <FloatingUploadPopup
+          files={files}
+          pauseFileUpload={pauseFileUpload}
+          deleteFile={deleteFile}
+        />
+        {/* Info: (20240919 - Anna) Tabs */}
+        <Tabs
+          tabs={Object.values(InvoiceTab)}
+          tabsString={[t('certificate:TAB.WITHOUT_VOUCHER'), t('certificate:TAB.WITH_VOUCHER')]}
+          activeTab={activeTab}
+          onTabClick={onTabClick}
+          counts={count ? [count.withoutVoucher, count.withVoucher] : [0, 0]}
+        />
 
-          {/* Info: (20240919 - Anna) Filter Section */}
-          <FilterSection<IInvoiceRC2Output[]>
-            className="mt-2"
-            params={{ accountBookId }}
-            apiName={APIName.LIST_INVOICE_RC2_OUTPUT}
-            onApiResponse={handleApiResponse}
-            page={page}
-            pageSize={DEFAULT_PAGE_LIMIT}
-            tab={activeTab}
-            types={[
-              InvoiceType.ALL,
-              InvoiceType.OUTPUT_31,
-              InvoiceType.OUTPUT_32,
-              InvoiceType.OUTPUT_33,
-              InvoiceType.OUTPUT_34,
-              InvoiceType.OUTPUT_35,
-              InvoiceType.OUTPUT_36,
-            ]}
-            sort={selectedSort}
-            labelClassName="text-neutral-300"
-            isShowSideMenu={isShowSideMenu}
-            toggleSideMenu={toggleSideMenu}
-          />
+        {/* Info: (20240919 - Anna) Filter Section */}
+        <FilterSection<IInvoiceRC2Output[]>
+          className="mt-2"
+          params={{ accountBookId }}
+          apiName={APIName.LIST_INVOICE_RC2_OUTPUT}
+          onApiResponse={handleApiResponse}
+          page={page}
+          pageSize={DEFAULT_PAGE_LIMIT}
+          tab={activeTab}
+          types={[
+            InvoiceType.ALL,
+            InvoiceType.OUTPUT_31,
+            InvoiceType.OUTPUT_32,
+            InvoiceType.OUTPUT_33,
+            InvoiceType.OUTPUT_34,
+            InvoiceType.OUTPUT_35,
+            InvoiceType.OUTPUT_36,
+          ]}
+          sort={selectedSort}
+          labelClassName="text-neutral-300"
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
+        />
 
-          {/* Info: (20240919 - Anna) Certificate Table */}
-          {Object.values(certificates) && Object.values(certificates).length > 0 ? (
-            <>
-              <SelectionToolbar
-                className="mt-6"
-                active={activeSelection}
-                isSelectable={activeTab === InvoiceTab.WITHOUT_VOUCHER}
-                onActiveChange={setActiveSelection}
-                items={Object.values(certificates)}
-                subtitle={`${t('certificate:LIST.OUTPUT_TOTAL_PRICE')}:`}
-                totalPrice={totalCertificatePrice}
-                currency={currency}
-                selectedCount={Object.values(selectedCertificates).length}
-                totalCount={Object.values(certificates).length || 0}
+        {/* Info: (20240919 - Anna) Certificate Table */}
+        {Object.values(certificates) && Object.values(certificates).length > 0 ? (
+          <>
+            <SelectionToolbar
+              className="mt-6"
+              active={activeSelection}
+              isSelectable={activeTab === InvoiceTab.WITHOUT_VOUCHER}
+              onActiveChange={setActiveSelection}
+              items={Object.values(certificates)}
+              subtitle={`${t('certificate:LIST.OUTPUT_TOTAL_PRICE')}:`}
+              totalPrice={totalCertificatePrice}
+              currency={currency}
+              selectedCount={Object.values(selectedCertificates).length}
+              totalCount={Object.values(certificates).length || 0}
+              handleSelect={handleSelect}
+              handleSelectAll={handleSelectAll}
+              addOperations={addOperations}
+              onDelete={handleDeleteSelectedItems}
+              onDownload={handleDownload}
+              toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
+            />
+            <div ref={downloadRef}>
+              <OutputInvoice
+                activeTab={activeTab}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                certificates={Object.values(certificates)}
+                viewType={viewType}
+                activeSelection={activeSelection}
                 handleSelect={handleSelect}
                 handleSelectAll={handleSelectAll}
-                addOperations={addOperations}
-                exportOperations={exportOperations}
-                onDelete={handleDeleteSelectedItems}
-                onDownload={handleDownload}
-                toggleSideMenu={toggleSideMenu} // Info: (20250528 - Anna) 手機版 filter 的開關
+                isSelectedAll={isSelectedAll}
+                onDownload={handleDownloadItem}
+                onRemove={handleDeleteItem}
+                onEdit={openEditModalHandler}
+                dateSort={dateSort}
+                amountSort={amountSort}
+                voucherSort={voucherSort}
+                certificateNoSort={certificateNoSort}
+                certificateTypeSort={certificateTypeSort}
+                setDateSort={setDateSort}
+                setAmountSort={setAmountSort}
+                setVoucherSort={setVoucherSort}
+                setCertificateNoSort={setCertificateNoSort}
+                setCertificateTypeSort={setCertificateTypeSort}
+                isExporting={isExporting}
+                uploaderAvatarMap={uploaderAvatarMap}
               />
-              <div ref={downloadRef} className="download-page">
-                <OutputInvoice
-                  activeTab={activeTab}
-                  page={page}
-                  setPage={setPage}
-                  totalPages={totalPages}
-                  totalCount={totalCount}
-                  certificates={Object.values(certificates)}
-                  currencyAlias={currency}
-                  viewType={viewType}
-                  activeSelection={activeSelection}
-                  handleSelect={handleSelect}
-                  handleSelectAll={handleSelectAll}
-                  isSelectedAll={isSelectedAll}
-                  onDownload={handleDownloadItem}
-                  onRemove={handleDeleteItem}
-                  onEdit={openEditModalHandler}
-                  dateSort={dateSort}
-                  amountSort={amountSort}
-                  voucherSort={voucherSort}
-                  certificateNoSort={certificateNoSort}
-                  certificateTypeSort={certificateTypeSort}
-                  setDateSort={setDateSort}
-                  setAmountSort={setAmountSort}
-                  setVoucherSort={setVoucherSort}
-                  setCertificateNoSort={setCertificateNoSort}
-                  setCertificateTypeSort={setCertificateTypeSort}
-                  isExporting={isExporting}
-                  uploaderAvatarMap={uploaderAvatarMap}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="flex flex-auto items-center justify-center">
-              <Image src="/images/empty.svg" alt="empty" width={120} height={135} />
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="flex flex-auto items-center justify-center">
+            <Image src="/images/empty.svg" alt="empty" width={120} height={135} />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

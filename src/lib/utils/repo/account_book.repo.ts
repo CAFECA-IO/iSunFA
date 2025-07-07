@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { File } from '@prisma/client';
+import { File, Prisma } from '@prisma/client';
 import {
   TeamRole,
   LeaveStatus,
@@ -19,6 +19,7 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
+  IBaifaAccountBook,
 } from '@/interfaces/account_book';
 import { listByTeamIdQuerySchema, transferAccountBookSchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
@@ -292,6 +293,8 @@ export const createAccountBook = async (
     taxId: string;
     teamId: number;
     fileId?: number;
+    businessLocation?: string;
+    accountingCurrency?: string;
     representativeName?: string;
     taxSerialNumber?: string;
     contactPerson?: string;
@@ -316,6 +319,8 @@ export const createAccountBook = async (
     name,
     tag,
     fileId,
+    businessLocation = '',
+    accountingCurrency = '',
     representativeName = '',
     taxSerialNumber = '',
     contactPerson = '',
@@ -434,7 +439,7 @@ export const createAccountBook = async (
           country: '',
           phone: phoneNumber || '',
           address: addressJson,
-          countryCode: 'tw',
+          countryCode: businessLocation || 'tw',
           contactPerson: contactPerson || '',
           filingFrequency,
           filingMethod,
@@ -457,7 +462,7 @@ export const createAccountBook = async (
           purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
           purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
           returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
-          currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
+          currency: accountingCurrency || DEFAULT_ACCOUNTING_SETTING.CURRENCY,
           createdAt: nowInSecond,
           updatedAt: nowInSecond,
         },
@@ -576,6 +581,13 @@ export const listAccountBookByUserId = async (
         },
         take: 1,
       },
+      // Info: (20250606 - Shirley) 添加 accountingSettings 以獲取會計幣別
+      accountingSettings: {
+        where: {
+          deletedAt: null,
+        },
+        take: 1,
+      },
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -592,6 +604,7 @@ export const listAccountBookByUserId = async (
 
       // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
       const setting = book.companySettings?.[0] || {};
+      const accountingSetting = book.accountingSettings?.[0] || {};
       const address = setting.address
         ? typeof setting.address === 'string'
           ? JSON.parse(setting.address)
@@ -619,6 +632,8 @@ export const listAccountBookByUserId = async (
         city: address.city || '',
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
+        businessLocation: setting.countryCode || '', // Info: (20250606 - Shirley) businessLocation 來自 country 欄位
+        accountingCurrency: accountingSetting.currency || '', // Info: (20250606 - Shirley) accountingCurrency 來自 accountingSetting
 
         // Info: (20250517 - Shirley) 添加選填欄位
         filingFrequency: setting.filingFrequency,
@@ -1747,4 +1762,122 @@ export const getAccountBookTeamId = async (accountBookId: number): Promise<numbe
     });
     return null;
   }
+};
+
+export const listBaifaAccountBooks = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}): Promise<IPaginatedOptions<IBaifaAccountBook[]>> => {
+  const nowInSecond = getTimestampNow();
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = nowInSecond,
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  const whereCondition = {
+    name: searchQuery ? { contains: searchQuery, mode: Prisma.QueryMode.insensitive } : undefined,
+    createdAt: { gte: startDate, lte: endDate },
+    AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+  };
+
+  const [totalCount, accountBooks] = await prisma.$transaction([
+    prisma.company.count({ where: whereCondition }),
+    prisma.company.findMany({
+      where: whereCondition,
+      include: {
+        team: {
+          include: {
+            subscriptions: {
+              where: {
+                startDate: { lte: nowInSecond },
+                expiredDate: { gt: nowInSecond },
+              },
+              include: { plan: true },
+            },
+            imageFile: { select: { url: true } },
+          },
+        },
+        imageFile: { select: { url: true } },
+        companySettings: { where: { deletedAt: null }, take: 1 },
+        accountingSettings: { where: { deletedAt: null }, take: 1 },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption),
+    }),
+  ]);
+
+  const result = toPaginatedData({
+    data: accountBooks.map((book) => {
+      const setting = book.companySettings?.[0] || {};
+      const accountingSetting = book.accountingSettings?.[0] || {};
+      const address = setting.address
+        ? typeof setting.address === 'string'
+          ? JSON.parse(setting.address)
+          : setting.address
+        : { city: '', district: '', enteredAddress: '' };
+
+      const subscription = book.team?.subscriptions[0];
+      const expiredAt = subscription?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+
+      return {
+        id: book.id,
+        teamId: book.teamId,
+        ownerId: book.userId,
+        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: book.name,
+        taxId: book.taxId,
+        tag: book.tag as WORK_TAG,
+        isPrivate: book.isPrivate ?? false,
+        startDate: book.startDate,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+
+        representativeName: setting.representativeName || '',
+        taxSerialNumber: setting.taxSerialNumber || '',
+        contactPerson: setting.contactPerson || '',
+        phoneNumber: setting.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+        businessLocation: setting.countryCode || '',
+        accountingCurrency: accountingSetting.currency || '',
+
+        isTransferring: book.isTransferring,
+
+        team: book.team
+          ? {
+              id: book.team.id,
+              name: book.team.name,
+              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+              about: book.team.about ?? '',
+              profile: book.team.profile ?? '',
+              planType: subscription?.plan?.type ?? TPlanType.BEGINNER,
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
+              bankAccount: book.team.bankInfo
+                ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
+                : '',
+            }
+          : null,
+      } as IBaifaAccountBook;
+    }),
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+    totalCount,
+    pageSize,
+    sort: sortOption,
+  });
+
+  return result;
 };

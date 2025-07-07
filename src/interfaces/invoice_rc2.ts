@@ -12,6 +12,7 @@ export interface IInvoiceRC2Base {
   id: number;
   accountBookId: number;
   voucherId: number | null;
+  fileId: number;
   file: {
     id: number;
     name: string;
@@ -32,7 +33,7 @@ export interface IInvoiceRC2Base {
   updatedAt: number;
   deletedAt?: number | null;
 
-  type: InvoiceType;
+  type: InvoiceType | undefined;
   issuedDate: number;
   no: string;
   currencyCode: CurrencyCode;
@@ -57,8 +58,8 @@ export interface IInvoiceRC2Base {
 
 export interface IInvoiceRC2Input extends IInvoiceRC2Base {
   direction: InvoiceDirection.INPUT;
-  deductionType?: DeductionType;
-  salesName?: string;
+  deductionType?: DeductionType | null;
+  salesName?: string | null;
   salesIdNumber?: string;
   isSharedAmount?: boolean;
   buyerName?: never;
@@ -86,6 +87,9 @@ export interface IInvoiceRC2OutputUI extends IInvoiceRC2Output {
   isSelected: boolean;
   actions: CERTIFICATE_USER_INTERACT_OPERATION[];
 }
+
+export type IInvoiceRC2 = IInvoiceRC2Input | IInvoiceRC2Output;
+export type IInvoiceRC2UI = IInvoiceRC2InputUI | IInvoiceRC2OutputUI;
 
 export const isClassicCertificate = (
   data: ICertificateUI | IInvoiceRC2InputUI | IInvoiceRC2OutputUI

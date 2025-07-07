@@ -118,9 +118,9 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
   return (
     <form className="flex flex-col gap-lv-7" onSubmit={handleSubmit}>
       {/* Info: (20241218 - tzuhan) First and Last Name Inputs */}
-      <div className="grid grid-cols-2 gap-lv-7">
+      <div className="grid grid-cols-1 gap-lv-7 tablet:grid-cols-2">
         {['firstName', 'lastName'].map((field) => (
-          <div key={field} className="flex flex-col gap-2">
+          <div key={field} className="flex flex-col gap-8px">
             <label
               htmlFor={`user-settings-${field}`}
               className="text-sm font-semibold text-input-text-primary"
@@ -133,14 +133,14 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
               value={formState[field as 'firstName' | 'lastName']}
               onChange={(e) => handleInputChange(field as keyof typeof formState, e.target.value)}
               placeholder={t(`settings:NORMAL.EX_${field === 'firstName' ? 'JOHN' : 'DOE'}`)}
-              className="rounded-sm border border-input-stroke-input px-3 py-2 outline-none placeholder:text-input-text-input-placeholder"
+              className="rounded-sm border border-input-stroke-input bg-input-surface-input-background px-3 py-2 outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
         ))}
       </div>
 
       {/* Info: (20241218 - tzuhan) Country and Phone Inputs */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-lv-7 tablet:grid-cols-2">
         <SelectCountryDropdown
           countryCode={formState.country}
           onSelect={(value) => handleInputChange('country', value)}
@@ -154,7 +154,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
       </div>
 
       {/* Info: (20241218 - tzuhan) Language Dropdown */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-lv-7">
         <SelectLanguageDropdown
           language={formState.language}
           onSelect={(value) => handleInputChange('language', value)}
@@ -162,7 +162,7 @@ const UserInfoForm: React.FC<UserInfoFormProps> = ({
       </div>
 
       {/* Info: (20241218 - tzuhan) Buttons */}
-      <div className="flex justify-end space-x-4">
+      <div className="flex justify-end gap-24px">
         <Button type="button" variant="secondaryBorderless" size="small" onClick={handleCancel}>
           {t('common:COMMON.CANCEL')}
         </Button>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+import { FaChevronDown } from 'react-icons/fa6';
 import { CountriesMap, LocaleKey } from '@/constants/normal_setting';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
@@ -29,7 +30,7 @@ const SelectCountryDropdown = ({ countryCode, onSelect }: SelectCountryDropdownP
   };
 
   return (
-    <div className="flex flex-col space-y-3 max-md:max-w-full">
+    <div className="flex flex-col gap-8px max-md:max-w-full">
       <div className="justify-center text-sm font-semibold leading-5 tracking-normal text-input-text-primary max-md:max-w-full">
         {t('settings:NORMAL.SELECT_COUNTRY')}
       </div>
@@ -38,7 +39,7 @@ const SelectCountryDropdown = ({ countryCode, onSelect }: SelectCountryDropdownP
         <button
           type="button"
           className={`flex w-full items-center justify-between gap-5 rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
-            isCountryMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+            isCountryMenuOpen ? 'border-input-stroke-selected' : 'border-input-stroke-input'
           }`}
           onClick={countryMenuClickHandler}
         >
@@ -51,16 +52,10 @@ const SelectCountryDropdown = ({ countryCode, onSelect }: SelectCountryDropdownP
           <div className="flex-1 whitespace-nowrap text-start text-base font-medium leading-6 tracking-normal text-input-text-primary">
             {selectedCountry?.name || t('settings:NORMAL.SELECT_COUNTRY')}
           </div>
-          <div className="my-auto flex flex-col justify-center">
-            <div className="flex items-center justify-center">
-              <Image
-                src="/elements/arrow_down.svg"
-                alt="arrow down"
-                width={20}
-                height={20}
-                className={`${isCountryMenuOpen ? 'rotate-180' : 'rotate-0'}`}
-              />
-            </div>
+          <div
+            className={`flex items-center justify-center text-icon-surface-single-color-primary ${isCountryMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+          >
+            <FaChevronDown size={12} />
           </div>
         </button>
 

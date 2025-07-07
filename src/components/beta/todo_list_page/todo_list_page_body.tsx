@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { FiSearch } from 'react-icons/fi';
 import { IoAdd } from 'react-icons/io5';
@@ -13,6 +14,9 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
+import { TbArrowBackUp } from 'react-icons/tb';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 const NoData = () => {
   const { t } = useTranslation('dashboard');
@@ -28,6 +32,7 @@ const NoData = () => {
 
 const TodoListPageBody = () => {
   const { t } = useTranslation('dashboard');
+  const router = useRouter();
   const { userAuth } = useUserCtx();
   const [todoList, setTodoList] = useState<ITodoAccountBook[]>([]);
   const [isCreateTodoModalOpen, setIsCreateTodoModalOpen] = useState(false);
@@ -49,6 +54,8 @@ const TodoListPageBody = () => {
     setTodoToDelete(undefined);
   };
 
+  const goBack = () => router.push(ISUNFA_ROUTE.DASHBOARD);
+
   // Info: (20241125 - Liz) 刪除待辦事項 API
   const { trigger: deleteTodoAPI } = APIHandler<ITodoAccountBook>(APIName.DELETE_TODO);
 
@@ -66,14 +73,10 @@ const TodoListPageBody = () => {
 
         setTodoList(userTodoList);
       } else {
-        // Deprecated: (20241121 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得待辦事項清單失敗');
+        loggerFront.log('取得待辦事項清單失敗');
       }
     } catch (error) {
-      // Deprecated: (20241121 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得待辦事項清單失敗');
+      loggerFront.error('取得待辦事項清單失敗');
     }
   }, [userId]);
 
@@ -97,9 +100,7 @@ const TodoListPageBody = () => {
         getTodoList();
       }
     } catch (error) {
-      // Deprecated: (20241125 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('刪除待辦事項失敗');
+      loggerFront.error('刪除待辦事項失敗');
     } finally {
       setIsLoading(false);
     }
@@ -116,9 +117,19 @@ const TodoListPageBody = () => {
   };
 
   return (
-    <main className="flex min-h-full flex-col gap-40px">
-      <section className="flex items-center gap-40px">
-        <div className="flex flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
+    <main className="flex min-h-full flex-col gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250618 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('dashboard:TODO_LIST_PAGE.TODO_LIST_TITLE')}
+        </p>
+      </div>
+
+      <section className="flex flex-col items-center gap-lv-6 tablet:flex-row tablet:gap-40px">
+        <div className="flex w-full flex-auto items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
           <input
             type="text"
             placeholder={t('dashboard:HEADER.SEARCH')}
@@ -132,19 +143,24 @@ const TodoListPageBody = () => {
           </button>
         </div>
 
-        <Button variant="tertiary" size="default" onClick={toggleCreateTodoModal}>
+        <Button
+          variant="tertiary"
+          size="default"
+          onClick={toggleCreateTodoModal}
+          className="w-full tablet:w-fit"
+        >
           <IoAdd size={20} />
           <p>{t('dashboard:TODO_LIST_PAGE.NEW_EVENT')}</p>
         </Button>
       </section>
 
       <section className="flex items-center gap-16px">
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-8px text-sm text-divider-text-lv-2">
           <Image src={'/icons/event_list.svg'} width={16} height={16} alt="event_list"></Image>
           <h3>{t('dashboard:TODO_LIST_PAGE.UPCOMING_EVENTS')}</h3>
         </div>
 
-        <div className="h-1px grow bg-divider-stroke-lv-1"></div>
+        <div className="h-1px grow bg-divider-stroke-lv-4"></div>
       </section>
 
       {isNoData ? (

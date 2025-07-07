@@ -35,7 +35,7 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
   const footnote = `#${invoiceId} - $ ${numberWithCommas(amountDue)} ${unit} ${t('subscriptions:INVOICE_PAGE.FOOTNOTE_DUE')} ${timestampToString(dueTimestamp).date}`;
 
   const issueAndDueCard = (
-    <div className="flex h-150px flex-col gap-16px rounded-md bg-surface-brand-primary-10 px-40px py-12px font-semibold print:h-auto">
+    <div className="flex h-full flex-col gap-16px rounded-md bg-surface-brand-primary-10 px-40px py-12px font-semibold print:h-auto">
       {/* Info: (20250115 - Julian) Issued Date */}
       <div className="flex flex-col items-start gap-6px">
         <p className="text-text-brand-primary-lv1">{t('subscriptions:INVOICE_PAGE.ISSUED')}</p>
@@ -54,7 +54,7 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
   );
 
   const billedToCard = (
-    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
+    <div className="flex h-full flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
       <p className="font-semibold text-text-brand-primary-lv1">
         {t('subscriptions:INVOICE_PAGE.BILLED_TO')}
       </p>
@@ -72,7 +72,7 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
   );
 
   const fromCard = (
-    <div className="flex h-150px flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
+    <div className="flex h-full flex-col gap-6px rounded-md bg-surface-brand-primary-10 px-40px py-12px print:h-auto">
       <p className="font-semibold text-text-brand-primary-lv1">
         {t('subscriptions:INVOICE_PAGE.FROM')}
       </p>
@@ -162,7 +162,7 @@ const InvoiceDetail: React.FC<IInvoiceDetailProps> = ({ invoice, printRef }) => 
   return (
     <div
       ref={printRef}
-      className="flex min-w-700px flex-col gap-24px bg-surface-neutral-surface-lv2 px-40px py-24px print:h-a4-height print:w-a4-width"
+      className="flex min-w-700px shrink-0 flex-col gap-24px bg-surface-neutral-surface-lv2 px-40px py-24px print:h-a4-height print:w-a4-width"
     >
       {/* Info: (20250115 - Julian) Invoice Title */}
       <div className="flex items-center justify-between">

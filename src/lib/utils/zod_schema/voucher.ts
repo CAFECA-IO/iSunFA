@@ -31,6 +31,8 @@ import { accountEntityValidator } from '@/lib/utils/zod_schema/account';
 import { paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
 import { eventEntityValidator } from '@/lib/utils/zod_schema/event';
 import { assetEntityValidator, IAssetDetailsValidator } from '@/lib/utils/zod_schema/asset';
+import { InvoiceDirection as PrismaInvoiceDirection } from '@prisma/client';
+import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
 import {
   certificateEntityValidator,
   ICertificateValidator,
@@ -41,6 +43,15 @@ import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
+import {
+  InvoiceDirection,
+  InvoiceType,
+  CurrencyCode,
+  DeductionType,
+  TaxType,
+} from '@/constants/invoice_rc2';
+
+// TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
 
 const iVoucherValidator = z.object({
   journalId: z.number(),
@@ -106,6 +117,7 @@ export const voucherEntityValidator = z.object({
  */
 export const IVoucherBetaValidator = z.object({
   id: z.number(),
+  accountBookId: z.number(),
   voucherDate: z.number(),
   voucherNo: z.string(),
   voucherType: z.nativeEnum(VoucherType),
@@ -254,6 +266,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
 
     const parsedVoucher = {
       id: voucher.id,
+      accountBookId: voucher.companyId,
       status: voucher.status,
       voucherDate: voucher.date,
       voucherNo: voucher.no,
@@ -303,7 +316,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
   };
 });
 
-const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
+export const voucherGetAllFrontendValidatorV2 = paginatedDataSchema(IVoucherBetaValidator);
 
 export const voucherGetAllValidatorV2: IZodValidator<
   (typeof voucherGetAllQueryValidatorV2)['shape'],
@@ -318,6 +331,7 @@ const voucherPostQueryValidatorV2 = z.object({});
 const voucherPostBodyValidatorV2 = z.object({
   actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
   certificateIds: z.array(z.number().int()),
+  invoiceRC2Ids: z.array(z.number().int()).default([]),
   voucherDate: z.number().int(), // Info: (20241105 - Murky) timestamp in Second
   type: z.nativeEnum(EventType),
   note: z.string(),
@@ -404,6 +418,71 @@ const voucherGetOneQueryValidatorV2 = z.object({
 
 const voucherGetOneBodyValidatorV2 = z.object({});
 
+export const InvoiceRC2WithFullRelationsValidator = z.object({
+  id: z.number(),
+  accountBookId: z.number(),
+  voucherId: z.number().optional(),
+  file: z.object({
+    id: z.number(),
+    name: z.string(),
+    size: z.number(),
+    url: z.string().optional(), // Info: (20250606 - Tzuhan) prisma 不會有 url，要 transform 時再補上
+    thumbnail: z
+      .object({
+        id: z.number(),
+        name: z.string(),
+        size: z.number(),
+        url: z.string().optional(),
+      })
+      .nullable()
+      .optional(),
+  }),
+  uploader: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
+  voucher: z.object({
+    id: z.number(),
+    no: z.string(),
+  }),
+  direction: z.nativeEnum(InvoiceDirection),
+  type: z.nativeEnum(InvoiceType).nullable().optional(),
+  no: z.string().nullable().optional(),
+  issuedDate: z.number().nullable().optional(),
+  taxType: z.nativeEnum(TaxType).nullable().optional(),
+  currencyCode: z.nativeEnum(CurrencyCode),
+  netAmount: z.number().nullable().optional(),
+  taxAmount: z.number().nullable().optional(),
+  totalAmount: z.number().nullable().optional(),
+  taxRate: z.number().nullable().optional(),
+  note: z.union([z.record(z.any()), z.string(), z.null()]).optional(),
+  aiResultId: z.string(),
+  aiStatus: z.string(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable().optional(),
+
+  // Info: (20250606 - Tzuhan) Input fields
+  deductionType: z.nativeEnum(DeductionType).nullable().optional(),
+
+  salesName: z.string().nullable().optional(),
+  salesIdNumber: z.string().nullable().optional(),
+  isSharedAmount: z.boolean().optional(),
+
+  // Info: (20250606 - Tzuhan) Output fields
+  buyerName: z.string().nullable().optional(),
+  buyerIdNumber: z.string().nullable().optional(),
+  isReturnOrAllowance: z.boolean().optional(),
+
+  isGenerated: z.boolean(),
+  incomplete: z.boolean(),
+  description: z.string().nullable().optional(),
+
+  totalOfSummarizedInvoices: z.number().nullable().optional(),
+  carrierSerialNumber: z.string().nullable().optional(),
+  otherCertificateNo: z.string().nullable().optional(),
+});
+
 const voucherGetOneOutputValidatorV2 = z
   .object({
     ...voucherEntityValidator.shape,
@@ -420,6 +499,7 @@ const voucherGetOneOutputValidatorV2 = z
         file: fileEntityValidator,
       })
     ),
+    invoiceRC2List: z.array(InvoiceRC2WithFullRelationsValidator).optional().default([]),
     lineItems: z.array(
       z.object({
         ...iLineItemBodyValidatorV2.shape,
@@ -608,6 +688,82 @@ const voucherGetOneOutputValidatorV2 = z
 
         return certificateInstance;
       }),
+      // TODO: (20250606 - Tzuhan) 需要實作 InvoiceRC2List 轉換
+      // invoiceRC2List: (data.invoiceRC2List ?? []).map((inv): IInvoiceRC2 => {
+      //   return inv.direction === InvoiceDirection.INPUT
+      //     ? transformInput(inv)
+      //     : transformOutput(inv);
+      // }),
+      invoiceRC2List: data.invoiceRC2List.map((invoice) => {
+        const base = {
+          id: invoice.id,
+          accountBookId: invoice.accountBookId,
+          voucherId: invoice.voucherId,
+          fileId: invoice.file.id,
+          file: {
+            id: invoice.file.id,
+            name: invoice.file.name,
+            size: invoice.file.size,
+            url: invoice.file.url ?? '',
+            thumbnail: invoice.file.name
+              ? {
+                  id: invoice.file.id,
+                  name: '',
+                  size: 0,
+                  url: '',
+                }
+              : undefined,
+          },
+          uploaderId: invoice.uploader.id,
+          uploaderName: invoice.uploader.name,
+          direction: invoice.direction,
+          aiResultId: invoice.aiResultId ?? '0',
+          aiStatus: invoice.aiStatus ?? 'READY',
+          createdAt: invoice.createdAt,
+          updatedAt: invoice.updatedAt,
+          deletedAt: invoice.deletedAt ?? undefined,
+
+          type: (invoice.type ?? undefined) as InvoiceType | undefined,
+          issuedDate: invoice.issuedDate ?? undefined,
+          no: invoice.no ?? '',
+          currencyCode: invoice.currencyCode,
+          taxType: invoice.taxType ?? undefined,
+          taxRate: invoice.taxRate ?? undefined,
+          netAmount: invoice.netAmount ?? undefined,
+          taxAmount: invoice.taxAmount ?? undefined,
+          totalAmount: invoice.totalAmount ?? undefined,
+
+          isGenerated: invoice.isGenerated,
+          incomplete: invoice.incomplete,
+          description: invoice.description ?? undefined,
+          note: invoice.note ?? undefined,
+
+          totalOfSummarizedInvoices: invoice.totalOfSummarizedInvoices ?? undefined,
+          carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
+          otherCertificateNo: invoice.otherCertificateNo ?? undefined,
+
+          voucherNo: invoice.voucher?.no ?? null,
+        };
+
+        if (invoice.direction === PrismaInvoiceDirection.INPUT) {
+          return {
+            ...base,
+            direction: PrismaInvoiceDirection.INPUT as InvoiceDirection.INPUT,
+            deductionType: (invoice.deductionType ?? undefined) as DeductionType | undefined,
+            salesName: invoice.salesName ?? undefined,
+            salesIdNumber: invoice.salesIdNumber ?? undefined,
+            isSharedAmount: invoice.isSharedAmount ?? false,
+          } as IInvoiceRC2;
+        }
+
+        return {
+          ...base,
+          direction: PrismaInvoiceDirection.OUTPUT as InvoiceDirection,
+          buyerName: invoice.buyerName ?? undefined,
+          buyerIdNumber: invoice.buyerIdNumber ?? undefined,
+          isReturnOrAllowance: invoice.isReturnOrAllowance ?? false,
+        } as IInvoiceRC2;
+      }),
       lineItems: data.lineItems.map((lineItem) => ({
         id: lineItem.id,
         description: lineItem.description,
@@ -640,18 +796,16 @@ const IVoucherDetailForFrontendValidator = z.object({
   voucherDate: z.number(),
   type: z.nativeEnum(EventType),
   note: z.string(),
-  counterParty: z
-    .object({
-      id: z.number().optional(),
-      companyId: z.number().optional(),
-      name: z.string().optional(),
-      taxId: z.string().optional(),
-      type: z.string().optional(),
-      note: z.string().optional(),
-      createdAt: z.number().optional(),
-      updatedAt: z.number().optional(),
-    })
-    .nullable(),
+  counterParty: z.object({
+    id: z.number().optional(),
+    companyId: z.number().optional(),
+    name: z.string().optional(),
+    taxId: z.string().optional(),
+    type: z.string().optional(),
+    note: z.string().optional(),
+    createdAt: z.number().optional(),
+    updatedAt: z.number().optional(),
+  }),
   recurringInfo: z.object({
     // Deprecated: (20241105 - Murky)
     type: z.string(),

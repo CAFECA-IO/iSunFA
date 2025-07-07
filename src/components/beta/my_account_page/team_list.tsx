@@ -8,6 +8,7 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 const TeamList: React.FC = () => {
   const { t } = useTranslation(['team']);
@@ -29,9 +30,7 @@ const TeamList: React.FC = () => {
         setTeamList(ownedTeams.data);
       }
     } catch (error) {
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得使用者擁有的所有團隊失敗');
+      loggerFront.error('取得使用者擁有的所有團隊失敗');
     } finally {
       setIsLoading(false);
     }

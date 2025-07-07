@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import BalanceSheetList from '@/components/balance_sheet_report_body/balance_sheet_list_new';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
@@ -20,6 +20,9 @@ const BalanceSheetPageBody = () => {
   // Info: (20241122 - Anna) 添加狀態來控制打印模式(加頁首頁尾、a4大小)
   const [isPrinting, setIsPrinting] = useState(false);
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20241122 - Anna) 新增 Ref 來捕獲列印區塊的 DOM
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -33,41 +36,10 @@ const BalanceSheetPageBody = () => {
 
   // Info: (20250327 - Anna) 下載
   const handleDownload = async () => {
+    setIsDownloading(true);
     pageCountRef.current = 1; // Info: (20250327 - Anna) reset 頁數
 
     if (!downloadRef.current) return;
-
-    //  Info: (20250401 - Anna) 插入修正樣式
-    const style = document.createElement('style');
-    style.innerHTML = `
-  /* Info: (20250401 - Anna) 表格 */
-  .download-page td,
-  .download-page th {
-    padding-top: 0 !important;
-  }
-
-  /* Info: (20250401 - Anna) 子科目 */
-  .download-page .child-code-name-wrapper {
-    padding-bottom: 8px !important;
-  }
-
-  /* Info: (20250401 - Anna) 子科目名稱允許換行 */
-  .download-page .child-name {
-    white-space: normal !important;
-  }
-
-  /* Info: (20250401 - Anna) Balance Sheet (header) 調整底部間距 */
-  .download-page h2 {
-    padding-bottom: 6px !important;
-  }
-
-  /* Info: (20250401 - Anna) 大標題與表格間距 */
-  .download-page .download-header-label {
-    padding-bottom: 8px !important;
-  }
-`;
-
-    document.head.appendChild(style);
 
     //  Info: (20250327 - Anna) 顯示下載內容讓 html2canvas 擷取，移到畫面外避免干擾
     downloadRef.current.classList.remove('hidden');
@@ -141,9 +113,6 @@ const BalanceSheetPageBody = () => {
       }
     }
 
-    // Info: (20250401 - Anna) 移除修正樣式
-    style.remove();
-
     // Info: (20250327 - Anna) 隱藏下載用的內容
     downloadRef.current.classList.add('hidden');
     downloadRef.current.style.position = '';
@@ -151,33 +120,11 @@ const BalanceSheetPageBody = () => {
 
     // Info: (20250327 - Anna) 下載 PDF
     pdf.save(filename);
+    setIsDownloading(false);
   };
 
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_report_body.觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('balance_sheet_report_body.觀察 isPrinting?', isPrinting);
-    }
-  }, [isPrinting]);
-
   const handleOnBeforePrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (Before setting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(true);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnBeforePrint (After setting isPrinting):',
-      true
-    );
 
     // Info: (20241130 - Anna) 強制 React 完成渲染，確保打印模式下渲染正確內容
     return new Promise<void>((resolve) => {
@@ -188,19 +135,7 @@ const BalanceSheetPageBody = () => {
   }, [isPrinting]);
 
   const handleOnAfterPrint = React.useCallback(() => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnAfterPrint (Before resetting isPrinting):',
-      isPrinting
-    );
     setIsPrinting(false);
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(
-      'balance_sheet_report_body 觀察 handleOnAfterPrint (After resetting isPrinting):',
-      false
-    );
   }, [isPrinting]);
 
   // Info: (20241122 - Anna)
@@ -237,11 +172,11 @@ const BalanceSheetPageBody = () => {
         {/* Info: (20241017 - Anna) Balance Sheet List */}
         <BalanceSheetList
           selectedDateRange={selectedDate} // Info: (20241212 - Anna) 傳遞單日期選擇結果
-          isPrinting={isPrinting} // Info: (20241122 - Anna) 傳遞列印狀態
           printRef={printRef} // Info: (20241122 - Anna) 傳遞列印區域 Ref
           downloadRef={downloadRef} // Info: (20250327 - Anna) 傳遞下載區域 Ref
           printFn={printFn} // Info: (20241122 - Anna) 傳遞列印函數
           downloadFn={handleDownload} // Info: (20250327 - Anna) 傳遞下載函數
+          isDownloading={isDownloading}
         />
       </div>
     </div>

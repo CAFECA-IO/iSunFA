@@ -10,6 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TeamPageButtonsProps {
   team: ITeam;
@@ -36,21 +37,17 @@ const TeamPageButtons = ({ team, openMemberListModal }: TeamPageButtonsProps) =>
       const { success } = await leaveTeamAPI({ params: { teamId: team.id } });
 
       if (!success) {
-        // Deprecated: (20250321 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('離開團隊失敗!');
+        loggerFront.error('離開團隊失敗!');
       }
     } catch (error) {
-      // Deprecated: (20250321 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('離開團隊失敗:', error);
+      loggerFront.error('離開團隊失敗:', error);
     } finally {
       setIsLeaving(false);
     }
   };
 
   return (
-    <main className="flex gap-16px">
+    <main className="ml-auto flex gap-16px">
       <Button
         variant="tertiary"
         size="small"

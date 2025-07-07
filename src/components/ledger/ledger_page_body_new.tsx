@@ -81,23 +81,6 @@ const LedgerPageBody = () => {
       selectedDateRange.endTimeStamp &&
       selectedReportType
     ) {
-      const query = {
-        startDate: selectedDateRange.startTimeStamp,
-        endDate: selectedDateRange.endTimeStamp,
-        startAccountNo: selectedStartAccountNo || null, // Info: (20241118 - Anna) 若為選填，使用 null 表示不填
-        endAccountNo: selectedEndAccountNo || null,
-        labelType: selectedReportType.toLowerCase(), // Info: (20241118 - Anna) 確保傳遞的是小寫的值
-      };
-
-      const params = { accountBookId: connectedAccountBook.id };
-
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.log('Fetching ledger data with params and query:', {
-        params,
-        query,
-      });
-
       const fetchLedgerData = async () => {
         const startAccountNo = selectedStartAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號
         const endAccountNo = selectedEndAccountNo.split(' ')[0]; // Info: (20241117 - Liz) 取出科目編號

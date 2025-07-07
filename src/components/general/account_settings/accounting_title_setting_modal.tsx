@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { RxCross2 } from 'react-icons/rx';
@@ -14,6 +14,8 @@ import AddNewTitleSection from '@/components/general/account_settings/add_new_ti
 import { TitleFormType } from '@/constants/accounting_setting';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { Button } from '@/components/button/button';
+import { ITrialBalancePayload, TrialBalanceItem } from '@/interfaces/trial_balance';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IAccountingTitleSettingModalProps {
   isModalVisible: boolean;
@@ -50,6 +52,11 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     true
   );
 
+  // Info: (20250617 - Anna) 使用 trigger 方法替代直接調用 APIHandler
+  const { trigger: fetchTrialBalance } = APIHandler<ITrialBalancePayload>(
+    APIName.TRIAL_BALANCE_LIST
+  );
+
   const accountList = accountTitleList?.data ?? [];
 
   const [searchWord, setSearchWord] = useState<string>('');
@@ -57,6 +64,34 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
   const [formType, setFormType] = useState<TitleFormType>(TitleFormType.ADD);
   const [selectedAccountTitle, setSelectedAccountTitle] = useState<IAccount | null>(null);
   const [isRecallApi, setIsRecallApi] = useState<boolean>(false);
+  const [tbAccountList, setTbAccountList] = useState<TrialBalanceItem[]>([]);
+
+  // Info: (20250617 - Anna) 更新 fetchTrialBalanceData 函數為使用 trigger 方法
+  const fetchTrialBalanceData = useCallback(async () => {
+    if (!connectedAccountBook?.id) {
+      return;
+    }
+    const startDate = 0;
+    const endDate = Math.floor(new Date().setHours(23, 59, 59, 999) / 1000); // Info: (20250617 - Anna) 設定 endDate 為今日 23:59:59
+    try {
+      // Info: (20241204 - Anna) 使用 trigger 手動觸發 APIHandler
+      const response = await fetchTrialBalance({
+        params: { accountBookId },
+        query: {
+          startDate,
+          endDate,
+          page: 1, // Info: (20250312 - Anna) 傳遞當前頁碼
+          pageSize: 99999, // Info: (20250617 - Anna) 一次取全部
+        },
+      });
+      if (response.success && response.data) {
+        // Info: (20250214 - Shirley) @Anna 修改 list trial balance API 資料格式，array 的 data 放到 data 裡，非 array 的 data 放到 note 裡，解析 note 字串，並提供預設值
+        setTbAccountList(response.data.data);
+      }
+    } catch (err) {
+      loggerFront.error('Error fetching trial balance data:', err);
+    }
+  }, [fetchTrialBalance]);
 
   // Info: (20250522 - Julian) 手機版用來控制是否顯示 Add New Title Section
   const isShowForm = selectedAccountTitle !== null;
@@ -106,6 +141,12 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
     getAccountList({ params: { accountBookId } });
   }, [isRecallApi]);
 
+  useEffect(() => {
+    if (accountBookId) {
+      fetchTrialBalanceData();
+    }
+  }, [accountBookId]);
+
   const clearSearchWord = () => {
     setSearchWord('');
     getAccountList({ params: { accountBookId } });
@@ -118,6 +159,7 @@ const AccountingTitleSettingModal: React.FC<IAccountingTitleSettingModalProps> =
       setFormType={setFormType}
       setSelectedAccountTitle={setSelectedAccountTitle}
       setIsRecallApi={setIsRecallApi}
+      trialBalanceAccountList={tbAccountList}
     />
   );
 

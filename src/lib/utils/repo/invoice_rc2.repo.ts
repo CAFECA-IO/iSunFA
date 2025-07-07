@@ -1,5 +1,5 @@
 import prisma from '@/client';
-import { InvoiceRC2, File, InvoiceType as PrismaInvoiceType, Prisma } from '@prisma/client';
+import { InvoiceType as PrismaInvoiceType, Prisma } from '@prisma/client';
 import { z } from 'zod';
 import {
   listInvoiceRC2QuerySchema,
@@ -7,6 +7,7 @@ import {
   InvoiceRC2OutputSchema,
   createInvoiceRC2QuerySchema,
   createInvoiceRC2BodySchema,
+  listInvoiceRC2Grouped,
 } from '@/lib/utils/zod_schema/invoice_rc2';
 import { CurrencyCode, InvoiceDirection, InvoiceTab, InvoiceType } from '@/constants/invoice_rc2';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -50,13 +51,13 @@ export const createOrderByList = (
     .flat();
 };
 
-type InvoiceRC2WithFullRelations = InvoiceRC2 & {
-  file: File & {
-    thumbnail?: File | null;
+export type InvoiceRC2WithFullRelations = Prisma.InvoiceRC2GetPayload<{
+  include: {
+    file: { include: { thumbnail: true } };
+    uploader: true;
+    voucher: true;
   };
-  uploader: { id: number; name: string };
-  voucher: { id: number; no: string } | null;
-};
+}>;
 
 type InvoiceRC2InputType = z.infer<typeof InvoiceRC2InputSchema>;
 type InvoiceRC2OutputType = z.infer<typeof InvoiceRC2OutputSchema>;
@@ -98,7 +99,9 @@ export function isInvoiceRC2Complete(cert: InvoiceRC2Type): boolean {
   });
 }
 
-function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof InvoiceRC2InputSchema> {
+export function transformInput(
+  cert: InvoiceRC2WithFullRelations
+): z.infer<typeof InvoiceRC2InputSchema> {
   const fileWithThumbnail = {
     ...cert.file,
     url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
@@ -135,7 +138,7 @@ function transformInput(cert: InvoiceRC2WithFullRelations): z.infer<typeof Invoi
   return invoiceRC2Input;
 }
 
-function transformOutput(
+export function transformOutput(
   cert: InvoiceRC2WithFullRelations
 ): z.infer<typeof InvoiceRC2OutputSchema> {
   const fileWithThumbnail = {
@@ -342,6 +345,33 @@ export const listInvoiceRC2Output = (
   userId: number,
   query: z.infer<typeof listInvoiceRC2QuerySchema>
 ) => listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT);
+
+export async function listInvoiceRC2GroupedByDirection(
+  userId: number,
+  query: z.infer<typeof listInvoiceRC2Grouped.input.querySchema>
+): Promise<
+  IPaginatedData<(z.infer<typeof InvoiceRC2InputSchema> | z.infer<typeof InvoiceRC2OutputSchema>)[]>
+> {
+  const { direction } = query;
+
+  if (direction === InvoiceDirection.INPUT) {
+    const input = await listInvoiceRC2ByDirection(userId, query, InvoiceDirection.INPUT);
+    return input;
+  }
+
+  if (direction === InvoiceDirection.OUTPUT) {
+    const output = await listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT);
+    return output;
+  }
+  const [inputPaginated, outputPaginated] = await Promise.all([
+    listInvoiceRC2ByDirection(userId, query, InvoiceDirection.INPUT),
+    listInvoiceRC2ByDirection(userId, query, InvoiceDirection.OUTPUT),
+  ]);
+
+  return toPaginatedData({
+    data: [...inputPaginated.data, ...outputPaginated.data],
+  });
+}
 
 export async function createInvoiceRC2(
   userId: number,

@@ -20,6 +20,7 @@ import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TeamPageBodyProps {
   team: ITeam;
@@ -69,17 +70,13 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       });
 
       if (!success || !accountBookListData) {
-        // Deprecated: (20250219 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得團隊帳本清單失敗');
+        loggerFront.log('取得團隊帳本清單失敗');
         return;
       }
 
       setAccountBookList(accountBookListData.data);
     } catch (error) {
-      // Deprecated: (20250219 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得團隊帳本清單失敗');
+      loggerFront.error('取得團隊帳本清單失敗');
     } finally {
       setIsLoading(false);
     }
@@ -93,18 +90,14 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
       const data = await deleteAccountBook(accountBookToDelete.id);
 
       if (!data) {
-        // Deprecated: (20250219 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('刪除帳本失敗');
+        loggerFront.log('刪除帳本失敗');
         return;
       }
 
       getAccountBookListByTeamId(); // Info: (20250314 - Liz) 重新取得團隊帳本清單
       closeDeleteModal();
     } catch (error) {
-      // Deprecated: (20250219 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
+      loggerFront.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
     }
   };
 
@@ -127,21 +120,22 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <div className="flex items-center">
+      <div className="flex flex-col items-stretch gap-lv-4 tablet:flex-row tablet:items-center">
         <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
         <TeamPageButtons team={team} openMemberListModal={openMemberListModal} />
       </div>
 
       <div className="flex items-center gap-16px">
-        <div className="flex items-center gap-8px">
+        <div className="flex items-center gap-8px text-divider-text-lv-2">
           <Image src="/icons/team_info.svg" alt="team_info" width={16} height={16} />
           <span>{t('team:TEAM_PAGE.INFORMATION')}</span>
         </div>
-        <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+        <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
       </div>
 
-      {isNoData && <NoData />}
-      {!isNoData && (
+      {isNoData ? (
+        <NoData />
+      ) : (
         <AccountBookList
           accountBookList={accountBookList}
           setAccountBookToEdit={setAccountBookToEdit}

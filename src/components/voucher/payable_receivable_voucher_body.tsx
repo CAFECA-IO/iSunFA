@@ -140,6 +140,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
             hideReversalsToggleHandler={hideReversalsToggleHandler}
             isShowSideMenu={isShowSideMenu}
             toggleSideMenu={toggleSideMenu}
+            labelClassName="text-input-text-primary"
           />
           {/* Info: (20250521 - Julian) Filter button */}
           <button

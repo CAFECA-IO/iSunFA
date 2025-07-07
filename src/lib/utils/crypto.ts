@@ -377,3 +377,15 @@ export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey)
     encryptedSymmetricKey,
   };
 };
+
+export const encryptBlobWithPublicKey = async (file: Blob, publicKey: CryptoKey) => {
+  const arrayBuffer = await file.arrayBuffer();
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
+
+  return {
+    encryptedFile: new Blob([encryptedContent]), // Info: (20250703 - Tzuhan) 回傳也是 Blob（或 Buffer）
+    iv,
+    encryptedSymmetricKey,
+  };
+};

@@ -8,9 +8,9 @@
     "noEmit": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",  
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*", "prisma/*"],  
+      "@/*": ["src/*", "prisma/*"]
     }
   },
   "include": ["src/cron_job/**/*.ts"]

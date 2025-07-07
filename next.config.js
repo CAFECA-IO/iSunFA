@@ -66,7 +66,7 @@ const nextConfig = {
   },
   images: {
     loader: 'custom',
-    loaderFile: '/src/lib/utils/image_loader.js',
+    loaderFile: '/src/lib/utils/image_loader.ts',
     domains: ['lh3.googleusercontent.com'], // Info: (20250124 - Julian) 讓 next/image 可以讀取 google storage 的圖片
   },
   webpack: (config) => {

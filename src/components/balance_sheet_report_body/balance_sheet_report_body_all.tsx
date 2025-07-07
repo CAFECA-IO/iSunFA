@@ -1,7 +1,7 @@
 import { APIName } from '@/constants/api_connection';
 import { NON_EXISTING_REPORT_ID } from '@/constants/config';
 import { BalanceSheetReport, FinancialReportItem } from '@/interfaces/report';
-
+import { useUserCtx } from '@/contexts/user_context';
 import APIHandler from '@/lib/utils/api_handler';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ const COLOR_CLASSES = [
 
 const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps) => {
   const { t } = useTranslation('common');
+  const { connectedAccountBook } = useUserCtx();
 
   const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
   const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
@@ -53,10 +54,6 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const [curYear, setCurYear] = useStateRef<string>('');
   const [preDate, setPreDate] = useStateRef<string>('');
   const [preYear, setPreYear] = useStateRef<string>('');
-
-  // Deprecated: (20241128 - Liz)
-  // eslint-disable-next-line no-console
-  console.log('進入 BalanceSheetReportBodyAll');
 
   const [financialReport, setFinancialReport] = useState<BalanceSheetReport | null>(null);
   const [isGetFinancialReportSuccess, setIsGetFinancialReportSuccess] = useState<boolean>(false);
@@ -78,33 +75,23 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           code,
           success: getReportFinancialSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
-
         if (!getReportFinancialSuccess) {
-          // Deprecated: (20241128 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', code);
-
           setErrorCode(code);
           return;
         }
         setFinancialReport(data);
         setIsGetFinancialReportSuccess(getReportFinancialSuccess);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', financialReport);
-      } catch (error) {
-        // console.log('error:', error);
       } finally {
         setIsLoading(false);
       }
     };
-
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in BalanceSheetReportBodyAll');
   }, [reportId]);
 
   const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
@@ -325,8 +312,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -339,8 +326,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -379,8 +366,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -393,8 +380,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -433,8 +420,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -447,8 +434,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -487,8 +474,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -501,8 +488,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -541,8 +528,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -555,8 +542,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -595,8 +582,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -609,8 +596,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -649,8 +636,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -663,8 +650,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -703,8 +690,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -717,8 +704,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -757,8 +744,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.curPeriodPercentage === 0
               ? '-'
               : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()}%)`
-                : `${item.curPeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
+                : `${item.curPeriodPercentage.toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {item.prePeriodAmount === 0
@@ -771,8 +758,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             {item.prePeriodPercentage === 0
               ? '-'
               : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()}%)`
-                : `${item.prePeriodPercentage.toLocaleString()}%`}
+                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+                : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
       );
@@ -825,7 +812,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {!isSummaryCollapsed && (
           <table className="relative z-1 w-full border-collapse bg-white">
@@ -880,7 +870,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -950,7 +943,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1006,7 +1002,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1062,7 +1061,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1118,7 +1120,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1174,7 +1179,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1230,7 +1238,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1286,7 +1297,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       <section className="mx-1 text-text-neutral-secondary">
         <div className="mb-16px mt-32px flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         <table className="w-full border-collapse bg-white">
           <thead>
@@ -1426,14 +1440,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{curDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {curAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {curAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (curAssetMixRatio[index] === 0) return null;
+                  if (
+                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1463,14 +1485,22 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
             <p className="text-xs font-semibold text-text-brand-secondary-lv2">{preDate}</p>
             <div className="flex items-center justify-between">
               <ul className="space-y-2">
-                {preAssetMixLabels.map((label, index) => (
-                  <li key={`${label + index}`} className="flex items-center">
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
-                    ></span>
-                    <span className="w-200px text-base">{label}</span>
-                  </li>
-                ))}
+                {preAssetMixLabels.map((label, index) => {
+                  // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
+                  if (preAssetMixRatio[index] === 0) return null;
+                  if (
+                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    label === '其他'
+                  ) return null;
+                  return (
+                    <li key={`${label + index}`} className="flex items-center">
+                      <span
+                        className={`mr-2 inline-block h-2 w-2 rounded-full ${COLOR_CLASSES[index % COLOR_CLASSES.length]}`}
+                      ></span>
+                      <span className="w-200px text-base">{label}</span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
                 {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
@@ -1527,7 +1557,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
         </div>
       </header>
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="mt-30px flex justify-between font-semibold text-surface-brand-secondary">
+        <div className="mt-30px flex justify-between !text-xs font-semibold text-surface-brand-secondary">
           <p className="mb-16px">五、{t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS')}</p>
           <p>{t('reports:REPORTS.UNIT_DAYS')}</p>
         </div>

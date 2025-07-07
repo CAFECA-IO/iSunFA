@@ -23,6 +23,8 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 import { AccountCodesOfAPRegex } from '@/constants/asset';
+import { IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
+import InvoiceSelection from './invoice_selection';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
@@ -43,6 +45,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   const accountBookId = connectedAccountBook?.id;
 
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
+  const [invoices, setInvoices] = useState<IInvoiceRC2UI[]>([]);
 
   // Info: (20241029 - Julian) Get voucher details from API
   const {
@@ -158,9 +161,6 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when accountBookId and voucherId are ready
     if (accountBookId && voucherId) {
-      // Deprecated: (20250124 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('API Params:', { companyId: accountBookId, voucherId }); // Info: (20250122 - Anna) 檢查 accountBookId 和 voucherId 是否正確
       getVoucherDetail();
     }
   }, [accountBookId, voucherId]);
@@ -176,6 +176,16 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
       });
 
       setCertificates(certificateUIList);
+    }
+    if (voucherData?.invoiceRC2List) {
+      const invoiceUIList = voucherData.invoiceRC2List.map((invoice) => {
+        return {
+          ...invoice,
+          isSelected: false,
+          actions: [],
+        };
+      });
+      setInvoices(invoiceUIList);
     }
   }, [voucherData]);
 
@@ -497,7 +507,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
           className="disabled:cursor-not-allowed"
           onClick={() => {
             if (!(isReverseRelated || type === EventType.OPENING)) {
-              router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              if (certificates.length > 0 || (certificates.length === 0 && invoices.length === 0)) {
+                router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              } else if (certificates.length === 0 && invoices.length > 0) {
+                router.push(`/users/accounting/${voucherId}/editing_rc2?voucherNo=${voucherNo}`);
+              }
             }
           }}
         >
@@ -505,12 +519,16 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
         </Button>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
-      <CertificateSelection
-        selectedCertificates={certificates}
-        isSelectable={false}
-        isDeletable={false}
-      />
-
+      {(certificates.length > 0 || (certificates.length === 0 && invoices.length === 0)) && (
+        <CertificateSelection
+          selectedCertificates={certificates}
+          isSelectable={false}
+          isDeletable={false}
+        />
+      )}
+      {certificates.length === 0 && invoices.length > 0 && (
+        <InvoiceSelection selectedInvoices={invoices} isSelectable={false} isDeletable={false} />
+      )}
       {/* Info: (20241008 - Julian) Voucher Detail */}
       <div className="mt-lv-6 flex flex-col items-stretch gap-24px text-xs font-semibold tablet:mt-40px tablet:text-sm">
         {/* Info: (20241007 - Julian) Voucher date */}

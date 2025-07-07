@@ -29,6 +29,8 @@ import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { InvoiceDirection, InvoiceType, DeductionType, TaxType } from '@/constants/invoice_rc2';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { useIsLg } from '@/lib/utils/use_is_lg';
+import { useCurrencyCtx } from '@/contexts/currency_context';
+import eventManager from '@/lib/utils/event_manager';
 
 interface InputInvoiceEditModalProps {
   isOpen: boolean;
@@ -45,7 +47,6 @@ interface InputInvoiceEditModalProps {
 }
 
 const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
-  isOpen,
   accountBookId,
   toggleModel,
   currencyAlias,
@@ -71,7 +72,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   const { t } = useTranslation(['certificate', 'common', 'filter_section_type']);
-  const [currency, setCurrency] = useState<string>('TWD');
+  const { currency } = useCurrencyCtx();
   const isLg = useIsLg();
 
   // Info: (20250430 - Anna) 用 ref 包住 preview 區塊
@@ -301,6 +302,26 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
   const invoiceTypeMenuOptionClickHandler = (id: InvoiceType) => {
     setIsInvoiceTypeMenuOpen(false);
+    setFormState((prev) => {
+      const updated = { ...prev, type: id };
+
+      // Info: (20250609 - Anna) 如果從格式20切換到其他格式，則重新預設扣抵類型 & 稅種
+      if (prev.type === InvoiceType.INPUT_20 && id !== InvoiceType.INPUT_20) {
+        updated.deductionType = DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE;
+        updated.taxType = TaxType.TAXABLE;
+      }
+
+      // Info: (20250609 - Anna) 清除不適用的欄位，避免殘留舊值
+      if (id !== InvoiceType.INPUT_22 && id !== InvoiceType.INPUT_27) {
+        updated.otherCertificateNo = '';
+      }
+
+      if (id !== InvoiceType.INPUT_25) {
+        updated.carrierSerialNumber = '';
+      }
+      formStateRef.current = updated;
+      return updated;
+    });
     handleInputChange('type', id);
   };
 
@@ -396,8 +417,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     debounceTimer.current = setTimeout(() => {
       const isSame = shallowEqual(formStateRef.current, savedInvoiceRC2Ref.current);
-      // eslint-disable-next-line no-console
-      console.log('isSame:', isSame, formStateRef.current, savedInvoiceRC2Ref.current);
       const isValid = validateForm();
 
       if (!isSame && isValid) {
@@ -464,27 +483,18 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     });
   }, [formState]);
 
-  // Info: (20250512 - Anna) Debug
   useEffect(() => {
-    if (isOpen && certificate) {
-      // Deprecated: (20250512 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Modal initialized with certificate:', certificate);
-    }
-  }, [isOpen, certificate]);
-
-  useEffect(() => {
-    const fetchCurrency = async () => {
-      if (!accountBookId) return;
-      const { data, success: isSuccess } = await getAccountSetting({ params: { accountBookId } });
-      if (isSuccess && data?.currency) {
-        setCurrency(data.currency);
-      }
+    const refreshCounterpartyList = () => {
+      listCounterparty();
     };
-    if (isOpen) {
-      fetchCurrency();
-    }
-  }, [isOpen, accountBookId]);
+    // Info: (20250621 - Anna) 當全域事件系統有 ‘counterparty:added’ 事件發生時，就執行 refreshCounterpartyList 函數;
+    eventManager.on('counterparty:added', refreshCounterpartyList);
+
+    return () => {
+      // Info: (20250621 - Anna) 元件卸載時，剛剛註冊的事件監聽取消掉
+      eventManager.off('counterparty:added', refreshCounterpartyList);
+    };
+  }, [listCounterparty]);
 
   return (
     <div
@@ -1097,7 +1107,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       ref={counterpartyInputRef}
                       counterparty={{
                         taxId: formState.salesIdNumber,
-                        name: formState.salesName,
+                        name: formState.salesName ?? undefined,
                       }}
                       counterpartyList={counterpartyList}
                       onSelect={(cp: ICounterpartyOptional) => {

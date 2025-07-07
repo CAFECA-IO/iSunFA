@@ -38,6 +38,7 @@ export enum APIName {
   USER_PENDING_TASK_GET = 'USER_PENDING_TASK_GET',
   ACCOUNT_BOOK_PENDING_TASK_GET = 'ACCOUNT_BOOK_PENDING_TASK_GET',
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = 'ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID',
+  LIST_INVOICE_RC2 = 'LIST_INVOICE_RC2',
   LIST_INVOICE_RC2_INPUT = 'LIST_INVOICE_RC2_INPUT',
   CREATE_INVOICE_RC2_INPUT = 'CREATE_INVOICE_RC2_INPUT',
   GET_INVOICE_RC2_INPUT = 'GET_INVOICE_RC2_INPUT',
@@ -174,6 +175,10 @@ export enum APIName {
   GET_ACCOUNT_BOOK_BY_ID = 'GET_ACCOUNT_BOOK_BY_ID',
   ACCEPT_TEAM_INVITATION = 'ACCEPT_TEAM_INVITATION',
   DECLINE_TEAM_INVITATION = 'DECLINE_TEAM_INVITATION',
+  LIST_BAIFA_ACCOUNT_BOOK = 'LIST_BAIFA_ACCOUNT_BOOK',
+  LIST_BAIFA_VOUCHER = 'LIST_BAIFA_VOUCHER',
+  // Info: (20250704 - Julian) 新增 Vacancy API
+  GET_VACANCY_BY_ID = 'GET_VACANCY_BY_ID',
 }
 
 export enum APIPath {
@@ -188,15 +193,16 @@ export enum APIPath {
   ACCOUNT_BOOK_PENDING_TASK_GET = `${apiPrefixV2}/account_book/:accountBookId/pending_task`,
   ACCOUNT_BOOK_SEARCH_BY_NAME_OR_TAX_ID = `${apiPrefixV2}/account_book/search`,
   CERTIFICATE_LIST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`, // Deprecated: (20250424 - Tzuhan) remove in the future
+  LIST_INVOICE_RC2 = `${apiPrefixRC2}/account_book/:accountBookId/invoice`,
   LIST_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
   CREATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/input`,
-  GET_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
-  DELETE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
-  UPDATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/input`,
+  GET_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/input`,
+  DELETE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/input`,
+  UPDATE_INVOICE_RC2_INPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/input`,
   CREATE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/output`,
-  GET_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
-  DELETE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
-  UPDATE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:certificateId/output`,
+  GET_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/output`,
+  DELETE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/output`,
+  UPDATE_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/:invoiceId/output`,
   LIST_INVOICE_RC2_OUTPUT = `${apiPrefixRC2}/account_book/:accountBookId/invoice/output`,
   CERTIFICATE_GET_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate/:certificateId`,
   CERTIFICATE_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/certificate`,
@@ -325,6 +331,9 @@ export enum APIPath {
   GET_NOTIFICATION_BY_ID = `${apiPrefixRC2}/user/:userId/notification/:notificationId`,
   READ_NOTIFICATION = `${apiPrefixRC2}/user/:userId/notification/:notificationId/read`,
   GET_ACCOUNT_BOOK_BY_ID = `${apiPrefixV2}/account_book/:accountBookId`,
+  LIST_BAIFA_ACCOUNT_BOOK = `${apiPrefixV2}/baifa/account_book`,
+  LIST_BAIFA_VOUCHER = `${apiPrefixV2}/baifa/voucher`,
+  GET_VACANCY_BY_ID = `${apiPrefixV2}/vacancy/:vacancyId`,
 }
 
 const createConfig = ({
@@ -655,6 +664,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.CERTIFICATE_LIST_V2,
     method: HttpMethod.GET,
     path: APIPath.CERTIFICATE_LIST_V2,
+  }),
+  [APIName.LIST_INVOICE_RC2]: createConfig({
+    name: APIName.LIST_INVOICE_RC2,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_INVOICE_RC2,
   }),
   [APIName.LIST_INVOICE_RC2_INPUT]: createConfig({
     name: APIName.LIST_INVOICE_RC2_INPUT,
@@ -1067,5 +1081,20 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.DECLINE_TEAM_INVITATION,
     method: HttpMethod.GET,
     path: APIPath.DECLINE_TEAM_INVITATION,
+  }),
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: createConfig({
+    name: APIName.LIST_BAIFA_ACCOUNT_BOOK,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_BAIFA_ACCOUNT_BOOK,
+  }),
+  [APIName.LIST_BAIFA_VOUCHER]: createConfig({
+    name: APIName.LIST_BAIFA_VOUCHER,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_BAIFA_VOUCHER,
+  }),
+  [APIName.GET_VACANCY_BY_ID]: createConfig({
+    name: APIName.GET_VACANCY_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_VACANCY_BY_ID,
   }),
 };

@@ -177,9 +177,6 @@ const CertificateEditModal: React.FC<CertificateEditModalProps> = ({
   };
 
   const selectTaxHandler = (value: number | null) => {
-    // Deprecated: (20250103 - tzuhan) Debug purpose
-    // eslint-disable-next-line no-console
-    console.log(`selectTaxHandler value:`, value);
     handleInputChange('taxRatio', value);
     const updateTaxPrice = Math.round(((formState.priceBeforeTax ?? 0) * (value ?? 0)) / 100);
     handleInputChange('taxPrice', updateTaxPrice);

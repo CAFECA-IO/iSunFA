@@ -46,14 +46,7 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
       } else if (typeof node === 'string' || typeof node === 'number') {
         result.push(node);
       } else if (node === null || node === undefined) {
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        // console.log('The node is null or undefined:', node, 'result:', result);
         result.push(<div key={key} />);
-      } else {
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.warn('Invalid ReactNode detected and skipped:', node);
       }
     });
 
@@ -169,10 +162,6 @@ const IncomeStatementA4Template: React.FC<IncomeStatementA4TemplateProps> = ({
   return (
     <>
       {firstBlockSplitPages.map((rows, index) => {
-        // Deprecated: (20241204 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('rows:', rows);
-
         return (
           <div
             key={`first-block-page-${index + 1}`}

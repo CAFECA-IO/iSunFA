@@ -9,6 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { NOTIFICATION_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
+import loggerFront from '@/lib/utils/logger_front';
 
 // ToDo: (20250529 - Liz) 先暫時使用假資料 FAKE_NOTIFICATIONS ，等功能完成後再改成實際資料 notifications
 const FAKE_NOTIFICATIONS: INotificationRC2[] = [];
@@ -54,9 +55,7 @@ const Notification = ({
         setNotifications(data);
       }
     } catch (error) {
-      // Deprecated: (20250516 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('Failed to fetch notifications', error);
+      loggerFront.error('Failed to fetch notifications', error);
     } finally {
       setIsGetNotificationsLoading(false);
     }
@@ -72,9 +71,7 @@ const Notification = ({
       // Info: (20250529 - Liz) 打 API 取得所有通知
       getNotifications();
     } catch (error) {
-      // Deprecated: (20250516 - Liz)
-      // eslint-disable-next-line no-console
-      console.log(`Failed to mark notification ${notificationId} as read`, error);
+      loggerFront.error(`Failed to mark notification ${notificationId} as read`, error);
     }
   };
 

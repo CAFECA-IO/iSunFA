@@ -46,7 +46,7 @@ const MenuOption = ({
           onClick={closeMenu}
         >
           <div className="flex h-24px w-24px items-center justify-center">
-            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight} />
           </div>
           <p className="grow text-left text-sm font-medium text-button-text-secondary">
             {t(`layout:SIDE_MENU.${title}`)}
@@ -56,14 +56,12 @@ const MenuOption = ({
         <button
           type="button"
           onClick={() => onClickMenuOption(title)}
-          className="flex w-full items-center gap-8px px-12px py-10px hover:bg-button-surface-soft-secondary-hover"
+          className="flex w-full items-center gap-8px px-12px py-10px text-button-text-secondary hover:bg-button-surface-soft-secondary-hover"
         >
           <div className="flex h-24px w-24px items-center justify-center">
-            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
+            <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight} />
           </div>
-          <p className="grow text-left text-sm font-medium text-button-text-secondary">
-            {t(`layout:SIDE_MENU.${title}`)}
-          </p>
+          <p className="grow text-left text-sm font-medium">{t(`layout:SIDE_MENU.${title}`)}</p>
           {subMenu && <IoIosArrowForward size={20} />}
         </button>
       )}

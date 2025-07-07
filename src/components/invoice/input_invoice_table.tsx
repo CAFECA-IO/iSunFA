@@ -5,13 +5,11 @@ import SortingButton from '@/components/voucher/sorting_button';
 import { SortOrder } from '@/constants/sort';
 import { HiCheck } from 'react-icons/hi';
 import { InvoiceTab } from '@/constants/invoice_rc2';
-import { CurrencyType } from '@/constants/currency';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 
 interface InputInvoiceTableProps {
   activeTab: InvoiceTab;
   certificates: IInvoiceRC2InputUI[];
-  currencyAlias: CurrencyType;
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態 // Info: (20240923 - Anna) 選中的項目 ID 列表
   handleSelect: (ids: number[], isSelected: boolean) => void; // Info: (20240923 - Anna) 當選擇變更時的回調函數
   handleSelectAll: () => void;
@@ -35,7 +33,6 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
   activeTab,
   activeSelection,
   certificates,
-  currencyAlias,
   handleSelect,
   handleSelectAll,
   isSelectedAll,
@@ -131,45 +128,62 @@ const InputInvoiceTable: React.FC<InputInvoiceTableProps> = ({
                 </div>
               </div>
             )}
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {isExporting ? t('certificate:TABLE.DATE') : displayedIssuedDate}
             </div>
-            <div className="download-pb-4 table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} table-cell w-120px min-w-120px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedCertificateNo}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedInvoiceType}
             </div>
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {t('certificate:TABLE.DEDUCTION_TYPE')}
             </div>
-            <div className="download-pb-4 table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} table-cell w-100px min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {t('certificate:EDIT.TAX_TYPE')}
             </div>
-            <div className="download-pb-4 col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} col-span-full table-cell min-w-100px flex-col items-center border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {t('certificate:EDIT.SELLER')}
             </div>
-            <div className="download-pb-4 table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
+            <div
+              className={`${isExporting ? 'pb-4' : ''} table-cell w-170px min-w-170px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle`}
+            >
               {isExporting ? t('certificate:TABLE.AMOUNT') : displayedAmount}
             </div>
+
             <div className="table-cell w-120px min-w-120px flex-col items-center border-b border-stroke-neutral-quaternary px-lv-2 text-center align-middle">
-              <div className="download-pb-4">{t('certificate:TABLE.UPLOADER')}</div>
+              <div className={`${isExporting ? 'pb-4' : ''}`}>
+                {t('certificate:TABLE.UPLOADER')}
+              </div>
               {activeTab === InvoiceTab.WITH_VOUCHER && displayedVoucherNumber}
             </div>
           </div>
         </div>
 
         <div className="table-row-group">
-          {/* Deprecated: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
+          {/* Info: (20240919 - Anna) Example of dynamic rows, should map actual data here */}
           {certificates.map((certificate, index) => (
             <InputInvoiceItem
-              currencyAlias={currencyAlias}
               activeSelection={activeSelection}
               handleSelect={handleSelect}
               certificate={certificate}
               key={`certificate-item-${index + 1}`}
               onEdit={onEdit}
               uploaderAvatarMap={uploaderAvatarMap}
+              isExporting={isExporting}
             />
           ))}
         </div>

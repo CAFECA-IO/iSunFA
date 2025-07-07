@@ -28,6 +28,8 @@ import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate'
 import type { IUserEntity } from '@/interfaces/user';
 import { AI_TYPE } from '@/constants/aich';
 import { CounterpartyType } from '@/constants/counterparty';
+import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
+import { InvoiceRC2WithFullRelations } from '@/lib/utils/repo/invoice_rc2.repo';
 
 export interface IVoucherMetaData {
   date: number;
@@ -147,6 +149,7 @@ export interface IVoucherDetailForFrontend {
   }[];
   assets: IAssetDetails[];
   certificates: ICertificate[];
+  invoiceRC2List: IInvoiceRC2[];
   lineItems: (ILineItemBeta & {
     reverseList: IReverseItem[];
   })[];
@@ -187,6 +190,7 @@ export const defaultVoucherDetail: IVoucherDetailForFrontend = {
   deletedReverseVoucherIds: [],
   assets: [],
   certificates: [],
+  invoiceRC2List: [],
   lineItems: [],
 };
 
@@ -201,6 +205,7 @@ export interface IVoucherListSummary {
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
+  accountBookId: number;
   status: JOURNAL_EVENT;
   voucherDate: number;
   voucherNo: string;
@@ -492,6 +497,8 @@ export interface IVoucherEntity {
    * @description is this voucher deleted or reverse voucher
    */
   isReverseRelated?: boolean;
+
+  InvoiceRC2List?: InvoiceRC2WithFullRelations[];
 }
 
 export type PartialPrismaCounterparty = Partial<PrismaCounterParty> | null;
@@ -504,6 +511,7 @@ export type IGetOneVoucherResponse = PrismaVoucher & {
       file: PrismaFile;
     };
   })[];
+  InvoiceRC2: InvoiceRC2WithFullRelations[];
   counterparty: PartialPrismaCounterparty;
   originalVouchers: (PrismaAssociateVoucher & {
     event: PrismaEvent;

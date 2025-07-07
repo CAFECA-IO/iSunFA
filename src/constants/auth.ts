@@ -8,6 +8,7 @@ export enum AuthFunctionsKeysNew {
   superAdmin = 'superAdmin',
   CompanyAdminMatch = 'CompanyAdminMatch',
   projectCompanyMatch = 'projectCompanyMatch',
+  internal = 'internal',
 }
 
 export const AUTH_WHITELIST = {
@@ -56,6 +57,7 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_INVOICE_RC2]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
   [APIName.GET_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
@@ -172,4 +174,9 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_NOTIFICATION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_NOTIFICATION_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.READ_NOTIFICATION]: [AuthFunctionsKeysNew.user],
+
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.internal],
+  [APIName.LIST_BAIFA_VOUCHER]: [AuthFunctionsKeysNew.internal],
+
+  [APIName.GET_VACANCY_BY_ID]: [AuthFunctionsKeysNew.user],
 };

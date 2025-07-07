@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-// Deprecated: (20250509 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { getSession } from '@/lib/utils/session';
+import { getSession, setSession } from '@/lib/utils/session';
 // Deprecated: (20250509 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { APIName, HttpMethod } from '@/constants/api_connection';
@@ -23,6 +21,12 @@ import { sendEmail } from '@/lib/utils/worker/email_sender.worker';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
 import { handleSignInSession } from '@/lib/utils/signIn';
 
+// Info: (20250625 - Shirley) 設置 session cookie 到響應中
+function setSessionCookie(res: NextApiResponse, sessionId: string) {
+  const cookieValue = `isunfa=${sessionId}; Path=/; HttpOnly; SameSite=Lax`;
+  res.setHeader('Set-Cookie', cookieValue);
+}
+
 /* Info: (20250429 - Luphia) 註冊 Email 一次性登入密碼
  * 1. 檢驗是否還在註冊冷卻期內
  * 2. 產生一次性登入密碼
@@ -33,6 +37,16 @@ import { handleSignInSession } from '@/lib/utils/signIn';
 export const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = req;
   const { email } = query;
+  const session = await getSession(req);
+  if (query.provider && query.uid) {
+    // Info: (20250630 - Luphia) 若存在 External User 參數，將資訊設定到 session 備用
+    await setSession(session, {
+      external: {
+        provider: query.provider as string,
+        uid: query.uid as string,
+      },
+    });
+  }
   const isValidEmail = emailVerifier(email as string);
   if (!isValidEmail) {
     // Info: (20250429 - Luphia) email 格式不正確
@@ -67,7 +81,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
     verificationCode: emailLogin.code,
     remainingMins,
   };
-  const emailResult = sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
+  const emailResult = await sendEmail(email as string, title, EmailTemplateName.VERIFICATION, data);
   if (!emailResult) {
     // Info: (20250429 - Luphia) 寄送 email 失敗
     throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
@@ -82,7 +96,7 @@ export const handleGetRequest = async (req: NextApiRequest) => {
 };
 
 // Info: (20250429 - Luphia) 執行一次性登入
-export const handlePostRequest = async (req: NextApiRequest) => {
+export const handlePostRequest = async (req: NextApiRequest, res?: NextApiResponse) => {
   const { body, query } = req;
   const { email } = query;
   const { code } = body;
@@ -119,7 +133,12 @@ export const handlePostRequest = async (req: NextApiRequest) => {
     providerAccountId: email as string,
     access_token: '',
   };
-  await handleSignInSession(req, user, account);
+  const session = await handleSignInSession(req, user, account);
+
+  // Info: (20250625 - Shirley) 設置 session cookie 到響應中
+  if (res && session) {
+    setSessionCookie(res, session.isunfa);
+  }
 
   const result = {
     statusMessage: STATUS_MESSAGE.SUCCESS,
@@ -157,7 +176,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     switch (method) {
       case HttpMethod.POST:
-        ({ statusMessage, result } = await handlePostRequest(req));
+        ({ statusMessage, result } = await handlePostRequest(req, res));
+        break;
+      case HttpMethod.DELETE:
+        ({ statusMessage, result } = await handleDeleteRequest(req));
         break;
       case HttpMethod.GET:
       default:

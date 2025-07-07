@@ -48,6 +48,7 @@ import {
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 interface DeepNestedLineItem extends PrismaLineItem {
   originalLineItem?: PrismaAssociateLineItem[];
@@ -487,6 +488,7 @@ export async function postVoucherV2({
   issuer,
   eventControlPanel: { revertEvent },
   certificateIds,
+  invoiceRC2Ids,
 }: {
   nowInSecond: number;
   company: ICompanyEntity;
@@ -498,6 +500,7 @@ export async function postVoucherV2({
     assetEvent: IEventEntity | null;
   };
   certificateIds: number[];
+  invoiceRC2Ids: number[];
 }): Promise<Voucher> {
   const isRevertEvent = !!revertEvent;
   const isAssetEvent = originalVoucher.asset.length > 0;
@@ -538,15 +541,24 @@ export async function postVoucherV2({
       issuer: {
         connect: { id: issuer.id },
       },
-      voucherCertificates: {
-        create: certificateIds.map((certificateId) => ({
-          certificate: {
-            connect: { id: certificateId },
-          },
-          createdAt: nowInSecond,
-          updatedAt: nowInSecond,
-        })),
-      },
+      voucherCertificates:
+        certificateIds.length > 0
+          ? {
+              create: certificateIds.map((certificateId) => ({
+                certificate: {
+                  connect: { id: certificateId },
+                },
+                createdAt: nowInSecond,
+                updatedAt: nowInSecond,
+              })),
+            }
+          : undefined,
+      InvoiceRC2:
+        invoiceRC2Ids && invoiceRC2Ids.length > 0
+          ? {
+              connect: invoiceRC2Ids.map((id) => ({ id })),
+            }
+          : undefined,
       counterparty: originalVoucher.counterPartyId
         ? { connect: { id: originalVoucher.counterPartyId } }
         : undefined,
@@ -671,6 +683,10 @@ export async function putVoucherWithoutCreateNew(
       certificateIdsNeedToBeRemoved: number[];
       certificateIdsNeedToBeAdded: number[];
     };
+    invoiceRC2Options: {
+      invoiceRC2IdsNeedToBeRemoved: number[];
+      invoiceRC2IdsNeedToBeAdded: number[];
+    };
     assetOptions: {
       assetIdsNeedToBeRemoved: number[];
       assetIdsNeedToBeAdded: number[];
@@ -702,6 +718,7 @@ export async function putVoucherWithoutCreateNew(
     counterPartyId,
     voucherInfo,
     certificateOptions,
+    invoiceRC2Options,
     assetOptions,
     reverseRelationNeedToBeReplace,
   } = options;
@@ -745,6 +762,24 @@ export async function putVoucherWithoutCreateNew(
         }
       }
 
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved.length > 0) {
+        try {
+          await tx.invoiceRC2.deleteMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeRemoved,
+              },
+              voucherId,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
       if (assetOptions.assetIdsNeedToBeRemoved.length > 0) {
         try {
           await tx.assetVoucher.deleteMany({
@@ -776,6 +811,27 @@ export async function putVoucherWithoutCreateNew(
         } catch (error) {
           loggerBack.error(
             'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
+            error as Error
+          );
+        }
+      }
+
+      if (invoiceRC2Options.invoiceRC2IdsNeedToBeAdded.length > 0) {
+        try {
+          await tx.invoiceRC2.updateMany({
+            where: {
+              id: {
+                in: invoiceRC2Options.invoiceRC2IdsNeedToBeAdded,
+              },
+            },
+            data: {
+              voucherId,
+              updatedAt: nowInSecond,
+            },
+          });
+        } catch (error) {
+          loggerBack.error(
+            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
             error as Error
           );
         }
@@ -930,6 +986,17 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
             },
           },
         },
+        InvoiceRC2: {
+          include: {
+            file: {
+              include: {
+                thumbnail: true,
+              },
+            },
+            voucher: true,
+            uploader: true,
+          },
+        },
         counterparty: true,
         originalVouchers: {
           include: {
@@ -1047,6 +1114,17 @@ export async function getOneVoucherByVoucherNoV2(options: {
             },
           },
         },
+        InvoiceRC2: {
+          include: {
+            file: {
+              include: {
+                thumbnail: true,
+              },
+            },
+            voucher: true,
+            uploader: true,
+          },
+        },
         counterparty: true,
         originalVouchers: {
           include: {
@@ -1141,6 +1219,35 @@ export function isFullyReversed(lineItem: DeepNestedLineItem): boolean {
 
 export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems: T[]): T[] {
   return lineItems.filter((li) => !isFullyReversed(li));
+}
+
+/**
+ * Info: (20250203 - Shirley) 建立排序條件列表
+ * 根據傳入的排序選項建立對應的排序條件
+ * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
+ */
+function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
+  const orderBy: { [key: string]: SortOrder }[] = [];
+  sortOptions.forEach((sort) => {
+    const { sortBy, sortOrder } = sort;
+    switch (sortBy) {
+      case SortBy.DATE:
+        orderBy.push({
+          date: sortOrder,
+        });
+        break;
+      // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
+      case SortBy.PERIOD:
+      case SortBy.CREDIT:
+      case SortBy.DEBIT:
+      case SortBy.PAY_RECEIVE_TOTAL:
+      case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
+      case SortBy.PAY_RECEIVE_REMAIN:
+      default:
+        break;
+    }
+  });
+  return orderBy;
 }
 
 export async function getManyVoucherV2(options: {
@@ -1332,35 +1439,6 @@ export async function getManyVoucherV2(options: {
 
   const totalPages = Math.ceil(totalCount / pageSize);
   const offset = pageToOffset(page, pageSize);
-
-  /**
-   * Info: (20250203 - Shirley) 建立排序條件列表
-   * 根據傳入的排序選項建立對應的排序條件
-   * 目前只處理日期排序，其他排序（Credit、Debit等）在程式碼中處理
-   */
-  function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-    const orderBy: { [key: string]: SortOrder }[] = [];
-    sortOptions.forEach((sort) => {
-      const { sortBy, sortOrder } = sort;
-      switch (sortBy) {
-        case SortBy.DATE:
-          orderBy.push({
-            date: sortOrder,
-          });
-          break;
-        // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
-        case SortBy.PERIOD:
-        case SortBy.CREDIT:
-        case SortBy.DEBIT:
-        case SortBy.PAY_RECEIVE_TOTAL:
-        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
-        case SortBy.PAY_RECEIVE_REMAIN:
-        default:
-          break;
-      }
-    });
-    return orderBy;
-  }
 
   /**
    * Info: (20250203 - Shirley) 建立分頁查詢參數
@@ -1668,29 +1746,6 @@ export async function getManyVoucherByAccountV2(options: {
 
   const offset = pageToOffset(page, pageSize);
   // const orderBy = { [sortBy]: sortOrder };
-  function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }[]) {
-    const orderBy: { [key: string]: SortOrder }[] = [];
-    sortOptions.forEach((sort) => {
-      const { sortBy, sortOrder } = sort;
-      switch (sortBy) {
-        case SortBy.DATE:
-          orderBy.push({
-            date: sortOrder,
-          });
-          break;
-        // Info: (20241120 - Murky) Credit和Debit等拿出去之後用程式碼排
-        case SortBy.PERIOD:
-        case SortBy.CREDIT:
-        case SortBy.DEBIT:
-        case SortBy.PAY_RECEIVE_TOTAL:
-        case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
-        case SortBy.PAY_RECEIVE_REMAIN:
-        default:
-          break;
-      }
-    });
-    return orderBy;
-  }
 
   const findManyArgs = {
     skip: offset,
@@ -2126,6 +2181,20 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       });
     });
 
+    const invoiceRC2Ids = voucherDeleteOtherEntity.InvoiceRC2List?.map((i) => i.id) || [];
+
+    if (invoiceRC2Ids.length > 0) {
+      await tx.invoiceRC2.updateMany({
+        where: {
+          id: { in: invoiceRC2Ids },
+        },
+        data: {
+          voucherId: newVoucher.id,
+          updatedAt: nowInSecond,
+        },
+      });
+    }
+
     await Promise.all(transactionJobs);
 
     return {
@@ -2154,4 +2223,205 @@ export const findVouchersByVoucherIds = async (
     });
     throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
   }
+};
+
+export const listBaifaVouchers = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}): Promise<
+  IPaginatedData<IGetManyVoucherResponseButOne[]> & {
+    where: Prisma.VoucherWhereInput;
+  }
+> => {
+  let modifyVouchers: IGetManyVoucherResponseButOne[] = [];
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = Math.floor(Date.now() / 1000),
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  const whereCondition: Prisma.VoucherWhereInput = {
+    date: {
+      gte: startDate,
+      lte: endDate,
+    },
+    OR: [
+      {
+        issuer: {
+          name: {
+            contains: searchQuery,
+          },
+        },
+      },
+      {
+        counterparty: {
+          OR: [
+            {
+              name: {
+                contains: searchQuery,
+              },
+            },
+            {
+              taxId: {
+                contains: searchQuery,
+              },
+            },
+          ],
+        },
+      },
+      {
+        note: {
+          contains: searchQuery,
+        },
+      },
+      {
+        no: {
+          contains: searchQuery,
+        },
+      },
+      {
+        lineItems: {
+          some: {
+            OR: [
+              {
+                account: {
+                  name: {
+                    contains: searchQuery,
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ],
+  };
+
+  const [totalCount, vouchers] = await prisma.$transaction([
+    prisma.voucher.count({ where: whereCondition }),
+    prisma.voucher.findMany({
+      where: whereCondition,
+      include: {
+        lineItems: {
+          include: {
+            account: true,
+            originalLineItem: {
+              include: {
+                resultLineItem: {
+                  include: {
+                    account: true,
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                  },
+                },
+              },
+            },
+            resultLineItem: {
+              include: {
+                originalLineItem: {
+                  include: {
+                    account: true,
+                    originalLineItem: {
+                      include: {
+                        resultLineItem: {
+                          include: {
+                            account: true,
+                          },
+                        },
+                        associateVoucher: {
+                          include: {
+                            event: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+                associateVoucher: {
+                  include: {
+                    event: true,
+                    originalVoucher: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        counterparty: true,
+        issuer: {
+          include: {
+            imageFile: true,
+          },
+        },
+        originalVouchers: {
+          include: {
+            event: true,
+            resultVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        resultVouchers: {
+          include: {
+            event: true,
+            originalVoucher: {
+              include: {
+                lineItems: {
+                  include: {
+                    account: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: createOrderByList(sortOption),
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
+
+  modifyVouchers = vouchers.map((voucher) => {
+    const noteData = parseNoteData(voucher.note ?? '');
+
+    return {
+      ...voucher,
+      lineItems: filterAvailableLineItems(voucher.lineItems),
+      note: noteData.note ?? voucher.note ?? '',
+      counterparty: voucher.counterparty
+        ? {
+            ...voucher.counterparty,
+            taxId: voucher.counterparty.taxId ?? '',
+          }
+        : null,
+    };
+  });
+  return {
+    ...toPaginatedData({
+      data: modifyVouchers,
+      page,
+      pageSize,
+      totalCount,
+      totalPages: Math.ceil(totalCount / pageSize),
+      sort: sortOption,
+    }),
+    where: whereCondition,
+  };
 };

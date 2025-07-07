@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+import { FaChevronDown } from 'react-icons/fa6';
 import { CountryCodeMap, LocaleKey } from '@/constants/normal_setting';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
@@ -41,7 +42,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
       <button
         type="button"
         className={`flex w-full items-center justify-between rounded-sm border bg-input-surface-input-background px-5 py-2.5 max-md:max-w-full ${
-          isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-dropdown-stroke-menu'
+          isCountryCodeMenuOpen ? 'border-input-stroke-selected' : 'border-input-stroke-input'
         }`}
       >
         <div
@@ -56,13 +57,11 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
             alt="countryCode icon"
             className="mr-2"
           />
-          <Image
-            src="/elements/arrow_down.svg"
-            alt="arrow_down"
-            width={20}
-            height={20}
-            className={`mr-5 ${isCountryCodeMenuOpen ? 'rotate-180' : 'rotate-0'}`}
-          />
+          <div
+            className={`mr-5 flex items-center justify-center text-icon-surface-single-color-primary ${isCountryCodeMenuOpen ? 'rotate-180' : 'rotate-0'}`}
+          >
+            <FaChevronDown size={12} />
+          </div>
         </div>
         <input
           id="note-input"
@@ -70,7 +69,7 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
           value={phoneNumber}
           onChange={onUpdate}
           placeholder={t('settings:NORMAL.ENTER_NUMBER')}
-          className="block flex-1 outline-none placeholder:text-input-text-input-placeholder"
+          className="block flex-1 bg-transparent outline-none placeholder:text-input-text-input-placeholder"
         />
       </button>
       {/* Info: (20240425 - Shirley) CountryCode Menu */}

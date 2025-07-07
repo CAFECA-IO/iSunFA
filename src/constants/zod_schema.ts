@@ -135,6 +135,7 @@ import {
   deleteInvoiceRC2Output,
   getInvoiceRC2Input,
   getInvoiceRC2Output,
+  listInvoiceRC2Grouped,
   listInvoiceRC2Input,
   listInvoiceRC2Output,
   updateInvoiceRC2Input,
@@ -146,6 +147,8 @@ import {
   listNotificationByUserIdSchema,
   readNotificationSchema,
 } from '@/lib/utils/zod_schema/notification';
+import { listBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/account_book';
+import { listBaifaVoucherSchema } from '@/lib/utils/zod_schema/baifa/voucher';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -223,6 +226,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.LIST_INVOICE_RC2]: listInvoiceRC2Grouped,
   [APIName.LIST_INVOICE_RC2_INPUT]: listInvoiceRC2Input,
   [APIName.CREATE_INVOICE_RC2_INPUT]: createInvoiceRC2Input,
   [APIName.GET_INVOICE_RC2_INPUT]: getInvoiceRC2Input,
@@ -337,4 +341,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
   [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
   [APIName.READ_NOTIFICATION]: readNotificationSchema,
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: listBaifaAccountBookSchema,
+  [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
+  [APIName.GET_VACANCY_BY_ID]: nullAPISchema, // ToDo: (20250704 - Julian) need to define the schema for get vacancy by id
 };

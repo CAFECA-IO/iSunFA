@@ -38,7 +38,7 @@ const News = ({ news }: NewsProps) => {
   const formattedDate = formatTimestamp(news.createdAt * 1000);
 
   return (
-    <div className="flex items-center gap-16px rounded-xs bg-surface-neutral-surface-lv2 p-8px">
+    <div className="relative flex items-center gap-16px rounded-xs bg-surface-neutral-surface-lv2 p-8px before:pointer-events-none before:absolute before:left-0 before:h-full before:w-full before:rounded-xs before:bg-surface-brand-primary-10 tablet:before:hidden">
       <p className="flex-none text-sm font-normal text-text-neutral-tertiary">{formattedDate}</p>
 
       <p className="min-w-0 flex-auto truncate text-base font-semibold text-text-neutral-primary">

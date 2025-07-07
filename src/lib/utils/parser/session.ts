@@ -17,20 +17,24 @@ const randomSessionId = () => {
  * 6. 返回 session ID
  */
 export const parseSessionId = (options: ISessionOption | ISessionData) => {
+  const data = options || {};
   // Info: (20250122 - Luphia) step 1
-  const isunfaInHeader = (options as ISessionData).isunfa;
-  const cookieHeader = (options as ISessionOption).cookie;
+  const isunfaInHeader = (data as ISessionData).isunfa;
+  const cookieHeader = (data as ISessionOption).cookie;
   const cookieData = parseCookie(cookieHeader);
   // Info: (20250122 - Luphia) step 2
   const isunfaInSession = (options as ISessionData).isunfa;
+  // Info: (20250625 - Shirley) step 2.5 - Check for isunfa in parsed cookies
+  const isunfaInCookie = (cookieData as { [key: string]: string }).isunfa;
   const findCsrfKeyInHeader = Object.keys(options).find((key) => key.includes('csrf')) as string;
   // Info: (20250122 - Luphia) step 3
-  const crsfInHeader = (options as { [key: string]: string })[findCsrfKeyInHeader];
+  const crsfInHeader = (data as { [key: string]: string })[findCsrfKeyInHeader];
   const findCsrfKeyInCookie = Object.keys(cookieData).find((key) => key.includes('csrf')) as string;
   // Info: (20250122 - Luphia) step 4
   const crsfInCookie = (cookieData as { [key: string]: string })[findCsrfKeyInCookie];
   // Info: (20250122 - Luphia) step 5
   const randomId = randomSessionId();
-  const sessionId = isunfaInSession || isunfaInHeader || crsfInHeader || crsfInCookie || randomId;
+  const sessionId =
+    isunfaInSession || isunfaInHeader || isunfaInCookie || crsfInHeader || crsfInCookie || randomId;
   return sessionId;
 };
