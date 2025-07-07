@@ -308,4 +308,159 @@ export class APITestHelper {
       this.switchToUser(emails[0]);
     }
   }
+
+  // Info: (20250707 - Shirley) Complete user registration flow with default values
+  async completeUserRegistrationFlow(userId?: string): Promise<{
+    agreementResponse: TestResponse;
+    roleResponse: TestResponse;
+    selectRoleResponse: TestResponse;
+    statusResponse: TestResponse;
+  }> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    // Info: (20250707 - Shirley) Get user ID from status if not provided
+    let userIdToUse = userId;
+    if (!userIdToUse) {
+      const statusResponse = await this.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      userIdToUse = userData?.id?.toString() || '1';
+    }
+
+    // Info: (20250707 - Shirley) Import handlers
+    const { default: agreementHandler } = await import('@/pages/api/v2/user/[userId]/agreement');
+    const { default: userRoleHandler } = await import('@/pages/api/v2/user/[userId]/role');
+    const { default: userRoleSelectHandler } = await import(
+      '@/pages/api/v2/user/[userId]/selected_role'
+    );
+
+    // Info: (20250707 - Shirley) Create clients
+    const agreementClient = createTestClient({
+      handler: agreementHandler,
+      routeParams: { userId: userIdToUse },
+    });
+    const userRoleCreateClient = createTestClient({
+      handler: userRoleHandler,
+      routeParams: { userId: userIdToUse },
+    });
+    const userRoleSelectClient = createTestClient({
+      handler: userRoleSelectHandler,
+      routeParams: { userId: userIdToUse },
+    });
+
+    // Info: (20250707 - Shirley) Step 1: Agree to terms
+    const agreementData = TestDataFactory.createTermsAgreementRequest();
+    const agreementResponse = await agreementClient
+      .post(`/api/v1/user/${userIdToUse}/agreement`)
+      .send(agreementData)
+      .set('Cookie', cookies.join('; '));
+
+    // Info: (20250707 - Shirley) Step 2: Create role
+    const roleData = TestDataFactory.createRoleRequest();
+    const roleResponse = await userRoleCreateClient
+      .post(`/api/v2/user/${userIdToUse}/role`)
+      .send(roleData)
+      .set('Cookie', cookies.join('; '));
+
+    // Info: (20250707 - Shirley) Step 3: Select role
+    const selectRoleResponse = await userRoleSelectClient
+      .put(`/api/v2/user/${userIdToUse}/selected_role`)
+      .send(roleData)
+      .set('Cookie', cookies.join('; '));
+
+    // Info: (20250707 - Shirley) Handle 405 error gracefully for role selection
+    if (selectRoleResponse.status === 405) {
+      console.warn('Role selection returned 405, this may be due to API routing issues');
+    }
+
+    // Info: (20250707 - Shirley) Step 4: Get final status
+    const statusResponse = await this.getStatusInfo();
+
+    return {
+      agreementResponse,
+      roleResponse,
+      selectRoleResponse,
+      statusResponse,
+    };
+  }
+
+  // Info: (20250707 - Shirley) Simple agreement method using default values
+  async agreeToTerms(userId?: string): Promise<TestResponse> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    // Info: (20250707 - Shirley) Get user ID from status if not provided
+    let userIdToUse = userId;
+    if (!userIdToUse) {
+      const statusResponse = await this.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      userIdToUse = userData?.id?.toString() || '1';
+    }
+
+    const { default: agreementHandler } = await import('@/pages/api/v2/user/[userId]/agreement');
+    const agreementClient = createTestClient({
+      handler: agreementHandler,
+      routeParams: { userId: userIdToUse },
+    });
+
+    const agreementData = TestDataFactory.createTermsAgreementRequest();
+    return agreementClient
+      .post(`/api/v1/user/${userIdToUse}/agreement`)
+      .send(agreementData)
+      .set('Cookie', cookies.join('; '));
+  }
+
+  // Info: (20250707 - Shirley) Simple role creation method using default values
+  async createUserRole(userId?: string, roleName?: string): Promise<TestResponse> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    // Info: (20250707 - Shirley) Get user ID from status if not provided
+    let userIdToUse = userId;
+    if (!userIdToUse) {
+      const statusResponse = await this.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      userIdToUse = userData?.id?.toString() || '1';
+    }
+
+    const { default: userRoleHandler } = await import('@/pages/api/v2/user/[userId]/role');
+    const userRoleClient = createTestClient({
+      handler: userRoleHandler,
+      routeParams: { userId: userIdToUse },
+    });
+
+    const roleData = TestDataFactory.createRoleRequest(roleName);
+    return userRoleClient
+      .post(`/api/v2/user/${userIdToUse}/role`)
+      .send(roleData)
+      .set('Cookie', cookies.join('; '));
+  }
+
+  // Info: (20250707 - Shirley) Simple role selection method using default values
+  async selectUserRole(userId?: string, roleName?: string): Promise<TestResponse> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    // Info: (20250707 - Shirley) Get user ID from status if not provided
+    let userIdToUse = userId;
+    if (!userIdToUse) {
+      const statusResponse = await this.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      userIdToUse = userData?.id?.toString() || '1';
+    }
+
+    const { default: userRoleSelectHandler } = await import(
+      '@/pages/api/v2/user/[userId]/selected_role'
+    );
+    const userRoleSelectClient = createTestClient({
+      handler: userRoleSelectHandler,
+      routeParams: { userId: userIdToUse },
+    });
+
+    const roleData = TestDataFactory.createRoleRequest(roleName);
+    return userRoleSelectClient
+      .put(`/api/v2/user/${userIdToUse}/selected_role`)
+      .send(roleData)
+      .set('Cookie', cookies.join('; '));
+  }
 }

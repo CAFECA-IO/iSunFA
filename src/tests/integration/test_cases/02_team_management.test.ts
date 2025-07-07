@@ -35,6 +35,11 @@ describe('Integration Test - Team Management Authentication', () => {
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
+    // Info: (20250707 - Shirley) Complete user registration with default values
+    await authenticatedHelper.agreeToTerms();
+    await authenticatedHelper.createUserRole();
+    await authenticatedHelper.selectUserRole();
+
     teamCreateClient = createTestClient(teamCreateHandler);
     teamListClient = createTestClient({
       handler: teamListHandler,
