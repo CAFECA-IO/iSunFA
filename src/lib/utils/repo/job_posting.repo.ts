@@ -26,9 +26,9 @@ export const getVacancyById = async (
     },
   });
 
-  // Info: (20250704 - Julian) 如果沒有找到對應的 vacancy 或者職缺已經關閉，則回傳 not found
+  // Info: (20250704 - Julian) 如果沒有找到對應的 vacancy 或者職缺已經關閉，則回傳 null
   if (!vacancy || vacancy.isOpen === false) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    return null;
   }
 
   try {
