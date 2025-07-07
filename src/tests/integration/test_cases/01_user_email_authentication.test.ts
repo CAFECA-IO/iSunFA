@@ -434,11 +434,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should create helper with specific user auto-login', async () => {
       const specificUserHelper = await APITestHelper.createHelper({
-        email: 'user1@isunfa.com',
+        email: testUsers.user2,
       });
 
       expect(specificUserHelper.isAuthenticated()).toBe(true);
-      expect(specificUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+      expect(specificUserHelper.getCurrentUser()).toBe(testUsers.user2);
 
       // Info: (20250703 - Shirley) Verify the helper can make authenticated API calls
       const statusResponse = await specificUserHelper.getStatusInfo();
@@ -447,25 +447,25 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const userPayload = statusResponse.body.payload as {
         user: { email: string; id: number };
       };
-      expect(userPayload.user.email).toBe('user1@isunfa.com');
+      expect(userPayload.user.email).toBe(testUsers.user2);
     });
 
     it('should create multi-user helper with auto-authentication', async () => {
       const factoryMultiUserHelper = await APITestHelper.createHelper({
-        emails: ['user@isunfa.com', 'user1@isunfa.com'],
+        emails: [testUsers.user1, testUsers.user2],
       });
 
       const authenticatedUsers = factoryMultiUserHelper.getAllAuthenticatedUsers();
       expect(authenticatedUsers).toHaveLength(2);
-      expect(authenticatedUsers).toContain('user@isunfa.com');
-      expect(authenticatedUsers).toContain('user1@isunfa.com');
+      expect(authenticatedUsers).toContain(testUsers.user1);
+      expect(authenticatedUsers).toContain(testUsers.user2);
 
       // Info: (20250703 - Shirley) Should start with first user as current
-      expect(factoryMultiUserHelper.getCurrentUser()).toBe('user@isunfa.com');
+      expect(factoryMultiUserHelper.getCurrentUser()).toBe(testUsers.user1);
 
       // Info: (20250703 - Shirley) Test switching between users
-      factoryMultiUserHelper.switchToUser('user1@isunfa.com');
-      expect(factoryMultiUserHelper.getCurrentUser()).toBe('user1@isunfa.com');
+      factoryMultiUserHelper.switchToUser(testUsers.user2);
+      expect(factoryMultiUserHelper.getCurrentUser()).toBe(testUsers.user2);
 
       const statusResponse = await factoryMultiUserHelper.getStatusInfo();
       expect(statusResponse.body.success).toBe(true);
