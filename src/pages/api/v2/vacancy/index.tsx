@@ -3,11 +3,13 @@ import { HttpMethod } from '@/constants/api_connection';
 import { formatApiResponse } from '@/lib/utils/common';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
-import { getAllVacancies } from '@/lib/utils/repo/job_posting.repo';
+import { listVacancy } from '@/lib/utils/repo/job_posting.repo';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const handleGetRequest = async (req: NextApiRequest) => {
-  const vacancies = await getAllVacancies();
+  // Info: (20250707 - Julian) 取得 GET 請求的查詢參數
+  const { query } = req;
+
+  const vacancies = await listVacancy(query);
 
   return {
     result: vacancies,
