@@ -35,6 +35,7 @@ export class TestDataFactory {
 
   // Info: (20250707 - Shirley) Default values for terms agreement and role selection
   static readonly DEFAULT_AGREEMENT_HASH = 'default_test_agreement_hash_v1';
+
   static readonly DEFAULT_ROLE_NAME = 'INDIVIDUAL';
 
   // Info: (20250701 - Shirley) Generate authentication request for email login

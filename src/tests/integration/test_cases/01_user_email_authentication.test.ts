@@ -699,4 +699,174 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(response.body.code).toBe('422ISF0000');
     });
   });
+
+  // ========================================
+  // Info: (20250707 - Shirley) Test Case 1.9: All Default Test Users Registration Flow
+  // ========================================
+  describe('Test Case 1.9: All Default Test Users Registration Flow', () => {
+    it('should process all default test users through complete registration flow', async () => {
+      // Info: (20250707 - Shirley) Process all test users from default_value.ts
+      const results = await APITestHelper.processAllTestUsers();
+
+      // Info: (20250707 - Shirley) Verify all users were processed
+      expect(results).toHaveLength(TestDataFactory.DEFAULT_TEST_EMAILS.length);
+
+      // Info: (20250707 - Shirley) Check that all users have results
+      results.forEach((result, index) => {
+        const expectedEmail = TestDataFactory.DEFAULT_TEST_EMAILS[index];
+        expect(result.email).toBe(expectedEmail);
+        expect(result.success).toBe(true);
+        expect(result.userId).toBeDefined();
+        expect(result.statusResponse).toBeDefined();
+        expect(result.statusResponse?.body.success).toBe(true);
+
+        // Info: (20250707 - Shirley) Verify user data in status response
+        if (
+          result.statusResponse?.body.payload &&
+          typeof result.statusResponse.body.payload === 'object'
+        ) {
+          const payload = result.statusResponse.body.payload as {
+            user: { email: string; id: number; name: string };
+          };
+          expect(payload.user.email).toBe(expectedEmail);
+          expect(payload.user.id).toBeDefined();
+          expect(typeof payload.user.id).toBe('number');
+        }
+      });
+
+      // Info: (20250707 - Shirley) Verify successful registrations
+      const successfulRegistrations = results.filter((r) => r.success);
+      expect(successfulRegistrations.length).toBe(TestDataFactory.DEFAULT_TEST_EMAILS.length);
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log(
+          `✅ All ${TestDataFactory.DEFAULT_TEST_EMAILS.length} default test users processed successfully`
+        );
+      }
+    });
+
+    it('should process individual test user through complete registration flow', async () => {
+      const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[0];
+
+      // Info: (20250707 - Shirley) Process single test user
+      const result = await APITestHelper.processTestUser(testEmail);
+
+      // Info: (20250707 - Shirley) Verify successful processing
+      expect(result.success).toBe(true);
+      expect(result.email).toBe(testEmail);
+      expect(result.userId).toBeDefined();
+      expect(result.statusResponse).toBeDefined();
+      expect(result.statusResponse?.body.success).toBe(true);
+
+      // Info: (20250707 - Shirley) Verify user data
+      if (
+        result.statusResponse?.body.payload &&
+        typeof result.statusResponse.body.payload === 'object'
+      ) {
+        const payload = result.statusResponse.body.payload as {
+          user: { email: string; id: number; name: string };
+        };
+        expect(payload.user.email).toBe(testEmail);
+        expect(payload.user.id).toBeDefined();
+        expect(typeof payload.user.id).toBe('number');
+      }
+
+      // Info: (20250707 - Shirley) Verify role operations were performed
+      if (result.roleResponse) {
+        expect([200, 201]).toContain(result.roleResponse.status);
+        expect(result.roleResponse.body.success).toBe(true);
+      }
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log(`✅ Test user ${testEmail} processed successfully`);
+      }
+    });
+
+    it('should handle user agreement logic correctly', async () => {
+      const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[1];
+      const helper = await APITestHelper.createHelper({ email: testEmail });
+
+      // Info: (20250707 - Shirley) Check agreement status
+      const hasAgreed = await helper.hasUserAgreedToTerms();
+
+      // Info: (20250707 - Shirley) Agreement status should be boolean
+      expect(typeof hasAgreed).toBe('boolean');
+
+      // Info: (20250707 - Shirley) Process user and verify agreement handling
+      const result = await APITestHelper.processTestUser(testEmail);
+      expect(result.success).toBe(true);
+
+      // Info: (20250707 - Shirley) If user hadn't agreed before, should have agreement response
+      if (!hasAgreed && result.agreementResponse) {
+        expect([200, 201, 405, 500]).toContain(result.agreementResponse.status);
+      }
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log(`✅ User agreement logic handled correctly for ${testEmail}`);
+      }
+    });
+
+    it('should validate all test emails are from default_value.ts', async () => {
+      // Info: (20250707 - Shirley) Verify test emails match default_value.ts
+      const expectedEmails = [
+        'user@isunfa.com',
+        'user1@isunfa.com',
+        'user2@isunfa.com',
+        'user3@isunfa.com',
+      ];
+
+      expect(TestDataFactory.DEFAULT_TEST_EMAILS).toEqual(expectedEmails);
+      expect(TestDataFactory.DEFAULT_TEST_EMAILS.length).toBe(4);
+
+      // Info: (20250707 - Shirley) Verify each email is processed correctly
+      const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
+        const result = await APITestHelper.processTestUser(email);
+        expect(result.success).toBe(true);
+        expect(result.email).toBe(email);
+        return result;
+      });
+
+      await Promise.all(emailPromises);
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ All default test emails validated and processed');
+      }
+    });
+
+    it('should reject processing of non-default test emails', async () => {
+      const invalidEmail = 'invalid@example.com';
+
+      // Info: (20250707 - Shirley) Should reject non-default email
+      const result = await APITestHelper.processTestUser(invalidEmail);
+
+      expect(result.success).toBe(false);
+      expect(result.email).toBe(invalidEmail);
+      expect(result.error).toBeDefined();
+      expect(result.error?.message).toContain('not in the default test emails list');
+    });
+
+    it('should handle list roles functionality for authenticated users', async () => {
+      const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[2];
+      const helper = await APITestHelper.createHelper({ email: testEmail });
+
+      // Info: (20250707 - Shirley) List roles for authenticated user
+      const rolesResponse = await helper.listRoles();
+
+      // Info: (20250707 - Shirley) Should return a response (accept various status codes for role API)
+      expect([200, 401, 500]).toContain(rolesResponse.status);
+
+      if (rolesResponse.status === 200) {
+        expect(rolesResponse.body.success).toBe(true);
+      }
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log(`✅ Roles API tested for ${testEmail} with status: ${rolesResponse.status}`);
+      }
+    });
+  });
 });

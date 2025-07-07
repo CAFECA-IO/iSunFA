@@ -370,6 +370,7 @@ export class APITestHelper {
 
     // Info: (20250707 - Shirley) Handle 405 error gracefully for role selection
     if (selectRoleResponse.status === 405) {
+      // eslint-disable-next-line no-console
       console.warn('Role selection returned 405, this may be due to API routing issues');
     }
 
@@ -462,5 +463,175 @@ export class APITestHelper {
       .put(`/api/v2/user/${userIdToUse}/selected_role`)
       .send(roleData)
       .set('Cookie', cookies.join('; '));
+  }
+
+  // Info: (20250707 - Shirley) Check if user has already agreed to terms
+  async hasUserAgreedToTerms(): Promise<boolean> {
+    await this.ensureAuthenticated();
+
+    try {
+      const statusResponse = await this.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as {
+        id?: number;
+        hasAgreedToTerms?: boolean;
+        agreementHash?: string;
+      };
+
+      // Info: (20250707 - Shirley) Check if user has agreement data
+      return Boolean(userData?.hasAgreedToTerms || userData?.agreementHash);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // Info: (20250707 - Shirley) List all available roles
+  async listRoles(): Promise<TestResponse> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    const { default: roleListHandler } = await import('@/pages/api/v2/role');
+    const roleListClient = createTestClient(roleListHandler);
+
+    return roleListClient.get('/').set('Cookie', cookies.join('; '));
+  }
+
+  // Info: (20250707 - Shirley) Complete registration flow for all test users from default_value.ts
+  static async processAllTestUsers(): Promise<
+    Array<{
+      email: string;
+      success: boolean;
+      userId?: string;
+      agreementResponse?: TestResponse;
+      roleResponse?: TestResponse;
+      selectRoleResponse?: TestResponse;
+      statusResponse?: TestResponse;
+      error?: Error;
+    }>
+  > {
+    const results: Array<{
+      email: string;
+      success: boolean;
+      userId?: string;
+      agreementResponse?: TestResponse;
+      roleResponse?: TestResponse;
+      selectRoleResponse?: TestResponse;
+      statusResponse?: TestResponse;
+      error?: Error;
+    }> = [];
+
+    // Info: (20250707 - Shirley) Process all test emails from default_value.ts sequentially
+    await TestDataFactory.DEFAULT_TEST_EMAILS.reduce(async (previousPromise, email) => {
+      await previousPromise;
+      try {
+        // Info: (20250707 - Shirley) Create fresh helper for each user
+        const helper = await APITestHelper.createHelper({ email });
+
+        // Info: (20250707 - Shirley) Get user ID from status
+        const statusResponse = await helper.getStatusInfo();
+        const userData = statusResponse.body.payload?.user as { id?: number };
+        const userId = userData?.id?.toString();
+
+        if (!userId) {
+          throw new Error(`Unable to get user ID for ${email}`);
+        }
+
+        // Info: (20250707 - Shirley) Check if user has already agreed to terms
+        const hasAgreed = await helper.hasUserAgreedToTerms();
+
+        let agreementResponse;
+
+        if (!hasAgreed) {
+          // Info: (20250707 - Shirley) Complete user registration flow
+          agreementResponse = await helper.agreeToTerms(userId);
+        }
+
+        // Info: (20250707 - Shirley) Always create and select role
+        const roleResponse = await helper.createUserRole(userId);
+        const selectRoleResponse = await helper.selectUserRole(userId);
+
+        // Info: (20250707 - Shirley) Get final status
+        const finalStatusResponse = await helper.getStatusInfo();
+
+        results.push({
+          email,
+          success: true,
+          userId,
+          agreementResponse,
+          roleResponse,
+          selectRoleResponse,
+          statusResponse: finalStatusResponse,
+        });
+      } catch (error) {
+        results.push({
+          email,
+          success: false,
+          error: error as Error,
+        });
+      }
+    }, Promise.resolve());
+
+    return results;
+  }
+
+  // Info: (20250707 - Shirley) Process specific test user with full registration flow
+  static async processTestUser(email: string): Promise<{
+    email: string;
+    success: boolean;
+    userId?: string;
+    agreementResponse?: TestResponse;
+    roleResponse?: TestResponse;
+    selectRoleResponse?: TestResponse;
+    statusResponse?: TestResponse;
+    error?: Error;
+  }> {
+    try {
+      // Info: (20250707 - Shirley) Validate email is in default test emails
+      if (!TestDataFactory.DEFAULT_TEST_EMAILS.includes(email)) {
+        throw new Error(`Email ${email} is not in the default test emails list`);
+      }
+
+      // Info: (20250707 - Shirley) Create authenticated helper
+      const helper = await APITestHelper.createHelper({ email });
+
+      // Info: (20250707 - Shirley) Get user ID
+      const statusResponse = await helper.getStatusInfo();
+      const userData = statusResponse.body.payload?.user as { id?: number };
+      const userId = userData?.id?.toString();
+
+      if (!userId) {
+        throw new Error(`Unable to get user ID for ${email}`);
+      }
+
+      // Info: (20250707 - Shirley) Check if user has already agreed to terms
+      const hasAgreed = await helper.hasUserAgreedToTerms();
+
+      let agreementResponse;
+      const roleResponse = await helper.createUserRole(userId);
+      const selectRoleResponse = await helper.selectUserRole(userId);
+
+      if (!hasAgreed) {
+        // Info: (20250707 - Shirley) User needs to agree to terms
+        agreementResponse = await helper.agreeToTerms(userId);
+      }
+
+      // Info: (20250707 - Shirley) Get final status
+      const finalStatusResponse = await helper.getStatusInfo();
+
+      return {
+        email,
+        success: true,
+        userId,
+        agreementResponse,
+        roleResponse,
+        selectRoleResponse,
+        statusResponse: finalStatusResponse,
+      };
+    } catch (error) {
+      return {
+        email,
+        success: false,
+        error: error as Error,
+      };
+    }
   }
 }
