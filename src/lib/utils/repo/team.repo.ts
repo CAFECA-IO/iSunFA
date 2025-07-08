@@ -160,16 +160,21 @@ export const createTeamWithTrial = async (
 ): Promise<ITeam> => {
   return prisma.$transaction(async (tx) => {
     loggerBack.info(
-      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
+      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with 1-month TRIAL subscription.`
     );
 
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
-    const expired = getUnixTime(addMonths(now, 1));
+    const trialEndDate = addMonths(now, 1); // Always 1 month trial for new teams
+    const expired = getUnixTime(trialEndDate);
     const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
+    // Info: (20250708 - Shirley) All new teams start with TRIAL plan for 1 month
     const plan = await tx.teamPlan.findFirst({
       where: {
-        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.TRIAL : teamData.planType,
+        type:
+          teamData.planType === TPlanType.BEGINNER || !teamData.planType
+            ? TPlanType.TRIAL
+            : teamData.planType,
       },
       select: { type: true },
     });

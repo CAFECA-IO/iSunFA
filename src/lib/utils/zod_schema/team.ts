@@ -178,7 +178,7 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.nativeEnum(TPlanType).optional(),
+        planType: z.nativeEnum(TPlanType).optional().default(TPlanType.BEGINNER),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
