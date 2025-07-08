@@ -368,7 +368,14 @@ function extractKeyAndIvFromFields(fields: formidable.Fields) {
 }
 
 const handlePostRequest = async (req: NextApiRequest) => {
-  loggerBack.debug(`Handling POST request for file upload: ${req.url}`);
+  loggerBack.debug(
+    `Handling POST request (url: ${req.url}) for file upload query: ${JSON.stringify(req.query)}`
+  );
+  loggerBack.debug('req.readable:', req.readable);
+  loggerBack.debug('typeof req.pipe:', typeof req.pipe);
+  req.on('data', (chunk) => {
+    loggerBack.debug('Got chunk:', chunk.length);
+  });
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IFileBeta | null = null;
 
@@ -380,11 +387,11 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const { query } = checkRequestData(APIName.FILE_UPLOAD, req, session);
   // Info: (20250522 - Shirley) type 和 targetId 都是可選的
-  const type = query?.type as UploadType | undefined;
-  const targetId = query?.targetId;
+  const type = (query?.type || req.query.type) as UploadType | undefined;
+  const targetId = (query?.targetId || req.query.targetId) as string | undefined;
 
-  loggerBack.debug('TargetId:', targetId);
-  loggerBack.debug('Upload type:', type);
+  loggerBack.info('TargetId:', targetId);
+  loggerBack.info('Upload type:', type);
 
   // Info: (20250522 - Shirley) 只有當同時提供 type 和 targetId 時才進行權限檢查
   if (type && targetId) {
@@ -445,9 +452,12 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   try {
+    loggerBack.debug(`Parsing form data for file upload type: ${type}, targetId: ${targetId}`);
     // Info: (20250522 - Shirley) 確保傳遞給 parseForm 的是有效的 FileFolder 類型
     const folder = type ? UPLOAD_TYPE_TO_FOLDER_MAP[type] || FileFolder.TMP : FileFolder.TMP;
+    loggerBack.debug(`Parsing form with folder: ${folder}`);
     const parsedForm = await parseForm(req, folder);
+    loggerBack.debug('Formidable form parsed successfully');
     const { files, fields } = parsedForm;
     const { file } = files;
 
@@ -517,7 +527,10 @@ export default async function handler(
     }
   } catch (error) {
     const err = error as Error;
-    statusMessage = err.message || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE];
+    statusMessage =
+      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
+      err.message ||
+      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 

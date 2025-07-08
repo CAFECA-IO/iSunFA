@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+// import request from 'supertest';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
@@ -7,25 +8,62 @@ import { APIName, APIPath } from '@/constants/api_connection';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
 import publicKeyGetHandler from '@/pages/api/v2/account_book/[accountBookId]/public_key';
-import uploadHandler from '@/pages/api/v2/file';
+// import uploadHandler from '@/pages/api/v2/file';
 // import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import { validateOutputData } from '@/lib/utils/validator';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { encryptFileWithPublicKey, importPublicKey } from '@/lib/utils/crypto';
-import { UploadType } from '@/constants/file';
-import { IFileBeta } from '@/interfaces/file';
+// import { UploadType } from '@/constants/file';
+// import { IFileBeta } from '@/interfaces/file';
+import { NextApiHandler } from 'next';
+import { createServer } from 'http';
+import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
+
 // import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 
 jest.mock('@/lib/utils/pdf_thumbnail', () => ({
   generatePDFThumbnail: jest.fn().mockResolvedValue(undefined),
 }));
 
+export const initTestClientServer = async (handler: NextApiHandler): Promise<string> => {
+  const server = createServer((req, res) => {
+    const url = new URL(req.url || '/', 'http://localhost');
+    const queryFromUrl = Object.fromEntries(url.searchParams.entries());
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (req as any).query = queryFromUrl;
+
+    return apiResolver(
+      req,
+      res,
+      queryFromUrl,
+      handler,
+      {
+        previewModeId: '',
+        previewModeEncryptionKey: '',
+        previewModeSigningKey: '',
+      },
+      false
+    );
+  });
+
+  return new Promise((resolve) => {
+    const listener = server.listen(0, () => {
+      const address = listener.address();
+      if (typeof address === 'object' && address) {
+        const testClientPort = address.port;
+        resolve(`http://localhost:${testClientPort}`);
+      }
+    });
+  });
+};
+
 describe('Integration Test - Invoice RC2', () => {
   let helper: APITestHelper;
   let currentUserId: string;
   let teamListClient: TestClient;
   let accountBookId: string;
-  let fileBeta: IFileBeta;
+  // let fileBeta: IFileBeta;
 
   beforeAll(async () => {
     helper = await APITestHelper.createWithEmail('user1@isunfa.com');
@@ -90,7 +128,6 @@ describe('Integration Test - Invoice RC2', () => {
 
     const jwk = keyResponse.body.payload as JsonWebKey;
     const publicKey = await importPublicKey(jwk);
-
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
     const fileBuffer = fs.readFileSync(filePath);
     const file = new File([fileBuffer], 'mock_invoice.png', { type: 'image/png' });
@@ -98,42 +135,40 @@ describe('Integration Test - Invoice RC2', () => {
       file,
       publicKey
     );
-
     const encryptedBuffer = Buffer.from(await encryptedFile.arrayBuffer());
-
-    // eslint-disable-next-line no-console
-    console.log('[DEBUG] Encrypted file size:', encryptedBuffer.length);
-
     const tempPath = path.resolve(__dirname, '../test_files/temp_encrypted_mock_invoice.png');
     fs.writeFileSync(tempPath, encryptedBuffer);
-
     const encryptedSymmetricKeyBase64 = Buffer.from(encryptedSymmetricKey).toString('base64');
     const ivString = Array.from(iv).join(',');
-
-    // eslint-disable-next-line no-console
-    console.log('[DEBUG] Uploading file with iv:', ivString);
-    // eslint-disable-next-line no-console
-    console.log('[DEBUG] Encrypted key (base64):', encryptedSymmetricKeyBase64);
-    // eslint-disable-next-line no-console
-    console.log('🔐 publicKey:', JSON.stringify(jwk));
-
     const fileStream = fs.createReadStream(tempPath);
-    const uploadClient = createTestClient(uploadHandler);
-    const uploadResponse = await uploadClient
+
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] File stream created:', fileStream.path);
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] Encrypted symmetric key base64:', encryptedSymmetricKeyBase64);
+    // eslint-disable-next-line no-console
+    console.log('[DEBUG] IV string:', ivString);
+
+    /**
+    const baseUrl = await initTestClientServer(uploadHandler);
+    const uploadResponse = await request(baseUrl)
       .post(`${APIPath.FILE_UPLOAD}?type=${UploadType.INVOICE}&targetId=${accountBookId}`)
-      .attach('file', fileStream, { filename: file.name, contentType: file.type })
+      // .set('Cookie', cookies.join('; '))
+      .attach('file', fileStream, {
+        filename: file.name,
+        contentType: file.type,
+      })
       .field('encryptedSymmetricKey', encryptedSymmetricKeyBase64)
       .field('iv', ivString)
-      .field('publicKey', JSON.stringify(jwk))
-      .set('Cookie', cookies.join('; '));
+      .field('publicKey', JSON.stringify(jwk));
 
     // eslint-disable-next-line no-console
-    console.log('[DEBUG] Uploaded uploadResponse.body:', uploadResponse.body);
+    console.log('[DEBUG] Uploaded uploadResponse:', uploadResponse);
 
     // expect(uploadResponse.body.success).toBe(true);
-    fileBeta = uploadResponse.body.payload as IFileBeta;
+    // fileBeta = uploadResponse.body?.payload as IFileBeta;
     // eslint-disable-next-line no-console
-    console.log('[DEBUG] Uploaded fileBeta:', fileBeta);
+    // console.log('[DEBUG] Uploaded fileBeta:', fileBeta);
 
     /** Info: (20250704 - Tzuhan) Invoice input creation is currently commented out
     const invoiceInputClient = createTestClient({

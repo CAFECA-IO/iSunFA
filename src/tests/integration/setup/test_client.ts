@@ -15,8 +15,8 @@
  * const response = await client.get('/api/users');
  *
  * // Dynamic route: /api/users/[email]
- * const client = createTestClient({ handler, routeParams: { email: 'test@example.com' } });
- * const response = await client.get('/api/users/test@example.com');
+ * const client = createTestClient({ handler, routeParams: { email: 'test@example.com' }, query: { active: 'true' } });
+ * const response = await client.get('/api/users/test@example.com?active=true');
  */
 import { createServer, RequestListener, IncomingMessage, ServerResponse, Server } from 'http';
 import { NextApiHandler } from 'next';
@@ -33,15 +33,18 @@ interface ExtendedIncomingMessage extends IncomingMessage {
 const activeServers = new Set<Server>();
 const serverCache = new Map<NextApiHandler, Server>();
 
-export const createSingleTestClient = (handler: NextApiHandler) => {
+export const createSingleTestClient = (handler: NextApiHandler, query?: Record<string, string>) => {
   let server = serverCache.get(handler);
 
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
+      const url = new URL(req.url || '/', 'http://localhost');
+      req.query = Object.fromEntries(url.searchParams.entries());
+
       return apiResolver(
         req,
         res,
-        req.query,
+        query || req.query || {},
         handler,
         {
           previewModeEncryptionKey: '',
@@ -61,34 +64,25 @@ export const createSingleTestClient = (handler: NextApiHandler) => {
 
 const dynamicServerCache = new Map<string, Server>();
 
-const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<string, string>) => {
-  const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
+const createDynamicTestClient = (
+  handler: NextApiHandler,
+  routeParams: Record<string, string>,
+  query: Record<string, string> = {}
+) => {
+  const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}_${JSON.stringify(query)}`;
   let server = dynamicServerCache.get(cacheKey);
 
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
       const url = new URL(req.url || '/', 'http://localhost');
 
-      if (!req.query) {
-        req.query = {};
-      }
+      req.query = {
+        ...Object.fromEntries(url.searchParams.entries()),
+        ...query,
+        ...routeParams,
+      };
 
-      url.searchParams.forEach((value, key) => {
-        if (req.query) {
-          req.query[key] = value;
-        }
-      });
-
-      if (req.query) {
-        Object.assign(req.query, routeParams);
-      } else {
-        req.query = routeParams;
-      }
-
-      if (!req.headers) {
-        req.headers = {};
-      }
-
+      if (!req.headers) req.headers = {};
       req.headers['user-agent'] = req.headers['user-agent'] || 'supertest-agent';
       req.headers['x-forwarded-for'] = req.headers['x-forwarded-for'] || '127.0.0.1';
       req.headers['x-real-ip'] = req.headers['x-real-ip'] || '127.0.0.1';
@@ -119,11 +113,13 @@ export const createTestClient = (options: TestClientOptions | NextApiHandler) =>
     return createSingleTestClient(options);
   }
 
-  if (options.routeParams && Object.keys(options.routeParams).length > 0) {
-    return createDynamicTestClient(options.handler, options.routeParams);
+  const { handler, routeParams = {}, query = {} } = options;
+
+  if (Object.keys(routeParams).length > 0) {
+    return createDynamicTestClient(handler, routeParams, query);
   }
 
-  return createSingleTestClient(options.handler);
+  return createSingleTestClient(handler, query);
 };
 
 export const closeAllTestServers = (): Promise<void> => {

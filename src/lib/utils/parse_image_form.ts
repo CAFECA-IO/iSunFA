@@ -11,9 +11,11 @@ export const parseForm = async (
   subDir: FileFolder = FileFolder.TMP, // Info: (20240726 - Jacky) 預設子資料夾名稱為tmp
   subSubDir?: string // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，則使用subSubDir
 ) => {
+  loggerBack.info(`parseForm req.headers:`, req.headers);
   loggerBack.debug(`parseForm called with subDir: ${subDir}, subSubDir: ${subSubDir}`);
   let uploadDir = getFileFolder(subDir);
 
+  loggerBack.debug(`Upload directory: ${uploadDir}`);
   // Info: (202410008 - Tzuhan) 如果有傳入subSubDir，更新 uploadDir
   if (subSubDir) {
     uploadDir = path.join(uploadDir, subSubDir);
@@ -25,7 +27,19 @@ export const parseForm = async (
     uploadDir,
   };
 
+  loggerBack.debug(`Formidable options:`, options);
+
   const form = new IncomingForm(options);
+
+  form.on('fileBegin', (name, file) => {
+    loggerBack.debug(`📝 fileBegin triggered: ${name}, path: ${file.filepath}`);
+  });
+  form.on('end', () => {
+    loggerBack.debug('✅ Formidable end triggered');
+  });
+  form.on('error', (err) => {
+    loggerBack.error(err, '❌ Formidable error');
+  });
 
   form.onPart = function onPart(part: Part) {
     // Info: (20250704 - Luphia) 無法規避的例外函式命名
@@ -36,6 +50,7 @@ export const parseForm = async (
   };
 
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
+    loggerBack.debug(`📦 Incoming headers:`, req.headers);
     form.parse(req, (err, fields, files) => {
       if (err) {
         reject(err);
