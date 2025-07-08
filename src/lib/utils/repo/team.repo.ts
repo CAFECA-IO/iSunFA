@@ -165,7 +165,7 @@ export const createTeamWithTrial = async (
 
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
-    const trialEndDate = addMonths(now, 1); // Always 1 month trial for new teams
+    const trialEndDate = addMonths(now, 1); // Info: (20250708 - Shirley) Always 1 month trial for new teams
     const expired = getUnixTime(trialEndDate);
     const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
     // Info: (20250708 - Shirley) All new teams start with TRIAL plan for 1 month
