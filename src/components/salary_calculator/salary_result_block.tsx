@@ -22,8 +22,9 @@ const ResultBlock: React.FC<{
     // Info: (20250708 - Julian) 避免重複顯示總計項目
     .filter((item) => item.label !== totalItem.label)
     .map((item) => {
-      // Info: (20250708 - Julian) 判斷是否為百分比：value 小於 1
-      const isPercentage = item.value < 1;
+      // Info: (20250708 - Julian) 判斷是否為百分比
+      // ToDo: (20250708 - Julian) 套用 i18n 翻譯後會調整規則
+      const isPercentage = item.label.includes('率') || item.label.includes('rate');
       const formattedValue = isPercentage
         ? `${(item.value * 100).toFixed(2)}%`
         : `NT ${numberWithCommas(item.value)}`;

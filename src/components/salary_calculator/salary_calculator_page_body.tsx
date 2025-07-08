@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { TbLogin2, TbDownload } from 'react-icons/tb';
@@ -8,6 +8,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { timestampToString, numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import ResultBlock from '@/components/salary_calculator/salary_result_block';
+import ProgressBar from '@/components/salary_calculator/progress_bar';
 import { RowItem } from '@/interfaces/calculator';
 
 const SalaryCalculatorResult: React.FC = () => {
@@ -214,6 +215,12 @@ const SalaryCalculatorResult: React.FC = () => {
 };
 
 const SalaryCalculatorPageBody: React.FC = () => {
+  const [progress, setProgress] = useState(50);
+  // ToDo: (20250708 - Julian) During development
+  const resetHandler = () => {
+    setProgress(0);
+  };
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-surface-neutral-main-background">
       {/* Info: (20250708 - Julian) Header */}
@@ -236,12 +243,10 @@ const SalaryCalculatorPageBody: React.FC = () => {
 
       {/* Info: (20250708 - Julian) Main Content */}
       <div className="flex">
-        {/* Info: (20250708 - Julian) Left Section: Form */}
+        {/* Info: (20250708 - Julian) Left Section */}
         <div className="flex flex-col gap-lv-8 p-80px">
-          <div className="h-24px w-550px bg-rose-400"></div>
-          <div className="h-24px w-550px bg-rose-400"></div>
-          <div className="h-24px w-550px bg-rose-400"></div>
-          <div className="h-24px w-550px bg-rose-400"></div>
+          {/* Info: (20250708 - Julian) Progress bar */}
+          <ProgressBar progress={progress} resetHandler={resetHandler} />
         </div>
         {/* Info: (20250708 - Julian) Right Section */}
         <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">
