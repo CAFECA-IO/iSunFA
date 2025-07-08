@@ -160,53 +160,43 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.body.payload).toHaveProperty('hasPreviousPage');
     });
 
-    // // TODO: (20250703 - Shirley) test case WIP
-    // it('should successfully create a new team', async () => {
-    //   await authenticatedHelper.ensureAuthenticated();
-    //   const cookies = authenticatedHelper.getCurrentSession();
+    it('should successfully create a new team', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
 
-    //   // Info: (20250703 - Shirley) Use proper team data structure
-    //   const teamData = {
-    //     name: `Integration Test Team ${Date.now()}`,
-    //     // about: 'Team created by integration tests',
-    //     // profile: 'Testing team management APIs',
-    //     // planType: 'PROFESSIONAL',
-    //   };
+      // Info: (20250703 - Shirley) Use proper team data structure
+      const teamData = {
+        name: `Integration Test Team ${Date.now()}`,
+        // about: 'Team created by integration tests',
+        // profile: 'Testing team management APIs',
+        // planType: 'PROFESSIONAL',
+      };
 
-    //   const response = await teamCreateClient
-    //     .post(APIPath.CREATE_TEAM)
-    //     .send(teamData)
-    //     .set('Cookie', cookies.join('; '));
+      const response = await teamCreateClient
+        .post(APIPath.CREATE_TEAM)
+        .send(teamData)
+        .set('Cookie', cookies.join('; '));
 
-    //   // Info: (20250703 - Shirley) Check if team creation works or skip due to environment issues
-    //   if (response.status === 500) {
-    //     // Info: (20250703 - Shirley) Environment issue: Database not properly seeded with team plans
-    //     // TODO: Fix database seeding for team plans in integration test environment
-    //     console.warn(
-    //       'Team creation failed due to environment setup. Response:',
-    //       response.body.message
-    //     );
-    //     return; // Skip assertions for now
-    //   }
+      // Info: (20250707 - Shirley) Team created successfully
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.code).toBe('201ISF0000');
+      expect(response.body.payload).toBeDefined();
 
-    //   // eslint-disable-next-line no-console
-    //   console.log('successfullyCreateATeam', response);
+      // Info: (20250703 - Shirley) Verify team structure
+      expect(response.body.payload.name.value).toBe(teamData.name);
+      // expect(response.body.payload.about.value).toBe(teamData.about);
+      // expect(response.body.payload.profile.value).toBe(teamData.profile);
+      expect(response.body.payload.role).toBe('OWNER');
+      // expect(response.body.payload.planType.value).toBe('PROFESSIONAL');
+      expect(typeof response.body.payload.id).toBe('number');
+      expect(typeof response.body.payload.totalMembers).toBe('number');
+      expect(typeof response.body.payload.expiredAt).toBe('number');
 
-    //   expect(response.status).toBe(201);
-    //   expect(response.body.success).toBe(true);
-    //   expect(response.body.code).toBe('201ISF0000');
-    //   expect(response.body.payload).toBeDefined();
-
-    //   // Info: (20250703 - Shirley) Verify team structure
-    //   expect(response.body.payload.name.value).toBe(teamData.name);
-    //   // expect(response.body.payload.about.value).toBe(teamData.about);
-    //   // expect(response.body.payload.profile.value).toBe(teamData.profile);
-    //   expect(response.body.payload.role).toBe('OWNER');
-    //   // expect(response.body.payload.planType.value).toBe('PROFESSIONAL');
-    //   expect(typeof response.body.payload.id).toBe('number');
-    //   expect(typeof response.body.payload.totalMembers).toBe('number');
-    //   expect(typeof response.body.payload.expiredAt).toBe('number');
-    // });
+      // Info: (20250707 - Shirley) Ensure team was created successfully
+      expect(response.body.payload.id).toBeGreaterThan(0);
+      expect(response.body.payload.totalMembers).toBeGreaterThan(0);
+    });
   });
 
   // ========================================

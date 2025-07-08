@@ -206,8 +206,6 @@ export const createTeamWithTrial = async (
       },
     });
 
-    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0);
-
     // Info: (20250409 - Tzuhan) 4. 處理邀請成員
     if (teamData.members?.length) {
       const existingUsers = await tx.user.findMany({
@@ -268,6 +266,9 @@ export const createTeamWithTrial = async (
         expiredDate: expired,
       },
     });
+
+    // Info: (20250708 - Shirley) Check team member limit after subscription is created
+    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0);
 
     // Info: (20250409 - Tzuhan) 6. 回傳 ITeam 格式
     return {
