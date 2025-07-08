@@ -271,7 +271,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const inviteData = {
-        emails: [TestDataFactory.DEFAULT_TEST_EMAILS[1]], // Use user1@isunfa.com for this test
+        emails: [TestDataFactory.DEFAULT_TEST_EMAILS[1]], // Info: (20250707 - Shirley) Use user1@isunfa.com for this test
       };
 
       const inviteResponse = await teamInviteClient
@@ -316,7 +316,7 @@ describe('Integration Test - Team Management Authentication', () => {
       });
 
       expect(teamMember).toBeTruthy();
-      expect(teamMember?.role).toBe('EDITOR'); // Default role for accepted invitations
+      expect(teamMember?.role).toBe('EDITOR'); // Info: (20250707 - Shirley) Default role for accepted invitations
       expect(teamMember?.status).toBe('IN_TEAM');
 
       // Info: (20250707 - Shirley) Verify invitation status was updated
@@ -423,7 +423,7 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.body.code).toBe('200ISF0000');
       expect(response.body.payload).toBeDefined();
       expect(Array.isArray(response.body.payload.data)).toBe(true);
-      expect(response.body.payload.data.length).toBeGreaterThan(0); // At least the owner
+      expect(response.body.payload.data.length).toBeGreaterThan(0); // Info: (20250707 - Shirley) At least the owner
     });
 
     it('should reject unauthenticated member listing requests', async () => {
@@ -461,7 +461,7 @@ describe('Integration Test - Team Management Authentication', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('404ISF0004'); // Specific error code for resource not found
+      expect(response.body.code).toBe('404ISF0004'); // Info: (20250707 - Shirley) Specific error code for resource not found
     });
   });
 
@@ -502,7 +502,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const response = await teamMemberUpdateClient
         .put(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .send(updateData)
-        .expect(500); // API returns 500 for internal errors when no session
+        .expect(500); // Info: (20250707 - Shirley) API returns 500 for internal errors when no session
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
@@ -527,7 +527,7 @@ describe('Integration Test - Team Management Authentication', () => {
         .put(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .send(updateData)
         .set('Cookie', cookies.join('; '))
-        .expect(500); // API returns 500 for internal validation errors
+        .expect(500); // Info: (20250707 - Shirley) API returns 500 for internal validation errors
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
@@ -548,7 +548,7 @@ describe('Integration Test - Team Management Authentication', () => {
         .put(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .send({})
         .set('Cookie', cookies.join('; '))
-        .expect(500); // Missing role validation causes internal error
+        .expect(500); // Info: (20250707 - Shirley) Missing role validation causes internal error
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
@@ -587,7 +587,7 @@ describe('Integration Test - Team Management Authentication', () => {
 
       const response = await teamMemberDeleteClient
         .delete(`/api/v2/team/${createdTeamId}/member/${memberId}`)
-        .expect(500); // API returns 500 for internal errors when no session
+        .expect(500); // Info: (20250707 - Shirley) API returns 500 for internal errors when no session
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
@@ -607,7 +607,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const response = await teamMemberDeleteClient
         .delete(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .set('Cookie', cookies.join('; '))
-        .expect(500); // API returns 500 for internal validation errors
+        .expect(500); // Info: (20250707 - Shirley) API returns 500 for internal validation errors
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
@@ -627,7 +627,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const response = await nonExistentTeamClient
         .delete('/api/v2/team/999999/member/123')
         .set('Cookie', cookies.join('; '))
-        .expect(500); // API returns 500 for internal validation errors
+        .expect(500); // Info: (20250707 - Shirley) API returns 500 for internal validation errors
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('500ISF0000');
