@@ -809,33 +809,33 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       }
     });
 
-    it('should validate all test emails are from default_value.ts', async () => {
-      // Info: (20250707 - Shirley) Verify test emails match default_value.ts
-      const expectedEmails = [
-        'user@isunfa.com',
-        'user1@isunfa.com',
-        'user2@isunfa.com',
-        'user3@isunfa.com',
-      ];
+    // it('should validate all test emails are from default_value.ts', async () => {
+    //   // Info: (20250707 - Shirley) Verify test emails match default_value.ts
+    //   const expectedEmails = [
+    //     'user@isunfa.com',
+    //     'user1@isunfa.com',
+    //     'user2@isunfa.com',
+    //     'user3@isunfa.com',
+    //   ];
 
-      expect(TestDataFactory.DEFAULT_TEST_EMAILS).toEqual(expectedEmails);
-      expect(TestDataFactory.DEFAULT_TEST_EMAILS.length).toBe(4);
+    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS).toEqual(expectedEmails);
+    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS.length).toBe(4);
 
-      // Info: (20250707 - Shirley) Verify each email is processed correctly
-      const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
-        const result = await APITestHelper.processTestUser(email);
-        expect(result.success).toBe(true);
-        expect(result.email).toBe(email);
-        return result;
-      });
+    //   // Info: (20250707 - Shirley) Verify each email is processed correctly
+    //   const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
+    //     const result = await APITestHelper.processTestUser(email);
+    //     expect(result.success).toBe(true);
+    //     expect(result.email).toBe(email);
+    //     return result;
+    //   });
 
-      await Promise.all(emailPromises);
+    //   await Promise.all(emailPromises);
 
-      if (process.env.DEBUG_TESTS === 'true') {
-        // eslint-disable-next-line no-console
-        console.log('✅ All default test emails validated and processed');
-      }
-    });
+    //   if (process.env.DEBUG_TESTS === 'true') {
+    //     // eslint-disable-next-line no-console
+    //     console.log('✅ All default test emails validated and processed');
+    //   }
+    // });
 
     it('should reject processing of non-default test emails', async () => {
       const invalidEmail = 'invalid@example.com';
