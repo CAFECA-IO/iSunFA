@@ -44,10 +44,12 @@ const VacancyDetailPage: React.FC<IVacancyDetailPageProps> = ({ vacancyId }) => 
         if (success && data) {
           setJobData(data);
         } else {
+          // Deprecated: (20250708 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.error('Failed to fetch job data: ', error);
         }
       } catch (err) {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.error('Error fetching job data:', err);
       }
