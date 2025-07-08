@@ -597,6 +597,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       }
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(
           '✅ Complete user registration flow completed successfully using default values'
@@ -619,6 +620,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(Array.isArray(response.body.payload)).toBe(true);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ User roles retrieved successfully');
       }
@@ -661,7 +663,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20250707 - Shirley) Test role creation with missing roleName
       const createRoleResponse = await userRoleCreateClient
         .post(APIPath.USER_CREATE_ROLE.replace(':userId', currentUserId))
-        .send({}) // Missing roleName
+        .send({}) // Info: (20250707 - Shirley) Missing roleName
         .set('Cookie', cookies.join('; '))
         .expect(422);
 
@@ -671,7 +673,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20250707 - Shirley) Test role selection with missing roleName
       const selectRoleResponse = await userRoleSelectClient
         .put(APIPath.USER_SELECT_ROLE.replace(':userId', currentUserId))
-        .send({}) // Missing roleName
+        .send({}) // Info: (20250707 - Shirley) Missing roleName
         .set('Cookie', cookies.join('; '));
 
       // Info: (20250707 - Shirley) Accept both 405 (method routing issue) and 422 (validation error)
@@ -691,7 +693,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
       const response = await agreementClient
         .post(APIPath.AGREE_TO_TERMS.replace(':userId', currentUserId))
-        .send({}) // Missing agreementHash
+        .send({}) // Info: (20250707 - Shirley) Missing agreementHash
         .set('Cookie', cookies.join('; '))
         .expect(422);
 
@@ -739,6 +741,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(successfulRegistrations.length).toBe(TestDataFactory.DEFAULT_TEST_EMAILS.length);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(
           `✅ All ${TestDataFactory.DEFAULT_TEST_EMAILS.length} default test users processed successfully`
@@ -779,6 +782,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       }
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`✅ Test user ${testEmail} processed successfully`);
       }
@@ -804,6 +808,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       }
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`✅ User agreement logic handled correctly for ${testEmail}`);
       }
@@ -864,6 +869,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       }
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250708 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`✅ Roles API tested for ${testEmail} with status: ${rolesResponse.status}`);
       }
