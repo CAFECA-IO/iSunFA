@@ -1,33 +1,47 @@
 import React, { useState } from 'react';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { PiUserFill } from 'react-icons/pi';
+import { MONTH_FULL_NAME } from '@/constants/display';
 import ProgressBar from '@/components/salary_calculator/progress_bar';
 import StepTabs from '@/components/salary_calculator/step_tabs';
-
-// ToDo: (20250708 - Julian) Develop dropdown menu
+import NumericInput from '@/components/numeric_input/numeric_input';
 
 const SalaryFormSection: React.FC = () => {
+  const yearOptions = ['2025', '2024', '2023'];
+  const monthOptions = MONTH_FULL_NAME;
+
+  const {
+    targetRef: yearDropdownRef,
+    componentVisible: isYearOpen,
+    setComponentVisible: setIsYearOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: monthDropdownRef,
+    componentVisible: isMonthOpen,
+    setComponentVisible: setIsMonthOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250709 - Julian) Step state
   const [currentStep, setCurrentStep] = useState<number>(1);
   // Info: (20250708 - Julian) Form state
   const [employeeNameInput, setEmployeeNameInput] = useState<string>('');
   const [employeeNumberInput, setEmployeeNumberInput] = useState<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedYear, setSelectedYear] = useState<string>('2025');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedMonth, setSelectedMonth] = useState<string>('January');
+  const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
+  const [selectedMonth, setSelectedMonth] = useState<string>(monthOptions[0]);
   const [workedDaysInput, setWorkedDaysInput] = useState<number>(31);
 
+  // Info: (20250709 - Julian) 下拉選單開關
+  const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
+  const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
+
+  // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmployeeNameInput(e.target.value);
   };
   const handleEmployeeNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmployeeNumberInput(e.target.value);
-  };
-  const handleWorkedDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setWorkedDaysInput(value ? parseInt(value, 10) : 0);
   };
 
   // Info: (20250708 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
@@ -38,6 +52,33 @@ const SalaryFormSection: React.FC = () => {
     setCurrentStep(1);
   };
 
+  const yearDropdown = yearOptions.map((year) => {
+    const clickHandler = () => setSelectedYear(year);
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {year}
+      </button>
+    );
+  });
+
+  const monthDropdown = monthOptions.map((month) => {
+    const clickHandler = () => setSelectedMonth(month);
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {month}
+      </button>
+    );
+  });
+
+  // Info: (20250709 - Julian) ================== 基本資訊表單 Basic Info Form ==================
   const basicInfoForm = (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250708 - Julian) 員工姓名 */}
@@ -78,13 +119,22 @@ const SalaryFormSection: React.FC = () => {
         <p className="text-sm font-semibold text-input-text-primary">
           Year <span className="text-text-state-error">*</span>
         </p>
-        <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer">
-          <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder">
+        <div
+          ref={yearDropdownRef}
+          onClick={toggleYearDropdown}
+          className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+        >
+          <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
             {selectedYear}
           </div>
           <div className="px-12px py-10px">
             <FaChevronDown size={16} />
           </div>
+          {isYearOpen && (
+            <div className="absolute top-50px flex w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+              {yearDropdown}
+            </div>
+          )}
         </div>
       </div>
 
@@ -93,13 +143,22 @@ const SalaryFormSection: React.FC = () => {
         <p className="text-sm font-semibold text-input-text-primary">
           Month <span className="text-text-state-error">*</span>
         </p>
-        <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer">
-          <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder">
+        <div
+          ref={monthDropdownRef}
+          onClick={toggleMonthDropdown}
+          className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+        >
+          <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
             {selectedMonth}
           </div>
           <div className="px-12px py-10px">
             <FaChevronDown size={16} />
           </div>
+          {isMonthOpen && (
+            <div className="absolute top-50px flex w-full flex-col overflow-hidden rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+              {monthDropdown}
+            </div>
+          )}
         </div>
       </div>
 
@@ -109,11 +168,12 @@ const SalaryFormSection: React.FC = () => {
           Days Worked <span className="text-text-state-error">*</span>
         </p>
         <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-          <input
-            type="number"
-            className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
+          <NumericInput
             value={workedDaysInput}
-            onChange={handleWorkedDaysChange}
+            setValue={setWorkedDaysInput}
+            min={0}
+            max={31}
+            className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
           />
         </div>
       </div>
@@ -125,7 +185,12 @@ const SalaryFormSection: React.FC = () => {
       {/* Info: (20250708 - Julian) Progress bar */}
       <ProgressBar progress={progress} resetHandler={resetHandler} />
       {/* Info: (20250708 - Julian) Step Tabs */}
-      <StepTabs currentStep={currentStep} />
+      <StepTabs
+        currentStep={currentStep}
+        switchStep={(step: number) => {
+          setCurrentStep(step);
+        }}
+      />
       {/* Info: (20250708 - Julian) Form */}
       {basicInfoForm}
     </div>
