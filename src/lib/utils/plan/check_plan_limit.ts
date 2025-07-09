@@ -4,6 +4,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { PLANS } from '@/constants/subscription';
 import { TPlanType } from '@/interfaces/subscription';
 import loggerBack from '@/lib/utils/logger_back';
+import { Prisma } from '@prisma/client';
 
 /**
  * Info: (20250514 - Tzuhan)
@@ -142,34 +143,21 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
 export async function checkTeamMemberLimit(
   teamId: number,
   addMemberCount: number,
-  maxMembers?: number
+  tx?: Prisma.TransactionClient
 ) {
-  let limit = maxMembers;
+  const db = tx ?? prisma;
 
-  // Info: (20250709 - Shirley) If maxMembers not provided, query from database
-  if (limit === undefined) {
-    const latestSubscription = await prisma.teamSubscription.findFirst({
-      where: { teamId },
-      orderBy: { createdAt: SortOrder.DESC },
-      select: { maxMembers: true },
-    });
-    limit = latestSubscription?.maxMembers ?? 3;
-  }
+  const latestSubscription = await db.teamSubscription.findFirst({
+    where: { teamId },
+    orderBy: { createdAt: SortOrder.DESC },
+    select: { maxMembers: true },
+  });
+  const limit = latestSubscription?.maxMembers ?? 3;
+
+  const memberCount = await db.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
 
   loggerBack.info(
-    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (${maxMembers !== undefined ? 'from parameter' : 'from team_subscription.max_members'})`
-  );
-
-  const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
-
-  // eslint-disable-next-line no-console
-  console.log(
-    'checkTeamMemberLimit, memberCount',
-    memberCount,
-    'addMemberCount',
-    addMemberCount,
-    'limit',
-    limit
+    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (${tx !== undefined ? 'from transaction' : 'from team_subscription.max_members'})`
   );
 
   if (memberCount + addMemberCount > limit) {

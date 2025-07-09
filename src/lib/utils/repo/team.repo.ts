@@ -262,24 +262,7 @@ export const createTeamWithTrial = async (
       }
     }
 
-    // // Info: (20250709 - Shirley) Extract maxMembers from plan features
-    // let maxMembers = 3; // Default fallback
-
-    // // Find the member limit feature
-    // const memberLimitFeature = plan.features.find(
-    //   (feature) =>
-    //     feature.featureKey === 'OWNED_TEAM_MEMBER_LIMIT' ||
-    //     feature.featureKey === 'EVERY_OWNED_TEAM_MEMBER_LIMIT'
-    // );
-
-    // if (memberLimitFeature) {
-    //   const match = memberLimitFeature.featureValue.match(/LIMIT_(\d+)_MEMBER(?:S)?/);
-    //   if (match) {
-    //     maxMembers = parseInt(match[1], 10);
-    //   }
-    // }
-
-    const subscription = await tx.teamSubscription.create({
+    await tx.teamSubscription.create({
       data: {
         teamId: newTeam.id,
         planType: plan.type,
@@ -288,11 +271,8 @@ export const createTeamWithTrial = async (
       },
     });
 
-    // eslint-disable-next-line no-console
-    console.log('subscriptionInCreateTeamWithTrial', subscription);
-
     // Info: (20250708 - Shirley) Check team member limit with calculated maxMembers
-    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0, subscription.maxMembers);
+    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0, tx);
 
     // Info: (20250409 - Tzuhan) 6. 回傳 ITeam 格式
     return {
