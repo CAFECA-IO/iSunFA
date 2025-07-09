@@ -32,7 +32,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const createdTeam = await createTeamWithTrial(userId, body);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
+  statusMessage = STATUS_MESSAGE.CREATED;
 
   const { isOutputDataValid, outputData } = validateOutputData(APIName.CREATE_TEAM, createdTeam);
   if (!isOutputDataValid) {
@@ -65,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     const err = error as Error;
+    loggerBack.error(`Team creation error: ${err.message}`, err);
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }

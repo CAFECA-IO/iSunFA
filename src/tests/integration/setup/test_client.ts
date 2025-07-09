@@ -38,6 +38,26 @@ export const createSingleTestClient = (handler: NextApiHandler) => {
 
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
+      const url = new URL(req.url || '/', 'http://localhost');
+
+      if (!req.query) {
+        req.query = {};
+      }
+
+      url.searchParams.forEach((value, key) => {
+        if (req.query) {
+          req.query[key] = value;
+        }
+      });
+
+      if (!req.headers) {
+        req.headers = {};
+      }
+
+      req.headers['user-agent'] = req.headers['user-agent'] || 'supertest-agent';
+      req.headers['x-forwarded-for'] = req.headers['x-forwarded-for'] || '127.0.0.1';
+      req.headers['x-real-ip'] = req.headers['x-real-ip'] || '127.0.0.1';
+
       return apiResolver(
         req,
         res,

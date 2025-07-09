@@ -33,6 +33,11 @@ export class TestDataFactory {
   // Info: (20250701 - Shirley) Primary test email (first in the list)
   static readonly PRIMARY_TEST_EMAIL = this.TEST_EMAIL[0]; // Info: (20250701 - Shirley) user@isunfa.com
 
+  // Info: (20250707 - Shirley) Default values for terms agreement and role selection
+  static readonly DEFAULT_AGREEMENT_HASH = 'default_test_agreement_hash_v1';
+
+  static readonly DEFAULT_ROLE_NAME = 'INDIVIDUAL';
+
   // Info: (20250701 - Shirley) Generate authentication request for email login
   static createAuthenticationRequest(
     email?: string,
@@ -41,6 +46,22 @@ export class TestDataFactory {
     return {
       email: email || this.PRIMARY_TEST_EMAIL,
       code: code || this.DEFAULT_VERIFICATION_CODE,
+    };
+  }
+
+  // Info: (20250707 - Shirley) Generate terms agreement request
+  static createTermsAgreementRequest(agreementHash?: string): { agreementHash: string } {
+    return {
+      agreementHash:
+        agreementHash ||
+        `${this.DEFAULT_AGREEMENT_HASH}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    };
+  }
+
+  // Info: (20250707 - Shirley) Generate role creation request
+  static createRoleRequest(roleName?: string): { roleName: string } {
+    return {
+      roleName: roleName || this.DEFAULT_ROLE_NAME,
     };
   }
 }
