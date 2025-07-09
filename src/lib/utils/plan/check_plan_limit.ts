@@ -52,9 +52,11 @@ export async function getTeamPlanFeatures(
  */
 
 export async function getTeamPlanFeatures(
-  teamId: number
+  teamId: number,
+  tx?: Prisma.TransactionClient
 ): Promise<Record<string, string | string[]>> {
-  const latestSub = await prisma.teamSubscription.findFirst({
+  const db = tx ?? prisma;
+  const latestSub = await db.teamSubscription.findFirst({
     where: { teamId },
     orderBy: { createdAt: SortOrder.DESC },
     select: { planType: true },
@@ -146,19 +148,20 @@ export async function checkTeamMemberLimit(
   tx?: Prisma.TransactionClient
 ) {
   const db = tx ?? prisma;
+  const features = await getTeamPlanFeatures(teamId, tx);
+  const limitEntry = features.OWNED_TEAM_MEMBER_LIMIT || features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
+  const match = limitEntry
+    ? (limitEntry as string).match(/LIMIT_(\d+)_MEMBER(?:S)?(?:_PAID_EXTENSION)?/)
+    : null;
 
-  const latestSubscription = await db.teamSubscription.findFirst({
-    where: { teamId },
-    orderBy: { createdAt: SortOrder.DESC },
-    select: { maxMembers: true },
-  });
-  const limit = latestSubscription?.maxMembers ?? 3;
-
-  const memberCount = await db.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
+  const limit = match ? parseInt(match[1], 10) : Infinity;
+  const isPaidExtension = limitEntry?.includes('_PAID_EXTENSION') ?? false;
 
   loggerBack.info(
-    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (${tx !== undefined ? 'from transaction' : 'from team_subscription.max_members'})`
+    `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}, isPaidExtension: ${isPaidExtension}`
   );
+
+  const memberCount = await db.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
 
   if (memberCount + addMemberCount > limit) {
     const error = new Error(STATUS_MESSAGE.LIMIT_EXCEEDED_TEAM_MEMBER);
