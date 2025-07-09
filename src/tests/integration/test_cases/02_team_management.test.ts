@@ -32,6 +32,8 @@ describe('Integration Test - Team Management Authentication', () => {
   let teamCreateClient: TestClient;
   let currentUserId: string;
 
+  let multiUserHelper: APITestHelper;
+
   beforeAll(async () => {
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
@@ -49,10 +51,20 @@ describe('Integration Test - Team Management Authentication', () => {
       handler: teamListHandler,
       routeParams: { userId: currentUserId },
     });
+
+    multiUserHelper = await APITestHelper.createHelper({
+      emails: [
+        TestDataFactory.DEFAULT_TEST_EMAILS[0],
+        TestDataFactory.DEFAULT_TEST_EMAILS[1],
+        TestDataFactory.DEFAULT_TEST_EMAILS[2],
+        TestDataFactory.DEFAULT_TEST_EMAILS[3],
+      ],
+    });
   });
 
   afterAll(() => {
     authenticatedHelper.clearAllUserSessions();
+    multiUserHelper.clearAllUserSessions();
   });
 
   // ========================================
@@ -231,8 +243,9 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully invite members with valid emails', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      multiUserHelper.switchToUser(testUsers.user1);
+      await multiUserHelper.ensureAuthenticated();
+      const cookies = multiUserHelper.getCurrentSession();
 
       const inviteData = {
         emails: [TestDataFactory.DEFAULT_TEST_EMAILS[3]],
@@ -271,6 +284,10 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
+      const user1 = authenticatedHelper.getCurrentUser();
+
+      console.log('cookieInAcceptInvitation', cookies, user1, 'timestamp', Date.now());
+
       const inviteData = {
         emails: [TestDataFactory.DEFAULT_TEST_EMAILS[1]], // Info: (20250707 - Shirley) Use user1@isunfa.com for this test
       };
@@ -279,6 +296,8 @@ describe('Integration Test - Team Management Authentication', () => {
         .put(`/api/v2/team/${createdTeamId}/member`)
         .send(inviteData)
         .set('Cookie', cookies.join('; '));
+
+      console.log('inviteResponse', inviteResponse.body);
 
       expect(inviteResponse.status).toBe(200);
 
@@ -296,6 +315,15 @@ describe('Integration Test - Team Management Authentication', () => {
       // Info: (20250707 - Shirley) Simulate accepting the invitation by directly calling the repo function
       const { acceptTeamInvitation } = await import('@/lib/utils/repo/team_member.repo');
 
+      // Info: (20250709 - Shirley) Ensure user exists by authenticating first
+      const userHelper = await APITestHelper.createHelper({
+        email: TestDataFactory.DEFAULT_TEST_EMAILS[1],
+        autoAuth: true,
+      });
+      await userHelper.agreeToTerms();
+      await userHelper.createUserRole();
+      await userHelper.selectUserRole();
+
       // Info: (20250707 - Shirley) Get the user ID for user1@isunfa.com
       const user = await prisma.user.findFirst({
         where: { email: TestDataFactory.DEFAULT_TEST_EMAILS[1] },
@@ -306,6 +334,9 @@ describe('Integration Test - Team Management Authentication', () => {
 
       // Info: (20250707 - Shirley) Accept the invitation
       await acceptTeamInvitation(user!.id, createdTeamId);
+
+      // Info: (20250709 - Shirley) Cleanup user helper
+      userHelper.clearAllUserSessions();
 
       // Info: (20250707 - Shirley) Verify member was actually added to team_member table
       const teamMember = await prisma.teamMember.findFirst({
@@ -513,6 +544,15 @@ describe('Integration Test - Team Management Authentication', () => {
       const { acceptTeamInvitation } = await import('@/lib/utils/repo/team_member.repo');
       const { TeamRole } = await import('@/interfaces/team');
 
+      // Info: (20250709 - Shirley) Ensure user exists by authenticating first
+      const userHelper = await APITestHelper.createHelper({
+        email: memberEmail,
+        autoAuth: true,
+      });
+      await userHelper.agreeToTerms();
+      await userHelper.createUserRole();
+      await userHelper.selectUserRole();
+
       const user = await prisma.user.findFirst({
         where: { email: memberEmail },
         select: { id: true },
@@ -522,6 +562,9 @@ describe('Integration Test - Team Management Authentication', () => {
       if (user) {
         await acceptTeamInvitation(user.id, createdTeamId);
       }
+
+      // Info: (20250709 - Shirley) Cleanup user helper
+      userHelper.clearAllUserSessions();
 
       // Info: (20250709 - Shirley) Get member info for update
       const teamMember = await prisma.teamMember.findFirst({
@@ -546,7 +589,6 @@ describe('Integration Test - Team Management Authentication', () => {
       };
 
       const response = await teamMemberUpdateClient
-        // .put(`/api/v2/team/${createdTeamId}/member/${teamMember.id}`)
         .put(
           APIPath.UPDATE_MEMBER.replace('{teamId}', createdTeamId.toString()).replace(
             '{memberId}',
@@ -647,6 +689,23 @@ describe('Integration Test - Team Management Authentication', () => {
       );
       const { TeamRole } = await import('@/interfaces/team');
 
+      // Info: (20250709 - Shirley) Ensure users exist by authenticating first
+      const adminHelper = await APITestHelper.createHelper({
+        email: adminEmail,
+        autoAuth: true,
+      });
+      await adminHelper.agreeToTerms();
+      await adminHelper.createUserRole();
+      await adminHelper.selectUserRole();
+
+      const editorHelper = await APITestHelper.createHelper({
+        email: editorEmail,
+        autoAuth: true,
+      });
+      await editorHelper.agreeToTerms();
+      await editorHelper.createUserRole();
+      await editorHelper.selectUserRole();
+
       const adminUser = await prisma.user.findFirst({
         where: { email: adminEmail },
         select: { id: true },
@@ -663,6 +722,10 @@ describe('Integration Test - Team Management Authentication', () => {
         await acceptTeamInvitation(adminUser.id, createdTeamId);
         await acceptTeamInvitation(editorUser.id, createdTeamId);
       }
+
+      // Info: (20250709 - Shirley) Cleanup user helpers
+      adminHelper.clearAllUserSessions();
+      editorHelper.clearAllUserSessions();
 
       // Info: (20250709 - Shirley) Get member IDs and promote admin
       const adminMember = await prisma.teamMember.findFirst({
@@ -681,15 +744,15 @@ describe('Integration Test - Team Management Authentication', () => {
       await updateMemberById(createdTeamId, adminMember.id, TeamRole.ADMIN, TeamRole.OWNER);
 
       // Info: (20250709 - Shirley) Switch to admin user's session for role update
-      const adminHelper = await APITestHelper.createHelper({
+      const adminHelper3 = await APITestHelper.createHelper({
         autoAuth: true,
         email: adminEmail,
       });
-      await adminHelper.agreeToTerms();
-      await adminHelper.createUserRole();
-      await adminHelper.selectUserRole();
+      await adminHelper3.agreeToTerms();
+      await adminHelper3.createUserRole();
+      await adminHelper3.selectUserRole();
 
-      const adminCookies = adminHelper.getCurrentSession();
+      const adminCookies = adminHelper3.getCurrentSession();
 
       // Info: (20250709 - Shirley) Update editor role to VIEWER as admin
       teamMemberUpdateClient = createTestClient({
@@ -735,7 +798,7 @@ describe('Integration Test - Team Management Authentication', () => {
       }
 
       // Info: (20250709 - Shirley) Cleanup admin helper
-      adminHelper.clearAllUserSessions();
+      adminHelper3.clearAllUserSessions();
     });
 
     it('should reject unauthenticated member update requests', async () => {
@@ -849,6 +912,15 @@ describe('Integration Test - Team Management Authentication', () => {
 
       // Info: (20250709 - Shirley) Accept the invitation using repository function
       const { acceptTeamInvitation } = await import('@/lib/utils/repo/team_member.repo');
+      // Info: (20250709 - Shirley) Ensure user exists by authenticating first
+      const userHelper = await APITestHelper.createHelper({
+        email: TestDataFactory.DEFAULT_TEST_EMAILS[2],
+        autoAuth: true,
+      });
+      await userHelper.agreeToTerms();
+      await userHelper.createUserRole();
+      await userHelper.selectUserRole();
+
       const user = await prisma.user.findFirst({
         where: { email: TestDataFactory.DEFAULT_TEST_EMAILS[2] },
         select: { id: true },
@@ -858,6 +930,9 @@ describe('Integration Test - Team Management Authentication', () => {
       if (user) {
         await acceptTeamInvitation(user.id, createdTeamId);
       }
+
+      // Info: (20250709 - Shirley) Cleanup user helper
+      userHelper.clearAllUserSessions();
 
       // Info: (20250709 - Shirley) Verify member was added and can be accessed for deletion
       const teamMember = await prisma.teamMember.findFirst({
@@ -954,6 +1029,23 @@ describe('Integration Test - Team Management Authentication', () => {
       );
       const { TeamRole } = await import('@/interfaces/team');
 
+      // Info: (20250709 - Shirley) Ensure users exist by authenticating first
+      const adminHelper = await APITestHelper.createHelper({
+        email: adminEmail,
+        autoAuth: true,
+      });
+      await adminHelper.agreeToTerms();
+      await adminHelper.createUserRole();
+      await adminHelper.selectUserRole();
+
+      const editorHelper = await APITestHelper.createHelper({
+        email: editorEmail,
+        autoAuth: true,
+      });
+      await editorHelper.agreeToTerms();
+      await editorHelper.createUserRole();
+      await editorHelper.selectUserRole();
+
       const adminUser = await prisma.user.findFirst({
         where: { email: adminEmail },
         select: { id: true },
@@ -970,6 +1062,10 @@ describe('Integration Test - Team Management Authentication', () => {
         await acceptTeamInvitation(adminUser.id, createdTeamId);
         await acceptTeamInvitation(editorUser.id, createdTeamId);
       }
+
+      // Info: (20250709 - Shirley) Cleanup user helpers
+      adminHelper.clearAllUserSessions();
+      editorHelper.clearAllUserSessions();
 
       // Info: (20250709 - Shirley) Get member IDs and promote admin
       const adminMember = await prisma.teamMember.findFirst({
@@ -995,15 +1091,15 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(updatedAdminMember?.role).toBe(TeamRole.ADMIN);
 
       // Info: (20250709 - Shirley) Verify ADMIN can access member management endpoints
-      const adminHelper = await APITestHelper.createHelper({
+      const adminHelper2 = await APITestHelper.createHelper({
         autoAuth: true,
         email: adminEmail,
       });
-      await adminHelper.agreeToTerms();
-      await adminHelper.createUserRole();
-      await adminHelper.selectUserRole();
+      await adminHelper2.agreeToTerms();
+      await adminHelper2.createUserRole();
+      await adminHelper2.selectUserRole();
 
-      const adminCookies = adminHelper.getCurrentSession();
+      const adminCookies = adminHelper2.getCurrentSession();
 
       // Info: (20250709 - Shirley) Test that ADMIN can access member deletion endpoint
       teamMemberDeleteClient = createTestClient({
@@ -1027,7 +1123,7 @@ describe('Integration Test - Team Management Authentication', () => {
       }
 
       // Info: (20250709 - Shirley) Cleanup admin helper
-      adminHelper.clearAllUserSessions();
+      adminHelper2.clearAllUserSessions();
     });
 
     it('should reject unauthenticated member deletion requests', async () => {
@@ -1084,7 +1180,7 @@ describe('Integration Test - Team Management Authentication', () => {
     });
   });
 
-  describe('Test Case 2.3-1: Authentication Performance', () => {
+  describe('Test Case 2.7: Authentication Performance', () => {
     it('should handle concurrent authenticated requests', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
