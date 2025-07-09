@@ -1,24 +1,6 @@
 import { z } from 'zod';
 import { IVacancyValidator, IVacancyDetailValidator } from '@/lib/utils/zod_schema/vacancy';
 
-// export interface IVacancy {
-//   id: number;
-//   title: string;
-//   location: string;
-//   date: number;
-//   description: string;
-// }
-
-// export interface IVacancyUI extends IVacancyDetail {
-//   isFavorite: boolean;
-// }
-
-// export interface IVacancyDetail extends IVacancy {
-//   responsibilities: string[];
-//   requirements: string[];
-//   extraSkills: string[];
-// }
-
 export type IVacancy = z.infer<typeof IVacancyValidator>;
 export type IVacancyDetail = z.infer<typeof IVacancyDetailValidator>;
 
