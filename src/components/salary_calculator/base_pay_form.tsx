@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
 
-const DisplayedInput: React.FC<{
+const AmountInput: React.FC<{
   title: string;
   children: React.ReactNode;
   required?: boolean;
@@ -43,7 +43,7 @@ const BasePayForm: React.FC = () => {
   return (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250709 - Julian) 本薪（應稅） */}
-      <DisplayedInput title="Base Salary (Taxable)" required>
+      <AmountInput title="Base Salary (Taxable)" required>
         <NumericInput
           id="input-base-salary"
           name="input-base-salary"
@@ -54,10 +54,10 @@ const BasePayForm: React.FC = () => {
           isDecimal
           required
         />
-      </DisplayedInput>
+      </AmountInput>
 
       {/* Info: (20250709 - Julian) 伙食費（免稅） */}
-      <DisplayedInput title="Meal Allowance (Non-taxable)">
+      <AmountInput title="Meal Allowance (Non-taxable)">
         <NumericInput
           id="input-meal-allowance"
           name="input-meal-allowance"
@@ -67,10 +67,10 @@ const BasePayForm: React.FC = () => {
           hasComma
           isDecimal
         />
-      </DisplayedInput>
+      </AmountInput>
 
       {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
-      <DisplayedInput title="Other Allowance (Non-taxable)">
+      <AmountInput title="Other Allowance (Non-taxable)">
         <NumericInput
           id="input-other-allowance"
           name="input-other-allowance"
@@ -80,7 +80,7 @@ const BasePayForm: React.FC = () => {
           hasComma
           isDecimal
         />
-      </DisplayedInput>
+      </AmountInput>
     </form>
   );
 };
