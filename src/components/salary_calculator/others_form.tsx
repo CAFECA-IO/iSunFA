@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+// Deprecated: (20250709 - Luphia) remove eslint-disable
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
