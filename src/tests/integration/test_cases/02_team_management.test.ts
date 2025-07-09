@@ -243,7 +243,7 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully invite members with valid emails', async () => {
-      multiUserHelper.switchToUser(testUsers.user1);
+      multiUserHelper.switchToUser(TestDataFactory.DEFAULT_TEST_EMAILS[0]);
       await multiUserHelper.ensureAuthenticated();
       const cookies = multiUserHelper.getCurrentSession();
 
