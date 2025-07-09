@@ -1,12 +1,9 @@
 import React from 'react';
 import { FaCircleCheck } from 'react-icons/fa6';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 
-interface IStepTabProps {
-  currentStep: number;
-  switchStep: (step: number) => void;
-}
-
-const StepTabs: React.FC<IStepTabProps> = ({ currentStep, switchStep }) => {
+const StepTabs: React.FC = () => {
+  const { currentStep, switchStep } = useCalculatorCtx();
   const steps = ['Basic Info', 'Base Pay', 'Work Hours', 'Others'];
 
   const tabs = steps.map((step, index) => {

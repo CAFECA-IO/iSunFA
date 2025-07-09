@@ -7,13 +7,16 @@ import { timestampToString, numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import ResultBlock from '@/components/salary_calculator/result_block';
 import { RowItem } from '@/interfaces/calculator';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const SalaryCalculatorResult: React.FC = () => {
   // ToDo: (20250708 - Julian) during development
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation('common');
 
-  const username = 'Julian Hsu';
+  const { employeeName } = useCalculatorCtx();
+
+  const username = employeeName !== '' ? employeeName : '-';
   const date = 1751945247;
 
   // Info: (20250708 - Julian) 第二象限

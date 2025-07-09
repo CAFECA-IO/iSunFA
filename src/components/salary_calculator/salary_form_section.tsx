@@ -6,10 +6,13 @@ import { MONTH_FULL_NAME } from '@/constants/display';
 import ProgressBar from '@/components/salary_calculator/progress_bar';
 import StepTabs from '@/components/salary_calculator/step_tabs';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const SalaryFormSection: React.FC = () => {
   const yearOptions = ['2025', '2024', '2023'];
   const monthOptions = MONTH_FULL_NAME;
+
+  const { currentStep, employeeName, changeEmployeeName } = useCalculatorCtx();
 
   const {
     targetRef: yearDropdownRef,
@@ -23,10 +26,8 @@ const SalaryFormSection: React.FC = () => {
     setComponentVisible: setIsMonthOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20250709 - Julian) Step state
-  const [currentStep, setCurrentStep] = useState<number>(1);
   // Info: (20250708 - Julian) Form state
-  const [employeeNameInput, setEmployeeNameInput] = useState<string>('');
+  //   const [employeeNameInput, setEmployeeNameInput] = useState<string>('');
   const [employeeNumberInput, setEmployeeNumberInput] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<string>(monthOptions[0]);
@@ -38,18 +39,10 @@ const SalaryFormSection: React.FC = () => {
 
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmployeeNameInput(e.target.value);
+    changeEmployeeName(e.target.value);
   };
   const handleEmployeeNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmployeeNumberInput(e.target.value);
-  };
-
-  // Info: (20250708 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
-  const progress = currentStep * 25;
-
-  // ToDo: (20250708 - Julian) During development
-  const resetHandler = () => {
-    setCurrentStep(1);
   };
 
   const yearDropdown = yearOptions.map((year) => {
@@ -94,7 +87,7 @@ const SalaryFormSection: React.FC = () => {
             type="text"
             className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
             placeholder="Enter employee name"
-            value={employeeNameInput}
+            value={employeeName}
             onChange={handleEmployeeNameChange}
           />
         </div>
@@ -180,19 +173,16 @@ const SalaryFormSection: React.FC = () => {
     </form>
   );
 
+  const displayedForm = currentStep === 1 ? basicInfoForm : null;
+
   return (
     <div className="flex flex-col gap-lv-8 p-80px">
       {/* Info: (20250708 - Julian) Progress bar */}
-      <ProgressBar progress={progress} resetHandler={resetHandler} />
+      <ProgressBar />
       {/* Info: (20250708 - Julian) Step Tabs */}
-      <StepTabs
-        currentStep={currentStep}
-        switchStep={(step: number) => {
-          setCurrentStep(step);
-        }}
-      />
-      {/* Info: (20250708 - Julian) Form */}
-      {basicInfoForm}
+      <StepTabs />
+      {/* Info: (20250709 - Julian) Form */}
+      {displayedForm}
     </div>
   );
 };
