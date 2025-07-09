@@ -8,7 +8,14 @@ const ProgressBar: React.FC = () => {
 
   // Info: (20250709 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
   const progress = currentStep * 25;
+};
 
+interface IProgressBarProps {
+  progress: number;
+  resetHandler: () => void;
+}
+
+const ProgressBar: React.FC<IProgressBarProps> = ({ progress, resetHandler }) => {
   return (
     <div className="flex items-end gap-12px">
       <div className="flex flex-col items-start gap-8px">
