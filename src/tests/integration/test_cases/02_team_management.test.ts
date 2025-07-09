@@ -238,7 +238,7 @@ describe('Integration Test - Team Management Authentication', () => {
         emails: [TestDataFactory.DEFAULT_TEST_EMAILS[3]],
       };
 
-      // Info: (20250707 - Shirley) TRIAL plan allows 3 members, so this should succeed
+      // Info: (20250707 - Shirley) Default max_members is 3, so this should succeed
       const response = await teamInviteClient
         .put(`/api/v2/team/${createdTeamId}/member`)
         .send(inviteData)
@@ -623,7 +623,7 @@ describe('Integration Test - Team Management Authentication', () => {
         .send(inviteData)
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20250709 - Shirley) Handle team member limit constraint - BEGINNER plan allows only 1 member
+      // Info: (20250709 - Shirley) Handle team member limit constraint - team_subscription max_members limit
       if (inviteResponse.status === 403) {
         // Info: (20250709 - Shirley) Verify this is the expected team member limit error
         expect(inviteResponse.body.success).toBe(false);
@@ -632,7 +632,9 @@ describe('Integration Test - Team Management Authentication', () => {
 
         if (process.env.DEBUG_TESTS === 'true') {
           // eslint-disable-next-line no-console
-          console.log('✅ Team member limit properly enforced (BEGINNER plan: 1 member limit)');
+          console.log(
+            '✅ Team member limit properly enforced (team_subscription max_members limit)'
+          );
         }
         return; // Info: (20250709 - Shirley) End test early since we cannot proceed with member invitation
       }
@@ -928,7 +930,7 @@ describe('Integration Test - Team Management Authentication', () => {
         .send(inviteData)
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20250709 - Shirley) Handle team member limit constraint - BEGINNER plan allows only 1 member
+      // Info: (20250709 - Shirley) Handle team member limit constraint - team_subscription max_members limit
       if (inviteResponse.status === 403) {
         // Info: (20250709 - Shirley) Verify this is the expected team member limit error
         expect(inviteResponse.body.success).toBe(false);
@@ -937,7 +939,9 @@ describe('Integration Test - Team Management Authentication', () => {
 
         if (process.env.DEBUG_TESTS === 'true') {
           // eslint-disable-next-line no-console
-          console.log('✅ Team member limit properly enforced (BEGINNER plan: 1 member limit)');
+          console.log(
+            '✅ Team member limit properly enforced (team_subscription max_members limit)'
+          );
         }
         return; // Info: (20250709 - Shirley) End test early since we cannot proceed with member invitation
       }

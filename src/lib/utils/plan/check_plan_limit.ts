@@ -140,17 +140,16 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
  * 檢查 team 成員數是否達上限
  */
 export async function checkTeamMemberLimit(teamId: number, addMemberCount: number) {
-  const features = await getTeamPlanFeatures(teamId);
-  const limitEntry = features.OWNED_TEAM_MEMBER_LIMIT || features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
-  const match = limitEntry
-    ? (limitEntry as string).match(/LIMIT_(\d+)_MEMBER(?:S)?(?:_PAID_EXTENSION)?/)
-    : null;
+  const latestSubscription = await prisma.teamSubscription.findFirst({
+    where: { teamId },
+    orderBy: { createdAt: SortOrder.DESC },
+    select: { maxMembers: true },
+  });
 
-  const limit = match ? parseInt(match[1], 10) : Infinity;
-  const isPaidExtension = limitEntry?.includes('_PAID_EXTENSION') ?? false;
+  const limit = latestSubscription?.maxMembers ?? 3; // Info: (20250709 - Shirley) Default to 3 if no subscription found
 
   loggerBack.info(
-    `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}, isPaidExtension: ${isPaidExtension}`
+    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (from team_subscription.max_members)`
   );
 
   const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
