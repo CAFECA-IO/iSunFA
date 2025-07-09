@@ -4,6 +4,10 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import { APIPath } from '@/constants/api_connection';
+import agreementHandler from '@/pages/api/v2/user/[userId]/agreement';
+import roleListHandler from '@/pages/api/v2/role';
+import userRoleHandler from '@/pages/api/v2/user/[userId]/role';
+import userRoleSelectHandler from '@/pages/api/v2/user/[userId]/selected_role';
 
 /**
  * Info: (20250701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
@@ -527,14 +531,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const statusResponse = await authenticatedHelper.getStatusInfo();
       const userData = statusResponse.body.payload?.user as { id?: number };
       currentUserId = userData?.id?.toString() || '1';
-
-      // Info: (20250707 - Shirley) Import API handlers
-      const { default: agreementHandler } = await import('@/pages/api/v2/user/[userId]/agreement');
-      const { default: roleListHandler } = await import('@/pages/api/v2/role');
-      const { default: userRoleHandler } = await import('@/pages/api/v2/user/[userId]/role');
-      const { default: userRoleSelectHandler } = await import(
-        '@/pages/api/v2/user/[userId]/selected_role'
-      );
 
       // Info: (20250707 - Shirley) Create test clients
       agreementClient = createTestClient({

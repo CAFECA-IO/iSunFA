@@ -3,6 +3,8 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import teamCreateHandler from '@/pages/api/v2/team/index';
+import teamMemberHandler from '@/pages/api/v2/team/[teamId]/member';
+import teamMemberByIdHandler from '@/pages/api/v2/team/[teamId]/member/[memberId]';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { TPlanType } from '@/interfaces/subscription';
 import { APIName, APIPath } from '@/constants/api_connection';
@@ -222,9 +224,8 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
 
-      const teamMemberHandler = await import('@/pages/api/v2/team/[teamId]/member');
       teamInviteClient = createTestClient({
-        handler: teamMemberHandler.default,
+        handler: teamMemberHandler,
         routeParams: { teamId: createdTeamId.toString() },
       });
     });
@@ -398,9 +399,8 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
 
-      const teamMemberHandler = await import('@/pages/api/v2/team/[teamId]/member');
       teamMemberListClient = createTestClient({
-        handler: teamMemberHandler.default,
+        handler: teamMemberHandler,
         routeParams: { teamId: createdTeamId.toString() },
       });
     });
@@ -444,9 +444,8 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const teamMemberHandler = await import('@/pages/api/v2/team/[teamId]/member');
       const nonExistentTeamClient = createTestClient({
-        handler: teamMemberHandler.default,
+        handler: teamMemberHandler,
         routeParams: { teamId: '999999' },
       });
 
@@ -489,9 +488,8 @@ describe('Integration Test - Team Management Authentication', () => {
 
     it('should reject unauthenticated member update requests', async () => {
       const memberId = '123';
-      const memberUpdateHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       teamMemberUpdateClient = createTestClient({
-        handler: memberUpdateHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: createdTeamId.toString(), memberId },
       });
 
@@ -513,9 +511,8 @@ describe('Integration Test - Team Management Authentication', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const memberId = '999999';
-      const memberUpdateHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       teamMemberUpdateClient = createTestClient({
-        handler: memberUpdateHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: createdTeamId.toString(), memberId },
       });
 
@@ -538,9 +535,8 @@ describe('Integration Test - Team Management Authentication', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const memberId = '123';
-      const memberUpdateHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       teamMemberUpdateClient = createTestClient({
-        handler: memberUpdateHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: createdTeamId.toString(), memberId },
       });
 
@@ -579,9 +575,8 @@ describe('Integration Test - Team Management Authentication', () => {
 
     it('should reject unauthenticated member deletion requests', async () => {
       const memberId = '123';
-      const memberDeleteHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       teamMemberDeleteClient = createTestClient({
-        handler: memberDeleteHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: createdTeamId.toString(), memberId },
       });
 
@@ -598,9 +593,8 @@ describe('Integration Test - Team Management Authentication', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const memberId = '999999';
-      const memberDeleteHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       teamMemberDeleteClient = createTestClient({
-        handler: memberDeleteHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: createdTeamId.toString(), memberId },
       });
 
@@ -618,9 +612,8 @@ describe('Integration Test - Team Management Authentication', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const memberId = '123';
-      const memberDeleteHandler = await import('@/pages/api/v2/team/[teamId]/member/[memberId]');
       const nonExistentTeamClient = createTestClient({
-        handler: memberDeleteHandler.default,
+        handler: teamMemberByIdHandler,
         routeParams: { teamId: '999999', memberId },
       });
 
