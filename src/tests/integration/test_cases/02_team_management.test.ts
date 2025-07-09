@@ -284,10 +284,6 @@ describe('Integration Test - Team Management Authentication', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const user1 = authenticatedHelper.getCurrentUser();
-
-      console.log('cookieInAcceptInvitation', cookies, user1, 'timestamp', Date.now());
-
       const inviteData = {
         emails: [TestDataFactory.DEFAULT_TEST_EMAILS[1]], // Info: (20250707 - Shirley) Use user1@isunfa.com for this test
       };
@@ -296,8 +292,6 @@ describe('Integration Test - Team Management Authentication', () => {
         .put(`/api/v2/team/${createdTeamId}/member`)
         .send(inviteData)
         .set('Cookie', cookies.join('; '));
-
-      console.log('inviteResponse', inviteResponse.body);
 
       expect(inviteResponse.status).toBe(200);
 
