@@ -139,20 +139,38 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
  * Info: (20250514 - Tzuhan)
  * 檢查 team 成員數是否達上限
  */
-export async function checkTeamMemberLimit(teamId: number, addMemberCount: number) {
-  const latestSubscription = await prisma.teamSubscription.findFirst({
-    where: { teamId },
-    orderBy: { createdAt: SortOrder.DESC },
-    select: { maxMembers: true },
-  });
+export async function checkTeamMemberLimit(
+  teamId: number,
+  addMemberCount: number,
+  maxMembers?: number
+) {
+  let limit = maxMembers;
 
-  const limit = latestSubscription?.maxMembers ?? 3; // Info: (20250709 - Shirley) Default to 3 if no subscription found
+  // Info: (20250709 - Shirley) If maxMembers not provided, query from database
+  if (limit === undefined) {
+    const latestSubscription = await prisma.teamSubscription.findFirst({
+      where: { teamId },
+      orderBy: { createdAt: SortOrder.DESC },
+      select: { maxMembers: true },
+    });
+    limit = latestSubscription?.maxMembers ?? 3;
+  }
 
   loggerBack.info(
-    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (from team_subscription.max_members)`
+    `checkTeamMemberLimit 團隊id: ${teamId} limit: ${limit} (${maxMembers !== undefined ? 'from parameter' : 'from team_subscription.max_members'})`
   );
 
   const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
+
+  // eslint-disable-next-line no-console
+  console.log(
+    'checkTeamMemberLimit, memberCount',
+    memberCount,
+    'addMemberCount',
+    addMemberCount,
+    'limit',
+    limit
+  );
 
   if (memberCount + addMemberCount > limit) {
     const error = new Error(STATUS_MESSAGE.LIMIT_EXCEEDED_TEAM_MEMBER);
