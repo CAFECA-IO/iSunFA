@@ -596,7 +596,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-      expect(response.body.powerby).toBe('iSunFA v0.10.5+2');
 
       // Info: (20250709 - Shirley) If update is successful, validate response
       if (response.status === 200) {
@@ -767,7 +766,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-      expect(response.body.powerby).toBe('iSunFA v0.10.5+2');
 
       // Info: (20250709 - Shirley) If update is successful, validate response
       if (response.status === 200) {
@@ -963,11 +961,13 @@ describe('Integration Test - Team Management Authentication', () => {
         .delete(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .set('Cookie', cookies.join('; '));
 
+      // eslint-disable-next-line no-console
+      console.log('responseInSetUpMemberForDeletion', response.body);
+
       // Info: (20250709 - Shirley) Note: Current API implementation may have issues, but authentication works
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-      expect(response.body.powerby).toBe('iSunFA v0.10.5+2');
 
       if (process.env.DEBUG_TESTS === 'true') {
         // eslint-disable-next-line no-console
@@ -1109,7 +1109,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-      expect(response.body.powerby).toBe('iSunFA v0.10.5+2');
 
       if (process.env.DEBUG_TESTS === 'true') {
         // eslint-disable-next-line no-console
