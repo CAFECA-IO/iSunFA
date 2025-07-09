@@ -64,9 +64,11 @@ const NumericInput: React.FC<INumericInputProps> = ({
     const maximum = props.max && typeof props.max === 'number' ? props.max : undefined;
     const minimum = props.min && typeof props.min === 'number' ? props.min : undefined;
 
-    const inputValueNum = parseFloat(inputValue);
+    // Info: (20250709 - Julian) 移除逗號後轉為數字
+    const inputValueNum = parseFloat(inputValue.replace(/,/g, ''));
+
+    // Info: (20250709 - Julian) 限制輸入的值在最大值和最小值之間
     const availableValue =
-      // Info: (20250709 - Julian) 限制輸入的值在最大值和最小值之間
       maximum && inputValueNum > maximum
         ? maximum
         : minimum && inputValueNum < minimum

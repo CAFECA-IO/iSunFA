@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { TbDownload } from 'react-icons/tb';
 import { FiSend } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
-import { timestampToString, numberWithCommas } from '@/lib/utils/common';
+import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import ResultBlock from '@/components/salary_calculator/result_block';
 import { RowItem } from '@/interfaces/calculator';
@@ -14,16 +14,15 @@ const SalaryCalculatorResult: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation('common');
 
-  const { employeeName } = useCalculatorCtx();
+  const { employeeName, selectedMonth, selectedYear, baseSalary, mealAllowance, otherAllowance } =
+    useCalculatorCtx();
 
   const username = employeeName !== '' ? employeeName : '-';
-  const date = 1751945247;
+  // Info: (20250709 - Julian) 格式化日期
+  const formattedDate = `${selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth} ${selectedYear}`;
 
   // Info: (20250708 - Julian) 第二象限
-  const baseSalary = 40000; // 本薪
-  const mealAllowance = 3000; // 伙食費
   const overtimePay = 0; // 加班費
-  const otherAllowances = 0; // 其他津貼
   const totalMonthlySalary = 430000; // 月薪資合計
 
   // Info: (20250708 - Julian) 第一象限
@@ -67,7 +66,7 @@ const SalaryCalculatorResult: React.FC = () => {
     },
     {
       label: '其他津貼（免稅）',
-      value: otherAllowances,
+      value: otherAllowance,
     },
     {
       label: '月薪資合計',
@@ -162,9 +161,6 @@ const SalaryCalculatorResult: React.FC = () => {
       value: totalEmployerCost,
     },
   ];
-
-  // Info: (20250708 - Julian) 格式化日期
-  const formattedDate = `${timestampToString(date).monthShortName} ${timestampToString(date).year}`;
 
   return (
     <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">

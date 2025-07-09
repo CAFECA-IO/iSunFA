@@ -8,8 +8,10 @@ const StepTabs: React.FC = () => {
 
   const tabs = steps.map((step, index) => {
     const isActive = currentStep === index + 1;
-    const isCompleted = index < currentStep - 1;
-    const clickHandler = () => switchStep(index + 1);
+    const isCompleted = 0;
+    const clickHandler = () => {
+      switchStep(index + 1);
+    };
 
     const stepClass = isActive
       ? 'border-stroke-state-success bg-surface-state-success-soft text-text-state-success'

@@ -1,13 +1,14 @@
-import { useState, useMemo, createContext, useContext } from 'react';
+import React, { useState, useMemo, createContext, useContext } from 'react';
 import { MONTH_FULL_NAME } from '@/constants/display';
 
 interface ICalculatorContext {
-  // Info: (20250709 - Julian) 整個計算機的 state 和 functions
+  // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   currentStep: number;
+  // completeSteps:number[]
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
 
-  // Info: (20250709 - Julian) 基本資訊相關 state 和 functions
+  // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
   changeEmployeeName: (name: string) => void;
   employeeNumber: string;
@@ -17,18 +18,17 @@ interface ICalculatorContext {
   selectedMonth: string;
   changeSelectedMonth: (month: string) => void;
   workedDays: number;
-  changeWorkedDays: (days: number) => void;
+  // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
+  setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
 
-  //   employeeNameInput: string;
-  //   setEmployeeNameInput: (name: string) => void;
-  //   employeeNumberInput: string;
-  //   setEmployeeNumberInput: (number: string) => void;
-  //   selectedYear: string;
-  //   setSelectedYear: (year: string) => void;
-  //   selectedMonth: string;
-  //   setSelectedMonth: (month: string) => void;
-  //   workedDaysInput: number;
-  //   setWorkedDaysInput: (days: number) => void;
+  // Info: (20250709 - Julian) Step 2: 基本薪資相關 state 和 functions
+  // 以下皆使用 Dispatch 來更新 state
+  baseSalary: number;
+  setBaseSalary: React.Dispatch<React.SetStateAction<number>>;
+  mealAllowance: number;
+  setMealAllowance: React.Dispatch<React.SetStateAction<number>>;
+  otherAllowance: number;
+  setOtherAllowance: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export interface ICalculatorProvider {
@@ -38,15 +38,20 @@ export interface ICalculatorProvider {
 export const CalculatorContext = createContext<ICalculatorContext | undefined>(undefined);
 
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
-  const yearOptions = ['2025', '2024', '2023'];
-  const monthOptions = MONTH_FULL_NAME;
-
+  // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
+
+  // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(monthOptions[0]);
+  const [selectedYear, setSelectedYear] = useState<string>('2025');
+  const [selectedMonth, setSelectedMonth] = useState<string>(MONTH_FULL_NAME[0]);
   const [workedDays, setWorkedDays] = useState<number>(31);
+
+  // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
+  const [baseSalary, setBaseSalary] = useState<number>(0);
+  const [mealAllowance, setMealAllowance] = useState<number>(0);
+  const [otherAllowance, setOtherAllowance] = useState<number>(0);
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
@@ -72,9 +77,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const changeSelectedMonth = (month: string) => {
     setSelectedMonth(month);
   };
-  const changeWorkedDays = (days: number) => {
-    setWorkedDays(days);
-  };
 
   const value = useMemo(
     () => ({
@@ -90,9 +92,25 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       selectedMonth,
       changeSelectedMonth,
       workedDays,
-      changeWorkedDays,
+      setWorkedDays,
+      baseSalary,
+      setBaseSalary,
+      mealAllowance,
+      setMealAllowance,
+      otherAllowance,
+      setOtherAllowance,
     }),
-    [currentStep, employeeName, employeeNumber, selectedYear, selectedMonth, workedDays]
+    [
+      currentStep,
+      employeeName,
+      employeeNumber,
+      selectedYear,
+      selectedMonth,
+      workedDays,
+      baseSalary,
+      mealAllowance,
+      otherAllowance,
+    ]
   );
 
   return <CalculatorContext.Provider value={value}>{children}</CalculatorContext.Provider>;
