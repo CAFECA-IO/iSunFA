@@ -1,13 +1,14 @@
 import React from 'react';
 import { GrPowerReset } from 'react-icons/gr';
 import { Button } from '@/components/button/button';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 
-interface IProgressBarProps {
-  progress: number;
-  resetHandler: () => void;
-}
+const ProgressBar: React.FC = () => {
+  const { currentStep, resetFormHandler } = useCalculatorCtx();
 
-const ProgressBar: React.FC<IProgressBarProps> = ({ progress, resetHandler }) => {
+  // Info: (20250709 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
+  const progress = currentStep * 25;
+
   return (
     <div className="flex items-end gap-12px">
       <div className="flex flex-col items-start gap-8px">
@@ -20,7 +21,7 @@ const ProgressBar: React.FC<IProgressBarProps> = ({ progress, resetHandler }) =>
         </div>
       </div>
 
-      <Button type="button" onClick={resetHandler} variant="tertiaryBorderless">
+      <Button type="button" onClick={resetFormHandler} variant="tertiaryBorderless">
         <GrPowerReset size={16} className="-scale-x-100" /> Reset
       </Button>
     </div>
