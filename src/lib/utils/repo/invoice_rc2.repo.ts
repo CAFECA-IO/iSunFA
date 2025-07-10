@@ -22,6 +22,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerBack from '@/lib/utils/logger_back';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -392,6 +393,10 @@ export async function createInvoiceRC2(
     error.name = STATUS_CODE.LIMIT_EXCEEDED_STORAGE;
     throw error;
   }
+
+  loggerBack.info(
+    `Creating invoice RC2 for user ${userId} in account book ${query.accountBookId} with file ${file.id}`
+  );
 
   await checkStorageLimit(can.teamId, file?.size ?? 0);
 

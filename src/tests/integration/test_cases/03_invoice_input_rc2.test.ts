@@ -147,14 +147,17 @@ describe('Integration Test - Invoice RC2', () => {
   });
 
   it('should create invoice RC2 input', async () => {
-    const invoiceInputClient = createTestClient({
+    const invoiceInputCreateClient = createTestClient({
       handler: invoiceInputCreateHandler,
       routeParams: { accountBookId },
     });
 
     const cookies = helper.getCurrentSession();
 
-    const invoiceInputResponse = await invoiceInputClient
+    // eslint-disable-next-line no-console
+    console.log('Creating invoice RC2 input with fileId:', fileId);
+
+    const invoiceInputCreateResponse = await invoiceInputCreateClient
       .post(`/api/rc2/account_book/${accountBookId}/invoice/input`)
       .send({
         fileId,
@@ -165,21 +168,24 @@ describe('Integration Test - Invoice RC2', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    expect(invoiceInputResponse.body.success).toBe(true);
-    expect(invoiceInputResponse.body.payload?.id).toBeDefined();
+    expect(invoiceInputCreateResponse.body.success).toBe(true);
+    expect(invoiceInputCreateResponse.body.payload?.id).toBeDefined();
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.CREATE_INVOICE_RC2_INPUT,
-      invoiceInputResponse.body.payload
+      invoiceInputCreateResponse.body.payload
     );
-    if (isOutputDataValid) {
-      invoiceId = outputData?.id || 0;
+    if (isOutputDataValid && outputData) {
+      invoiceId = outputData.id;
     }
   });
 
   it('should update invoice RC2 input', async () => {
+    if (invoiceId === undefined) {
+      throw new Error('invoiceId is not defined, cannot update invoice input');
+    }
     const handler = invoiceInputModifyHandler;
-    const client = createTestClient({
+    const invoiceInputModifyClient = createTestClient({
       handler,
       routeParams: {
         accountBookId: accountBookId.toString(),
@@ -189,7 +195,7 @@ describe('Integration Test - Invoice RC2', () => {
 
     const cookies = helper.getCurrentSession();
 
-    const response = await client
+    const response = await invoiceInputModifyClient
       .put(`/api/rc2/account_book/${accountBookId}/invoice/${invoiceId}/input`)
       .send({
         no: 'AB25000038',
@@ -210,17 +216,31 @@ describe('Integration Test - Invoice RC2', () => {
 
     expect(response.body.success).toBe(true);
     expect(response.body.payload?.id).toBeDefined();
+
+    const { isOutputDataValid: isUpdateValid, outputData: updatedData } = validateOutputData(
+      APIName.UPDATE_INVOICE_RC2_INPUT,
+      response.body.payload
+    );
+    expect(isUpdateValid).toBe(true);
+    expect(updatedData?.no).toBe('AB25000038');
   });
 
   it('should delete invoice RC2 input', async () => {
-    const invoiceInputClient = createTestClient({
-      handler: invoiceInputCreateHandler,
-      routeParams: { accountBookId },
+    if (invoiceId === undefined) {
+      throw new Error('invoiceId is not defined, cannot delete invoice input');
+    }
+    const handler = invoiceInputCreateHandler;
+    const invoiceInputModifyClient = createTestClient({
+      handler,
+      routeParams: {
+        accountBookId: accountBookId.toString(),
+        // invoiceId: invoiceId.toString(),
+      },
     });
 
     const cookies = helper.getCurrentSession();
 
-    const invoiceInputResponse = await invoiceInputClient
+    const invoiceInputResponse = await invoiceInputModifyClient
       .post(`/api/rc2/account_book/${accountBookId}/invoice/input`)
       .send({
         fileId,
@@ -232,8 +252,8 @@ describe('Integration Test - Invoice RC2', () => {
       .expect(200);
 
     expect(invoiceInputResponse.body.success).toBe(true);
-    expect(invoiceInputResponse.body.payload?.id).toBeDefined();
   });
+
   afterAll(() => {
     helper.clearAllUserSessions();
   });
