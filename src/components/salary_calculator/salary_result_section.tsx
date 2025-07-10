@@ -18,7 +18,7 @@ const SalaryCalculatorResult: React.FC = () => {
 
   const username = employeeName !== '' ? employeeName : '-';
   // Info: (20250709 - Julian) 格式化日期
-  const formattedDate = `${selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth} ${selectedYear}`;
+  const formattedDate = `${selectedMonth.name.length > 3 ? `${selectedMonth.name.slice(0, 3)}.` : selectedMonth} ${selectedYear}`;
 
   const {
     monthlySalary: {

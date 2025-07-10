@@ -4,10 +4,10 @@ import { Button } from '@/components/button/button';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const ProgressBar: React.FC = () => {
-  const { currentStep, resetFormHandler } = useCalculatorCtx();
+  const { completeSteps, resetFormHandler } = useCalculatorCtx();
 
   // Info: (20250709 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
-  const progress = currentStep * 25;
+  const progress = completeSteps.length * 25;
 
   return (
     <div className="flex items-end gap-12px">
