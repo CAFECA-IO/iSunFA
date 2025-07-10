@@ -400,6 +400,7 @@ export async function createInvoiceRC2(
 
   try {
     await checkStorageLimit(can.teamId, file?.size ?? 0);
+    loggerBack.info(`Storage limit check passed for file ${file.id} of size ${file.size}`);
 
     const now = getTimestampNow();
     loggerBack.info(
@@ -415,7 +416,7 @@ export async function createInvoiceRC2(
         2
       )}`
     );
-    const cert = await prisma.invoiceRC2.create({
+    const invoiceRC2 = await prisma.invoiceRC2.create({
       data: {
         ...body,
         accountBookId: query.accountBookId,
@@ -433,8 +434,14 @@ export async function createInvoiceRC2(
         uploader: true,
       },
     });
+    loggerBack.info(`Invoice RC2 created successfully with ID: ${invoiceRC2.id}`);
+
     const invoice =
-      body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+      body.direction === InvoiceDirection.INPUT
+        ? transformInput(invoiceRC2)
+        : transformOutput(invoiceRC2);
+
+    loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
 
     const pusher = getPusherInstance();
 

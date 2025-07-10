@@ -85,9 +85,7 @@ describe('Integration Test - Invoice RC2', () => {
       file,
       publicKey!
     );
-
     const tempPath = path.resolve(__dirname, '../test_files/temp_encrypted_mock_invoice.png');
-
     const fileInDB = await createFile({
       name: encryptedFile.name,
       size: encryptedFile.size,
