@@ -171,6 +171,9 @@ describe('Integration Test - Invoice RC2', () => {
     expect(invoiceInputCreateResponse.body.success).toBe(true);
     expect(invoiceInputCreateResponse.body.payload?.id).toBeDefined();
 
+    // eslint-disable-next-line no-console
+    console.log('Created invoice RC2 input:', invoiceInputCreateResponse.body.payload);
+
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.CREATE_INVOICE_RC2_INPUT,
       invoiceInputCreateResponse.body.payload
@@ -184,9 +187,9 @@ describe('Integration Test - Invoice RC2', () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot update invoice input');
     }
-    const handler = invoiceInputModifyHandler;
+
     const invoiceInputModifyClient = createTestClient({
-      handler,
+      handler: invoiceInputModifyHandler,
       routeParams: {
         accountBookId: accountBookId.toString(),
         invoiceId: invoiceId.toString(),
@@ -196,7 +199,12 @@ describe('Integration Test - Invoice RC2', () => {
     const cookies = helper.getCurrentSession();
 
     const response = await invoiceInputModifyClient
-      .put(`/api/rc2/account_book/${accountBookId}/invoice/${invoiceId}/input`)
+      .put(
+        APIPath.UPDATE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId).replace(
+          ':invoiceId',
+          invoiceId.toString()
+        )
+      )
       .send({
         no: 'AB25000038',
         type: InvoiceType.INPUT_21,
@@ -214,6 +222,9 @@ describe('Integration Test - Invoice RC2', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
+    // eslint-disable-next-line no-console
+    console.log('Updated invoice RC2 input:', response.body.payload);
+
     expect(response.body.success).toBe(true);
     expect(response.body.payload?.id).toBeDefined();
 
@@ -229,9 +240,9 @@ describe('Integration Test - Invoice RC2', () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice input');
     }
-    const handler = invoiceInputCreateHandler;
+
     const invoiceInputModifyClient = createTestClient({
-      handler,
+      handler: invoiceInputCreateHandler,
       routeParams: {
         accountBookId: accountBookId.toString(),
         // invoiceId: invoiceId.toString(),
@@ -241,15 +252,15 @@ describe('Integration Test - Invoice RC2', () => {
     const cookies = helper.getCurrentSession();
 
     const invoiceInputResponse = await invoiceInputModifyClient
-      .post(`/api/rc2/account_book/${accountBookId}/invoice/input`)
+      .delete(APIPath.DELETE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId))
       .send({
-        fileId,
-        direction: InvoiceDirection.INPUT,
-        isGenerated: false,
-        currencyCode: CurrencyCode.TWD,
+        invoiceIds: [invoiceId],
       })
       .set('Cookie', cookies.join('; '))
       .expect(200);
+
+    // eslint-disable-next-line no-console
+    console.log('Deleted invoice RC2 input:', invoiceInputResponse.body);
 
     expect(invoiceInputResponse.body.success).toBe(true);
   });

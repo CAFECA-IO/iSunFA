@@ -12,7 +12,40 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { validateOutputData } from '@/lib/utils/validator';
-import { createInvoiceRC2, listInvoiceRC2Input } from '@/lib/utils/repo/invoice_rc2.repo';
+import {
+  createInvoiceRC2,
+  listInvoiceRC2Input,
+  deleteInvoiceRC2,
+} from '@/lib/utils/repo/invoice_rc2.repo';
+
+const handleDeleteRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+
+  await checkSessionUser(session, APIName.DELETE_INVOICE_RC2_INPUT, req);
+  await checkUserAuthorization(APIName.DELETE_INVOICE_RC2_INPUT, req, session);
+
+  const { query, body } = checkRequestData(APIName.DELETE_INVOICE_RC2_INPUT, req, session);
+  if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+
+  const invoiceList = await deleteInvoiceRC2(session.userId, query.accountBookId, body.invoiceIds);
+
+  const { isOutputDataValid, outputData } = validateOutputData(
+    APIName.DELETE_INVOICE_RC2_INPUT,
+    invoiceList
+  );
+
+  if (!isOutputDataValid) {
+    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  } else {
+    payload = outputData;
+    statusMessage = STATUS_MESSAGE.SUCCESS;
+  }
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
 
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
@@ -88,6 +121,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         break;
       case HttpMethod.POST:
         ({ response, statusMessage } = await handlePostRequest(req));
+        ({ httpCode, result } = response);
+        break;
+      case HttpMethod.DELETE:
+        ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);
         break;
       default:
