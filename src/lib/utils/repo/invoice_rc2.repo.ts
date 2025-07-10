@@ -402,7 +402,13 @@ export async function createInvoiceRC2(
     await checkStorageLimit(can.teamId, file?.size ?? 0);
 
     const now = getTimestampNow();
-
+    loggerBack.info('[DEBUG] About to create invoiceRC2, data:', {
+      ...body,
+      accountBookId: query.accountBookId,
+      uploaderId: userId,
+      createdAt: now,
+      updatedAt: now,
+    });
     const cert = await prisma.invoiceRC2.create({
       data: {
         ...body,
@@ -432,7 +438,7 @@ export async function createInvoiceRC2(
 
     return invoice;
   } catch (error) {
-    loggerBack.error(`Error creating invoice RC2: ${JSON.stringify(error)}`);
+    loggerBack.error(`Error creating invoice RC2 error`, error);
     throw error;
   }
 }
