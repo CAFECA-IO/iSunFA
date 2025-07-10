@@ -1,4 +1,4 @@
-import React, { useState, useMemo, createContext, useContext } from 'react';
+import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
 import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
 
@@ -33,10 +33,22 @@ interface ICalculatorContext {
   setOtherAllowance: React.Dispatch<React.SetStateAction<number>>;
 
   // Info: (20250710 - Julian) Step 3: 工作時數相關 state 和 functions
+  oneHours: number;
+  setOneHours: React.Dispatch<React.SetStateAction<number>>;
+  oneAndOneThirdHours: number;
+  setOneAndOneThirdHours: React.Dispatch<React.SetStateAction<number>>;
+  oneAndTwoThirdsHours: number;
+  setOneAndTwoThirdsHours: React.Dispatch<React.SetStateAction<number>>;
+  twoHours: number;
+  setTwoHours: React.Dispatch<React.SetStateAction<number>>;
+  twoAndTwoThirdsHours: number;
+  setTwoAndTwoThirdsHours: React.Dispatch<React.SetStateAction<number>>;
+  sickLeaveHours: number;
+  setSickLeaveHours: React.Dispatch<React.SetStateAction<number>>;
+  personalLeaveHours: number;
+  setPersonalLeaveHours: React.Dispatch<React.SetStateAction<number>>;
   totalOvertimeHours: number;
-  changeTotalOvertimeHours: (hours: number) => void;
   totalLeaveHours: number;
-  changeTotalLeaveHours: (hours: number) => void;
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
   // 除了 VPC 皆使用 Dispatch 來更新 state
@@ -78,6 +90,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [otherAllowance, setOtherAllowance] = useState<number>(0);
 
   // Info: (20250709 - Julian) Step 3: 工作時數相關 state
+  const [oneHours, setOneHours] = useState<number>(0);
+  const [oneAndOneThirdHours, setOneAndOneThirdHours] = useState<number>(0);
+  const [oneAndTwoThirdsHours, setOneAndTwoThirdsHours] = useState<number>(0);
+  const [twoHours, setTwoHours] = useState<number>(0);
+  const [twoAndTwoThirdsHours, setTwoAndTwoThirdsHours] = useState<number>(0);
+  const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
+  const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
   const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
   const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
 
@@ -87,18 +106,40 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [otherAdjustments, setOtherAdjustments] = useState<number>(0);
   const [voluntaryPensionContribution, setVoluntaryPensionContribution] = useState<number>(0);
 
+  useEffect(() => {
+    // Info: (20250710 - Julian) 計算總加班時數
+    const totalOvertime =
+      oneHours * 1 +
+      oneAndOneThirdHours * 1.34 +
+      oneAndTwoThirdsHours * 1.67 +
+      twoHours * 2 +
+      twoAndTwoThirdsHours * 2.67;
+
+    setTotalOvertimeHours(totalOvertime);
+  }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
+
+  useEffect(() => {
+    // Info: (20250710 - Julian) 計算總休假時數
+    const totalLeave = sickLeaveHours + personalLeaveHours;
+    setTotalLeaveHours(totalLeave);
+  }, [sickLeaveHours, personalLeaveHours]);
+
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
-    if (employeeName !== '') {
+    // Info: (20250710 - Julian) 檢查當前步驟是否已完成
+    if (currentStep === 1 && employeeName !== '') {
       setCompleteSteps((prev) => (prev.includes(1) ? prev : [...prev, 1]));
     }
-    if (baseSalary !== 0) {
+    if (currentStep === 2 && baseSalary !== 0) {
       setCompleteSteps((prev) => (prev.includes(2) ? prev : [...prev, 2]));
     }
-    // if (totalOvertimeHours !== 0 || totalLeaveHours !== 0) {
-    //   setCompleteSteps((prev) => (prev.includes(3) ? prev : [...prev, 3]));
-    // }
-    if (nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0) {
+    if (currentStep === 3 && (totalOvertimeHours !== 0 || totalLeaveHours !== 0)) {
+      setCompleteSteps((prev) => (prev.includes(3) ? prev : [...prev, 3]));
+    }
+    if (
+      currentStep === 4 &&
+      (nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0)
+    ) {
       setCompleteSteps((prev) => (prev.includes(4) ? prev : [...prev, 4]));
     }
 
@@ -117,8 +158,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setBaseSalary(0);
     setMealAllowance(0);
     setOtherAllowance(0);
-    setTotalOvertimeHours(0);
-    setTotalLeaveHours(0);
+    setOneHours(0);
+    setOneAndOneThirdHours(0);
+    setOneAndTwoThirdsHours(0);
+    setTwoHours(0);
+    setTwoAndTwoThirdsHours(0);
+    setSickLeaveHours(0);
+    setPersonalLeaveHours(0);
+    // setTotalOvertimeHours(0);
+    // setTotalLeaveHours(0);
     setNhiBackPremium(0);
     setSecondGenNhiTax(0);
     setOtherAdjustments(0);
@@ -144,14 +192,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedMonth(month);
     // Info: (20250710 - Julian) 根據選擇的月份更新工作天數
     setWorkedDays(month.days);
-  };
-
-  // Info: (20250710 - Julian) =========== 工作時數相關 state 和 functions ===========
-  const changeTotalOvertimeHours = (hours: number) => {
-    setTotalOvertimeHours(hours);
-  };
-  const changeTotalLeaveHours = (hours: number) => {
-    setTotalLeaveHours(hours);
   };
 
   // Info: (20250710 - Julian) =========== 其他相關 state 和 functions ===========
@@ -182,10 +222,22 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setMealAllowance,
       otherAllowance,
       setOtherAllowance,
+      oneHours,
+      setOneHours,
+      oneAndOneThirdHours,
+      setOneAndOneThirdHours,
+      oneAndTwoThirdsHours,
+      setOneAndTwoThirdsHours,
+      twoHours,
+      setTwoHours,
+      twoAndTwoThirdsHours,
+      setTwoAndTwoThirdsHours,
+      sickLeaveHours,
+      setSickLeaveHours,
+      personalLeaveHours,
+      setPersonalLeaveHours,
       totalOvertimeHours,
-      changeTotalOvertimeHours,
       totalLeaveHours,
-      changeTotalLeaveHours,
       nhiBackPremium,
       setNhiBackPremium,
       secondGenNhiTax,
@@ -207,6 +259,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       baseSalary,
       mealAllowance,
       otherAllowance,
+      oneHours,
+      oneAndOneThirdHours,
+      oneAndTwoThirdsHours,
+      twoHours,
+      twoAndTwoThirdsHours,
+      sickLeaveHours,
+      personalLeaveHours,
       totalOvertimeHours,
       totalLeaveHours,
       nhiBackPremium,

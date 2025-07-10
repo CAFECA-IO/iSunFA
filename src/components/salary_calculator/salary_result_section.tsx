@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Image from 'next/image';
 import { TbDownload } from 'react-icons/tb';
 import { FiSend } from 'react-icons/fi';
@@ -8,17 +8,44 @@ import { Button } from '@/components/button/button';
 import ResultBlock from '@/components/salary_calculator/result_block';
 import { RowItem } from '@/interfaces/calculator';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
+import html2canvas from 'html2canvas';
 
 const SalaryCalculatorResult: React.FC = () => {
   // ToDo: (20250708 - Julian) during development
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation('common');
+  const downloadRef = useRef<HTMLDivElement>(null);
 
   const { employeeName, selectedMonth, selectedYear, salaryCalculator } = useCalculatorCtx();
 
   const username = employeeName !== '' ? employeeName : '-';
   // Info: (20250709 - Julian) 格式化日期
   const formattedDate = `${selectedMonth.name.length > 3 ? `${selectedMonth.name.slice(0, 3)}.` : selectedMonth} ${selectedYear}`;
+
+  // Info: (20250710 - Julian) 下載圖片功能
+  const downloadPng = () => {
+    if (!downloadRef.current) return;
+
+    html2canvas(downloadRef.current, {
+      backgroundColor: null,
+      scale: 2,
+      onclone: (clonedNode) => {
+        // Info: (20250710 - Julian) 調整樣式
+        const frame = clonedNode.querySelector<HTMLIFrameElement>('#salary-result');
+        if (frame) {
+          frame.style.borderRadius = '0px';
+        }
+      },
+    }).then((canvas) => {
+      // Info: (20250710 - Julian) 下載圖片
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = `${employeeName}_${formattedDate}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
 
   const {
     monthlySalary: {
@@ -168,7 +195,11 @@ const SalaryCalculatorResult: React.FC = () => {
   return (
     <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">
       {/* Info: (20250708 - Julian) Result Block */}
-      <div className="flex flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS">
+      <div
+        id="salary-result"
+        ref={downloadRef}
+        className="flex flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
+      >
         {/* Info: (20250708 - Julian) Result Title */}
         <div className="grid grid-cols-2 gap-12px">
           {/* Info: (20250708 - Julian) 姓名和日期 */}
@@ -202,7 +233,7 @@ const SalaryCalculatorResult: React.FC = () => {
       </div>
       {/* Info: (20250708 - Julian) Buttons */}
       <div className="grid grid-cols-2 gap-24px">
-        <Button type="button" variant="tertiary">
+        <Button type="button" variant="tertiary" onClick={downloadPng}>
           Download as png <TbDownload size={20} />
         </Button>
         <Button type="button" variant="tertiary">
