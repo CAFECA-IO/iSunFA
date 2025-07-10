@@ -444,6 +444,7 @@ export async function createInvoiceRC2(
     loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
 
     if (process.env.TEST_TYPE !== 'integration') {
+      loggerBack.info(`Triggering Pusher event for invoice creation: ${INVOICE_EVENT.CREATE}`);
       const pusher = getPusherInstance();
 
       pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
