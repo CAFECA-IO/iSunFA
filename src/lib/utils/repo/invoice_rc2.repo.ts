@@ -398,66 +398,66 @@ export async function createInvoiceRC2(
     `Creating invoice RC2 for user ${userId} in account book ${query.accountBookId} with file ${file.id}`
   );
 
-  try {
-    await checkStorageLimit(can.teamId, file?.size ?? 0);
-    loggerBack.info(`Storage limit check passed for file ${file.id} of size ${file.size}`);
+  await checkStorageLimit(can.teamId, file?.size ?? 0);
+  loggerBack.info(`Storage limit check passed for file ${file.id} of size ${file.size}`);
 
-    const now = getTimestampNow();
-    loggerBack.info(
-      `[DEBUG] About to create invoiceRC2, data: ${JSON.stringify(
-        {
-          ...body,
-          accountBookId: query.accountBookId,
-          uploaderId: userId,
-          createdAt: now,
-          updatedAt: now,
-        },
-        null,
-        2
-      )}`
-    );
-    const invoiceRC2 = await prisma.invoiceRC2.create({
-      data: {
+  const now = getTimestampNow();
+  loggerBack.info(
+    `[DEBUG] About to create invoiceRC2, data: ${JSON.stringify(
+      {
         ...body,
         accountBookId: query.accountBookId,
         uploaderId: userId,
         createdAt: now,
         updatedAt: now,
       },
-      include: {
-        file: {
-          include: {
-            thumbnail: true,
-          },
+      null,
+      2
+    )}`
+  );
+  const invoiceRC2 = await prisma.invoiceRC2.create({
+    data: {
+      ...body,
+      accountBookId: query.accountBookId,
+      uploaderId: userId,
+      createdAt: now,
+      updatedAt: now,
+    },
+    include: {
+      file: {
+        include: {
+          thumbnail: true,
         },
-        voucher: true,
-        uploader: true,
       },
-    });
-    loggerBack.info(`Invoice RC2 created successfully with ID: ${invoiceRC2.id}`);
+      voucher: true,
+      uploader: true,
+    },
+  });
+  loggerBack.info(`Invoice RC2 created successfully with ID: ${invoiceRC2.id}`);
 
-    const invoice =
-      body.direction === InvoiceDirection.INPUT
-        ? transformInput(invoiceRC2)
-        : transformOutput(invoiceRC2);
+  const invoice =
+    body.direction === InvoiceDirection.INPUT
+      ? transformInput(invoiceRC2)
+      : transformOutput(invoiceRC2);
 
-    loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
+  loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
 
-    if (process.env.TEST_TYPE !== 'integration') {
+  if (process.env.TEST_TYPE !== 'integration') {
+    try {
       loggerBack.info(`Triggering Pusher event for invoice creation: ${INVOICE_EVENT.CREATE}`);
       const pusher = getPusherInstance();
 
       pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
         message: JSON.stringify(invoice),
       });
+    } catch (error) {
+      loggerBack.error(`Error creating invoice RC2 error`, error);
+      throw error;
     }
-
-    loggerBack.info(`Pusher event triggered for invoice creation: ${INVOICE_EVENT.CREATE}`);
-    return invoice;
-  } catch (error) {
-    loggerBack.error(`Error creating invoice RC2 error`, error);
-    throw error;
   }
+
+  loggerBack.info(`Pusher event triggered for invoice creation: ${INVOICE_EVENT.CREATE}`);
+  return invoice;
 }
 
 export async function updateInvoiceRC2Input(

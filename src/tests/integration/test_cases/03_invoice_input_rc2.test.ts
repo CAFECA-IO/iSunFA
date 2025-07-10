@@ -21,6 +21,12 @@ import {
 } from '@/constants/invoice_rc2';
 import * as cryptoUtils from '@/lib/utils/crypto';
 
+jest.mock('pusher', () => {
+  return jest.fn().mockImplementation(() => ({
+    trigger: jest.fn(),
+  }));
+});
+
 describe('Integration Test - Invoice RC2', () => {
   let helper: APITestHelper;
   let currentUserId: string;
