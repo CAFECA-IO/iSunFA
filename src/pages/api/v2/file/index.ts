@@ -433,7 +433,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
   try {
     // Info: (20250522 - Shirley) 確保傳遞給 parseForm 的是有效的 FileFolder 類型
     const folder = type ? UPLOAD_TYPE_TO_FOLDER_MAP[type] || FileFolder.TMP : FileFolder.TMP;
-    loggerBack.info(`API POST File: Uploading file to folder ${folder}`);
     const parsedForm = await parseForm(req, folder);
     const { files, fields } = parsedForm;
     const { file } = files;
