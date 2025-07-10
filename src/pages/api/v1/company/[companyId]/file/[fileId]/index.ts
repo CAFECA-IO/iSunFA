@@ -77,6 +77,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
 
       if (file) {
         const stat = await fs.stat(file.url);
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 刪除檔案)
         await fs.unlink(file.url);
 
         statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;

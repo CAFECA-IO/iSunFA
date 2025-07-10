@@ -21,6 +21,7 @@ export async function generatePDFThumbnail(
 }> {
   try {
     // Info: (20250507 - Shirley) Check if file exists
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 檢查檔案存在/狀態)
     await fs.access(pdfPath);
 
     const document = await pdf(pdfPath, { scale: 3 });
@@ -44,9 +45,11 @@ export async function generatePDFThumbnail(
     const thumbnailPath = `${baseFilename}${suffix}.png`;
 
     // Info: (20250507 - Shirley) Write the image buffer to the thumbnail file
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 寫入縮圖/檔案)
     await fs.writeFile(thumbnailPath, firstPageImage);
 
     // Info: (20250507 - Shirley) Get the size of the generated thumbnail
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 檢查檔案存在/狀態)
     const stats = await fs.stat(thumbnailPath);
     const { size } = stats;
 

@@ -303,22 +303,29 @@ export async function storeKeyByCompany(companyId: number, keyPair: CryptoKeyPai
 
   const { metadata, separatedPrivateKeys } = separatePrivateKey(privateKey);
 
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   fs.writeFile(publicKeyPath, JSON.stringify(publicKey));
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   fs.writeFile(privateMetaPath, JSON.stringify(metadata));
 
   separatedPrivateKeys.forEach((separatedPrivateKey, index) => {
     const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${index + 1}`, `${companyId}.json`);
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
     fs.writeFile(privatePath, JSON.stringify(separatedPrivateKey));
   });
 }
 
 export async function getPublicKeyByCompany(companyId: number): Promise<CryptoKey | null> {
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
 
   let publicKey: CryptoKey | null = null;
 
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   const publicKeyJSON = await fs.readFile(publicKeyPath, 'utf-8');
   publicKey = await importPublicKey(JSON.parse(publicKeyJSON));
 
@@ -326,12 +333,16 @@ export async function getPublicKeyByCompany(companyId: number): Promise<CryptoKe
 }
 
 export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoKey | null> {
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   const metadata = JSON.parse(await fs.readFile(privateMetaPath, 'utf-8'));
 
   const separatedPrivateKeyJSONs = await Promise.all(
     Array.from({ length: CRYPTO_KEY_TOTAL_AMOUNT }, (_, i) => {
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
       const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${i + 1}`, `${companyId}.json`);
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
       return fs.readFile(privatePath, 'utf-8');
     })
   );

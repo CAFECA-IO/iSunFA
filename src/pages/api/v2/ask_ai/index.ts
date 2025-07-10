@@ -29,6 +29,7 @@ const handleCertificateRequest = async (
   const fileBlobList = await Promise.all(
     fileList.map(async (file) => {
       const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取本地)
       const fileBuffer = await readFile(filePath);
       const decryptFileBuffer = await decryptImageFile({
         imageBuffer: fileBuffer,
@@ -71,6 +72,7 @@ const handleVoucherRequest = async (companyId: number, key: AI_TYPE, targetIdLis
   const fileBlobList = await Promise.all(
     fileList.map(async (file) => {
       const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取本地)
       const fileBuffer = await readFile(filePath);
       const decryptFileBuffer = await decryptImageFile({
         imageBuffer: fileBuffer,
