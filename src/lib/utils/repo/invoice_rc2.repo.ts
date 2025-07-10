@@ -22,7 +22,6 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/client';
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { IPaginatedData } from '@/interfaces/pagination';
-import loggerBack from '@/lib/utils/logger_back';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
   return `/api/v1/company/${accountBookId}/image/${fileId}`;
@@ -394,27 +393,10 @@ export async function createInvoiceRC2(
     throw error;
   }
 
-  loggerBack.info(
-    `Creating invoice RC2 for user ${userId} in account book ${query.accountBookId} with file ${file.id}`
-  );
-
   await checkStorageLimit(can.teamId, file?.size ?? 0);
-  loggerBack.info(`Storage limit check passed for file ${file.id} of size ${file.size}`);
 
   const now = getTimestampNow();
-  loggerBack.info(
-    `[DEBUG] About to create invoiceRC2, data: ${JSON.stringify(
-      {
-        ...body,
-        accountBookId: query.accountBookId,
-        uploaderId: userId,
-        createdAt: now,
-        updatedAt: now,
-      },
-      null,
-      2
-    )}`
-  );
+
   const invoiceRC2 = await prisma.invoiceRC2.create({
     data: {
       ...body,
@@ -433,29 +415,17 @@ export async function createInvoiceRC2(
       uploader: true,
     },
   });
-  loggerBack.info(`Invoice RC2 created successfully with ID: ${invoiceRC2.id}`);
-
   const invoice =
     body.direction === InvoiceDirection.INPUT
       ? transformInput(invoiceRC2)
       : transformOutput(invoiceRC2);
 
-  loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
+  const pusher = getPusherInstance();
 
-  if (process.env.TEST_TYPE !== 'integration') {
-    try {
-      loggerBack.info(`Triggering Pusher event for invoice creation: ${INVOICE_EVENT.CREATE}`);
-      const pusher = getPusherInstance();
+  pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
+    message: JSON.stringify(invoice),
+  });
 
-      pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
-        message: JSON.stringify(invoice),
-      });
-    } catch (error) {
-      loggerBack.error(`Error creating invoice RC2 error`, error);
-    }
-  }
-
-  loggerBack.info(`Pusher event triggered for invoice creation: ${INVOICE_EVENT.CREATE}`);
   return invoice;
 }
 

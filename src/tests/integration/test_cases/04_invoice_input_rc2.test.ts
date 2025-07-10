@@ -139,9 +139,6 @@ describe('Integration Test - Invoice RC2', () => {
 
     const cookies = helper.getCurrentSession();
 
-    // eslint-disable-next-line no-console
-    console.log('Creating invoice RC2 input with fileId:', fileId);
-
     const invoiceInputCreateResponse = await invoiceInputCreateClient
       .post(`/api/rc2/account_book/${accountBookId}/invoice/input`)
       .send({
@@ -156,9 +153,6 @@ describe('Integration Test - Invoice RC2', () => {
     expect(invoiceInputCreateResponse.body.success).toBe(true);
     expect(invoiceInputCreateResponse.body.payload?.id).toBeDefined();
 
-    // eslint-disable-next-line no-console
-    console.log('Created invoice RC2 input:', invoiceInputCreateResponse.body.payload);
-
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.CREATE_INVOICE_RC2_INPUT,
       invoiceInputCreateResponse.body.payload
@@ -166,6 +160,8 @@ describe('Integration Test - Invoice RC2', () => {
     if (isOutputDataValid && outputData) {
       invoiceId = outputData.id;
     }
+
+    expect(isOutputDataValid).toBe(true);
   });
 
   it('should update invoice RC2 input', async () => {
@@ -207,9 +203,6 @@ describe('Integration Test - Invoice RC2', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    // eslint-disable-next-line no-console
-    console.log('Updated invoice RC2 input:', response.body.payload);
-
     expect(response.body.success).toBe(true);
     expect(response.body.payload?.id).toBeDefined();
 
@@ -244,10 +237,14 @@ describe('Integration Test - Invoice RC2', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    // eslint-disable-next-line no-console
-    console.log('Deleted invoice RC2 input:', invoiceInputResponse.body);
-
     expect(invoiceInputResponse.body.success).toBe(true);
+
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.DELETE_INVOICE_RC2_INPUT,
+      invoiceInputResponse.body.payload
+    );
+    expect(isOutputDataValid).toBe(true);
+    expect(outputData?.deletedIds.length).toBe(1);
   });
 
   afterAll(() => {
