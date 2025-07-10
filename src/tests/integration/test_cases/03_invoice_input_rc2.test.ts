@@ -27,6 +27,32 @@ jest.mock('pusher', () => {
   }));
 });
 
+jest.mock('@/lib/utils/crypto', () => {
+  // Info: (20250710 - Tzuhan) 拿到真的 export，保留其餘函式
+  const real = jest.requireActual('@/lib/utils/crypto');
+  // Info: (20250710 - Tzuhan) 只要同一組 keyPair 就夠測試用
+  const keyPairPromise = crypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt']
+  );
+
+  return {
+    ...real,
+    // Info: (20250710 - Tzuhan) 不再讀檔案，直接回傳 in-memory 公鑰
+    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
+    // Info: (20250710 - Tzuhan) 同理，回傳 in-memory 私鑰
+    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
+    // Info: (20250710 - Tzuhan) 如果測試裡面有用到 storeKeyByCompany，也一併 stub 掉
+    storeKeyByCompany: jest.fn(),
+  };
+});
+
 describe('Integration Test - Invoice RC2', () => {
   let helper: APITestHelper;
   let currentUserId: string;
@@ -195,7 +221,6 @@ describe('Integration Test - Invoice RC2', () => {
     expect(updatedData?.no).toBe('AB25000038');
   });
 
-  /** Info: (20250710 - Tzuhan) 暫時不測試刪除發票輸入功能
   it('should delete invoice RC2 input', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice input');
@@ -224,7 +249,6 @@ describe('Integration Test - Invoice RC2', () => {
 
     expect(invoiceInputResponse.body.success).toBe(true);
   });
-  */
 
   afterAll(() => {
     helper.clearAllUserSessions();
