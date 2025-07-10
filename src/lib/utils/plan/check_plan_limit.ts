@@ -4,6 +4,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { PLANS } from '@/constants/subscription';
 import { TPlanType } from '@/interfaces/subscription';
 import loggerBack from '@/lib/utils/logger_back';
+import { Prisma } from '@prisma/client';
 
 /**
  * Info: (20250514 - Tzuhan)
@@ -51,9 +52,11 @@ export async function getTeamPlanFeatures(
  */
 
 export async function getTeamPlanFeatures(
-  teamId: number
+  teamId: number,
+  tx?: Prisma.TransactionClient
 ): Promise<Record<string, string | string[]>> {
-  const latestSub = await prisma.teamSubscription.findFirst({
+  const db = tx ?? prisma;
+  const latestSub = await db.teamSubscription.findFirst({
     where: { teamId },
     orderBy: { createdAt: SortOrder.DESC },
     select: { planType: true },
@@ -139,8 +142,13 @@ export async function checkStorageLimit(teamId: number, fileSize: number) {
  * Info: (20250514 - Tzuhan)
  * 檢查 team 成員數是否達上限
  */
-export async function checkTeamMemberLimit(teamId: number, addMemberCount: number) {
-  const features = await getTeamPlanFeatures(teamId);
+export async function checkTeamMemberLimit(
+  teamId: number,
+  addMemberCount: number,
+  tx?: Prisma.TransactionClient
+) {
+  const db = tx ?? prisma;
+  const features = await getTeamPlanFeatures(teamId, tx);
   const limitEntry = features.OWNED_TEAM_MEMBER_LIMIT || features.EVERY_OWNED_TEAM_MEMBER_LIMIT;
   const match = limitEntry
     ? (limitEntry as string).match(/LIMIT_(\d+)_MEMBER(?:S)?(?:_PAID_EXTENSION)?/)
@@ -153,7 +161,7 @@ export async function checkTeamMemberLimit(teamId: number, addMemberCount: numbe
     `checkTeamMemberLimit 團隊id: ${teamId} limitEntry: ${limitEntry}, match: ${match}, limit: ${limit}, isPaidExtension: ${isPaidExtension}`
   );
 
-  const memberCount = await prisma.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
+  const memberCount = await db.teamMember.count({ where: { teamId, status: 'IN_TEAM' } });
 
   if (memberCount + addMemberCount > limit) {
     const error = new Error(STATUS_MESSAGE.LIMIT_EXCEEDED_TEAM_MEMBER);

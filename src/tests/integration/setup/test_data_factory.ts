@@ -31,7 +31,7 @@ export class TestDataFactory {
   static readonly TEST_EMAIL = DefaultValue.EMAIL_LOGIN.EMAIL;
 
   // Info: (20250701 - Shirley) Primary test email (first in the list)
-  static readonly PRIMARY_TEST_EMAIL = this.TEST_EMAIL[0]; // Info: (20250701 - Shirley) user@isunfa.com
+  static readonly PRIMARY_TEST_EMAIL = this.DEFAULT_TEST_EMAILS[0]; // Info: (20250701 - Shirley) user@isunfa.com
 
   // Info: (20250707 - Shirley) Default values for terms agreement and role selection
   static readonly DEFAULT_AGREEMENT_HASH = 'default_test_agreement_hash_v1';
