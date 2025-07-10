@@ -150,59 +150,47 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
     // Info: (20250710 - Julian) 檢查當前步驟是否已完成
-    // ToDo: (20250710 - Julian) 以下邏輯還有待優化
     switch (currentStep) {
       case 1:
-        if (employeeName !== '') {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 1 ? { ...s, completed: true } : s));
-            return updatedSteps;
+        setCompleteSteps((prev) => {
+          // Info: (20250710 - Julian) 檢查員工姓名是否已填寫
+          const isCompleted = employeeName !== '';
+          const updatedSteps = prev.map((s) => {
+            return s.step === 1 ? { ...s, completed: isCompleted } : s;
           });
-        } else {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 1 ? { ...s, completed: false } : s));
-            return updatedSteps;
-          });
-        }
+          return updatedSteps;
+        });
         break;
       case 2:
-        if (baseSalary !== 0) {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 2 ? { ...s, completed: true } : s));
-            return updatedSteps;
+        setCompleteSteps((prev) => {
+          // Info: (20250710 - Julian) 檢查基本薪資是否已填寫
+          const isCompleted = baseSalary !== 0;
+          const updatedSteps = prev.map((s) => {
+            return s.step === 2 ? { ...s, completed: isCompleted } : s;
           });
-        } else {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 2 ? { ...s, completed: false } : s));
-            return updatedSteps;
-          });
-        }
+          return updatedSteps;
+        });
         break;
       case 3:
-        if (totalOvertimeHours !== 0 || totalLeaveHours !== 0) {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 3 ? { ...s, completed: true } : s));
-            return updatedSteps;
+        setCompleteSteps((prev) => {
+          // Info: (20250710 - Julian) 檢查工作時數是否已填寫
+          const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
+          const updatedSteps = prev.map((s) => {
+            return s.step === 3 ? { ...s, completed: isCompleted } : s;
           });
-        } else {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 3 ? { ...s, completed: false } : s));
-            return updatedSteps;
-          });
-        }
+          return updatedSteps;
+        });
         break;
       case 4:
-        if (nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0) {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 4 ? { ...s, completed: true } : s));
-            return updatedSteps;
+        setCompleteSteps((prev) => {
+          // Info: (20250710 - Julian) 檢查其他調整是否已填寫
+          const isCompleted =
+            nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0;
+          const updatedSteps = prev.map((s) => {
+            return s.step === 4 ? { ...s, completed: isCompleted } : s;
           });
-        } else {
-          setCompleteSteps((prev) => {
-            const updatedSteps = prev.map((s) => (s.step === 4 ? { ...s, completed: false } : s));
-            return updatedSteps;
-          });
-        }
+          return updatedSteps;
+        });
         break;
       default:
         break;
