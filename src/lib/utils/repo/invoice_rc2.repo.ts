@@ -398,38 +398,43 @@ export async function createInvoiceRC2(
     `Creating invoice RC2 for user ${userId} in account book ${query.accountBookId} with file ${file.id}`
   );
 
-  await checkStorageLimit(can.teamId, file?.size ?? 0);
+  try {
+    await checkStorageLimit(can.teamId, file?.size ?? 0);
 
-  const now = getTimestampNow();
+    const now = getTimestampNow();
 
-  const cert = await prisma.invoiceRC2.create({
-    data: {
-      ...body,
-      accountBookId: query.accountBookId,
-      uploaderId: userId,
-      createdAt: now,
-      updatedAt: now,
-    },
-    include: {
-      file: {
-        include: {
-          thumbnail: true,
-        },
+    const cert = await prisma.invoiceRC2.create({
+      data: {
+        ...body,
+        accountBookId: query.accountBookId,
+        uploaderId: userId,
+        createdAt: now,
+        updatedAt: now,
       },
-      voucher: true,
-      uploader: true,
-    },
-  });
-  const invoice =
-    body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+      include: {
+        file: {
+          include: {
+            thumbnail: true,
+          },
+        },
+        voucher: true,
+        uploader: true,
+      },
+    });
+    const invoice =
+      body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
 
-  const pusher = getPusherInstance();
+    const pusher = getPusherInstance();
 
-  pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
-    message: JSON.stringify(invoice),
-  });
+    pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
+      message: JSON.stringify(invoice),
+    });
 
-  return invoice;
+    return invoice;
+  } catch (error) {
+    loggerBack.error(`Error creating invoice RC2: ${JSON.stringify(error)}`);
+    throw error;
+  }
 }
 
 export async function updateInvoiceRC2Input(
