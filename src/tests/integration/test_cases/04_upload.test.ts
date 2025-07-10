@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Info: (20250709 - Tzuhan)
  *
@@ -99,16 +98,16 @@ import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
 export const config = { api: { bodyParser: false } };
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('[handler] method:', req.method, req.url);
+  // console.log('[handler] method:', req.method, req.url);
   if (req.method === 'POST') {
     const form = new IncomingForm();
     form.parse(req, (err, fields, files) => {
-      console.log('[handler] formidable.parse callback', { err, fields, files });
+      // console.log('[handler] formidable.parse callback', { err, fields, files });
       if (err) return res.status(500).json({ err: String(err) });
       return res.status(200).json({ fields, files });
     });
   } else {
-    console.log('[handler] 405 method not allowed:', req.method);
+    // console.log('[handler] 405 method not allowed:', req.method);
     res.status(405).end();
   }
 }
@@ -119,11 +118,11 @@ describe('Raw Node.js Upload Test', () => {
 
   beforeAll((done) => {
     server = createServer((req, res) => {
-      console.log('[RawServer] Incoming', req.method, req.url, req.headers);
+      // console.log('[RawServer] Incoming', req.method, req.url, req.headers);
       if (req.method === 'POST') {
         const form = new IncomingForm();
         form.parse(req, (err, fields, files) => {
-          console.log('[RawServer] formidable.parse callback', { err, fields, files });
+          // console.log('[RawServer] formidable.parse callback', { err, fields, files });
           res.statusCode = err ? 500 : 200;
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ err, fields, files }));
@@ -135,14 +134,14 @@ describe('Raw Node.js Upload Test', () => {
     }).listen(0, () => {
       const address = server.address();
       baseUrl = typeof address === 'object' && address ? `http://localhost:${address.port}` : '';
-      console.log('[RawServer] Listening on', baseUrl);
+      // console.log('[RawServer] Listening on', baseUrl);
       done();
     });
   });
 
   afterAll((done) => {
     server.close(() => {
-      console.log('[RawServer] Closed');
+      // console.log('[RawServer] Closed');
       done();
     });
   });
@@ -153,7 +152,7 @@ describe('Raw Node.js Upload Test', () => {
       .attach('file', Buffer.from('hello world'), 'test.txt')
       .expect(200);
 
-    console.log('[RawServer] upload response:', resp.body);
+    // console.log('[RawServer] upload response:', resp.body);
 
     // 這裡 resp.body.files.file **一定是 array**
     expect(resp.body.err).toBeNull();
@@ -174,7 +173,7 @@ describe('Next.js API Upload Test (SKIPPED)', () => {
 
   beforeAll((done) => {
     server = createServer((req, res) => {
-      console.log('[NextApiServer] Incoming', req.method, req.url, req.headers);
+      // console.log('[NextApiServer] Incoming', req.method, req.url, req.headers);
       const url = new URL(req.url || '/', 'http://localhost');
       apiResolver(
         req,
@@ -191,14 +190,14 @@ describe('Next.js API Upload Test (SKIPPED)', () => {
     }).listen(0, () => {
       const address = server.address();
       baseUrl = typeof address === 'object' && address ? `http://localhost:${address.port}` : '';
-      console.log('[NextApiServer] Listening on', baseUrl);
+      // console.log('[NextApiServer] Listening on', baseUrl);
       done();
     });
   });
 
   afterAll((done) => {
     server.close(() => {
-      console.log('[NextApiServer] Closed');
+      // console.log('[NextApiServer] Closed');
       done();
     });
   });
@@ -216,7 +215,7 @@ describe('Next.js API Upload Test (SKIPPED)', () => {
       .expect(200);
 
     // 不會執行到這
-    console.log('[NextApiServer] upload response:', resp.body);
+    // console.log('[NextApiServer] upload response:', resp.body);
 
     expect(resp.body.err).toBeNull();
     expect(resp.body.files.file).toBeDefined();

@@ -402,13 +402,19 @@ export async function createInvoiceRC2(
     await checkStorageLimit(can.teamId, file?.size ?? 0);
 
     const now = getTimestampNow();
-    loggerBack.info('[DEBUG] About to create invoiceRC2, data:', {
-      ...body,
-      accountBookId: query.accountBookId,
-      uploaderId: userId,
-      createdAt: now,
-      updatedAt: now,
-    });
+    loggerBack.info(
+      `[DEBUG] About to create invoiceRC2, data: ${JSON.stringify(
+        {
+          ...body,
+          accountBookId: query.accountBookId,
+          uploaderId: userId,
+          createdAt: now,
+          updatedAt: now,
+        },
+        null,
+        2
+      )}`
+    );
     const cert = await prisma.invoiceRC2.create({
       data: {
         ...body,
