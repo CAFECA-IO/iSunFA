@@ -443,11 +443,13 @@ export async function createInvoiceRC2(
 
     loggerBack.info(`Transformed invoice RC2: ${JSON.stringify(invoice, null, 2)}`);
 
-    const pusher = getPusherInstance();
+    if (process.env.TEST_TYPE !== 'integration') {
+      const pusher = getPusherInstance();
 
-    pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
-      message: JSON.stringify(invoice),
-    });
+      pusher.trigger(`${PRIVATE_CHANNEL.INVOICE}-${query.accountBookId}`, INVOICE_EVENT.CREATE, {
+        message: JSON.stringify(invoice),
+      });
+    }
 
     loggerBack.info(`Pusher event triggered for invoice creation: ${INVOICE_EVENT.CREATE}`);
     return invoice;
