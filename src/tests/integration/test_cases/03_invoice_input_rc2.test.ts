@@ -6,16 +6,11 @@ import { TestClient } from '@/interfaces/test_client';
 import { APIName, APIPath } from '@/constants/api_connection';
 import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
-import publicKeyGetHandler from '@/pages/api/v2/account_book/[accountBookId]/public_key';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceInputModifyHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/[invoiceId]/input';
 import { validateOutputData } from '@/lib/utils/validator';
 import { WORK_TAG } from '@/interfaces/account_book';
-import { encryptFileWithPublicKey, importPublicKey, uint8ArrayToBuffer } from '@/lib/utils/crypto';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
-import { NextApiHandler } from 'next';
-import { createServer } from 'http';
-import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import {
   CurrencyCode,
@@ -24,42 +19,13 @@ import {
   InvoiceType,
   TaxType,
 } from '@/constants/invoice_rc2';
-
-export const initTestClientServer = async (handler: NextApiHandler): Promise<string> => {
-  const server = createServer((req, res) => {
-    const url = new URL(req.url || '/', 'http://localhost');
-    const queryFromUrl = Object.fromEntries(url.searchParams.entries());
-
-    return apiResolver(
-      req,
-      res,
-      queryFromUrl,
-      handler,
-      {
-        previewModeId: '',
-        previewModeEncryptionKey: '',
-        previewModeSigningKey: '',
-      },
-      false
-    );
-  });
-
-  return new Promise((resolve) => {
-    const listener = server.listen(0, () => {
-      const address = listener.address();
-      if (typeof address === 'object' && address) {
-        const testClientPort = address.port;
-        resolve(`http://localhost:${testClientPort}`);
-      }
-    });
-  });
-};
+import * as cryptoUtils from '@/lib/utils/crypto';
 
 describe('Integration Test - Invoice RC2', () => {
   let helper: APITestHelper;
   let currentUserId: string;
   let teamListClient: TestClient;
-  let accountBookId: string;
+  let accountBookId: number;
   let fileId: number;
   let invoiceId: number;
 
@@ -109,26 +75,15 @@ describe('Integration Test - Invoice RC2', () => {
     expect(accountBookResponse.body.success).toBe(true);
     expect(accountBookResponse.body.payload?.id).toBeDefined();
     expect(isOutputDataValid).toBe(true);
-    accountBookId = `${outputData?.id ?? ''}`;
+    accountBookId = outputData?.id || 0;
 
-    const keyClient = createTestClient({
-      handler: publicKeyGetHandler,
-      routeParams: { accountBookId },
-    });
-
-    const keyResponse = await keyClient
-      .get(APIPath.PUBLIC_KEY_GET.replace(':accountBookId', accountBookId))
-      .set('Cookie', cookies.join('; '))
-      .expect(200);
-
-    const jwk = keyResponse.body.payload as JsonWebKey;
-    const publicKey = await importPublicKey(jwk);
+    const publicKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
     const fileBuffer = fs.readFileSync(filePath);
     const file = new File([fileBuffer], 'mock_invoice.png', { type: 'image/png' });
-    const { encryptedFile, encryptedSymmetricKey, iv } = await encryptFileWithPublicKey(
+    const { encryptedFile, encryptedSymmetricKey, iv } = await cryptoUtils.encryptFileWithPublicKey(
       file,
-      publicKey
+      publicKey!
     );
 
     const tempPath = path.resolve(__dirname, '../test_files/temp_encrypted_mock_invoice.png');
@@ -141,7 +96,7 @@ describe('Integration Test - Invoice RC2', () => {
       url: tempPath,
       isEncrypted: true,
       encryptedSymmetricKey,
-      iv: uint8ArrayToBuffer(iv),
+      iv: cryptoUtils.uint8ArrayToBuffer(iv),
     });
     fileId = fileInDB?.id || 0;
   });
@@ -149,7 +104,7 @@ describe('Integration Test - Invoice RC2', () => {
   it('should create invoice RC2 input', async () => {
     const invoiceInputCreateClient = createTestClient({
       handler: invoiceInputCreateHandler,
-      routeParams: { accountBookId },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     const cookies = helper.getCurrentSession();
@@ -200,10 +155,10 @@ describe('Integration Test - Invoice RC2', () => {
 
     const response = await invoiceInputModifyClient
       .put(
-        APIPath.UPDATE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId).replace(
-          ':invoiceId',
-          invoiceId.toString()
-        )
+        APIPath.UPDATE_INVOICE_RC2_INPUT.replace(
+          ':accountBookId',
+          accountBookId.toString()
+        ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
         no: 'AB25000038',
@@ -252,7 +207,7 @@ describe('Integration Test - Invoice RC2', () => {
     const cookies = helper.getCurrentSession();
 
     const invoiceInputResponse = await invoiceInputModifyClient
-      .delete(APIPath.DELETE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId))
+      .delete(APIPath.DELETE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId.toString()))
       .send({
         invoiceIds: [invoiceId],
       })
