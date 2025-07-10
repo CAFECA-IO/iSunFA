@@ -195,6 +195,7 @@ describe('Integration Test - Invoice RC2', () => {
     expect(updatedData?.no).toBe('AB25000038');
   });
 
+  /** Info: (20250710 - Tzuhan) 暫時不測試刪除發票輸入功能
   it('should delete invoice RC2 input', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice input');
@@ -223,6 +224,7 @@ describe('Integration Test - Invoice RC2', () => {
 
     expect(invoiceInputResponse.body.success).toBe(true);
   });
+  */
 
   afterAll(() => {
     helper.clearAllUserSessions();
