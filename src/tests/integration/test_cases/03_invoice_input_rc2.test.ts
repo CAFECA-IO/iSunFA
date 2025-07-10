@@ -96,7 +96,7 @@ describe('Integration Test - Invoice RC2', () => {
       url: tempPath,
       isEncrypted: true,
       encryptedSymmetricKey,
-      iv: cryptoUtils.uint8ArrayToBuffer(iv),
+      iv: Buffer.from(iv as Uint8Array),
     });
     fileId = fileInDB?.id || 0;
   });
