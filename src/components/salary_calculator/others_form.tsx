@@ -1,9 +1,8 @@
 import React from 'react';
 import Image from 'next/image';
-// Deprecated: (20250709 - Luphia) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import { radioButtonStyle } from '@/constants/display';
 
 const AmountInput: React.FC<{
   title: string;
@@ -33,6 +32,27 @@ const AmountInput: React.FC<{
 };
 
 const OthersForm: React.FC = () => {
+  const {
+    nhiBackPremium,
+    setNhiBackPremium,
+    secondGenNhiTax,
+    setSecondGenNhiTax,
+    otherAdjustments,
+    setOtherAdjustments,
+    voluntaryPensionContribution,
+    changeVoluntaryPensionContribution,
+  } = useCalculatorCtx();
+
+  const isCheckedZero = voluntaryPensionContribution === 0;
+  const isCheckedSix = voluntaryPensionContribution === 6;
+
+  const handleVPCZero = () => {
+    changeVoluntaryPensionContribution(0);
+  };
+  const handleVPCSix = () => {
+    changeVoluntaryPensionContribution(6);
+  };
+
   return (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250709 - Julian) NHI Premium */}
@@ -41,9 +61,8 @@ const OthersForm: React.FC = () => {
           id="input-nhi-back-premium"
           name="input-nhi-back-premium"
           className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={0}
-          //   value={baseSalary}
-          //   setValue={setBaseSalary}
+          value={nhiBackPremium}
+          setValue={setNhiBackPremium}
           hasComma
           isDecimal
           required
@@ -55,9 +74,8 @@ const OthersForm: React.FC = () => {
           id="input-2nd-gen-nhi-tax"
           name="input-2nd-gen-nhi-tax"
           className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={0}
-          //   value={baseSalary}
-          //   setValue={setBaseSalary}
+          value={secondGenNhiTax}
+          setValue={setSecondGenNhiTax}
           hasComma
           isDecimal
           required
@@ -69,14 +87,43 @@ const OthersForm: React.FC = () => {
           id="input-other-adjustments"
           name="input-other-adjustments"
           className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={0}
-          //   value={baseSalary}
-          //   setValue={setBaseSalary}
+          value={otherAdjustments}
+          setValue={setOtherAdjustments}
           hasComma
           isDecimal
           required
         />
       </AmountInput>
+      {/* Info: (20250710 - Julian) 自提勞退 */}
+      <div className="flex flex-col gap-8px">
+        <p className="text-sm font-semibold text-input-text-primary">
+          Voluntary Pension Contribution
+        </p>
+        <div className="flex items-center gap-36px">
+          <label htmlFor="radio-vpc-zero" className="flex items-center gap-8px">
+            <input
+              id="radio-vpc-zero"
+              name="radio-vpc"
+              type="radio"
+              checked={isCheckedZero}
+              onChange={handleVPCZero}
+              className={radioButtonStyle}
+            />
+            <p className="text-sm font-normal text-checkbox-text-primary">0%</p>
+          </label>
+          <label htmlFor="radio-vpc-six" className="flex items-center gap-8px">
+            <input
+              id="radio-vpc-six"
+              name="radio-vpc"
+              type="radio"
+              checked={isCheckedSix}
+              onChange={handleVPCSix}
+              className={radioButtonStyle}
+            />
+            <p className="text-sm font-normal text-checkbox-text-primary">6%</p>
+          </label>
+        </div>
+      </div>
     </form>
   );
 };

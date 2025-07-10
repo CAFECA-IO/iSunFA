@@ -1,5 +1,6 @@
 import React, { useState, useMemo, createContext, useContext } from 'react';
 import { MONTH_FULL_NAME } from '@/constants/display';
+import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
@@ -7,6 +8,7 @@ interface ICalculatorContext {
   // completeSteps:number[]
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
+  salaryCalculator: ISalaryCalculator;
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -29,6 +31,23 @@ interface ICalculatorContext {
   setMealAllowance: React.Dispatch<React.SetStateAction<number>>;
   otherAllowance: number;
   setOtherAllowance: React.Dispatch<React.SetStateAction<number>>;
+
+  // Info: (20250710 - Julian) Step 3: 工作時數相關 state 和 functions
+  totalOvertimeHours: number;
+  changeTotalOvertimeHours: (hours: number) => void;
+  totalLeaveHours: number;
+  changeTotalLeaveHours: (hours: number) => void;
+
+  // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
+  // 除了 VPC 皆使用 Dispatch 來更新 state
+  nhiBackPremium: number;
+  setNhiBackPremium: React.Dispatch<React.SetStateAction<number>>;
+  secondGenNhiTax: number;
+  setSecondGenNhiTax: React.Dispatch<React.SetStateAction<number>>;
+  otherAdjustments: number;
+  setOtherAdjustments: React.Dispatch<React.SetStateAction<number>>;
+  voluntaryPensionContribution: number;
+  changeVoluntaryPensionContribution: (contribution: number) => void;
 }
 
 export interface ICalculatorProvider {
@@ -40,6 +59,10 @@ export const CalculatorContext = createContext<ICalculatorContext | undefined>(u
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
+  // ToDo: (20250710 - Julian) 計算機的整體計算結果
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [salaryCalculator, setSalaryCalculator] =
+    useState<ISalaryCalculator>(defaultSalaryCalculator);
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
@@ -52,6 +75,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [baseSalary, setBaseSalary] = useState<number>(0);
   const [mealAllowance, setMealAllowance] = useState<number>(0);
   const [otherAllowance, setOtherAllowance] = useState<number>(0);
+
+  // Info: (20250709 - Julian) Step 3: 工作時數相關 state
+  const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
+  const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
+
+  // Info: (20250710 - Julian) Step 4: 其他相關 state
+  const [nhiBackPremium, setNhiBackPremium] = useState<number>(0);
+  const [secondGenNhiTax, setSecondGenNhiTax] = useState<number>(0);
+  const [otherAdjustments, setOtherAdjustments] = useState<number>(0);
+  const [voluntaryPensionContribution, setVoluntaryPensionContribution] = useState<number>(0);
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
@@ -78,9 +111,23 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedMonth(month);
   };
 
+  // Info: (20250710 - Julian) =========== 工作時數相關 state 和 functions ===========
+  const changeTotalOvertimeHours = (hours: number) => {
+    setTotalOvertimeHours(hours);
+  };
+  const changeTotalLeaveHours = (hours: number) => {
+    setTotalLeaveHours(hours);
+  };
+
+  // Info: (20250710 - Julian) =========== 其他相關 state 和 functions ===========
+  const changeVoluntaryPensionContribution = (contribution: number) => {
+    setVoluntaryPensionContribution(contribution);
+  };
+
   const value = useMemo(
     () => ({
       currentStep,
+      salaryCalculator,
       switchStep,
       resetFormHandler,
       employeeName,
@@ -99,9 +146,22 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setMealAllowance,
       otherAllowance,
       setOtherAllowance,
+      totalOvertimeHours,
+      changeTotalOvertimeHours,
+      totalLeaveHours,
+      changeTotalLeaveHours,
+      nhiBackPremium,
+      setNhiBackPremium,
+      secondGenNhiTax,
+      setSecondGenNhiTax,
+      otherAdjustments,
+      setOtherAdjustments,
+      voluntaryPensionContribution,
+      changeVoluntaryPensionContribution,
     }),
     [
       currentStep,
+      salaryCalculator,
       employeeName,
       employeeNumber,
       selectedYear,
@@ -110,6 +170,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       baseSalary,
       mealAllowance,
       otherAllowance,
+      totalOvertimeHours,
+      totalLeaveHours,
+      nhiBackPremium,
+      secondGenNhiTax,
+      otherAdjustments,
+      voluntaryPensionContribution,
     ]
   );
 

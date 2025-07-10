@@ -14,44 +14,47 @@ const SalaryCalculatorResult: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation('common');
 
-  const { employeeName, selectedMonth, selectedYear, baseSalary, mealAllowance, otherAllowance } =
-    useCalculatorCtx();
+  const { employeeName, selectedMonth, selectedYear, salaryCalculator } = useCalculatorCtx();
 
   const username = employeeName !== '' ? employeeName : '-';
   // Info: (20250709 - Julian) 格式化日期
   const formattedDate = `${selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth} ${selectedYear}`;
 
-  // Info: (20250708 - Julian) 第二象限
-  const overtimePay = 0; // Info: (20250708 - Julian) 加班費
-  const totalMonthlySalary = 430000; // Info: (20250708 - Julian) 月薪資合計
-
-  // Info: (20250708 - Julian) 第一象限
-  const employeePaidLaborInsurance = 1098; // Info: (20250708 - Julian) 自行負擔勞保費
-  const employeePaidHealthInsurance = 681; // Info: (20250708 - Julian) 自行負擔健保費
-  const voluntaryPensionContribution = 0; // Info: (20250708 - Julian) 自提勞退
-  const withheldIncomeTax = 0; // Info: (20250708 - Julian) 代扣所得稅款
-  const withheldSecondGenerationNHIPremium = 0; // Info: (20250708 - Julian) 代扣二代健保
-  const salaryDeductionForLeave = 0; // Info: (20250708 - Julian) 請假扣薪
-  const totalEmployeeContribution = 1779; // Info: (20250708 - Julian) 員工負擔總計
-
-  // Info: (20250708 - Julian) 第三象限
-  const healthInsuranceSalaryBracket = 43000; // Info: (20250708 - Julian) 健保投保級距
-  const laborInsuranceSalaryBracket = 43000; // Info: (20250708 - Julian) 勞保投保級距
-  const employmentInsuranceSalaryBracket = 43000; // Info: (20250708 - Julian) 就業保險級距
-  const occupationalInjuryInsuranceSalaryBracket = 43000; // Info: (20250708 - Julian) 職災保險級距
-  const laborPensionSalaryBracket = 43000; // Info: (20250708 - Julian) 勞退級距
-  const occupationalInjuryIndustryRate = 0.0012; // Info: (20250708 - Julian) 職災行業別費率
-  const insuredSalary = 43000; // Info: (20250708 - Julian) 投保薪資
-
-  // Info: (20250708 - Julian) 第四象限
-  const employerContributions = 8652; // Info: (20250708 - Julian) 公司負擔勞健退
-  const employerPaidLaborInsurance = 3894; // Info: (20250708 - Julian) 公司負擔勞保費
-  const employerPaidHealthInsurance = 2124; // Info: (20250708 - Julian) 公司負擔健保費
-  const employerPaidPensionContribution = 2634; // Info: (20250708 - Julian) 公司負擔退休金
-  const totalEmployerCost = 51652; // Info: (20250708 - Julian) 雇主總負擔
-
-  // Info: (20250708 - Julian) 薪資合計
-  const totalSalary = 41221;
+  const {
+    monthlySalary: {
+      baseSalary,
+      mealAllowance,
+      overtimePay, // Info: (20250710 - Julian) 加班費
+      otherAllowance,
+      totalMonthlySalary, // Info: (20250710 - Julian) 月薪資合計
+    },
+    employeeContribution: {
+      employeePaidLaborInsurance, // Info: (20250710 - Julian) 自行負擔勞保費
+      employeePaidHealthInsurance, // Info: (20250710 - Julian) 自行負擔健保費
+      voluntaryPensionContribution, // Info: (20250710 - Julian) 自提勞退
+      withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
+      withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
+      salaryDeductionForLeave, // Info: (20250710 - Julian) 請假扣薪
+      totalEmployeeContribution, // Info: (20250710 - Julian) 員工負擔總計
+    },
+    insuredSalary: {
+      healthInsuranceSalaryBracket, // Info: (20250710 - Julian) 健保投保級距
+      laborInsuranceSalaryBracket, // Info: (20250710 - Julian) 勞保投保級距
+      employmentInsuranceSalaryBracket, // Info: (20250710 - Julian) 就業保險級距
+      occupationalInjuryInsuranceSalaryBracket, // Info: (20250710 - Julian) 職災保險級距
+      laborPensionSalaryBracket, // Info: (20250710 - Julian) 勞退級距
+      occupationalInjuryIndustryRate, // Info: (20250710 - Julian) 職災行業別費率
+      insuredSalary, // Info: (20250710 - Julian) 投保薪資
+    },
+    employerContribution: {
+      employerContributions, // Info: (20250710 - Julian) 公司負擔勞健退
+      employerPaidLaborInsurance, // Info: (20250710 - Julian) 公司負擔勞保費
+      employerPaidHealthInsurance, // Info: (20250710 - Julian) 公司負擔健保費
+      employerPaidPensionContribution, // Info: (20250710 - Julian) 公司負擔退休金
+      totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
+    },
+    totalSalary, // Info: (20250710 - Julian) 薪資合計
+  } = salaryCalculator;
 
   // Info: (20250708 - Julian) 月薪資項目
   const monthlyRowItems: RowItem[] = [
