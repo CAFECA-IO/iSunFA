@@ -452,7 +452,6 @@ export async function createInvoiceRC2(
       });
     } catch (error) {
       loggerBack.error(`Error creating invoice RC2 error`, error);
-      throw error;
     }
   }
 
