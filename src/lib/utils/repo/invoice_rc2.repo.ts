@@ -449,6 +449,7 @@ export async function createInvoiceRC2(
       message: JSON.stringify(invoice),
     });
 
+    loggerBack.info(`Pusher event triggered for invoice creation: ${INVOICE_EVENT.CREATE}`);
     return invoice;
   } catch (error) {
     loggerBack.error(`Error creating invoice RC2 error`, error);
