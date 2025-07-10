@@ -2,10 +2,34 @@ import React, { useState, useMemo, createContext, useContext, useEffect } from '
 import { MONTHS, MonthType } from '@/constants/month';
 import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
 
+type TabStep = {
+  step: number;
+  completed: boolean;
+};
+
+const defaultTabSteps: TabStep[] = [
+  {
+    step: 1,
+    completed: false,
+  },
+  {
+    step: 2,
+    completed: false,
+  },
+  {
+    step: 3,
+    completed: false,
+  },
+  {
+    step: 4,
+    completed: false,
+  },
+];
+
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   currentStep: number;
-  completeSteps: number[]; // Info: (20250710 - Julian) 已完成的步驟
+  completeSteps: TabStep[]; // Info: (20250710 - Julian) 已完成的步驟
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
   salaryCalculator: ISalaryCalculator;
@@ -71,9 +95,8 @@ export const CalculatorContext = createContext<ICalculatorContext | undefined>(u
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const [completeSteps, setCompleteSteps] = useState<number[]>([]);
+  const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
   // ToDo: (20250710 - Julian) 計算機的整體計算結果
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [salaryCalculator, setSalaryCalculator] =
     useState<ISalaryCalculator>(defaultSalaryCalculator);
 
@@ -127,20 +150,62 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
     // Info: (20250710 - Julian) 檢查當前步驟是否已完成
-    if (currentStep === 1 && employeeName !== '') {
-      setCompleteSteps((prev) => (prev.includes(1) ? prev : [...prev, 1]));
-    }
-    if (currentStep === 2 && baseSalary !== 0) {
-      setCompleteSteps((prev) => (prev.includes(2) ? prev : [...prev, 2]));
-    }
-    if (currentStep === 3 && (totalOvertimeHours !== 0 || totalLeaveHours !== 0)) {
-      setCompleteSteps((prev) => (prev.includes(3) ? prev : [...prev, 3]));
-    }
-    if (
-      currentStep === 4 &&
-      (nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0)
-    ) {
-      setCompleteSteps((prev) => (prev.includes(4) ? prev : [...prev, 4]));
+    // ToDo: (20250710 - Julian) 以下邏輯還有待優化
+    switch (currentStep) {
+      case 1:
+        if (employeeName !== '') {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 1 ? { ...s, completed: true } : s));
+            return updatedSteps;
+          });
+        } else {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 1 ? { ...s, completed: false } : s));
+            return updatedSteps;
+          });
+        }
+        break;
+      case 2:
+        if (baseSalary !== 0) {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 2 ? { ...s, completed: true } : s));
+            return updatedSteps;
+          });
+        } else {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 2 ? { ...s, completed: false } : s));
+            return updatedSteps;
+          });
+        }
+        break;
+      case 3:
+        if (totalOvertimeHours !== 0 || totalLeaveHours !== 0) {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 3 ? { ...s, completed: true } : s));
+            return updatedSteps;
+          });
+        } else {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 3 ? { ...s, completed: false } : s));
+            return updatedSteps;
+          });
+        }
+        break;
+      case 4:
+        if (nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0) {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 4 ? { ...s, completed: true } : s));
+            return updatedSteps;
+          });
+        } else {
+          setCompleteSteps((prev) => {
+            const updatedSteps = prev.map((s) => (s.step === 4 ? { ...s, completed: false } : s));
+            return updatedSteps;
+          });
+        }
+        break;
+      default:
+        break;
     }
 
     const targetStep = step > 4 ? 4 : step < 1 ? 1 : step;
@@ -174,7 +239,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 重置計算機狀態
     setSalaryCalculator(defaultSalaryCalculator);
     // Info: (20250710 - Julian) 重置步驟狀態
-    setCompleteSteps([]);
+    setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
   };
 
