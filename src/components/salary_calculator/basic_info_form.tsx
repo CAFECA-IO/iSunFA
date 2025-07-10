@@ -2,13 +2,13 @@ import React from 'react';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { PiUserFill } from 'react-icons/pi';
-import { MONTH_FULL_NAME } from '@/constants/display';
+import { MONTHS } from '@/constants/month';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const BasicInfoForm: React.FC = () => {
   const yearOptions = ['2025', '2024', '2023'];
-  const monthOptions = MONTH_FULL_NAME;
+  const monthOptions = MONTHS;
 
   const {
     employeeName,
@@ -34,6 +34,9 @@ const BasicInfoForm: React.FC = () => {
     componentVisible: isMonthOpen,
     setComponentVisible: setIsMonthOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250710 - Julian) 當月的最大天數
+  const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
 
   // Info: (20250709 - Julian) 下拉選單開關
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
@@ -68,7 +71,7 @@ const BasicInfoForm: React.FC = () => {
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
-        {month}
+        {month.name}
       </button>
     );
   });
@@ -148,7 +151,7 @@ const BasicInfoForm: React.FC = () => {
           className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
         >
           <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
-            {selectedMonth}
+            {selectedMonth.name}
           </div>
           <div className="px-12px py-10px">
             <FaChevronDown size={16} />
@@ -173,7 +176,7 @@ const BasicInfoForm: React.FC = () => {
             value={workedDays}
             setValue={setWorkedDays}
             min={0}
-            max={31}
+            max={maxDaysInMonth}
             className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
             required
           />

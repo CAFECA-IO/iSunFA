@@ -3,12 +3,13 @@ import { FaCircleCheck } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const StepTabs: React.FC = () => {
-  const { currentStep, switchStep } = useCalculatorCtx();
+  const { currentStep, completeSteps, switchStep } = useCalculatorCtx();
   const steps = ['Basic Info', 'Base Pay', 'Work Hours', 'Others'];
 
   const tabs = steps.map((step, index) => {
     const isActive = currentStep === index + 1;
-    const isCompleted = 0;
+    // Info: (20250710 - Julian) 檢查 completeSteps 是否包含當前步驟
+    const isCompleted = completeSteps.some((s) => s.step === index + 1 && s.completed);
     const clickHandler = () => {
       switchStep(index + 1);
     };
