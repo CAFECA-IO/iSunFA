@@ -397,7 +397,7 @@ export async function createInvoiceRC2(
 
   const now = getTimestampNow();
 
-  const cert = await prisma.invoiceRC2.create({
+  const invoiceRC2 = await prisma.invoiceRC2.create({
     data: {
       ...body,
       accountBookId: query.accountBookId,
@@ -416,7 +416,9 @@ export async function createInvoiceRC2(
     },
   });
   const invoice =
-    body.direction === InvoiceDirection.INPUT ? transformInput(cert) : transformOutput(cert);
+    body.direction === InvoiceDirection.INPUT
+      ? transformInput(invoiceRC2)
+      : transformOutput(invoiceRC2);
 
   const pusher = getPusherInstance();
 
