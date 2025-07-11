@@ -18,6 +18,11 @@
  * const client = createTestClient({ handler, routeParams: { email: 'test@example.com' } });
  * const response = await client.get('/api/users/test@example.com');
  */
+
+/**
+ * Info: (20250709 - Tzuhan)
+ * - 如果需要測試檔案上傳，請見 04_upload.test.ts 的技術限制說明。
+ */
 import { createServer, RequestListener, IncomingMessage, ServerResponse, Server } from 'http';
 import { NextApiHandler } from 'next';
 import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
@@ -81,7 +86,11 @@ export const createSingleTestClient = (handler: NextApiHandler) => {
 
 const dynamicServerCache = new Map<string, Server>();
 
-const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<string, string>) => {
+const createDynamicTestClient = (
+  handler: NextApiHandler,
+  routeParams: Record<string, string>,
+  queryParams: Record<string, string | string[]>
+) => {
   const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
   let server = dynamicServerCache.get(cacheKey);
 
@@ -89,21 +98,18 @@ const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<st
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
       const url = new URL(req.url || '/', 'http://localhost');
 
-      if (!req.query) {
-        req.query = {};
-      }
+      const mergedQuery = {
+        ...(req.query || {}),
+        ...Object.fromEntries(url.searchParams.entries()),
+        ...queryParams,
+        ...routeParams,
+      };
 
       url.searchParams.forEach((value, key) => {
         if (req.query) {
           req.query[key] = value;
         }
       });
-
-      if (req.query) {
-        Object.assign(req.query, routeParams);
-      } else {
-        req.query = routeParams;
-      }
 
       if (!req.headers) {
         req.headers = {};
@@ -116,7 +122,7 @@ const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<st
       return apiResolver(
         req,
         res,
-        req.query,
+        mergedQuery,
         handler,
         {
           previewModeEncryptionKey: '',
@@ -139,8 +145,12 @@ export const createTestClient = (options: TestClientOptions | NextApiHandler) =>
     return createSingleTestClient(options);
   }
 
-  if (options.routeParams && Object.keys(options.routeParams).length > 0) {
-    return createDynamicTestClient(options.handler, options.routeParams);
+  if ((options.routeParams && Object.keys(options.routeParams).length > 0) || options.queryParams) {
+    return createDynamicTestClient(
+      options.handler,
+      options.routeParams || {},
+      options.queryParams || {}
+    );
   }
 
   return createSingleTestClient(options.handler);

@@ -23,6 +23,7 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 // Info: (20250701 - Shirley) Import API handlers for testing
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
+import { APIPath } from '@/constants/api_connection';
 
 interface TestResponse {
   status: number;
@@ -493,6 +494,25 @@ export class APITestHelper {
     const roleListClient = createTestClient(roleListHandler);
 
     return roleListClient.get('/').set('Cookie', cookies.join('; '));
+  }
+
+  // Info: (20250710 - Shirley) Create team method for account book testing
+  async createTeam(teamName?: string): Promise<TestResponse> {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    const { default: teamCreateHandler } = await import('@/pages/api/v2/team');
+    const teamCreateClient = createTestClient(teamCreateHandler);
+
+    const teamData = {
+      name: teamName || `Test Team ${Date.now()}`,
+      about: 'Test team for integration testing',
+    };
+
+    return teamCreateClient
+      .post(APIPath.CREATE_TEAM)
+      .send(teamData)
+      .set('Cookie', cookies.join('; '));
   }
 
   // Info: (20250707 - Shirley) Complete registration flow for all test users from default_value.ts
