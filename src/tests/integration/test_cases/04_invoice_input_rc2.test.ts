@@ -110,6 +110,7 @@ describe('Integration Test - Invoice RC2', () => {
     accountBookId = outputData?.id || 0;
 
     const publicKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
+    // Deprecated: (20250711 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log(`Public Key for Account Book ${accountBookId}:`, publicKey);
     const filePath = path.resolve(__dirname, '../test_files/mock_invoice.png');
