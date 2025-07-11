@@ -132,11 +132,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   useEffect(() => {
     // Info: (20250710 - Julian) 計算總加班時數
     const totalOvertime =
-      oneHours * 1 +
-      oneAndOneThirdHours * 1.34 +
-      oneAndTwoThirdsHours * 1.67 +
-      twoHours * 2 +
-      twoAndTwoThirdsHours * 2.67;
+      oneHours + oneAndOneThirdHours + oneAndTwoThirdsHours + twoHours + twoAndTwoThirdsHours;
 
     setTotalOvertimeHours(totalOvertime);
   }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
@@ -174,7 +170,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       case 3:
         setCompleteSteps((prev) => {
           // Info: (20250710 - Julian) 檢查工作時數是否已填寫
-          const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
+          // const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
+          const isCompleted = true;
           const updatedSteps = prev.map((s) => {
             return s.step === 3 ? { ...s, completed: isCompleted } : s;
           });
