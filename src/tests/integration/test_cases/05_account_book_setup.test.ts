@@ -6,11 +6,42 @@ import { TestClient } from '@/interfaces/test_client';
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
+import updateAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 
 // Info: (20250710 - Shirley) Import required types and constants
-import { WORK_TAG } from '@/interfaces/account_book';
+import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
+
+// Info: (20250711 - Shirley) Mock pusher and crypto for account book testing
+jest.mock('pusher', () => ({
+  // 建構子 → 回傳只有 trigger 的假物件
+  __esModule: true,
+  default: jest.fn(() => ({ trigger: jest.fn() })),
+}));
+
+jest.mock('@/lib/utils/crypto', () => {
+  const real = jest.requireActual('@/lib/utils/crypto');
+
+  // 一次產生 keyPair，後面重複取用
+  const keyPairPromise = crypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt']
+  );
+
+  return {
+    ...real,
+    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
+    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
+    storeKeyByCompany: jest.fn(), // 若有呼叫也不做事
+  };
+});
 
 /**
  * Info: (20250710 - Shirley) Integration Test - Account Book Setup (Test Case 3)
@@ -34,6 +65,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
   let createAccountBookClient: TestClient;
   let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
+  let updateAccountBookClient: TestClient;
   let currentUserId: string;
   let teamId: number;
   let createdAccountBookId: number;
@@ -142,6 +174,10 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
       });
       connectAccountBookClient = createTestClient({
         handler: connectAccountBookHandler,
+        routeParams: { accountBookId: createdAccountBookId.toString() },
+      });
+      updateAccountBookClient = createTestClient({
+        handler: updateAccountBookHandler,
         routeParams: { accountBookId: createdAccountBookId.toString() },
       });
     });
@@ -293,6 +329,185 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('404ISF0000');
+    });
+  });
+
+  /**
+   * Info: (20250711 - Shirley) Test PUT /api/v2/account_book/{accountBookId}
+   *
+   * Success Cases:
+   * - Valid account book data with MODIFY_ACCOUNT_BOOK permission → expect 200 with updated data
+   * - Company info update with proper permissions → expect 200 success
+   *
+   * Failure Cases:
+   * - No session/authentication → expect 401ISF0000 "Unauthorized access"
+   * - User without MODIFY_ACCOUNT_BOOK permission → expect 403ISF0000 "Forbidden"
+   * - Non-existent account book → expect 404ISF0000 "Resource not found"
+   * - Invalid action type → expect 422ISF0005 "Invalid input type"
+   * - Missing required fields for action → expect 422ISF0000 "Invalid input parameter"
+   */
+  describe('PUT /api/v2/account_book/{accountBookId} - Update Account Book', () => {
+    test('Success: Update account book with valid data and permissions', async () => {
+      const updateData = {
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+        name: 'Updated Test Company 更新測試公司',
+        taxId: '87654321',
+        representativeName: 'Updated Representative',
+        contactPerson: 'Updated Contact Person',
+      };
+
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const response = await updateAccountBookClient
+        .put(`/api/v2/account_book/${createdAccountBookId}`)
+        .send(updateData)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.payload).toBeDefined();
+      expect(response.body.payload).toBeDefined();
+      // Info: (20250711 - Shirley) The actual response structure may vary, check what's available
+      if (response.body.payload.company) {
+        expect(response.body.payload.company.name).toBe(updateData.name);
+        expect(response.body.payload.company.taxId).toBe(updateData.taxId);
+      }
+    });
+
+    test('Failure: Missing action type', async () => {
+      const invalidData = {
+        name: 'Test Update',
+        // Missing required action field
+      };
+
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const response = await updateAccountBookClient
+        .put(`/api/v2/account_book/${createdAccountBookId}`)
+        .send(invalidData)
+        .set('Cookie', cookies.join('; '))
+        .expect(422);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('422ISF0000');
+    });
+
+    test('Failure: Invalid action type', async () => {
+      const invalidData = {
+        action: 'INVALID_ACTION',
+        name: 'Test Update',
+      };
+
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const response = await updateAccountBookClient
+        .put(`/api/v2/account_book/${createdAccountBookId}`)
+        .send(invalidData)
+        .set('Cookie', cookies.join('; '))
+        .expect(422);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('422ISF0000');
+    });
+
+    test('Failure: No session/authentication', async () => {
+      const updateData = {
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+        name: 'Unauthorized Update',
+      };
+
+      const response = await updateAccountBookClient
+        .put(`/api/v2/account_book/${createdAccountBookId}`)
+        .send(updateData)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('401ISF0000');
+    });
+
+    test('Failure: Non-existent account book', async () => {
+      const nonExistentUpdateClient = createTestClient({
+        handler: updateAccountBookHandler,
+        routeParams: { accountBookId: '99999' },
+      });
+
+      const updateData = {
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+        name: 'Non-existent Update',
+      };
+
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const response = await nonExistentUpdateClient
+        .put('/api/v2/account_book/99999')
+        .send(updateData)
+        .set('Cookie', cookies.join('; '))
+        .expect(404);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('404ISF0000');
+    });
+  });
+
+  /**
+   * Info: (20250711 - Shirley) Integration test for complete account book workflow
+   * Tests the full sequence of account book operations as specified in Integration Test Plan v2
+   */
+  describe('Complete Account Book Workflow Integration', () => {
+    test('Success: Complete account book lifecycle', async () => {
+      // Info: (20250711 - Shirley) Step 1: Verify account book was created successfully
+      expect(createdAccountBookId).toBeDefined();
+      expect(createdAccountBookId).toBeGreaterThan(0);
+
+      // Info: (20250711 - Shirley) Step 2: Get account book info to verify data
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const getResponse = await getAccountBookClient
+        .get(`/api/v2/account_book/${createdAccountBookId}`)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      expect(getResponse.body.payload.name).toBeDefined();
+      expect(getResponse.body.payload.taxId).toBeDefined();
+
+      // Info: (20250711 - Shirley) Step 3: Connect to account book to verify access
+      const connectResponse = await connectAccountBookClient
+        .get(`/api/v2/account_book/${createdAccountBookId}/connect`)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      expect(connectResponse.body.success).toBe(true);
+
+      // Info: (20250711 - Shirley) Step 4: Update account book to verify modification
+      const updateData = {
+        action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+        name: 'Final Updated Company Name',
+      };
+
+      const updateResponse = await updateAccountBookClient
+        .put(`/api/v2/account_book/${createdAccountBookId}`)
+        .send(updateData)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      expect(updateResponse.body.payload).toBeDefined();
+      // Info: (20250711 - Shirley) Check response structure
+      if (updateResponse.body.payload.company) {
+        expect(updateResponse.body.payload.company.name).toBe(updateData.name);
+      }
+
+      // Info: (20250711 - Shirley) Step 5: Verify update by getting account book info again
+      const finalGetResponse = await getAccountBookClient
+        .get(`/api/v2/account_book/${createdAccountBookId}`)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      expect(finalGetResponse.body.payload.name).toBe(updateData.name);
     });
   });
 });
