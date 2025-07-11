@@ -154,7 +154,7 @@ describe('Raw Node.js Upload Test', () => {
 
     // console.log('[RawServer] upload response:', resp.body);
 
-    // 這裡 resp.body.files.file **一定是 array**
+    // Info: (20250709 - Tzuhan) 這裡 resp.body.files.file **一定是 array**
     expect(resp.body.err).toBeNull();
     expect(resp.body.files.file).toBeDefined();
     expect(Array.isArray(resp.body.files.file)).toBe(true);
@@ -164,7 +164,7 @@ describe('Raw Node.js Upload Test', () => {
 });
 
 // -------------------------------------
-// ⚠️ 跳過此測試，並說明原因！
+// Info: (20250709 - Tzuhan) ⚠️ 跳過此測試，並說明原因！
 // -------------------------------------
 
 describe('Next.js API Upload Test (SKIPPED)', () => {
@@ -202,10 +202,9 @@ describe('Next.js API Upload Test (SKIPPED)', () => {
     });
   });
 
-  // ⚠️ SKIP，明確告知是 framework 限制，不是 code bug
+  // Info: (20250709 - Tzuhan) ⚠️ SKIP，明確告知是 framework 限制，不是 code bug
   it.skip('should upload file via supertest to next api (framework stream bug, see comment)', async () => {
-    // 下方說明不要移除
-    // Info: (20250709 - Tzuhan)
+    // Info: (20250709 - Tzuhan) 下方說明不要移除
     // 【Framework 限制】supertest + formidable + apiResolver 在 Next.js handler 下會卡死
     // - 進 handler 沒問題，但 formidable.parse 不會 callback
     // - 原因見本檔案開頭
@@ -214,7 +213,7 @@ describe('Next.js API Upload Test (SKIPPED)', () => {
       .attach('file', Buffer.from('hello world'), 'test.txt')
       .expect(200);
 
-    // 不會執行到這
+    // Info: (20250709 - Tzuhan) 不會執行到這
     // console.log('[NextApiServer] upload response:', resp.body);
 
     expect(resp.body.err).toBeNull();
