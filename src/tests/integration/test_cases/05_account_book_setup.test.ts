@@ -57,8 +57,6 @@ jest.mock('@/lib/utils/crypto', () => {
  * 2. GET /api/v2/account_book/{accountBookId} - Get account book info
  * 3. GET /api/v2/account_book/{accountBookId}/connect - Connect to account book
  * 4. PUT /api/v2/account_book/{accountBookId} - Update account book info
- *
- * Follows Integration Test Plan v2 specifications for success/failure validation
  */
 describe('Integration Test - Account Book Setup (Test Case 3)', () => {
   let authenticatedHelper: APITestHelper;
@@ -455,7 +453,6 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
   /**
    * Info: (20250711 - Shirley) Integration test for complete account book workflow
-   * Tests the full sequence of account book operations as specified in Integration Test Plan v2
    */
   describe('Complete Account Book Workflow Integration', () => {
     test('Success: Complete account book lifecycle', async () => {
