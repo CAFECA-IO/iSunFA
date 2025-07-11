@@ -23,7 +23,7 @@ jest.mock('pusher', () => ({
 jest.mock('@/lib/utils/crypto', () => {
   const real = jest.requireActual('@/lib/utils/crypto');
 
-  // 一次產生 keyPair，後面重複取用
+  // Info: (20250711 - Shirley) 一次產生 keyPair，後面重複取用
   const keyPairPromise = crypto.subtle.generateKey(
     {
       name: 'RSA-OAEP',
@@ -39,7 +39,7 @@ jest.mock('@/lib/utils/crypto', () => {
     ...real,
     getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
     getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
-    storeKeyByCompany: jest.fn(), // 若有呼叫也不做事
+    storeKeyByCompany: jest.fn(), // Info: (20250711 - Shirley) 若有呼叫也不做事
   };
 });
 
@@ -68,7 +68,6 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
   let teamId: number;
   let createdAccountBookId: number;
 
-  // generate a random number between 10000000 and 99999999
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
   // Info: (20250710 - Shirley) Test data for account book creation
@@ -76,7 +75,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
     name: 'Test Company 測試公司',
     taxId: randomNumber.toString(),
     tag: WORK_TAG.ALL,
-    teamId: 0, // Will be set after team creation
+    teamId: 0, // Info: (20250711 - Shirley) Will be set after team creation
     businessLocation: LocaleKey.tw,
     accountingCurrency: CurrencyType.TWD,
     representativeName: 'John Doe',
@@ -114,22 +113,6 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
       handler: createAccountBookHandler,
       routeParams: { userId: currentUserId },
     });
-  });
-
-  afterAll(async () => {
-    // Info: (20250710 - Shirley) Cleanup created test data
-    // Note: Disabled cleanup due to foreign key constraints
-    // The test database will be cleaned up between test runs
-    // if (createdAccountBookId) {
-    //   await prisma.company.deleteMany({
-    //     where: { id: createdAccountBookId },
-    //   });
-    // }
-    // if (teamId) {
-    //   await prisma.team.deleteMany({
-    //     where: { id: teamId },
-    //   });
-    // }
   });
 
   /**
