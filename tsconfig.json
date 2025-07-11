@@ -27,6 +27,6 @@
     "**/*.tsx",
     "tailwind.config.ts",
     "scripts/update_version.js"
-, "src/tests/integration/test_cases/07_invoice_rc2/common_util.ts."  ],
+  ],
   "exclude": ["node_modules"]
 }
