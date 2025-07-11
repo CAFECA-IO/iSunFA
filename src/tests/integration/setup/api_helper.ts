@@ -654,4 +654,56 @@ export class APITestHelper {
       };
     }
   }
+
+  // Info: (20250711 - Shirley) Create test account book for integration tests
+  async createTestAccountBook(): Promise<number> {
+    const cookies = this.getCurrentSession();
+
+    // Info: (20250711 - Shirley) Get user ID from status
+    const statusResponse = await this.getStatusInfo();
+    const userData = statusResponse.body.payload?.user as { id?: number };
+    const userId = userData?.id?.toString() || '1';
+
+    // Info: (20250711 - Shirley) Create a team first
+    const teamData = {
+      name: `Accounting Test Team ${Date.now()}`,
+    };
+
+    // Info: (20250711 - Shirley) Import team handler and create client
+    const { default: teamHandler } = await import('@/pages/api/v2/team');
+    const teamClient = createTestClient(teamHandler);
+
+    const teamResponse = await teamClient
+      .post('/api/v2/team')
+      .send(teamData)
+      .set('Cookie', cookies.join('; '));
+
+    const teamId = teamResponse.body.payload.id;
+
+    // Info: (20250711 - Shirley) Create account book
+    const accountBookData = {
+      teamId,
+      name: `Test Company ${Date.now()}`,
+      taxId: `${Date.now()}`,
+      tag: 'ALL',
+      businessLocation: 'tw',
+      accountingCurrency: 'TWD',
+    };
+
+    // Info: (20250711 - Shirley) Import account book handler and create client
+    const { default: accountBookHandler } = await import(
+      '@/pages/api/v2/user/[userId]/account_book'
+    );
+    const accountBookClient = createTestClient({
+      handler: accountBookHandler,
+      routeParams: { userId },
+    });
+
+    const accountBookResponse = await accountBookClient
+      .post(`/api/v2/user/${userId}/account_book`)
+      .send(accountBookData)
+      .set('Cookie', cookies.join('; '));
+
+    return accountBookResponse.body.payload.id;
+  }
 }
