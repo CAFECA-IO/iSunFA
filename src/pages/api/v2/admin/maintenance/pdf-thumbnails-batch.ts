@@ -132,6 +132,7 @@ async function processPdfFile(
     if (isEncrypted) {
       loggerBack.info(`[PDF_BATCH_THUMBNAIL] Decrypting PDF file: ${pdfPath}`);
       try {
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
         const encryptedFileBuffer = await fs.readFile(pdfPath);
         const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
         const privateKey = await getPrivateKeyByCompany(companyId);
@@ -149,6 +150,7 @@ async function processPdfFile(
         );
 
         // Info: (20250529 - Shirley) 將解密後的檔案寫入臨時檔案
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
         tempDecryptedPath = `${pdfPath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
         await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
         loggerBack.info(
@@ -156,6 +158,7 @@ async function processPdfFile(
         );
 
         // Info: (20250529 - Shirley) 確認臨時檔案已成功寫入
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
         const tempFileStats = await fs.stat(tempDecryptedPath);
         loggerBack.info(`[PDF_BATCH_THUMBNAIL] Temporary file size: ${tempFileStats.size} bytes`);
         if (tempFileStats.size === 0) {
@@ -203,12 +206,14 @@ async function processPdfFile(
       );
 
       // Info: (20250529 - Shirley) 確認縮略圖檔案已成功產生
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
       const thumbnailStats = await fs.stat(thumbnailInfo.filepath);
       if (thumbnailStats.size === 0 || thumbnailStats.size !== thumbnailInfo.size) {
         throw new Error('Thumbnail was created but has incorrect file size');
       }
 
       // Info: (20250529 - Shirley) 處理縮略圖
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
       const thumbnailFileName = path.basename(thumbnailInfo.filepath);
       const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(
         thumbnailFileName,
@@ -219,6 +224,7 @@ async function processPdfFile(
       if (isEncrypted) {
         loggerBack.info(`[PDF_BATCH_THUMBNAIL] Encrypting thumbnail: ${thumbnailInfo.filepath}`);
         try {
+          // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
           const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
           loggerBack.info(
             `[PDF_BATCH_THUMBNAIL] Read thumbnail file into buffer, size: ${thumbnailBuffer.length} bytes`
@@ -253,6 +259,7 @@ async function processPdfFile(
           );
 
           // Info: (20250529 - Shirley) 寫入加密縮略圖
+          // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
           await fs.writeFile(thumbnailInfo.filepath, Buffer.from(encryptedContent));
 
           // Info: (20250529 - Shirley) 確認加密後的縮略圖檔案已成功寫入
@@ -381,6 +388,7 @@ async function processPdfFile(
     // Info: (20250529 - Shirley) 移除臨時解密檔案
     if (tempDecryptedPath) {
       try {
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
         await fs.unlink(tempDecryptedPath);
         loggerBack.info(
           `[PDF_BATCH_THUMBNAIL] Deleted temporary decrypted file: ${tempDecryptedPath}`
@@ -548,10 +556,11 @@ export default async function handler(
 
   try {
     // Info: (20250529 - Shirley) 獲取 invoice 資料夾路徑並讀取所有 PDF 檔案
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 路徑組合)
     const invoiceFolderPath = path.join(process.env.BASE_STORAGE_PATH || '', 'invoice');
     loggerBack.info(`[PDF_BATCH_THUMBNAIL] Scanning PDF files in: ${invoiceFolderPath}`);
-
     // Info: (20250529 - Shirley) 讀取資料夾中的所有檔案
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
     const files = await fs.readdir(invoiceFolderPath);
     // Info: (20250529 - Shirley) 篩選出 PDF 檔案
     const pdfFiles = files.filter((file) => file.toLowerCase().endsWith('.pdf'));

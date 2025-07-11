@@ -25,6 +25,7 @@ export const parseForm = async (
   };
 
   const form = new IncomingForm(options);
+  
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
@@ -42,6 +43,7 @@ export async function findFileByName(baseFolder: string, fileName: string): Prom
   let foundFile: string | null = null;
 
   try {
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 目錄掃描)
     const files = await fs.readdir(baseFolder);
     foundFile = files.find((file) => file.includes(fileName)) || null;
     if (foundFile) {
@@ -65,6 +67,7 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
   const filePath = fileName ? path.join(baseFolder, fileName) : baseFolder;
   let fileBuffer: Buffer | null = null;
   try {
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取)
     fileBuffer = await fs.readFile(filePath);
   } catch (error) {
     loggerBack.error(error, `Error in readFile: ${filePath}`);
@@ -91,16 +94,20 @@ export async function addPrefixToFile(
   const targetFolder = getFileFolder(folder); // Info: (20240726 - Jacky) 確保是從專案根目錄開始找目標資料夾
 
   // Info: (20240723 - Jacky) 檔案的完整路徑
+  // Info: (20250710 - Luphia) Use IPFS to store files (S2: 批次或更名流程)
   const oldFilePath = path.join(targetFolder, fileName);
   const currentExt = path.extname(fileName).slice(1); // Info: (20240726 - Jacky) 去除開頭的點 (.)
 
   // Info: (20240726 - Jacky) 根據現有副檔名與新的副檔名來決定是否需要更改
   const newFilename = `${prefix}-${fileName}${currentExt === ext ? '' : `.${ext}`}`;
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 批次或更名流程)
   const newFilePath = path.join(targetFolder, newFilename);
 
   // Info: (20240726 - Jacky) 檢查檔案是否存在
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 批次或更名流程)
   await fs.access(oldFilePath);
   // Info: (20240726 - Jacky) 改名檔案
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 批次或更名流程)
   await fs.rename(oldFilePath, newFilePath);
   return newFilename;
 }

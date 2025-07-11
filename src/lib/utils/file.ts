@@ -25,6 +25,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DefaultValue } from '@/constants/default_value';
 import { IV_LENGTH } from '@/constants/config';
 
+// ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 文件夾管理/路徑組合)
 export async function createFileFoldersIfNotExists(): Promise<void> {
   UPLOAD_IMAGE_FOLDERS_TO_CREATE_WHEN_START_SERVER.map(async (folder) => {
     try {
@@ -51,6 +52,7 @@ export async function createFileFoldersIfNotExists(): Promise<void> {
  * @param folderType - the folder type (optional)
  * @returns - the file path
  */
+// ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 文件夾管理/路徑組合)
 export function generateFilePathWithBaseUrlPlaceholder(
   fileName: string,
   folderType?: FileFolder
@@ -95,6 +97,7 @@ export async function decryptImageFile({
 
   if (isEncrypted && encryptedSymmetricKey && iv) {
     const encryptedArrayBuffer: ArrayBuffer = bufferToArrayBuffer(imageBuffer);
+    // ToDo: (20250710 - Luphia) Use IPFS to store files
     const privateKey = await getPrivateKeyByCompany(companyId);
 
     if (!privateKey) {
@@ -197,6 +200,7 @@ export async function writeBufferToFile({
   filePath: string;
 }): Promise<string | null> {
   try {
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: 文件工具)
     await fs.writeFile(filePath, new Uint8Array(buffer.buffer));
   } catch (error) {
     loggerBack.error(error, `Error in writeBufferToFile in file.ts`);
