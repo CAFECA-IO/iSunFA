@@ -63,6 +63,7 @@ async function uploadEncryptedFile(filename: string, bookId: number): Promise<nu
 
 /* Info: (20250711 - Tzuhan) ---------- 單例 Context ---------- */
 let ctxPromise: Promise<InvoiceTestContext> | undefined;
+let cleared = false;
 
 export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
   if (ctxPromise) return ctxPromise; // Info: (20250711 - Tzuhan) 已建好
@@ -126,6 +127,8 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
     };
   })();
 
+  cleared = false; // Info: (20250711 - Tzuhan) 清理狀態
+
   return ctxPromise;
 }
 
@@ -174,7 +177,10 @@ export async function createInvoice<T extends IInvoiceRC2Base>(
 }
 
 /*  Info: (20250711 - Tzuhan)---------- 清理 ---------- */
-export async function clearInvoiceTestContext(): Promise<void> {
-  const c = await ctxPromise;
-  c?.helper?.clearAllUserSessions?.();
+
+export async function clearInvoiceTestContext() {
+  if (cleared) return;
+  const ctx = await ctxPromise;
+  ctx?.helper?.clearAllUserSessions?.();
+  cleared = true;
 }

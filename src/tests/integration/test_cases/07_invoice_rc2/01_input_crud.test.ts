@@ -1,11 +1,12 @@
 import {
+  clearInvoiceTestContext,
   getInvoiceTestContext,
   InvoiceTestContext,
 } from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { APIName, APIPath } from '@/constants/api_connection';
-import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
-import invoiceOutputModifyHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/[invoiceId]/output';
+import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
+import invoiceInputModifyHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/[invoiceId]/input';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
   CurrencyCode,
@@ -15,38 +16,38 @@ import {
   TaxType,
 } from '@/constants/invoice_rc2';
 
-describe('Invoice RC2 - Output Invoice CRUD', () => {
+describe('Invoice RC2 - Input Invoice CRUD', () => {
   let ctx: InvoiceTestContext;
   let invoiceId: number;
 
   beforeAll(async () => {
     ctx = await getInvoiceTestContext();
   });
-  it('should create invoice RC2 output', async () => {
-    const invoiceOutputCreateClient = createTestClient({
-      handler: invoiceOutputCreateHandler,
+  it('should create invoice RC2 input', async () => {
+    const invoiceInputCreateClient = createTestClient({
+      handler: invoiceInputCreateHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },
     });
 
-    const invoiceOutputCreateResponse = await invoiceOutputCreateClient
+    const invoiceInputCreateResponse = await invoiceInputCreateClient
       .post(
-        `${APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())}`
+        `${APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())}`
       )
       .send({
-        fileId: ctx.fileIdForOutput,
-        direction: InvoiceDirection.OUTPUT,
+        fileId: ctx.fileIdForInput,
+        direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
       })
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
 
-    expect(invoiceOutputCreateResponse.body.success).toBe(true);
-    expect(invoiceOutputCreateResponse.body.payload?.id).toBeDefined();
+    expect(invoiceInputCreateResponse.body.success).toBe(true);
+    expect(invoiceInputCreateResponse.body.payload?.id).toBeDefined();
 
     const { isOutputDataValid, outputData } = validateOutputData(
-      APIName.CREATE_INVOICE_RC2_OUTPUT,
-      invoiceOutputCreateResponse.body.payload
+      APIName.CREATE_INVOICE_RC2_INPUT,
+      invoiceInputCreateResponse.body.payload
     );
     if (isOutputDataValid && outputData) {
       invoiceId = outputData.id;
@@ -55,29 +56,29 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     expect(isOutputDataValid).toBe(true);
   });
 
-  it('should update invoice RC2 output', async () => {
+  it('should update invoice RC2 input', async () => {
     if (invoiceId === undefined) {
-      throw new Error('invoiceId is not defined, cannot update invoice output');
+      throw new Error('invoiceId is not defined, cannot update invoice input');
     }
 
-    const invoiceOutputModifyClient = createTestClient({
-      handler: invoiceOutputModifyHandler,
+    const invoiceInputModifyClient = createTestClient({
+      handler: invoiceInputModifyHandler,
       routeParams: {
         accountBookId: ctx.accountBookId.toString(),
         invoiceId: invoiceId.toString(),
       },
     });
 
-    const response = await invoiceOutputModifyClient
+    const response = await invoiceInputModifyClient
       .put(
-        APIPath.UPDATE_INVOICE_RC2_OUTPUT.replace(
+        APIPath.UPDATE_INVOICE_RC2_INPUT.replace(
           ':accountBookId',
           ctx.accountBookId.toString()
         ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
         no: 'AB25000038',
-        type: InvoiceType.OUTPUT_31,
+        type: InvoiceType.INPUT_21,
         taxType: TaxType.TAXABLE,
         issuedDate: 1728835200,
         taxRate: 5,
@@ -96,28 +97,28 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     expect(response.body.payload?.id).toBeDefined();
 
     const { isOutputDataValid: isUpdateValid, outputData: updatedData } = validateOutputData(
-      APIName.UPDATE_INVOICE_RC2_OUTPUT,
+      APIName.UPDATE_INVOICE_RC2_INPUT,
       response.body.payload
     );
     expect(isUpdateValid).toBe(true);
     expect(updatedData?.no).toBe('AB25000038');
   });
 
-  it('should delete invoice RC2 output', async () => {
+  it('should delete invoice RC2 input', async () => {
     if (invoiceId === undefined) {
-      throw new Error('invoiceId is not defined, cannot delete invoice output');
+      throw new Error('invoiceId is not defined, cannot delete invoice input');
     }
 
-    const invoiceOutputDeleteClient = createTestClient({
-      handler: invoiceOutputCreateHandler,
+    const invoiceInputDeleteClient = createTestClient({
+      handler: invoiceInputCreateHandler,
       routeParams: {
         accountBookId: ctx.accountBookId.toString(),
       },
     });
 
-    const invoiceOutputResponse = await invoiceOutputDeleteClient
+    const invoiceInputResponse = await invoiceInputDeleteClient
       .delete(
-        APIPath.DELETE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())
+        APIPath.DELETE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
         invoiceIds: [invoiceId],
@@ -125,13 +126,17 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
 
-    expect(invoiceOutputResponse.body.success).toBe(true);
+    expect(invoiceInputResponse.body.success).toBe(true);
 
     const { isOutputDataValid, outputData } = validateOutputData(
-      APIName.DELETE_INVOICE_RC2_OUTPUT,
-      invoiceOutputResponse.body.payload
+      APIName.DELETE_INVOICE_RC2_INPUT,
+      invoiceInputResponse.body.payload
     );
     expect(isOutputDataValid).toBe(true);
     expect(outputData?.deletedIds.length).toBe(1);
+  });
+
+  afterAll(async () => {
+    await clearInvoiceTestContext();
   });
 });
