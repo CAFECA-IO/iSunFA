@@ -25,7 +25,7 @@ export const parseForm = async (
   };
 
   const form = new IncomingForm(options);
-  
+
   const parsePromise = new Promise<{ fields: Fields; files: Files<string> }>((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) {
