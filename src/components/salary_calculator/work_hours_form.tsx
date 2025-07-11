@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
 
 const MIN_HOURS = 0;
@@ -64,35 +65,26 @@ const TotalHours: React.FC<{
 };
 
 const WorkHoursForm: React.FC = () => {
-  // Info: (20250709 - Julian) overtime hour state
-  const [oneHours, setOneHours] = useState<number>(0);
-  const [oneAndOneThirdHours, setOneAndOneThirdHours] = useState<number>(0);
-  const [oneAndTwoThirdsHours, setOneAndTwoThirdsHours] = useState<number>(0);
-  const [twoHours, setTwoHours] = useState<number>(0);
-  const [twoAndTwoThirdsHours, setTwoAndTwoThirdsHours] = useState<number>(0);
-  const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
-  // Info: (20250709 - Julian) leave hour state
-  const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
-  const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
-  const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
-
-  useEffect(() => {
-    // Info: (20250709 - Julian) 計算總加班時數
-    const totalOvertime =
-      oneHours * 1 +
-      oneAndOneThirdHours * 1.33 +
-      oneAndTwoThirdsHours * 1.67 +
-      twoHours * 2 +
-      twoAndTwoThirdsHours * 2.67;
-
-    setTotalOvertimeHours(totalOvertime);
-  }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
-
-  useEffect(() => {
-    // Info: (20250709 - Julian) 計算總休假時數
-    const totalLeave = sickLeaveHours + personalLeaveHours;
-    setTotalLeaveHours(totalLeave);
-  }, [sickLeaveHours, personalLeaveHours]);
+  const {
+    // Info: (20250709 - Julian) overtime hour state
+    oneHours,
+    setOneHours,
+    oneAndOneThirdHours,
+    setOneAndOneThirdHours,
+    oneAndTwoThirdsHours,
+    setOneAndTwoThirdsHours,
+    twoHours,
+    setTwoHours,
+    twoAndTwoThirdsHours,
+    setTwoAndTwoThirdsHours,
+    // Info: (20250709 - Julian) leave hour state
+    sickLeaveHours,
+    setSickLeaveHours,
+    personalLeaveHours,
+    setPersonalLeaveHours,
+    totalOvertimeHours,
+    totalLeaveHours,
+  } = useCalculatorCtx();
 
   return (
     <form className="flex flex-col gap-lv-8">
@@ -102,7 +94,7 @@ const WorkHoursForm: React.FC = () => {
         {/* Info: (20250709 - Julian) 1 小時 */}
         <HourCounter title="1" value={oneHours} setValue={setOneHours} />
         {/* Info: (20250709 - Julian) 1.34 小時 */}
-        <HourCounter title="1.43" value={oneAndOneThirdHours} setValue={setOneAndOneThirdHours} />
+        <HourCounter title="1.34" value={oneAndOneThirdHours} setValue={setOneAndOneThirdHours} />
         {/* Info: (20250709 - Julian) 1.67 小時 */}
         <HourCounter title="1.67" value={oneAndTwoThirdsHours} setValue={setOneAndTwoThirdsHours} />
         {/* Info: (20250709 - Julian) 2 小時 */}

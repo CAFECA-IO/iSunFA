@@ -90,6 +90,7 @@ class SessionHandler {
       const data = Buffer.from(encryptedString).toString('base64');
       // Info: (20250108 - Luphia) save session data to file
       const { filePath } = this;
+      // ToDo: (20250108 - Luphia) Use IPFS to store files (S1: Session 管理)
       fs.promises.writeFile(filePath, data);
     } catch (error) {
       // Info: (20250108 - Luphia) log error message and nothing to do
@@ -102,6 +103,7 @@ class SessionHandler {
     try {
       // Info: (20250108 - Luphia) read session data from file
       const { filePath } = this;
+      // ToDo: (20250108 - Luphia) Use IPFS to store files (S1: Session 管理)
       const data = await fs.promises.readFile(filePath, 'utf-8');
       const rawString = Buffer.from(data, 'base64').toString('utf-8');
       const decryptedString = decryptString(rawString, this.secret);

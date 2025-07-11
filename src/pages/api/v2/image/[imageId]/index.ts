@@ -28,6 +28,7 @@ const handleGetRequest: IHandleRequest<APIName.IMAGE_GET_BY_ID, Buffer> = async 
     }
 
     const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 讀圖)
     const fileBuffer = await readFile(filePath);
     if (!fileBuffer) {
       loggerBack.info(

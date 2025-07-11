@@ -20,7 +20,7 @@ export const compileTemplate = <T extends keyof EmailTemplateData>({
   if (!fs.existsSync(filePath)) {
     throw new Error(`Email template not found: ${templateName}`);
   }
-
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 讀圖)
   const mjmlContent = fs.readFileSync(filePath, 'utf-8');
   const renderedMJML = mustache.render(mjmlContent, data);
   const { html, errors } = mjml2html(renderedMJML);
