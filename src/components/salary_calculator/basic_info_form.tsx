@@ -12,9 +12,6 @@ const BasicInfoForm: React.FC = () => {
   const yearOptions = ['2025', '2024', '2023'];
   const monthOptions = MONTHS;
 
-  // ToDo: (20250711 - Julian) During development
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isNameError, setIsNameError] = useState<boolean>(false);
   const [isShowEmployeeListModal, setIsShowEmployeeListModal] = useState<boolean>(false);
 
   const {
@@ -28,6 +25,7 @@ const BasicInfoForm: React.FC = () => {
     changeSelectedMonth,
     workedDays,
     setWorkedDays,
+    isNameError,
   } = useCalculatorCtx();
 
   const {
