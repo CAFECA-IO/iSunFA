@@ -7,6 +7,7 @@ import { MONTHS } from '@/constants/month';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import EmployeeListModal from '@/components/salary_calculator/employee_list_modal';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
+import { useUserCtx } from '@/contexts/user_context';
 
 const BasicInfoForm: React.FC = () => {
   const yearOptions = ['2025', '2024', '2023'];
@@ -27,6 +28,7 @@ const BasicInfoForm: React.FC = () => {
     setWorkedDays,
     isNameError,
   } = useCalculatorCtx();
+  const { isSignIn } = useUserCtx();
 
   const {
     targetRef: yearDropdownRef,
@@ -110,16 +112,19 @@ const BasicInfoForm: React.FC = () => {
               onChange={handleEmployeeNameChange}
               required
             />
-            <button
-              type="button"
-              onClick={toggleEmployeeListModal}
-              className="flex h-full items-center gap-8px border-l border-input-stroke-input px-12px py-10px"
-            >
-              <FiSearch size={16} className="text-icon-surface-single-color-primary" />
-              <p className="text-sm font-medium text-input-text-input-placeholder hover:text-input-text-input-hover">
-                Employee List
-              </p>
-            </button>
+            {/* Info: (20250711 - Julian) 登入時才顯示員工列表按鈕 */}
+            {isSignIn && (
+              <button
+                type="button"
+                onClick={toggleEmployeeListModal}
+                className="flex h-full items-center gap-8px border-l border-input-stroke-input px-12px py-10px"
+              >
+                <FiSearch size={16} className="text-icon-surface-single-color-primary" />
+                <p className="text-sm font-medium text-input-text-input-placeholder hover:text-input-text-input-hover">
+                  Employee List
+                </p>
+              </button>
+            )}
           </div>
         </div>
 

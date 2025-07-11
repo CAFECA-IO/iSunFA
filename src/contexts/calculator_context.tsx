@@ -157,7 +157,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 檢查當前步驟是否已完成
     switch (currentStep) {
       case 1:
-        if (employeeName !== '') {
+        if (employeeName === '') {
           // Info: (20250711 - Julian) 如果姓名有錯誤，則不允許切換到下一步，且顯示錯誤訊息
           setIsNameError(true);
           messageModalDataHandler({
