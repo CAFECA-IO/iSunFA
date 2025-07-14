@@ -34,7 +34,7 @@ const HourCounter: React.FC<{
           value={value}
           setValue={setValue}
           min={MIN_WORK_HOURS}
-          max={maxValue}
+          // max={maxValue}
           className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
         />
         <button
