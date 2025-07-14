@@ -1,6 +1,8 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
 import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
 
 type TabStep = {
   step: number;
@@ -46,6 +48,8 @@ interface ICalculatorContext {
   workedDays: number;
   // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
   setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
+
+  isNameError: boolean; // Info: (20250709 - Julian) 是否有姓名錯誤
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state 和 functions
   // 以下皆使用 Dispatch 來更新 state
@@ -93,6 +97,8 @@ export interface ICalculatorProvider {
 export const CalculatorContext = createContext<ICalculatorContext | undefined>(undefined);
 
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
@@ -106,6 +112,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [selectedYear, setSelectedYear] = useState<string>('2025');
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(MONTHS[0]);
   const [workedDays, setWorkedDays] = useState<number>(31);
+
+  // Info: (20250711 - Julian) 是否有姓名錯誤
+  const [isNameError, setIsNameError] = useState<boolean>(false);
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
   const [baseSalary, setBaseSalary] = useState<number>(0);
@@ -132,11 +141,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   useEffect(() => {
     // Info: (20250710 - Julian) 計算總加班時數
     const totalOvertime =
-      oneHours * 1 +
-      oneAndOneThirdHours * 1.34 +
-      oneAndTwoThirdsHours * 1.67 +
-      twoHours * 2 +
-      twoAndTwoThirdsHours * 2.67;
+      oneHours + oneAndOneThirdHours + oneAndTwoThirdsHours + twoHours + twoAndTwoThirdsHours;
 
     setTotalOvertimeHours(totalOvertime);
   }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
@@ -152,14 +157,27 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 檢查當前步驟是否已完成
     switch (currentStep) {
       case 1:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查員工姓名是否已填寫
-          const isCompleted = employeeName !== '';
-          const updatedSteps = prev.map((s) => {
-            return s.step === 1 ? { ...s, completed: isCompleted } : s;
+        if (employeeName === '') {
+          // Info: (20250711 - Julian) 如果姓名有錯誤，則不允許切換到下一步，且顯示錯誤訊息
+          setIsNameError(true);
+          messageModalDataHandler({
+            messageType: MessageType.ERROR,
+            title: 'Employee’s Name is not Filled',
+            content: 'You need to enter the employee’s name before you go to next step',
+            submitBtnStr: 'Close',
+            submitBtnFunction: messageModalVisibilityHandler,
           });
-          return updatedSteps;
-        });
+          messageModalVisibilityHandler();
+          return;
+        } else {
+          setCompleteSteps((prev) => {
+            // Info: (20250710 - Julian) 檢查員工姓名是否已填寫
+            const updatedSteps = prev.map((s) => {
+              return s.step === 1 ? { ...s, completed: true } : s;
+            });
+            return updatedSteps;
+          });
+        }
         break;
       case 2:
         setCompleteSteps((prev) => {
@@ -174,7 +192,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       case 3:
         setCompleteSteps((prev) => {
           // Info: (20250710 - Julian) 檢查工作時數是否已填寫
-          const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
+          // const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
+          const isCompleted = true;
           const updatedSteps = prev.map((s) => {
             return s.step === 3 ? { ...s, completed: isCompleted } : s;
           });
@@ -229,11 +248,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
+    setIsNameError(false);
   };
 
   // Info: (20250709 - Julian) =========== 基本資訊相關 state 和 functions ===========
   const changeEmployeeName = (name: string) => {
     setEmployeeName(name);
+    setIsNameError(name === ''); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
   };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
@@ -275,6 +296,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setMealAllowance,
       otherAllowance,
       setOtherAllowance,
+      isNameError,
       oneHours,
       setOneHours,
       oneAndOneThirdHours,
@@ -312,6 +334,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       baseSalary,
       mealAllowance,
       otherAllowance,
+      isNameError,
       oneHours,
       oneAndOneThirdHours,
       oneAndTwoThirdsHours,

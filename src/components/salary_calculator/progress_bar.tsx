@@ -9,7 +9,7 @@ const ProgressBar: React.FC = () => {
   // Info: (20250709 - Julian) 總共四個步驟，每個步驟佔 25% 的進度
   const progress = completeSteps.reduce((acc, step) => {
     return acc + (step.completed ? 25 : 0);
-  }, 0);
+  }, 25); // Info: (20250711 - Julian) 初始值為 25
 
   return (
     <div className="flex items-end gap-12px">

@@ -272,8 +272,8 @@ export const createTeamWithTrial = async (
       },
     });
 
-    // Info: (20250708 - Shirley) Check team member limit after subscription is created
-    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0, tx);
+    // Info: (20250708 - Shirley) Remove check team member limit after subscription is created
+    // await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0, tx);
 
     // Info: (20250409 - Tzuhan) 6. 回傳 ITeam 格式
     return {
