@@ -15,6 +15,7 @@ describe('Invoice RC2 - Invoice List (list both input/output invoice', () => {
 
   beforeAll(async () => {
     ctx = await getInvoiceTestContext();
+    // Deprecated: (20250714 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('ctx.accountBookId', ctx.accountBookId);
     await createInvoice(ctx, InvoiceDirection.INPUT);
