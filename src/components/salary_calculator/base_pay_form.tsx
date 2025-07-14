@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
 
@@ -8,6 +9,8 @@ const AmountInput: React.FC<{
   children: React.ReactNode;
   required?: boolean;
 }> = ({ title, children, required }) => {
+  const { t } = useTranslation('common');
+
   return (
     <div className="flex flex-col gap-8px">
       <p className="text-sm font-semibold text-input-text-primary">
@@ -23,7 +26,7 @@ const AmountInput: React.FC<{
             alt="TWD"
             className="overflow-hidden rounded-full"
           />
-          <p>TWD</p>
+          <p>{t('common:CURRENCY_ALIAS.TWD')}</p>
         </div>
       </div>
     </div>
@@ -31,6 +34,7 @@ const AmountInput: React.FC<{
 };
 
 const BasePayForm: React.FC = () => {
+  const { t } = useTranslation('calculator');
   const {
     baseSalary,
     setBaseSalary,
@@ -43,7 +47,7 @@ const BasePayForm: React.FC = () => {
   return (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250709 - Julian) 本薪（應稅） */}
-      <AmountInput title="Base Salary (Taxable)" required>
+      <AmountInput title={t('calculator:BASE_PAY_FORM.BASE_SALARY')} required>
         <NumericInput
           id="input-base-salary"
           name="input-base-salary"
@@ -57,7 +61,7 @@ const BasePayForm: React.FC = () => {
       </AmountInput>
 
       {/* Info: (20250709 - Julian) 伙食費（免稅） */}
-      <AmountInput title="Meal Allowance (Non-taxable)">
+      <AmountInput title={t('calculator:BASE_PAY_FORM.MEAL_ALLOWANCE')}>
         <NumericInput
           id="input-meal-allowance"
           name="input-meal-allowance"
@@ -70,7 +74,7 @@ const BasePayForm: React.FC = () => {
       </AmountInput>
 
       {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
-      <AmountInput title="Other Allowance (Non-taxable)">
+      <AmountInput title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE')}>
         <NumericInput
           id="input-other-allowance"
           name="input-other-allowance"

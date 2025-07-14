@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
@@ -65,6 +66,8 @@ const TotalHours: React.FC<{
 };
 
 const WorkHoursForm: React.FC = () => {
+  const { t } = useTranslation('calculator');
+
   const {
     // Info: (20250709 - Julian) overtime hour state
     oneHours,
@@ -89,7 +92,9 @@ const WorkHoursForm: React.FC = () => {
   return (
     <form className="flex flex-col gap-lv-8">
       {/* Info: (20250709 - Julian) 加班時數 */}
-      <h2 className="text-lg font-bold text-text-brand-secondary-lv1">Overtime Hour</h2>
+      <h2 className="text-lg font-bold text-text-brand-secondary-lv1">
+        {t('calculator:WORK_HOURS_FORM.OVERTIME_HOUR')}
+      </h2>
       <div className="grid grid-cols-3 gap-24px">
         {/* Info: (20250709 - Julian) 1 小時 */}
         <HourCounter title="1" value={oneHours} setValue={setOneHours} />
@@ -102,26 +107,34 @@ const WorkHoursForm: React.FC = () => {
         {/* Info: (20250709 - Julian) 2.67 小時 */}
         <HourCounter title="2.67" value={twoAndTwoThirdsHours} setValue={setTwoAndTwoThirdsHours} />
         {/* Info: (20250709 - Julian) 總加班時數 */}
-        <TotalHours title="Total Overtime Hour" totalHours={totalOvertimeHours} />
+        <TotalHours
+          title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
+          totalHours={totalOvertimeHours}
+        />
       </div>
 
       {/* Info: (20250709 - Julian) 休假時數 */}
-      <h2 className="text-lg font-bold text-text-brand-secondary-lv1">Leave Hour</h2>
+      <h2 className="text-lg font-bold text-text-brand-secondary-lv1">
+        {t('calculator:WORK_HOURS_FORM.LEAVE_HOUR')}
+      </h2>
       <div className="grid grid-cols-3 gap-24px">
         {/* Info: (20250709 - Julian) 病假 */}
         <HourCounter
-          title="Sick / Menstrual Leave"
+          title={t('calculator:WORK_HOURS_FORM.SICK_MENSTRUAL_LEAVE')}
           value={sickLeaveHours}
           setValue={setSickLeaveHours}
         />
         {/* Info: (20250709 - Julian) 事假 */}
         <HourCounter
-          title="Personal Leave"
+          title={t('calculator:WORK_HOURS_FORM.PERSONAL_LEAVE')}
           value={personalLeaveHours}
           setValue={setPersonalLeaveHours}
         />
         {/* Info: (20250709 - Julian) 總休假時數 */}
-        <TotalHours title="Total Leave Hour" totalHours={totalLeaveHours} />
+        <TotalHours
+          title={t('calculator:WORK_HOURS_FORM.TOTAL_LEAVE_HOUR')}
+          totalHours={totalLeaveHours}
+        />
       </div>
     </form>
   );

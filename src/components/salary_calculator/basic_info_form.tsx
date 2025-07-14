@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
@@ -10,6 +11,7 @@ import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useUserCtx } from '@/contexts/user_context';
 
 const BasicInfoForm: React.FC = () => {
+  const { t } = useTranslation('calculator');
   const yearOptions = ['2025', '2024', '2023'];
   const monthOptions = MONTHS;
 
@@ -92,7 +94,8 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250708 - Julian) 員工姓名 */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            Employee Name <span className="text-text-state-error">*</span>
+            {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME')}
+            <span className="text-text-state-error">*</span>
           </p>
           <div
             className={`flex h-44px items-center rounded-sm border bg-input-surface-input-background text-input-text-input-filled ${isNameError ? 'border-input-stroke-error' : 'border-input-stroke-input'}`}
@@ -107,7 +110,7 @@ const BasicInfoForm: React.FC = () => {
               name="input-employee-name"
               type="text"
               className={`flex-1 bg-transparent px-12px py-10px text-base font-medium ${isNameError ? 'placeholder:text-input-text-error' : 'placeholder:text-input-text-input-placeholder'}`}
-              placeholder="Enter employee name"
+              placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME_PLACEHOLDER')}
               value={employeeName}
               onChange={handleEmployeeNameChange}
               required
@@ -121,7 +124,7 @@ const BasicInfoForm: React.FC = () => {
               >
                 <FiSearch size={16} className="text-icon-surface-single-color-primary" />
                 <p className="text-sm font-medium text-input-text-input-placeholder hover:text-input-text-input-hover">
-                  Employee List
+                  {t('calculator:BASIC_INFO_FORM.EMPLOYEE_LIST')}
                 </p>
               </button>
             )}
@@ -130,14 +133,16 @@ const BasicInfoForm: React.FC = () => {
 
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="flex flex-col gap-8px">
-          <p className="text-sm font-semibold text-input-text-primary">Employee Number</p>
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER')}
+          </p>
           <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
             <input
               id="input-employee-number"
               name="input-employee-number"
               type="text"
               className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-              placeholder="Enter employee number"
+              placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER_PLACEHOLDER')}
               value={employeeNumber}
               onChange={handleEmployeeNumberChange}
             />
@@ -147,7 +152,7 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250708 - Julian) 年份 */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            Year <span className="text-text-state-error">*</span>
+            {t('calculator:BASIC_INFO_FORM.YEAR')} <span className="text-text-state-error">*</span>
           </p>
           <div
             ref={yearDropdownRef}
@@ -171,7 +176,7 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250708 - Julian) 月份 */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            Month <span className="text-text-state-error">*</span>
+            {t('calculator:BASIC_INFO_FORM.MONTH')} <span className="text-text-state-error">*</span>
           </p>
           <div
             ref={monthDropdownRef}
@@ -195,7 +200,8 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250708 - Julian) 工作天數 */}
         <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            Days Worked <span className="text-text-state-error">*</span>
+            {t('calculator:BASIC_INFO_FORM.DAYS_WORKED')}{' '}
+            <span className="text-text-state-error">*</span>
           </p>
           <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
             <NumericInput

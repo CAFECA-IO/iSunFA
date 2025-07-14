@@ -1,10 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'next-i18next';
 import { FaCircleCheck } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 
 const StepTabs: React.FC = () => {
+  const { t } = useTranslation('calculator');
   const { currentStep, completeSteps, switchStep } = useCalculatorCtx();
-  const steps = ['Basic Info', 'Base Pay', 'Work Hours', 'Others'];
+  const steps = [
+    t('calculator:TABS.BASIC_INFO'),
+    t('calculator:TABS.BASE_PAY'),
+    t('calculator:TABS.WORK_HOURS'),
+    t('calculator:TABS.OTHERS'),
+  ];
 
   const tabs = steps.map((step, index) => {
     const isActive = currentStep === index + 1;

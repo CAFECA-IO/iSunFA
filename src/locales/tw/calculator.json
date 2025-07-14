@@ -1,6 +1,5 @@
 {
   "PAGE": {
-    "HEAD_TITLE": "薪資計算機",
     "MAIN_TITLE": "薪資計算機"
   },
   "TABS": {
@@ -38,6 +37,11 @@
     "OTHER_ADJUSTMENTS": "其他溢扣／補收",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
   },
+  "EMPLOYEE_LIST_MODAL": {
+    "MODAL_TITLE": "員工列表",
+    "SEARCH_PLACEHOLDER": "搜尋員工",
+    "NO_DATA": "無員工資料"
+  },
   "RESULT": {
     "BASE_SALARY": "本薪（應稅）",
     "MEAL_ALLOWANCE": "伙食費（免稅）",
@@ -67,6 +71,7 @@
   "BUTTON": {
     "DOWNLOAD": "下載為 PNG",
     "SEND": "寄出薪資單",
-    "RESET": "重置"
+    "RESET": "重置",
+    "LOGIN": "登入"
   }
 }

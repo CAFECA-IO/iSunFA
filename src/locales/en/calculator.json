@@ -1,6 +1,5 @@
 {
   "PAGE": {
-    "HEAD_TITLE": "Salary Calculator",
     "MAIN_TITLE": "Salary Calculator"
   },
   "TABS": {
@@ -38,6 +37,11 @@
     "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
   },
+  "EMPLOYEE_LIST_MODAL": {
+    "MODAL_TITLE": "Employee List",
+    "SEARCH_PLACEHOLDER": "Search for employee",
+    "NO_DATA": "No employee found"
+  },
   "RESULT": {
     "BASE_SALARY": "Base Salary (Taxable)",
     "MEAL_ALLOWANCE": "Meal Allowance (Non-taxable)",
@@ -67,6 +71,7 @@
   "BUTTON": {
     "DOWNLOAD": "Download as png",
     "SEND": "Send the Pay Slip",
-    "RESET": "Reset"
+    "RESET": "Reset",
+    "LOGIN": "Login"
   }
 }
