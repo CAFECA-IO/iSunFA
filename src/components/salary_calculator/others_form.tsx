@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
 import { radioButtonStyle } from '@/constants/display';
@@ -9,6 +10,7 @@ const AmountInput: React.FC<{
   children: React.ReactNode;
   required?: boolean;
 }> = ({ title, children, required }) => {
+  const { t } = useTranslation('common');
   return (
     <div className="flex flex-col gap-8px">
       <p className="text-sm font-semibold text-input-text-primary">
@@ -24,7 +26,7 @@ const AmountInput: React.FC<{
             alt="TWD"
             className="overflow-hidden rounded-full"
           />
-          <p>TWD</p>
+          <p>{t('common:CURRENCY_ALIAS.TWD')}</p>
         </div>
       </div>
     </div>
@@ -32,6 +34,8 @@ const AmountInput: React.FC<{
 };
 
 const OthersForm: React.FC = () => {
+  const { t } = useTranslation('calculator');
+
   const {
     nhiBackPremium,
     setNhiBackPremium,
@@ -56,7 +60,7 @@ const OthersForm: React.FC = () => {
   return (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250709 - Julian) NHI Premium */}
-      <AmountInput title="NHI Back Premium" required>
+      <AmountInput title={t('calculator:OTHERS_FORM.NHI_BACK_PREMIUM')} required>
         <NumericInput
           id="input-nhi-back-premium"
           name="input-nhi-back-premium"
@@ -69,7 +73,7 @@ const OthersForm: React.FC = () => {
         />
       </AmountInput>
       {/* Info: (20250709 - Julian) 代扣二代健保 */}
-      <AmountInput title="Income Tax / 2nd Gen NHI Tax" required>
+      <AmountInput title={t('calculator:OTHERS_FORM.INCOME_TAX_SECOND_GEN_NHI_TAX')} required>
         <NumericInput
           id="input-2nd-gen-nhi-tax"
           name="input-2nd-gen-nhi-tax"
@@ -82,7 +86,7 @@ const OthersForm: React.FC = () => {
         />
       </AmountInput>
       {/* Info: (20250709 - Julian) 其他調整（報銷 / 額外扣除） */}
-      <AmountInput title="Other Adjustments (Reimbursement / Extra Deduction)" required>
+      <AmountInput title={t('calculator:OTHERS_FORM.OTHER_ADJUSTMENTS')} required>
         <NumericInput
           id="input-other-adjustments"
           name="input-other-adjustments"
@@ -97,7 +101,7 @@ const OthersForm: React.FC = () => {
       {/* Info: (20250710 - Julian) 自提勞退 */}
       <div className="flex flex-col gap-8px">
         <p className="text-sm font-semibold text-input-text-primary">
-          Voluntary Pension Contribution
+          {t('calculator:OTHERS_FORM.VOLUNTARY_PENSION_CONTRIBUTION')}
         </p>
         <div className="flex items-center gap-36px">
           <label htmlFor="radio-vpc-zero" className="flex items-center gap-8px">
