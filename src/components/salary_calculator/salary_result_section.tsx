@@ -11,9 +11,7 @@ import { useCalculatorCtx } from '@/contexts/calculator_context';
 import html2canvas from 'html2canvas';
 
 const SalaryCalculatorResult: React.FC = () => {
-  // ToDo: (20250708 - Julian) during development
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { t } = useTranslation('common');
+  const { t } = useTranslation('calculator');
   const downloadRef = useRef<HTMLDivElement>(null);
 
   const { employeeName, selectedMonth, selectedYear, salaryCalculator } = useCalculatorCtx();
@@ -85,21 +83,21 @@ const SalaryCalculatorResult: React.FC = () => {
 
   // Info: (20250708 - Julian) 月薪資項目
   const monthlyRowItems: RowItem[] = [
-    { label: '本薪（應稅）', value: baseSalary },
+    { label: t('calculator:RESULT.BASE_SALARY'), value: baseSalary },
     {
-      label: '伙食費（免稅）',
+      label: t('calculator:RESULT.MEAL_ALLOWANCE'),
       value: mealAllowance,
     },
     {
-      label: '加班費（免稅）',
+      label: t('calculator:RESULT.OVERTIME_PAY'),
       value: overtimePay,
     },
     {
-      label: '其他津貼（免稅）',
+      label: t('calculator:RESULT.OTHER_ALLOWANCE'),
       value: otherAllowance,
     },
     {
-      label: '月薪資合計',
+      label: t('calculator:RESULT.TOTAL_MONTHLY_SALARY'),
       value: totalMonthlySalary,
     },
   ];
@@ -107,31 +105,31 @@ const SalaryCalculatorResult: React.FC = () => {
   // Info: (20250708 - Julian) 員工負擔項目
   const employeeRowItems: RowItem[] = [
     {
-      label: '自行負擔勞保費',
+      label: t('calculator:RESULT.EMPLOYEE_PAID_LABOR_INSURANCE'),
       value: employeePaidLaborInsurance,
     },
     {
-      label: '自行負擔健保費',
+      label: t('calculator:RESULT.EMPLOYEE_PAID_HEALTH_INSURANCE'),
       value: employeePaidHealthInsurance,
     },
     {
-      label: '自提勞退',
+      label: t('calculator:RESULT.VOLUNTARY_PENSION_CONTRIBUTION'),
       value: voluntaryPensionContribution,
     },
     {
-      label: '代扣所得稅款',
+      label: t('calculator:RESULT.WITHHELD_INCOME_TAX'),
       value: withheldIncomeTax,
     },
     {
-      label: '代扣二代健保',
+      label: t('calculator:RESULT.WITHHELD_SECOND_GENERATION_NHI_PREMIUM'),
       value: withheldSecondGenerationNHIPremium,
     },
     {
-      label: '請假扣薪',
+      label: t('calculator:RESULT.SALARY_DEDUCTION_FOR_LEAVE'),
       value: salaryDeductionForLeave,
     },
     {
-      label: '員工負擔總計',
+      label: t('calculator:RESULT.TOTAL_EMPLOYEE_CONTRIBUTION'),
       value: totalEmployeeContribution,
     },
   ];
@@ -139,31 +137,31 @@ const SalaryCalculatorResult: React.FC = () => {
   // Info: (20250708 - Julian) 投保級距項目
   const insuredSalaryRowItems: RowItem[] = [
     {
-      label: '健保投保級距',
+      label: t('calculator:RESULT.HEALTH_INSURANCE_SALARY_BRACKET'),
       value: healthInsuranceSalaryBracket,
     },
     {
-      label: '勞保投保級距',
+      label: t('calculator:RESULT.LABOR_INSURANCE_SALARY_BRACKET'),
       value: laborInsuranceSalaryBracket,
     },
     {
-      label: '就業保險級距',
+      label: t('calculator:RESULT.EMPLOYMENT_INSURANCE_SALARY_BRACKET'),
       value: employmentInsuranceSalaryBracket,
     },
     {
-      label: '職災保險級距',
+      label: t('calculator:RESULT.OCCUPATIONAL_INJURY_INSURANCE_SALARY_BRACKET'),
       value: occupationalInjuryInsuranceSalaryBracket,
     },
     {
-      label: '勞退級距',
+      label: t('calculator:RESULT.LABOR_PENSION_SALARY_BRACKET'),
       value: laborPensionSalaryBracket,
     },
     {
-      label: '職災行業別費率',
+      label: t('calculator:RESULT.OCCUPATIONAL_INJURY_INDUSTRY_RATE'),
       value: occupationalInjuryIndustryRate,
     },
     {
-      label: '投保薪資',
+      label: t('calculator:RESULT.INSURED_SALARY'),
       value: insuredSalary,
     },
   ];
@@ -171,23 +169,23 @@ const SalaryCalculatorResult: React.FC = () => {
   // Info: (20250708 - Julian) 雇主負擔項目
   const employerRowItems: RowItem[] = [
     {
-      label: '公司負擔勞健退',
+      label: t('calculator:RESULT.EMPLOYER_CONTRIBUTIONS'),
       value: employerContributions,
     },
     {
-      label: '公司負擔勞保費',
+      label: t('calculator:RESULT.EMPLOYER_PAID_LABOR_INSURANCE'),
       value: employerPaidLaborInsurance,
     },
     {
-      label: '公司負擔健保費',
+      label: t('calculator:RESULT.EMPLOYER_PAID_HEALTH_INSURANCE'),
       value: employerPaidHealthInsurance,
     },
     {
-      label: '公司負擔退休金',
+      label: t('calculator:RESULT.EMPLOYER_PAID_PENSION_CONTRIBUTION'),
       value: employerPaidPensionContribution,
     },
     {
-      label: '雇主總負擔',
+      label: t('calculator:RESULT.TOTAL_EMPLOYER_COST'),
       value: totalEmployerCost,
     },
   ];
@@ -234,10 +232,10 @@ const SalaryCalculatorResult: React.FC = () => {
       {/* Info: (20250708 - Julian) Buttons */}
       <div className="grid grid-cols-2 gap-24px">
         <Button type="button" variant="tertiary" onClick={downloadPng}>
-          Download as png <TbDownload size={20} />
+          {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
         </Button>
         <Button type="button" variant="tertiary">
-          Send the Pay Slip <FiSend size={20} />
+          {t('calculator:BUTTON.SEND')} <FiSend size={20} />
         </Button>
       </div>
     </div>
