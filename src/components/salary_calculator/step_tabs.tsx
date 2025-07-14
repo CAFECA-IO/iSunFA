@@ -7,7 +7,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { MIN_BASE_SALARY } from '@/constants/salary_calculator';
 
 const StepTabs: React.FC = () => {
-  const { t } = useTranslation('calculator');
+  const { t } = useTranslation(['calculator', 'common']);
   const steps = [
     t('calculator:TABS.BASIC_INFO'),
     t('calculator:TABS.BASE_PAY'),
@@ -35,9 +35,9 @@ const StepTabs: React.FC = () => {
             setIsNameError(true);
             messageModalDataHandler({
               messageType: MessageType.ERROR,
-              title: 'Employee’s Name is not Filled',
-              content: 'You need to enter the employee’s name before you go to next step',
-              submitBtnStr: 'Close',
+              title: t('calculator:MESSAGE.NAME_ERROR_TITLE'),
+              content: t('calculator:MESSAGE.NAME_ERROR_CONTENT'),
+              submitBtnStr: t('common:COMMON.CLOSE'),
               submitBtnFunction: messageModalVisibilityHandler,
             });
             messageModalVisibilityHandler();
@@ -52,9 +52,9 @@ const StepTabs: React.FC = () => {
             // Info: (20250714 - Julian) 如果基本薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
             messageModalDataHandler({
               messageType: MessageType.ERROR,
-              title: 'Base Salary is not Filled',
-              content: 'Base salary must be greater than or equal to the minimum wage.',
-              submitBtnStr: 'Close',
+              title: t('calculator:MESSAGE.SALARY_ERROR_TITLE'),
+              content: t('calculator:MESSAGE.SALARY_ERROR_CONTENT'),
+              submitBtnStr: t('common:COMMON.CLOSE'),
               submitBtnFunction: messageModalVisibilityHandler,
             });
             messageModalVisibilityHandler();

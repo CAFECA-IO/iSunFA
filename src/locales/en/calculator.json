@@ -73,5 +73,11 @@
     "SEND": "Send the Pay Slip",
     "RESET": "Reset",
     "LOGIN": "Login"
+  },
+  "MESSAGE": {
+    "NAME_ERROR_TITLE": "Employee’s Name is not Filled",
+    "NAME_ERROR_CONTENT": "You need to enter the employee’s name before you go to next step",
+    "SALARY_ERROR_TITLE": "Base Salary is not Filled",
+    "SALARY_ERROR_CONTENT": "Base salary must be greater than or equal to the minimum wage."
   }
 }
