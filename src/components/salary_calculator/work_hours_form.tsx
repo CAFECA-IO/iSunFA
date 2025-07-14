@@ -3,18 +3,17 @@ import { useTranslation } from 'next-i18next';
 import { FaPlus, FaMinus } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
-
-const MIN_HOURS = 0;
-const MAX_HOURS = 99;
+import { MIN_WORK_HOURS, MAX_OVERWORK_HOURS, MAX_LEAVE_HOURS } from '@/constants/salary_calculator';
 
 // Info: (20250709 - Julian) 時數計數器
 const HourCounter: React.FC<{
   title: string;
   value: number;
   setValue: React.Dispatch<React.SetStateAction<number>>;
-}> = ({ title, value, setValue }) => {
-  const minusDisabled = value <= MIN_HOURS;
-  const plusDisabled = value >= MAX_HOURS;
+  maxValue: number;
+}> = ({ title, value, setValue, maxValue }) => {
+  const minusDisabled = value <= MIN_WORK_HOURS;
+  const plusDisabled = value >= maxValue;
 
   const minusClickHandler = () => setValue((prev) => prev - 1);
   const plusClickHandler = () => setValue((prev) => prev + 1);
@@ -34,8 +33,8 @@ const HourCounter: React.FC<{
         <NumericInput
           value={value}
           setValue={setValue}
-          min={MIN_HOURS}
-          max={MAX_HOURS}
+          min={MIN_WORK_HOURS}
+          max={maxValue}
           className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
         />
         <button
@@ -97,15 +96,40 @@ const WorkHoursForm: React.FC = () => {
       </h2>
       <div className="grid grid-cols-3 gap-24px">
         {/* Info: (20250709 - Julian) 1 小時 */}
-        <HourCounter title="1" value={oneHours} setValue={setOneHours} />
+        <HourCounter
+          title="1"
+          value={oneHours}
+          setValue={setOneHours}
+          maxValue={MAX_OVERWORK_HOURS}
+        />
         {/* Info: (20250709 - Julian) 1.34 小時 */}
-        <HourCounter title="1.34" value={oneAndOneThirdHours} setValue={setOneAndOneThirdHours} />
+        <HourCounter
+          title="1.34"
+          value={oneAndOneThirdHours}
+          setValue={setOneAndOneThirdHours}
+          maxValue={MAX_OVERWORK_HOURS}
+        />
         {/* Info: (20250709 - Julian) 1.67 小時 */}
-        <HourCounter title="1.67" value={oneAndTwoThirdsHours} setValue={setOneAndTwoThirdsHours} />
+        <HourCounter
+          title="1.67"
+          value={oneAndTwoThirdsHours}
+          setValue={setOneAndTwoThirdsHours}
+          maxValue={MAX_OVERWORK_HOURS}
+        />
         {/* Info: (20250709 - Julian) 2 小時 */}
-        <HourCounter title="2" value={twoHours} setValue={setTwoHours} />
+        <HourCounter
+          title="2"
+          value={twoHours}
+          setValue={setTwoHours}
+          maxValue={MAX_OVERWORK_HOURS}
+        />
         {/* Info: (20250709 - Julian) 2.67 小時 */}
-        <HourCounter title="2.67" value={twoAndTwoThirdsHours} setValue={setTwoAndTwoThirdsHours} />
+        <HourCounter
+          title="2.67"
+          value={twoAndTwoThirdsHours}
+          setValue={setTwoAndTwoThirdsHours}
+          maxValue={MAX_OVERWORK_HOURS}
+        />
         {/* Info: (20250709 - Julian) 總加班時數 */}
         <TotalHours
           title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
@@ -123,12 +147,14 @@ const WorkHoursForm: React.FC = () => {
           title={t('calculator:WORK_HOURS_FORM.SICK_MENSTRUAL_LEAVE')}
           value={sickLeaveHours}
           setValue={setSickLeaveHours}
+          maxValue={MAX_LEAVE_HOURS}
         />
         {/* Info: (20250709 - Julian) 事假 */}
         <HourCounter
           title={t('calculator:WORK_HOURS_FORM.PERSONAL_LEAVE')}
           value={personalLeaveHours}
           setValue={setPersonalLeaveHours}
+          maxValue={MAX_LEAVE_HOURS}
         />
         {/* Info: (20250709 - Julian) 總休假時數 */}
         <TotalHours

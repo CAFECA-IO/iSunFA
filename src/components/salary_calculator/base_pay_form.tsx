@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import { MAX_MEAL_ALLOWANCE } from '@/constants/salary_calculator';
 
 const AmountInput: React.FC<{
   title: string;
@@ -54,6 +55,7 @@ const BasePayForm: React.FC = () => {
           className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
           value={baseSalary}
           setValue={setBaseSalary}
+          min={0}
           hasComma
           isDecimal
           required
@@ -68,6 +70,8 @@ const BasePayForm: React.FC = () => {
           className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
           value={mealAllowance}
           setValue={setMealAllowance}
+          min={0}
+          max={MAX_MEAL_ALLOWANCE}
           hasComma
           isDecimal
         />

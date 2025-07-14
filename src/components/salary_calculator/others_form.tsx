@@ -10,6 +10,7 @@ const AmountInput: React.FC<{
   children: React.ReactNode;
   required?: boolean;
 }> = ({ title, children, required }) => {
+  const { t } = useTranslation('common');
   return (
     <div className="flex flex-col gap-8px">
       <p className="text-sm font-semibold text-input-text-primary">
@@ -25,7 +26,7 @@ const AmountInput: React.FC<{
             alt="TWD"
             className="overflow-hidden rounded-full"
           />
-          <p>TWD</p>
+          <p>{t('common:CURRENCY_ALIAS.TWD')}</p>
         </div>
       </div>
     </div>

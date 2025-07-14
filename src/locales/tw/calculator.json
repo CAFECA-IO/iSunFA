@@ -16,7 +16,7 @@
     "EMPLOYEE_NUMBER_PLACEHOLDER": "請輸入員工編號",
     "YEAR": "年度",
     "MONTH": "月份",
-    "DAYS_WORKED": "實際工作天數"
+    "DAYS_WORKED": "在職天數"
   },
   "BASE_PAY_FORM": {
     "BASE_SALARY": "本薪（應稅）",

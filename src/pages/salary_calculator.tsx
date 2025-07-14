@@ -21,7 +21,7 @@ const SalaryCalculatorPage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'calculator'])),
+    ...(await serverSideTranslations(locale, ['common', 'calculator', 'date_picker'])),
   },
 });
 
