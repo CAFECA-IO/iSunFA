@@ -1,9 +1,6 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
 import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
-import { useModalContext } from '@/contexts/modal_context';
-import { MessageType } from '@/interfaces/message_modal';
-import { MIN_BASE_SALARY } from '@/constants/salary_calculator';
 
 type TabStep = {
   step: number;
@@ -11,22 +8,10 @@ type TabStep = {
 };
 
 const defaultTabSteps: TabStep[] = [
-  {
-    step: 1,
-    completed: false,
-  },
-  {
-    step: 2,
-    completed: false,
-  },
-  {
-    step: 3,
-    completed: false,
-  },
-  {
-    step: 4,
-    completed: false,
-  },
+  { step: 1, completed: true }, // Info: (20250714 - Julian) 由第一步開始，所以第一步永遠為已完成
+  { step: 2, completed: false },
+  { step: 3, completed: false },
+  { step: 4, completed: false },
 ];
 
 interface ICalculatorContext {
@@ -54,7 +39,9 @@ interface ICalculatorContext {
   // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
   setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
 
-  isNameError: boolean; // Info: (20250709 - Julian) 是否有姓名錯誤
+  // Info: (20250709 - Julian) 是否有姓名錯誤
+  isNameError: boolean;
+  setIsNameError: React.Dispatch<React.SetStateAction<boolean>>;
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state 和 functions
   // 以下皆使用 Dispatch 來更新 state
@@ -102,8 +89,6 @@ export interface ICalculatorProvider {
 export const CalculatorContext = createContext<ICalculatorContext | undefined>(undefined);
 
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
-  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
-
   // Info: (20250714 - Julian) 計算機的表單選項
   const thisYear = new Date().getFullYear();
   // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
@@ -131,7 +116,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [isNameError, setIsNameError] = useState<boolean>(false);
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
-  const [baseSalary, setBaseSalary] = useState<number>(MIN_BASE_SALARY);
+  const [baseSalary, setBaseSalary] = useState<number>(0);
   const [mealAllowance, setMealAllowance] = useState<number>(0);
   const [otherAllowance, setOtherAllowance] = useState<number>(0);
 
@@ -168,80 +153,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
-    // Info: (20250710 - Julian) 檢查當前步驟是否已完成
-    switch (currentStep) {
-      case 1:
-        if (employeeName === '') {
-          // Info: (20250711 - Julian) 如果姓名有錯誤，則不允許切換到下一步，且顯示錯誤訊息
-          setIsNameError(true);
-          messageModalDataHandler({
-            messageType: MessageType.ERROR,
-            title: 'Employee’s Name is not Filled',
-            content: 'You need to enter the employee’s name before you go to next step',
-            submitBtnStr: 'Close',
-            submitBtnFunction: messageModalVisibilityHandler,
-          });
-          messageModalVisibilityHandler();
-          return;
-        } else {
-          setCompleteSteps((prev) => {
-            // Info: (20250710 - Julian) 檢查員工姓名是否已填寫
-            const updatedSteps = prev.map((s) => {
-              return s.step === 1 ? { ...s, completed: true } : s;
-            });
-            return updatedSteps;
-          });
-        }
-        break;
-      case 2:
-        if (baseSalary < MIN_BASE_SALARY) {
-          // Info: (20250714 - Julian) 如果基本薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
-          setIsNameError(true);
-          messageModalDataHandler({
-            messageType: MessageType.ERROR,
-            title: 'Base Salary is not Filled',
-            content: 'Base salary must be greater than or equal to the minimum wage.',
-            submitBtnStr: 'Close',
-            submitBtnFunction: messageModalVisibilityHandler,
-          });
-          messageModalVisibilityHandler();
-          return;
-        } else {
-          setCompleteSteps((prev) => {
-            // Info: (20250714 - Julian) 檢查基本薪資是否已填寫
-            const updatedSteps = prev.map((s) => {
-              return s.step === 2 ? { ...s, completed: true } : s;
-            });
-            return updatedSteps;
-          });
-        }
-        break;
-      case 3:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查工作時數是否已填寫
-          // const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
-          const isCompleted = true;
-          const updatedSteps = prev.map((s) => {
-            return s.step === 3 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      case 4:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查其他調整是否已填寫
-          const isCompleted =
-            nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0;
-          const updatedSteps = prev.map((s) => {
-            return s.step === 4 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      default:
-        break;
-    }
+    // Info: (20250714 - Julian) 將當前步驟標記為已完成
+    setCompleteSteps((prev) => {
+      const updatedSteps = prev.map((s) => {
+        return s.step === step ? { ...s, completed: true } : s;
+      });
+      return updatedSteps;
+    });
 
+    // Info: (20250714 - Julian) 如果步驟超出範圍，則限制在 1 到 4 之間
     const targetStep = step > 4 ? 4 : step < 1 ? 1 : step;
     setCurrentStep(targetStep);
   };
@@ -254,7 +174,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(monthOptions[0]);
     setWorkedDays(31);
-    setBaseSalary(MIN_BASE_SALARY);
+    setBaseSalary(0);
     setMealAllowance(0);
     setOtherAllowance(0);
     setOneHours(0);
@@ -326,6 +246,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       otherAllowance,
       setOtherAllowance,
       isNameError,
+      setIsNameError,
       oneHours,
       setOneHours,
       oneAndOneThirdHours,
