@@ -2,6 +2,13 @@
   "PAGE": {
     "MAIN_TITLE": "薪資計算機"
   },
+  "NAVBAR": {
+    "CALCULATOR": "計算機",
+    "PAY_SLIP": "我的薪資單",
+    "EMPLOYEE_LIST": "員工列表",
+    "LOGIN": "登入",
+    "LOGOUT": "登出"
+  },
   "TABS": {
     "COMPLETED": "已完成",
     "BASIC_INFO": "基本資料",
@@ -46,10 +53,11 @@
     "SEARCH_PLACEHOLDER": "搜尋員工",
     "ADD_EMPLOYEE": "新增員工",
     "EDIT_EMPLOYEE": "編輯員工",
+    "NAME_PLACEHOLDER": "請輸入員工姓名",
+    "NUMBER_PLACEHOLDER": "請輸入員工編號",
+    "EMAIL_PLACEHOLDER": "請輸入員工電子郵件",
+    "EMAIL_VALID": "請輸入有效的電子郵件地址",
     "NO_DATA": "無員工資料",
-    "REMOVE_EMPLOYEE_TITLE": "移除員工",
-    "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
-    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。",
     "ADD_SUCCESS_TOAST": "員工已新增"
   },
   "RESULT": {
@@ -81,13 +89,15 @@
   "BUTTON": {
     "DOWNLOAD": "下載為 PNG",
     "SEND": "寄出薪資單",
-    "RESET": "重置",
-    "LOGIN": "登入"
+    "RESET": "重置"
   },
   "MESSAGE": {
     "NAME_ERROR_TITLE": "員工姓名未填寫",
     "NAME_ERROR_CONTENT": "請在前往下一步之前輸入員工姓名",
     "SALARY_ERROR_TITLE": "本薪未填寫",
-    "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。"
+    "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。",
+    "REMOVE_EMPLOYEE_TITLE": "移除員工",
+    "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。"
   }
 }

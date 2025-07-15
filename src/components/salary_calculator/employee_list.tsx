@@ -7,6 +7,9 @@ import { PiUserFill } from 'react-icons/pi';
 import { IEmployeeForCalc, dummyEmployeeForCalc } from '@/interfaces/employees';
 import Pagination from '@/components/pagination/pagination';
 import { Button } from '@/components/button/button';
+import { useModalContext } from '@/contexts/modal_context';
+import { MessageType } from '@/interfaces/message_modal';
+import EmployeeActionModal from '@/components/salary_calculator/employee_action_modal';
 
 const cellStyle =
   'table-cell align-middle border-b border-stroke-neutral-quaternary px-24px py-12px';
@@ -14,7 +17,30 @@ const cellStyle =
 const EmployeeItem: React.FC<{
   employee: IEmployeeForCalc;
 }> = ({ employee }) => {
-  const { name, number, email } = employee;
+  const { t } = useTranslation('calculator');
+
+  const { id, name, number, email } = employee;
+  const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+
+  const deleteEmployee = () => {
+    // ToDo: (20250715 - Julian) Delete employee API
+    // eslint-disable-next-line no-console
+    console.log('Delete employee:', id);
+  };
+
+  const clickDeleteHandler = () => {
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: t('calculator:MESSAGE.REMOVE_EMPLOYEE_TITLE'),
+      content: t('calculator:MESSAGE.REMOVE_EMPLOYEE_CONTENT', { name }),
+      submitBtnStr: t('calculator:MESSAGE.REMOVE_EMPLOYEE_SUBMIT_BTN'),
+      submitBtnFunction: () => {
+        deleteEmployee();
+        messageModalVisibilityHandler();
+      },
+    });
+    messageModalVisibilityHandler();
+  };
 
   return (
     <div className="table-row">
@@ -49,6 +75,7 @@ const EmployeeItem: React.FC<{
           {/* Info: (20250715 - Julian) Delete button */}
           <button
             type="button"
+            onClick={clickDeleteHandler}
             className="p-10px text-button-text-secondary hover:text-button-stroke-primary-hover"
           >
             <LuTrash2 size={16} />
@@ -65,6 +92,9 @@ const EmployeeList: React.FC = () => {
   const employeeList = dummyEmployeeForCalc;
 
   const [keyword, setKeyword] = useState<string>('');
+  // Info: (20250715 - Julian) 操作 Modal 類型，'add' 為新增員工，'edit' 為編輯員工
+  const [action, setAction] = useState<'add' | 'edit'>('add');
+  const [isShowModal, setIsShowModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(0);
   // ToDo: (20250715 - Julian) Get total pages from API
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -74,53 +104,67 @@ const EmployeeList: React.FC = () => {
     setKeyword(e.target.value);
   };
 
+  const clickAddEmployeeHandler = () => {
+    setAction('add');
+    setIsShowModal(true);
+  };
+
+  const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
+
   const displayedEmployees = employeeList.map((employee) => (
     <EmployeeItem key={employee.id} employee={employee} />
   ));
 
   return (
-    <div className="flex w-full flex-col items-center gap-24px">
-      <div className="flex w-full items-center gap-40px">
-        {/* Info: (20250715 - Julian) Search bar */}
-        <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input">
-          <div className="px-12px py-10px text-icon-surface-single-color-primary">
-            <FiSearch size={16} />
+    <>
+      <div className="flex w-full flex-col items-center gap-24px">
+        <div className="flex w-full items-center gap-40px">
+          {/* Info: (20250715 - Julian) Search bar */}
+          <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input">
+            <div className="px-12px py-10px text-icon-surface-single-color-primary">
+              <FiSearch size={16} />
+            </div>
+            <input
+              type="text"
+              value={keyword}
+              onChange={changeKeyword}
+              placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
+              className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
+            />
           </div>
-          <input
-            type="text"
-            value={keyword}
-            onChange={changeKeyword}
-            placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
-            className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
-          />
+
+          {/* Info: (20250715 - Julian) Add New Employee button */}
+          <Button onClick={clickAddEmployeeHandler}>
+            <FaPlus size={16} />
+            <p>{t('calculator:EMPLOYEE_LIST.ADD_EMPLOYEE')}</p>
+          </Button>
         </div>
 
-        {/* Info: (20250715 - Julian) Add New Employee button */}
-        <Button>
-          <FaPlus size={16} />
-          <p>{t('calculator:EMPLOYEE_LIST.ADD_EMPLOYEE')}</p>
-        </Button>
+        {/* Info: (20250715 - Julian) Employee List */}
+        <div className="table w-full bg-surface-neutral-surface-lv2 text-sm font-medium text-text-neutral-secondary">
+          <div className="table-header-group">
+            <div className="table-row">
+              <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NAME')}</div>
+              <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NUMBER')}</div>
+              <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.EMAIL')}</div>
+              <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.ACTION')}</div>
+            </div>
+          </div>
+          <div className="table-row-group">{displayedEmployees}</div>
+        </div>
+        {/* Info: (20250715 - Julian) Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+        />
       </div>
 
-      {/* Info: (20250715 - Julian) Employee List */}
-      <div className="table w-full bg-surface-neutral-surface-lv2 text-sm font-medium text-text-neutral-secondary">
-        <div className="table-header-group">
-          <div className="table-row">
-            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NAME')}</div>
-            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NUMBER')}</div>
-            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.EMAIL')}</div>
-            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.ACTION')}</div>
-          </div>
-        </div>
-        <div className="table-row-group">{displayedEmployees}</div>
-      </div>
-      {/* Info: (20250715 - Julian) Pagination */}
-      <Pagination
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalPages={totalPages}
-      />
-    </div>
+      {/* Info: (20250715 - Julian) Add/Edit Employee Modal */}
+      {isShowModal && (
+        <EmployeeActionModal type={action} modalVisibleHandler={modalVisibleHandler} />
+      )}
+    </>
   );
 };
 

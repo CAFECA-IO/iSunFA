@@ -76,7 +76,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-440px">
+      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-440px">
         {/* Info: (20250711 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-40px py-16px">
           <h2 className="text-lg font-bold text-card-text-primary">

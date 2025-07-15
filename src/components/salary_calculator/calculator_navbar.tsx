@@ -52,20 +52,20 @@ const CalculatorNavbar: React.FC = () => {
             className={`px-12px py-8px text-base font-medium hover:text-tabs-text-active ${isCalc ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
           >
             <div className="flex items-center gap-8px">
-              <GrHomeRounded size={20} /> Calculator
+              <GrHomeRounded size={20} /> {t('calculator:NAVBAR.CALCULATOR')}
             </div>
           </Link>
           <Link
             href={ISUNFA_ROUTE.PAY_SLIP}
             className={`px-12px py-8px text-base font-medium hover:text-tabs-text-active ${isSlip ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
           >
-            My Pay Slip
+            {t('calculator:NAVBAR.PAY_SLIP')}
           </Link>
           <Link
             href={ISUNFA_ROUTE.EMPLOYEE_LIST}
             className={`px-12px py-8px text-base font-medium hover:text-tabs-text-active ${isList ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
           >
-            Employee List
+            {t('calculator:NAVBAR.EMPLOYEE_LIST')}
           </Link>
         </div>
 
@@ -81,7 +81,7 @@ const CalculatorNavbar: React.FC = () => {
                 type="button"
                 className="flex items-center gap-12px whitespace-nowrap px-12px py-8px text-sm font-medium hover:bg-dropdown-surface-item-hover"
               >
-                Log out <TbLogout2 size={20} />
+                {t('calculator:NAVBAR.LOGOUT')} <TbLogout2 size={20} />
               </button>
             </div>
           )}
@@ -93,7 +93,7 @@ const CalculatorNavbar: React.FC = () => {
         className="flex items-center gap-8px px-24px py-10px font-medium text-button-text-primary"
       >
         <TbLogin2 size={24} />
-        {t('calculator:BUTTON.LOGIN')}
+        {t('calculator:NAVBAR.LOGIN')}
       </Link>
     );
   return (
