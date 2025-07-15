@@ -13,7 +13,7 @@ import { CurrencyType } from '@/constants/currency';
 
 // Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
 jest.mock('pusher', () => ({
-  // 建構子 → 回傳只有 trigger 的假物件
+  // Info: (20250715 - Shirley) 建構子 → 回傳只有 trigger 的假物件
   __esModule: true,
   default: jest.fn(() => ({ trigger: jest.fn() })),
 }));
@@ -150,6 +150,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof accountingSetting.taxSettings.purchaseTax.rate).toBe('number');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Accounting setting GET validated with production validator successfully');
       }
@@ -173,6 +174,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(validatedError.code).toBe('401ISF0000');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Accounting setting GET error response validated with Zod successfully');
       }
@@ -299,6 +301,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(updatedSetting.currency).toBe(CurrencyType.TWD);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Accounting setting PUT validated with production validator successfully');
       }
@@ -438,6 +441,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
 
+      // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
 
@@ -459,6 +463,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof accountList.hasPreviousPage).toBe('boolean');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account list GET validated with production validator successfully');
       }
@@ -482,6 +487,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(validatedError.code).toBe('401ISF0000');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account list GET error response validated with Zod successfully');
       }
@@ -590,6 +596,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       createdAccountId = createdAccount.id;
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account creation POST validated with production validator successfully');
       }
@@ -626,8 +633,8 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidData = {
-        name: '', // Empty name should be invalid
-        // code: '', // Empty code should be invalid
+        name: '', // Info: (20250715 - Shirley) Empty name should be invalid
+        // code: '', // Info: (20250715 - Shirley) Empty code should be invalid
         // parentCode: 'INVALID_PARENT',
         accountId: 160200,
       };
@@ -766,6 +773,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof account.code).toBe('string');
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account GET by ID validated with production validator successfully');
       }
@@ -904,6 +912,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .send(newAccountData)
         .set('Cookie', cookies.join('; '));
 
+      // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
         'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
@@ -938,6 +947,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .send(updateData)
         .set('Cookie', cookies.join('; '));
 
+      // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
         'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
@@ -967,6 +977,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(updatedAccount.note).toBe(updateData.note);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250715 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account PUT validated with production validator successfully');
       }
@@ -1009,8 +1020,8 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       const invalidData = {
         id: 'invalid_id',
-        name: '', // Empty name should be invalid
-        code: '', // Empty code should be invalid
+        name: '', // Info: (20250715 - Shirley) Empty name should be invalid
+        code: '', // Info: (20250715 - Shirley) Empty code should be invalid
       };
 
       const putByIdClient = createTestClient({
