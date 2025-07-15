@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
+import { FaHashtag } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import { PiUserFill } from 'react-icons/pi';
 import { RxCross2 } from 'react-icons/rx';
@@ -54,7 +55,10 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
               </p>
             </div>
             <div className="flex items-center gap-8px text-sm font-medium">
-              <p className="text-text-neutral-tertiary group-hover:text-text-neutral-primary">#</p>
+              <FaHashtag
+                size={16}
+                className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
+              />
               <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary">
                 {employee.number}
               </p>
@@ -65,18 +69,18 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
     ) : (
       <div className="p-20px">
         <p className="text-center text-text-neutral-secondary">
-          {t('calculator:EMPLOYEE_LIST_MODAL.NO_DATA')}
+          {t('calculator:EMPLOYEE_LIST.NO_DATA')}
         </p>
       </div>
     );
 
   return (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative flex flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-440px">
+      <div className="relative flex w-90vw flex-col rounded-sm bg-surface-neutral-surface-lv2 md:w-440px">
         {/* Info: (20250711 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-40px py-16px">
           <h2 className="text-lg font-bold text-card-text-primary">
-            {t('calculator:EMPLOYEE_LIST_MODAL.MODAL_TITLE')}
+            {t('calculator:EMPLOYEE_LIST.MAIN_TITLE')}
           </h2>
           <button type="button" onClick={modalVisibleHandler} className="absolute right-20px">
             <RxCross2 scale={24} />
@@ -93,7 +97,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
               type="text"
               value={keyword}
               onChange={changeKeyword}
-              placeholder={t('calculator:EMPLOYEE_LIST_MODAL.SEARCH_PLACEHOLDER')}
+              placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
               className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
             />
           </div>

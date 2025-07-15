@@ -2,6 +2,13 @@
   "PAGE": {
     "MAIN_TITLE": "Salary Calculator"
   },
+  "NAVBAR": {
+    "CALCULATOR": "Calculator",
+    "PAY_SLIP": "My Pay Slip",
+    "EMPLOYEE_LIST": "Employee List",
+    "LOGIN": "Login",
+    "LOGOUT": "Logout"
+  },
   "TABS": {
     "COMPLETED": "Completed",
     "BASIC_INFO": "Basic Info",
@@ -37,10 +44,22 @@
     "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
   },
-  "EMPLOYEE_LIST_MODAL": {
-    "MODAL_TITLE": "Employee List",
+  "EMPLOYEE_LIST": {
+    "MAIN_TITLE": "Employee List",
+    "NAME": "Employee’s Name",
+    "NUMBER": "Employee Number",
+    "EMAIL": "Email",
+    "ACTION": "Action",
     "SEARCH_PLACEHOLDER": "Search for employee",
-    "NO_DATA": "No employee found"
+    "ADD_EMPLOYEE": "Add New Employee",
+    "EDIT_EMPLOYEE": "Edit Employee",
+    "NAME_PLACEHOLDER": "Please enter employee name",
+    "NUMBER_PLACEHOLDER": "Please enter employee number",
+    "EMAIL_PLACEHOLDER": "Please enter employee email",
+    "EMAIL_VALID": "Please enter a valid email",
+    "NO_DATA": "No employee found",
+    "ADD_SUCCESS_TOAST": "Employee has been added",
+    "EDIT_SUCCESS_TOAST": "Employee data has been updated"
   },
   "RESULT": {
     "BASE_SALARY": "Base Salary (Taxable)",
@@ -71,13 +90,15 @@
   "BUTTON": {
     "DOWNLOAD": "Download as png",
     "SEND": "Send the Pay Slip",
-    "RESET": "Reset",
-    "LOGIN": "Login"
+    "RESET": "Reset"
   },
   "MESSAGE": {
     "NAME_ERROR_TITLE": "Employee’s Name is not Filled",
     "NAME_ERROR_CONTENT": "You need to enter the employee’s name before you go to next step",
     "SALARY_ERROR_TITLE": "Base Salary is not Filled",
-    "SALARY_ERROR_CONTENT": "Base salary must be greater than or equal to the minimum wage."
+    "SALARY_ERROR_CONTENT": "Base salary must be greater than or equal to the minimum wage.",
+    "REMOVE_EMPLOYEE_TITLE": "Remove Employee",
+    "REMOVE_EMPLOYEE_CONTENT": "Are you sure you want to remove {{name}} from your employee list?",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "Yes, remove employee."
   }
 }
