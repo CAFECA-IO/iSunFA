@@ -20,6 +20,7 @@ import {
   checkUserAuthorization,
   logUserAction,
 } from '@/lib/utils/middleware';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 
 /**
  * Info: (20250505 - Shirley) Handle GET request for account list
@@ -68,7 +69,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   );
 
   // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
-  const { teams } = session;
+  // const { teams } = session;
 
   // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(companyId);
@@ -81,6 +82,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId: companyId,
+    action: TeamPermissionAction.ACCOUNTING_SETTING_GET,
+  });
+  /** Info: (20250715 - Tzuhan) 這裡的 assertUserCanByAccountBook 會檢查 userId 是否有權限訪問該帳本
   const userTeam = teams?.find((team) => team.id === companyTeamId);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -94,6 +101,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
+    */
 
   // Info: (20250505 - Shirley) 獲取帳號列表
   const accountRetriever = AccountRetrieverFactory.createRetriever({

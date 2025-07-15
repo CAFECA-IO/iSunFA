@@ -1,5 +1,4 @@
 import {
-  clearInvoiceTestContext,
   getInvoiceTestContext,
   createInvoice,
   InvoiceTestContext,
@@ -208,9 +207,5 @@ describe('Invoice RC2 - Validation', () => {
         expect(res.body.success).toBe(false);
         expect(res.body.code).toBe(STATUS_CODE.INVALID_INPUT_PARAMETER);
       });
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });

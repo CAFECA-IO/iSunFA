@@ -1,7 +1,6 @@
 import {
   getVoucherTestContext,
   VoucherTestContext,
-  clearVoucherTestContext,
 } from '@/tests/integration/test_cases/06_voucher/00_test_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import voucherListHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
@@ -87,9 +86,5 @@ describe('Voucher V2 – List', () => {
       .expect(200);
 
     expect(res.body.payload.data.length).toBeGreaterThan(0);
-  });
-
-  afterAll(async () => {
-    await clearVoucherTestContext();
   });
 });

@@ -7,7 +7,6 @@ import { validateOutputData } from '@/lib/utils/validator';
 import {
   VoucherTestContext,
   getVoucherTestContext,
-  clearVoucherTestContext,
 } from '@/tests/integration/test_cases/06_voucher/00_test_context';
 
 describe('Voucher V2 – CRUD', () => {
@@ -121,9 +120,5 @@ describe('Voucher V2 – CRUD', () => {
       )
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
-  });
-
-  afterAll(async () => {
-    await clearVoucherTestContext();
   });
 });

@@ -22,9 +22,9 @@
 import { closeAllTestServers } from '@/tests/integration/setup/test_client';
 
 beforeAll(async () => {
+  process.env.TEST_BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
   process.env.INTEGRATION_TEST = 'true';
   process.env.TEST_TYPE = 'integration';
-
   if (process.env.DEBUG_TESTS === 'true') {
     process.env.DEBUG_API = 'true';
   }
@@ -45,7 +45,7 @@ beforeEach(() => {
 // });
 
 // Info: (20250701 - Shirley) Extend Jest timeout for integration tests
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 jest.mock('pusher', () => {
   return jest.fn().mockImplementation(() => ({

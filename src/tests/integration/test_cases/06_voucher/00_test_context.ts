@@ -39,5 +39,3 @@ export async function getVoucherTestContext(): Promise<VoucherTestContext> {
 
   return ctxPromise;
 }
-
-export { clearInvoiceTestContext as clearVoucherTestContext } from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';

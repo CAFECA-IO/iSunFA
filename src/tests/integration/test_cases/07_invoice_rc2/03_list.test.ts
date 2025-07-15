@@ -1,5 +1,4 @@
 import {
-  clearInvoiceTestContext,
   createInvoice,
   getInvoiceTestContext,
   InvoiceTestContext,
@@ -42,9 +41,5 @@ describe('Invoice RC2 - Invoice List (list both input/output invoice', () => {
     );
     expect(isOutputDataValid).toBe(true);
     expect(outputData).toBeDefined();
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });

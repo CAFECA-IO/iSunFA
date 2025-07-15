@@ -1,5 +1,4 @@
 import {
-  clearInvoiceTestContext,
   getInvoiceTestContext,
   InvoiceTestContext,
 } from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';
@@ -134,9 +133,5 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
     );
     expect(isOutputDataValid).toBe(true);
     expect(outputData?.deletedIds.length).toBe(1);
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });

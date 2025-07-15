@@ -24,6 +24,23 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
+import { WORK_TAG } from '@/interfaces/account_book';
+// import { LocaleKey } from '@/constants/normal_setting';
+// import { CurrencyType } from '@/constants/currency';
+import { TPlanType } from '@/interfaces/subscription';
+
+interface TestContext {
+  helper: APITestHelper;
+  cookies: string[];
+  userId: number;
+  teamId: number;
+  accountBookId: number;
+}
+declare global {
+  // Info: (20250715 - Tzuhan) 全域測試上下文，供各測試檔案存取
+  // eslint-disable-next-line vars-on-top, no-var
+  var TEST_CTX: TestContext | undefined;
+}
 
 interface TestResponse {
   status: number;
@@ -170,6 +187,10 @@ export class APITestHelper {
       return [...this.userSessions.get(this.currentUser)!];
     }
     return [...this.sessionCookies];
+  }
+
+  loadSession(cookies: string[]) {
+    this.sessionCookies = [...cookies];
   }
 
   // Info: (20250703 - Shirley) Check if user is currently authenticated
@@ -507,6 +528,7 @@ export class APITestHelper {
     const teamData = {
       name: teamName || `Test Team ${Date.now()}`,
       about: 'Test team for integration testing',
+      planType: TPlanType.TRIAL,
     };
 
     return teamCreateClient
@@ -653,5 +675,76 @@ export class APITestHelper {
         error: error as Error,
       };
     }
+  }
+
+  async createAccountBook(name: string, teamId: number, userId: string) {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+
+    const { default: accountBookCreateHandler } = await import(
+      '@/pages/api/v2/user/[userId]/account_book'
+    );
+
+    // const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
+
+    // const validAccountBookData = {
+    //   name: 'Test Company 測試公司',
+    //   taxId: randomNumber.toString(),
+    //   tag: WORK_TAG.ALL,
+    //   teamId,
+    //   businessLocation: LocaleKey.tw,
+    //   accountingCurrency: CurrencyType.TWD,
+    //   representativeName: 'John Doe',
+    //   taxSerialNumber: 'A12345678',
+    //   contactPerson: 'Jane Smith',
+    //   phoneNumber: '+886-2-1234-5678',
+    //   city: 'Taipei',
+    //   district: "Da'an District",
+    //   enteredAddress: "123 Test Street, Da'an District, Taipei",
+    // };
+
+    const accountBookCreateClient = createTestClient({
+      handler: accountBookCreateHandler,
+      routeParams: { userId },
+    });
+    return accountBookCreateClient
+      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId))
+      .send({
+        name,
+        taxId: Math.random().toString(36).slice(2, 10),
+        tag: WORK_TAG.ALL,
+        teamId: Number(teamId),
+      })
+      .set('Cookie', cookies.join('; '));
+  }
+
+  /**
+   * Info: (20250715 - Tzuhan)
+   * 一次性建立並快取共用 context：user, team, accountBook
+   */
+  static async bootstrapSharedContext(): Promise<TestContext> {
+    if (!globalThis.TEST_CTX) {
+      const helper = await APITestHelper.createHelper({
+        email: TestDataFactory.PRIMARY_TEST_EMAIL,
+      });
+      const teamRes = await helper.createTeam('IT Shared Team');
+      const teamId = teamRes.body.payload?.id as number;
+      const status = await helper.getStatusInfo();
+      const userId = (status.body.payload?.user as { id: number }).id;
+      const bookRes = await helper.createAccountBook('IT Shared Book', teamId, String(userId));
+      const accountBookId = bookRes.body.payload.id as number;
+      globalThis.TEST_CTX = {
+        helper,
+        cookies: helper.getCurrentSession(),
+        userId,
+        teamId,
+        accountBookId,
+      };
+    }
+    return globalThis.TEST_CTX;
+  }
+
+  async loadSharedSession() {
+    this.loadSession(globalThis.TEST_CTX!.cookies);
   }
 }
