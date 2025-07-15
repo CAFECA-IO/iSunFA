@@ -6,6 +6,12 @@ export default async function globalTeardown() {
   if (ctx) {
     const { userId, teamId, accountBookId } = ctx;
 
+    // eslint-disable-next-line no-console
+    console.log(
+      `Global Teardown: Deleting userId: ${userId}, teamId: ${teamId}, accountBookId: ${accountBookId}`
+    );
+
+    /**  Info: (20250715 - Tzuhan) 暫時不刪除
     // Info: (20250715 - Tzuhan) 1. 刪除 InvoiceRC2 測試資料，避免 FK 限制
     await prisma.invoiceRC2.deleteMany({ where: { accountBookId } });
 
@@ -45,6 +51,7 @@ export default async function globalTeardown() {
 
     // Info: (20250715 - Tzuhan) 7. 最後刪除 user
     await prisma.user.delete({ where: { id: userId } });
+    */
   }
   await prisma.$disconnect();
 }
