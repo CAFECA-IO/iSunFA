@@ -69,6 +69,7 @@ export const IAccountValidator = z.object({
 });
 
 const accountGetQueryV2Schema = z.object({
+  accountBookId: z.string(),
   includeDefaultAccount: zodStringToBooleanOptional,
   liquidity: zodStringToBooleanOptional,
   type: z.nativeEnum(AccountType).optional(),
@@ -98,9 +99,13 @@ const accountPostBodyV2Schema = z.object({
   note: z.string().nullable(),
 });
 
+const accountPostQueryV2Schema = z.object({
+  accountBookId: z.string(),
+});
+
 export const accountPostV2Schema = {
   input: {
-    querySchema: nullSchema,
+    querySchema: accountPostQueryV2Schema,
     bodySchema: accountPostBodyV2Schema,
   },
   outputSchema: IAccountValidator.strip(), // Info: (20241203 - Murky)  多的部分會被刪掉要用stript 不是strict
@@ -130,7 +135,7 @@ export const accountGetByIdSchema = {
  * Info: (20250424 - Shirley) UPDATE account info by ID schema
  */
 const accountUpdateBodySchema = z.object({
-  name: z.string().optional(),
+  name: z.string().min(1, 'Name cannot be empty').optional(),
   note: z.string().optional(),
 });
 

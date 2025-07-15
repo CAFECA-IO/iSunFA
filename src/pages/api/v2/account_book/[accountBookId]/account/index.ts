@@ -34,7 +34,7 @@ import {
  */
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedAccount | null = null;
 
@@ -46,6 +46,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (query === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
+
+  const { accountBookId } = query;
+  const companyId = +accountBookId;
 
   const {
     includeDefaultAccount,
@@ -140,7 +143,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
  */
 const handlePostRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId, companyId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAccount | null = null;
 
@@ -148,17 +150,17 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkUserAuthorization(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
 
   // Info: (20250505 - Shirley) 驗證請求資料
-  const { body } = checkRequestData(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
-  if (body === null) {
+  const { query, body } = checkRequestData(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
+  if (query === null || body === null) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { accountId, name, note } = body;
-  const nowInSecond = getTimestampNow();
+  const { accountBookId } = query;
+  const companyId = +accountBookId;
 
-  loggerBack.info(
-    `User: ${userId} Creating new sub-account for companyId: ${companyId}, parentId: ${accountId}`
-  );
+  const { accountId, name, note } = body;
+
+  const nowInSecond = getTimestampNow();
 
   // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
   const { teams } = session;
