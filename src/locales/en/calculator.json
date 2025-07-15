@@ -58,7 +58,8 @@
     "EMAIL_PLACEHOLDER": "Please enter employee email",
     "EMAIL_VALID": "Please enter a valid email",
     "NO_DATA": "No employee found",
-    "ADD_SUCCESS_TOAST": "Employee has been added"
+    "ADD_SUCCESS_TOAST": "Employee has been added",
+    "EDIT_SUCCESS_TOAST": "Employee data has been updated"
   },
   "RESULT": {
     "BASE_SALARY": "Base Salary (Taxable)",

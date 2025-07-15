@@ -58,7 +58,8 @@
     "EMAIL_PLACEHOLDER": "請輸入員工電子郵件",
     "EMAIL_VALID": "請輸入有效的電子郵件地址",
     "NO_DATA": "無員工資料",
-    "ADD_SUCCESS_TOAST": "員工已新增"
+    "ADD_SUCCESS_TOAST": "員工已新增",
+    "EDIT_SUCCESS_TOAST": "員工資料已更新"
   },
   "RESULT": {
     "BASE_SALARY": "本薪（應稅）",

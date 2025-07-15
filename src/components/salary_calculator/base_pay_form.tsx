@@ -1,38 +1,8 @@
 import React from 'react';
-import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
-import NumericInput from '@/components/numeric_input/numeric_input';
 import { MAX_MEAL_ALLOWANCE } from '@/constants/salary_calculator';
-
-const AmountInput: React.FC<{
-  title: string;
-  children: React.ReactNode;
-  required?: boolean;
-}> = ({ title, children, required }) => {
-  const { t } = useTranslation('common');
-
-  return (
-    <div className="flex flex-col gap-8px">
-      <p className="text-sm font-semibold text-input-text-primary">
-        {title} {required && <span className="text-text-state-error">*</span>}
-      </p>
-      <div className="flex h-44px items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-        {children}
-        <div className="flex h-full items-center gap-8px px-12px py-10px text-sm font-medium text-input-text-input-placeholder">
-          <Image
-            src="/currencies/twd.svg"
-            width={16}
-            height={16}
-            alt="TWD"
-            className="overflow-hidden rounded-full"
-          />
-          <p>{t('common:CURRENCY_ALIAS.TWD')}</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+import AmountInput from '@/components/salary_calculator/amount_input';
 
 const BasePayForm: React.FC = () => {
   const { t } = useTranslation('calculator');
@@ -48,47 +18,29 @@ const BasePayForm: React.FC = () => {
   return (
     <form className="flex flex-col gap-24px">
       {/* Info: (20250709 - Julian) 本薪（應稅） */}
-      <AmountInput title={t('calculator:BASE_PAY_FORM.BASE_SALARY')} required>
-        <NumericInput
-          id="input-base-salary"
-          name="input-base-salary"
-          className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={baseSalary}
-          setValue={setBaseSalary}
-          min={0}
-          hasComma
-          isDecimal
-          required
-        />
-      </AmountInput>
+      <AmountInput
+        title={t('calculator:BASE_PAY_FORM.BASE_SALARY')}
+        value={baseSalary}
+        setValue={setBaseSalary}
+        minimum={0}
+        required
+      />
 
       {/* Info: (20250709 - Julian) 伙食費（免稅） */}
-      <AmountInput title={t('calculator:BASE_PAY_FORM.MEAL_ALLOWANCE')}>
-        <NumericInput
-          id="input-meal-allowance"
-          name="input-meal-allowance"
-          className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={mealAllowance}
-          setValue={setMealAllowance}
-          min={0}
-          max={MAX_MEAL_ALLOWANCE}
-          hasComma
-          isDecimal
-        />
-      </AmountInput>
+      <AmountInput
+        title={t('calculator:BASE_PAY_FORM.MEAL_ALLOWANCE')}
+        value={mealAllowance}
+        setValue={setMealAllowance}
+        minimum={0}
+        maximum={MAX_MEAL_ALLOWANCE}
+      />
 
       {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
-      <AmountInput title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE')}>
-        <NumericInput
-          id="input-other-allowance"
-          name="input-other-allowance"
-          className="flex-1 bg-transparent px-12px py-10px text-right text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-          value={otherAllowance}
-          setValue={setOtherAllowance}
-          hasComma
-          isDecimal
-        />
-      </AmountInput>
+      <AmountInput
+        title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE')}
+        value={otherAllowance}
+        setValue={setOtherAllowance}
+      />
     </form>
   );
 };

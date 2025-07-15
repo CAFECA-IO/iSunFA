@@ -16,7 +16,8 @@ const cellStyle =
 
 const EmployeeItem: React.FC<{
   employee: IEmployeeForCalc;
-}> = ({ employee }) => {
+  editHandler: (employee: IEmployeeForCalc) => void;
+}> = ({ employee, editHandler }) => {
   const { t } = useTranslation('calculator');
 
   const { id, name, number, email } = employee;
@@ -26,6 +27,10 @@ const EmployeeItem: React.FC<{
     // ToDo: (20250715 - Julian) Delete employee API
     // eslint-disable-next-line no-console
     console.log('Delete employee:', id);
+  };
+
+  const clickEditHandler = () => {
+    editHandler(employee);
   };
 
   const clickDeleteHandler = () => {
@@ -68,6 +73,7 @@ const EmployeeItem: React.FC<{
           {/* Info: (20250715 - Julian) Edit button */}
           <button
             type="button"
+            onClick={clickEditHandler}
             className="p-10px text-button-text-secondary hover:text-button-stroke-primary-hover"
           >
             <FiEdit size={16} />
@@ -94,6 +100,7 @@ const EmployeeList: React.FC = () => {
   const [keyword, setKeyword] = useState<string>('');
   // Info: (20250715 - Julian) 操作 Modal 類型，'add' 為新增員工，'edit' 為編輯員工
   const [action, setAction] = useState<'add' | 'edit'>('add');
+  const [dataToEdit, setDataToEdit] = useState<IEmployeeForCalc | null>(null);
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(0);
   // ToDo: (20250715 - Julian) Get total pages from API
@@ -106,14 +113,22 @@ const EmployeeList: React.FC = () => {
 
   const clickAddEmployeeHandler = () => {
     setAction('add');
+    setDataToEdit(null);
     setIsShowModal(true);
   };
 
   const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
 
-  const displayedEmployees = employeeList.map((employee) => (
-    <EmployeeItem key={employee.id} employee={employee} />
-  ));
+  const displayedEmployees = employeeList.map((employee) => {
+    // Info: (20250715 - Julian) 將資料寫入 dataToEdit ，並開啟 Modal 以編輯員工資料
+    const editHandler = (employeeToEdit: IEmployeeForCalc) => {
+      setAction('edit');
+      setDataToEdit(employeeToEdit);
+      setIsShowModal(true);
+    };
+
+    return <EmployeeItem key={employee.id} employee={employee} editHandler={editHandler} />;
+  });
 
   return (
     <>
@@ -162,7 +177,11 @@ const EmployeeList: React.FC = () => {
 
       {/* Info: (20250715 - Julian) Add/Edit Employee Modal */}
       {isShowModal && (
-        <EmployeeActionModal type={action} modalVisibleHandler={modalVisibleHandler} />
+        <EmployeeActionModal
+          type={action}
+          data={dataToEdit}
+          modalVisibleHandler={modalVisibleHandler}
+        />
       )}
     </>
   );
