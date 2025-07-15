@@ -8,16 +8,16 @@ import { GrHomeRounded } from 'react-icons/gr';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import I18n from '@/components/i18n/i18n';
-// import { useUserCtx } from '@/contexts/user_context';
+import { useUserCtx } from '@/contexts/user_context';
 
 const CalculatorNavbar: React.FC = () => {
   const { t } = useTranslation('calculator');
   const router = useRouter();
-  //   const { isSignIn, userAuth } = useUserCtx();
-  const isSignIn = true;
-  const userAuth = {
-    imageId: '/entities/happy_customer_001.png',
-  };
+  const { isSignIn, userAuth } = useUserCtx();
+  // const isSignIn = true;
+  // const userAuth = {
+  //   imageId: '/entities/happy_customer_001.png',
+  // };
 
   const {
     targetRef: userRef,
