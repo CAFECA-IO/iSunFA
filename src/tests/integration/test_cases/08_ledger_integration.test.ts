@@ -2,7 +2,7 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// Info: (20250715 - Claude) Import API handlers for ledger integration testing
+// Info: (20250715 - Shirley) Import API handlers for ledger integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import getLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger';
@@ -10,14 +10,14 @@ import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/led
 import getAccountSettingHandler from '@/pages/api/v2/account_book/[accountBookId]/accounting_setting';
 import getAccountHandler from '@/pages/api/v2/account_book/[accountBookId]/account';
 
-// Info: (20250715 - Claude) Import required types and constants
+// Info: (20250715 - Shirley) Import required types and constants
 import { WORK_TAG } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
-// Info: (20250715 - Claude) Mock pusher for testing
+// Info: (20250715 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
   default: jest.fn(() => ({ trigger: jest.fn() })),
@@ -46,7 +46,7 @@ jest.mock('@/lib/utils/crypto', () => {
 });
 
 /**
- * Info: (20250715 - Claude) Integration Test - Ledger Integration (Test Case 8)
+ * Info: (20250715 - Shirley) Integration Test - Ledger Integration (Test Case 8)
  *
  * Primary Purpose:
  * - Test ledger API functionality and data structure
@@ -67,7 +67,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
 
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
-  // Info: (20250715 - Claude) Test company data
+  // Info: (20250715 - Shirley) Test company data
   const testCompanyData = {
     name: 'Ledger Test Company 分類帳測試公司',
     taxId: randomNumber.toString(),
@@ -85,19 +85,19 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   };
 
   beforeAll(async () => {
-    // Info: (20250715 - Claude) Setup authenticated helper and complete user registration
+    // Info: (20250715 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     const statusResponse = await authenticatedHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
-    // Info: (20250715 - Claude) Complete user registration flow
+    // Info: (20250715 - Shirley) Complete user registration flow
     await authenticatedHelper.agreeToTerms();
     await authenticatedHelper.createUserRole();
     await authenticatedHelper.selectUserRole();
 
-    // Info: (20250715 - Claude) Create team for account book operations
+    // Info: (20250715 - Shirley) Create team for account book operations
     const teamResponse = await authenticatedHelper.createTeam();
     const teamData = teamResponse.body.payload?.team as { id?: number };
     teamId = teamData?.id || 0;
@@ -111,7 +111,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   afterAll(async () => {
-    // Info: (20250715 - Claude) Cleanup test data
+    // Info: (20250715 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
@@ -121,7 +121,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   /**
-   * Info: (20250715 - Claude) Test Step 1: Create Account Book
+   * Info: (20250715 - Shirley) Test Step 1: Create Account Book
    */
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
@@ -144,7 +144,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
       expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
 
-      // Info: (20250715 - Claude) Validate output with production validator
+      // Info: (20250715 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.CREATE_ACCOUNT_BOOK,
         response.body.payload
@@ -187,7 +187,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   /**
-   * Info: (20250715 - Claude) Test Step 2: Ledger API Testing
+   * Info: (20250715 - Shirley) Test Step 2: Ledger API Testing
    */
   describe('Step 2: Ledger API Testing', () => {
     test('should generate ledger with proper structure (empty data)', async () => {
@@ -218,7 +218,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.data).toBeDefined();
       expect(Array.isArray(response.body.payload.data)).toBe(true);
 
-      // Info: (20250715 - Claude) Validate ledger structure
+      // Info: (20250715 - Shirley) Validate ledger structure
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.LEDGER_LIST,
         response.body.payload
@@ -245,7 +245,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
       const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
 
-      // Info: (20250715 - Claude) Test general label type filtering
+      // Info: (20250715 - Shirley) Test general label type filtering
       const generalResponse = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
         .query({
@@ -306,7 +306,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   /**
-   * Info: (20250715 - Claude) Test Step 3: Ledger Export
+   * Info: (20250715 - Shirley) Test Step 3: Ledger Export
    */
   describe('Step 3: Ledger Export', () => {
     test('should export ledger to CSV', async () => {
@@ -355,15 +355,15 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   /**
-   * Info: (20250715 - Claude) Test Step 4: Complete Integration Workflow
+   * Info: (20250715 - Shirley) Test Step 4: Complete Integration Workflow
    */
   describe('Step 4: Complete Integration Workflow Validation', () => {
     test('should validate complete ledger integration workflow', async () => {
-      // Info: (20250715 - Claude) Step 1: Verify account book exists
+      // Info: (20250715 - Shirley) Step 1: Verify account book exists
       expect(accountBookId).toBeDefined();
       expect(accountBookId).toBeGreaterThan(0);
 
-      // Info: (20250715 - Claude) Step 2: Verify ledger API is working
+      // Info: (20250715 - Shirley) Step 2: Verify ledger API is working
       const getLedgerClient = createTestClient({
         handler: getLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
@@ -389,7 +389,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(finalLedgerResponse.body.success).toBe(true);
       const finalLedgerItems = finalLedgerResponse.body.payload.data;
 
-      // Info: (20250715 - Claude) Empty ledger is expected for this test
+      // Info: (20250715 - Shirley) Empty ledger is expected for this test
       expect(finalLedgerItems.length).toBe(0);
 
       if (process.env.DEBUG_TESTS === 'true') {
