@@ -90,7 +90,7 @@ const EmployeeList: React.FC = () => {
             type="text"
             value={keyword}
             onChange={changeKeyword}
-            placeholder={t('calculator:EMPLOYEE_LIST_MODAL.SEARCH_PLACEHOLDER')}
+            placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
             className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
           />
         </div>
@@ -98,7 +98,7 @@ const EmployeeList: React.FC = () => {
         {/* Info: (20250715 - Julian) Add New Employee button */}
         <Button>
           <FaPlus size={16} />
-          <p>Add New Employee</p>
+          <p>{t('calculator:EMPLOYEE_LIST.ADD_EMPLOYEE')}</p>
         </Button>
       </div>
 
@@ -106,10 +106,10 @@ const EmployeeList: React.FC = () => {
       <div className="table w-full bg-surface-neutral-surface-lv2 text-sm font-medium text-text-neutral-secondary">
         <div className="table-header-group">
           <div className="table-row">
-            <div className={`${cellStyle}`}>Employee’s Name</div>
-            <div className={`${cellStyle}`}>Employee Number</div>
-            <div className={`${cellStyle}`}>Email</div>
-            <div className={`${cellStyle}`}>Action</div>
+            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NAME')}</div>
+            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.NUMBER')}</div>
+            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.EMAIL')}</div>
+            <div className={`${cellStyle}`}>{t('calculator:EMPLOYEE_LIST.ACTION')}</div>
           </div>
         </div>
         <div className="table-row-group">{displayedEmployees}</div>

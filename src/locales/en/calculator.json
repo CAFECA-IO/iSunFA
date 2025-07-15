@@ -37,10 +37,20 @@
     "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
   },
-  "EMPLOYEE_LIST_MODAL": {
-    "MODAL_TITLE": "Employee List",
+  "EMPLOYEE_LIST": {
+    "MAIN_TITLE": "Employee List",
+    "NAME": "Employee’s Name",
+    "NUMBER": "Employee Number",
+    "EMAIL": "Email",
+    "ACTION": "Action",
     "SEARCH_PLACEHOLDER": "Search for employee",
-    "NO_DATA": "No employee found"
+    "ADD_EMPLOYEE": "Add New Employee",
+    "EDIT_EMPLOYEE": "Edit Employee",
+    "NO_DATA": "No employee found",
+    "REMOVE_EMPLOYEE_TITLE": "Remove Employee",
+    "REMOVE_EMPLOYEE_CONTENT": "Are you sure you want to remove {{name}} from your employee list?",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "Yes, remove employee.",
+    "ADD_SUCCESS_TOAST": "Employee has been added"
   },
   "RESULT": {
     "BASE_SALARY": "Base Salary (Taxable)",

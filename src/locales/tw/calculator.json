@@ -37,10 +37,20 @@
     "OTHER_ADJUSTMENTS": "其他溢扣／補收",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
   },
-  "EMPLOYEE_LIST_MODAL": {
-    "MODAL_TITLE": "員工列表",
+  "EMPLOYEE_LIST": {
+    "MAIN_TITLE": "員工列表",
+    "NAME": "員工姓名",
+    "NUMBER": "員工編號",
+    "EMAIL": "電子郵件",
+    "ACTION": "操作",
     "SEARCH_PLACEHOLDER": "搜尋員工",
-    "NO_DATA": "無員工資料"
+    "ADD_EMPLOYEE": "新增員工",
+    "EDIT_EMPLOYEE": "編輯員工",
+    "NO_DATA": "無員工資料",
+    "REMOVE_EMPLOYEE_TITLE": "移除員工",
+    "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。",
+    "ADD_SUCCESS_TOAST": "員工已新增"
   },
   "RESULT": {
     "BASE_SALARY": "本薪（應稅）",

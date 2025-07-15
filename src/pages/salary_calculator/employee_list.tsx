@@ -14,7 +14,7 @@ const EmployeeListPage: React.FC = () => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>iSunFA - {t('calculator:PAGE.MAIN_TITLE')}</title>
+        <title>iSunFA - {t('calculator:EMPLOYEE_LIST.MAIN_TITLE')}</title>
       </Head>
 
       <EmployeeListPageBody />

@@ -69,7 +69,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
     ) : (
       <div className="p-20px">
         <p className="text-center text-text-neutral-secondary">
-          {t('calculator:EMPLOYEE_LIST_MODAL.NO_DATA')}
+          {t('calculator:EMPLOYEE_LIST.NO_DATA')}
         </p>
       </div>
     );
@@ -80,7 +80,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
         {/* Info: (20250711 - Julian) Modal Header */}
         <div className="relative flex items-start justify-center px-40px py-16px">
           <h2 className="text-lg font-bold text-card-text-primary">
-            {t('calculator:EMPLOYEE_LIST_MODAL.MODAL_TITLE')}
+            {t('calculator:EMPLOYEE_LIST.MAIN_TITLE')}
           </h2>
           <button type="button" onClick={modalVisibleHandler} className="absolute right-20px">
             <RxCross2 scale={24} />
@@ -97,7 +97,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
               type="text"
               value={keyword}
               onChange={changeKeyword}
-              placeholder={t('calculator:EMPLOYEE_LIST_MODAL.SEARCH_PLACEHOLDER')}
+              placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
               className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
             />
           </div>
