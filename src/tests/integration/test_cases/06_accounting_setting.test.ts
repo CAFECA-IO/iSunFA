@@ -8,6 +8,36 @@ import { z } from 'zod';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { CurrencyType } from '@/constants/currency';
 
+// Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
+jest.mock('pusher', () => ({
+  // 建構子 → 回傳只有 trigger 的假物件
+  __esModule: true,
+  default: jest.fn(() => ({ trigger: jest.fn() })),
+}));
+
+jest.mock('@/lib/utils/crypto', () => {
+  const real = jest.requireActual('@/lib/utils/crypto');
+
+  // Info: (20250715 - Shirley) 一次產生 keyPair，後面重複取用
+  const keyPairPromise = crypto.subtle.generateKey(
+    {
+      name: 'RSA-OAEP',
+      modulusLength: 2048,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    true,
+    ['encrypt', 'decrypt']
+  );
+
+  return {
+    ...real,
+    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
+    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
+    storeKeyByCompany: jest.fn(), // Info: (20250715 - Shirley) 若有呼叫也不做事
+  };
+});
+
 /**
  * Info: (20250711 - Shirley) Integration Test - Accounting Setting Configuration
  *
@@ -81,6 +111,12 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.ACCOUNTING_SETTING_GET,
         response.body.payload
+      );
+
+      // eslint-disable-next-line no-console
+      console.log(
+        'outputData in GET /api/v2/account_book/{accountBookId}/accounting_setting',
+        outputData
       );
 
       expect(isOutputDataValid).toBe(true);
