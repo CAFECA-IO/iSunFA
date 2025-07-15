@@ -34,7 +34,7 @@ import {
  */
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedAccount | null = null;
 
@@ -48,6 +48,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   const {
+    accountBookId: companyId,
     includeDefaultAccount,
     liquidity,
     type,

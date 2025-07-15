@@ -54,7 +54,6 @@ import {
   voucherPostSchema,
   voucherPostValidatorV2,
   voucherPutSchema,
-  voucherWasReadValidatorV2,
   voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
@@ -179,7 +178,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
-  [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
 };
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
@@ -256,7 +254,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
-  [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
