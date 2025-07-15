@@ -8,8 +8,8 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { APIName, HttpMethod } from '@/constants/api_connection';
-import { ITeam } from '@/interfaces/team';
-import { getSession } from '@/lib/utils/session';
+import { ITeam, TeamRole } from '@/interfaces/team';
+import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
@@ -31,6 +31,9 @@ const handlePostRequest = async (req: NextApiRequest) => {
   loggerBack.info(`Create Team by userId: ${userId} with body: ${JSON.stringify(body)}`);
 
   const createdTeam = await createTeamWithTrial(userId, body);
+
+  // Info: (20250715 - Shirley) Update session to include new team membership
+  await updateTeamMemberSession(userId, createdTeam.id, TeamRole.OWNER);
 
   statusMessage = STATUS_MESSAGE.CREATED;
 

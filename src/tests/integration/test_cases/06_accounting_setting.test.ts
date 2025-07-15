@@ -69,6 +69,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     // Info: (20250711 - Shirley) Create a test account book for accounting setting tests
     testAccountBookId = await authenticatedHelper.createTestAccountBook();
 
+    // Info: (20250715 - Shirley) Refresh session to include new team membership
+    await authenticatedHelper.getStatusInfo();
+
     // Info: (20250711 - Shirley) Initialize test client
     accountingSettingClient = createTestClient({
       handler: accountingSettingHandler,
@@ -92,31 +95,17 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .get(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20250711 - Shirley) Check for permission errors first
-      if (response.status === 403) {
-        // Info: (20250711 - Shirley) If user doesn't have permission, skip this test
-        expect(response.body.success).toBe(false);
-        expect(response.body.code).toBe('403ISF0000');
-        return;
-      }
-
       expect(response.status).toBe(200);
 
       // Info: (20250711 - Shirley) Validate basic response structure
       expect(response.body.success).toBe(true);
-      expect(response.body.code).toBe('200ISF0000');
+      expect(response.body.code).toBe('200ISF0002');
       expect(response.body.payload).toBeDefined();
 
       // Info: (20250711 - Shirley) Use production validateOutputData for accounting setting validation
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.ACCOUNTING_SETTING_GET,
         response.body.payload
-      );
-
-      // eslint-disable-next-line no-console
-      console.log(
-        'outputData in GET /api/v2/account_book/{accountBookId}/accounting_setting',
-        outputData
       );
 
       expect(isOutputDataValid).toBe(true);
@@ -237,20 +226,13 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .get(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20250711 - Shirley) Only set if we have permission
-      if (getResponse.status === 200) {
-        existingAccountingSetting = getResponse.body.payload as IAccountingSetting;
-      }
+      expect(getResponse.status).toBe(200);
+      existingAccountingSetting = getResponse.body.payload as IAccountingSetting;
     });
 
     it('should successfully update accounting settings with valid data', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
-
-      // Info: (20250711 - Shirley) If we couldn't get the accounting setting, skip this test
-      if (!existingAccountingSetting) {
-        return;
-      }
 
       const updateData = {
         ...existingAccountingSetting,
@@ -272,13 +254,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .put(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
         .send(updateData)
         .set('Cookie', cookies.join('; '));
-
-      // Info: (20250711 - Shirley) Check for permission errors first
-      if (response.status === 403) {
-        expect(response.body.success).toBe(false);
-        expect(response.body.code).toBe('403ISF0000');
-        return;
-      }
 
       expect(response.status).toBe(200);
 
