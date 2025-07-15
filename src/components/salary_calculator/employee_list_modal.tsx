@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
+import { FaHashtag } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import { PiUserFill } from 'react-icons/pi';
 import { RxCross2 } from 'react-icons/rx';
@@ -54,7 +55,10 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
               </p>
             </div>
             <div className="flex items-center gap-8px text-sm font-medium">
-              <p className="text-text-neutral-tertiary group-hover:text-text-neutral-primary">#</p>
+              <FaHashtag
+                size={16}
+                className="text-text-neutral-tertiary group-hover:text-text-neutral-primary"
+              />
               <p className="text-text-neutral-secondary group-hover:text-text-neutral-primary">
                 {employee.number}
               </p>

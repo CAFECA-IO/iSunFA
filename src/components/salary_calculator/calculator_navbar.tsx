@@ -7,6 +7,7 @@ import { TbLogin2, TbLogout2 } from 'react-icons/tb';
 import { GrHomeRounded } from 'react-icons/gr';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import I18n from '@/components/i18n/i18n';
 // import { useUserCtx } from '@/contexts/user_context';
 
 const CalculatorNavbar: React.FC = () => {
@@ -24,15 +25,27 @@ const CalculatorNavbar: React.FC = () => {
     setComponentVisible: setIsShowUserMenu,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: i18nRef,
+    componentVisible: isShowI18nMenu,
+    setComponentVisible: setIsShowI18nMenu,
+  } = useOuterClick<HTMLDivElement>(false);
+
   const isCalc = router.pathname === ISUNFA_ROUTE.SALARY_CALCULATOR;
   const isList = router.pathname === ISUNFA_ROUTE.EMPLOYEE_LIST;
   const isSlip = router.pathname === ISUNFA_ROUTE.PAY_SLIP;
 
   const toggleUserMenu = () => setIsShowUserMenu((prev) => !prev);
+  const toggleI18nMenu = () => setIsShowI18nMenu((prev) => !prev);
 
   const displayedLinks =
     isSignIn && userAuth ? (
       <div className="flex items-center gap-lv-4">
+        <div ref={i18nRef}>
+          <I18n isMenuOpen={isShowI18nMenu} setIsMenuOpen={toggleI18nMenu} />
+        </div>
+
+        {/* Info: (20250715 - Julian) Links */}
         <div className="flex items-center gap-24px">
           <Link
             href={ISUNFA_ROUTE.SALARY_CALCULATOR}
@@ -62,7 +75,7 @@ const CalculatorNavbar: React.FC = () => {
             <Image src={userAuth?.imageId} width={56} height={56} alt="avatar" />
           </button>
           {isShowUserMenu && (
-            <div className="absolute right-0 top-70px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px">
+            <div className="absolute right-0 top-70px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
               {/* ToDo: (20250715 - Julian) Logout */}
               <button
                 type="button"
