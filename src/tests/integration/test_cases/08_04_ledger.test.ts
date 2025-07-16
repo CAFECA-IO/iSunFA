@@ -105,6 +105,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
     testCompanyData.teamId = teamId;
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created');
     }
@@ -115,6 +116,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test cleanup completed');
     }
@@ -156,6 +158,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       accountBookId = response.body.payload.id;
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
       }
@@ -180,6 +183,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book connection verified');
       }
@@ -199,8 +203,8 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7; // 7 days ago
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7; // 7 days from now
+      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7; // Info: (20250716 - Shirley) 7 days ago
+      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7; // Info: (20250716 - Shirley) 7 days from now
 
       const response = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
@@ -225,9 +229,10 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData?.data).toBeDefined();
-      expect(outputData?.totalCount).toBe(0); // Empty ledger is expected
+      expect(outputData?.totalCount).toBe(0); // Info: (20250716 - Shirley) Empty ledger is expected
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Ledger generated successfully with', outputData?.totalCount, 'items');
       }
@@ -263,6 +268,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(Array.isArray(generalResponse.body.payload.data)).toBe(true);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Label type filtering verified');
       }
@@ -299,6 +305,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.hasPreviousPage).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Ledger pagination verified');
       }
@@ -340,14 +347,16 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .expect(200);
 
       expect(response.headers['content-type']).toContain('text/csv');
-      expect(response.text).toContain('科目代碼'); // Chinese headers
+      expect(response.text).toContain('科目代碼'); // Info: (20250716 - Shirley) Chinese headers
       expect(response.text).toContain('會計科目');
       expect(response.text).toContain('傳票編號');
 
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('response.text', response.text);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Ledger export to CSV verified');
       }
@@ -393,12 +402,16 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(finalLedgerItems.length).toBe(0);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Complete workflow validated successfully');
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Account Book ID: ${accountBookId}`);
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Ledger Items: ${finalLedgerItems.length}`);
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Total Count: ${finalLedgerResponse.body.payload.totalCount}`);
       }
@@ -420,6 +433,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .set('Cookie', cookies.join('; '))
         .expect(200);
 
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('responseForConnect', responseForConnect.body);
 
@@ -466,8 +480,10 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .set('Cookie', cookies.join('; '));
 
       // Info: (20250715 - Shirley) Debug the response
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Response status:', response.status);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Response body:', response.body);
 
@@ -486,10 +502,12 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
 
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('outputDataForVoucherPost', outputData);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
       }
@@ -514,16 +532,22 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .set('Cookie', cookies.join('; '))
         .expect(200);
 
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== LEDGER AFTER INCOME VOUCHER POST ===');
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Success:', ledgerResponse.body.success);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== END LEDGER VERIFICATION ===');
 
@@ -574,28 +598,40 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .set('Cookie', cookies.join('; '));
 
       // Info: (20250716 - Shirley) Always log payment voucher results for record keeping
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== PAYMENT VOUCHER POST RESULT ===');
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Status:', response.status);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Success:', response.body.success);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Code:', response.body.code);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Message:', response.body.message);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher ID:', response.body.payload?.id);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Number:', response.body.payload?.no);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Type:', response.body.payload?.type);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Date:', response.body.payload?.date);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Line Items Count:', response.body.payload?.lineItems?.length);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== END PAYMENT VOUCHER RESULT ===');
 
@@ -614,6 +650,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(outputData).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Payment voucher created successfully with ID:', response.body.payload.id);
       }
@@ -638,16 +675,22 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         .set('Cookie', cookies.join('; '))
         .expect(200);
 
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== LEDGER AFTER PAYMENT VOUCHER POST ===');
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Success:', ledgerResponse.body.success);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
+      // Deprecated: (20250716 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== END LEDGER VERIFICATION ===');
 
