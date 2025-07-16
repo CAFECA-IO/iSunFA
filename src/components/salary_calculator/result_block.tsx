@@ -25,8 +25,8 @@ const ResultBlock: React.FC<IResultBlockProps> = ({ backgroundColor, rowItems })
     .filter((item) => item.label !== totalItem.label)
     .map((item) => {
       // Info: (20250708 - Julian) 判斷是否為百分比
-      // ToDo: (20250708 - Julian) 套用 i18n 翻譯後會調整規則
-      const isPercentage = item.label.includes('率') || item.label.includes('rate');
+      const isPercentage =
+        item.label.includes('率') || item.label.toLocaleLowerCase().includes('ate');
       const formattedValue = isPercentage
         ? `${(item.value * 100).toFixed(2)}%`
         : `NT ${numberWithCommas(item.value)}`;
