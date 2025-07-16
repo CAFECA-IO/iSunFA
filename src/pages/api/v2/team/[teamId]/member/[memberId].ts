@@ -98,12 +98,12 @@ const handlePutRequest = async (req: NextApiRequest) => {
     if (updatedMember) {
       // Info: (20250401 - Shirley) 更新成員的 session 資料
       try {
-        loggerBack.info({
-          message: 'Updating team member session',
-          userId: updatedMember.userId,
-          teamId,
-          role: updateData.role,
-        });
+        // loggerBack.info({
+        //   message: 'Updating team member session',
+        //   userId: updatedMember.userId,
+        //   teamId,
+        //   role: updateData.role,
+        // });
 
         await updateTeamMemberSession(updatedMember.userId, teamId, updateData.role);
 
@@ -230,11 +230,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
     if (deletedMember) {
       // Info: (20250401 - Shirley) 更新成員的 session 資料
       try {
-        loggerBack.info({
-          message: 'Updating team member session after deletion',
-          memberId: deletedMember.memberId,
-          teamId,
-        });
+        // loggerBack.info({
+        //   message: 'Updating team member session after deletion',
+        //   memberId: deletedMember.memberId,
+        //   teamId,
+        // });
 
         await updateTeamMemberSession(deletedMember.memberId, teamId, null);
 

@@ -29,19 +29,6 @@ import { WORK_TAG } from '@/interfaces/account_book';
 // import { CurrencyType } from '@/constants/currency';
 import { TPlanType } from '@/interfaces/subscription';
 
-interface TestContext {
-  helper: APITestHelper;
-  cookies: string[];
-  userId: number;
-  teamId: number;
-  accountBookId: number;
-}
-declare global {
-  // Info: (20250715 - Tzuhan) 全域測試上下文，供各測試檔案存取
-  // eslint-disable-next-line vars-on-top, no-var
-  var TEST_CTX: TestContext | undefined;
-}
-
 interface TestResponse {
   status: number;
   body: {
@@ -716,35 +703,5 @@ export class APITestHelper {
         teamId: Number(teamId),
       })
       .set('Cookie', cookies.join('; '));
-  }
-
-  /**
-   * Info: (20250715 - Tzuhan)
-   * 一次性建立並快取共用 context：user, team, accountBook
-   */
-  static async bootstrapSharedContext(): Promise<TestContext> {
-    if (!globalThis.TEST_CTX) {
-      const helper = await APITestHelper.createHelper({
-        email: TestDataFactory.PRIMARY_TEST_EMAIL,
-      });
-      const teamRes = await helper.createTeam('IT Shared Team');
-      const teamId = teamRes.body.payload?.id as number;
-      const status = await helper.getStatusInfo();
-      const userId = (status.body.payload?.user as { id: number }).id;
-      const bookRes = await helper.createAccountBook('IT Shared Book', teamId, String(userId));
-      const accountBookId = bookRes.body.payload.id as number;
-      globalThis.TEST_CTX = {
-        helper,
-        cookies: helper.getCurrentSession(),
-        userId,
-        teamId,
-        accountBookId,
-      };
-    }
-    return globalThis.TEST_CTX;
-  }
-
-  async loadSharedSession() {
-    this.loadSession(globalThis.TEST_CTX!.cookies);
   }
 }

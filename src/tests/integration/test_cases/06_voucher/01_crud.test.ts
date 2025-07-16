@@ -5,25 +5,20 @@ import { APIPath, APIName } from '@/constants/api_connection';
 import { EventType } from '@/constants/account';
 import { validateOutputData } from '@/lib/utils/validator';
 import {
-  VoucherTestContext,
+  VoucherContext,
   getVoucherTestContext,
-} from '@/tests/integration/test_cases/06_voucher/00_test_context';
+} from '@/tests/integration/fixtures/voucher_context';
 
 describe('Voucher V2 – CRUD', () => {
-  let ctx: VoucherTestContext;
+  let ctx: VoucherContext;
   let voucherId: number;
-  let createdBody: Record<string, unknown> = {};
+  let createdBody: Record<string, unknown>;
 
   beforeAll(async () => {
+    // 1. 取得共用上下文（含帳本、憑證科目、發票）
     ctx = await getVoucherTestContext();
-  });
 
-  it('POST voucher', async () => {
-    const client = createTestClient({
-      handler: voucherPostHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
-    });
-
+    // 2. 準備要 POST 的 payload
     createdBody = {
       actions: [],
       certificateIds: [],
@@ -32,12 +27,29 @@ describe('Voucher V2 – CRUD', () => {
       type: EventType.INCOME,
       note: 'integration test',
       lineItems: [
-        { description: '測試借方', debit: true, amount: 1000, accountId: ctx.debitAccountId },
-        { description: '測試貸方', debit: false, amount: 1000, accountId: ctx.creditAccountId },
+        {
+          description: '測試借方',
+          debit: true,
+          amount: 1000,
+          accountId: ctx.debitAccountId,
+        },
+        {
+          description: '測試貸方',
+          debit: false,
+          amount: 1000,
+          accountId: ctx.creditAccountId,
+        },
       ],
       assetIds: [],
       counterPartyId: null,
     };
+  });
+
+  it('POST voucher', async () => {
+    const client = createTestClient({
+      handler: voucherPostHandler,
+      routeParams: { accountBookId: ctx.accountBookId.toString() },
+    });
 
     const res = await client
       .post(APIPath.VOUCHER_POST_V2.replace(':accountBookId', ctx.accountBookId.toString()))
@@ -45,13 +57,16 @@ describe('Voucher V2 – CRUD', () => {
       .set('Cookie', ctx.cookies.join('; '))
       .expect(201);
 
+    expect(res.body.success).toBe(true);
+
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.VOUCHER_POST_V2,
       res.body.payload
     );
-    expect(res.body.success).toBe(true);
     expect(isOutputDataValid).toBe(true);
-    voucherId = outputData!;
+
+    // outputData 回傳的是新建的 voucherId
+    voucherId = outputData as number;
   });
 
   it('GET voucher by id', async () => {
@@ -73,6 +88,7 @@ describe('Voucher V2 – CRUD', () => {
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
 
+    expect(res.body.success).toBe(true);
     expect(res.body.payload?.id).toBe(voucherId);
   });
 
@@ -85,6 +101,7 @@ describe('Voucher V2 – CRUD', () => {
       },
     });
 
+    const updated = { ...createdBody, note: 'updated note' };
     const res = await client
       .put(
         APIPath.VOUCHER_PUT_V2.replace(':accountBookId', ctx.accountBookId.toString()).replace(
@@ -92,14 +109,13 @@ describe('Voucher V2 – CRUD', () => {
           voucherId.toString()
         )
       )
-      .send({ ...createdBody, note: 'updated note' })
+      .send(updated)
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
 
-    // eslint-disable-next-line no-console
-    console.log('PUT voucher response:', res.body);
-
-    expect(res.body.payload).toBe(voucherId); // PUT schema 回傳 id or null
+    expect(res.body.success).toBe(true);
+    // PUT schema 回傳 id
+    expect(res.body.payload).toBe(voucherId);
   });
 
   it('DELETE voucher', async () => {
@@ -119,6 +135,10 @@ describe('Voucher V2 – CRUD', () => {
         )
       )
       .set('Cookie', ctx.cookies.join('; '))
-      .expect(200);
+      .expect(200)
+      .then((res) => {
+        expect(res.body.success).toBe(true);
+        // DELETE 不回傳 body.payload 或回 null
+      });
   });
 });
