@@ -103,21 +103,11 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
     teamId = teamData?.id || 0;
 
     testCompanyData.teamId = teamId;
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created');
-    }
   });
 
   afterAll(async () => {
     // Info: (20250715 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
