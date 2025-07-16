@@ -60,6 +60,11 @@ export const ISUNFA_ROUTE = {
   UPLOAD: `mobile_upload`,
   JOIN_US: '/join_us',
   FINISH_PAGE: '/join_us/finish',
+
+  // Info: (20250715 - Julian) Salary Calculator
+  SALARY_CALCULATOR: '/salary_calculator',
+  EMPLOYEE_LIST: '/salary_calculator/employee_list',
+  PAY_SLIP: '/salary_calculator/pay_slip',
 };
 
 export const EXTERNAL_API = {
