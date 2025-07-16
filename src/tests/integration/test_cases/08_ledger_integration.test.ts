@@ -493,6 +493,167 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         // eslint-disable-next-line no-console
         console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
       }
+
+      // Info: (20250716 - Shirley) Verify ledger after voucher creation
+      const getLedgerClient = createTestClient({
+        handler: getLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
+      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
+
+      const ledgerResponse = await getLedgerClient
+        .get(`/api/v2/account_book/${accountBookId}/ledger`)
+        .query({
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+          page: '1',
+          pageSize: '50',
+        })
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      // eslint-disable-next-line no-console
+      console.log('=== LEDGER AFTER INCOME VOUCHER POST ===');
+      // eslint-disable-next-line no-console
+      console.log('Ledger Success:', ledgerResponse.body.success);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('=== END LEDGER VERIFICATION ===');
+
+      expect(ledgerResponse.body.success).toBe(true);
+      expect(ledgerResponse.body.payload.totalCount).toBeGreaterThan(0);
+      expect(ledgerResponse.body.payload.data.length).toBeGreaterThan(0);
+    });
+
+    test('should create payment voucher based on screenshot requirements', async () => {
+      const voucherPostClient = createTestClient({
+        handler: voucherPostHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      // Info: (20250716 - Shirley) Payment voucher data based on screenshot
+      const paymentVoucherData = {
+        actions: [],
+        certificateIds: [],
+        invoiceRC2Ids: [],
+        voucherDate: 1751299200, // Info: (20250716 - Shirley) Date from screenshot
+        type: 'payment',
+        note: '{"note":""}',
+        lineItems: [
+          {
+            accountId: 1601,
+            amount: 12,
+            debit: true,
+            description: '',
+          },
+          {
+            accountId: 1601,
+            amount: 12,
+            debit: false,
+            description: '',
+          },
+        ],
+        reverseVouchers: [],
+        assetIds: [],
+        counterPartyId: null,
+      };
+
+      const response = await voucherPostClient
+        .post(`/api/v2/account_book/${accountBookId}/voucher`)
+        .send(paymentVoucherData)
+        .set('Cookie', cookies.join('; '));
+
+      // Info: (20250716 - Shirley) Always log payment voucher results for record keeping
+      // eslint-disable-next-line no-console
+      console.log('=== PAYMENT VOUCHER POST RESULT ===');
+      // eslint-disable-next-line no-console
+      console.log('Status:', response.status);
+      // eslint-disable-next-line no-console
+      console.log('Success:', response.body.success);
+      // eslint-disable-next-line no-console
+      console.log('Code:', response.body.code);
+      // eslint-disable-next-line no-console
+      console.log('Message:', response.body.message);
+      // eslint-disable-next-line no-console
+      console.log('Voucher ID:', response.body.payload?.id);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Number:', response.body.payload?.no);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Type:', response.body.payload?.type);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Date:', response.body.payload?.date);
+      // eslint-disable-next-line no-console
+      console.log('Line Items Count:', response.body.payload?.lineItems?.length);
+      // eslint-disable-next-line no-console
+      console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('=== END PAYMENT VOUCHER RESULT ===');
+
+      expect(response.status).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.payload).toBeDefined();
+      expect(response.body.payload.id).toBeDefined();
+      expect(typeof response.body.payload.id).toBe('number');
+
+      // Info: (20250716 - Shirley) Validate output structure
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.VOUCHER_POST_V2,
+        response.body.payload
+      );
+      expect(isOutputDataValid).toBe(true);
+      expect(outputData).toBeDefined();
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Payment voucher created successfully with ID:', response.body.payload.id);
+      }
+
+      // Info: (20250716 - Shirley) Verify ledger after payment voucher creation
+      const getLedgerClient = createTestClient({
+        handler: getLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
+      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
+
+      const ledgerResponse = await getLedgerClient
+        .get(`/api/v2/account_book/${accountBookId}/ledger`)
+        .query({
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+          page: '1',
+          pageSize: '50',
+        })
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      // eslint-disable-next-line no-console
+      console.log('=== LEDGER AFTER PAYMENT VOUCHER POST ===');
+      // eslint-disable-next-line no-console
+      console.log('Ledger Success:', ledgerResponse.body.success);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
+      // eslint-disable-next-line no-console
+      console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('=== END LEDGER VERIFICATION ===');
+
+      expect(ledgerResponse.body.success).toBe(true);
+      expect(ledgerResponse.body.payload.totalCount).toBeGreaterThan(0);
+      expect(ledgerResponse.body.payload.data.length).toBeGreaterThan(0);
     });
   });
 });
