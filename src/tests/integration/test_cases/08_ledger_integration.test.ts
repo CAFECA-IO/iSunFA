@@ -1,14 +1,13 @@
-/* eslint-disable */
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
 // Info: (20250715 - Shirley) Import API handlers for ledger integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
+import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import getLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger';
 import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger/export';
-import getAccountSettingHandler from '@/pages/api/v2/account_book/[accountBookId]/accounting_setting';
-import getAccountHandler from '@/pages/api/v2/account_book/[accountBookId]/account';
+import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250715 - Shirley) Import required types and constants
 import { WORK_TAG } from '@/interfaces/account_book';
@@ -16,6 +15,7 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
+import { EventType } from '@/constants/account';
 
 // Info: (20250715 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
@@ -324,8 +324,8 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       const exportData = {
         fileType: 'csv',
         filters: {
-          startDate: startDate,
-          endDate: endDate,
+          startDate,
+          endDate,
           labelType: 'all',
         },
         options: {
@@ -401,6 +401,97 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         console.log(`   - Ledger Items: ${finalLedgerItems.length}`);
         // eslint-disable-next-line no-console
         console.log(`   - Total Count: ${finalLedgerResponse.body.payload.totalCount}`);
+      }
+    });
+
+    test('should create voucher successfully via voucherPost', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const connectAccountBookClient = createTestClient({
+        handler: connectAccountBookHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      await authenticatedHelper.ensureAuthenticated();
+
+      const responseForConnect = await connectAccountBookClient
+        .get(`/api/v2/account_book/${accountBookId}/connect`)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      // eslint-disable-next-line no-console
+      console.log('responseForConnect', responseForConnect.body);
+
+      expect(responseForConnect.body.success).toBe(true);
+      expect(responseForConnect.body.payload).toBeDefined();
+
+      const voucherPostClient = createTestClient({
+        handler: voucherPostHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+
+      // Info: (20250715 - Shirley) Test voucher data structure
+      const testVoucherData = {
+        actions: [],
+        // actions: [VoucherV2Action.ADD_ASSET],
+        certificateIds: [],
+        invoiceRC2Ids: [],
+        voucherDate: currentTimestamp,
+        type: EventType.INCOME,
+        note: 'Test voucher for ledger integration',
+        lineItems: [
+          {
+            description: 'Test income item',
+            debit: true,
+            amount: 1000,
+            accountId: 1256, // Info: (20250715 - Shirley) Cash and Cash Equivalents (現金及約當現金)
+          },
+          {
+            description: 'Test revenue item',
+            debit: false,
+            amount: 1000,
+            accountId: 1001, // Info: (20250715 - Shirley) Operating Revenue (營業收入)
+          },
+        ],
+        assetIds: [],
+        counterPartyId: null,
+      };
+
+      const response = await voucherPostClient
+        .post(`/api/v2/account_book/${accountBookId}/voucher`)
+        .send(testVoucherData)
+        .set('Cookie', cookies.join('; '));
+
+      // Info: (20250715 - Shirley) Debug the response
+      // eslint-disable-next-line no-console
+      console.log('Response status:', response.status);
+      // eslint-disable-next-line no-console
+      console.log('Response body:', response.body);
+
+      expect(response.status).toBe(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.payload).toBeDefined();
+      expect(response.body.payload.id).toBeDefined();
+      expect(typeof response.body.payload.id).toBe('number');
+
+      // Info: (20250715 - Shirley) Validate output with production validator
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.VOUCHER_POST_V2,
+        response.body.payload
+      );
+      expect(isOutputDataValid).toBe(true);
+      expect(outputData).toBeDefined();
+
+      // eslint-disable-next-line no-console
+      console.log('outputDataForVoucherPost', outputData);
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
       }
     });
   });
