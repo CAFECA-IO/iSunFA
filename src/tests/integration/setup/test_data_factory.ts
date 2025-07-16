@@ -64,4 +64,166 @@ export class TestDataFactory {
       roleName: roleName || this.DEFAULT_ROLE_NAME,
     };
   }
+
+  /**
+   * Info: (20250716 - Shirley) Sample voucher data referring to company_id 10000007
+   */
+  static sampleVoucherData() {
+    const sampleVouchersData = [
+      {
+        type: 'payment',
+        date: 1733900543,
+        note: 'Financial report sample voucher 1',
+        lineItems: [
+          {
+            accountId: 1603,
+            amount: 100,
+            description: '測試1',
+            debit: false,
+          },
+          {
+            accountId: 1601,
+            amount: 100,
+            description: '測試1',
+            debit: true,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1733468990,
+        note: 'Financial report sample voucher 2',
+        lineItems: [
+          {
+            accountId: 2108,
+            amount: 100,
+            description: '120611111',
+            debit: false,
+          },
+          {
+            accountId: 2127,
+            amount: 100,
+            description: '120611111',
+            debit: true,
+          },
+        ],
+      },
+      {
+        type: 'transfer',
+        date: 1733467495,
+        note: 'Financial report sample voucher 3',
+        lineItems: [
+          {
+            accountId: 2103,
+            amount: 10000,
+            description: '',
+            debit: true,
+          },
+          {
+            accountId: 1603,
+            amount: 10000,
+            description: '1203',
+            debit: false,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1733467636,
+        note: 'Financial report sample voucher 4',
+        lineItems: [
+          {
+            accountId: 2117,
+            amount: 10000,
+            description: '',
+            debit: true,
+          },
+          {
+            accountId: 2121,
+            amount: 10000,
+            description: '',
+            debit: false,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1733467693,
+        note: 'Financial report sample voucher 5',
+        lineItems: [
+          {
+            accountId: 1645,
+            amount: 100000,
+            description: '',
+            debit: false,
+          },
+          {
+            accountId: 1668,
+            amount: 100000,
+            description: '',
+            debit: true,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1733462850,
+        note: 'Financial report sample voucher 6',
+        lineItems: [
+          {
+            accountId: 1607,
+            amount: 120000,
+            description: '',
+            debit: false,
+          },
+          {
+            accountId: 1618,
+            amount: 120000,
+            description: '',
+            debit: true,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1729493349,
+        note: 'Financial report sample voucher 7',
+        lineItems: [
+          {
+            accountId: 1601,
+            amount: 10000,
+            description: '',
+            debit: false,
+          },
+          {
+            accountId: 1608,
+            amount: 10000,
+            description: '',
+            debit: true,
+          },
+        ],
+      },
+      {
+        type: 'payment',
+        date: 1729494105,
+        note: 'Financial report sample voucher 8',
+        lineItems: [
+          {
+            accountId: 1369,
+            amount: 10000,
+            description: '',
+            debit: false,
+          },
+          {
+            accountId: 1603,
+            amount: 10000,
+            description: '',
+            debit: true,
+          },
+        ],
+      },
+    ];
+
+    return sampleVouchersData;
+  }
 }
