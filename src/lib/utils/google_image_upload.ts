@@ -66,6 +66,8 @@ export async function uploadFileToGoogleCloud(
     await file.makePublic();
     url = `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.trace(`trace error: ${error}`);
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'uploadFileToGoogleCloud failed',
