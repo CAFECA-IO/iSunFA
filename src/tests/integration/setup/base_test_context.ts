@@ -203,6 +203,7 @@ export class BaseTestContext {
       prisma.user.deleteMany({ where: { id: { in: userIds } } }),
     ]);
 
+    // Deprecated: (20250717 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('BaseTestContext.cleanup() - All test data purged successfully.');
     await prisma.$disconnect();
