@@ -1,4 +1,4 @@
-import { PrismaClient, Tag, TeamPlanType } from '@prisma/client';
+import { Tag, TeamPlanType } from '@prisma/client';
 import files from '@/seed_json/file.json';
 import users from '@/seed_json/user.json';
 import teams from '@/seed_json/team.json';
@@ -6,8 +6,7 @@ import accounts from '@/seed_json/account.json';
 import companies from '@/seed_json/company.json';
 import country from '@/seed_json/country.json';
 import teamPlans from '@/seed_json/team_plan.json';
-
-const prisma = new PrismaClient();
+import prisma from '@/client';
 
 async function createFile() {
   const data = files.map((f) => {

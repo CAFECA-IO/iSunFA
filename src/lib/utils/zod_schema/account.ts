@@ -69,7 +69,7 @@ export const IAccountValidator = z.object({
 });
 
 const accountGetQueryV2Schema = z.object({
-  accountBookId: z.string(),
+  accountBookId: zodStringToNumber,
   includeDefaultAccount: zodStringToBooleanOptional,
   liquidity: zodStringToBooleanOptional,
   type: z.nativeEnum(AccountType).optional(),

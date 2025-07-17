@@ -60,6 +60,12 @@ const config: Config = {
   testEnvironmentOptions: {
     NODE_ENV: 'test',
   },
+
+  // Info: (20250630 - Shirley) A path to a module which exports an async function that is triggered once before all test suites
+  globalSetup: '<rootDir>/src/tests/integration/setup/global_setup.ts',
+
+  // Info: (20250630 - Shirley) A path to a module which exports an async function that is triggered once after all test suites
+  globalTeardown: '<rootDir>/src/tests/integration/setup/global_teardown.ts',
 };
 
 export default createJestConfig(config);

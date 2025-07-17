@@ -12,7 +12,9 @@ import updateAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
+/** Info: (20250717 - Tzuhan) 統一在 jest_setup 設定
 // Info: (20250711 - Shirley) Mock pusher and crypto for account book testing
 jest.mock('pusher', () => ({
   // Info: (20250711 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -42,6 +44,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(), // Info: (20250711 - Shirley) 若有呼叫也不做事
   };
 });
+*/
 
 /**
  * Info: (20250710 - Shirley) Integration Test - Account Book Setup (Test Case 3)
@@ -59,6 +62,7 @@ jest.mock('@/lib/utils/crypto', () => {
  * 4. PUT /api/v2/account_book/{accountBookId} - Update account book info
  */
 describe('Integration Test - Account Book Setup (Test Case 3)', () => {
+  let ctx: SharedContext;
   let authenticatedHelper: APITestHelper;
   let createAccountBookClient: TestClient;
   let getAccountBookClient: TestClient;
@@ -89,21 +93,22 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
   beforeAll(async () => {
     // Info: (20250710 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    ctx = await BaseTestContext.getSharedContext();
+    authenticatedHelper = ctx.helper;
 
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
+    // const statusResponse = await authenticatedHelper.getStatusInfo();
+    // const userData = statusResponse.body.payload?.user as { id?: number };
+    currentUserId = String(ctx.userId);
 
     // Info: (20250710 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await authenticatedHelper.agreeToTerms();
+    // await authenticatedHelper.createUserRole();
+    // await authenticatedHelper.selectUserRole();
 
     // Info: (20250710 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
+    // const teamResponse = await authenticatedHelper.createTeam();
+    // const teamData = teamResponse.body.payload?.team as { id?: number };
+    teamId = ctx.teamId;
 
     // Info: (20250710 - Shirley) Update test data with actual team ID
     validAccountBookData.teamId = teamId;

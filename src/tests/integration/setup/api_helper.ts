@@ -24,6 +24,10 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
+import { WORK_TAG } from '@/interfaces/account_book';
+// import { LocaleKey } from '@/constants/normal_setting';
+// import { CurrencyType } from '@/constants/currency';
+import { TPlanType } from '@/interfaces/subscription';
 
 interface TestResponse {
   status: number;
@@ -170,6 +174,10 @@ export class APITestHelper {
       return [...this.userSessions.get(this.currentUser)!];
     }
     return [...this.sessionCookies];
+  }
+
+  loadSession(cookies: string[]) {
+    this.sessionCookies = [...cookies];
   }
 
   // Info: (20250703 - Shirley) Check if user is currently authenticated
@@ -507,12 +515,15 @@ export class APITestHelper {
     const teamData = {
       name: teamName || `Test Team ${Date.now()}`,
       about: 'Test team for integration testing',
+      planType: TPlanType.TRIAL,
     };
 
-    return teamCreateClient
+    const response = await teamCreateClient
       .post(APIPath.CREATE_TEAM)
       .send(teamData)
       .set('Cookie', cookies.join('; '));
+
+    return response;
   }
 
   // Info: (20250707 - Shirley) Complete registration flow for all test users from default_value.ts
@@ -655,55 +666,46 @@ export class APITestHelper {
     }
   }
 
-  // Info: (20250711 - Shirley) Create test account book for integration tests
-  async createTestAccountBook(): Promise<number> {
+  async createAccountBook(name: string, teamId: number, userId: string) {
+    await this.ensureAuthenticated();
     const cookies = this.getCurrentSession();
 
-    // Info: (20250711 - Shirley) Get user ID from status
-    const statusResponse = await this.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    const userId = userData?.id?.toString() || '1';
-
-    // Info: (20250711 - Shirley) Create a team first
-    const teamData = {
-      name: `Accounting Test Team ${Date.now()}`,
-    };
-
-    // Info: (20250711 - Shirley) Import team handler and create client
-    const { default: teamHandler } = await import('@/pages/api/v2/team');
-    const teamClient = createTestClient(teamHandler);
-
-    const teamResponse = await teamClient
-      .post('/api/v2/team')
-      .send(teamData)
-      .set('Cookie', cookies.join('; '));
-
-    const teamId = teamResponse.body.payload.id;
-
-    // Info: (20250711 - Shirley) Create account book
-    const accountBookData = {
-      teamId,
-      name: `Test Company ${Date.now()}`,
-      taxId: `${Date.now()}`,
-      tag: 'ALL',
-      businessLocation: 'tw',
-      accountingCurrency: 'TWD',
-    };
-
-    // Info: (20250711 - Shirley) Import account book handler and create client
-    const { default: accountBookHandler } = await import(
+    const { default: accountBookCreateHandler } = await import(
       '@/pages/api/v2/user/[userId]/account_book'
     );
-    const accountBookClient = createTestClient({
-      handler: accountBookHandler,
+
+    // const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
+
+    // const validAccountBookData = {
+    //   name: 'Test Company 測試公司',
+    //   taxId: randomNumber.toString(),
+    //   tag: WORK_TAG.ALL,
+    //   teamId,
+    //   businessLocation: LocaleKey.tw,
+    //   accountingCurrency: CurrencyType.TWD,
+    //   representativeName: 'John Doe',
+    //   taxSerialNumber: 'A12345678',
+    //   contactPerson: 'Jane Smith',
+    //   phoneNumber: '+886-2-1234-5678',
+    //   city: 'Taipei',
+    //   district: "Da'an District",
+    //   enteredAddress: "123 Test Street, Da'an District, Taipei",
+    // };
+
+    const accountBookCreateClient = createTestClient({
+      handler: accountBookCreateHandler,
       routeParams: { userId },
     });
-
-    const accountBookResponse = await accountBookClient
-      .post(`/api/v2/user/${userId}/account_book`)
-      .send(accountBookData)
+    const response = await accountBookCreateClient
+      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId))
+      .send({
+        name,
+        taxId: Math.random().toString(36).slice(2, 10),
+        tag: WORK_TAG.ALL,
+        teamId: Number(teamId),
+      })
       .set('Cookie', cookies.join('; '));
 
-    return accountBookResponse.body.payload.id;
+    return response;
   }
 }

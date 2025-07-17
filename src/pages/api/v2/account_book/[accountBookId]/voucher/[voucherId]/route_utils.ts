@@ -14,7 +14,6 @@ import {
   Certificate as PrismaCertificate,
   Invoice as PrismaInvoice,
   File as PrismaFile,
-  PrismaClient,
 } from '@prisma/client';
 import { IAssetEntity } from '@/interfaces/asset';
 import { getOneVoucherByVoucherNoV2, getOneVoucherV2 } from '@/lib/utils/repo/voucher.repo';
@@ -46,8 +45,7 @@ import { isFloatsEqual } from '@/lib/utils/common';
 import { EventType } from '@/constants/account';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 import { VOUCHER_RESTORE_WINDOW_IN_SECONDS } from '@/constants/common';
-
-const prisma = new PrismaClient();
+import prisma from '@/client';
 
 export const voucherAPIGetOneUtils = {
   /**

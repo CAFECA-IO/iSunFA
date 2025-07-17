@@ -73,11 +73,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(apiName, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { userId, companyId } = session;
+  const { userId } = session;
+  const { accountBookId } = query;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.VIEW_VOUCHER,
   });
 
@@ -97,14 +98,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
       voucherId,
       {
         isVoucherNo,
-        companyId,
+        companyId: accountBookId,
       }
     );
 
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
     const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
     const accountSetting: PrismaAccountingSetting =
-      await getUtils.getAccountingSettingFromPrisma(companyId);
+      await getUtils.getAccountingSettingFromPrisma(accountBookId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
     const counterParty: ICounterPartyEntityPartial =
       getUtils.initCounterPartyEntity(voucherFromPrisma);
@@ -169,12 +170,12 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { query, body } = checkRequestData(apiName, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { voucherId, isVoucherNo } = query;
-  const { userId, companyId } = session;
+  const { accountBookId, voucherId, isVoucherNo } = query;
+  const { userId } = session;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.MODIFY_VOUCHER,
   });
 
@@ -188,7 +189,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let payload = null;
 
   try {
-    const origin = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const origin = await getUtils.getVoucherFromPrisma(voucherId, {
+      isVoucherNo,
+      companyId: accountBookId,
+    });
     const originLineItems = getUtils.initLineItemEntities(origin);
     const certificates = getUtils.initCertificateEntities(origin);
     const asset = getUtils.initAssetEntities(origin);
@@ -248,7 +252,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         }
       );
 
-      const company = await postUtils.initCompanyFromPrisma(companyId);
+      const company = await postUtils.initCompanyFromPrisma(accountBookId);
       const originLineItemsWithEntity = deleteUtils.initOriginalLineItemEntities(origin);
 
       const deleteVersionReverseLineItemPairs =
@@ -256,7 +260,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
       await deleteVoucherByCreateReverseVoucher({
         nowInSecond,
-        companyId,
+        companyId: accountBookId,
         issuerId: issuer.id,
         voucherDeleteOtherEntity: deleteVoucher,
         deleteVersionOriginVoucher: parsePrismaVoucherToVoucherEntity(origin),
@@ -354,11 +358,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(apiName, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { voucherId, isVoucherNo } = query;
-  const { userId, companyId } = session;
+  const { accountBookId, voucherId, isVoucherNo } = query;
+  const { userId } = session;
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.DELETE_VOUCHER,
   });
 
@@ -373,7 +377,10 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   try {
     const nowInSecond = getTimestampNow();
-    const voucher = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const voucher = await getUtils.getVoucherFromPrisma(voucherId, {
+      isVoucherNo,
+      companyId: accountBookId,
+    });
     const origin = parsePrismaVoucherToVoucherEntity(voucher);
     if (origin.deletedAt) {
       const error = new Error(STATUS_MESSAGE.VOUCHER_ALREADY_DELETED);
@@ -403,7 +410,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
     const result = await deleteVoucherByCreateReverseVoucher({
       nowInSecond,
-      companyId,
+      companyId: accountBookId,
       issuerId: userId,
       voucherDeleteOtherEntity: deleteEntity,
       deleteVersionOriginVoucher: origin,

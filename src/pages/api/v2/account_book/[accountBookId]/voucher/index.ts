@@ -77,26 +77,28 @@ export const buildVoucherBeta = (
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_LIST_V2;
   const session = await getSession(req);
-  const { userId, companyId } = session;
+  const { userId } = session;
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query) {
+    const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
+    throw error;
+  }
+
+  const { accountBookId } = query;
+
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.VIEW_VOUCHER_LIST,
   });
 
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
     error.name = STATUS_CODE.PERMISSION_DENIED;
-    throw error;
-  }
-
-  const { query } = checkRequestData(apiName, req, session);
-  if (!query) {
-    const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
     throw error;
   }
 
@@ -133,7 +135,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   try {
     const typeFilter = getTypeFilter(type);
     const paginationVouchers = await getUtils.getVoucherListFromPrisma({
-      companyId,
+      companyId: accountBookId,
       page,
       pageSize,
       startDate,
@@ -194,16 +196,18 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
-  const { body } = checkRequestData(apiName, req, session);
-  if (!body) {
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  const { userId, companyId } = session;
+  const { userId } = session;
+
+  const { accountBookId } = query;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.CREATE_VOUCHER,
   });
 
@@ -283,7 +287,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       }
     }
 
-    const company = await postUtils.initCompanyFromPrisma(companyId);
+    const company = await postUtils.initCompanyFromPrisma(accountBookId);
     const issuer = await postUtils.initIssuerFromPrisma(userId);
     const counterPartyEntity = postUtils.isItemExist(counterPartyId)
       ? await postUtils.initCounterPartyFromPrisma(counterPartyId)

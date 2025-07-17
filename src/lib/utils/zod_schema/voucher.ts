@@ -192,6 +192,7 @@ const voucherListAllSortOptions = z.enum([
 // Info: (20240927 - Murky) GET all v2 validator
 // Info: (20241104 - Murky) 不需要status, 因為status和tab重複, 都是upcoming, uploaded
 const voucherGetAllQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT),
   pageSize: zodStringToNumberWithDefault(DEFAULT_PAGE_LIMIT),
   type: z.preprocess(
@@ -327,7 +328,9 @@ export const voucherGetAllValidatorV2: IZodValidator<
 };
 
 // Info: (20240927 - Murky) POST voucher v2 validator
-const voucherPostQueryValidatorV2 = z.object({});
+const voucherPostQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+});
 const voucherPostBodyValidatorV2 = z.object({
   actions: z.array(z.nativeEnum(VoucherV2Action)), // Info: (20241025 - Murky) [VoucherV2Action.ADD_ASSET, VoucherV2Action.REVERT]
   certificateIds: z.array(z.number().int()),
@@ -403,6 +406,7 @@ export const voucherWasReadValidatorV2: IZodValidator<
 // Info: (20240927 - Murky) GET One Voucher v2
 
 const voucherGetOneQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   voucherId: zodStringToNumber,
   isVoucherNo: z
     .string()
@@ -863,6 +867,7 @@ export const voucherGetOneValidatorV2: IZodValidator<
 
 // Info: (20240927 - Murky) PUT voucher v2 (body validator is same as Post)
 const voucherPutQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   voucherId: zodStringToNumber,
   isVoucherNo: z
     .string()
@@ -886,6 +891,7 @@ export const voucherPutValidatorV2: IZodValidator<
 
 // Info: (20240927 - Murky) DELETE voucher v2
 const voucherDeleteQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   voucherId: zodStringToNumber,
   isVoucherNo: z
     .string()
@@ -1050,6 +1056,7 @@ export const voucherDeleteSchema = {
 export const voucherRestoreSchema = {
   input: {
     querySchema: z.object({
+      accountBookId: zodStringToNumber,
       voucherId: zodStringToNumber,
     }),
     bodySchema: nullSchema,

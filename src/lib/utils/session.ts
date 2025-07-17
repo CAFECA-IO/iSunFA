@@ -307,13 +307,13 @@ export async function updateTeamMemberSession(
     const userSessions = sessions.filter((session) => session.userId === userId);
 
     // Deprecated: (20250416 - Shirley) 移除 log
-    loggerBack.info({
-      message: 'Updating team member session',
-      userId,
-      teamId,
-      role,
-      sessionsCount: userSessions.length,
-    });
+    // loggerBack.info({
+    //   message: 'Updating team member session',
+    //   userId,
+    //   teamId,
+    //   role,
+    //   sessionsCount: userSessions.length,
+    // });
 
     await Promise.all(
       userSessions.map(async (session) => {

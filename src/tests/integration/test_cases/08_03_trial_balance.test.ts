@@ -17,7 +17,9 @@ import { APIName } from '@/constants/api_connection';
 import { EventType } from '@/constants/account';
 import { TrialBalanceItem } from '@/interfaces/trial_balance';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
+/** Info: (20250717 - Tzuhan) 統一在 jest_setup 設定
 // Info: (20250716 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
@@ -45,6 +47,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(),
   };
 });
+*/
 
 /**
  * Info: (20250716 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
@@ -62,6 +65,7 @@ jest.mock('@/lib/utils/crypto', () => {
  * 4. Trial Balance Verification After Voucher
  */
 describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
+  let ctx: SharedContext;
   let authenticatedHelper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
@@ -88,27 +92,31 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
   beforeAll(async () => {
     // Info: (20250716 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    // authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
+    ctx = await BaseTestContext.getSharedContext();
+    authenticatedHelper = ctx.helper;
+
+    // const statusResponse = await authenticatedHelper.getStatusInfo();
+    // const userData = statusResponse.body.payload?.user as { id?: number };
+    currentUserId = String(ctx.userId);
 
     // Info: (20250716 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await authenticatedHelper.agreeToTerms();
+    // await authenticatedHelper.createUserRole();
+    // await authenticatedHelper.selectUserRole();
 
     // Info: (20250716 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
+    // const teamResponse = await authenticatedHelper.createTeam();
+    // const teamData = teamResponse.body.payload?.team as { id?: number };
+    // teamId = teamData?.id || 0;
+    teamId = ctx.teamId;
 
     // Info: (20250716 - Shirley) Update test company data with actual team ID
     testCompanyData.teamId = teamId;
 
     // Info: (20250716 - Shirley) Refresh session to ensure team membership is updated
-    await authenticatedHelper.getStatusInfo();
+    // await authenticatedHelper.getStatusInfo();
 
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250716 - Luphia) remove eslint-disable
