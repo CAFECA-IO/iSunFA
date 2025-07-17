@@ -772,7 +772,10 @@ export class APITestHelper {
     }
   }
 
-  async getPartialAccountList(accountBookId: number) {
+  async getPartialAccountList(accountBookId: number): Promise<{
+    debitAccountId: number;
+    creditAccountId: number;
+  }> {
     const { default: accountListHandler } = await import(
       '@/pages/api/v2/account_book/[accountBookId]/account'
     );
@@ -787,14 +790,12 @@ export class APITestHelper {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    // 3. 拿到借、貸帳號 ID
     const { data } = res.body.payload;
     const [debitAcc, creditAcc] = data;
     if (!debitAcc || !creditAcc) {
       throw new Error('Voucher context setup failed: missing account data');
     }
 
-    // 4. 回傳並快取完整的 VoucherContext
     return {
       debitAccountId: debitAcc.id,
       creditAccountId: creditAcc.id,

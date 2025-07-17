@@ -24,6 +24,10 @@ export interface SharedContext {
     input: number;
     output: number;
   };
+  accountIds: {
+    debitAccountId: number;
+    creditAccountId: number;
+  };
 }
 
 export class BaseTestContext {
@@ -69,6 +73,10 @@ export class BaseTestContext {
           input: 0,
           output: 0,
         },
+        accountIds: {
+          debitAccountId: 0,
+          creditAccountId: 0,
+        },
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
@@ -102,6 +110,8 @@ export class BaseTestContext {
         BaseTestContext.uploadEncryptedFile('invoice_output', accountBookId),
       ]);
 
+      const { debitAccountId, creditAccountId } = await helper.getPartialAccountList(accountBookId);
+
       Object.assign(this.ctx, {
         helper,
         multiUserHelper,
@@ -112,6 +122,10 @@ export class BaseTestContext {
         invoiceFileIds: {
           input: fileIdForInput,
           output: fileIdForOutput,
+        },
+        accountIds: {
+          debitAccountId,
+          creditAccountId,
         },
       });
 
