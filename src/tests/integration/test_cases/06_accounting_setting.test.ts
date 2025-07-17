@@ -448,7 +448,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
+      // console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate paginated account list structure
       const accountList = outputData as IPaginatedAccount;
@@ -587,7 +587,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(outputData).toBeDefined();
 
       // eslint-disable-next-line no-console
-      console.log('outputData in POST /api/v2/account_book/{accountBookId}/account', outputData);
+      // console.log('outputData in POST /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate created account structure
       const createdAccount = outputData as IAccount;
@@ -919,10 +919,10 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log(
-        'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        createResponse.body
-      );
+      // console.log(
+      //   'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
+      //   createResponse.body
+      // );
 
       expect(createResponse.status).toBe(201);
       testAccountId = createResponse.body.payload.id;
@@ -954,10 +954,10 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log(
-        'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        response.body
-      );
+      // console.log(
+      //   'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
+      //   response.body
+      // );
 
       expect(response.status).toBe(200);
 

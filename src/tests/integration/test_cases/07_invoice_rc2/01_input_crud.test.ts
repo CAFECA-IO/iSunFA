@@ -21,7 +21,7 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
     ctx = await getInvoiceTestContext();
   });
 
-  test.skip('should create invoice RC2 input', async () => {
+  it('should create invoice RC2 input', async () => {
     const client = createTestClient({
       handler: invoiceInputCreateHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },
@@ -32,7 +32,7 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
         APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
-        fileId: 0, // ctx.fileIdForInput,
+        fileId: ctx.fileIdForInput,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
@@ -51,7 +51,7 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
     invoiceId = outputData!.id;
   });
 
-  test.skip('should update invoice RC2 input', async () => {
+  it('should update invoice RC2 input', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot update invoice input');
     }
@@ -99,7 +99,7 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
     expect(updatedData?.no).toBe('AB25000038');
   });
 
-  test.skip('should delete invoice RC2 input', async () => {
+  it('should delete invoice RC2 input', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice input');
     }

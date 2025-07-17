@@ -18,10 +18,10 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
   let invoiceId: number;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext(); // ← 取得包含 fileIdForOutput、cookies、accountBookId 的 ctx
+    ctx = await getInvoiceTestContext();
   });
 
-  test.skip('should create invoice RC2 output', async () => {
+  it('should create invoice RC2 output', async () => {
     const client = createTestClient({
       handler: invoiceOutputCreateHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },
@@ -32,7 +32,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
         APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
-        fileId: 0, // ctx.fileIdForOutput,
+        fileId: ctx.fileIdForOutput,
         direction: InvoiceDirection.OUTPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
@@ -51,7 +51,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     invoiceId = outputData!.id;
   });
 
-  test.skip('should update invoice RC2 output', async () => {
+  it('should update invoice RC2 output', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot update invoice output');
     }
@@ -99,7 +99,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     expect(updatedData?.no).toBe('AB25000038');
   });
 
-  test.skip('should delete invoice RC2 output', async () => {
+  it('should delete invoice RC2 output', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice output');
     }

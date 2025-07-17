@@ -14,8 +14,8 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 const TEST_FILES_DIR = path.resolve(__dirname, '../test_cases/07_invoice_rc2/test_files');
 
 export interface InvoiceContext extends SharedContext {
-  // fileIdForInput: number;
-  // fileIdForOutput: number;
+  fileIdForInput: number;
+  fileIdForOutput: number;
 }
 
 export class InvoiceFixture {
@@ -28,14 +28,14 @@ export class InvoiceFixture {
   /** Info: (20250716 - Tzuhan) 初始化：讀取 SharedContext 並上傳測試檔 */
   async init(): Promise<InvoiceContext> {
     const shared = await BaseTestContext.getSharedContext();
-    // const [fileIdForInput, fileIdForOutput] = await Promise.all([
-    //   InvoiceFixture.uploadEncryptedFile('invoice_input', shared.accountBookId),
-    //   InvoiceFixture.uploadEncryptedFile('invoice_output', shared.accountBookId),
-    // ]);
+    const [fileIdForInput, fileIdForOutput] = await Promise.all([
+      InvoiceFixture.uploadEncryptedFile('invoice_input', shared.accountBookId),
+      InvoiceFixture.uploadEncryptedFile('invoice_output', shared.accountBookId),
+    ]);
     this.ctx = {
       ...shared,
-      // fileIdForInput,
-      // fileIdForOutput,
+      fileIdForInput,
+      fileIdForOutput,
     };
 
     return this.ctx;
@@ -82,8 +82,8 @@ export class InvoiceFixture {
 
     const handler =
       direction === InvoiceDirection.INPUT ? invoiceInputCreateHandler : invoiceOutputCreateHandler;
-    const fileId = 0;
-    // direction === InvoiceDirection.INPUT ? this.ctx.fileIdForInput : this.ctx.fileIdForOutput;
+    const fileId =
+      direction === InvoiceDirection.INPUT ? this.ctx.fileIdForInput : this.ctx.fileIdForOutput;
 
     const client = createTestClient({
       handler,
