@@ -25,7 +25,7 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
-import { WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBookInfo, WORK_TAG } from '@/interfaces/account_book';
 
 interface TestResponse {
   status: number;
@@ -684,7 +684,7 @@ export class APITestHelper {
   }
 
   // Info: (20250711 - Shirley) Create test account book for integration tests
-  async createTestAccountBook(): Promise<number> {
+  async createTestAccountBook(): Promise<IAccountBookInfo> {
     const cookies = this.getCurrentSession();
 
     // Info: (20250711 - Shirley) Get user ID from status
@@ -721,6 +721,6 @@ export class APITestHelper {
       .send(accountBookData)
       .set('Cookie', cookies.join('; '));
 
-    return accountBookResponse.body.payload.id;
+    return accountBookResponse.body.payload as IAccountBookInfo;
   }
 }

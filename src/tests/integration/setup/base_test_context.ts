@@ -60,6 +60,7 @@ export class BaseTestContext {
         emails: TestDataFactory.DEFAULT_TEST_EMAILS,
       });
 
+      /** Info: (20250717 - Tzuhan) replace with createTestAccountBook
       // Info: (20250717 - Tzuhan) 建立 Team
       const teamRes = await helper.createTeam('IT Shared Team');
       const teamId = teamRes.body.payload!.id as number;
@@ -67,9 +68,10 @@ export class BaseTestContext {
       // Info: (20250717 - Tzuhan) 取得 User
       const status = await helper.getStatusInfo();
       const userId = (status.body.payload!.user as { id: number }).id;
+      */
 
       // Info: (20250717 - Tzuhan) 建立帳本
-      const accountBookId = await helper.createTestAccountBook();
+      const { id: accountBookId, userId, teamId } = await helper.createTestAccountBook();
 
       Object.assign(this.ctx, {
         helper,
