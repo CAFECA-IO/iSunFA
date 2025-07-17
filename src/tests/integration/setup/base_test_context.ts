@@ -51,13 +51,14 @@ export class BaseTestContext {
       const helper = await APITestHelper.createHelper({
         email: TestDataFactory.PRIMARY_TEST_EMAIL,
       });
-      const multiUserHelper = await APITestHelper.createHelper({
-        emails: TestDataFactory.DEFAULT_TEST_EMAILS,
-      });
       // Info: (20250717 - Tzuhan) Complete user registration with default values
       await helper.agreeToTerms();
       await helper.createUserRole();
       await helper.selectUserRole();
+
+      const multiUserHelper = await APITestHelper.createHelper({
+        emails: TestDataFactory.DEFAULT_TEST_EMAILS,
+      });
 
       // Info: (20250717 - Tzuhan) 建立 Team
       const teamRes = await helper.createTeam('IT Shared Team');
@@ -68,8 +69,7 @@ export class BaseTestContext {
       const userId = (status.body.payload!.user as { id: number }).id;
 
       // Info: (20250717 - Tzuhan) 建立帳本
-      const bookRes = await helper.createAccountBook(teamId, `${userId}`);
-      const accountBookId = bookRes.body.payload!.id as number;
+      const accountBookId = await helper.createTestAccountBook();
 
       Object.assign(this.ctx, {
         helper,
