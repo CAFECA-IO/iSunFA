@@ -77,7 +77,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     await authenticatedHelper.selectUserRole();
 
     // Info: (20250711 - Shirley) Create a test account book for accounting setting tests
-    testAccountBookId = await authenticatedHelper.createTestAccountBook();
+    testAccountBookId = (await authenticatedHelper.createTestAccountBook()).id;
 
     // Info: (20250715 - Shirley) Refresh session to include new team membership
     await authenticatedHelper.getStatusInfo();

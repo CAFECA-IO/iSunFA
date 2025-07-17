@@ -60,16 +60,16 @@ export class BaseTestContext {
       await helper.selectUserRole();
 
       // Info: (20250717 - Tzuhan) 建立 Team
-      const teamRes = await helper.createTeam('IT Shared Team');
-      const teamId = teamRes.body.payload!.id as number;
+      // const teamRes = await helper.createTeam('IT Shared Team');
+      // const teamId = teamRes.body.payload!.id as number;
 
-      // Info: (20250717 - Tzuhan) 取得 User
-      const status = await helper.getStatusInfo();
-      const userId = (status.body.payload!.user as { id: number }).id;
+      // // Info: (20250717 - Tzuhan) 取得 User
+      // const status = await helper.getStatusInfo();
+      // const userId = (status.body.payload!.user as { id: number }).id;
 
       // Info: (20250717 - Tzuhan) 建立帳本
-      const bookRes = await helper.createAccountBook(teamId, `${userId}`);
-      const accountBookId = bookRes.body.payload!.id as number;
+      const bookRes = await helper.createTestAccountBook();
+      const { id: accountBookId, userId, teamId } = bookRes;
 
       Object.assign(this.ctx, {
         helper,
