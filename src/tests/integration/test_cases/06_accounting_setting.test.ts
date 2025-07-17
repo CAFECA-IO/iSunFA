@@ -12,6 +12,7 @@ import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { CurrencyType } from '@/constants/currency';
 import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
+/** Info: (20250717 - Tzuhan) 統一在 jest_setup 設定
 // Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
 jest.mock('pusher', () => ({
   // Info: (20250715 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -41,6 +42,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(), // Info: (20250715 - Shirley) 若有呼叫也不做事
   };
 });
+*/
 
 /**
  * Info: (20250715 - Shirley) Integration Test - Accounting Setting Configuration
@@ -83,7 +85,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     testAccountBookId = ctx.accountBookId;
 
     // Info: (20250715 - Shirley) Refresh session to include new team membership
-    await authenticatedHelper.getStatusInfo();
+    // await authenticatedHelper.getStatusInfo();
 
     // Info: (20250711 - Shirley) Initialize test clients
     accountingSettingClient = createTestClient({

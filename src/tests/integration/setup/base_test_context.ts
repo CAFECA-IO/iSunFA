@@ -8,6 +8,7 @@ import prisma from '@/client';
  */
 export interface SharedContext {
   helper: APITestHelper;
+  multiUserHelper: APITestHelper;
   cookies: string[];
   userId: number;
   teamId: number;
@@ -38,6 +39,7 @@ export class BaseTestContext {
       // 建立空殼，確保 recordXXX 在初始化途中也能安全使用
       this.ctx = {
         helper: undefined as unknown as APITestHelper,
+        multiUserHelper: undefined as unknown as APITestHelper,
         cookies: [],
         userId: 0,
         teamId: 0,
@@ -48,7 +50,9 @@ export class BaseTestContext {
       const helper = await APITestHelper.createHelper({
         email: TestDataFactory.PRIMARY_TEST_EMAIL,
       });
-
+      const multiUserHelper = await APITestHelper.createHelper({
+        emails: TestDataFactory.DEFAULT_TEST_EMAILS,
+      });
       // Info: (20250717 - Tzuhan) Complete user registration with default values
       await helper.agreeToTerms();
       await helper.createUserRole();
@@ -68,6 +72,7 @@ export class BaseTestContext {
 
       Object.assign(this.ctx, {
         helper,
+        multiUserHelper,
         cookies: helper.getCurrentSession(),
         userId,
         teamId,

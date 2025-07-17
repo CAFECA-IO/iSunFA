@@ -16,7 +16,9 @@ import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { EventType } from '@/constants/account';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
+/** Info: (20250717 - Tzuhan) 統一在 jest_setup 設定
 // Info: (20250715 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
@@ -44,6 +46,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(),
   };
 });
+*/
 
 /**
  * Info: (20250715 - Shirley) Integration Test - Ledger Integration (Test Case 8)
@@ -60,6 +63,7 @@ jest.mock('@/lib/utils/crypto', () => {
  * 3. Ledger Filtering and Export Testing
  */
 describe('Integration Test - Ledger Integration (Test Case 8)', () => {
+  let ctx: SharedContext;
   let authenticatedHelper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
@@ -86,21 +90,24 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
 
   beforeAll(async () => {
     // Info: (20250715 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    ctx = await BaseTestContext.getSharedContext();
+    authenticatedHelper = ctx.helper;
 
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
+    // const statusResponse = await authenticatedHelper.getStatusInfo();
+    // const userData = statusResponse.body.payload?.user as { id?: number };
+    // currentUserId = userData?.id?.toString() || '1';
+    currentUserId = String(ctx.userId);
 
     // Info: (20250715 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await authenticatedHelper.agreeToTerms();
+    // await authenticatedHelper.createUserRole();
+    // await authenticatedHelper.selectUserRole();
 
     // Info: (20250715 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
+    // const teamResponse = await authenticatedHelper.createTeam();
+    // const teamData = teamResponse.body.payload?.team as { id?: number };
+    // teamId = teamData?.id || 0;
+    teamId = ctx.teamId;
 
     testCompanyData.teamId = teamId;
   });

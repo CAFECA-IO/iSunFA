@@ -40,9 +40,10 @@ describe('Integration Test - Team Management Authentication', () => {
     ctx = await BaseTestContext.getSharedContext();
     apiHelper = ctx.helper;
 
-    const statusResponse = await apiHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
+    // const statusResponse = await apiHelper.getStatusInfo();
+    // const userData = statusResponse.body.payload?.user as { id?: number };
+    // currentUserId = userData?.id?.toString() || '1';
+    currentUserId = String(ctx.userId);
 
     // Info: (20250707 - Shirley) Complete user registration with default values
     // await apiHelper.agreeToTerms();
@@ -55,14 +56,7 @@ describe('Integration Test - Team Management Authentication', () => {
       routeParams: { userId: currentUserId },
     });
 
-    multiUserHelper = await APITestHelper.createHelper({
-      emails: [
-        TestDataFactory.DEFAULT_TEST_EMAILS[0],
-        TestDataFactory.DEFAULT_TEST_EMAILS[1],
-        TestDataFactory.DEFAULT_TEST_EMAILS[2],
-        TestDataFactory.DEFAULT_TEST_EMAILS[3],
-      ],
-    });
+    multiUserHelper = ctx.multiUserHelper;
   });
 
   afterAll(() => {

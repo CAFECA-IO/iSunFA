@@ -41,10 +41,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     apiHelper = ctx.helper;
 
     // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
-    multiUserHelper = await APITestHelper.createHelper({
-      emails: [testUsers.user1, testUsers.user2, testUsers.user3, testUsers.user4],
-      // emails: TestDataFactory.DEFAULT_TEST_EMAILS,
-    });
+    multiUserHelper = ctx.multiUserHelper;
   });
 
   afterAll(() => {
