@@ -8,6 +8,8 @@ import agreementHandler from '@/pages/api/v2/user/[userId]/agreement';
 import roleListHandler from '@/pages/api/v2/role';
 import userRoleHandler from '@/pages/api/v2/user/[userId]/role';
 import userRoleSelectHandler from '@/pages/api/v2/user/[userId]/selected_role';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
+import { Registry } from '@/tests/integration/setup/test_data_registry';
 
 /**
  * Info: (20250701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
@@ -21,6 +23,7 @@ import userRoleSelectHandler from '@/pages/api/v2/user/[userId]/selected_role';
  * - Tests multi-user authentication and session switching
  */
 describe('Integration Test - User Email Authentication (Supertest)', () => {
+  let ctx: SharedContext;
   let apiHelper: APITestHelper;
   let multiUserHelper: APITestHelper;
 
@@ -33,11 +36,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
   beforeAll(async () => {
     // Info: (20250701 - Shirley) Initialize API helpers for testing
-    apiHelper = new APITestHelper();
+    // apiHelper = new APITestHelper();
+    ctx = await BaseTestContext.getSharedContext();
+    apiHelper = ctx.helper;
 
     // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
     multiUserHelper = await APITestHelper.createHelper({
       emails: [testUsers.user1, testUsers.user2, testUsers.user3, testUsers.user4],
+      // emails: TestDataFactory.DEFAULT_TEST_EMAILS,
     });
   });
 
@@ -167,8 +173,9 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(statusResponse2.body.payload?.user).toBeDefined();
       expect(statusResponse2.body.payload?.user).not.toBeNull();
       if (statusResponse2.body.payload && typeof statusResponse2.body.payload === 'object') {
-        const payload2 = statusResponse2.body.payload as { user: { email: string } };
+        const payload2 = statusResponse2.body.payload as { user: { id: number; email: string } };
         expect(payload2.user.email).toBe(TestDataFactory.PRIMARY_TEST_EMAIL);
+        Registry.recordUserId(payload2.user.id as number);
       }
     });
 
@@ -194,7 +201,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   // ========================================
   // Info: (20250701 - Shirley) Test Case 1.2: Authentication Failure Scenarios (skipped due to non-functional SMTP in the test environment)
   // ========================================
-  xdescribe('Test Case 1.2: Authentication Failure Scenarios', () => {
+  describe('Test Case 1.2: Authentication Failure Scenarios', () => {
     it('should fail with invalid verification code', async () => {
       // Info: (20250701 - Shirley) Request OTP first
       await apiHelper.requestOTP();

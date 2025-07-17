@@ -12,6 +12,7 @@ import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator
 import { z } from 'zod';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import prisma from '@/client';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
 /**
  * Info: (20250703 - Shirley) Integration Test - Team Management Authentication
@@ -27,7 +28,8 @@ import prisma from '@/client';
  * TODO: Focus on deep API functionality in future test cases
  */
 describe('Integration Test - Team Management Authentication', () => {
-  let authenticatedHelper: APITestHelper;
+  let ctx: SharedContext;
+  let apiHelper: APITestHelper;
   let teamListClient: TestClient;
   let teamCreateClient: TestClient;
   let currentUserId: string;
@@ -35,16 +37,17 @@ describe('Integration Test - Team Management Authentication', () => {
   let multiUserHelper: APITestHelper;
 
   beforeAll(async () => {
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    ctx = await BaseTestContext.getSharedContext();
+    apiHelper = ctx.helper;
 
-    const statusResponse = await authenticatedHelper.getStatusInfo();
+    const statusResponse = await apiHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
     // Info: (20250707 - Shirley) Complete user registration with default values
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await apiHelper.agreeToTerms();
+    // await apiHelper.createUserRole();
+    // await apiHelper.selectUserRole();
 
     teamCreateClient = createTestClient(teamCreateHandler);
     teamListClient = createTestClient({
@@ -63,7 +66,7 @@ describe('Integration Test - Team Management Authentication', () => {
   });
 
   afterAll(() => {
-    authenticatedHelper.clearAllUserSessions();
+    apiHelper.clearAllUserSessions();
     multiUserHelper.clearAllUserSessions();
   });
 
@@ -122,11 +125,11 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully list teams with proper parameters', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250703 - Shirley) Get fresh user ID to ensure proper authorization
-      const statusResponse = await authenticatedHelper.getStatusInfo();
+      const statusResponse = await apiHelper.getStatusInfo();
       const userData = statusResponse.body.payload?.user as { id?: number };
       const userId = userData?.id?.toString() || '1';
 
@@ -177,8 +180,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully create a new team', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250703 - Shirley) Use proper team data structure
       const teamData = {
@@ -231,7 +234,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const createResponse = await teamCreateClient
         .post(APIPath.CREATE_TEAM)
         .send(teamData)
-        .set('Cookie', authenticatedHelper.getCurrentSession().join('; '));
+        .set('Cookie', apiHelper.getCurrentSession().join('; '));
 
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
@@ -281,8 +284,8 @@ describe('Integration Test - Team Management Authentication', () => {
 
     it('should successfully accept invitation and add member to team', async () => {
       // Info: (20250707 - Shirley) First invite a member (reuse previous test logic)
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const inviteData = {
         emails: [TestDataFactory.DEFAULT_TEST_EMAILS[1]], // Info: (20250707 - Shirley) Use user1@isunfa.com for this test
@@ -371,8 +374,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject invitation with missing emails', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const response = await teamInviteClient
         .put(`/api/v2/team/${createdTeamId}/member`)
@@ -385,8 +388,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject invitation with invalid email format', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const inviteData = {
         emails: ['invalid-email', 'another-invalid'],
@@ -419,7 +422,7 @@ describe('Integration Test - Team Management Authentication', () => {
       const createResponse = await teamCreateClient
         .post(APIPath.CREATE_TEAM)
         .send(teamData)
-        .set('Cookie', authenticatedHelper.getCurrentSession().join('; '));
+        .set('Cookie', apiHelper.getCurrentSession().join('; '));
 
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
@@ -431,8 +434,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully list team members with proper permissions', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const response = await teamMemberListClient
         .get(`/api/v2/team/${createdTeamId}/member`)
@@ -466,8 +469,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject access to non-existent team', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const nonExistentTeamClient = createTestClient({
         handler: teamMemberHandler,
@@ -505,15 +508,15 @@ describe('Integration Test - Team Management Authentication', () => {
       const createResponse = await teamCreateClient
         .post(APIPath.CREATE_TEAM)
         .send(teamData)
-        .set('Cookie', authenticatedHelper.getCurrentSession().join('; '));
+        .set('Cookie', apiHelper.getCurrentSession().join('; '));
 
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
     });
 
     it('should successfully update member role with proper permissions (OWNER updating any member)', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250709 - Shirley) Create team invite client for this test
       const teamInviteClient = createTestClient({
@@ -638,8 +641,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully demonstrate ADMIN role update capabilities', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250709 - Shirley) Create team invite client for this test
       const teamInviteClient = createTestClient({
@@ -818,8 +821,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject update to non-existent member', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const memberId = '999999';
       teamMemberUpdateClient = createTestClient({
@@ -842,8 +845,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject missing role in update request', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const memberId = '123';
       teamMemberUpdateClient = createTestClient({
@@ -878,15 +881,15 @@ describe('Integration Test - Team Management Authentication', () => {
       const createResponse = await teamCreateClient
         .post(APIPath.CREATE_TEAM)
         .send(teamData)
-        .set('Cookie', authenticatedHelper.getCurrentSession().join('; '));
+        .set('Cookie', apiHelper.getCurrentSession().join('; '));
 
       expect(createResponse.status).toBe(201);
       createdTeamId = createResponse.body.payload.id;
     });
 
     it('should successfully set up member for deletion (OWNER permissions)', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250709 - Shirley) Create team invite client for this test
       const teamInviteClient = createTestClient({
@@ -983,8 +986,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should successfully set up ADMIN role for member management', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250709 - Shirley) Create team invite client for this test
       const teamInviteClient = createTestClient({
@@ -1144,8 +1147,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject deletion of non-existent member', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const memberId = '999999';
       teamMemberDeleteClient = createTestClient({
@@ -1163,8 +1166,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should reject access to non-existent team for deletion', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const memberId = '123';
       const nonExistentTeamClient = createTestClient({
@@ -1184,8 +1187,8 @@ describe('Integration Test - Team Management Authentication', () => {
 
   describe('Test Case 2.7: Authentication Performance', () => {
     it('should handle concurrent authenticated requests', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       const requests = Array(3)
         .fill(null)
@@ -1205,8 +1208,8 @@ describe('Integration Test - Team Management Authentication', () => {
     });
 
     it('should maintain authentication across multiple API calls', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250703 - Shirley) Make multiple API calls with same session
       const listResponse = await teamListClient
@@ -1242,8 +1245,8 @@ describe('Integration Test - Team Management Authentication', () => {
 
   describe('Test Case 2.8: Authentication Methods', () => {
     it('should handle method validation for team endpoints', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      await apiHelper.ensureAuthenticated();
+      const cookies = apiHelper.getCurrentSession();
 
       // Info: (20250703 - Shirley) Test wrong HTTP method - should get 405, not 401
       const listWrongMethod = await teamListClient
