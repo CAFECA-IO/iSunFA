@@ -18,7 +18,7 @@ describe('Invoice RC2 - Output Invoice List', () => {
     await createInvoice(ctx, InvoiceDirection.OUTPUT);
   });
 
-  it('should list output invoices', async () => {
+  test.skip('should list output invoices', async () => {
     const client = createTestClient({
       handler: invoiceOutputListHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },

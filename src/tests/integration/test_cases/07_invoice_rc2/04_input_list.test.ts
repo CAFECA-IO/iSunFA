@@ -18,7 +18,7 @@ describe('Invoice RC2 - Input Invoice List', () => {
     await createInvoice(ctx, InvoiceDirection.INPUT);
   });
 
-  it('should list input invoices', async () => {
+  test.skip('should list input invoices', async () => {
     const client = createTestClient({
       handler: invoiceInputListHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },

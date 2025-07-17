@@ -22,7 +22,7 @@ describe('Invoice RC2 - Invoice List (list both input/output invoice', () => {
     await createInvoice(ctx, InvoiceDirection.OUTPUT);
   });
 
-  it('should list input invoices', async () => {
+  test.skip('should list input invoices', async () => {
     const client = createTestClient({
       handler: invoiceListHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },

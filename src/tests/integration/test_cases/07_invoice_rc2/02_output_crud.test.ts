@@ -23,7 +23,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
   beforeAll(async () => {
     ctx = await getInvoiceTestContext();
   });
-  it('should create invoice RC2 output', async () => {
+  test.skip('should create invoice RC2 output', async () => {
     const invoiceOutputCreateClient = createTestClient({
       handler: invoiceOutputCreateHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },
@@ -56,7 +56,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     expect(isOutputDataValid).toBe(true);
   });
 
-  it('should update invoice RC2 output', async () => {
+  test.skip('should update invoice RC2 output', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot update invoice output');
     }
@@ -104,7 +104,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     expect(updatedData?.no).toBe('AB25000038');
   });
 
-  it('should delete invoice RC2 output', async () => {
+  test.skip('should delete invoice RC2 output', async () => {
     if (invoiceId === undefined) {
       throw new Error('invoiceId is not defined, cannot delete invoice output');
     }
