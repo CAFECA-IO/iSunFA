@@ -24,6 +24,7 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
+import { TPlanType } from '@/interfaces/subscription';
 
 interface TestResponse {
   status: number;
@@ -507,6 +508,7 @@ export class APITestHelper {
     const teamData = {
       name: teamName || `Test Team ${Date.now()}`,
       about: 'Test team for integration testing',
+      planType: TPlanType.TRIAL,
     };
 
     return teamCreateClient
@@ -665,20 +667,9 @@ export class APITestHelper {
     const userId = userData?.id?.toString() || '1';
 
     // Info: (20250711 - Shirley) Create a team first
-    const teamData = {
-      name: `Accounting Test Team ${Date.now()}`,
-    };
-
-    // Info: (20250711 - Shirley) Import team handler and create client
-    const { default: teamHandler } = await import('@/pages/api/v2/team');
-    const teamClient = createTestClient(teamHandler);
-
-    const teamResponse = await teamClient
-      .post('/api/v2/team')
-      .send(teamData)
-      .set('Cookie', cookies.join('; '));
-
-    const teamId = teamResponse.body.payload.id;
+    const teamResponse = await this.createTeam(`Accounting Test Team ${Date.now()}`);
+    const teamData = teamResponse.body.payload?.team as { id?: number };
+    const teamId = teamData?.id || 0;
 
     // Info: (20250711 - Shirley) Create account book
     const accountBookData = {
