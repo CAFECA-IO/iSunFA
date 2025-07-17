@@ -47,12 +47,12 @@ export class InvoiceFixture {
     accountBookId: number
   ): Promise<number> {
     const pubKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
-    const filePath = path.join(TEST_FILES_DIR, `${filename}.png`);
-    const buffer = fs.readFileSync(filePath);
-    const file = new File([buffer], `${filename}.png`, { type: 'image/png' });
+    const filePath = path.resolve(process.cwd(), TEST_FILES_DIR, `${filename}.png`);
+    const fileBuffer = fs.readFileSync(filePath);
+    const file = new File([fileBuffer], `${filename}.png`, { type: 'image/png' });
 
     const enc = await cryptoUtils.encryptFileWithPublicKey(file, pubKey!);
-    const tempPath = path.join(TEST_FILES_DIR, `temp_enc_${filename}.png`);
+    const tempPath = path.resolve(process.cwd(), TEST_FILES_DIR, `temp_encrypted_${filename}.png`);
 
     const record = await createFile({
       name: enc.encryptedFile.name,
