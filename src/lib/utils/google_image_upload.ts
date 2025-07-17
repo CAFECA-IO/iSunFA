@@ -52,10 +52,6 @@ export async function uploadFileToGoogleCloud(
   destFileName: string,
   mimeType: string
 ): Promise<string> {
-  // 測試環境或顯式跳過 → 假裝上傳成功
-  if (process.env.NODE_ENV === 'test' || process.env.SKIP_GCS_UPLOAD === 'true') {
-    return `${GOOGLE_STORAGE_BUCKET_URL}${destFileName}`;
-  }
   let url = '';
   try {
     const file = googleBucket.file(destFileName);

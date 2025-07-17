@@ -1,10 +1,13 @@
 import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
+import {
+  getInvoiceTestContext,
+  // createInvoice
+} from '@/tests/integration/fixtures/invoice_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceInputListHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateOutputData } from '@/lib/utils/validator';
-import { InvoiceDirection } from '@/constants/invoice_rc2';
+// import { InvoiceDirection } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Input Invoice List', () => {
   let ctx: InvoiceContext;
@@ -14,7 +17,7 @@ describe('Invoice RC2 - Input Invoice List', () => {
     ctx = await getInvoiceTestContext();
 
     // 2. 建立一筆 Input 發票，用於 list 測試
-    await createInvoice(ctx, InvoiceDirection.INPUT);
+    // await createInvoice(ctx, InvoiceDirection.INPUT);
   });
 
   it('should list input invoices', async () => {

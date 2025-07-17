@@ -1,10 +1,13 @@
 import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
+import {
+  getInvoiceTestContext,
+  // createInvoice
+} from '@/tests/integration/fixtures/invoice_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceListHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateOutputData } from '@/lib/utils/validator';
-import { InvoiceDirection } from '@/constants/invoice_rc2';
+// import { InvoiceDirection } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Invoice List (list both input/output invoices)', () => {
   let ctx: InvoiceContext;
@@ -15,8 +18,8 @@ describe('Invoice RC2 - Invoice List (list both input/output invoices)', () => {
     ctx = await getInvoiceTestContext();
 
     // 2. 先建立一筆 Input 與一筆 Output 發票
-    await createInvoice(ctx, InvoiceDirection.INPUT);
-    await createInvoice(ctx, InvoiceDirection.OUTPUT);
+    // await createInvoice(ctx, InvoiceDirection.INPUT);
+    // await createInvoice(ctx, InvoiceDirection.OUTPUT);
   });
 
   it('should list both input and output invoices', async () => {

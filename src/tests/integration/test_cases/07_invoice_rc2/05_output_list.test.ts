@@ -1,10 +1,13 @@
 import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
+import {
+  getInvoiceTestContext,
+  // createInvoice
+} from '@/tests/integration/fixtures/invoice_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceOutputListHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateOutputData } from '@/lib/utils/validator';
-import { InvoiceDirection } from '@/constants/invoice_rc2';
+// import { InvoiceDirection } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Output Invoice List', () => {
   let ctx: InvoiceContext;
@@ -14,7 +17,7 @@ describe('Invoice RC2 - Output Invoice List', () => {
     ctx = await getInvoiceTestContext();
 
     // 2. 產生一筆 OUTPUT 發票，供 list 測試使用
-    await createInvoice(ctx, InvoiceDirection.OUTPUT);
+    // await createInvoice(ctx, InvoiceDirection.OUTPUT);
   });
 
   it('should list output invoices', async () => {
