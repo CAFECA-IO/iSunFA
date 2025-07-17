@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
-import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
@@ -11,9 +10,11 @@ import { WORK_TAG } from '@/interfaces/account_book';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import * as cryptoUtils from '@/lib/utils/crypto';
-import { TestClient } from '@/interfaces/test_client';
 import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
 import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
+// import teamListHandler from '@/pages/api/v2/user/[userId]/team';
+// import { TestClient } from '@/interfaces/test_client';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 
 /* Info: (20250711 - Tzuhan) ---------- 型別 ---------- */
 export interface InvoiceTestContext {
@@ -69,44 +70,20 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
   if (ctxPromise) return ctxPromise; // Info: (20250711 - Tzuhan) 已建好
 
   ctxPromise = (async () => {
-    /* Info: (20250711 - Tzuhan) 1. 建使用者＋取 cookie */
-    const helper = await APITestHelper.createWithEmail('user1@isunfa.com');
-    const cookies = helper.getCurrentSession();
-
-    /*  Info: (20250711 - Tzuhan)2. 取 userId */
-    const statusResponse = await helper.getStatusInfo();
-    const user = statusResponse.body.payload?.user as { id?: string } | undefined;
-
-    if (!user?.id) {
-      throw new Error('User not found in status response');
-    }
-    const userId = `${user.id}`;
-
-    /* Info: (20250711 - Tzuhan) 3. 取 / 建 team */
-    const teamClient: TestClient = createTestClient({
-      handler: teamListHandler,
-      routeParams: { userId },
-    });
-    const teamRes = await teamClient
-      .get(APIPath.LIST_TEAM.replace(':userId', userId))
-      .query({ page: 1, pageSize: 10 })
-      .send({})
-      .set('Cookie', cookies.join('; '));
-    const team = teamRes.body.payload?.data?.[0];
-    if (!team?.id) throw new SetupError('team not found', teamRes.body);
+    const { helper, cookies, userId, teamId } = await BaseTestContext.getSharedContext();
 
     /* Info: (20250711 - Tzuhan) 4. 建帳簿 */
     const bookClient = createTestClient({
       handler: accountBookCreateHandler,
-      routeParams: { userId },
+      routeParams: { userId: userId.toString() },
     });
     const bookRes = await bookClient
-      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId))
+      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId.toString()))
       .send({
         name: `AccountBook ${Date.now()}`,
         taxId: Math.random().toString(36).slice(2, 10),
         tag: WORK_TAG.ALL,
-        teamId: Number(team.id),
+        teamId: Number(teamId),
       })
       .set('Cookie', cookies.join('; '));
 
@@ -120,7 +97,7 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
     return {
       helper,
       cookies,
-      currentUserId: userId,
+      currentUserId: String(userId),
       accountBookId: bookId,
       fileIdForInput,
       fileIdForOutput,
