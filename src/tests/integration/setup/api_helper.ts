@@ -28,7 +28,6 @@ import { WORK_TAG } from '@/interfaces/account_book';
 // import { LocaleKey } from '@/constants/normal_setting';
 // import { CurrencyType } from '@/constants/currency';
 import { TPlanType } from '@/interfaces/subscription';
-import { Registry } from '@/tests/integration/setup/test_data_registry';
 
 interface TestResponse {
   status: number;
@@ -197,29 +196,6 @@ export class APITestHelper {
     const otpResponse = await this.requestOTP(testEmail);
     const authResponse = await this.authenticateWithOTP(testEmail, testCode);
     const statusResponse = await this.getStatusInfo();
-
-    if (statusResponse.body.success) {
-      Registry.recordUserId(
-        (
-          statusResponse.body.payload as {
-            user: {
-              id: number;
-            };
-          }
-        ).user.id
-      );
-      Registry.recordFileName(
-        `${
-          (
-            statusResponse.body.payload as {
-              user: {
-                name: string;
-              };
-            }
-          ).user.name
-        }_icon`
-      );
-    }
 
     return { otpResponse, authResponse, statusResponse };
   }
@@ -547,10 +523,6 @@ export class APITestHelper {
       .send(teamData)
       .set('Cookie', cookies.join('; '));
 
-    if (response.body.success) {
-      Registry.recordTeamId((response.body.payload as { id: number }).id);
-    }
-
     return response;
   }
 
@@ -733,25 +705,6 @@ export class APITestHelper {
         teamId: Number(teamId),
       })
       .set('Cookie', cookies.join('; '));
-
-    if (response.body.success) {
-      Registry.recordAccountBookId(response.body.payload.id);
-      Registry.recordFileName(
-        `${
-          (
-            response.body.payload as {
-              name: string;
-            }
-          ).name
-        }_icon${
-          (
-            response.body.payload as {
-              createdAt: number;
-            }
-          ).createdAt
-        }`
-      );
-    }
 
     return response;
   }

@@ -1,7 +1,6 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import prisma from '@/client';
-import { Registry } from '@/tests/integration/setup/test_data_registry';
 
 /**
  * 在整個整合測試階段持有「所有測試資料的 ID」
@@ -95,7 +94,14 @@ export class BaseTestContext {
   static async cleanup(): Promise<void> {
     if (!this.ctx) return;
 
-    const { userIds } = Registry.getSnapshot();
+    const userIds = await prisma.user
+      .findMany({
+        where: {
+          email: { in: TestDataFactory.DEFAULT_TEST_EMAILS },
+        },
+        select: { id: true },
+      })
+      .then((users) => users.map((user) => user.id));
 
     const orphanAccountBookIds = await prisma.company
       .findMany({

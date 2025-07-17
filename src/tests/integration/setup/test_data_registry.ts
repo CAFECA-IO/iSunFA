@@ -1,4 +1,4 @@
-// 單純的 POJO，無任何外部相依
+// Deprecated: (20250717 - Tzuhan) deprecated
 export interface RegistryShape {
   userIds: number[];
   teamIds: number[];
