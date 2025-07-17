@@ -102,53 +102,76 @@ export class BaseTestContext {
     console.log(
       `[BaseTestContext] Cleaning up test data: userIds: ${userIds}, teamIds: ${teamIds}, accountBookIds: ${accountBookIds}, invoiceIds: ${invoiceIds}, voucherIds: ${voucherIds}`
     );
+
+    const orphanAccountBookIds = await prisma.company
+      .findMany({
+        where: { userId: { in: userIds } },
+        select: { id: true },
+      })
+      .then((abs) => abs.map((ab) => ab.id));
+
+    const orphanTeamIds = await prisma.team
+      .findMany({
+        where: { ownerId: { in: userIds } },
+        select: { id: true },
+      })
+      .then((teams) => teams.map((team) => team.id));
+
+    const voucherIdsToPurge = await prisma.voucher
+      // ① 先拿要清的 voucherId：自己 record 的 + 同一本帳的
+      .findMany({
+        where: { companyId: { in: orphanAccountBookIds } },
+        select: { id: true },
+      })
+      .then((vs) => vs.map((v) => v.id));
+
+    const invoiceIdsToPurge = await prisma.invoiceRC2
+      .findMany({
+        where: { accountBookId: { in: orphanAccountBookIds } },
+        select: { id: true },
+      })
+      .then((ins) => ins.map((i) => i.id));
+
+    // const accountingSettingIds = await prisma.accountingSetting
+    //   .findMany({
+    //     where: {
+    //       companyId: { in: orphanAccountBookIds },
+    //     },
+    //     select: { id: true },
+    //   })
+    //   .then((settings) => settings.map((setting) => setting.id));
+
+    // const companySettingIds = await prisma.companySetting
+    //   .findMany({
+    //     where: {
+    //       companyId: { in: orphanAccountBookIds },
+    //     },
+    //     select: { id: true },
+    //   })
+    //   .then((settings) => settings.map((setting) => setting.id));
+
     const teamSubscriptionIds = await prisma.teamSubscription
       .findMany({
         where: {
-          teamId: { in: teamIds },
+          teamId: { in: orphanTeamIds },
         },
         select: { id: true },
       })
       .then((subs) => subs.map((sub) => sub.id));
+
     const teamMemberIds = await prisma.teamMember
       .findMany({
         where: {
-          teamId: { in: teamIds },
+          teamId: { in: orphanTeamIds },
         },
         select: { id: true },
       })
       .then((members) => members.map((member) => member.id));
-    const teamAccountBookIds = await prisma.company
-      .findMany({
-        where: {
-          teamId: { in: teamIds },
-        },
-        select: { id: true },
-      })
-      .then((companies) => companies.map((company) => company.id));
-    const mergeAccountBookIds = [...teamAccountBookIds, ...accountBookIds];
-    const accountingSettingIds = await prisma.accountingSetting
-      .findMany({
-        where: {
-          companyId: { in: mergeAccountBookIds },
-        },
-        select: { id: true },
-      })
-      .then((settings) => settings.map((setting) => setting.id));
-
-    const companySettingIds = await prisma.companySetting
-      .findMany({
-        where: {
-          companyId: { in: mergeAccountBookIds },
-        },
-        select: { id: true },
-      })
-      .then((settings) => settings.map((setting) => setting.id));
 
     const invitedTeamMemberIds = await prisma.inviteTeamMember
       .findMany({
         where: {
-          teamId: { in: teamIds },
+          teamId: { in: orphanTeamIds },
         },
         select: { id: true },
       })
@@ -209,31 +232,67 @@ export class BaseTestContext {
       .then((emailLogins) => emailLogins.map((emailLogin) => emailLogin.id));
 
     await prisma.$transaction([
-      prisma.invoiceRC2.deleteMany({
-        where: { id: { in: invoiceIds } },
+      // ── asset_voucher / associate_line_item / voucher_salary_record / invoice_voucher_journal …
+      prisma.associateLineItem.deleteMany({
+        where: {
+          OR: [
+            { originalLineItem: { voucherId: { in: voucherIdsToPurge } } },
+            { resultLineItem: { voucherId: { in: voucherIdsToPurge } } },
+          ],
+        },
       }),
+      prisma.associateVoucher.deleteMany({
+        where: {
+          OR: [
+            { originalVoucherId: { in: voucherIdsToPurge } },
+            { resultVoucherId: { in: voucherIdsToPurge } },
+          ],
+        },
+      }),
+      prisma.assetVoucher.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
+      prisma.voucherSalaryRecord.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
+      prisma.invoiceVoucherJournal.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
+
+      // ── line_item 直接指 voucher
+      prisma.lineItem.deleteMany({
+        where: { voucherId: { in: voucherIdsToPurge } },
+      }),
+      // ── 現在才能刪 voucher
       prisma.voucher.deleteMany({
-        where: { id: { in: voucherIds } },
+        where: { id: { in: voucherIdsToPurge } },
+      }),
+
+      // ── 如果還有 InvoiceRC2 連到 voucher，要在這裡把 voucherId 置空或一起刪
+      prisma.invoiceRC2.updateMany({
+        where: { voucherId: { in: voucherIdsToPurge } },
+        data: { voucherId: null },
+      }),
+      prisma.invoiceRC2.deleteMany({
+        where: { id: { in: invoiceIdsToPurge } },
       }),
       prisma.accountingSetting.deleteMany({
-        where: { id: { in: accountingSettingIds } },
+        where: { companyId: { in: orphanAccountBookIds } },
       }),
       prisma.companySetting.deleteMany({
-        where: { id: { in: companySettingIds } },
+        where: { companyId: { in: orphanAccountBookIds } },
+      }),
+      prisma.account.deleteMany({
+        where: { companyId: { in: orphanAccountBookIds } },
       }),
       prisma.company.deleteMany({
-        where: { id: { in: mergeAccountBookIds } },
+        where: { id: { in: orphanAccountBookIds } },
       }),
       prisma.inviteTeamMember.deleteMany({ where: { id: { in: invitedTeamMemberIds } } }),
       prisma.teamSubscription.deleteMany({ where: { id: { in: teamSubscriptionIds } } }),
       prisma.teamMember.deleteMany({ where: { id: { in: teamMemberIds } } }),
       prisma.notification.deleteMany({ where: { id: { in: notificationIds } } }),
-      prisma.team.deleteMany({ where: { id: { in: teamIds } } }),
+      prisma.team.deleteMany({ where: { id: { in: orphanTeamIds } } }),
       prisma.userActionLog.deleteMany({ where: { id: { in: userActionLogIds } } }),
       prisma.userAgreement.deleteMany({ where: { id: { in: userAgreementIds } } }),
       prisma.userRole.deleteMany({ where: { id: { in: userRoleIds } } }),
       prisma.authentication.deleteMany({ where: { id: { in: authenticationIds } } }),
       prisma.emailLogin.deleteMany({ where: { id: { in: emailLoginIds } } }),
+      prisma.user.deleteMany({ where: { id: { in: userIds } } }),
     ]);
 
     await prisma.$disconnect();
