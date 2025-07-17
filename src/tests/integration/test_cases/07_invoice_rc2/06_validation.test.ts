@@ -1,5 +1,5 @@
-import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
@@ -9,13 +9,21 @@ import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 import { STATUS_CODE } from '@/constants/status_code';
 
 describe('Invoice RC2 - Validation', () => {
-  let ctx: InvoiceContext;
+  let ctx: SharedContext;
+  let apiHelper: APITestHelper;
   let invoiceId: number;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext();
-    const invoice = await createInvoice(ctx, InvoiceDirection.INPUT);
-    invoiceId = invoice.id;
+    ctx = await BaseTestContext.getSharedContext();
+    apiHelper = ctx.helper;
+
+    invoiceId = (
+      await apiHelper.createInvoice(
+        InvoiceDirection.INPUT,
+        ctx.accountBookId,
+        ctx.invoiceFileIds.input
+      )
+    ).id;
   });
 
   test.skip('should reject duplicate output invoice → 409', async () => {
@@ -24,7 +32,7 @@ describe('Invoice RC2 - Validation', () => {
       routeParams: { accountBookId: ctx.accountBookId.toString() },
     });
     const body = {
-      fileId: ctx.fileIdForOutput,
+      fileId: ctx.invoiceFileIds.output,
       direction: InvoiceDirection.OUTPUT,
       currencyCode: CurrencyCode.TWD,
       isGenerated: false,
@@ -66,7 +74,7 @@ describe('Invoice RC2 - Validation', () => {
         APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
-        fileId: ctx.fileIdForInput,
+        fileId: ctx.invoiceFileIds.input,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
@@ -117,7 +125,7 @@ describe('Invoice RC2 - Validation', () => {
         APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
-        fileId: ctx.fileIdForInput,
+        fileId: ctx.invoiceFileIds.input,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,

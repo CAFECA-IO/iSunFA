@@ -26,6 +26,10 @@ import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookInfo, WORK_TAG } from '@/interfaces/account_book';
+import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
+import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
+import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
+import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 
 interface TestResponse {
   status: number;
@@ -722,5 +726,74 @@ export class APITestHelper {
       .set('Cookie', cookies.join('; '));
 
     return accountBookResponse.body.payload as IAccountBookInfo;
+  }
+
+  async createInvoice<T extends IInvoiceRC2Base>(
+    direction: InvoiceDirection,
+    accountBookId: number,
+    fileId: number
+  ): Promise<T> {
+    const handler =
+      direction === InvoiceDirection.INPUT ? invoiceInputCreateHandler : invoiceOutputCreateHandler;
+
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: String(accountBookId) },
+    });
+    const cookies = this.getCurrentSession();
+
+    const res = await client
+      .post(
+        (direction === InvoiceDirection.INPUT
+          ? APIPath.CREATE_INVOICE_RC2_INPUT
+          : APIPath.CREATE_INVOICE_RC2_OUTPUT
+        ).replace(':accountBookId', String(accountBookId))
+      )
+      .send({
+        fileId,
+        direction,
+        isGenerated: false,
+        currencyCode: CurrencyCode.TWD,
+      })
+      .set('Cookie', cookies.join('; '));
+
+    if (!res.body.success) {
+      throw new Error(`invoice creation failed, res.body: ${JSON.stringify(res.body)}`);
+    }
+
+    if (direction === InvoiceDirection.INPUT) {
+      return res.body.payload as IInvoiceRC2Input as T;
+    } else {
+      return res.body.payload as IInvoiceRC2Output as T;
+    }
+  }
+
+  async getPartialAccountList(accountBookId: number) {
+    const { default: accountListHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/account'
+    );
+
+    const client = createTestClient({
+      handler: accountListHandler,
+      routeParams: { accountBookId: String(accountBookId) },
+    });
+    const cookies = this.getCurrentSession();
+    const res = await client
+      .get(APIPath.ACCOUNT_LIST.replace(':accountBookId', String(accountBookId)))
+      .set('Cookie', cookies.join('; '))
+      .expect(200);
+
+    // 3. 拿到借、貸帳號 ID
+    const { data } = res.body.payload;
+    const [debitAcc, creditAcc] = data;
+    if (!debitAcc || !creditAcc) {
+      throw new Error('Voucher context setup failed: missing account data');
+    }
+
+    // 4. 回傳並快取完整的 VoucherContext
+    return {
+      debitAccountId: debitAcc.id,
+      creditAccountId: creditAcc.id,
+    };
   }
 }

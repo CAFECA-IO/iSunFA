@@ -1,5 +1,5 @@
-import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceInputListHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import { APIName, APIPath } from '@/constants/api_connection';
@@ -7,11 +7,17 @@ import { validateOutputData } from '@/lib/utils/validator';
 import { InvoiceDirection } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Input Invoice List', () => {
-  let ctx: InvoiceContext;
+  let ctx: SharedContext;
+  let apiHelper: APITestHelper;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext();
-    await createInvoice(ctx, InvoiceDirection.INPUT);
+    ctx = await BaseTestContext.getSharedContext();
+    apiHelper = ctx.helper;
+    await apiHelper.createInvoice(
+      InvoiceDirection.INPUT,
+      ctx.accountBookId,
+      ctx.invoiceFileIds.input
+    );
   });
 
   it('should list input invoices', async () => {

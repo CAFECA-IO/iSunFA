@@ -1,5 +1,4 @@
-import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
-import { getInvoiceTestContext } from '@/tests/integration/fixtures/invoice_context';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { APIName, APIPath } from '@/constants/api_connection';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
@@ -14,11 +13,11 @@ import {
 } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Input Invoice CRUD', () => {
-  let ctx: InvoiceContext;
+  let ctx: SharedContext;
   let invoiceId: number;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext();
+    ctx = await BaseTestContext.getSharedContext();
   });
 
   it('should create invoice RC2 input', async () => {
@@ -32,7 +31,7 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
         APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
       )
       .send({
-        fileId: ctx.fileIdForInput,
+        fileId: ctx.invoiceFileIds.input,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,

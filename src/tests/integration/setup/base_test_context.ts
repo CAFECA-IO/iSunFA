@@ -1,6 +1,13 @@
+import fs from 'fs';
+import path from 'path';
+import prisma from '@/client';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-import prisma from '@/client';
+import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import * as cryptoUtils from '@/lib/utils/crypto';
+import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
+import { InvoiceDirection } from '@/constants/invoice_rc2';
 
 /** Info: (20250717 - Tzuhan)
  * 在整個整合測試階段持有「所有測試資料的 ID」
@@ -13,6 +20,10 @@ export interface SharedContext {
   userId: number;
   teamId: number;
   accountBookId: number;
+  invoiceFileIds: {
+    input: number;
+    output: number;
+  };
 }
 
 export class BaseTestContext {
@@ -21,6 +32,15 @@ export class BaseTestContext {
 
   /** Info: (20250717 - Tzuhan) 解決多個 getSharedContext() 併發呼叫時的 race condition */
   private static initializing: Promise<SharedContext> | null = null;
+
+  private static TEST_FILES_DIR = path.resolve(
+    __dirname,
+    '../test_cases/07_invoice_rc2/test_files'
+  );
+
+  private static cacheInput?: IInvoiceRC2Input;
+
+  private static cacheOutput?: IInvoiceRC2Output;
 
   private constructor() {
     /* Info: (20250717 - Tzuhan) 禁止實例化 */
@@ -45,6 +65,10 @@ export class BaseTestContext {
         userId: 0,
         teamId: 0,
         accountBookId: 0,
+        invoiceFileIds: {
+          input: 0,
+          output: 0,
+        },
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
@@ -73,6 +97,11 @@ export class BaseTestContext {
       // Info: (20250717 - Tzuhan) 建立帳本
       const { id: accountBookId, userId, teamId } = await helper.createTestAccountBook();
 
+      const [fileIdForInput, fileIdForOutput] = await Promise.all([
+        BaseTestContext.uploadEncryptedFile('invoice_input', accountBookId),
+        BaseTestContext.uploadEncryptedFile('invoice_output', accountBookId),
+      ]);
+
       Object.assign(this.ctx, {
         helper,
         multiUserHelper,
@@ -80,6 +109,10 @@ export class BaseTestContext {
         userId,
         teamId,
         accountBookId,
+        invoiceFileIds: {
+          input: fileIdForInput,
+          output: fileIdForOutput,
+        },
       });
 
       return this.ctx;
@@ -93,6 +126,66 @@ export class BaseTestContext {
   // -----------------------------------------
   private static ensureCtx() {
     if (!this.ctx) throw new Error('BaseTestContext not initialized yet');
+  }
+
+  private static async uploadEncryptedFile(
+    filename: 'invoice_input' | 'invoice_output',
+    accountBookId: number
+  ): Promise<number> {
+    const pubKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
+    const filePath = path.resolve(process.cwd(), BaseTestContext.TEST_FILES_DIR, `${filename}.png`);
+    const fileBuffer = fs.readFileSync(filePath);
+    const file = new File([fileBuffer], `${filename}.png`, { type: 'image/png' });
+
+    const enc = await cryptoUtils.encryptFileWithPublicKey(file, pubKey!);
+    const tempPath = path.resolve(
+      process.cwd(),
+      BaseTestContext.TEST_FILES_DIR,
+      `temp_encrypted_${filename}.png`
+    );
+
+    const record = await createFile({
+      name: enc.encryptedFile.name,
+      size: enc.encryptedFile.size,
+      mimeType: 'image/png',
+      type: UPLOAD_TYPE_TO_FOLDER_MAP[UploadType.INVOICE],
+      url: tempPath,
+      isEncrypted: true,
+      encryptedSymmetricKey: enc.encryptedSymmetricKey,
+      iv: Buffer.from(enc.iv as Uint8Array),
+    });
+    if (!record?.id) {
+      throw new Error(`upload ${filename} failed, ${JSON.stringify(record)}`);
+    }
+
+    return record.id;
+  }
+
+  static async createInvoice<T extends IInvoiceRC2Base>(direction: InvoiceDirection): Promise<T> {
+    if (direction === InvoiceDirection.INPUT && BaseTestContext.cacheInput) {
+      return BaseTestContext.cacheInput as T;
+    }
+    if (direction === InvoiceDirection.OUTPUT && BaseTestContext.cacheOutput) {
+      return BaseTestContext.cacheOutput as T;
+    }
+    const fileId =
+      direction === InvoiceDirection.INPUT
+        ? this.ctx?.invoiceFileIds.input
+        : this.ctx?.invoiceFileIds.output;
+
+    const invoice = await this.ctx?.helper.createInvoice(
+      direction,
+      this.ctx.accountBookId,
+      fileId!
+    );
+
+    if (direction === InvoiceDirection.INPUT) {
+      this.cacheInput = invoice as IInvoiceRC2Input;
+      return this.cacheInput as T;
+    } else {
+      this.cacheOutput = invoice as IInvoiceRC2Output;
+      return this.cacheOutput as T;
+    }
   }
 
   // -----------------------------------------
