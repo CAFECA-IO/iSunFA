@@ -25,6 +25,7 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
+import { WORK_TAG } from '@/interfaces/account_book';
 
 interface TestResponse {
   status: number;
@@ -655,6 +656,31 @@ export class APITestHelper {
         error: error as Error,
       };
     }
+  }
+
+  async createAccountBook(teamId: number, userId: string) {
+    await this.ensureAuthenticated();
+    const cookies = this.getCurrentSession();
+    const name = `Test_Account_Book_${teamId}_${userId}`;
+
+    const { default: accountBookCreateHandler } = await import(
+      '@/pages/api/v2/user/[userId]/account_book'
+    );
+    const accountBookCreateClient = createTestClient({
+      handler: accountBookCreateHandler,
+      routeParams: { userId },
+    });
+    const response = await accountBookCreateClient
+      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId))
+      .send({
+        name,
+        taxId: Math.random().toString(36).slice(2, 10),
+        tag: WORK_TAG.ALL,
+        teamId: Number(teamId),
+      })
+      .set('Cookie', cookies.join('; '));
+
+    return response;
   }
 
   // Info: (20250711 - Shirley) Create test account book for integration tests
