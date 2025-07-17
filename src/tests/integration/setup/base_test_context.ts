@@ -70,7 +70,7 @@ export class BaseTestContext {
       // Info: (20250717 - Tzuhan) 建立帳本
       // const bookRes = await helper.createAccountBook(teamId, `${userId}`);
       // const accountBookId = bookRes.body.payload!.id as number;
-      const accountBookId = await helper.createTestAccountBook();
+      // const accountBookId = await helper.createTestAccountBook();
 
       Object.assign(this.ctx, {
         helper,
@@ -78,7 +78,7 @@ export class BaseTestContext {
         cookies: helper.getCurrentSession(),
         userId,
         teamId,
-        accountBookId,
+        // accountBookId,
       });
 
       return this.ctx;
