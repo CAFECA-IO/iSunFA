@@ -95,13 +95,7 @@ export class BaseTestContext {
   static async cleanup(): Promise<void> {
     if (!this.ctx) return;
 
-    // 依 FK 先子後母順序刪除，缺省為最佳猜測，可依 Schema 調整
-    const { voucherIds, invoiceIds, accountBookIds, teamIds, userIds } = Registry.getSnapshot();
-
-    // eslint-disable-next-line no-console
-    console.log(
-      `[BaseTestContext] Cleaning up test data: userIds: ${userIds}, teamIds: ${teamIds}, accountBookIds: ${accountBookIds}, invoiceIds: ${invoiceIds}, voucherIds: ${voucherIds}`
-    );
+    const { userIds } = Registry.getSnapshot();
 
     const orphanAccountBookIds = await prisma.company
       .findMany({
@@ -132,106 +126,6 @@ export class BaseTestContext {
       })
       .then((ins) => ins.map((i) => i.id));
 
-    /** Info: (20250709 - Tzuhan) 這裡的 orphanAccountBookIds 和 orphanTeamIds 是從 userIds 推導出來的，
-    const accountingSettingIds = await prisma.accountingSetting
-      .findMany({
-        where: {
-          companyId: { in: orphanAccountBookIds },
-        },
-        select: { id: true },
-      })
-      .then((settings) => settings.map((setting) => setting.id));
-
-    const companySettingIds = await prisma.companySetting
-      .findMany({
-        where: {
-          companyId: { in: orphanAccountBookIds },
-        },
-        select: { id: true },
-      })
-      .then((settings) => settings.map((setting) => setting.id));
-
-    const teamSubscriptionIds = await prisma.teamSubscription
-      .findMany({
-        where: {
-          teamId: { in: orphanTeamIds },
-        },
-        select: { id: true },
-      })
-      .then((subs) => subs.map((sub) => sub.id));
-
-    const teamMemberIds = await prisma.teamMember
-      .findMany({
-        where: {
-          teamId: { in: orphanTeamIds },
-        },
-        select: { id: true },
-      })
-      .then((members) => members.map((member) => member.id));
-
-    const invitedTeamMemberIds = await prisma.inviteTeamMember
-      .findMany({
-        where: {
-          teamId: { in: orphanTeamIds },
-        },
-        select: { id: true },
-      })
-      .then((invites) => invites.map((invite) => invite.id));
-
-    const notificationIds = await prisma.notification
-      .findMany({
-        where: {
-          userId: { in: userIds },
-        },
-        select: { id: true },
-      })
-      .then((notifications) => notifications.map((notification) => notification.id));
-
-    const userActionLogIds = await prisma.userActionLog
-      .findMany({
-        where: {
-          userId: { in: userIds },
-        },
-        select: { id: true },
-      })
-      .then((logs) => logs.map((log) => log.id));
-
-    const userAgreementIds = await prisma.userAgreement
-      .findMany({
-        where: {
-          userId: { in: userIds },
-        },
-        select: { id: true },
-      })
-      .then((agreements) => agreements.map((agreement) => agreement.id));
-
-    const userRoleIds = await prisma.userRole
-      .findMany({
-        where: {
-          userId: { in: userIds },
-        },
-        select: { id: true },
-      })
-      .then((roles) => roles.map((role) => role.id));
-
-    const authenticationIds = await prisma.authentication
-      .findMany({
-        where: {
-          userId: { in: userIds },
-        },
-        select: { id: true },
-      })
-      .then((auths) => auths.map((auth) => auth.id));
-
-    const emailLoginIds = await prisma.emailLogin
-      .findMany({
-        where: {
-          email: { in: TestDataFactory.DEFAULT_TEST_EMAILS },
-        },
-        select: { id: true },
-      })
-      .then((emailLogins) => emailLogins.map((emailLogin) => emailLogin.id));
-*/
     await prisma.$transaction([
       // ── asset_voucher / associate_line_item / voucher_salary_record / invoice_voucher_journal …
       prisma.associateLineItem.deleteMany({
@@ -253,7 +147,6 @@ export class BaseTestContext {
       prisma.assetVoucher.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
       prisma.voucherSalaryRecord.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
       prisma.invoiceVoucherJournal.deleteMany({ where: { voucherId: { in: voucherIdsToPurge } } }),
-
       // ── line_item 直接指 voucher
       prisma.lineItem.deleteMany({
         where: { voucherId: { in: voucherIdsToPurge } },
@@ -262,7 +155,6 @@ export class BaseTestContext {
       prisma.voucher.deleteMany({
         where: { id: { in: voucherIdsToPurge } },
       }),
-
       // ── 如果還有 InvoiceRC2 連到 voucher，要在這裡把 voucherId 置空或一起刪
       prisma.invoiceRC2.updateMany({
         where: { voucherId: { in: voucherIdsToPurge } },
@@ -298,6 +190,8 @@ export class BaseTestContext {
       prisma.user.deleteMany({ where: { id: { in: userIds } } }),
     ]);
 
+    // eslint-disable-next-line no-console
+    console.log('BaseTestContext.cleanup() - All test data purged successfully.');
     await prisma.$disconnect();
   }
 
