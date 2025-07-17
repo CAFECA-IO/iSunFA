@@ -26,8 +26,6 @@ import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
 import { IAccountBookInfo, WORK_TAG } from '@/interfaces/account_book';
-import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
-import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
 import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
 import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 
@@ -733,6 +731,12 @@ export class APITestHelper {
     accountBookId: number,
     fileId: number
   ): Promise<T> {
+    const { default: invoiceInputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/input'
+    );
+    const { default: invoiceOutputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/output'
+    );
     const handler =
       direction === InvoiceDirection.INPUT ? invoiceInputCreateHandler : invoiceOutputCreateHandler;
 
