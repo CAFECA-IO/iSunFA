@@ -1,35 +1,29 @@
-import {
-  clearInvoiceTestContext,
-  createInvoice,
-  getInvoiceTestContext,
-  InvoiceTestContext,
-} from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';
+import { InvoiceContext } from '@/tests/integration/fixtures/invoice_fixture';
+import { getInvoiceTestContext, createInvoice } from '@/tests/integration/fixtures/invoice_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceListHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice';
 import { APIName, APIPath } from '@/constants/api_connection';
 import { validateOutputData } from '@/lib/utils/validator';
 import { InvoiceDirection } from '@/constants/invoice_rc2';
 
-describe('Invoice RC2 - Invoice List (list both input/output invoice', () => {
-  let ctx: InvoiceTestContext;
+describe('Invoice RC2 - Invoice List (list both input/output invoices)', () => {
+  let ctx: InvoiceContext;
 
   beforeAll(async () => {
     ctx = await getInvoiceTestContext();
-    // Deprecated: (20250714 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('ctx.accountBookId', ctx.accountBookId);
+
     await createInvoice(ctx, InvoiceDirection.INPUT);
     await createInvoice(ctx, InvoiceDirection.OUTPUT);
   });
 
-  test.skip('should list input invoices', async () => {
+  it('should list both input and output invoices', async () => {
     const client = createTestClient({
       handler: invoiceListHandler,
       routeParams: { accountBookId: ctx.accountBookId.toString() },
     });
 
     const res = await client
-      .get(`${APIPath.LIST_INVOICE_RC2.replace(':accountBookId', ctx.accountBookId.toString())}`)
+      .get(APIPath.LIST_INVOICE_RC2.replace(':accountBookId', ctx.accountBookId.toString()))
       .query({ page: 1, pageSize: 10 })
       .set('Cookie', ctx.cookies.join('; '))
       .expect(200);
@@ -40,11 +34,8 @@ describe('Invoice RC2 - Invoice List (list both input/output invoice', () => {
       APIName.LIST_INVOICE_RC2,
       res.body.payload
     );
+
     expect(isOutputDataValid).toBe(true);
     expect(outputData).toBeDefined();
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });
