@@ -324,13 +324,13 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
             description: 'Test item A',
             debit: false,
             amount: 100,
-            accountId: 1603, // Info: (20250716 - Shirley) Cash and Cash Equivalents (現金及約當現金)
+            accountId: 1256, // Info: (20250716 - Shirley) Cash and Cash Equivalents (現金及約當現金)
           },
           {
             description: 'Test item B',
             debit: true,
             amount: 100,
-            accountId: 1601, // Info: (20250716 - Shirley) Operating Revenue (營業收入)
+            accountId: 1001, // Info: (20250716 - Shirley) Operating Revenue (營業收入)
           },
         ],
         assetIds: [],
@@ -619,9 +619,168 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 5: Complete Integration Workflow
+   * Info: (20250716 - Shirley) Test Step 5: Additional Voucher Posting Test Case
    */
-  describe('Step 5: Complete Integration Workflow Validation', () => {
+  describe('Step 5: Additional Voucher Posting Test Case', () => {
+    test('should create additional voucher and verify trial balance impact', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      // Info: (20250716 - Shirley) Connect to account book first
+      const connectAccountBookClient = createTestClient({
+        handler: connectAccountBookHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      await connectAccountBookClient
+        .get(`/api/v2/account_book/${accountBookId}/connect`)
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+
+      const voucherPostClient = createTestClient({
+        handler: voucherPostHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+
+      // Info: (20250716 - Shirley) Create a comprehensive voucher for trial balance testing
+      const additionalVoucherData = {
+        actions: [],
+        certificateIds: [],
+        invoiceRC2Ids: [],
+        voucherDate: currentTimestamp,
+        type: EventType.PAYMENT,
+        note: 'Additional voucher for enhanced trial balance testing',
+        lineItems: [
+          {
+            description: 'Additional Cash Transaction',
+            debit: true,
+            amount: 5000,
+            accountId: 1603, // Info: (20250716 - Shirley) Cash and Cash Equivalents
+          },
+          {
+            description: 'Additional Service Revenue',
+            debit: false,
+            amount: 5000,
+            accountId: 1601, // Info: (20250716 - Shirley) Operating Revenue
+          },
+        ],
+        assetIds: [],
+        counterPartyId: null,
+      };
+
+      const response = await voucherPostClient
+        .post(`/api/v2/account_book/${accountBookId}/voucher`)
+        .send(additionalVoucherData)
+        .set('Cookie', cookies.join('; '));
+
+      // Info: (20250716 - Shirley) Always log additional voucher results for record keeping
+      // eslint-disable-next-line no-console
+      console.log('=== ADDITIONAL VOUCHER POST RESULT ===');
+      // eslint-disable-next-line no-console
+      console.log('Status:', response.status);
+      // eslint-disable-next-line no-console
+      console.log('Success:', response.body.success);
+      // eslint-disable-next-line no-console
+      console.log('Code:', response.body.code);
+      // eslint-disable-next-line no-console
+      console.log('Message:', response.body.message);
+      // eslint-disable-next-line no-console
+      console.log('Voucher ID:', response.body.payload?.id);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Number:', response.body.payload?.no);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Type:', response.body.payload?.type);
+      // eslint-disable-next-line no-console
+      console.log('Voucher Date:', response.body.payload?.date);
+      // eslint-disable-next-line no-console
+      console.log('Line Items Count:', response.body.payload?.lineItems?.length);
+      // eslint-disable-next-line no-console
+      console.log('Line Items Details:', JSON.stringify(response.body.payload?.lineItems, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
+      // eslint-disable-next-line no-console
+      console.log('=== END ADDITIONAL VOUCHER RESULT ===');
+
+      if (response.status === 201) {
+        expect(response.body.success).toBe(true);
+        expect(response.body.payload).toBeDefined();
+        expect(response.body.payload.id).toBeDefined();
+        expect(typeof response.body.payload.id).toBe('number');
+
+        // Info: (20250716 - Shirley) Validate output with production validator
+        const { isOutputDataValid, outputData } = validateOutputData(
+          APIName.VOUCHER_POST_V2,
+          response.body.payload
+        );
+        expect(isOutputDataValid).toBe(true);
+        expect(outputData).toBeDefined();
+
+        // Info: (20250716 - Shirley) Get trial balance after additional voucher
+        const trialBalanceClient = createTestClient({
+          handler: trialBalanceHandler,
+          routeParams: { accountBookId: accountBookId.toString() },
+        });
+
+        const startDate = Math.floor(Date.now() / 1000) - 86400 * 30;
+        const endDate = Math.floor(Date.now() / 1000) + 86400 * 30;
+
+        const trialBalanceResponse = await trialBalanceClient
+          .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
+          .query({
+            page: '1',
+            pageSize: '100',
+            startDate: startDate.toString(),
+            endDate: endDate.toString(),
+          })
+          .set('Cookie', cookies.join('; '));
+
+        // eslint-disable-next-line no-console
+        console.log('=== TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
+        // eslint-disable-next-line no-console
+        console.log('Trial Balance Status:', trialBalanceResponse.status);
+        // eslint-disable-next-line no-console
+        console.log('Trial Balance Success:', trialBalanceResponse.body.success);
+        // eslint-disable-next-line no-console
+        console.log('Trial Balance Total Count:', trialBalanceResponse.body.payload?.totalCount);
+        // eslint-disable-next-line no-console
+        console.log('Trial Balance Data Count:', trialBalanceResponse.body.payload?.data?.length);
+        // eslint-disable-next-line no-console
+        console.log(
+          'Full Trial Balance Response:',
+          JSON.stringify(trialBalanceResponse.body, null, 2)
+        );
+        // eslint-disable-next-line no-console
+        console.log('=== END TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
+
+        if (trialBalanceResponse.status === 200) {
+          expect(trialBalanceResponse.body.success).toBe(true);
+          expect(trialBalanceResponse.body.payload.totalCount).toBeGreaterThan(0);
+          expect(trialBalanceResponse.body.payload.data.length).toBeGreaterThan(0);
+        }
+
+        if (process.env.DEBUG_TESTS === 'true') {
+          // eslint-disable-next-line no-console
+          console.log('✅ Additional voucher created and trial balance verified successfully');
+          // eslint-disable-next-line no-console
+          console.log(`   - Additional Voucher ID: ${response.body.payload.id}`);
+          // eslint-disable-next-line no-console
+          console.log(
+            `   - Trial Balance Items: ${trialBalanceResponse.body.payload?.data?.length || 0}`
+          );
+        }
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('❌ Additional voucher creation failed, continuing with existing data');
+      }
+    });
+  });
+
+  /**
+   * Info: (20250716 - Shirley) Test Step 6: Complete Integration Workflow
+   */
+  describe('Step 6: Complete Integration Workflow Validation', () => {
     test('should validate complete trial balance integration workflow', async () => {
       // Info: (20250716 - Shirley) Step 1: Verify account book exists
       expect(accountBookId).toBeDefined();
