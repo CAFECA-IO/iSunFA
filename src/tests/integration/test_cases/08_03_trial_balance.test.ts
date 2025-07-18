@@ -833,6 +833,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
           'Full Trial Balance Response:',
           JSON.stringify(trialBalanceResponse.body, null, 2)
         );
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('=== END TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
 
