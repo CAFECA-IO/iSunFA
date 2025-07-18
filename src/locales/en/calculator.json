@@ -87,6 +87,18 @@
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
     "TOTAL_EMPLOYER_COST": "Total Employer Cost"
   },
+  "MY_PAY_SLIP": {
+    "MAIN_TITLE": "My Pay Slip",
+    "TAB_RECEIVED": "Pay Slip I Received",
+    "TAB_SENT": "Pay Slip I Sent",
+    "SEARCH_PLACEHOLDER": "Search for pay slip",
+    "PAY_PERIOD": "Pay Period",
+    "FROM": "From",
+    "TO": "To",
+    "NET_PAY": "Net Pay",
+    "PAYSLIP_ISSUED_DATE": "Payslip Issued Date",
+    "ACTION": "Action"
+  },
   "BUTTON": {
     "DOWNLOAD": "Download as png",
     "SEND": "Send the Pay Slip",
