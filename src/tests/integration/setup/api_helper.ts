@@ -25,7 +25,9 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
-import { WORK_TAG } from '@/interfaces/account_book';
+import { IAccountBookInfo, WORK_TAG } from '@/interfaces/account_book';
+import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
+import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 
 interface TestResponse {
   status: number;
@@ -684,7 +686,7 @@ export class APITestHelper {
   }
 
   // Info: (20250711 - Shirley) Create test account book for integration tests
-  async createTestAccountBook(): Promise<number> {
+  async createTestAccountBook(): Promise<IAccountBookInfo> {
     const cookies = this.getCurrentSession();
 
     // Info: (20250711 - Shirley) Get user ID from status
@@ -721,6 +723,82 @@ export class APITestHelper {
       .send(accountBookData)
       .set('Cookie', cookies.join('; '));
 
-    return accountBookResponse.body.payload.id;
+    return accountBookResponse.body.payload as IAccountBookInfo;
+  }
+
+  async createInvoice<T extends IInvoiceRC2Base>(
+    direction: InvoiceDirection,
+    accountBookId: number,
+    fileId: number
+  ): Promise<T> {
+    const { default: invoiceInputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/input'
+    );
+    const { default: invoiceOutputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/output'
+    );
+    const handler =
+      direction === InvoiceDirection.INPUT ? invoiceInputCreateHandler : invoiceOutputCreateHandler;
+
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: String(accountBookId) },
+    });
+    const cookies = this.getCurrentSession();
+
+    const res = await client
+      .post(
+        (direction === InvoiceDirection.INPUT
+          ? APIPath.CREATE_INVOICE_RC2_INPUT
+          : APIPath.CREATE_INVOICE_RC2_OUTPUT
+        ).replace(':accountBookId', String(accountBookId))
+      )
+      .send({
+        fileId,
+        direction,
+        isGenerated: false,
+        currencyCode: CurrencyCode.TWD,
+      })
+      .set('Cookie', cookies.join('; '));
+
+    if (!res.body.success) {
+      throw new Error(`invoice creation failed, res.body: ${JSON.stringify(res.body)}`);
+    }
+
+    if (direction === InvoiceDirection.INPUT) {
+      return res.body.payload as IInvoiceRC2Input as T;
+    } else {
+      return res.body.payload as IInvoiceRC2Output as T;
+    }
+  }
+
+  async getPartialAccountList(accountBookId: number): Promise<{
+    debitAccountId: number;
+    creditAccountId: number;
+  }> {
+    const { default: accountListHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/account'
+    );
+
+    const client = createTestClient({
+      handler: accountListHandler,
+      routeParams: { accountBookId: String(accountBookId) },
+    });
+    const cookies = this.getCurrentSession();
+    const res = await client
+      .get(APIPath.ACCOUNT_LIST.replace(':accountBookId', String(accountBookId)))
+      .set('Cookie', cookies.join('; '))
+      .expect(200);
+
+    const { data } = res.body.payload;
+    const [debitAcc, creditAcc] = data;
+    if (!debitAcc || !creditAcc) {
+      throw new Error('Voucher context setup failed: missing account data');
+    }
+
+    return {
+      debitAccountId: debitAcc.id,
+      creditAccountId: creditAcc.id,
+    };
   }
 }

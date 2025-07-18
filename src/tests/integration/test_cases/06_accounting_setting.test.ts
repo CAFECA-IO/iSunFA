@@ -10,7 +10,9 @@ import { z } from 'zod';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { CurrencyType } from '@/constants/currency';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
+/** Info: (20250717 - Tzuhan) 統一在 jest_setup 設定
 // Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
 jest.mock('pusher', () => ({
   // Info: (20250715 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -40,6 +42,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(), // Info: (20250715 - Shirley) 若有呼叫也不做事
   };
 });
+*/
 
 /**
  * Info: (20250715 - Shirley) Integration Test - Accounting Setting Configuration
@@ -62,6 +65,7 @@ jest.mock('@/lib/utils/crypto', () => {
  * Note: Tests follow the Integration Test Plan v2 specification (sections 4.1-4.5) for API behavior validation
  */
 describe('Integration Test - Accounting Setting Configuration', () => {
+  let ctx: SharedContext;
   let authenticatedHelper: APITestHelper;
   let testAccountBookId: number;
   let accountingSettingClient: TestClient;
@@ -69,18 +73,19 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   // let accountByIdClient: TestClient;
 
   beforeAll(async () => {
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    ctx = await BaseTestContext.getSharedContext();
+    authenticatedHelper = ctx.helper;
 
     // Info: (20250711 - Shirley) Complete user registration with default values
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await authenticatedHelper.agreeToTerms();
+    // await authenticatedHelper.createUserRole();
+    // await authenticatedHelper.selectUserRole();
 
     // Info: (20250711 - Shirley) Create a test account book for accounting setting tests
-    testAccountBookId = await authenticatedHelper.createTestAccountBook();
+    testAccountBookId = ctx.accountBookId;
 
     // Info: (20250715 - Shirley) Refresh session to include new team membership
-    await authenticatedHelper.getStatusInfo();
+    // await authenticatedHelper.getStatusInfo();
 
     // Info: (20250711 - Shirley) Initialize test clients
     accountingSettingClient = createTestClient({
@@ -443,7 +448,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
+      // console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate paginated account list structure
       const accountList = outputData as IPaginatedAccount;
@@ -582,7 +587,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(outputData).toBeDefined();
 
       // eslint-disable-next-line no-console
-      console.log('outputData in POST /api/v2/account_book/{accountBookId}/account', outputData);
+      // console.log('outputData in POST /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate created account structure
       const createdAccount = outputData as IAccount;
@@ -914,10 +919,10 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log(
-        'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        createResponse.body
-      );
+      // console.log(
+      //   'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
+      //   createResponse.body
+      // );
 
       expect(createResponse.status).toBe(201);
       testAccountId = createResponse.body.payload.id;
@@ -949,10 +954,10 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Deprecated: (20250715 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log(
-        'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        response.body
-      );
+      // console.log(
+      //   'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
+      //   response.body
+      // );
 
       expect(response.status).toBe(200);
 

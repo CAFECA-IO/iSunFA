@@ -12,6 +12,7 @@ import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator
 import { z } from 'zod';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import prisma from '@/client';
+import { BaseTestContext, SharedContext } from '@/tests/integration/setup/base_test_context';
 
 /**
  * Info: (20250703 - Shirley) Integration Test - Team Management Authentication
@@ -27,6 +28,7 @@ import prisma from '@/client';
  * TODO: Focus on deep API functionality in future test cases
  */
 describe('Integration Test - Team Management Authentication', () => {
+  let ctx: SharedContext;
   let authenticatedHelper: APITestHelper;
   let teamListClient: TestClient;
   let teamCreateClient: TestClient;
@@ -35,16 +37,18 @@ describe('Integration Test - Team Management Authentication', () => {
   let multiUserHelper: APITestHelper;
 
   beforeAll(async () => {
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
+    ctx = await BaseTestContext.getSharedContext();
+    authenticatedHelper = ctx.helper;
 
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
+    // const statusResponse = await authenticatedHelper.getStatusInfo();
+    // const userData = statusResponse.body.payload?.user as { id?: number };
+    // currentUserId = userData?.id?.toString() || '1';
+    currentUserId = String(ctx.userId);
 
     // Info: (20250707 - Shirley) Complete user registration with default values
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
+    // await authenticatedHelper.agreeToTerms();
+    // await authenticatedHelper.createUserRole();
+    // await authenticatedHelper.selectUserRole();
 
     teamCreateClient = createTestClient(teamCreateHandler);
     teamListClient = createTestClient({
@@ -52,14 +56,7 @@ describe('Integration Test - Team Management Authentication', () => {
       routeParams: { userId: currentUserId },
     });
 
-    multiUserHelper = await APITestHelper.createHelper({
-      emails: [
-        TestDataFactory.DEFAULT_TEST_EMAILS[0],
-        TestDataFactory.DEFAULT_TEST_EMAILS[1],
-        TestDataFactory.DEFAULT_TEST_EMAILS[2],
-        TestDataFactory.DEFAULT_TEST_EMAILS[3],
-      ],
-    });
+    multiUserHelper = ctx.multiUserHelper;
   });
 
   afterAll(() => {
