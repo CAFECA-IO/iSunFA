@@ -1,14 +1,14 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// Info: (20250716 - Shirley) Import API handlers for income statement integration testing
+// Info: (20250718 - Shirley) Import API handlers for income statement integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import reportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
-// Info: (20250716 - Shirley) Import required types and constants
+// Info: (20250718 - Shirley) Import required types and constants
 import { WORK_TAG } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
@@ -20,7 +20,7 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
 import { TestClient } from '@/interfaces/test_client';
 
-// Info: (20250716 - Shirley) Mock pusher for testing
+// Info: (20250718 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
   default: jest.fn(() => ({ trigger: jest.fn() })),
@@ -49,7 +49,7 @@ jest.mock('@/lib/utils/crypto', () => {
 });
 
 /**
- * Info: (20250716 - Shirley) Integration Test - Income Statement Report Integration (Test Case 8.1.2)
+ * Info: (20250718 - Shirley) Integration Test - Income Statement Report Integration (Test Case 8.1.2)
  *
  * Primary Purpose:
  * - Test income statement report API functionality and data structure
@@ -78,7 +78,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
-  // Info: (20250716 - Shirley) Test company data
+  // Info: (20250718 - Shirley) Test company data
   const testCompanyData = {
     name: 'Income Statement Test Company 損益表測試公司',
     taxId: randomNumber.toString(),
@@ -96,27 +96,27 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   };
 
   beforeAll(async () => {
-    // Info: (20250716 - Shirley) Setup authenticated helper and complete user registration
+    // Info: (20250718 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     const statusResponse = await authenticatedHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
-    // Info: (20250716 - Shirley) Complete user registration flow
+    // Info: (20250718 - Shirley) Complete user registration flow
     await authenticatedHelper.agreeToTerms();
     await authenticatedHelper.createUserRole();
     await authenticatedHelper.selectUserRole();
 
-    // Info: (20250716 - Shirley) Create team for account book operations
+    // Info: (20250718 - Shirley) Create team for account book operations
     const teamResponse = await authenticatedHelper.createTeam();
     const teamData = teamResponse.body.payload?.team as { id?: number };
     teamId = teamData?.id || 0;
 
-    // Info: (20250716 - Shirley) Update test company data with actual team ID
+    // Info: (20250718 - Shirley) Update test company data with actual team ID
     testCompanyData.teamId = teamId;
 
-    // Info: (20250716 - Shirley) Refresh session to ensure team membership is updated
+    // Info: (20250718 - Shirley) Refresh session to ensure team membership is updated
     await authenticatedHelper.getStatusInfo();
 
     // Info: (20250718 - Shirley) Initialize shared test clients once
@@ -155,7 +155,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   };
 
   afterAll(async () => {
-    // Info: (20250716 - Shirley) Cleanup test data
+    // Info: (20250718 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
@@ -165,7 +165,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 1: Create Account Book
+   * Info: (20250718 - Shirley) Test Step 1: Create Account Book
    */
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
@@ -183,7 +183,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(response.body.payload.name).toBe(testCompanyData.name);
       expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
 
-      // Info: (20250716 - Shirley) Validate output with production validator
+      // Info: (20250718 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.CREATE_ACCOUNT_BOOK,
         response.body.payload
@@ -224,14 +224,14 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 2: Create Sample Vouchers for Income Statement
+   * Info: (20250718 - Shirley) Test Step 2: Create Sample Vouchers for Income Statement
    */
   describe('Step 2: Create Sample Vouchers for Income Statement', () => {
     test('should create income and expense vouchers', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250716 - Shirley) Connect to account book first
+      // Info: (20250718 - Shirley) Connect to account book first
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -243,7 +243,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
       const createdVouchers = [];
 
-      // Info: (20250716 - Shirley) Create all sample vouchers
+      // Info: (20250718 - Shirley) Create all sample vouchers
       for (let i = 0; i < sampleVouchersData.length; i += 1) {
         const voucherData = sampleVouchersData[i];
 
@@ -296,7 +296,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         }
       }
 
-      // Info: (20250716 - Shirley) Verify all vouchers were created
+      // Info: (20250718 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
       // eslint-disable-next-line no-console
@@ -307,7 +307,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 3: Generate Income Statement Report
+   * Info: (20250718 - Shirley) Test Step 3: Generate Income Statement Report
    */
   describe('Step 3: Generate Income Statement Report', () => {
     test('should generate income statement report with proper structure', async () => {
@@ -362,7 +362,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(response.body.payload).toBeDefined();
       expect(response.body.payload.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
 
-      // Info: (20250716 - Shirley) Validate output with production validator
+      // Info: (20250718 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.REPORT_GET_V2,
         response.body.payload
@@ -370,7 +370,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
 
-      // Info: (20250716 - Shirley) Verify income statement specific structure
+      // Info: (20250718 - Shirley) Verify income statement specific structure
       expect(outputData?.company).toBeDefined();
 
       expect(outputData?.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
@@ -412,20 +412,20 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       const incomeStatementData = response.body.payload;
 
-      // Info: (20250716 - Shirley) Detailed income statement validation
+      // Info: (20250718 - Shirley) Detailed income statement validation
       expect(incomeStatementData.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
       expect(incomeStatementData.company).toBeDefined();
       expect(incomeStatementData.company.id).toBe(accountBookId);
       expect(incomeStatementData.company.name).toBe(testCompanyData.name);
       expect(incomeStatementData.company.code).toBe(testCompanyData.taxId);
 
-      // Info: (20250716 - Shirley) Validate date ranges
+      // Info: (20250718 - Shirley) Validate date ranges
       expect(incomeStatementData.curDate).toBeDefined();
       expect(incomeStatementData.preDate).toBeDefined();
       expect(incomeStatementData.curDate.from).toBe(startDate);
       expect(incomeStatementData.curDate.to).toBe(endDate);
 
-      // Info: (20250716 - Shirley) Validate account data structure
+      // Info: (20250718 - Shirley) Validate account data structure
       expect(Array.isArray(incomeStatementData.general)).toBe(true);
       expect(Array.isArray(incomeStatementData.details)).toBe(true);
 
@@ -489,7 +489,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 4: Error Handling and Edge Cases
+   * Info: (20250718 - Shirley) Test Step 4: Error Handling and Edge Cases
    */
   describe('Step 4: Error Handling and Edge Cases', () => {
     test('should handle invalid report type gracefully', async () => {
@@ -549,15 +549,15 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 5: Complete Integration Workflow Validation
+   * Info: (20250718 - Shirley) Test Step 5: Complete Integration Workflow Validation
    */
   describe('Step 5: Complete Integration Workflow Validation', () => {
     test('should validate complete income statement integration workflow', async () => {
-      // Info: (20250716 - Shirley) Step 1: Verify account book exists
+      // Info: (20250718 - Shirley) Step 1: Verify account book exists
       expect(accountBookId).toBeDefined();
       expect(accountBookId).toBeGreaterThan(0);
 
-      // Info: (20250716 - Shirley) Step 2: Verify income statement report API is working
+      // Info: (20250718 - Shirley) Step 2: Verify income statement report API is working
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
@@ -598,7 +598,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       const finalIncomeStatementData = finalIncomeStatementResponse.body.payload;
 
-      // Info: (20250716 - Shirley) Income statement should have proper structure
+      // Info: (20250718 - Shirley) Income statement should have proper structure
       expect(finalIncomeStatementData.company).toBeDefined();
       expect(finalIncomeStatementData.curDate).toBeDefined();
       expect(finalIncomeStatementData.preDate).toBeDefined();
