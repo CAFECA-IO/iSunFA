@@ -739,30 +739,43 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         .set('Cookie', cookies.join('; '));
 
       // Info: (20250716 - Shirley) Always log additional voucher results for record keeping
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== ADDITIONAL VOUCHER POST RESULT ===');
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Status:', response.status);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Success:', response.body.success);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Code:', response.body.code);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Message:', response.body.message);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher ID:', response.body.payload?.id);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Number:', response.body.payload?.no);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Type:', response.body.payload?.type);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Voucher Date:', response.body.payload?.date);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Line Items Count:', response.body.payload?.lineItems?.length);
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Line Items Details:', JSON.stringify(response.body.payload?.lineItems, null, 2));
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
+      // Deprecated: (20250718 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== END ADDITIONAL VOUCHER RESULT ===');
 
@@ -799,16 +812,22 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
           })
           .set('Cookie', cookies.join('; '));
 
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('=== TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Trial Balance Status:', trialBalanceResponse.status);
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Trial Balance Success:', trialBalanceResponse.body.success);
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Trial Balance Total Count:', trialBalanceResponse.body.payload?.totalCount);
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('Trial Balance Data Count:', trialBalanceResponse.body.payload?.data?.length);
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(
           'Full Trial Balance Response:',
@@ -824,16 +843,20 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         }
 
         if (process.env.DEBUG_TESTS === 'true') {
+          // Deprecated: (20250718 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Additional voucher created and trial balance verified successfully');
+          // Deprecated: (20250718 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log(`   - Additional Voucher ID: ${response.body.payload.id}`);
+          // Deprecated: (20250718 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log(
             `   - Trial Balance Items: ${trialBalanceResponse.body.payload?.data?.length || 0}`
           );
         }
       } else {
+        // Deprecated: (20250718 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('❌ Additional voucher creation failed, continuing with existing data');
       }
