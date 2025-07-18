@@ -18,6 +18,7 @@ import { ReportSheetType } from '@/constants/report';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
+import { TestClient } from '@/interfaces/test_client';
 
 // Info: (20250716 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
@@ -68,6 +69,13 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   let teamId: number;
   let accountBookId: number;
 
+  // Info: (20250718 - Shirley) Shared test clients - defined once and reused throughout the test suite
+  let createAccountBookClient: TestClient;
+  let getAccountBookClient: TestClient;
+  let connectAccountBookClient: TestClient;
+  let reportClient: TestClient;
+  let voucherPostClient: TestClient;
+
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
   // Info: (20250716 - Shirley) Test company data
@@ -111,11 +119,40 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     // Info: (20250716 - Shirley) Refresh session to ensure team membership is updated
     await authenticatedHelper.getStatusInfo();
 
+    // Info: (20250718 - Shirley) Initialize shared test clients once
+    createAccountBookClient = createTestClient({
+      handler: createAccountBookHandler,
+      routeParams: { userId: currentUserId },
+    });
+
     if (process.env.DEBUG_TESTS === 'true') {
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
   });
+
+  // Info: (20250718 - Shirley) Initialize clients that depend on accountBookId
+  const initializeAccountBookDependentClients = () => {
+    getAccountBookClient = createTestClient({
+      handler: getAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    connectAccountBookClient = createTestClient({
+      handler: connectAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    reportClient = createTestClient({
+      handler: reportHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    voucherPostClient = createTestClient({
+      handler: voucherPostHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+  };
 
   afterAll(async () => {
     // Info: (20250716 - Shirley) Cleanup test data
@@ -132,11 +169,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
    */
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
-      const createAccountBookClient = createTestClient({
-        handler: createAccountBookHandler,
-        routeParams: { userId: currentUserId },
-      });
-
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
@@ -162,6 +194,9 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       accountBookId = response.body.payload.id;
 
+      // Info: (20250718 - Shirley) Initialize account book dependent clients now that we have accountBookId
+      initializeAccountBookDependentClients();
+
       if (process.env.DEBUG_TESTS === 'true') {
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
@@ -169,11 +204,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     });
 
     test('should verify account book connection', async () => {
-      const getAccountBookClient = createTestClient({
-        handler: getAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
@@ -202,11 +232,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       const cookies = authenticatedHelper.getCurrentSession();
 
       // Info: (20250716 - Shirley) Connect to account book first
-      const connectAccountBookClient = createTestClient({
-        handler: connectAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -214,11 +239,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
-
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
 
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
       const createdVouchers = [];
@@ -293,11 +313,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     test('should generate income statement report with proper structure', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
-
-      const reportClient = createTestClient({
-        handler: reportHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
 
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const startDate = currentTimestamp - 86400 * 365; // 1 year ago
@@ -377,11 +392,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     test('should validate income statement data structure and calculations', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
-
-      const reportClient = createTestClient({
-        handler: reportHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
 
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const startDate = currentTimestamp - 86400 * 365; // 1 year ago
@@ -486,11 +496,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const reportClient = createTestClient({
-        handler: reportHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const startDate = currentTimestamp - 86400 * 365;
       const endDate = currentTimestamp + 86400 * 30;
@@ -527,11 +532,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const reportClient = createTestClient({
-        handler: reportHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       const response = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
         .query({
@@ -558,11 +558,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(accountBookId).toBeGreaterThan(0);
 
       // Info: (20250716 - Shirley) Step 2: Verify income statement report API is working
-      const reportClient = createTestClient({
-        handler: reportHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
@@ -645,11 +640,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
      */
     describe('6.1 Authentication Failure Cases', () => {
       test('should reject unauthenticated requests', async () => {
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
         const endDate = currentTimestamp + 86400 * 30;
@@ -678,11 +668,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       });
 
       test('should reject requests with invalid session cookies', async () => {
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
         const endDate = currentTimestamp + 86400 * 30;
@@ -720,7 +705,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const cookies = authenticatedHelper.getCurrentSession();
 
         const nonExistentAccountBookId = 999999;
-        const reportClient = createTestClient({
+        const nonExistentReportClient = createTestClient({
           handler: reportHandler,
           routeParams: { accountBookId: nonExistentAccountBookId.toString() },
         });
@@ -729,7 +714,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const startDate = currentTimestamp - 86400 * 365;
         const endDate = currentTimestamp + 86400 * 30;
 
-        const response = await reportClient
+        const response = await nonExistentReportClient
           .get(`/api/v2/account_book/${nonExistentAccountBookId}/report`)
           .query({
             reportType: FinancialReportTypesKey.comprehensive_income_statement,
@@ -763,11 +748,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
         const endDate = currentTimestamp + 86400 * 30;
@@ -799,11 +779,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp + 86400 * 30; // 30 days in future
         const endDate = currentTimestamp - 86400 * 365; // 1 year ago (invalid: endDate < startDate)
@@ -834,11 +809,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const response = await reportClient
           .get(`/api/v2/account_book/${accountBookId}/report`)
           .query({
@@ -863,11 +833,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       xtest('should reject invalid language code', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
-
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
 
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
@@ -898,11 +863,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       test('should reject non-numeric date values', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
-
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
 
         const response = await reportClient
           .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -936,11 +896,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const cookies = authenticatedHelper.getCurrentSession();
 
         // Info: (20250718 - Shirley) Create a new account book with no vouchers/transactions
-        const createAccountBookClient = createTestClient({
-          handler: createAccountBookHandler,
-          routeParams: { userId: currentUserId },
-        });
-
         const emptyTestCompanyData = {
           ...testCompanyData,
           name: 'Empty Test Company 空資料測試公司',
@@ -957,7 +912,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const emptyAccountBookId = createResponse.body.payload.id;
 
         // Info: (20250718 - Shirley) Try to generate income statement for empty account book
-        const reportClient = createTestClient({
+        const emptyReportClient = createTestClient({
           handler: reportHandler,
           routeParams: { accountBookId: emptyAccountBookId.toString() },
         });
@@ -966,7 +921,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const startDate = currentTimestamp - 86400 * 365;
         const endDate = currentTimestamp + 86400 * 30;
 
-        const response = await reportClient
+        const response = await emptyReportClient
           .get(`/api/v2/account_book/${emptyAccountBookId}/report`)
           .query({
             reportType: FinancialReportTypesKey.comprehensive_income_statement,
@@ -1003,11 +958,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         // Info: (20250718 - Shirley) Test with very large date range (10 years)
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365 * 10; // 10 years ago
@@ -1037,11 +987,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const sameDate = currentTimestamp;
 
@@ -1068,11 +1013,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       test('should handle all supported language codes', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
-
-        const reportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
 
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
