@@ -125,7 +125,7 @@ const BasicInfoForm: React.FC = () => {
               >
                 <FiSearch size={16} className="text-icon-surface-single-color-primary" />
                 <p className="text-sm font-medium text-input-text-input-placeholder hover:text-input-text-input-hover">
-                  {t('calculator:BASIC_INFO_FORM.EMPLOYEE_LIST')}
+                  {t('calculator:EMPLOYEE_LIST.MAIN_TITLE')}
                 </p>
               </button>
             )}

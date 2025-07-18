@@ -132,7 +132,7 @@ const EmployeeList: React.FC = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col items-center gap-24px">
+      <div className="flex flex-col items-center gap-24px">
         <div className="flex w-full items-center gap-40px">
           {/* Info: (20250715 - Julian) Search bar */}
           <div className="flex flex-1 items-center rounded-sm border border-input-stroke-input">

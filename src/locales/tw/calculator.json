@@ -87,6 +87,18 @@
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
     "TOTAL_EMPLOYER_COST": "雇主總負擔"
   },
+  "MY_PAY_SLIP": {
+    "MAIN_TITLE": "我的薪資單",
+    "TAB_RECEIVED": "我收到的薪資單",
+    "TAB_SENT": "我寄出的薪資單",
+    "SEARCH_PLACEHOLDER": "搜尋薪資單",
+    "PAY_PERIOD": "給付期間",
+    "FROM": "寄件人",
+    "TO": "收件人",
+    "NET_PAY": "淨薪資",
+    "PAYSLIP_ISSUED_DATE": "薪資單發行日期",
+    "ACTION": "操作"
+  },
   "BUTTON": {
     "DOWNLOAD": "下載為 PNG",
     "SEND": "寄出薪資單",
