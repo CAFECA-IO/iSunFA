@@ -2,7 +2,6 @@ import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
-import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import { APIPath } from '@/constants/api_connection';
 import agreementHandler from '@/pages/api/v2/user/[userId]/agreement';
 import roleListHandler from '@/pages/api/v2/role';
@@ -64,7 +63,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //   expect(response.body.success).toBe(true);
     //   expect(response.body.code).toBe('200ISF0002');
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should successfully authenticate with default email and code', async () => {
     //   // Info: (20250701 - Shirley) Complete authentication flow: OTP request -> authentication
@@ -84,7 +82,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //   await apiHelper.createUserRole();
     //   await apiHelper.selectUserRole();
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should authenticate with all default email addresses', async () => {
     //   // Info: (20250703 - Shirley) Test all default emails in the system
@@ -94,7 +91,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //   const successfulAuths = results.filter((result) => result.success);
     //   expect(successfulAuths.length).toBeGreaterThan(0);
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should test individual email authentication and verify with statusInfo', async () => {
     //   // Info: (20250703 - Shirley) Test each default email individually
@@ -137,7 +133,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //     }
     //   }, Promise.resolve());
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should maintain session after authentication', async () => {
     //   // Info: (20250701 - Shirley) Complete authentication
@@ -177,7 +172,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //     expect(payload2.user.email).toBe(TestDataFactory.PRIMARY_TEST_EMAIL);
     //   }
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should complete email authentication flow successfully', async () => {
     //   // Info: (20250701 - Shirley) Test complete authentication flow
@@ -247,7 +241,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //
     //   await otpClient.put('/').expect(200);
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should validate request body for POST authentication (empty code may succeed)', async () => {
     //   // Info: (20250701 - Shirley) Request OTP first
@@ -335,7 +328,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     //     expect(response.status).toBe(200);
     //   });
     // });
-
     // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
     // it('should respond within reasonable time', async () => {
     //   const startTime = Date.now();
