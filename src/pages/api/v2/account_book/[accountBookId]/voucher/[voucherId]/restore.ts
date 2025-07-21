@@ -31,14 +31,14 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const { userId, companyId } = session;
-  const { voucherId } = query;
+  const { userId } = session;
+  const { accountBookId, voucherId } = query;
 
   try {
     const now = getTimestampNow();
     const { can } = await assertUserCanByAccountBook({
       userId,
-      accountBookId: companyId,
+      accountBookId,
       action: TeamPermissionAction.RESTORE_VOUCHER,
     });
 
@@ -49,7 +49,7 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
     }
     const restoredVoucher = await restoreUtils.restoreVoucherAndRelations({
       voucherId,
-      companyId,
+      companyId: accountBookId,
       now,
       userId,
     });
