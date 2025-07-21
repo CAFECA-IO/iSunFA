@@ -489,216 +489,9 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250718 - Shirley) Test Step 4: Error Handling and Edge Cases
+   * Info: (20250718 - Shirley) Test Step 4: Comprehensive Error Handling and Edge Cases
    */
-  describe('Step 4: Error Handling and Edge Cases', () => {
-    test('should handle invalid report type gracefully', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const startDate = currentTimestamp - 86400 * 365;
-      const endDate = currentTimestamp + 86400 * 30;
-
-      const response = await reportClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
-        .query({
-          reportType: 'invalid_report_type',
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          language: 'en',
-        })
-        .set('Cookie', cookies.join('; '));
-
-      // eslint-disable-next-line no-console
-      console.log('=== INVALID REPORT TYPE ERROR HANDLING ===');
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // eslint-disable-next-line no-console
-      console.log('=== END ERROR HANDLING ===');
-
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('422ISF0000');
-    });
-
-    test('should handle invalid date range gracefully', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const response = await reportClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
-        .query({
-          reportType: FinancialReportTypesKey.comprehensive_income_statement,
-          startDate: 'invalid_date',
-          endDate: 'invalid_date',
-          language: 'en',
-        })
-        .set('Cookie', cookies.join('; '));
-
-      expect(response.status).toBe(422);
-      expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('422ISF0000');
-    });
-  });
-
-  /**
-   * Info: (20250718 - Shirley) Test Step 5: Complete Integration Workflow Validation
-   */
-  describe('Step 5: Complete Integration Workflow Validation', () => {
-    test('should validate complete income statement integration workflow', async () => {
-      // Info: (20250718 - Shirley) Step 1: Verify account book exists
-      expect(accountBookId).toBeDefined();
-      expect(accountBookId).toBeGreaterThan(0);
-
-      // Info: (20250718 - Shirley) Step 2: Verify income statement report API is working
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const startDate = currentTimestamp - 86400 * 365;
-      const endDate = currentTimestamp + 86400 * 30;
-
-      const finalIncomeStatementResponse = await reportClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
-        .query({
-          reportType: FinancialReportTypesKey.comprehensive_income_statement,
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          language: 'en',
-        })
-        .set('Cookie', cookies.join('; '));
-
-      // eslint-disable-next-line no-console
-      console.log('=== FINAL INCOME STATEMENT VALIDATION ===');
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Status:', finalIncomeStatementResponse.status);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Success:', finalIncomeStatementResponse.body.success);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Code:', finalIncomeStatementResponse.body.code);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Message:', finalIncomeStatementResponse.body.message);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Payload:', finalIncomeStatementResponse.body.payload);
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL INCOME STATEMENT VALIDATION ===');
-
-      expect(finalIncomeStatementResponse.status).toBe(200);
-      expect(finalIncomeStatementResponse.body.success).toBe(true);
-      expect(finalIncomeStatementResponse.body.payload.reportType).toBe(
-        ReportSheetType.INCOME_STATEMENT
-      );
-
-      const finalIncomeStatementData = finalIncomeStatementResponse.body.payload;
-
-      const nonZeroItems = finalIncomeStatementData.details.filter(
-        (item: {
-          curPeriodAmount: number;
-          prePeriodAmount: number;
-          indent: number;
-          name: string;
-          code: string;
-          accountId: number;
-          children: {
-            curPeriodAmount: number;
-            prePeriodAmount: number;
-            indent: number;
-            name: string;
-            code: string;
-            accountId: number;
-          }[];
-        }) =>
-          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
-          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
-          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
-      );
-      const nonZeroGeneralItems = finalIncomeStatementData.general.filter(
-        (item: {
-          curPeriodAmount: number;
-          prePeriodAmount: number;
-          indent: number;
-          name: string;
-          code: string;
-          accountId: number;
-          children: {
-            curPeriodAmount: number;
-            prePeriodAmount: number;
-            indent: number;
-            name: string;
-            code: string;
-            accountId: number;
-          }[];
-        }) =>
-          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
-          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
-          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
-      );
-
-      const allNonZeroItems = nonZeroItems.concat(nonZeroGeneralItems);
-
-      const expectedBasicChecks = [
-        { accountId: 1369, code: '6213', name: '管理費用 - 旅費', curPeriodAmount: -10000, prePeriodAmount: 0 },
-        { accountId: 1056, code: '6200', name: '管理費用', curPeriodAmount: -10000, prePeriodAmount: 0 },
-        { accountId: 1009, code: '6000', name: '營業費用合計', curPeriodAmount: -10000, prePeriodAmount: 0 },
-        { accountId: 1011, code: '6900', name: '營業利益（損失）', curPeriodAmount: 10000, prePeriodAmount: 0 },
-        {
-          accountId: 1013,
-          code: '7900',
-          name: '繼續營業單位稅前淨利（淨損）',
-          curPeriodAmount: 10000,
-          prePeriodAmount: 0,
-        },
-        {
-          accountId: 1015,
-          code: '8000',
-          name: '繼續營業單位本期淨利（淨損）',
-          curPeriodAmount: 10000,
-          prePeriodAmount: 0,
-        },
-        { accountId: 1018, code: '8200', name: '本期淨利（淨損）', curPeriodAmount: 10000, prePeriodAmount: 0 },
-        { accountId: 1021, code: '8500', name: '本期綜合損益總額', curPeriodAmount: 10000, prePeriodAmount: 0 },
-      ];
-
-      expectedBasicChecks.forEach((expectedItem) => {
-        expect(allNonZeroItems).toContainEqual(expect.objectContaining(expectedItem));
-      });
-
-      // Info: (20250718 - Shirley) Income statement should have proper structure
-      expect(finalIncomeStatementData.company).toBeDefined();
-      expect(finalIncomeStatementData.curDate).toBeDefined();
-      expect(finalIncomeStatementData.preDate).toBeDefined();
-      expect(finalIncomeStatementData.general).toBeDefined();
-      expect(finalIncomeStatementData.details).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete income statement workflow validated successfully');
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Company Name: ${finalIncomeStatementData.company.name}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Report Type: ${finalIncomeStatementData.reportType}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - General Items: ${finalIncomeStatementData.general.length}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Detail Items: ${finalIncomeStatementData.details.length}`);
-      }
-    });
-  });
-
-  /**
-   * Info: (20250718 - Shirley) Test Step 6: Comprehensive Failure Test Cases
-   * Following Integration Test Plan v2 - Section 8.1.4: Common Financial Report Failure Cases
-   */
-  describe('Step 6: Comprehensive Failure Test Cases', () => {
+  describe('Step 4: Comprehensive Error Handling and Edge Cases', () => {
     // Info: (20250718 - Shirley) Define standard error response schema for validation
     const errorResponseSchema = z.object({
       success: z.literal(false),
@@ -708,9 +501,9 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     });
 
     /**
-     * Info: (20250718 - Shirley) Test Case 6.1: Authentication Failure Cases
+     * Info: (20250718 - Shirley) Test Case 4.1: Authentication Failure Cases
      */
-    describe('6.1 Authentication Failure Cases', () => {
+    describe('4.1 Authentication Failure Cases', () => {
       test('should reject unauthenticated requests', async () => {
         const currentTimestamp = Math.floor(Date.now() / 1000);
         const startDate = currentTimestamp - 86400 * 365;
@@ -768,55 +561,10 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     });
 
     /**
-     * Info: (20250718 - Shirley) Test Case 6.2: Authorization Failure Cases
+     * Info: (20250718 - Shirley) Test Case 4.2: Input Validation Failure Cases
      */
-    // TODO: (20250718 - Shirley) Report API test authentication and authorization by session companyId instead of parameter accountBookId, discuss if this needs to be changed
-    xtest('6.2 Authorization Failure Cases', () => {
-      test('should reject access to non-existent account book', async () => {
-        await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const nonExistentAccountBookId = 999999;
-        const nonExistentReportClient = createTestClient({
-          handler: reportHandler,
-          routeParams: { accountBookId: nonExistentAccountBookId.toString() },
-        });
-
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const startDate = currentTimestamp - 86400 * 365;
-        const endDate = currentTimestamp + 86400 * 30;
-
-        const response = await nonExistentReportClient
-          .get(`/api/v2/account_book/${nonExistentAccountBookId}/report`)
-          .query({
-            reportType: FinancialReportTypesKey.comprehensive_income_statement,
-            startDate: startDate.toString(),
-            endDate: endDate.toString(),
-            language: 'en',
-          })
-          .set('Cookie', cookies.join('; '));
-
-        // eslint-disable-next-line no-console
-        console.log('responseIn6.2', response.body);
-
-        expect(response.status).toBe(403);
-
-        const validatedError = validateAndFormatData(errorResponseSchema, response.body);
-        expect(validatedError.success).toBe(false);
-        expect(validatedError.code).toBe('403ISF0000'); // Forbidden
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Non-existent account book access properly rejected with 403');
-        }
-      });
-    });
-
-    /**
-     * Info: (20250718 - Shirley) Test Case 6.3: Input Validation Failure Cases
-     */
-    describe('6.3 Input Validation Failure Cases', () => {
-      test('should reject invalid reportType parameter', async () => {
+    describe('4.2 Input Validation Failure Cases', () => {
+      test('should handle invalid report type gracefully', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
 
@@ -827,7 +575,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const response = await reportClient
           .get(`/api/v2/account_book/${accountBookId}/report`)
           .query({
-            reportType: 'completely_invalid_report_type',
+            reportType: 'invalid_report_type',
             startDate: startDate.toString(),
             endDate: endDate.toString(),
             language: 'en',
@@ -835,10 +583,8 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           .set('Cookie', cookies.join('; '));
 
         expect(response.status).toBe(422);
-
-        const validatedError = validateAndFormatData(errorResponseSchema, response.body);
-        expect(validatedError.success).toBe(false);
-        expect(validatedError.code).toBe('422ISF0000'); // Invalid input parameter
+        expect(response.body.success).toBe(false);
+        expect(response.body.code).toBe('422ISF0000');
 
         if (process.env.DEBUG_TESTS === 'true') {
           // eslint-disable-next-line no-console
@@ -846,35 +592,23 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         }
       });
 
-      // TODO: (20250718 - Shirley) It'll succeed if we test date range validation by startDate and endDate parameters
-      xtest('should reject invalid date range (endDate < startDate)', async () => {
+      test('should handle invalid date range gracefully', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const startDate = currentTimestamp + 86400 * 30; // 30 days in future
-        const endDate = currentTimestamp - 86400 * 365; // 1 year ago (invalid: endDate < startDate)
 
         const response = await reportClient
           .get(`/api/v2/account_book/${accountBookId}/report`)
           .query({
             reportType: FinancialReportTypesKey.comprehensive_income_statement,
-            startDate: startDate.toString(),
-            endDate: endDate.toString(),
+            startDate: 'invalid_date',
+            endDate: 'invalid_date',
             language: 'en',
           })
           .set('Cookie', cookies.join('; '));
 
         expect(response.status).toBe(422);
-
-        const validatedError = validateAndFormatData(errorResponseSchema, response.body);
-        expect(validatedError.success).toBe(false);
-        expect(validatedError.code).toBe('422ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid date range (endDate < startDate) properly rejected with 422');
-        }
+        expect(response.body.success).toBe(false);
+        expect(response.body.code).toBe('422ISF0000');
       });
 
       test('should reject missing required parameters', async () => {
@@ -898,37 +632,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         if (process.env.DEBUG_TESTS === 'true') {
           // eslint-disable-next-line no-console
           console.log('✅ Missing required parameters properly rejected with 422');
-        }
-      });
-
-      // TODO: (20250718 - Shirley) It'll succeed if we test language code validation by language parameter
-      xtest('should reject invalid language code', async () => {
-        await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000);
-        const startDate = currentTimestamp - 86400 * 365;
-        const endDate = currentTimestamp + 86400 * 30;
-
-        const response = await reportClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
-          .query({
-            reportType: FinancialReportTypesKey.comprehensive_income_statement,
-            startDate: startDate.toString(),
-            endDate: endDate.toString(),
-            language: 'invalid_language_code',
-          })
-          .set('Cookie', cookies.join('; '));
-
-        expect(response.status).toBe(422);
-
-        const validatedError = validateAndFormatData(errorResponseSchema, response.body);
-        expect(validatedError.success).toBe(false);
-        expect(validatedError.code).toBe('422ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid language code properly rejected with 422');
         }
       });
 
@@ -960,9 +663,9 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     });
 
     /**
-     * Info: (20250718 - Shirley) Test Case 6.4: Business Logic Failure Cases
+     * Info: (20250718 - Shirley) Test Case 4.3: Business Logic and Edge Cases
      */
-    describe('6.4 Business Logic Failure Cases', () => {
+    describe('4.3 Business Logic and Edge Cases', () => {
       test('should handle account book with no accounting data gracefully', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
@@ -1020,12 +723,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         expect(Array.isArray(outputData?.general)).toBe(true);
         expect(Array.isArray(outputData?.details)).toBe(true);
       });
-    });
 
-    /**
-     * Info: (20250718 - Shirley) Test Case 6.5: Edge Cases and Boundary Conditions
-     */
-    describe('6.5 Edge Cases and Boundary Conditions', () => {
       test('should handle extremely large date ranges', async () => {
         await authenticatedHelper.ensureAuthenticated();
         const cookies = authenticatedHelper.getCurrentSession();
@@ -1117,4 +815,116 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       });
     });
   });
+
+  /**
+   * Info: (20250718 - Shirley) Test Step 5: Complete Integration Workflow Validation
+   */
+  describe('Step 5: Complete Integration Workflow Validation', () => {
+    test('should validate complete income statement integration workflow', async () => {
+      // Info: (20250718 - Shirley) Step 1: Verify account book exists
+      expect(accountBookId).toBeDefined();
+      expect(accountBookId).toBeGreaterThan(0);
+
+      // Info: (20250718 - Shirley) Step 2: Verify income statement report API is working
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const startDate = currentTimestamp - 86400 * 365;
+      const endDate = currentTimestamp + 86400 * 30;
+
+      const finalIncomeStatementResponse = await reportClient
+        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .query({
+          reportType: FinancialReportTypesKey.comprehensive_income_statement,
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+          language: 'en',
+        })
+        .set('Cookie', cookies.join('; '));
+
+      // eslint-disable-next-line no-console
+      console.log('=== FINAL INCOME STATEMENT VALIDATION ===');
+      // eslint-disable-next-line no-console
+      console.log('Final Income Statement Status:', finalIncomeStatementResponse.status);
+      // eslint-disable-next-line no-console
+      console.log('Final Income Statement Success:', finalIncomeStatementResponse.body.success);
+      // eslint-disable-next-line no-console
+      console.log('Final Income Statement Code:', finalIncomeStatementResponse.body.code);
+      // eslint-disable-next-line no-console
+      console.log('Final Income Statement Message:', finalIncomeStatementResponse.body.message);
+      // eslint-disable-next-line no-console
+      console.log('Final Income Statement Payload:', finalIncomeStatementResponse.body.payload);
+      // eslint-disable-next-line no-console
+      console.log('=== END FINAL INCOME STATEMENT VALIDATION ===');
+
+      expect(finalIncomeStatementResponse.status).toBe(200);
+      expect(finalIncomeStatementResponse.body.success).toBe(true);
+      expect(finalIncomeStatementResponse.body.payload.reportType).toBe(
+        ReportSheetType.INCOME_STATEMENT
+      );
+
+      const finalIncomeStatementData = finalIncomeStatementResponse.body.payload;
+
+      // Info: (20250721 - Shirley) Filter non-zero items for validation
+      const nonZeroItems = finalIncomeStatementData.details.filter(
+        (item: {
+          curPeriodAmount: number;
+          prePeriodAmount: number;
+          children: {
+            curPeriodAmount: number;
+            prePeriodAmount: number;
+          }[];
+        }) =>
+          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
+          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
+          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
+      );
+      const nonZeroGeneralItems = finalIncomeStatementData.general.filter(
+        (item: {
+          curPeriodAmount: number;
+          prePeriodAmount: number;
+          children: {
+            curPeriodAmount: number;
+            prePeriodAmount: number;
+          }[];
+        }) =>
+          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
+          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
+          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
+      );
+
+      const allNonZeroItems = nonZeroItems.concat(nonZeroGeneralItems);
+
+      // Info: (20250721 - Shirley) Get expected income statement items from TestDataFactory
+      const expectedBasicChecks = TestDataFactory.expectedIncomeStatementItems();
+
+      expectedBasicChecks.forEach((expectedItem) => {
+        expect(allNonZeroItems).toContainEqual(expect.objectContaining(expectedItem));
+      });
+
+      // Info: (20250718 - Shirley) Income statement should have proper structure
+      expect(finalIncomeStatementData.company).toBeDefined();
+      expect(finalIncomeStatementData.curDate).toBeDefined();
+      expect(finalIncomeStatementData.preDate).toBeDefined();
+      expect(finalIncomeStatementData.general).toBeDefined();
+      expect(finalIncomeStatementData.details).toBeDefined();
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // eslint-disable-next-line no-console
+        console.log('✅ Complete income statement workflow validated successfully');
+        // eslint-disable-next-line no-console
+        console.log(`   - Account Book ID: ${accountBookId}`);
+        // eslint-disable-next-line no-console
+        console.log(`   - Company Name: ${finalIncomeStatementData.company.name}`);
+        // eslint-disable-next-line no-console
+        console.log(`   - Report Type: ${finalIncomeStatementData.reportType}`);
+        // eslint-disable-next-line no-console
+        console.log(`   - General Items: ${finalIncomeStatementData.general.length}`);
+        // eslint-disable-next-line no-console
+        console.log(`   - Detail Items: ${finalIncomeStatementData.details.length}`);
+      }
+    });
+  });
+
 });
