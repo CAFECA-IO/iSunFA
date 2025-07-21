@@ -226,4 +226,33 @@ export class TestDataFactory {
 
     return sampleVouchersData;
   }
+
+  /**
+   * Info: (20250721 - Shirley) Expected income statement account items for integration test validation
+   * Returns the expected account data that should appear in income statement after posting sample vouchers
+   */
+  static expectedIncomeStatementItems() {
+    return [
+      { accountId: 1369, code: '6213', name: '管理費用 - 旅費', curPeriodAmount: -10000, prePeriodAmount: 0 },
+      { accountId: 1056, code: '6200', name: '管理費用', curPeriodAmount: -10000, prePeriodAmount: 0 },
+      { accountId: 1009, code: '6000', name: '營業費用合計', curPeriodAmount: -10000, prePeriodAmount: 0 },
+      { accountId: 1011, code: '6900', name: '營業利益（損失）', curPeriodAmount: 10000, prePeriodAmount: 0 },
+      {
+        accountId: 1013,
+        code: '7900',
+        name: '繼續營業單位稅前淨利（淨損）',
+        curPeriodAmount: 10000,
+        prePeriodAmount: 0,
+      },
+      {
+        accountId: 1015,
+        code: '8000',
+        name: '繼續營業單位本期淨利（淨損）',
+        curPeriodAmount: 10000,
+        prePeriodAmount: 0,
+      },
+      { accountId: 1018, code: '8200', name: '本期淨利（淨損）', curPeriodAmount: 10000, prePeriodAmount: 0 },
+      { accountId: 1021, code: '8500', name: '本期綜合損益總額', curPeriodAmount: 10000, prePeriodAmount: 0 },
+    ];
+  }
 }
