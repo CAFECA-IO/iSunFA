@@ -617,19 +617,58 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         }) =>
           (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
           (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
-          item.children.some(
-            (child) =>
-              child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0 || item.code === '6200'
-          )
+          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
+      );
+      const nonZeroGeneralItems = finalIncomeStatementData.general.filter(
+        (item: {
+          curPeriodAmount: number;
+          prePeriodAmount: number;
+          indent: number;
+          name: string;
+          code: string;
+          accountId: number;
+          children: {
+            curPeriodAmount: number;
+            prePeriodAmount: number;
+            indent: number;
+            name: string;
+            code: string;
+            accountId: number;
+          }[];
+        }) =>
+          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
+          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
+          item.children.some((child) => child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0)
       );
 
-      const expectedSamples = {
-        accountId: 1369,
-        code: '6213',
-        name: '管理費用 - 旅費',
-        curPeriodAmount: -10000,
-      };
-      expect(nonZeroItems).toContainEqual(expect.objectContaining(expectedSamples));
+      const allNonZeroItems = nonZeroItems.concat(nonZeroGeneralItems);
+
+      const expectedBasicChecks = [
+        { accountId: 1369, code: '6213', name: '管理費用 - 旅費', curPeriodAmount: -10000, prePeriodAmount: 0 },
+        { accountId: 1056, code: '6200', name: '管理費用', curPeriodAmount: -10000, prePeriodAmount: 0 },
+        { accountId: 1009, code: '6000', name: '營業費用合計', curPeriodAmount: -10000, prePeriodAmount: 0 },
+        { accountId: 1011, code: '6900', name: '營業利益（損失）', curPeriodAmount: 10000, prePeriodAmount: 0 },
+        {
+          accountId: 1013,
+          code: '7900',
+          name: '繼續營業單位稅前淨利（淨損）',
+          curPeriodAmount: 10000,
+          prePeriodAmount: 0,
+        },
+        {
+          accountId: 1015,
+          code: '8000',
+          name: '繼續營業單位本期淨利（淨損）',
+          curPeriodAmount: 10000,
+          prePeriodAmount: 0,
+        },
+        { accountId: 1018, code: '8200', name: '本期淨利（淨損）', curPeriodAmount: 10000, prePeriodAmount: 0 },
+        { accountId: 1021, code: '8500', name: '本期綜合損益總額', curPeriodAmount: 10000, prePeriodAmount: 0 },
+      ];
+
+      expectedBasicChecks.forEach((expectedItem) => {
+        expect(allNonZeroItems).toContainEqual(expect.objectContaining(expectedItem));
+      });
 
       // Info: (20250718 - Shirley) Income statement should have proper structure
       expect(finalIncomeStatementData.company).toBeDefined();
