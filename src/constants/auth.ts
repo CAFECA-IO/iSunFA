@@ -92,7 +92,6 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_STATUS]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_V2]: [AuthFunctionsKeysNew.user],
-  [APIName.VOUCHER_WAS_READ_V2]: [AuthFunctionsKeysNew.user],
   [APIName.JOURNAL_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.REPORT_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.REPORT_GET_BY_ID]: [AuthFunctionsKeysNew.user],

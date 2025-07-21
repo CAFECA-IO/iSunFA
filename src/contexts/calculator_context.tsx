@@ -8,22 +8,10 @@ type TabStep = {
 };
 
 const defaultTabSteps: TabStep[] = [
-  {
-    step: 1,
-    completed: false,
-  },
-  {
-    step: 2,
-    completed: false,
-  },
-  {
-    step: 3,
-    completed: false,
-  },
-  {
-    step: 4,
-    completed: false,
-  },
+  { step: 1, completed: true }, // Info: (20250714 - Julian) 由第一步開始，所以第一步永遠為已完成
+  { step: 2, completed: false },
+  { step: 3, completed: false },
+  { step: 4, completed: false },
 ];
 
 interface ICalculatorContext {
@@ -33,6 +21,10 @@ interface ICalculatorContext {
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
   salaryCalculator: ISalaryCalculator;
+
+  // Info: (20250714 - Julian) 表單選項
+  yearOptions: string[];
+  monthOptions: MonthType[];
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -46,6 +38,10 @@ interface ICalculatorContext {
   workedDays: number;
   // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
   setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
+
+  // Info: (20250709 - Julian) 是否有姓名錯誤
+  isNameError: boolean;
+  setIsNameError: React.Dispatch<React.SetStateAction<boolean>>;
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state 和 functions
   // 以下皆使用 Dispatch 來更新 state
@@ -93,6 +89,15 @@ export interface ICalculatorProvider {
 export const CalculatorContext = createContext<ICalculatorContext | undefined>(undefined);
 
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
+  // Info: (20250714 - Julian) 計算機的表單選項
+  const thisYear = new Date().getFullYear();
+  // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
+  const yearGap = thisYear - 2025 + 1;
+  const yearOptions = Array.from({ length: yearGap }, (_, i) => `${i + 2025}`).reverse();
+
+  // Info: (20250714 - Julian) 月份選項：只顯示 1 月到 6 月
+  const monthOptions = MONTHS.slice(0, 6);
+
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
@@ -103,9 +108,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
-  const [selectedYear, setSelectedYear] = useState<string>('2025');
-  const [selectedMonth, setSelectedMonth] = useState<MonthType>(MONTHS[0]);
+  const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
+  const [selectedMonth, setSelectedMonth] = useState<MonthType>(monthOptions[0]);
   const [workedDays, setWorkedDays] = useState<number>(31);
+
+  // Info: (20250711 - Julian) 是否有姓名錯誤
+  const [isNameError, setIsNameError] = useState<boolean>(false);
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
   const [baseSalary, setBaseSalary] = useState<number>(0);
@@ -132,11 +140,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   useEffect(() => {
     // Info: (20250710 - Julian) 計算總加班時數
     const totalOvertime =
-      oneHours * 1 +
-      oneAndOneThirdHours * 1.34 +
-      oneAndTwoThirdsHours * 1.67 +
-      twoHours * 2 +
-      twoAndTwoThirdsHours * 2.67;
+      oneHours + oneAndOneThirdHours + oneAndTwoThirdsHours + twoHours + twoAndTwoThirdsHours;
 
     setTotalOvertimeHours(totalOvertime);
   }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
@@ -149,53 +153,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
-    // Info: (20250710 - Julian) 檢查當前步驟是否已完成
-    switch (currentStep) {
-      case 1:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查員工姓名是否已填寫
-          const isCompleted = employeeName !== '';
-          const updatedSteps = prev.map((s) => {
-            return s.step === 1 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      case 2:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查基本薪資是否已填寫
-          const isCompleted = baseSalary !== 0;
-          const updatedSteps = prev.map((s) => {
-            return s.step === 2 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      case 3:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查工作時數是否已填寫
-          const isCompleted = totalOvertimeHours !== 0 || totalLeaveHours !== 0;
-          const updatedSteps = prev.map((s) => {
-            return s.step === 3 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      case 4:
-        setCompleteSteps((prev) => {
-          // Info: (20250710 - Julian) 檢查其他調整是否已填寫
-          const isCompleted =
-            nhiBackPremium !== 0 || secondGenNhiTax !== 0 || otherAdjustments !== 0;
-          const updatedSteps = prev.map((s) => {
-            return s.step === 4 ? { ...s, completed: isCompleted } : s;
-          });
-          return updatedSteps;
-        });
-        break;
-      default:
-        break;
-    }
+    // Info: (20250714 - Julian) 將當前步驟標記為已完成
+    setCompleteSteps((prev) => {
+      const updatedSteps = prev.map((s) => {
+        return s.step === step ? { ...s, completed: true } : s;
+      });
+      return updatedSteps;
+    });
 
+    // Info: (20250714 - Julian) 如果步驟超出範圍，則限制在 1 到 4 之間
     const targetStep = step > 4 ? 4 : step < 1 ? 1 : step;
     setCurrentStep(targetStep);
   };
@@ -205,8 +171,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName('');
     setEmployeeNumber('');
-    setSelectedYear('2025');
-    setSelectedMonth(MONTHS[0]);
+    setSelectedYear(yearOptions[0]);
+    setSelectedMonth(monthOptions[0]);
     setWorkedDays(31);
     setBaseSalary(0);
     setMealAllowance(0);
@@ -229,11 +195,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
+    setIsNameError(false);
   };
 
   // Info: (20250709 - Julian) =========== 基本資訊相關 state 和 functions ===========
   const changeEmployeeName = (name: string) => {
     setEmployeeName(name);
+    setIsNameError(name === ''); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
   };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
@@ -254,6 +222,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   const value = useMemo(
     () => ({
+      yearOptions,
+      monthOptions,
       currentStep,
       completeSteps,
       salaryCalculator,
@@ -275,6 +245,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setMealAllowance,
       otherAllowance,
       setOtherAllowance,
+      isNameError,
+      setIsNameError,
       oneHours,
       setOneHours,
       oneAndOneThirdHours,
@@ -301,6 +273,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeVoluntaryPensionContribution,
     }),
     [
+      yearOptions,
+      monthOptions,
       currentStep,
       completeSteps,
       salaryCalculator,
@@ -312,6 +286,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       baseSalary,
       mealAllowance,
       otherAllowance,
+      isNameError,
       oneHours,
       oneAndOneThirdHours,
       oneAndTwoThirdsHours,

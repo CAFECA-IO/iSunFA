@@ -15,7 +15,7 @@ import { CurrencyType } from '@/constants/currency';
 
 // Info: (20250711 - Shirley) Mock pusher and crypto for account book testing
 jest.mock('pusher', () => ({
-  // 建構子 → 回傳只有 trigger 的假物件
+  // Info: (20250711 - Shirley) 建構子 → 回傳只有 trigger 的假物件
   __esModule: true,
   default: jest.fn(() => ({ trigger: jest.fn() })),
 }));
@@ -168,7 +168,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
       const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidData = {
-        // Missing name, taxId, tag, teamId
+        // Info: (20250711 - Shirley) Missing name, taxId, tag, teamId
         businessLocation: LocaleKey.tw,
       };
 
@@ -188,7 +188,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
       const invalidTeamData = {
         ...validAccountBookData,
-        teamId: 99999, // Non-existent team ID
+        teamId: 99999, // Info: (20250711 - Shirley) Non-existent team ID
       };
 
       const response = await createAccountBookClient
@@ -359,7 +359,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
     test('Failure: Missing action type', async () => {
       const invalidData = {
         name: 'Test Update',
-        // Missing required action field
+        // Info: (20250711 - Shirley) Missing required action field
       };
 
       await authenticatedHelper.ensureAuthenticated();
