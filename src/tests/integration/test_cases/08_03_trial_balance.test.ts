@@ -1,11 +1,12 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// Info: (20250716 - Shirley) Import API handlers for trial balance integration testing
+// Info: (20250721 - Shirley) Import API handlers for trial balance integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import trialBalanceHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance';
+import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance/export';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250716 - Shirley) Import required types and constants
@@ -109,6 +110,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     await authenticatedHelper.getStatusInfo();
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
@@ -119,6 +121,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test cleanup completed');
     }
@@ -160,6 +163,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       accountBookId = response.body.payload.id;
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
       }
@@ -184,6 +188,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book connection verified');
       }
@@ -248,9 +253,11 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
             type: voucherData.type,
             lineItems: voucherData.lineItems,
           });
+          // Deprecated: (20250730 - Shirley) Remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
         } else {
+          // Deprecated: (20250730 - Shirley) Remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ Voucher creation failed:', response.body.message);
         }
@@ -259,6 +266,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       // Info: (20250721 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
         `\n🎉 Successfully created ${createdVouchers.length} vouchers for trial balance test`
@@ -307,8 +315,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(outputData).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Trial balance report generated successfully');
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Total Items: ${response.body.payload.totalCount}`);
       }
@@ -434,14 +444,195 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(finalTrialBalanceData.hasPreviousPage).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Complete workflow validated successfully');
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Account Book ID: ${accountBookId}`);
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Trial Balance Items: ${finalTrialBalanceData.data.length}`);
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Total Count: ${finalTrialBalanceData.totalCount}`);
+      }
+    });
+  });
+
+  /**
+   * Info: (20250721 - Shirley) Test Step 5: Trial Balance Export Testing
+   */
+  describe('Step 5: Trial Balance Export Testing', () => {
+    test('should export trial balance to CSV format', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          startDate,
+          endDate,
+        },
+        options: {
+          fields: [
+            'accountingTitle',
+            'no',
+            'beginningDebitAmount',
+            'beginningCreditAmount',
+            'midtermDebitAmount',
+            'midtermCreditAmount',
+            'endingDebitAmount',
+            'endingCreditAmount',
+          ],
+        },
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('text/csv');
+      expect(response.headers['content-disposition']).toContain('attachment');
+      expect(response.headers['content-disposition']).toContain('trial_balance_');
+
+      // Info: (20250721 - Shirley) Validate CSV content structure
+      const csvContent = response.text;
+      console.log('csvContent', csvContent); // Deprecated: (20250730 - Shirley) Remove console.log in production
+
+      expect(csvContent).toBeDefined();
+      expect(typeof csvContent).toBe('string');
+      expect(csvContent.length).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Check CSV headers are present (may be in Chinese)
+      const lines = csvContent.split('\n');
+      expect(lines.length).toBeGreaterThan(1);
+      const headers = lines[0];
+      // Info: (20250721 - Shirley) Headers may be in Chinese or English depending on system
+      expect(headers).toBeDefined();
+      expect(headers.length).toBeGreaterThan(0);
+      // Info: (20250721 - Shirley) Verify there are multiple columns separated by commas
+      const columnCount = headers.split(',').length;
+      expect(columnCount).toBeGreaterThanOrEqual(8); // Should have at least 8 fields
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Trial balance CSV export successful');
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Lines Count: ${lines.length}`);
+      }
+    });
+
+    test('should handle invalid file type for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'pdf', // Invalid file type
+        filters: {
+          startDate: 1753027200,
+          endDate: 1753113599,
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Invalid file type properly rejected');
+      }
+    });
+
+    test('should handle missing date parameters for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          // Missing startDate and endDate
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Missing date parameters properly rejected');
+      }
+    });
+
+    test('should handle export without authentication', async () => {
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          startDate: 1753027200,
+          endDate: 1753113599,
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData);
+      // No authentication cookies
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Unauthenticated export request properly rejected');
       }
     });
   });
