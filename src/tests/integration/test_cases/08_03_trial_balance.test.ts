@@ -508,22 +508,53 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
       // Info: (20250721 - Shirley) Validate CSV content structure
       const csvContent = response.text;
-      console.log('csvContent', csvContent); // Deprecated: (20250730 - Shirley) Remove console.log in production
 
       expect(csvContent).toBeDefined();
       expect(typeof csvContent).toBe('string');
       expect(csvContent.length).toBeGreaterThan(0);
 
-      // Info: (20250721 - Shirley) Check CSV headers are present (may be in Chinese)
-      const lines = csvContent.split('\n');
+      // Info: (20250721 - Shirley) Parse CSV content and convert to JSON for comparison
+      const lines = csvContent.split('\n').filter((line) => line.trim().length > 0);
       expect(lines.length).toBeGreaterThan(1);
-      const headers = lines[0];
-      // Info: (20250721 - Shirley) Headers may be in Chinese or English depending on system
-      expect(headers).toBeDefined();
-      expect(headers.length).toBeGreaterThan(0);
-      // Info: (20250721 - Shirley) Verify there are multiple columns separated by commas
-      const columnCount = headers.split(',').length;
-      expect(columnCount).toBeGreaterThanOrEqual(8); // Should have at least 8 fields
+
+      const headers = lines[0].split(',');
+      expect(headers.length).toBeGreaterThanOrEqual(8);
+
+      // Info: (20250721 - Shirley) Convert CSV to JSON format for comparison
+      const csvData = lines.slice(1).map((line) => {
+        const values = line.split(',');
+        return {
+          accountingTitle: values[0],
+          no: values[1],
+          beginningDebitAmount: parseInt(values[2], 10) || 0,
+          beginningCreditAmount: parseInt(values[3], 10) || 0,
+          midtermDebitAmount: parseInt(values[4], 10) || 0,
+          midtermCreditAmount: parseInt(values[5], 10) || 0,
+          endingDebitAmount: parseInt(values[6], 10) || 0,
+          endingCreditAmount: parseInt(values[7], 10) || 0,
+        };
+      });
+
+      // Info: (20250721 - Shirley) Get expected data from TestDataFactory for comparison
+      const expectedData = TestDataFactory.expectedTrialBalanceData();
+
+      // Info: (20250721 - Shirley) Compare CSV data with expected data
+      expect(csvData.length).toBe(expectedData.payload.data.length);
+
+      expectedData.payload.data.forEach((expectedItem) => {
+        const csvItem = csvData.find((item) => item.no === expectedItem.no);
+        expect(csvItem).toBeDefined();
+
+        if (csvItem) {
+          expect(csvItem.accountingTitle).toBe(expectedItem.accountingTitle);
+          expect(csvItem.beginningDebitAmount).toBe(expectedItem.beginningDebitAmount);
+          expect(csvItem.beginningCreditAmount).toBe(expectedItem.beginningCreditAmount);
+          expect(csvItem.midtermDebitAmount).toBe(expectedItem.midtermDebitAmount);
+          expect(csvItem.midtermCreditAmount).toBe(expectedItem.midtermCreditAmount);
+          expect(csvItem.endingDebitAmount).toBe(expectedItem.endingDebitAmount);
+          expect(csvItem.endingCreditAmount).toBe(expectedItem.endingCreditAmount);
+        }
+      });
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250730 - Shirley) Remove eslint-disable
