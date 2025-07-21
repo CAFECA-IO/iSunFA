@@ -265,23 +265,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           .send(voucherPayload)
           .set('Cookie', cookies.join('; '));
 
-        // eslint-disable-next-line no-console
-        console.log(`=== VOUCHER ${i + 1} FOR INCOME STATEMENT POST RESULT ===`);
-        // eslint-disable-next-line no-console
-        console.log('Status:', response.status);
-        // eslint-disable-next-line no-console
-        console.log('Success:', response.body.success);
-        // eslint-disable-next-line no-console
-        console.log('Type:', voucherData.type);
-        // eslint-disable-next-line no-console
-        console.log('Note:', voucherData.note);
-        // eslint-disable-next-line no-console
-        console.log('Line Items:', voucherData.lineItems.length);
-        // eslint-disable-next-line no-console
-        console.log('Full Response:', JSON.stringify(response.body, null, 2));
-        // eslint-disable-next-line no-console
-        console.log('=== END VOUCHER RESULT ===');
-
         if (response.status === 201) {
           createdVouchers.push({
             id: response.body.payload.id,
@@ -327,35 +310,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           language: 'en',
         })
         .set('Cookie', cookies.join('; '));
-
-      // eslint-disable-next-line no-console
-      console.log('=== INCOME STATEMENT REPORT RESULT ===');
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // eslint-disable-next-line no-console
-      console.log('Report Type:', response.body.payload?.reportType);
-      // eslint-disable-next-line no-console
-      console.log('Company:', response.body.payload?.company);
-      // eslint-disable-next-line no-console
-      console.log('Current Period:', response.body.payload?.curDate);
-      // eslint-disable-next-line no-console
-      console.log('Previous Period:', response.body.payload?.preDate);
-      // eslint-disable-next-line no-console
-      console.log('General Items Count:', response.body.payload?.general?.length);
-      // eslint-disable-next-line no-console
-      console.log('Detail Items Count:', response.body.payload?.details?.length);
-      // eslint-disable-next-line no-console
-      console.log('Other Info:', response.body.payload?.otherInfo);
-      // eslint-disable-next-line no-console
-      console.log('Full Response:', JSON.stringify(response.body, null, 2));
-      // eslint-disable-next-line no-console
-      console.log('=== END INCOME STATEMENT REPORT RESULT ===');
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -428,63 +382,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       // Info: (20250718 - Shirley) Validate account data structure
       expect(Array.isArray(incomeStatementData.general)).toBe(true);
       expect(Array.isArray(incomeStatementData.details)).toBe(true);
-
-      // eslint-disable-next-line no-console
-      console.log('\n=== INCOME STATEMENT DETAILED ANALYSIS ===');
-      // eslint-disable-next-line no-console
-      console.log('📊 Report Summary:');
-      // eslint-disable-next-line no-console
-      console.log(
-        `   Company: ${incomeStatementData.company.name} (${incomeStatementData.company.code})`
-      );
-      // eslint-disable-next-line no-console
-      console.log(
-        `   Period: ${new Date(startDate * 1000).toLocaleDateString()} to ${new Date(endDate * 1000).toLocaleDateString()}`
-      );
-      // eslint-disable-next-line no-console
-      console.log(`   General Items: ${incomeStatementData.general.length}`);
-      // eslint-disable-next-line no-console
-      console.log(`   Detail Items: ${incomeStatementData.details.length}`);
-
-      if (incomeStatementData.general.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log('\n💰 General Income Statement Items:');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        incomeStatementData.general.forEach((item: any, index: number) => {
-          // eslint-disable-next-line no-console
-          console.log(`${index + 1}. ${item.no} - ${item.accountingTitle}`);
-          // eslint-disable-next-line no-console
-          console.log(`   Current: ${item.curPeriodAmount?.toLocaleString() || 0}`);
-          // eslint-disable-next-line no-console
-          console.log(`   Previous: ${item.prePeriodAmount?.toLocaleString() || 0}`);
-        });
-      }
-
-      if (incomeStatementData.details.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log('\n📋 Detailed Income Statement Items:');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        incomeStatementData.details.forEach((item: any, index: number) => {
-          // eslint-disable-next-line no-console
-          console.log(`${index + 1}. ${item.no} - ${item.accountingTitle}`);
-          // eslint-disable-next-line no-console
-          console.log(`   Current: ${item.curPeriodAmount?.toLocaleString() || 0}`);
-          // eslint-disable-next-line no-console
-          console.log(`   Previous: ${item.prePeriodAmount?.toLocaleString() || 0}`);
-        });
-      }
-
-      // eslint-disable-next-line no-console
-      console.log('\n📈 Other Information:');
-      // eslint-disable-next-line no-console
-      console.log('Other Info:', JSON.stringify(incomeStatementData.otherInfo, null, 2));
-      // eslint-disable-next-line no-console
-      console.log('=== END INCOME STATEMENT DETAILED ANALYSIS ===');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // eslint-disable-next-line no-console
-        console.log('✅ Income statement data structure validated successfully');
-      }
     });
   });
 
@@ -552,11 +449,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('401ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid session properly rejected with 401');
-        }
       });
     });
 
@@ -585,11 +477,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         expect(response.status).toBe(422);
         expect(response.body.success).toBe(false);
         expect(response.body.code).toBe('422ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid reportType properly rejected with 422');
-        }
       });
 
       test('should handle invalid date range gracefully', async () => {
@@ -628,11 +515,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Missing required parameters properly rejected with 422');
-        }
       });
 
       test('should reject non-numeric date values', async () => {
@@ -654,11 +536,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // eslint-disable-next-line no-console
-          console.log('✅ Non-numeric date values properly rejected with 422');
-        }
       });
     });
 
@@ -843,21 +720,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         })
         .set('Cookie', cookies.join('; '));
 
-      // eslint-disable-next-line no-console
-      console.log('=== FINAL INCOME STATEMENT VALIDATION ===');
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Status:', finalIncomeStatementResponse.status);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Success:', finalIncomeStatementResponse.body.success);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Code:', finalIncomeStatementResponse.body.code);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Message:', finalIncomeStatementResponse.body.message);
-      // eslint-disable-next-line no-console
-      console.log('Final Income Statement Payload:', finalIncomeStatementResponse.body.payload);
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL INCOME STATEMENT VALIDATION ===');
-
       expect(finalIncomeStatementResponse.status).toBe(200);
       expect(finalIncomeStatementResponse.body.success).toBe(true);
       expect(finalIncomeStatementResponse.body.payload.reportType).toBe(
@@ -909,22 +771,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(finalIncomeStatementData.preDate).toBeDefined();
       expect(finalIncomeStatementData.general).toBeDefined();
       expect(finalIncomeStatementData.details).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete income statement workflow validated successfully');
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Company Name: ${finalIncomeStatementData.company.name}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Report Type: ${finalIncomeStatementData.reportType}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - General Items: ${finalIncomeStatementData.general.length}`);
-        // eslint-disable-next-line no-console
-        console.log(`   - Detail Items: ${finalIncomeStatementData.details.length}`);
-      }
     });
   });
-
 });
