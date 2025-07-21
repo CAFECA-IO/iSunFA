@@ -598,6 +598,39 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       const finalIncomeStatementData = finalIncomeStatementResponse.body.payload;
 
+      const nonZeroItems = finalIncomeStatementData.details.filter(
+        (item: {
+          curPeriodAmount: number;
+          prePeriodAmount: number;
+          indent: number;
+          name: string;
+          code: string;
+          accountId: number;
+          children: {
+            curPeriodAmount: number;
+            prePeriodAmount: number;
+            indent: number;
+            name: string;
+            code: string;
+            accountId: number;
+          }[];
+        }) =>
+          (item.curPeriodAmount && item.curPeriodAmount !== 0) ||
+          (item.prePeriodAmount && item.prePeriodAmount !== 0) ||
+          item.children.some(
+            (child) =>
+              child.curPeriodAmount !== 0 || child.prePeriodAmount !== 0 || item.code === '6200'
+          )
+      );
+
+      const expectedSamples = {
+        accountId: 1369,
+        code: '6213',
+        name: '管理費用 - 旅費',
+        curPeriodAmount: -10000,
+      };
+      expect(nonZeroItems).toContainEqual(expect.objectContaining(expectedSamples));
+
       // Info: (20250718 - Shirley) Income statement should have proper structure
       expect(finalIncomeStatementData.company).toBeDefined();
       expect(finalIncomeStatementData.curDate).toBeDefined();
