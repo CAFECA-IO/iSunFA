@@ -1,7 +1,6 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// API handlers
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
@@ -19,32 +18,7 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
 import { TestClient } from '@/interfaces/test_client';
 
-// mock external dependencies
-jest.mock('pusher', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({ trigger: jest.fn() })),
-}));
-jest.mock('@/lib/utils/crypto', () => {
-  const real = jest.requireActual('@/lib/utils/crypto');
-  const keyPairPromise = crypto.subtle.generateKey(
-    {
-      name: 'RSA-OAEP',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-    },
-    true,
-    ['encrypt', 'decrypt']
-  );
-  return {
-    ...real,
-    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
-    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
-    storeKeyByCompany: jest.fn(),
-  };
-});
-
-describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8.2)', () => {
+describe('Integration Test - Cash Flow Statement Report Integration', () => {
   let helper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
@@ -94,7 +68,6 @@ describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8
     });
   });
 
-  // initialize clients that depend on accountBookId
   const initClients = () => {
     getAccountBookClient = createTestClient({
       handler: getAccountBookHandler,
@@ -115,7 +88,7 @@ describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8
   };
 
   afterAll(async () => {
-    await helper.clearSession();
+    helper.clearSession();
   });
 
   describe('Step 1: Account Book Creation', () => {
@@ -155,7 +128,6 @@ describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8
       await helper.ensureAuthenticated();
       const cookies = helper.getCurrentSession();
 
-      // connect first
       const conn = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -291,7 +263,6 @@ describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8
       await helper.ensureAuthenticated();
       const cookies = helper.getCurrentSession();
 
-      // create empty book
       const emptyData = { ...testCompanyData, taxId: `${Date.now()}`, name: 'Empty CF Co.' };
       const cr = await createAccountBookClient
         .post(`/api/v2/user/${currentUserId}/account_book`)
@@ -340,7 +311,6 @@ describe('Integration Test - Cash Flow Statement Report Integration (Test Case 8
         .expect(200);
 
       const data = res.body.payload;
-      // filter non-zero
       const nonZero = [...data.general, ...data.details].filter(
         (item) => item.curPeriodAmount !== 0 || item.prePeriodAmount !== 0
       );

@@ -35,11 +35,11 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
     await helper.createUserRole();
     await helper.selectUserRole();
 
-    // 建立 Team
+    // Info: (20250721 - Tzuhan) 建立 Team
     const teamResp = await helper.createTeam();
     teamId = (teamResp.body.payload as { id: number }).id;
 
-    // 建立 Account Book
+    // Info: (20250721 - Tzuhan) 建立 Account Book
     const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
     const testCompany = {
       name: `Voucher Test Co.`,
@@ -68,7 +68,7 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       .expect(200);
     accountBookId = bookRes.body.payload.id;
 
-    // 準備 Voucher POST 的 body
+    // Info: (20250721 - Tzuhan) 準備 Voucher POST 的 body
     payload = {
       actions: [],
       certificateIds: [],
@@ -174,7 +174,7 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       .expect(200);
 
     expect(res.body.success).toBe(true);
-    // 刪除後 payload 可為 null 或 undefined
+    // Info: (20250721 - Tzuhan) 刪除後 payload 可為 null 或 undefined
   });
 
   it('POST /voucher/:id/restore → 還原剛才刪除的 Voucher', async () => {
@@ -212,11 +212,11 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    // 用前端的 Zod schema 驗證整體結構
+    // Info: (20250721 - Tzuhan) 用前端的 Zod schema 驗證整體結構
     const parsed = FrontendSchema.safeParse(res.body.payload);
     expect(parsed.success).toBe(true);
 
-    // 確認剛剛新增的 voucherId 在列表中
+    // Info: (20250721 - Tzuhan) 確認剛剛新增的 voucherId 在列表中
     const list = parsed.data?.data as Array<{ id: number }>;
     expect(list.some((v) => v.id === voucherId)).toBe(true);
   });
@@ -241,7 +241,7 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       .set('Cookie', cookies.join('; '))
       .expect(200);
 
-    // 這裡不使用 Zod schema，只簡單檢查 data array 長度
+    // Info: (20250721 - Tzuhan) 這裡不使用 Zod schema，只簡單檢查 data array 長度
     expect(Array.isArray(res.body.payload.data)).toBe(true);
     expect(res.body.payload.data.length).toBeGreaterThan(0);
   });
