@@ -1,11 +1,12 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// Info: (20250716 - Shirley) Import API handlers for trial balance integration testing
+// Info: (20250721 - Shirley) Import API handlers for trial balance integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import trialBalanceHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance';
+import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance/export';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250716 - Shirley) Import required types and constants
@@ -14,7 +15,6 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
-import { EventType } from '@/constants/account';
 import { TrialBalanceItem } from '@/interfaces/trial_balance';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 
@@ -47,19 +47,18 @@ jest.mock('@/lib/utils/crypto', () => {
 });
 
 /**
- * Info: (20250716 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
+ * Info: (20250721 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
  *
  * Primary Purpose:
  * - Test trial balance API functionality and data structure
  * - Verify trial balance calculation after voucher posting
- * - Ensure proper API response validation
+ * - Ensure proper API response validation with expected data
  * - Test trial balance with actual voucher data
  *
  * Test Flow:
  * 1. User Authentication and Account Book Setup
- * 2. Trial Balance API Testing (empty scenario)
- * 3. Voucher Posting
- * 4. Trial Balance Verification After Voucher
+ * 2. Voucher Posting for Trial Balance Data
+ * 3. Trial Balance Report Generation and Validation
  */
 describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   let authenticatedHelper: APITestHelper;
@@ -111,7 +110,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     await authenticatedHelper.getStatusInfo();
 
     if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
@@ -122,7 +121,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test cleanup completed');
     }
@@ -164,7 +163,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       accountBookId = response.body.payload.id;
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
       }
@@ -189,7 +188,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book connection verified');
       }
@@ -197,112 +196,14 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   });
 
   /**
-   * Info: (20250716 - Shirley) Test Step 2: Trial Balance API Testing
+   * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Trial Balance
    */
-  describe('Step 2: Trial Balance API Testing', () => {
-    test('should generate trial balance with proper structure (empty data)', async () => {
-      const trialBalanceClient = createTestClient({
-        handler: trialBalanceHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
+  describe('Step 2: Create Sample Vouchers for Trial Balance', () => {
+    test('should create vouchers and verify trial balance data', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const response = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
-        .query({
-          page: '1',
-          pageSize: '50',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.data).toBeDefined();
-      expect(Array.isArray(response.body.payload.data)).toBe(true);
-
-      // Info: (20250716 - Shirley) Validate trial balance structure
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.TRIAL_BALANCE_LIST,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData?.data).toBeDefined();
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== TRIAL BALANCE EMPTY DATA RESULT ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Total Count:', response.body.payload.totalCount);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Data Items:', response.body.payload.data.length);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Full Response:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END TRIAL BALANCE EMPTY DATA RESULT ===');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          '✅ Trial balance generated successfully with',
-          outputData?.data?.length,
-          'items'
-        );
-      }
-    });
-
-    test('should handle trial balance pagination', async () => {
-      const trialBalanceClient = createTestClient({
-        handler: trialBalanceHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const response = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
-        .query({
-          page: '1',
-          pageSize: '10',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload.page).toBe(1);
-      expect(response.body.payload.pageSize).toBe(10);
-      expect(response.body.payload.totalPages).toBeDefined();
-      expect(response.body.payload.hasNextPage).toBeDefined();
-      expect(response.body.payload.hasPreviousPage).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Trial balance pagination verified');
-      }
-    });
-  });
-
-  /**
-   * Info: (20250716 - Shirley) Test Step 3: Voucher Posting and Trial Balance Verification
-   */
-  describe('Step 3: Voucher Posting and Trial Balance Verification', () => {
-    test('should create income voucher and verify trial balance', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      // Info: (20250716 - Shirley) Connect to account book first to ensure proper session
+      // Info: (20250721 - Shirley) Connect to account book first
       const connectAccountBookClient = createTestClient({
         handler: connectAccountBookHandler,
         routeParams: { accountBookId: accountBookId.toString() },
@@ -321,188 +222,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-
-      // Info: (20250716 - Shirley) Test voucher data structure
-      const testVoucherData = {
-        actions: [],
-        certificateIds: [],
-        invoiceRC2Ids: [],
-        voucherDate: currentTimestamp,
-        type: EventType.PAYMENT,
-        note: 'Test voucher for trial balance integration',
-        lineItems: [
-          {
-            description: 'Test item A',
-            debit: false,
-            amount: 100,
-            accountId: 1256, // Info: (20250716 - Shirley) Cash and Cash Equivalents (現金及約當現金)
-          },
-          {
-            description: 'Test item B',
-            debit: true,
-            amount: 100,
-            accountId: 1001, // Info: (20250716 - Shirley) Operating Revenue (營業收入)
-          },
-        ],
-        assetIds: [],
-        counterPartyId: null,
-      };
-
-      const response = await voucherPostClient
-        .post(`/api/v2/account_book/${accountBookId}/voucher`)
-        .send(testVoucherData)
-        .set('Cookie', cookies.join('; '));
-
-      // Info: (20250716 - Shirley) Always log income voucher results for record keeping
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== INCOME VOUCHER POST RESULT ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher ID:', response.body.payload?.id);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Number:', response.body.payload?.no);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Type:', response.body.payload?.type);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Date:', response.body.payload?.date);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Line Items Count:', response.body.payload?.lineItems?.length);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END INCOME VOUCHER RESULT ===');
-
-      expect(response.status).toBe(201);
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.id).toBeDefined();
-      expect(typeof response.body.payload.id).toBe('number');
-
-      // Info: (20250716 - Shirley) Validate output with production validator
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.VOUCHER_POST_V2,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-      }
-
-      // Info: (20250716 - Shirley) Verify trial balance after voucher creation
-      const trialBalanceClient = createTestClient({
-        handler: trialBalanceHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      // Info: (20250716 - Shirley) Use explicit date range that includes voucher dates
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 30; // Info: (20250716 - Shirley) 30 days ago
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 30; // Info: (20250716 - Shirley) 30 days from now
-
-      const trialBalanceResponse = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
-        .query({
-          page: '1',
-          pageSize: '50',
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-        })
-        .set('Cookie', cookies.join('; '));
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== TRIAL BALANCE AFTER INCOME VOUCHER POST ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Trial Balance Status:', trialBalanceResponse.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Trial Balance Success:', trialBalanceResponse.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Trial Balance Code:', trialBalanceResponse.body.code);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Trial Balance Message:', trialBalanceResponse.body.message);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Trial Balance Payload:', trialBalanceResponse.body.payload);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Query used:', { startDate, endDate, page: '1', pageSize: '50' });
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Full Response Body:', JSON.stringify(trialBalanceResponse.body, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END TRIAL BALANCE VERIFICATION ===');
-
-      if (trialBalanceResponse.status !== 200) {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Trial balance API failed, skipping assertions');
-        return;
-      }
-
-      expect(trialBalanceResponse.status).toBe(200);
-      expect(trialBalanceResponse.body.success).toBe(true);
-      expect(trialBalanceResponse.body.payload.totalCount).toBeGreaterThan(0);
-      expect(trialBalanceResponse.body.payload.data.length).toBeGreaterThan(0);
-    });
-  });
-
-  /**
-   * Info: (20250716 - Shirley) Test Step 4: Financial Report Sample Data Testing
-   */
-  describe('Step 4: Financial Report Sample Data Testing', () => {
-    test('should create vouchers based on sample data and verify trial balance', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      // Info: (20250716 - Shirley) Connect to account book first
-      const connectAccountBookClient = createTestClient({
-        handler: connectAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await connectAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}/connect`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
-
       const createdVouchers = [];
 
-      // Info: (20250716 - Shirley) Create all sample vouchers
+      // Info: (20250721 - Shirley) Create all sample vouchers
       for (let i = 0; i < sampleVouchersData.length; i += 1) {
         const voucherData = sampleVouchersData[i];
 
@@ -518,40 +241,11 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
           counterPartyId: null,
         };
 
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         const response = await voucherPostClient
           .post(`/api/v2/account_book/${accountBookId}/voucher`)
           .send(voucherPayload)
           .set('Cookie', cookies.join('; '));
-
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`=== SAMPLE VOUCHER ${i + 1} POST RESULT ===`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Status:', response.status);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Success:', response.body.success);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Type:', voucherData.type);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Line Items:', voucherData.lineItems.length);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          'Total Amount:',
-          voucherData.lineItems.reduce((sum, item) => sum + item.amount, 0)
-        );
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          'Accounts Used:',
-          voucherData.lineItems.map((item) => item.accountId).join(', ')
-        );
 
         if (response.status === 201) {
           createdVouchers.push({
@@ -559,36 +253,44 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
             type: voucherData.type,
             lineItems: voucherData.lineItems,
           });
-          // Deprecated: (20250716 - Luphia) remove eslint-disable
+          // Deprecated: (20250730 - Shirley) Remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
         } else {
-          // Deprecated: (20250716 - Luphia) remove eslint-disable
+          // Deprecated: (20250730 - Shirley) Remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ Voucher creation failed:', response.body.message);
         }
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('=== END SAMPLE VOUCHER RESULT ===');
       }
 
-      // Info: (20250716 - Shirley) Verify all vouchers were created
+      // Info: (20250721 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log(`\n🎉 Successfully created ${createdVouchers.length} sample vouchers`);
+      console.log(
+        `\n🎉 Successfully created ${createdVouchers.length} vouchers for trial balance test`
+      );
+    });
+  });
 
-      // Info: (20250716 - Shirley) Get trial balance after all vouchers are created
+  /**
+   * Info: (20250721 - Shirley) Test Step 3: Generate Trial Balance Report
+   */
+  describe('Step 3: Generate Trial Balance Report', () => {
+    test('should generate trial balance report with proper structure', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
       const trialBalanceClient = createTestClient({
         handler: trialBalanceHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 365; // Info: (20250716 - Shirley) 1 year ago
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 30; // Info: (20250716 - Shirley) 30 days from now
+      const startDate = 1753027200;
+      const endDate = 1753113599;
 
-      const trialBalanceResponse = await trialBalanceClient
+      const response = await trialBalanceClient
         .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
         .query({
           page: '1',
@@ -598,347 +300,370 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         })
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== FINAL TRIAL BALANCE WITH SAMPLE DATA 123 ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', trialBalanceResponse.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', trialBalanceResponse.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Total Items:', trialBalanceResponse.body.payload?.totalCount || 0);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Data Items:', trialBalanceResponse.body.payload?.data?.length || 0);
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.payload).toBeDefined();
+      expect(response.body.payload.data).toBeDefined();
+      expect(Array.isArray(response.body.payload.data)).toBe(true);
 
-      if (trialBalanceResponse.body.payload?.data) {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('\n📊 Trial Balance Summary:');
-
-        const trialBalanceData = trialBalanceResponse.body.payload.data;
-        let totalDebitAmount = 0;
-        let totalCreditAmount = 0;
-
-        trialBalanceData.forEach((item: TrialBalanceItem, index: number) => {
-          const debitAmount = item.endingDebitAmount || 0;
-          const creditAmount = item.endingCreditAmount || 0;
-
-          if (debitAmount > 0 || creditAmount > 0) {
-            // Deprecated: (20250716 - Luphia) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.log(`${index + 1}. Account ${item.no} (${item.accountingTitle}):`);
-            // Deprecated: (20250716 - Luphia) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.log(
-              `   Debit: ${debitAmount.toLocaleString()}, Credit: ${creditAmount.toLocaleString()}`
-            );
-
-            totalDebitAmount += debitAmount;
-            totalCreditAmount += creditAmount;
-          }
-        });
-
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('\n💰 Total Amounts:');
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`Total Debit Amount: ${totalDebitAmount.toLocaleString()}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`Total Credit Amount: ${totalCreditAmount.toLocaleString()}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          `Balance Check: ${totalDebitAmount === totalCreditAmount ? '✅ Balanced' : '❌ Unbalanced'}`
-        );
-      }
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL TRIAL BALANCE ===');
-
-      expect(trialBalanceResponse.status).toBe(200);
-      expect(trialBalanceResponse.body.success).toBe(true);
-      expect(trialBalanceResponse.body.payload.totalCount).toBeGreaterThan(0);
-      expect(trialBalanceResponse.body.payload.data.length).toBeGreaterThan(0);
+      // Info: (20250721 - Shirley) Validate output with production validator
+      const { isOutputDataValid, outputData } = validateOutputData(
+        APIName.TRIAL_BALANCE_LIST,
+        response.body.payload
+      );
+      expect(isOutputDataValid).toBe(true);
+      expect(outputData).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log(`✅ Sample data test completed successfully`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        console.log('✅ Trial balance report generated successfully');
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log(`   - Created vouchers: ${createdVouchers.length}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Trial balance items: ${trialBalanceResponse.body.payload.data.length}`);
+        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
       }
     });
-  });
 
-  /**
-   * Info: (20250716 - Shirley) Test Step 5: Additional Voucher Posting Test Case
-   */
-  describe('Step 5: Additional Voucher Posting Test Case', () => {
-    test('should create additional voucher and verify trial balance impact', async () => {
+    test('should validate trial balance data structure and calculations', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250716 - Shirley) Connect to account book first
-      const connectAccountBookClient = createTestClient({
-        handler: connectAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await connectAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}/connect`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-
-      // Info: (20250716 - Shirley) Create a comprehensive voucher for trial balance testing
-      const additionalVoucherData = {
-        actions: [],
-        certificateIds: [],
-        invoiceRC2Ids: [],
-        voucherDate: currentTimestamp,
-        type: EventType.PAYMENT,
-        note: 'Additional voucher for enhanced trial balance testing',
-        lineItems: [
-          {
-            description: 'Additional Cash Transaction',
-            debit: true,
-            amount: 5000,
-            accountId: 1603, // Info: (20250716 - Shirley) Cash and Cash Equivalents
-          },
-          {
-            description: 'Additional Service Revenue',
-            debit: false,
-            amount: 5000,
-            accountId: 1601, // Info: (20250716 - Shirley) Operating Revenue
-          },
-        ],
-        assetIds: [],
-        counterPartyId: null,
-      };
-
-      const response = await voucherPostClient
-        .post(`/api/v2/account_book/${accountBookId}/voucher`)
-        .send(additionalVoucherData)
-        .set('Cookie', cookies.join('; '));
-
-      // Info: (20250716 - Shirley) Always log additional voucher results for record keeping
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== ADDITIONAL VOUCHER POST RESULT ===');
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher ID:', response.body.payload?.id);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Number:', response.body.payload?.no);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Type:', response.body.payload?.type);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Date:', response.body.payload?.date);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Line Items Count:', response.body.payload?.lineItems?.length);
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Line Items Details:', JSON.stringify(response.body.payload?.lineItems, null, 2));
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250718 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END ADDITIONAL VOUCHER RESULT ===');
-
-      if (response.status === 201) {
-        expect(response.body.success).toBe(true);
-        expect(response.body.payload).toBeDefined();
-        expect(response.body.payload.id).toBeDefined();
-        expect(typeof response.body.payload.id).toBe('number');
-
-        // Info: (20250716 - Shirley) Validate output with production validator
-        const { isOutputDataValid, outputData } = validateOutputData(
-          APIName.VOUCHER_POST_V2,
-          response.body.payload
-        );
-        expect(isOutputDataValid).toBe(true);
-        expect(outputData).toBeDefined();
-
-        // Info: (20250716 - Shirley) Get trial balance after additional voucher
-        const trialBalanceClient = createTestClient({
-          handler: trialBalanceHandler,
-          routeParams: { accountBookId: accountBookId.toString() },
-        });
-
-        const startDate = Math.floor(Date.now() / 1000) - 86400 * 30;
-        const endDate = Math.floor(Date.now() / 1000) + 86400 * 30;
-
-        const trialBalanceResponse = await trialBalanceClient
-          .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
-          .query({
-            page: '1',
-            pageSize: '100',
-            startDate: startDate.toString(),
-            endDate: endDate.toString(),
-          })
-          .set('Cookie', cookies.join('; '));
-
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('=== TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Trial Balance Status:', trialBalanceResponse.status);
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Trial Balance Success:', trialBalanceResponse.body.success);
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Trial Balance Total Count:', trialBalanceResponse.body.payload?.totalCount);
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Trial Balance Data Count:', trialBalanceResponse.body.payload?.data?.length);
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          'Full Trial Balance Response:',
-          JSON.stringify(trialBalanceResponse.body, null, 2)
-        );
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('=== END TRIAL BALANCE AFTER ADDITIONAL VOUCHER ===');
-
-        if (trialBalanceResponse.status === 200) {
-          expect(trialBalanceResponse.body.success).toBe(true);
-          expect(trialBalanceResponse.body.payload.totalCount).toBeGreaterThan(0);
-          expect(trialBalanceResponse.body.payload.data.length).toBeGreaterThan(0);
-        }
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250718 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Additional voucher created and trial balance verified successfully');
-          // Deprecated: (20250718 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`   - Additional Voucher ID: ${response.body.payload.id}`);
-          // Deprecated: (20250718 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(
-            `   - Trial Balance Items: ${trialBalanceResponse.body.payload?.data?.length || 0}`
-          );
-        }
-      } else {
-        // Deprecated: (20250718 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('❌ Additional voucher creation failed, continuing with existing data');
-      }
-    });
-  });
-
-  /**
-   * Info: (20250716 - Shirley) Test Step 6: Complete Integration Workflow
-   */
-  describe('Step 6: Complete Integration Workflow Validation', () => {
-    test('should validate complete trial balance integration workflow', async () => {
-      // Info: (20250716 - Shirley) Step 1: Verify account book exists
-      expect(accountBookId).toBeDefined();
-      expect(accountBookId).toBeGreaterThan(0);
-
-      // Info: (20250716 - Shirley) Step 2: Verify trial balance API is working
       const trialBalanceClient = createTestClient({
         handler: trialBalanceHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      const response = await trialBalanceClient
+        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
+        .query({
+          page: '1',
+          pageSize: '100',
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+        })
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+
+      const trialBalanceData = response.body.payload;
+
+      // Info: (20250721 - Shirley) Detailed trial balance validation
+      expect(trialBalanceData.data).toBeDefined();
+      expect(Array.isArray(trialBalanceData.data)).toBe(true);
+      expect(trialBalanceData.totalCount).toBeGreaterThan(0);
+      expect(trialBalanceData.data.length).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Validate pagination structure
+      expect(trialBalanceData.page).toBe(1);
+      expect(trialBalanceData.pageSize).toBe(100);
+      expect(trialBalanceData.totalPages).toBeDefined();
+      expect(trialBalanceData.hasNextPage).toBeDefined();
+      expect(trialBalanceData.hasPreviousPage).toBeDefined();
+
+      // Info: (20250721 - Shirley) Validate trial balance items structure
+      const firstItem = trialBalanceData.data[0];
+      expect(firstItem).toBeDefined();
+      expect(firstItem.id).toBeDefined();
+      expect(firstItem.no).toBeDefined();
+      expect(firstItem.accountingTitle).toBeDefined();
+      expect(typeof firstItem.beginningCreditAmount).toBe('number');
+      expect(typeof firstItem.beginningDebitAmount).toBe('number');
+      expect(typeof firstItem.endingCreditAmount).toBe('number');
+      expect(typeof firstItem.endingDebitAmount).toBe('number');
+    });
+  });
+
+  /**
+   * Info: (20250721 - Shirley) Test Step 4: Complete Integration Workflow Validation
+   */
+  describe('Step 4: Complete Integration Workflow Validation', () => {
+    test('should validate complete trial balance integration workflow', async () => {
+      // Info: (20250721 - Shirley) Step 1: Verify account book exists
+      expect(accountBookId).toBeDefined();
+      expect(accountBookId).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Step 2: Verify trial balance API is working
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceClient = createTestClient({
+        handler: trialBalanceHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = 1753027200;
+      const endDate = 1753113599;
 
       const finalTrialBalanceResponse = await trialBalanceClient
         .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
         .query({
           page: '1',
           pageSize: '100',
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
         })
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== FINAL TRIAL BALANCE VALIDATION ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Trial Balance Status:', finalTrialBalanceResponse.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Trial Balance Success:', finalTrialBalanceResponse.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Trial Balance Code:', finalTrialBalanceResponse.body.code);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Trial Balance Message:', finalTrialBalanceResponse.body.message);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Trial Balance Payload:', finalTrialBalanceResponse.body.payload);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL TRIAL BALANCE VALIDATION ===');
-
-      if (finalTrialBalanceResponse.status !== 200) {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Final trial balance API failed, skipping assertions');
-        return;
-      }
-
       expect(finalTrialBalanceResponse.status).toBe(200);
       expect(finalTrialBalanceResponse.body.success).toBe(true);
-      const finalTrialBalanceItems = finalTrialBalanceResponse.body.payload.data;
 
-      // Info: (20250716 - Shirley) Trial balance should have data from vouchers
-      expect(finalTrialBalanceItems.length).toBeGreaterThan(0);
+      const finalTrialBalanceData = finalTrialBalanceResponse.body.payload;
+
+      // Info: (20250721 - Shirley) Get expected trial balance data from TestDataFactory
+      const expectedTrialBalanceData = TestDataFactory.expectedTrialBalanceData();
+
+      // Info: (20250721 - Shirley) Validate payload structure
+      expect(finalTrialBalanceData.totalCount).toBe(expectedTrialBalanceData.payload.totalCount);
+      expect(finalTrialBalanceData.data.length).toBe(expectedTrialBalanceData.payload.data.length);
+
+      // Info: (20250721 - Shirley) Validate specific trial balance items
+      expectedTrialBalanceData.payload.data.forEach((expectedItem: TrialBalanceItem) => {
+        const actualItem = finalTrialBalanceData.data.find(
+          (item: TrialBalanceItem) => item.id === expectedItem.id
+        );
+
+        expect(actualItem).toBeDefined();
+        if (actualItem) {
+          expect(actualItem.no).toBe(expectedItem.no);
+          expect(actualItem.accountingTitle).toBe(expectedItem.accountingTitle);
+          expect(actualItem.beginningCreditAmount).toBe(expectedItem.beginningCreditAmount);
+          expect(actualItem.beginningDebitAmount).toBe(expectedItem.beginningDebitAmount);
+          expect(actualItem.endingCreditAmount).toBe(expectedItem.endingCreditAmount);
+          expect(actualItem.endingDebitAmount).toBe(expectedItem.endingDebitAmount);
+        }
+      });
+
+      // Info: (20250721 - Shirley) Trial balance should have proper structure
+      expect(finalTrialBalanceData.page).toBeDefined();
+      expect(finalTrialBalanceData.totalPages).toBeDefined();
+      expect(finalTrialBalanceData.hasNextPage).toBeDefined();
+      expect(finalTrialBalanceData.hasPreviousPage).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log(`   - Trial Balance Items: ${finalTrialBalanceItems.length}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        console.log(`   - Trial Balance Items: ${finalTrialBalanceData.data.length}`);
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalTrialBalanceResponse.body.payload.totalCount}`);
+        console.log(`   - Total Count: ${finalTrialBalanceData.totalCount}`);
+      }
+    });
+  });
+
+  /**
+   * Info: (20250721 - Shirley) Test Step 5: Trial Balance Export Testing
+   */
+  describe('Step 5: Trial Balance Export Testing', () => {
+    test('should export trial balance to CSV format', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          startDate,
+          endDate,
+        },
+        options: {
+          fields: [
+            'accountingTitle',
+            'no',
+            'beginningDebitAmount',
+            'beginningCreditAmount',
+            'midtermDebitAmount',
+            'midtermCreditAmount',
+            'endingDebitAmount',
+            'endingCreditAmount',
+          ],
+        },
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('text/csv');
+      expect(response.headers['content-disposition']).toContain('attachment');
+      expect(response.headers['content-disposition']).toContain('trial_balance_');
+
+      // Info: (20250721 - Shirley) Validate CSV content structure
+      const csvContent = response.text;
+
+      expect(csvContent).toBeDefined();
+      expect(typeof csvContent).toBe('string');
+      expect(csvContent.length).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Parse CSV content and convert to JSON for comparison
+      const lines = csvContent.split('\n').filter((line) => line.trim().length > 0);
+      expect(lines.length).toBeGreaterThan(1);
+
+      const headers = lines[0].split(',');
+      expect(headers.length).toBeGreaterThanOrEqual(8);
+
+      // Info: (20250721 - Shirley) Convert CSV to JSON format for comparison
+      const csvData = lines.slice(1).map((line) => {
+        const values = line.split(',');
+        return {
+          accountingTitle: values[0],
+          no: values[1],
+          beginningDebitAmount: parseInt(values[2], 10) || 0,
+          beginningCreditAmount: parseInt(values[3], 10) || 0,
+          midtermDebitAmount: parseInt(values[4], 10) || 0,
+          midtermCreditAmount: parseInt(values[5], 10) || 0,
+          endingDebitAmount: parseInt(values[6], 10) || 0,
+          endingCreditAmount: parseInt(values[7], 10) || 0,
+        };
+      });
+
+      // Info: (20250721 - Shirley) Get expected data from TestDataFactory for comparison
+      const expectedData = TestDataFactory.expectedTrialBalanceData();
+
+      // Info: (20250721 - Shirley) Compare CSV data with expected data
+      expect(csvData.length).toBe(expectedData.payload.data.length);
+
+      expectedData.payload.data.forEach((expectedItem) => {
+        const csvItem = csvData.find((item) => item.no === expectedItem.no);
+        expect(csvItem).toBeDefined();
+
+        if (csvItem) {
+          expect(csvItem.accountingTitle).toBe(expectedItem.accountingTitle);
+          expect(csvItem.beginningDebitAmount).toBe(expectedItem.beginningDebitAmount);
+          expect(csvItem.beginningCreditAmount).toBe(expectedItem.beginningCreditAmount);
+          expect(csvItem.midtermDebitAmount).toBe(expectedItem.midtermDebitAmount);
+          expect(csvItem.midtermCreditAmount).toBe(expectedItem.midtermCreditAmount);
+          expect(csvItem.endingDebitAmount).toBe(expectedItem.endingDebitAmount);
+          expect(csvItem.endingCreditAmount).toBe(expectedItem.endingCreditAmount);
+        }
+      });
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Trial balance CSV export successful');
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Lines Count: ${lines.length}`);
+      }
+    });
+
+    test('should handle invalid file type for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'pdf', // Invalid file type
+        filters: {
+          startDate: 1753027200,
+          endDate: 1753113599,
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Invalid file type properly rejected');
+      }
+    });
+
+    test('should handle missing date parameters for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          // Missing startDate and endDate
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Missing date parameters properly rejected');
+      }
+    });
+
+    test('should handle export without authentication', async () => {
+      const trialBalanceExportClient = createTestClient({
+        handler: trialBalanceExportHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          startDate: 1753027200,
+          endDate: 1753113599,
+        },
+        options: {},
+      };
+
+      const response = await trialBalanceExportClient
+        .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
+        .send(exportRequestData);
+      // No authentication cookies
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250730 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Unauthenticated export request properly rejected');
       }
     });
   });
