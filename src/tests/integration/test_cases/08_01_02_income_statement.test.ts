@@ -126,6 +126,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     });
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250721 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
@@ -159,6 +160,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     await authenticatedHelper.clearSession();
 
     if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250721 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test cleanup completed');
     }
@@ -198,6 +200,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       initializeAccountBookDependentClients();
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
       }
@@ -217,6 +220,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book connection verified');
       }
@@ -259,6 +263,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           counterPartyId: null,
         };
 
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         const response = await voucherPostClient
           .post(`/api/v2/account_book/${accountBookId}/voucher`)
@@ -271,9 +276,11 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
             type: voucherData.type,
             lineItems: voucherData.lineItems,
           });
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
         } else {
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('❌ Voucher creation failed:', response.body.message);
         }
@@ -282,6 +289,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       // Info: (20250718 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
+      // Deprecated: (20250721 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
         `\n🎉 Successfully created ${createdVouchers.length} vouchers for income statement test`
@@ -298,8 +306,8 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       const cookies = authenticatedHelper.getCurrentSession();
 
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const startDate = currentTimestamp - 86400 * 365; // 1 year ago
-      const endDate = currentTimestamp + 86400 * 30; // 30 days from now
+      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Shirley) 1 year ago
+      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Shirley) 30 days from now
 
       const response = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -336,8 +344,10 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(Array.isArray(outputData?.details)).toBe(true);
 
       if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Income statement report generated successfully');
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-console
         console.log(`   - Report Type: ${outputData?.reportType}`);
       }
@@ -348,8 +358,8 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       const cookies = authenticatedHelper.getCurrentSession();
 
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const startDate = currentTimestamp - 86400 * 365; // 1 year ago
-      const endDate = currentTimestamp + 86400 * 30; // 30 days from now
+      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Shirley) 1 year ago
+      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Shirley) 30 days from now
 
       const response = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -421,9 +431,10 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         // Info: (20250718 - Shirley) Validate error response structure
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
-        expect(validatedError.code).toBe('401ISF0000'); // Unauthorized access
+        expect(validatedError.code).toBe('401ISF0000'); // Info: (20250721 - Shirley) Unauthorized access
 
         if (process.env.DEBUG_TESTS === 'true') {
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Unauthenticated request properly rejected with 401');
         }
@@ -607,8 +618,8 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
         // Info: (20250718 - Shirley) Test with very large date range (10 years)
         const currentTimestamp = Math.floor(Date.now() / 1000);
-        const startDate = currentTimestamp - 86400 * 365 * 10; // 10 years ago
-        const endDate = currentTimestamp + 86400 * 365 * 10; // 10 years in future
+        const startDate = currentTimestamp - 86400 * 365 * 10; // Info: (20250721 - Shirley) 10 years ago
+        const endDate = currentTimestamp + 86400 * 365 * 10; // Info: (20250721 - Shirley) 10 years in future
 
         const response = await reportClient
           .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -625,6 +636,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         expect(response.body.success).toBe(true);
 
         if (process.env.DEBUG_TESTS === 'true') {
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Large date range handled gracefully');
         }
@@ -652,6 +664,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         expect(response.body.success).toBe(true);
 
         if (process.env.DEBUG_TESTS === 'true') {
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-console
           console.log('✅ Same start and end date handled gracefully');
         }
@@ -667,8 +680,10 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
         const supportedLanguages = ['en', 'tw', 'cn'];
 
+        // Deprecated: (20250721 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-restricted-syntax
         for (const language of supportedLanguages) {
+          // Deprecated: (20250721 - Luphia) remove eslint-disable
           // eslint-disable-next-line no-await-in-loop
           const response = await reportClient
             .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -685,6 +700,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           expect(response.body.payload.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
 
           if (process.env.DEBUG_TESTS === 'true') {
+            // Deprecated: (20250721 - Luphia) remove eslint-disable
             // eslint-disable-next-line no-console
             console.log(`✅ Language '${language}' handled successfully`);
           }
