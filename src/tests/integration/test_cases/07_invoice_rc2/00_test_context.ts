@@ -2,16 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
-import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
 import { APIPath } from '@/constants/api_connection';
-import { WORK_TAG } from '@/interfaces/account_book';
 import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
 import { createFile } from '@/lib/utils/repo/file.repo';
 import * as cryptoUtils from '@/lib/utils/crypto';
 import { IInvoiceRC2Input, IInvoiceRC2Output, IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
 import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
+// import accountBookCreateHandler from '@/pages/api/v2/user/[userId]/account_book';
+// import { WORK_TAG } from '@/interfaces/account_book';
 // import teamListHandler from '@/pages/api/v2/user/[userId]/team';
 // import { TestClient } from '@/interfaces/test_client';
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
@@ -73,6 +73,7 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
     const { helper, cookies, userId, teamId } = await BaseTestContext.getSharedContext();
 
     /* Info: (20250711 - Tzuhan) 4. 建帳簿 */
+    /** Info: (20250722 - Tzuhan) replaced by APIHelper createAccountBook
     const bookClient = createTestClient({
       handler: accountBookCreateHandler,
       routeParams: { userId: userId.toString() },
@@ -89,6 +90,8 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
 
     const bookId = Number(bookRes.body.payload?.id);
     if (!bookId) throw new SetupError('create accountBook failed', bookRes.body);
+    */
+    const bookId = await helper.createAccountBook(userId, teamId);
 
     /* Info: (20250711 - Tzuhan) 5. 上傳測試檔 */
     const fileIdForInput = await uploadEncryptedFile('invoice_input', bookId);

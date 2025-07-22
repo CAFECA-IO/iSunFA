@@ -25,7 +25,9 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
-import { ICreateAccountBookReqBody } from '@/interfaces/account_book';
+import { WORK_TAG } from '@/interfaces/account_book';
+import { LocaleKey } from '@/constants/normal_setting';
+import { CurrencyType } from '@/constants/currency';
 
 interface TestResponse {
   status: number;
@@ -658,7 +660,7 @@ export class APITestHelper {
     }
   }
 
-  async createAccountBook(userId: number, accountBookData: ICreateAccountBookReqBody) {
+  async createAccountBook(userId: number, teamId: number) {
     await this.ensureAuthenticated();
     const cookies = this.getCurrentSession();
 
@@ -669,9 +671,26 @@ export class APITestHelper {
       handler: accountBookCreateHandler,
       routeParams: { userId: userId.toString() },
     });
+    const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
+    const accountBook = {
+      name: `IT Shared Test Account Book`,
+      taxId: randomTaxId,
+      tag: WORK_TAG.ALL,
+      teamId,
+      businessLocation: LocaleKey.tw,
+      accountingCurrency: CurrencyType.TWD,
+      representativeName: 'VT Rep',
+      taxSerialNumber: `VT${randomTaxId}`,
+      contactPerson: 'VT Tester',
+      phoneNumber: '+886-2-1234-5678',
+      city: 'Taipei',
+      district: 'Zhongzheng',
+      enteredAddress: '100 Test Rd, Zhongzheng, Taipei',
+    };
+
     const response = await accountBookCreateClient
       .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId.toString()))
-      .send(accountBookData)
+      .send(accountBook)
       .set('Cookie', cookies.join('; '));
 
     return response.body.payload?.id || 0;

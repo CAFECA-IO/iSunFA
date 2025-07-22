@@ -1,4 +1,4 @@
-// import { APITestHelper } from '@/tests/integration/setup/api_helper';
+import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 // import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
@@ -16,9 +16,9 @@ import { VoucherListTabV2 } from '@/constants/voucher';
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 
 describe('Voucher V2 – 完整 CRUD + Restore', () => {
-  // let helper: APITestHelper;
-  // let userId: string;
-  // let teamId: number;
+  let helper: APITestHelper;
+  let userId: number;
+  let teamId: number;
   let accountBookId: number;
   let cookies: string[];
 
@@ -27,8 +27,11 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
 
   beforeAll(async () => {
     const sharedContext = await BaseTestContext.getSharedContext();
-    accountBookId = sharedContext.accountBookId;
+    helper = sharedContext.helper;
+    userId = sharedContext.userId;
+    teamId = sharedContext.teamId;
     cookies = sharedContext.cookies;
+    accountBookId = await helper.createAccountBook(userId, teamId);
 
     /** Info: (20250722 - Tzuhan) replaced by BaseTestContext
     helper = await APITestHelper.createHelper({ autoAuth: true });

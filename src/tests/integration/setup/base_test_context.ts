@@ -1,9 +1,6 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import prisma from '@/client';
-import { WORK_TAG } from '@/interfaces/account_book';
-import { LocaleKey } from '@/constants/normal_setting';
-import { CurrencyType } from '@/constants/currency';
 
 /** Info: (20250717 - Tzuhan)
  * 在整個整合測試階段持有「所有測試資料的 ID」
@@ -14,7 +11,7 @@ export interface SharedContext {
   cookies: string[];
   userId: number;
   teamId: number;
-  accountBookId: number;
+  // accountBookId: number;
 }
 
 export class BaseTestContext {
@@ -45,7 +42,7 @@ export class BaseTestContext {
         cookies: [],
         userId: 0,
         teamId: 0,
-        accountBookId: 0,
+        // accountBookId: 0,
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
@@ -64,31 +61,14 @@ export class BaseTestContext {
       const teamId = teamRes.body.payload!.id as number;
 
       // Info: (20250721 - Tzuhan) 建立 Account Book
-      const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
-      const accountBook = {
-        name: `IT Shared Test Account Book`,
-        taxId: randomTaxId,
-        tag: WORK_TAG.ALL,
-        teamId,
-        businessLocation: LocaleKey.tw,
-        accountingCurrency: CurrencyType.TWD,
-        representativeName: 'VT Rep',
-        taxSerialNumber: `VT${randomTaxId}`,
-        contactPerson: 'VT Tester',
-        phoneNumber: '+886-2-1234-5678',
-        city: 'Taipei',
-        district: 'Zhongzheng',
-        enteredAddress: '100 Test Rd, Zhongzheng, Taipei',
-      };
-
-      const accountBookId = await helper.createAccountBook(userId, accountBook);
+      // const accountBookId = await helper.createAccountBook(userId, teamId);
 
       Object.assign(this.ctx, {
         helper,
         cookies,
         userId,
         teamId,
-        accountBookId,
+        // accountBookId,
       });
 
       return this.ctx;
