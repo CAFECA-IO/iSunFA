@@ -9,6 +9,7 @@ import {
 } from '@/components/landing_page_v2/linear_gradient_text';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { LuBellPlus } from 'react-icons/lu';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boolean }> = ({
   feature,
@@ -18,7 +19,7 @@ const FlexibleFeatureIcon: React.FC<{ feature: string; size?: number; halo?: boo
   const { t } = useTranslation('common');
 
   const imageSrc = `/flexible_feature/${feature.toLowerCase().replaceAll(' ', '_')}.svg`;
-  const imageAlt = `${feature}_icon`;
+  const imageAlt = `${feature.toLowerCase().replaceAll(' ', '_')}_icon`;
 
   const featureText = t(
     `landing_page_v2:FLEXIBLE_FEATURE_SELECTION.${feature.toUpperCase().replaceAll(' ', '_')}`
@@ -73,17 +74,17 @@ const FlexibleFeatureSelection: React.FC = () => {
   }, []);
 
   // Info: (20241219 - Julian) 第一分類：主要功能
-  const featuresOfFirstPart = [
-    'Dashboard',
-    //  'AI Assistant', // ToDo: (20250106 - Julian) AI 助手先隱藏
-    'Accounting System',
-    'Asset Management',
-    // 'CRM', // ToDo: (20250106 - Julian) 客戶關係管理先隱藏
-    'Calendar',
-    'Reports System',
-    // 'Outsourcing Matching', // ToDo: (20250106 - Julian) 平台媒合先隱藏
-    // 'Technical Support', // ToDo: (20250106 - Julian) 技術支援先隱藏
-  ];
+  // const featuresOfFirstPart = [
+  //   'Dashboard',
+  //   //  'AI Assistant', // ToDo: (20250106 - Julian) AI 助手先隱藏
+  //   'Accounting System',
+  //   'Asset Management',
+  //   // 'CRM', // ToDo: (20250106 - Julian) 客戶關係管理先隱藏
+  //   'Calendar',
+  //   'Reports System',
+  //   // 'Outsourcing Matching', // ToDo: (20250106 - Julian) 平台媒合先隱藏
+  //   // 'Technical Support', // ToDo: (20250106 - Julian) 技術支援先隱藏
+  // ];
 
   // Info: (20241219 - Julian) 第二分類：金融相關功能
   // ToDo: (20250106 - Julian) 金融相關功能先隱藏
@@ -127,8 +128,19 @@ const FlexibleFeatureSelection: React.FC = () => {
         {t('landing_page_v2:FLEXIBLE_FEATURE_SELECTION.MAIN_TITLE')}
       </LinearGradientText>
 
-      {/* Info: (20241219 - Julian) Features of First Part */}
       <div
+        ref={featureFirstRef}
+        className={`${
+          isFeatureFirstRefVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+        } grid grid-cols-2 gap-34px transition-all duration-500 md:grid-cols-3 lg:grid-cols-5`}
+      >
+        <Link href={ISUNFA_ROUTE.SALARY_CALCULATOR}>
+          <FlexibleFeatureIcon feature={'Salary Calculator'} />
+        </Link>
+      </div>
+
+      {/* Info: (20241219 - Julian) Features of First Part */}
+      {/* <div
         ref={featureFirstRef}
         className={`${
           isFeatureFirstRefVisible ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
@@ -137,7 +149,7 @@ const FlexibleFeatureSelection: React.FC = () => {
         {featuresOfFirstPart.map((feature) => (
           <FlexibleFeatureIcon key={feature} feature={feature} />
         ))}
-      </div>
+      </div> */}
 
       {/* Info: (20241219 - Julian) Features of Second Part */}
       {/* <div className="grid grid-cols-2 gap-34px md:grid-cols-3 lg:grid-cols-5">

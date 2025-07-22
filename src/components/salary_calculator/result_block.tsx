@@ -27,12 +27,20 @@ const ResultBlock: React.FC<IResultBlockProps> = ({ backgroundColor, rowItems })
       // Info: (20250708 - Julian) 判斷是否為百分比
       const isPercentage =
         item.label.includes('率') || item.label.toLocaleLowerCase().includes('ate');
+
+      // Info: (20250722 - Julian) 判斷是否為粗體字
+      const isBold =
+        item.label.toLocaleLowerCase().includes('total') ||
+        item.label.toLocaleLowerCase().includes('總');
+
       const formattedValue = isPercentage
         ? `${(item.value * 100).toFixed(2)}%`
         : `NT ${numberWithCommas(item.value)}`;
 
       return (
-        <div className="flex items-center justify-between">
+        <div
+          className={`flex items-center justify-between ${isBold ? 'font-bold' : 'font-normal'}`}
+        >
           <p>{item.label}:</p>
           <p>{formattedValue}</p>
         </div>
@@ -40,7 +48,7 @@ const ResultBlock: React.FC<IResultBlockProps> = ({ backgroundColor, rowItems })
     });
 
   return (
-    <div className={`flex h-270px flex-col rounded-sm p-12px ${backgroundColor}`}>
+    <div className={`flex h-300px flex-col rounded-sm p-12px ${backgroundColor}`}>
       {/* Info: (20250708 - Julian) 項目 */}
       <div className="flex flex-1 flex-col gap-12px text-xs font-normal text-text-neutral-secondary">
         {displayRowItems}

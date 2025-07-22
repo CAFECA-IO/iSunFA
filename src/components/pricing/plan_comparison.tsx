@@ -55,7 +55,7 @@ const PlanComparison: React.FC = () => {
         {t('COMPARISON.TITLE')}
       </LinearGradientText>
       <div className="hide-scrollbar w-full overflow-x-auto">
-        <table className="mb-200px w-full border-collapse border border-white text-left text-white">
+        <table className="mb-200px shrink-0 border-collapse border border-white text-left text-white">
           <thead>
             <tr>
               <th className="pricing-header h-80px min-w-200px border border-white px-4 py-2 text-xl backdrop-blur-pricing">
@@ -64,7 +64,7 @@ const PlanComparison: React.FC = () => {
               {comparisonPlans.map((plan) => (
                 <th
                   key={plan}
-                  className="pricing-header w-1/3 border border-white px-4 py-2 text-center text-base backdrop-blur-pricing"
+                  className="pricing-header min-w-330px border border-white px-4 py-2 text-center text-base backdrop-blur-pricing"
                 >
                   {t(`${plan}.TITLE`)}
                 </th>

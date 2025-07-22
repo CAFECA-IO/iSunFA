@@ -4,10 +4,16 @@ export type RowItem = {
 };
 
 export interface IMonthlySalary {
-  baseSalary: number; // Info: (20250710 - Julian) 本薪
-  mealAllowance: number; // Info: (20250710 - Julian) 伙食費
-  overtimePay: number; // Info: (20250710 - Julian) 加班費
-  otherAllowance: number; // Info: (20250710 - Julian) 其他津貼
+  baseSalaryWithTax: number; // Info: (20250722 - Julian) 本薪（應稅）
+  overtimePayWithTax: number; // Info: (20250722 - Julian) 加班費（應稅）
+  otherAllowanceWithTax: number; // Info: (20250722 - Julian) 其他加給（應稅）
+  totalSalaryWithTax: number; // Info: (20250722 - Julian) 總應稅薪資
+
+  mealAllowanceWithoutTax: number; // Info: (20250722 - Julian) 伙食費（免稅）
+  overtimePayWithoutTax: number; // Info: (20250722 - Julian) 加班費（免稅）
+  otherAllowanceWithoutTax: number; // Info: (20250722 - Julian) 其他加給（免稅）
+  totalSalaryWithoutTax: number; // Info: (20250722 - Julian) 總免稅薪資
+
   totalMonthlySalary: number; // Info: (20250710 - Julian) 月薪資合計
 }
 
@@ -49,10 +55,14 @@ export interface ISalaryCalculator {
 
 export const defaultSalaryCalculator: ISalaryCalculator = {
   monthlySalary: {
-    baseSalary: 0,
-    mealAllowance: 0,
-    overtimePay: 0,
-    otherAllowance: 0,
+    baseSalaryWithTax: 0,
+    overtimePayWithTax: 0,
+    otherAllowanceWithTax: 0,
+    totalSalaryWithTax: 0,
+    mealAllowanceWithoutTax: 0,
+    overtimePayWithoutTax: 0,
+    otherAllowanceWithoutTax: 0,
+    totalSalaryWithoutTax: 0,
     totalMonthlySalary: 0,
   },
   employeeContribution: {

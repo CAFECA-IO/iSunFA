@@ -11,7 +11,7 @@ import { PLANS } from '@/constants/subscription';
 
 const Card: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="relative w-full overflow-hidden rounded-lg border-x border-b bg-cloudy-glass px-lv-6 py-lv-8 text-left backdrop-blur-md">
+    <div className="relative mx-auto w-320px overflow-hidden rounded-sm border-x border-b bg-cloudy-glass px-lv-6 py-lv-8 text-left backdrop-blur-md lg:w-full">
       <Image
         src="/icons/nail.svg"
         width={24}
@@ -71,7 +71,7 @@ const PlanCard: React.FC<PlanProps> = ({ planId, title, price, features, buttonT
   return (
     <Card>
       <h3 className="text-28px font-bold text-text-brand-primary-lv3">{title}</h3>
-      <div className="mt-4 md:h-74px">
+      <div className="mt-4 whitespace-nowrap md:h-74px">
         <LinearGradientText size={LinearTextSize.MD} align={TextAlign.LEFT}>
           {price.value}
           <span className="pl-2 text-base font-medium leading-loose text-neutral-150">
@@ -247,7 +247,7 @@ const PricingPlan: React.FC = () => {
           {t('pricing:MAIN.SUBTITLE')}
         </p>
       </div>
-      <div className="grid w-full max-w-7xl grid-cols-1 gap-8 md:grid-cols-3">
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-3">
         {plans.map((plan, index) => (
           <PlanCard key={`plan-${index + 1}`} {...plan} />
         ))}

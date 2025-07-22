@@ -28,11 +28,13 @@
   "BASE_PAY_FORM": {
     "BASE_SALARY": "Base Salary (Taxable)",
     "MEAL_ALLOWANCE": "Meal Allowance (Non-taxable)",
-    "OTHER_ALLOWANCE": "Other Allowance (Non-taxable)"
+    "OTHER_ALLOWANCE_WITH_TAX": "Other Allowance (Taxable)",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "Other Allowance (Non-taxable)",
+    "ADDITIONAL_INFORMATION": "Travel, injury, funeral, retirement pay, social insurance benefits, or government grants"
   },
   "WORK_HOURS_FORM": {
-    "OVERTIME_HOUR": "Overtime Hour",
-    "TOTAL_OVERTIME_HOUR": "Total Overtime Hour",
+    "OVERTIME_HOUR_WITHOUT_TAX": "Overtime Hour (Non-taxable)",
+    "OVERTIME_HOUR_WITH_TAX": "Overtime Hour (Taxable)",
     "LEAVE_HOUR": "Leave Hour",
     "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
     "PERSONAL_LEAVE": "Personal Leave",
@@ -62,10 +64,14 @@
     "EDIT_SUCCESS_TOAST": "Employee data has been updated"
   },
   "RESULT": {
-    "BASE_SALARY": "Base Salary (Taxable)",
-    "MEAL_ALLOWANCE": "Meal Allowance (Non-taxable)",
-    "OVERTIME_PAY": "Overtime Pay (Non-taxable)",
-    "OTHER_ALLOWANCE": "Other Allowance (Non-taxable)",
+    "BASE_SALARY_WITH_TAX": "Base Salary (Taxable)",
+    "OVERTIME_PAY_WITH_TAX": "Overtime Pay (Taxable)",
+    "OTHER_ALLOWANCE_WITH_TAX": "Other Allowance (Taxable)",
+    "TOTAL_SALARY_WITH_TAX": "Total Salary (Taxable)",
+    "MEAL_ALLOWANCE_WITHOUT_TAX": "Meal Allowance (Non-taxable)",
+    "OVERTIME_PAY_WITHOUT_TAX": "Overtime Pay (Non-taxable)",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "Other Allowance (Non-taxable)",
+    "TOTAL_SALARY_WITHOUT_TAX": "Total Salary (Non-taxable)",
     "TOTAL_MONTHLY_SALARY": "Total Monthly Salary",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "Employee Paid Labor Insurance",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "Employee Paid Health Insurance",

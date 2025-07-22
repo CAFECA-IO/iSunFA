@@ -49,10 +49,14 @@ const SalaryCalculatorResult: React.FC = () => {
 
   const {
     monthlySalary: {
-      baseSalary,
-      mealAllowance,
-      overtimePay, // Info: (20250710 - Julian) 加班費
-      otherAllowance,
+      baseSalaryWithTax, // Info: (20250722 - Julian) 本薪（應稅）
+      overtimePayWithTax, // Info: (20250722 - Julian) 加班費（應稅）
+      otherAllowanceWithTax, // Info: (20250722 - Julian) 其他加給（應稅）
+      totalSalaryWithTax, // Info: (20250722 - Julian) 總應稅薪資
+      mealAllowanceWithoutTax, // Info: (20250710 - Julian) 伙食費（免稅）
+      overtimePayWithoutTax, // Info: (20250710 - Julian) 加班費（免稅）
+      otherAllowanceWithoutTax, // Info: (20250710 - Julian) 其他加給（免稅）
+      totalSalaryWithoutTax, // Info: (20250710 - Julian) 總免稅薪資
       totalMonthlySalary, // Info: (20250710 - Julian) 月薪資合計
     },
     employeeContribution: {
@@ -85,18 +89,34 @@ const SalaryCalculatorResult: React.FC = () => {
 
   // Info: (20250708 - Julian) 月薪資項目
   const monthlyRowItems: RowItem[] = [
-    { label: t('calculator:RESULT.BASE_SALARY'), value: baseSalary },
+    { label: t('calculator:RESULT.BASE_SALARY_WITH_TAX'), value: baseSalaryWithTax },
     {
-      label: t('calculator:RESULT.MEAL_ALLOWANCE'),
-      value: mealAllowance,
+      label: t('calculator:RESULT.OVERTIME_PAY_WITH_TAX'),
+      value: overtimePayWithTax,
     },
     {
-      label: t('calculator:RESULT.OVERTIME_PAY'),
-      value: overtimePay,
+      label: t('calculator:RESULT.OTHER_ALLOWANCE_WITH_TAX'),
+      value: otherAllowanceWithTax,
     },
     {
-      label: t('calculator:RESULT.OTHER_ALLOWANCE'),
-      value: otherAllowance,
+      label: t('calculator:RESULT.TOTAL_SALARY_WITH_TAX'),
+      value: totalSalaryWithTax,
+    },
+    {
+      label: t('calculator:RESULT.MEAL_ALLOWANCE_WITHOUT_TAX'),
+      value: mealAllowanceWithoutTax,
+    },
+    {
+      label: t('calculator:RESULT.OVERTIME_PAY_WITHOUT_TAX'),
+      value: overtimePayWithoutTax,
+    },
+    {
+      label: t('calculator:RESULT.OTHER_ALLOWANCE_WITHOUT_TAX'),
+      value: otherAllowanceWithoutTax,
+    },
+    {
+      label: t('calculator:RESULT.TOTAL_SALARY_WITHOUT_TAX'),
+      value: totalSalaryWithoutTax,
     },
     {
       label: t('calculator:RESULT.TOTAL_MONTHLY_SALARY'),

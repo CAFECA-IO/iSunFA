@@ -11,8 +11,10 @@ const BasePayForm: React.FC = () => {
     setBaseSalary,
     mealAllowance,
     setMealAllowance,
-    otherAllowance,
-    setOtherAllowance,
+    otherAllowanceWithTax,
+    setOtherAllowanceWithTax,
+    otherAllowanceWithoutTax,
+    setOtherAllowanceWithoutTax,
   } = useCalculatorCtx();
 
   return (
@@ -35,12 +37,24 @@ const BasePayForm: React.FC = () => {
         maximum={MAX_MEAL_ALLOWANCE}
       />
 
-      {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
+      {/* Info: (20250709 - Julian) 其他津貼（應稅） */}
       <AmountInput
-        title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE')}
-        value={otherAllowance}
-        setValue={setOtherAllowance}
+        title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE_WITH_TAX')}
+        value={otherAllowanceWithTax}
+        setValue={setOtherAllowanceWithTax}
       />
+
+      {/* Info: (20250709 - Julian) 其他津貼（免稅） */}
+      <div className="flex flex-col gap-8px">
+        <AmountInput
+          title={t('calculator:BASE_PAY_FORM.OTHER_ALLOWANCE_WITHOUT_TAX')}
+          value={otherAllowanceWithoutTax}
+          setValue={setOtherAllowanceWithoutTax}
+        />
+        <p className="text-sm font-medium text-input-text-secondary">
+          {t('calculator:BASE_PAY_FORM.ADDITIONAL_INFORMATION')}
+        </p>
+      </div>
     </form>
   );
 };
