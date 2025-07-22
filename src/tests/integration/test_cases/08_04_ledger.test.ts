@@ -15,7 +15,6 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
-import { ILedgerItem } from '@/interfaces/ledger';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 
 // Info: (20250721 - Shirley) Mock pusher for testing
