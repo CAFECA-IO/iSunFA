@@ -226,7 +226,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const createdVouchers = [];
 
       // Info: (20250721 - Shirley) Create all sample vouchers with dates in test range
-      const testDateBase = 1753050000; // Within test date range
+      const testDateBase = 1753050000; // Info: (20250722 - Shirley) Within test date range
       for (let i = 0; i < sampleVouchersData.length; i += 1) {
         const voucherData = sampleVouchersData[i];
 
