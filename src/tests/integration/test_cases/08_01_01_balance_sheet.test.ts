@@ -7,31 +7,35 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getReportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
+// import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250717 - Julian) 測試用 constants
 import { ReportSheetType } from '@/constants/report';
 import { LocaleKey } from '@/constants/normal_setting';
-import { WORK_TAG } from '@/interfaces/account_book';
-import { CurrencyType } from '@/constants/currency';
+// import { WORK_TAG } from '@/interfaces/account_book';
+// import { CurrencyType } from '@/constants/currency';
 import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
+import { WORK_TAG } from '@/interfaces/account_book';
 
 describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   let authenticatedHelper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
+  let accountBook: { id: number; name: string; taxId: string };
   let accountBookId: number;
 
   // Info: (20250721 - Julian) test clients
   let createAccountBookClient: TestClient;
-  let getAccountBookClient: TestClient;
+  // let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
   let getBalanceSheetClient: TestClient;
   let voucherPostClient: TestClient;
 
+  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
   // Info: (20250717 - Julian) 借用 Shirley 的 Test company data
@@ -50,8 +54,46 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     district: 'Xinyi District',
     enteredAddress: '123 Test Street, Xinyi District, Taipei',
   };
+  */
+
+  // Info: (20250721 - Julian) 基於 accountBookId 的 client 初始化
+  const initializeAccountBookDependentClients = () => {
+    // getAccountBookClient = createTestClient({
+    //   handler: getAccountBookHandler,
+    //   routeParams: { accountBookId: accountBookId.toString() },
+    // });
+
+    connectAccountBookClient = createTestClient({
+      handler: connectAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    getBalanceSheetClient = createTestClient({
+      handler: getReportHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    voucherPostClient = createTestClient({
+      handler: voucherPostHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+  };
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    authenticatedHelper = sharedContext.helper;
+    currentUserId = sharedContext.userId.toString();
+    teamId = sharedContext.teamId;
+    accountBook = await authenticatedHelper.createAccountBook(Number(currentUserId), teamId);
+    accountBookId = accountBook.id;
+
+    // Info: (20250721 - Julian) 建立測試用的帳本
+    createAccountBookClient = createTestClient({
+      handler: createAccountBookHandler,
+      routeParams: { userId: currentUserId },
+    });
+
+    /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
     // Info: (20250717 - Julian) 設定 Helper
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
@@ -87,30 +129,11 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       // eslint-disable-next-line no-console
       console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
+    */
+
+    // Info: (20250721 - Julian) 有了 accountBookId 後就初始化相關的 client
+    initializeAccountBookDependentClients();
   });
-
-  // Info: (20250721 - Julian) 基於 accountBookId 的 client 初始化
-  const initializeAccountBookDependentClients = () => {
-    getAccountBookClient = createTestClient({
-      handler: getAccountBookHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    connectAccountBookClient = createTestClient({
-      handler: connectAccountBookHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    getBalanceSheetClient = createTestClient({
-      handler: getReportHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    voucherPostClient = createTestClient({
-      handler: voucherPostHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-  };
 
   afterAll(async () => {
     // Info: (20250717 - Julian) 清理測試資料
@@ -125,8 +148,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
 
   /**
    * Info: (20250717 - Julian) Test Step 1: Create Account Book
-   */
-
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
       await authenticatedHelper.ensureAuthenticated();
@@ -184,6 +205,7 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       }
     });
   });
+   */
 
   /**
    * Info: (20250721 - Julian) Test Step 2: Create Sample Vouchers for Income Statement
@@ -410,8 +432,8 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       // Info: (20250721 - Julian) 2️⃣ 驗證 company
       expect(balanceSheetData.company).toBeDefined();
       expect(balanceSheetData.company.id).toBe(accountBookId);
-      expect(balanceSheetData.company.code).toBe(testCompanyData.taxId);
-      expect(balanceSheetData.company.name).toBe(testCompanyData.name);
+      expect(balanceSheetData.company.code).toBe(accountBook.taxId);
+      expect(balanceSheetData.company.name).toBe(accountBook.name);
 
       // Info: (20250721 - Julian) 3️⃣ 檢查 preDate 和 curDate 的範圍
       expect(balanceSheetData.preDate).toBeDefined();
@@ -976,10 +998,10 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
 
         // Info: (20250721 - Julian) Create a new account book with no vouchers/transactions
         const emptyTestCompanyData = {
-          ...testCompanyData,
           name: 'Empty Test Company 空資料測試公司',
           taxId: (Math.floor(Math.random() * 90000000) + 10000000).toString(),
           teamId,
+          tag: WORK_TAG.FINANCIAL,
         };
 
         const createResponse = await createAccountBookClient

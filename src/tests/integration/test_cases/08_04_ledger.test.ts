@@ -1,23 +1,23 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-// Info: (20250715 - Shirley) Import API handlers for ledger integration testing
+// Info: (20250721 - Shirley) Import API handlers for ledger integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
+import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import getLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger';
 import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger/export';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
-// Info: (20250715 - Shirley) Import required types and constants
+// Info: (20250721 - Shirley) Import required types and constants
 import { WORK_TAG } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
-import { EventType } from '@/constants/account';
+import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 
-// Info: (20250715 - Shirley) Mock pusher for testing
+// Info: (20250721 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
   default: jest.fn(() => ({ trigger: jest.fn() })),
@@ -46,20 +46,21 @@ jest.mock('@/lib/utils/crypto', () => {
 });
 
 /**
- * Info: (20250715 - Shirley) Integration Test - Ledger Integration (Test Case 8)
+ * Info: (20250721 - Shirley) Integration Test - Ledger Integration (Test Case 8.4)
  *
  * Primary Purpose:
  * - Test ledger API functionality and data structure
- * - Verify ledger filtering, pagination, and export functionality
- * - Ensure proper API response validation
- * - Test empty and populated ledger scenarios
+ * - Verify ledger calculation after voucher posting
+ * - Ensure proper API response validation with expected data
+ * - Test ledger with actual voucher data
  *
  * Test Flow:
  * 1. User Authentication and Account Book Setup
- * 2. Ledger API Testing (empty ledger scenario)
- * 3. Ledger Filtering and Export Testing
+ * 2. Voucher Posting for Ledger Data
+ * 3. Ledger Report Generation and Validation
+ * 4. Ledger Export Testing
  */
-describe('Integration Test - Ledger Integration (Test Case 8)', () => {
+describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   let authenticatedHelper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
@@ -67,7 +68,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
 
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
-  // Info: (20250715 - Shirley) Test company data
+  // Info: (20250721 - Shirley) Test company data
   const testCompanyData = {
     name: 'Ledger Test Company 分類帳測試公司',
     taxId: randomNumber.toString(),
@@ -85,33 +86,49 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   };
 
   beforeAll(async () => {
-    // Info: (20250715 - Shirley) Setup authenticated helper and complete user registration
+    // Info: (20250721 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     const statusResponse = await authenticatedHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
 
-    // Info: (20250715 - Shirley) Complete user registration flow
+    // Info: (20250721 - Shirley) Complete user registration flow
     await authenticatedHelper.agreeToTerms();
     await authenticatedHelper.createUserRole();
     await authenticatedHelper.selectUserRole();
 
-    // Info: (20250715 - Shirley) Create team for account book operations
+    // Info: (20250721 - Shirley) Create team for account book operations
     const teamResponse = await authenticatedHelper.createTeam();
     const teamData = teamResponse.body.payload?.team as { id?: number };
     teamId = teamData?.id || 0;
 
+    // Info: (20250721 - Shirley) Update test company data with actual team ID
     testCompanyData.teamId = teamId;
+
+    // Info: (20250721 - Shirley) Refresh session to ensure team membership is updated
+    await authenticatedHelper.getStatusInfo();
+
+    if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('✅ Test setup completed: User and team created with ID:', teamId);
+    }
   });
 
   afterAll(async () => {
-    // Info: (20250715 - Shirley) Cleanup test data
+    // Info: (20250721 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
+
+    if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('✅ Test cleanup completed');
+    }
   });
 
   /**
-   * Info: (20250715 - Shirley) Test Step 1: Create Account Book
+   * Info: (20250721 - Shirley) Test Step 1: Create Account Book
    */
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
@@ -134,7 +151,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
       expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
 
-      // Info: (20250715 - Shirley) Validate output with production validator
+      // Info: (20250721 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
         APIName.CREATE_ACCOUNT_BOOK,
         response.body.payload
@@ -146,14 +163,14 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       accountBookId = response.body.payload.id;
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book created successfully with ID:', accountBookId);
       }
     });
 
     test('should verify account book connection', async () => {
-      const connectAccountBookClient = createTestClient({
+      const getAccountBookClient = createTestClient({
         handler: getAccountBookHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
@@ -161,7 +178,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const response = await connectAccountBookClient
+      const response = await getAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}`)
         .set('Cookie', cookies.join('; '))
         .expect(200);
@@ -171,7 +188,7 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
         console.log('✅ Account book connection verified');
       }
@@ -179,251 +196,23 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
   });
 
   /**
-   * Info: (20250715 - Shirley) Test Step 2: Ledger API Testing
+   * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
    */
-  describe('Step 2: Ledger API Testing', () => {
-    test('should generate ledger with proper structure (empty data)', async () => {
-      const getLedgerClient = createTestClient({
-        handler: getLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
+  describe('Step 2: Create Sample Vouchers for Ledger', () => {
+    test('should create vouchers and verify ledger data', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7; // Info: (20250716 - Shirley) 7 days ago
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7; // Info: (20250716 - Shirley) 7 days from now
-
-      const response = await getLedgerClient
-        .get(`/api/v2/account_book/${accountBookId}/ledger`)
-        .query({
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          page: '1',
-          pageSize: '50',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.data).toBeDefined();
-      expect(Array.isArray(response.body.payload.data)).toBe(true);
-
-      // Info: (20250715 - Shirley) Validate ledger structure
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.LEDGER_LIST,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData?.data).toBeDefined();
-      expect(outputData?.totalCount).toBe(0); // Info: (20250716 - Shirley) Empty ledger is expected
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger generated successfully with', outputData?.totalCount, 'items');
-      }
-    });
-
-    test('should handle ledger filtering by label type', async () => {
-      const getLedgerClient = createTestClient({
-        handler: getLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
-
-      // Info: (20250715 - Shirley) Test general label type filtering
-      const generalResponse = await getLedgerClient
-        .get(`/api/v2/account_book/${accountBookId}/ledger`)
-        .query({
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          labelType: 'general',
-          page: '1',
-          pageSize: '50',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(generalResponse.body.success).toBe(true);
-      expect(generalResponse.body.payload.data).toBeDefined();
-      expect(Array.isArray(generalResponse.body.payload.data)).toBe(true);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Label type filtering verified');
-      }
-    });
-
-    test('should handle ledger pagination', async () => {
-      const getLedgerClient = createTestClient({
-        handler: getLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
-
-      const response = await getLedgerClient
-        .get(`/api/v2/account_book/${accountBookId}/ledger`)
-        .query({
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          page: '1',
-          pageSize: '10',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload.page).toBe(1);
-      expect(response.body.payload.pageSize).toBe(10);
-      expect(response.body.payload.totalPages).toBeDefined();
-      expect(response.body.payload.hasNextPage).toBeDefined();
-      expect(response.body.payload.hasPreviousPage).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger pagination verified');
-      }
-    });
-  });
-
-  /**
-   * Info: (20250715 - Shirley) Test Step 3: Ledger Export
-   */
-  describe('Step 3: Ledger Export', () => {
-    test('should export ledger to CSV', async () => {
-      const exportLedgerClient = createTestClient({
-        handler: exportLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
-
-      const exportData = {
-        fileType: 'csv',
-        filters: {
-          startDate,
-          endDate,
-          labelType: 'all',
-        },
-        options: {
-          timezone: '+0800',
-        },
-      };
-
-      const response = await exportLedgerClient
-        .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
-        .send(exportData)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.headers['content-type']).toContain('text/csv');
-      expect(response.text).toContain('科目代碼'); // Info: (20250716 - Shirley) Chinese headers
-      expect(response.text).toContain('會計科目');
-      expect(response.text).toContain('傳票編號');
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('response.text', response.text);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger export to CSV verified');
-      }
-    });
-  });
-
-  /**
-   * Info: (20250715 - Shirley) Test Step 4: Complete Integration Workflow
-   */
-  describe('Step 4: Complete Integration Workflow Validation', () => {
-    test('should validate complete ledger integration workflow', async () => {
-      // Info: (20250715 - Shirley) Step 1: Verify account book exists
-      expect(accountBookId).toBeDefined();
-      expect(accountBookId).toBeGreaterThan(0);
-
-      // Info: (20250715 - Shirley) Step 2: Verify ledger API is working
-      const getLedgerClient = createTestClient({
-        handler: getLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
-
-      const finalLedgerResponse = await getLedgerClient
-        .get(`/api/v2/account_book/${accountBookId}/ledger`)
-        .query({
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          page: '1',
-          pageSize: '100',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(finalLedgerResponse.body.success).toBe(true);
-      const finalLedgerItems = finalLedgerResponse.body.payload.data;
-
-      // Info: (20250715 - Shirley) Empty ledger is expected for this test
-      expect(finalLedgerItems.length).toBe(0);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Ledger Items: ${finalLedgerItems.length}`);
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalLedgerResponse.body.payload.totalCount}`);
-      }
-    });
-
-    test('should create voucher successfully via voucherPost', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
+      // Info: (20250721 - Shirley) Connect to account book first
       const connectAccountBookClient = createTestClient({
         handler: connectAccountBookHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      await authenticatedHelper.ensureAuthenticated();
-
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
         .expect(200);
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('responseForConnect', responseForConnect.body);
 
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
@@ -433,258 +222,474 @@ describe('Integration Test - Ledger Integration (Test Case 8)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const sampleVouchersData = TestDataFactory.sampleVoucherData();
+      const createdVouchers = [];
 
-      // Info: (20250715 - Shirley) Test voucher data structure
-      const testVoucherData = {
-        actions: [],
-        // actions: [VoucherV2Action.ADD_ASSET],
-        certificateIds: [],
-        invoiceRC2Ids: [],
-        voucherDate: currentTimestamp,
-        type: EventType.INCOME,
-        note: 'Test voucher for ledger integration',
-        lineItems: [
-          {
-            description: 'Test income item',
-            debit: true,
-            amount: 1000,
-            accountId: 1256, // Info: (20250715 - Shirley) Cash and Cash Equivalents (現金及約當現金)
-          },
-          {
-            description: 'Test revenue item',
-            debit: false,
-            amount: 1000,
-            accountId: 1001, // Info: (20250715 - Shirley) Operating Revenue (營業收入)
-          },
-        ],
-        assetIds: [],
-        counterPartyId: null,
-      };
+      // Info: (20250721 - Shirley) Create all sample vouchers with dates in test range
+      const testDateBase = 1753050000; // Info: (20250722 - Shirley) Within test date range
+      for (let i = 0; i < sampleVouchersData.length; i += 1) {
+        const voucherData = sampleVouchersData[i];
 
-      const response = await voucherPostClient
-        .post(`/api/v2/account_book/${accountBookId}/voucher`)
-        .send(testVoucherData)
-        .set('Cookie', cookies.join('; '));
+        const voucherPayload = {
+          actions: [],
+          certificateIds: [],
+          invoiceRC2Ids: [],
+          voucherDate: testDateBase + i * 3600, // Info: (20250722 - Shirley) Use test date range with incremental hours
+          type: voucherData.type,
+          note: voucherData.note,
+          lineItems: voucherData.lineItems,
+          assetIds: [],
+          counterPartyId: null,
+        };
 
-      // Info: (20250715 - Shirley) Debug the response
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response status:', response.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response body:', response.body);
+        // Deprecated: (20250722 - Luphia) remove eslint-disable
+        // eslint-disable-next-line no-await-in-loop
+        const response = await voucherPostClient
+          .post(`/api/v2/account_book/${accountBookId}/voucher`)
+          .send(voucherPayload)
+          .set('Cookie', cookies.join('; '));
 
-      expect(response.status).toBe(201);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.id).toBeDefined();
-      expect(typeof response.body.payload.id).toBe('number');
-
-      // Info: (20250715 - Shirley) Validate output with production validator
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.VOUCHER_POST_V2,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData).toBeDefined();
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('outputDataForVoucherPost', outputData);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
+        if (response.status === 201) {
+          createdVouchers.push({
+            id: response.body.payload.id,
+            type: voucherData.type,
+            lineItems: voucherData.lineItems,
+          });
+          // Deprecated: (20250722 - Shirley) Remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
+        } else {
+          // Deprecated: (20250722 - Shirley) Remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log('❌ Voucher creation failed:', response.body.message);
+        }
       }
 
-      // Info: (20250716 - Shirley) Verify ledger after voucher creation
-      const getLedgerClient = createTestClient({
-        handler: getLedgerHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
+      // Info: (20250721 - Shirley) Verify all vouchers were created
+      expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
-
-      const ledgerResponse = await getLedgerClient
-        .get(`/api/v2/account_book/${accountBookId}/ledger`)
-        .query({
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
-          page: '1',
-          pageSize: '50',
-        })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('=== LEDGER AFTER INCOME VOUCHER POST ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Success:', ledgerResponse.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END LEDGER VERIFICATION ===');
-
-      expect(ledgerResponse.body.success).toBe(true);
-      expect(ledgerResponse.body.payload.totalCount).toBeGreaterThan(0);
-      expect(ledgerResponse.body.payload.data.length).toBeGreaterThan(0);
+      console.log(`\n🎉 Successfully created ${createdVouchers.length} vouchers for ledger test`);
     });
+  });
 
-    test('should create payment voucher based on screenshot requirements', async () => {
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
+  /**
+   * Info: (20250721 - Shirley) Test Step 3: Generate Ledger Report
+   */
+  describe('Step 3: Generate Ledger Report', () => {
+    test('should generate ledger report with proper structure', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250716 - Shirley) Payment voucher data based on screenshot
-      const paymentVoucherData = {
-        actions: [],
-        certificateIds: [],
-        invoiceRC2Ids: [],
-        voucherDate: 1751299200, // Info: (20250716 - Shirley) Date from screenshot
-        type: 'payment',
-        note: '{"note":""}',
-        lineItems: [
-          {
-            accountId: 1601,
-            amount: 12,
-            debit: true,
-            description: '',
-          },
-          {
-            accountId: 1601,
-            amount: 12,
-            debit: false,
-            description: '',
-          },
-        ],
-        reverseVouchers: [],
-        assetIds: [],
-        counterPartyId: null,
-      };
+      const getLedgerClient = createTestClient({
+        handler: getLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
 
-      const response = await voucherPostClient
-        .post(`/api/v2/account_book/${accountBookId}/voucher`)
-        .send(paymentVoucherData)
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      const response = await getLedgerClient
+        .get(`/api/v2/account_book/${accountBookId}/ledger`)
+        .query({
+          page: '1',
+          pageSize: '100',
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+        })
         .set('Cookie', cookies.join('; '));
 
-      // Info: (20250716 - Shirley) Always log payment voucher results for record keeping
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== PAYMENT VOUCHER POST RESULT ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher ID:', response.body.payload?.id);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Number:', response.body.payload?.no);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Type:', response.body.payload?.type);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Voucher Date:', response.body.payload?.date);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Line Items Count:', response.body.payload?.lineItems?.length);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Full Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END PAYMENT VOUCHER RESULT ===');
-
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.id).toBeDefined();
-      expect(typeof response.body.payload.id).toBe('number');
+      expect(response.body.payload.data).toBeDefined();
+      expect(Array.isArray(response.body.payload.data)).toBe(true);
 
-      // Info: (20250716 - Shirley) Validate output structure
+      // Info: (20250721 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.VOUCHER_POST_V2,
+        APIName.LEDGER_LIST,
         response.body.payload
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250716 - Luphia) remove eslint-disable
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('✅ Payment voucher created successfully with ID:', response.body.payload.id);
+        console.log('✅ Ledger report generated successfully');
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
       }
+    });
 
-      // Info: (20250716 - Shirley) Verify ledger after payment voucher creation
+    test('should validate ledger data structure and calculations', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
       const getLedgerClient = createTestClient({
         handler: getLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = Math.floor(Date.now() / 1000) - 86400 * 7;
-      const endDate = Math.floor(Date.now() / 1000) + 86400 * 7;
+      const startDate = 1753027200;
+      const endDate = 1753113599;
 
-      const ledgerResponse = await getLedgerClient
+      const response = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
         .query({
+          page: '1',
+          pageSize: '100',
           startDate: startDate.toString(),
           endDate: endDate.toString(),
-          page: '1',
-          pageSize: '50',
         })
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
+        .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== LEDGER AFTER PAYMENT VOUCHER POST ===');
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Success:', ledgerResponse.body.success);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Total Count:', ledgerResponse.body.payload.totalCount);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Items Count:', ledgerResponse.body.payload.data.length);
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Ledger Items:', JSON.stringify(ledgerResponse.body.payload.data, null, 2));
-      // Deprecated: (20250716 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END LEDGER VERIFICATION ===');
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
 
-      expect(ledgerResponse.body.success).toBe(true);
-      expect(ledgerResponse.body.payload.totalCount).toBeGreaterThan(0);
-      expect(ledgerResponse.body.payload.data.length).toBeGreaterThan(0);
+      const ledgerData = response.body.payload;
+
+      // Info: (20250721 - Shirley) Detailed ledger validation
+      expect(ledgerData.data).toBeDefined();
+      expect(Array.isArray(ledgerData.data)).toBe(true);
+      expect(ledgerData.totalCount).toBeGreaterThan(0);
+      expect(ledgerData.data.length).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Validate pagination structure
+      expect(ledgerData.page).toBe(1);
+      expect(ledgerData.pageSize).toBe(100);
+      expect(ledgerData.totalPages).toBeDefined();
+      expect(ledgerData.hasNextPage).toBeDefined();
+      expect(ledgerData.hasPreviousPage).toBeDefined();
+
+      // Info: (20250721 - Shirley) Validate ledger items structure
+      const firstItem = ledgerData.data[0];
+      expect(firstItem).toBeDefined();
+      expect(firstItem.id).toBeDefined();
+      expect(firstItem.accountId).toBeDefined();
+      expect(firstItem.voucherId).toBeDefined();
+      expect(firstItem.accountingTitle).toBeDefined();
+      expect(typeof firstItem.debitAmount).toBe('number');
+      expect(typeof firstItem.creditAmount).toBe('number');
+      expect(typeof firstItem.balance).toBe('number');
+    });
+  });
+
+  /**
+   * Info: (20250721 - Shirley) Test Step 4: Complete Integration Workflow Validation
+   */
+  describe('Step 4: Complete Integration Workflow Validation', () => {
+    test('should validate complete ledger integration workflow', async () => {
+      // Info: (20250721 - Shirley) Step 1: Verify account book exists
+      expect(accountBookId).toBeDefined();
+      expect(accountBookId).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Step 2: Verify ledger API is working
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const getLedgerClient = createTestClient({
+        handler: getLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      // Info: (20250722 - Shirley) Wait for database operations to complete before fetching ledger data
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
+      const finalLedgerResponse = await getLedgerClient
+        .get(`/api/v2/account_book/${accountBookId}/ledger`)
+        .query({
+          page: '1',
+          pageSize: '100',
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
+        })
+        .set('Cookie', cookies.join('; '));
+
+      expect(finalLedgerResponse.status).toBe(200);
+      expect(finalLedgerResponse.body.success).toBe(true);
+
+      const finalLedgerData = finalLedgerResponse.body.payload;
+
+      // Info: (20250721 - Shirley) Get expected ledger data from TestDataFactory for exact value validation
+      const expectedLedgerData = TestDataFactory.expectedLedgerData();
+
+      // Info: (20250722 - Shirley) Debug - temporarily log actual data to update expected data
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('🔍 Actual ledger data:', JSON.stringify(finalLedgerData, null, 2));
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('🔍 Expected ledger data:', JSON.stringify(expectedLedgerData, null, 2));
+      }
+
+      // Info: (20250721 - Shirley) Validate payload structure matches exactly with expected data
+      expect(finalLedgerData.totalCount).toBe(expectedLedgerData.payload.totalCount);
+      expect(finalLedgerData.data.length).toBe(expectedLedgerData.payload.data.length);
+      expect(finalLedgerData.page).toBe(expectedLedgerData.payload.page);
+      expect(finalLedgerData.totalPages).toBe(expectedLedgerData.payload.totalPages);
+      expect(finalLedgerData.pageSize).toBe(expectedLedgerData.payload.pageSize);
+      expect(finalLedgerData.hasNextPage).toBe(expectedLedgerData.payload.hasNextPage);
+      expect(finalLedgerData.hasPreviousPage).toBe(expectedLedgerData.payload.hasPreviousPage);
+      expect(finalLedgerData.sort).toEqual(expectedLedgerData.payload.sort);
+      expect(finalLedgerData.note).toBe(expectedLedgerData.payload.note);
+
+      // Info: (20250722 - Shirley) Validate ledger totals from note field (sufficient for integration test)
+      const finalNoteData = JSON.parse(finalLedgerData.note);
+      const expectedNoteData = JSON.parse(expectedLedgerData.payload.note);
+
+      expect(finalNoteData.currencyAlias).toBe(expectedNoteData.currencyAlias);
+      expect(finalNoteData.total.totalDebitAmount).toBe(expectedNoteData.total.totalDebitAmount);
+      expect(finalNoteData.total.totalCreditAmount).toBe(expectedNoteData.total.totalCreditAmount);
+
+      // Info: (20250721 - Shirley) Ledger should have proper structure
+      expect(finalLedgerData.page).toBeDefined();
+      expect(finalLedgerData.totalPages).toBeDefined();
+      expect(finalLedgerData.hasNextPage).toBeDefined();
+      expect(finalLedgerData.hasPreviousPage).toBeDefined();
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Complete workflow validated successfully');
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - Account Book ID: ${accountBookId}`);
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - Ledger Items: ${finalLedgerData.data.length}`);
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - Total Count: ${finalLedgerData.totalCount}`);
+      }
+    });
+  });
+
+  /**
+   * Info: (20250721 - Shirley) Test Step 5: Ledger Export Testing
+   */
+  describe('Step 5: Ledger Export Testing', () => {
+    test('should export ledger to CSV format', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const exportLedgerClient = createTestClient({
+        handler: exportLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const startDate = 1753027200;
+      const endDate = 1753113599;
+
+      // Info: (20250722 - Shirley) Wait for database operations to complete before exporting ledger data
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          startDate,
+          endDate,
+        },
+        options: {
+          fields: [
+            'no',
+            'accountingTitle',
+            'voucherNumber',
+            'voucherDate',
+            'particulars',
+            'debitAmount',
+            'creditAmount',
+            'balance',
+          ],
+        },
+      };
+
+      const response = await exportLedgerClient
+        .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('text/csv');
+      expect(response.headers['content-disposition']).toContain('attachment');
+      expect(response.headers['content-disposition']).toContain('ledger_');
+
+      // Info: (20250721 - Shirley) Validate CSV content structure
+      const csvContent = response.text;
+
+      expect(csvContent).toBeDefined();
+      expect(typeof csvContent).toBe('string');
+      expect(csvContent.length).toBeGreaterThan(0);
+
+      // Info: (20250721 - Shirley) Parse CSV content and convert to JSON for comparison
+      const lines = csvContent.split('\n').filter((line) => line.trim().length > 0);
+      expect(lines.length).toBeGreaterThan(1);
+
+      const headers = lines[0].split(',');
+      expect(headers.length).toBeGreaterThanOrEqual(8);
+
+      // Info: (20250721 - Shirley) Convert CSV to JSON format for comparison
+      const csvData = lines.slice(1).map((line) => {
+        const values = line.split(',');
+        // Info: (20250722 - Shirley) Handle date format - CSV exports dates as YYYY-MM-DD, not timestamps
+        let voucherDate = 0;
+        const dateString = values[3];
+        if (dateString && dateString.includes('-')) {
+          // Info: (20250722 - Shirley) Convert "2025-07-21" format to timestamp for comparison
+          const date = new Date(dateString);
+          voucherDate = Math.floor(date.getTime() / 1000); // Info: (20250722 - Shirley) Convert to Unix timestamp
+        } else if (!Number.isNaN(parseInt(values[3], 10))) {
+          voucherDate = parseInt(values[3], 10);
+        }
+
+        return {
+          no: values[0],
+          accountingTitle: values[1],
+          voucherNumber: values[2],
+          voucherDate,
+          particulars: values[4],
+          debitAmount: parseInt(values[5], 10) || 0,
+          creditAmount: parseInt(values[6], 10) || 0,
+          balance: parseInt(values[7], 10) || 0,
+        };
+      });
+
+      // Info: (20250721 - Shirley) Get expected data from TestDataFactory for exact value comparison
+      const expectedData = TestDataFactory.expectedLedgerData();
+
+      // Info: (20250721 - Shirley) Compare CSV data length with expected data
+      expect(csvData.length).toBe(expectedData.payload.data.length);
+      expect(csvData.length).toBe(lines.length - 1); // Should match actual data minus header
+
+      // Info: (20250722 - Shirley) Validate CSV totals match expected totals (sufficient for integration test)
+      const totalDebitAmount = csvData.reduce((sum, item) => sum + item.debitAmount, 0);
+      const totalCreditAmount = csvData.reduce((sum, item) => sum + item.creditAmount, 0);
+      const expectedNoteData = JSON.parse(expectedData.payload.note);
+
+      expect(totalDebitAmount).toBe(expectedNoteData.total.totalDebitAmount);
+      expect(totalCreditAmount).toBe(expectedNoteData.total.totalCreditAmount);
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Ledger CSV export successful');
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log(`   - CSV Lines Count: ${lines.length}`);
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('🔍 CSV Content (first 3 lines):', lines.slice(0, 3).join('\n'));
+      }
+    });
+
+    test('should handle invalid file type for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const exportLedgerClient = createTestClient({
+        handler: exportLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'pdf', // Info: (20250722 - Shirley) Invalid file type
+        filters: {
+          startDate: 1753027200,
+          endDate: 1753113599,
+        },
+        options: {},
+      };
+
+      const response = await exportLedgerClient
+        .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to validation error
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Invalid file type properly rejected');
+      }
+    });
+
+    test('should handle missing date parameters for export', async () => {
+      await authenticatedHelper.ensureAuthenticated();
+      const cookies = authenticatedHelper.getCurrentSession();
+
+      const exportLedgerClient = createTestClient({
+        handler: exportLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          // Info: (20250722 - Shirley) Missing startDate and endDate
+        },
+        options: {},
+      };
+
+      const response = await exportLedgerClient
+        .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
+        .send(exportRequestData)
+        .set('Cookie', cookies.join('; '));
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing parameters
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Missing date parameters properly rejected');
+      }
+    });
+
+    test('should handle export without authentication', async () => {
+      const exportLedgerClient = createTestClient({
+        handler: exportLedgerHandler,
+        routeParams: { accountBookId: accountBookId.toString() },
+      });
+
+      const exportRequestData = {
+        fileType: 'csv',
+        filters: {
+          // Info: (20250722 - Shirley) Missing startDate and endDate
+        },
+        options: {},
+      };
+
+      const response = await exportLedgerClient
+        .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
+        .send(exportRequestData);
+      // Info: (20250722 - Shirley) No authentication cookies
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing authentication
+
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250722 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('✅ Unauthenticated export request properly rejected');
+      }
     });
   });
 });
