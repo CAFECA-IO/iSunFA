@@ -108,23 +108,11 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
     // Info: (20250716 - Shirley) Refresh session to ensure team membership is updated
     await authenticatedHelper.getStatusInfo();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
   afterAll(async () => {
     // Info: (20250716 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
@@ -161,12 +149,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(typeof outputData?.id).toBe('number');
 
       accountBookId = response.body.payload.id;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
     });
 
     test('should verify account book connection', async () => {
@@ -186,12 +168,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.payload.id).toBe(accountBookId);
       expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
     });
   });
 
@@ -253,24 +229,11 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
             type: voucherData.type,
             lineItems: voucherData.lineItems,
           });
-          // Deprecated: (20250730 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-        } else {
-          // Deprecated: (20250730 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
         }
       }
 
       // Info: (20250721 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
-
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for trial balance test`
-      );
     });
   });
 
@@ -313,15 +276,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Trial balance report generated successfully');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
-      }
     });
 
     test('should validate trial balance data structure and calculations', async () => {
@@ -442,21 +396,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(finalTrialBalanceData.totalPages).toBeDefined();
       expect(finalTrialBalanceData.hasNextPage).toBeDefined();
       expect(finalTrialBalanceData.hasPreviousPage).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Trial Balance Items: ${finalTrialBalanceData.data.length}`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalTrialBalanceData.totalCount}`);
-      }
     });
   });
 
@@ -555,18 +494,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
           expect(csvItem.endingCreditAmount).toBe(expectedItem.endingCreditAmount);
         }
       });
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Trial balance CSV export successful');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Lines Count: ${lines.length}`);
-      }
     });
 
     test('should handle invalid file type for export', async () => {
@@ -595,12 +522,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Invalid file type properly rejected');
-      }
     });
 
     test('should handle missing date parameters for export', async () => {
@@ -628,12 +549,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Missing date parameters properly rejected');
-      }
     });
 
     test('should handle export without authentication', async () => {
@@ -659,12 +574,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Unauthenticated export request properly rejected');
-      }
     });
   });
 });

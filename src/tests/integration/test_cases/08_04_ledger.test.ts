@@ -109,23 +109,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
     // Info: (20250721 - Shirley) Refresh session to ensure team membership is updated
     await authenticatedHelper.getStatusInfo();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
   afterAll(async () => {
     // Info: (20250721 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
@@ -162,12 +150,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(typeof outputData?.id).toBe('number');
 
       accountBookId = response.body.payload.id;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
     });
 
     test('should verify account book connection', async () => {
@@ -187,12 +169,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.payload.id).toBe(accountBookId);
       expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
     });
   });
 
@@ -255,22 +231,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
             type: voucherData.type,
             lineItems: voucherData.lineItems,
           });
-          // Deprecated: (20250722 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-        } else {
-          // Deprecated: (20250722 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
         }
       }
 
       // Info: (20250721 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
-
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`\n🎉 Successfully created ${createdVouchers.length} vouchers for ledger test`);
     });
   });
 
@@ -313,15 +278,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger report generated successfully');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
-      }
     });
 
     test('should validate ledger data structure and calculations', async () => {
@@ -416,16 +372,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       // Info: (20250721 - Shirley) Get expected ledger data from TestDataFactory for exact value validation
       const expectedLedgerData = TestDataFactory.expectedLedgerData();
 
-      // Info: (20250722 - Shirley) Debug - temporarily log actual data to update expected data
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🔍 Actual ledger data:', JSON.stringify(finalLedgerData, null, 2));
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🔍 Expected ledger data:', JSON.stringify(expectedLedgerData, null, 2));
-      }
-
       // Info: (20250721 - Shirley) Validate payload structure matches exactly with expected data
       expect(finalLedgerData.totalCount).toBe(expectedLedgerData.payload.totalCount);
       expect(finalLedgerData.data.length).toBe(expectedLedgerData.payload.data.length);
@@ -473,21 +419,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(finalLedgerData.totalPages).toBeDefined();
       expect(finalLedgerData.hasNextPage).toBeDefined();
       expect(finalLedgerData.hasPreviousPage).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Ledger Items: ${finalLedgerData.data.length}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalLedgerData.totalCount}`);
-      }
     });
   });
 
@@ -606,21 +537,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
           expect(csvItem.balance).toBe(expectedItem.balance);
         }
       });
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger CSV export successful');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Lines Count: ${lines.length}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🔍 CSV Content (first 3 lines):', lines.slice(0, 3).join('\n'));
-      }
     });
 
     test('should handle invalid file type for export', async () => {
@@ -649,12 +565,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Invalid file type properly rejected');
-      }
     });
 
     test('should handle missing date parameters for export', async () => {
@@ -682,12 +592,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Missing date parameters properly rejected');
-      }
     });
 
     test('should handle export without authentication', async () => {
@@ -712,12 +616,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Unauthenticated export request properly rejected');
-      }
     });
   });
 });
