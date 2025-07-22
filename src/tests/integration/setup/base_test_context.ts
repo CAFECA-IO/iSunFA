@@ -8,11 +8,10 @@ import prisma from '@/client';
  */
 export interface SharedContext {
   helper: APITestHelper;
-  multiUserHelper: APITestHelper;
   cookies: string[];
   userId: number;
   teamId: number;
-  accountBookId: number;
+  // accountBookId: number;
 }
 
 export class BaseTestContext {
@@ -40,20 +39,18 @@ export class BaseTestContext {
       // Info: (20250717 - Tzuhan) 建立空殼，確保 recordXXX 在初始化途中也能安全使用
       this.ctx = {
         helper: undefined as unknown as APITestHelper,
-        multiUserHelper: undefined as unknown as APITestHelper,
         cookies: [],
         userId: 0,
         teamId: 0,
-        accountBookId: 0,
+        // accountBookId: 0,
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
-      const helper = await APITestHelper.createHelper({
-        email: TestDataFactory.PRIMARY_TEST_EMAIL,
-      });
-      const multiUserHelper = await APITestHelper.createHelper({
-        emails: TestDataFactory.DEFAULT_TEST_EMAILS,
-      });
+      const helper = await APITestHelper.createHelper({ autoAuth: true });
+      // Info: (20250717 - Tzuhan) 取得 User
+      const status = await helper.getStatusInfo();
+      const userId = (status.body.payload?.user as { id: number }).id as number;
+      const cookies = helper.getCurrentSession();
       // Info: (20250717 - Tzuhan) Complete user registration with default values
       await helper.agreeToTerms();
       await helper.createUserRole();
@@ -63,19 +60,12 @@ export class BaseTestContext {
       const teamRes = await helper.createTeam('IT Shared Team');
       const teamId = teamRes.body.payload!.id as number;
 
-      // Info: (20250717 - Tzuhan) 取得 User
-      const status = await helper.getStatusInfo();
-      const userId = (status.body.payload!.user as { id: number }).id;
-
-      // Info: (20250717 - Tzuhan) 建立帳本
-      // const bookRes = await helper.createAccountBook(teamId, `${userId}`);
-      // const accountBookId = bookRes.body.payload!.id as number;
-      // const accountBookId = await helper.createTestAccountBook();
+      // Info: (20250721 - Tzuhan) 建立 Account Book
+      // const accountBookId = await helper.createAccountBook(userId, teamId);
 
       Object.assign(this.ctx, {
         helper,
-        multiUserHelper,
-        cookies: helper.getCurrentSession(),
+        cookies,
         userId,
         teamId,
         // accountBookId,
@@ -88,17 +78,12 @@ export class BaseTestContext {
   }
 
   // -----------------------------------------
-  // Info: (20250717 - Tzuhan) 資料記錄工具
-  // -----------------------------------------
-  private static ensureCtx() {
-    if (!this.ctx) throw new Error('BaseTestContext not initialized yet');
-  }
-
-  // -----------------------------------------
   // Info: (20250717 - Tzuhan) 清理 / 重設
   // -----------------------------------------
   /** Info: (20250717 - Tzuhan) 刪除 DB 中所有測試期間建立的資料，並斷線 */
   static async cleanup(): Promise<void> {
+    // Todo: 透過補上開始測試時間與結束時間，用來清楚測試期間內新增的 file
+    // Todo： 移除 ctx，透過email來刪除測試資料
     if (!this.ctx) return;
 
     const userIds = await prisma.user
