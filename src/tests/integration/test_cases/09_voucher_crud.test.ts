@@ -31,7 +31,7 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
     userId = sharedContext.userId;
     teamId = sharedContext.teamId;
     cookies = sharedContext.cookies;
-    accountBookId = await helper.createAccountBook(userId, teamId);
+    accountBookId = (await helper.createAccountBook(userId, teamId)).id;
 
     /** Info: (20250722 - Tzuhan) replaced by BaseTestContext
     helper = await APITestHelper.createHelper({ autoAuth: true });

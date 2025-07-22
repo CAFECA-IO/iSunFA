@@ -691,9 +691,10 @@ export class APITestHelper {
     const response = await accountBookCreateClient
       .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId.toString()))
       .send(accountBook)
-      .set('Cookie', cookies.join('; '));
+      .set('Cookie', cookies.join('; '))
+      .expect(200);
 
-    return response.body.payload?.id || 0;
+    return response.body.payload;
   }
 
   // Info: (20250711 - Shirley) Create test account book for integration tests

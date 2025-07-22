@@ -91,7 +91,7 @@ export async function getInvoiceTestContext(): Promise<InvoiceTestContext> {
     const bookId = Number(bookRes.body.payload?.id);
     if (!bookId) throw new SetupError('create accountBook failed', bookRes.body);
     */
-    const bookId = await helper.createAccountBook(userId, teamId);
+    const bookId = (await helper.createAccountBook(userId, teamId)).id;
 
     /* Info: (20250711 - Tzuhan) 5. 上傳測試檔 */
     const fileIdForInput = await uploadEncryptedFile('invoice_input', bookId);
