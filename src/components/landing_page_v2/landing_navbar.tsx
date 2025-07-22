@@ -113,8 +113,8 @@ const LandingNavbar: React.FC = () => {
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link> */}
-      <Link href={ISUNFA_ROUTE.PRICING}>
-        <LandingButton type="button" variant="default">
+      <Link href={ISUNFA_ROUTE.PRICING} className="p-10px">
+        <LandingButton type="button" className="w-full">
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
       </Link>
@@ -183,8 +183,8 @@ const LandingNavbar: React.FC = () => {
         {langBtn}
         {/* Info: (20241227 - Julian) Language Dropdown */}
         <div
-          className={`mt-10px grid w-full overflow-hidden rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out ${
-            isLangOpen ? 'grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
+          className={`grid w-full overflow-hidden rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out ${
+            isLangOpen ? 'mt-10px grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
           }`}
         >
           <div className="flex flex-col items-start py-12px">{langOptions}</div>
