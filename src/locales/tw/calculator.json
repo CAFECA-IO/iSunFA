@@ -28,11 +28,13 @@
   "BASE_PAY_FORM": {
     "BASE_SALARY": "本薪（應稅）",
     "MEAL_ALLOWANCE": "伙食費（免稅）",
-    "OTHER_ALLOWANCE": "其他津貼（免稅）"
+    "OTHER_ALLOWANCE_WITH_TAX": "其他加給（應稅）",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "其他加給（免稅）",
+    "ADDITIONAL_INFORMATION": "差旅費、傷病、喪葬、退休金、社會保險福利或政府補助"
   },
   "WORK_HOURS_FORM": {
-    "OVERTIME_HOUR": "加班時數",
-    "TOTAL_OVERTIME_HOUR": "總加班時數",
+    "OVERTIME_HOUR_WITHOUT_TAX": "加班時數（免稅）",
+    "OVERTIME_HOUR_WITH_TAX": "加班時數（應稅）",
     "LEAVE_HOUR": "請假時數",
     "SICK_MENSTRUAL_LEAVE": "病假/生理假",
     "PERSONAL_LEAVE": "事假",
@@ -62,10 +64,14 @@
     "EDIT_SUCCESS_TOAST": "員工資料已更新"
   },
   "RESULT": {
-    "BASE_SALARY": "本薪（應稅）",
-    "MEAL_ALLOWANCE": "伙食費（免稅）",
-    "OVERTIME_PAY": "加班費（免稅）",
-    "OTHER_ALLOWANCE": "其他津貼（免稅）",
+    "BASE_SALARY_WITH_TAX": "本薪（應稅）",
+    "OVERTIME_PAY_WITH_TAX": "加班費（應稅）",
+    "OTHER_ALLOWANCE_WITH_TAX": "其他加給（應稅）",
+    "TOTAL_SALARY_WITH_TAX": "總應稅薪資",
+    "MEAL_ALLOWANCE_WITHOUT_TAX": "伙食費（免稅）",
+    "OVERTIME_PAY_WITHOUT_TAX": "加班費（免稅）",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "其他津貼（免稅）",
+    "TOTAL_SALARY_WITHOUT_TAX": "總免稅薪資",
     "TOTAL_MONTHLY_SALARY": "月薪資合計",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "自行負擔勞保費",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "自行負擔健保費",

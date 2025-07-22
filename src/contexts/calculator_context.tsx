@@ -49,25 +49,45 @@ interface ICalculatorContext {
   setBaseSalary: React.Dispatch<React.SetStateAction<number>>;
   mealAllowance: number;
   setMealAllowance: React.Dispatch<React.SetStateAction<number>>;
-  otherAllowance: number;
-  setOtherAllowance: React.Dispatch<React.SetStateAction<number>>;
+  otherAllowanceWithTax: number;
+  setOtherAllowanceWithTax: React.Dispatch<React.SetStateAction<number>>;
+  otherAllowanceWithoutTax: number;
+  setOtherAllowanceWithoutTax: React.Dispatch<React.SetStateAction<number>>;
 
   // Info: (20250710 - Julian) Step 3: 工作時數相關 state 和 functions
-  oneHours: number;
-  setOneHours: React.Dispatch<React.SetStateAction<number>>;
-  oneAndOneThirdHours: number;
-  setOneAndOneThirdHours: React.Dispatch<React.SetStateAction<number>>;
-  oneAndTwoThirdsHours: number;
-  setOneAndTwoThirdsHours: React.Dispatch<React.SetStateAction<number>>;
-  twoHours: number;
-  setTwoHours: React.Dispatch<React.SetStateAction<number>>;
-  twoAndTwoThirdsHours: number;
-  setTwoAndTwoThirdsHours: React.Dispatch<React.SetStateAction<number>>;
+  // Info: (20250722 - Julian) Non-taxable hours
+  oneAndOneThirdHoursForNonTax: number;
+  setOneAndOneThirdHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  oneAndTwoThirdsHoursForNonTax: number;
+  setOneAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  twoHoursForNonTax: number;
+  setTwoHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  twoAndOneThirdsHoursForNonTax: number;
+  setTwoAndOneThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  twoAndTwoThirdsHoursForNonTax: number;
+  setTwoAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  threeAndTwoThirdsHoursForNonTax: number;
+  setThreeAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  totalNonTaxableHours: number; // Info: (20250710 - Julian) 總免稅加班時數
+  // Info: (20250722 - Julian) Taxable hours
+  oneAndOneThirdHoursForTaxable: number;
+  setOneAndOneThirdHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  oneAndTwoThirdsHoursForTaxable: number;
+  setOneAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  twoHoursForTaxable: number;
+  setTwoHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  twoAndOneThirdsHoursForTaxable: number;
+  setTwoAndOneThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  twoAndTwoThirdsHoursForTaxable: number;
+  setTwoAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  threeAndTwoThirdsHoursForTaxable: number;
+  setThreeAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  totalTaxableHours: number; // Info: (20250710 - Julian) 總應稅加班時數
+  // Info: (20250722 - Julian) Leave hours
   sickLeaveHours: number;
   setSickLeaveHours: React.Dispatch<React.SetStateAction<number>>;
   personalLeaveHours: number;
   setPersonalLeaveHours: React.Dispatch<React.SetStateAction<number>>;
-  totalOvertimeHours: number;
   totalLeaveHours: number;
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
@@ -119,17 +139,27 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
   const [baseSalary, setBaseSalary] = useState<number>(0);
   const [mealAllowance, setMealAllowance] = useState<number>(0);
-  const [otherAllowance, setOtherAllowance] = useState<number>(0);
+  const [otherAllowanceWithTax, setOtherAllowanceWithTax] = useState<number>(0);
+  const [otherAllowanceWithoutTax, setOtherAllowanceWithoutTax] = useState<number>(0);
 
   // Info: (20250709 - Julian) Step 3: 工作時數相關 state
-  const [oneHours, setOneHours] = useState<number>(0);
-  const [oneAndOneThirdHours, setOneAndOneThirdHours] = useState<number>(0);
-  const [oneAndTwoThirdsHours, setOneAndTwoThirdsHours] = useState<number>(0);
-  const [twoHours, setTwoHours] = useState<number>(0);
-  const [twoAndTwoThirdsHours, setTwoAndTwoThirdsHours] = useState<number>(0);
+  const [oneAndOneThirdHoursForNonTax, setOneAndOneThirdHoursForNonTax] = useState<number>(0);
+  const [oneAndTwoThirdsHoursForNonTax, setOneAndTwoThirdsHoursForNonTax] = useState<number>(0);
+  const [twoHoursForNonTax, setTwoHoursForNonTax] = useState<number>(0);
+  const [twoAndOneThirdsHoursForNonTax, setTwoAndOneThirdsHoursForNonTax] = useState<number>(0);
+  const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] = useState<number>(0);
+  const [threeAndTwoThirdsHoursForNonTax, setThreeAndTwoThirdsHoursForNonTax] = useState<number>(0);
+  const [totalNonTaxableHours, setTotalNonTaxableHours] = useState<number>(0);
+  const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdHoursForTaxable] = useState<number>(0);
+  const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] = useState<number>(0);
+  const [twoHoursForTaxable, setTwoHoursForTaxable] = useState<number>(0);
+  const [twoAndOneThirdsHoursForTaxable, setTwoAndOneThirdsHoursForTaxable] = useState<number>(0);
+  const [twoAndTwoThirdsHoursForTaxable, setTwoAndTwoThirdsHoursForTaxable] = useState<number>(0);
+  const [threeAndTwoThirdsHoursForTaxable, setThreeAndTwoThirdsHoursForTaxable] =
+    useState<number>(0);
+  const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
-  const [totalOvertimeHours, setTotalOvertimeHours] = useState<number>(0);
   const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state
@@ -139,12 +169,42 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [voluntaryPensionContribution, setVoluntaryPensionContribution] = useState<number>(0);
 
   useEffect(() => {
-    // Info: (20250710 - Julian) 計算總加班時數
-    const totalOvertime =
-      oneHours + oneAndOneThirdHours + oneAndTwoThirdsHours + twoHours + twoAndTwoThirdsHours;
+    // Info: (20250710 - Julian) 計算總免稅加班時數
+    const totalHours =
+      oneAndOneThirdHoursForNonTax +
+      oneAndTwoThirdsHoursForNonTax +
+      twoHoursForNonTax +
+      twoAndOneThirdsHoursForNonTax +
+      twoAndTwoThirdsHoursForNonTax +
+      threeAndTwoThirdsHoursForNonTax;
+    setTotalNonTaxableHours(totalHours);
+  }, [
+    oneAndOneThirdHoursForNonTax,
+    oneAndTwoThirdsHoursForNonTax,
+    twoHoursForNonTax,
+    twoAndOneThirdsHoursForNonTax,
+    twoAndTwoThirdsHoursForNonTax,
+    threeAndTwoThirdsHoursForNonTax,
+  ]);
 
-    setTotalOvertimeHours(totalOvertime);
-  }, [oneHours, oneAndOneThirdHours, oneAndTwoThirdsHours, twoHours, twoAndTwoThirdsHours]);
+  useEffect(() => {
+    // Info: (20250710 - Julian) 計算總應稅加班時數
+    const totalHours =
+      oneAndOneThirdHoursForTaxable +
+      oneAndTwoThirdsHoursForTaxable +
+      twoHoursForTaxable +
+      twoAndOneThirdsHoursForTaxable +
+      twoAndTwoThirdsHoursForTaxable +
+      threeAndTwoThirdsHoursForTaxable;
+    setTotalTaxableHours(totalHours);
+  }, [
+    oneAndOneThirdHoursForTaxable,
+    oneAndTwoThirdsHoursForTaxable,
+    twoHoursForTaxable,
+    twoAndOneThirdsHoursForTaxable,
+    twoAndTwoThirdsHoursForTaxable,
+    threeAndTwoThirdsHoursForTaxable,
+  ]);
 
   useEffect(() => {
     // Info: (20250710 - Julian) 計算總休假時數
@@ -177,16 +237,25 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setWorkedDays(31);
     setBaseSalary(0);
     setMealAllowance(0);
-    setOtherAllowance(0);
-    setOneHours(0);
-    setOneAndOneThirdHours(0);
-    setOneAndTwoThirdsHours(0);
-    setTwoHours(0);
-    setTwoAndTwoThirdsHours(0);
+    setOtherAllowanceWithTax(0);
+    setOtherAllowanceWithoutTax(0);
+    // Info: (20250722 - Julian) 重置工作時數相關 state
+    setOneAndOneThirdHoursForNonTax(0);
+    setOneAndTwoThirdsHoursForNonTax(0);
+    setTwoHoursForNonTax(0);
+    setTwoAndOneThirdsHoursForNonTax(0);
+    setTwoAndTwoThirdsHoursForNonTax(0);
+    setThreeAndTwoThirdsHoursForNonTax(0);
+    setTotalNonTaxableHours(0);
+    setOneAndOneThirdHoursForTaxable(0);
+    setOneAndTwoThirdsHoursForTaxable(0);
+    setTwoHoursForTaxable(0);
+    setTwoAndOneThirdsHoursForTaxable(0);
+    setTwoAndTwoThirdsHoursForTaxable(0);
+    setThreeAndTwoThirdsHoursForTaxable(0);
+    setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
-    // setTotalOvertimeHours(0);
-    // setTotalLeaveHours(0);
     setNhiBackPremium(0);
     setSecondGenNhiTax(0);
     setOtherAdjustments(0);
@@ -244,25 +313,42 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setBaseSalary,
       mealAllowance,
       setMealAllowance,
-      otherAllowance,
-      setOtherAllowance,
+      otherAllowanceWithTax,
+      setOtherAllowanceWithTax,
+      otherAllowanceWithoutTax,
+      setOtherAllowanceWithoutTax,
       isNameError,
       setIsNameError,
-      oneHours,
-      setOneHours,
-      oneAndOneThirdHours,
-      setOneAndOneThirdHours,
-      oneAndTwoThirdsHours,
-      setOneAndTwoThirdsHours,
-      twoHours,
-      setTwoHours,
-      twoAndTwoThirdsHours,
-      setTwoAndTwoThirdsHours,
+      oneAndOneThirdHoursForNonTax,
+      setOneAndOneThirdHoursForNonTax,
+      oneAndTwoThirdsHoursForNonTax,
+      setOneAndTwoThirdsHoursForNonTax,
+      twoHoursForNonTax,
+      setTwoHoursForNonTax,
+      twoAndOneThirdsHoursForNonTax,
+      setTwoAndOneThirdsHoursForNonTax,
+      twoAndTwoThirdsHoursForNonTax,
+      setTwoAndTwoThirdsHoursForNonTax,
+      threeAndTwoThirdsHoursForNonTax,
+      setThreeAndTwoThirdsHoursForNonTax,
+      totalNonTaxableHours,
+      oneAndOneThirdHoursForTaxable,
+      setOneAndOneThirdHoursForTaxable,
+      oneAndTwoThirdsHoursForTaxable,
+      setOneAndTwoThirdsHoursForTaxable,
+      twoHoursForTaxable,
+      setTwoHoursForTaxable,
+      twoAndOneThirdsHoursForTaxable,
+      setTwoAndOneThirdsHoursForTaxable,
+      twoAndTwoThirdsHoursForTaxable,
+      setTwoAndTwoThirdsHoursForTaxable,
+      threeAndTwoThirdsHoursForTaxable,
+      setThreeAndTwoThirdsHoursForTaxable,
+      totalTaxableHours,
       sickLeaveHours,
       setSickLeaveHours,
       personalLeaveHours,
       setPersonalLeaveHours,
-      totalOvertimeHours,
       totalLeaveHours,
       nhiBackPremium,
       setNhiBackPremium,
@@ -286,16 +372,25 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       workedDays,
       baseSalary,
       mealAllowance,
-      otherAllowance,
+      otherAllowanceWithTax,
+      otherAllowanceWithoutTax,
       isNameError,
-      oneHours,
-      oneAndOneThirdHours,
-      oneAndTwoThirdsHours,
-      twoHours,
-      twoAndTwoThirdsHours,
+      oneAndOneThirdHoursForNonTax,
+      oneAndTwoThirdsHoursForNonTax,
+      twoHoursForNonTax,
+      twoAndOneThirdsHoursForNonTax,
+      twoAndTwoThirdsHoursForNonTax,
+      threeAndTwoThirdsHoursForNonTax,
+      totalNonTaxableHours,
+      oneAndOneThirdHoursForTaxable,
+      oneAndTwoThirdsHoursForTaxable,
+      twoHoursForTaxable,
+      twoAndOneThirdsHoursForTaxable,
+      twoAndTwoThirdsHoursForTaxable,
+      threeAndTwoThirdsHoursForTaxable,
+      totalTaxableHours,
       sickLeaveHours,
       personalLeaveHours,
-      totalOvertimeHours,
       totalLeaveHours,
       nhiBackPremium,
       secondGenNhiTax,
