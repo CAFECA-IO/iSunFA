@@ -398,6 +398,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const startDate = 1753027200;
       const endDate = 1753113599;
 
+      // Info: (20250722 - Shirley) Wait for database operations to complete before fetching ledger data
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
       const finalLedgerResponse = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
         .query({
@@ -415,6 +420,12 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
       // Info: (20250721 - Shirley) Get expected ledger data from TestDataFactory for exact value validation
       const expectedLedgerData = TestDataFactory.expectedLedgerData();
+
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('step5, finalLedgerData:', finalLedgerData);
+      // eslint-disable-next-line no-console
+      console.log('step5, expectedLedgerData:', expectedLedgerData);
 
       // Info: (20250722 - Shirley) Debug - temporarily log actual data to update expected data
       if (process.env.DEBUG_TESTS === 'true') {
@@ -507,6 +518,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const startDate = 1753027200;
       const endDate = 1753113599;
 
+      // Info: (20250722 - Shirley) Wait for database operations to complete before exporting ledger data
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000);
+      });
+
       const exportRequestData = {
         fileType: 'csv',
         filters: {
@@ -583,6 +599,12 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       // Info: (20250721 - Shirley) Compare CSV data length with expected data
       expect(csvData.length).toBe(expectedData.payload.data.length);
       expect(csvData.length).toBe(lines.length - 1); // Should match actual data minus header
+
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('step5, csvData:', csvData);
+      // eslint-disable-next-line no-console
+      console.log('step5,expectedData:', expectedData.payload.data);
 
       // Info: (20250721 - Shirley) Validate each CSV row matches expected ledger data (flexible matching)
       expectedData.payload.data.forEach((expectedItem) => {
