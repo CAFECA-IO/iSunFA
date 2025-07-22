@@ -420,12 +420,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       // Info: (20250721 - Shirley) Get expected ledger data from TestDataFactory for exact value validation
       const expectedLedgerData = TestDataFactory.expectedLedgerData();
 
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('step5, finalLedgerData.data:', finalLedgerData.data);
-      // eslint-disable-next-line no-console
-      console.log('step5, expectedLedgerData:', expectedLedgerData);
-
       // Info: (20250722 - Shirley) Debug - temporarily log actual data to update expected data
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable
@@ -575,12 +569,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       // Info: (20250721 - Shirley) Compare CSV data length with expected data
       expect(csvData.length).toBe(expectedData.payload.data.length);
       expect(csvData.length).toBe(lines.length - 1); // Should match actual data minus header
-
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('step5, csvData:', csvData);
-      // eslint-disable-next-line no-console
-      console.log('step5,expectedData:', expectedData.payload.data);
 
       // Info: (20250722 - Shirley) Validate CSV totals match expected totals (sufficient for integration test)
       const totalDebitAmount = csvData.reduce((sum, item) => sum + item.debitAmount, 0);
