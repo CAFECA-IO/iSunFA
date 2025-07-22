@@ -234,7 +234,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
           actions: [],
           certificateIds: [],
           invoiceRC2Ids: [],
-          voucherDate: testDateBase + i * 3600, // Use test date range with incremental hours
+          voucherDate: testDateBase + i * 3600, // Info: (20250722 - Shirley) Use test date range with incremental hours
           type: voucherData.type,
           note: voucherData.note,
           lineItems: voucherData.lineItems,
@@ -242,6 +242,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
           counterPartyId: null,
         };
 
+        // Deprecated: (20250722 - Luphia) remove eslint-disable
         // eslint-disable-next-line no-await-in-loop
         const response = await voucherPostClient
           .post(`/api/v2/account_book/${accountBookId}/voucher`)
@@ -546,7 +547,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         if (dateString && dateString.includes('-')) {
           // Info: (20250722 - Shirley) Convert "2025-07-21" format to timestamp for comparison
           const date = new Date(dateString);
-          voucherDate = Math.floor(date.getTime() / 1000); // Convert to Unix timestamp
+          voucherDate = Math.floor(date.getTime() / 1000); // Info: (20250722 - Shirley) Convert to Unix timestamp
         } else if (!Number.isNaN(parseInt(values[3], 10))) {
           voucherDate = parseInt(values[3], 10);
         }
@@ -604,7 +605,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       const exportRequestData = {
-        fileType: 'pdf', // Invalid file type
+        fileType: 'pdf', // Info: (20250722 - Shirley) Invalid file type
         filters: {
           startDate: 1753027200,
           endDate: 1753113599,
@@ -619,7 +620,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to validation error
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable
@@ -640,7 +641,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          // Missing startDate and endDate
+          // Info: (20250722 - Shirley) Missing startDate and endDate
         },
         options: {},
       };
@@ -652,7 +653,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing parameters
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable
@@ -670,7 +671,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          // Missing startDate and endDate
+          // Info: (20250722 - Shirley) Missing startDate and endDate
         },
         options: {},
       };
@@ -678,11 +679,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const response = await exportLedgerClient
         .post(`/api/v2/account_book/${accountBookId}/ledger/export`)
         .send(exportRequestData);
-      // No authentication cookies
+      // Info: (20250722 - Shirley) No authentication cookies
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
+      expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing authentication
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable
