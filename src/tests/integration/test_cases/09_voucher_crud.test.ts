@@ -1,23 +1,23 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
-
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
+// import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 import voucherIdHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]';
 import voucherRestoreHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher/[voucherId]/restore';
 import { APIPath, APIName } from '@/constants/api_connection';
 import { EventType } from '@/constants/account';
 import { validateOutputData } from '@/lib/utils/validator';
-import { WORK_TAG } from '@/interfaces/account_book';
-import { LocaleKey } from '@/constants/normal_setting';
-import { CurrencyType } from '@/constants/currency';
+// import { WORK_TAG } from '@/interfaces/account_book';
+// import { LocaleKey } from '@/constants/normal_setting';
+// import { CurrencyType } from '@/constants/currency';
 import voucherListByAccHandler from '@/pages/api/v2/account_book/[accountBookId]/account/[accountId]/voucher';
 import { voucherGetAllFrontendValidatorV2 as FrontendSchema } from '@/lib/utils/zod_schema/voucher';
 import { VoucherListTabV2 } from '@/constants/voucher';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 
 describe('Voucher V2 – 完整 CRUD + Restore', () => {
   let helper: APITestHelper;
-  let currentUserId: string;
+  let userId: number;
   let teamId: number;
   let accountBookId: number;
   let cookies: string[];
@@ -26,9 +26,17 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
   let payload: Record<string, unknown>;
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    helper = sharedContext.helper;
+    userId = sharedContext.userId;
+    teamId = sharedContext.teamId;
+    cookies = sharedContext.cookies;
+    accountBookId = (await helper.createAccountBook(userId, teamId)).id;
+
+    /** Info: (20250722 - Tzuhan) replaced by BaseTestContext
     helper = await APITestHelper.createHelper({ autoAuth: true });
     const status = await helper.getStatusInfo();
-    currentUserId = ((status.body.payload?.user as { id: number }).id as number).toString();
+    userId = ((status.body.payload?.user as { id: number }).id as number).toString();
     cookies = helper.getCurrentSession();
 
     await helper.agreeToTerms();
@@ -59,14 +67,15 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
 
     const createBookClient = createTestClient({
       handler: createAccountBookHandler,
-      routeParams: { userId: currentUserId },
+      routeParams: { userId: userId },
     });
     const bookRes = await createBookClient
-      .post(`/api/v2/user/${currentUserId}/account_book`)
+      .post(`/api/v2/user/${userId}/account_book`)
       .send(testCompany)
       .set('Cookie', cookies.join('; '))
       .expect(200);
     accountBookId = bookRes.body.payload.id;
+    */
 
     // Info: (20250721 - Tzuhan) 準備 Voucher POST 的 body
     payload = {
@@ -197,7 +206,12 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       .expect(200);
 
     expect(res.body.success).toBe(true);
-    expect(res.body.payload).toBe(voucherId);
+    const { isOutputDataValid, outputData } = validateOutputData(
+      APIName.VOUCHER_RESTORE_V2,
+      res.body.payload
+    );
+    expect(isOutputDataValid).toBe(true);
+    expect(outputData).toBe(voucherId);
   });
 
   it('GET /voucher list (all)', async () => {
