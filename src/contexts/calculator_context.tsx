@@ -91,12 +91,13 @@ export const CalculatorContext = createContext<ICalculatorContext | undefined>(u
 export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250714 - Julian) 計算機的表單選項
   const thisYear = new Date().getFullYear();
+  const thisMonth = new Date().getMonth() + 1; // 月份從 0 開始，所以要加 1
   // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
   const yearGap = thisYear - 2025 + 1;
   const yearOptions = Array.from({ length: yearGap }, (_, i) => `${i + 2025}`).reverse();
 
-  // Info: (20250714 - Julian) 月份選項：只顯示 1 月到 6 月
-  const monthOptions = MONTHS.slice(0, 6);
+  // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
+  const monthOptions = MONTHS.slice(0, thisMonth);
 
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
