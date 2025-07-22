@@ -587,7 +587,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const totalDebitAmount = csvData.reduce((sum, item) => sum + item.debitAmount, 0);
       const totalCreditAmount = csvData.reduce((sum, item) => sum + item.creditAmount, 0);
       const expectedNoteData = JSON.parse(expectedData.payload.note);
-      
+
       expect(totalDebitAmount).toBe(expectedNoteData.total.totalDebitAmount);
       expect(totalCreditAmount).toBe(expectedNoteData.total.totalCreditAmount);
 
