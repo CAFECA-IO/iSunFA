@@ -448,14 +448,16 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(finalLedgerData.sort).toEqual(expectedLedgerData.payload.sort);
       expect(finalLedgerData.note).toBe(expectedLedgerData.payload.note);
 
-      // Info: (20250721 - Shirley) Validate each ledger item matches expected data (flexible matching by account and voucher details)
+      // Info: (20250721 - Shirley) Validate each ledger item matches expected data (flexible matching by account and core business data)
       expectedLedgerData.payload.data.forEach((expectedItem: ILedgerItem) => {
         const actualItem = finalLedgerData.data.find(
           (item: ILedgerItem) =>
             item.accountId === expectedItem.accountId &&
-            item.voucherDate === expectedItem.voucherDate &&
-            item.voucherNumber === expectedItem.voucherNumber &&
-            item.particulars === expectedItem.particulars
+            item.no === expectedItem.no &&
+            item.accountingTitle === expectedItem.accountingTitle &&
+            item.particulars === expectedItem.particulars &&
+            item.debitAmount === expectedItem.debitAmount &&
+            item.creditAmount === expectedItem.creditAmount
         );
 
         expect(actualItem).toBeDefined();
@@ -606,13 +608,15 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       // eslint-disable-next-line no-console
       console.log('step5,expectedData:', expectedData.payload.data);
 
-      // Info: (20250721 - Shirley) Validate each CSV row matches expected ledger data (flexible matching)
+      // Info: (20250721 - Shirley) Validate each CSV row matches expected ledger data (flexible matching by core business data)
       expectedData.payload.data.forEach((expectedItem) => {
         const csvItem = csvData.find(
           (item) =>
             item.no === expectedItem.no &&
-            item.voucherNumber === expectedItem.voucherNumber &&
-            item.particulars === expectedItem.particulars
+            item.accountingTitle === expectedItem.accountingTitle &&
+            item.particulars === expectedItem.particulars &&
+            item.debitAmount === expectedItem.debitAmount &&
+            item.creditAmount === expectedItem.creditAmount
         );
         expect(csvItem).toBeDefined();
 
