@@ -25,7 +25,7 @@ import otpHandler from '@/pages/api/v2/email/[email]/one_time_password';
 import statusInfoHandler from '@/pages/api/v2/status_info';
 import { APIPath } from '@/constants/api_connection';
 import { TPlanType } from '@/interfaces/subscription';
-import { WORK_TAG } from '@/interfaces/account_book';
+import { ICreateAccountBookReqBody } from '@/interfaces/account_book';
 
 interface TestResponse {
   status: number;
@@ -658,29 +658,23 @@ export class APITestHelper {
     }
   }
 
-  async createAccountBook(teamId: number, userId: string) {
+  async createAccountBook(userId: number, accountBookData: ICreateAccountBookReqBody) {
     await this.ensureAuthenticated();
     const cookies = this.getCurrentSession();
-    const name = `Test_Account_Book_${teamId}_${userId}`;
 
     const { default: accountBookCreateHandler } = await import(
       '@/pages/api/v2/user/[userId]/account_book'
     );
     const accountBookCreateClient = createTestClient({
       handler: accountBookCreateHandler,
-      routeParams: { userId },
+      routeParams: { userId: userId.toString() },
     });
     const response = await accountBookCreateClient
-      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId))
-      .send({
-        name,
-        taxId: Math.random().toString(36).slice(2, 10),
-        tag: WORK_TAG.ALL,
-        teamId: Number(teamId),
-      })
+      .post(APIPath.CREATE_ACCOUNT_BOOK.replace(':userId', userId.toString()))
+      .send(accountBookData)
       .set('Cookie', cookies.join('; '));
 
-    return response;
+    return response.body.payload?.id || 0;
   }
 
   // Info: (20250711 - Shirley) Create test account book for integration tests
