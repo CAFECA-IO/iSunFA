@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
-import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
-import { useCalculatorCtx, CalculatorProvider } from '@/contexts/calculator_context';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
+import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
+import ReceivedTab from '@/components/salary_calculator/pay_slip_received_tab';
+import { useCalculatorCtx, CalculatorProvider } from '@/contexts/calculator_context';
+import useOuterClick from '@/lib/hooks/use_outer_click';
+import { dummyReceivedData } from '@/interfaces/pay_slip';
 
-const FilterSection: React.FC = () => {
+const FilterSection: React.FC<{
+  selectedYear: string;
+  setSelectedYear: (year: string) => void;
+  selectedMonth: string;
+  setSelectedMonth: (month: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}> = ({
+  selectedYear,
+  setSelectedYear,
+  selectedMonth,
+  setSelectedMonth,
+  searchQuery,
+  setSearchQuery,
+}) => {
   const { t } = useTranslation(['calculator', 'date_picker']);
   const { yearOptions: defaultYearOptions, monthOptions: defaultMonthOptions } = useCalculatorCtx();
+
+  const yearOptions = ['All', ...defaultYearOptions];
+  const monthOptions = ['All', ...defaultMonthOptions.map((month) => month.name)];
 
   const {
     targetRef: yearRef,
@@ -21,13 +40,6 @@ const FilterSection: React.FC = () => {
     componentVisible: isShowMonth,
     setComponentVisible: setShowMonth,
   } = useOuterClick<HTMLDivElement>(false);
-
-  const yearOptions = ['All', ...defaultYearOptions];
-  const monthOptions = ['All', ...defaultMonthOptions.map((month) => month.name)];
-
-  const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(monthOptions[0]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const yearStr = selectedYear === yearOptions[0] ? t('date_picker:DATE_PICKER.ALL') : selectedYear;
   const monthStr = t(`date_picker:DATE_PICKER.${selectedMonth.slice(0, 3).toUpperCase()}`);
@@ -144,7 +156,12 @@ const FilterSection: React.FC = () => {
 
 const MyPaySlipPageBody: React.FC = () => {
   const { t } = useTranslation('calculator');
+
   const [currentTab, setCurrentTab] = useState<'received' | 'sent'>('received');
+  //  // Info: (20250723 - Julian) 查詢條件
+  const [selectedYear, setSelectedYear] = useState<string>('All');
+  const [selectedMonth, setSelectedMonth] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const receivedStyle =
     currentTab === 'received'
@@ -190,7 +207,19 @@ const MyPaySlipPageBody: React.FC = () => {
 
           {/* Info: (20250718 - Julian) List */}
           <div className="flex w-full flex-col gap-24px">
-            <FilterSection />
+            <FilterSection
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+              selectedMonth={selectedMonth}
+              setSelectedMonth={setSelectedMonth}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            {currentTab === 'received' ? (
+              <ReceivedTab receivedRecords={dummyReceivedData} />
+            ) : (
+              <div>To be continued...</div>
+            )}
           </div>
         </div>
       </main>

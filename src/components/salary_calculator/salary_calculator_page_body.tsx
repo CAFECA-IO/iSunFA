@@ -12,7 +12,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
         <CalculatorNavbar />
 
         {/* Info: (20250708 - Julian) Main Content */}
-        <div className="flex gap-84px p-80px">
+        <div className="flex gap-84px overflow-x-auto p-80px">
           {/* Info: (20250708 - Julian) Left Section */}
           <SalaryFormSection />
           {/* Info: (20250708 - Julian) Right Section */}
