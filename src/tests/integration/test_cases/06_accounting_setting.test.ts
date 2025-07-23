@@ -1,3 +1,4 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
@@ -11,6 +12,7 @@ import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { CurrencyType } from '@/constants/currency';
 
+/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
 jest.mock('pusher', () => ({
   // Info: (20250715 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -41,6 +43,8 @@ jest.mock('@/lib/utils/crypto', () => {
   };
 });
 
+*/
+
 /**
  * Info: (20250715 - Shirley) Integration Test - Accounting Setting Configuration
  *
@@ -69,6 +73,14 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   // let accountByIdClient: TestClient;
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    authenticatedHelper = sharedContext.helper;
+    const currentUserId = String(sharedContext.userId);
+    const teamId =
+      sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
+    testAccountBookId = (await authenticatedHelper.createAccountBook(Number(currentUserId), teamId))
+      .id;
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     // Info: (20250711 - Shirley) Complete user registration with default values
@@ -81,6 +93,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     // Info: (20250715 - Shirley) Refresh session to include new team membership
     await authenticatedHelper.getStatusInfo();
+    */
 
     // Info: (20250711 - Shirley) Initialize test clients
     accountingSettingClient = createTestClient({
@@ -100,7 +113,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   });
 
   afterAll(() => {
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     authenticatedHelper.clearAllUserSessions();
+    */
   });
 
   // ========================================

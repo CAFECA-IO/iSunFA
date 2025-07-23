@@ -1,15 +1,16 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
+// import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
+// import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
+// import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import reportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
+// import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
-import { WORK_TAG } from '@/interfaces/account_book';
-import { LocaleKey } from '@/constants/normal_setting';
-import { CurrencyType } from '@/constants/currency';
+// import { WORK_TAG } from '@/interfaces/account_book';
+// import { LocaleKey } from '@/constants/normal_setting';
+// import { CurrencyType } from '@/constants/currency';
 import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { ReportSheetType } from '@/constants/report';
@@ -23,31 +24,44 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
   let currentUserId: string;
   let teamId: number;
   let accountBookId: number;
+  let cookies: string[];
 
-  let createAccountBookClient: TestClient;
-  let getAccountBookClient: TestClient;
+  // let createAccountBookClient: TestClient;
+  // let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
   let reportClient: TestClient;
   let voucherPostClient: TestClient;
 
-  const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
-  const testCompanyData = {
-    name: `Cash Flow Test Company 現金流量測試公司`,
-    taxId: randomTaxId,
-    tag: WORK_TAG.ALL,
-    teamId: 0,
-    businessLocation: LocaleKey.tw,
-    accountingCurrency: CurrencyType.TWD,
-    representativeName: 'CF Test Rep',
-    taxSerialNumber: `CF${randomTaxId}`,
-    contactPerson: 'CF Tester',
-    phoneNumber: '+886-2-1234-5678',
-    city: 'Taipei',
-    district: 'Zhongzheng District',
-    enteredAddress: '100 Test Rd, Zhongzheng, Taipei',
-  };
+  // const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
+  // const testCompanyData = {
+  //   name: `Cash Flow Test Company 現金流量測試公司`,
+  //   taxId: randomTaxId,
+  //   tag: WORK_TAG.ALL,
+  //   teamId: 0,
+  //   businessLocation: LocaleKey.tw,
+  //   accountingCurrency: CurrencyType.TWD,
+  //   representativeName: 'CF Test Rep',
+  //   taxSerialNumber: `CF${randomTaxId}`,
+  //   contactPerson: 'CF Tester',
+  //   phoneNumber: '+886-2-1234-5678',
+  //   city: 'Taipei',
+  //   district: 'Zhongzheng District',
+  //   enteredAddress: '100 Test Rd, Zhongzheng, Taipei',
+  // };
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    helper = sharedContext.helper;
+    currentUserId = String(sharedContext.userId);
+    teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
+    cookies = sharedContext.cookies;
+    accountBookId = (await helper.createAccountBook(Number(currentUserId), teamId)).id;
+    const clients = await helper.getAccountBookClients(accountBookId);
+    // createAccountBookClient = clients.createAccountBookClient;
+    connectAccountBookClient = clients.connectAccountBookClient;
+    voucherPostClient = clients.voucherPostClient;
+    reportClient = clients.reportClient;
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     helper = await APITestHelper.createHelper({ autoAuth: true });
     const status = await helper.getStatusInfo();
     currentUserId = (status.body.payload?.user as { id: number })?.id?.toString() ?? '1';
@@ -66,8 +80,9 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
       handler: createAccountBookHandler,
       routeParams: { userId: currentUserId },
     });
+    */
   });
-
+  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   const initClients = () => {
     getAccountBookClient = createTestClient({
       handler: getAccountBookHandler,
@@ -86,15 +101,15 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
       routeParams: { accountBookId: accountBookId.toString() },
     });
   };
-
+    */
   afterAll(async () => {
     helper.clearSession();
   });
 
+  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   describe('Step 1: Account Book Creation', () => {
     test('creates an account book successfully', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
 
       const res = await createAccountBookClient
         .post(`/api/v2/user/${currentUserId}/account_book`)
@@ -106,12 +121,11 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
       accountBookId = res.body.payload.id;
       expect(typeof accountBookId).toBe('number');
 
-      initClients();
+      // initClients();
     });
 
     test('verifies account book connection', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
 
       const res = await getAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}`)
@@ -122,11 +136,10 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
       expect(res.body.payload.id).toBe(accountBookId);
     });
   });
-
+    */
   describe('Step 2: Create Sample Vouchers for Cash Flow', () => {
     test('posts cash flow vouchers via API', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
 
       const conn = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
@@ -174,7 +187,6 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
 
     test('returns valid cash flow report structure', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
 
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -232,7 +244,7 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
 
     test('invalid reportType yields 422', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
+
       const now = Math.floor(Date.now() / 1000);
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
@@ -249,7 +261,7 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
 
     test('missing params yields 422', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
+
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
         .query({ language: 'en' })
@@ -261,15 +273,16 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
 
     test('empty account book returns empty arrays', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
 
-      const emptyData = { ...testCompanyData, taxId: `${Date.now()}`, name: 'Empty CF Co.' };
-      const cr = await createAccountBookClient
-        .post(`/api/v2/user/${currentUserId}/account_book`)
-        .send(emptyData)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-      const emptyId = cr.body.payload.id;
+      // const emptyData = { ...testCompanyData, taxId: `${Date.now()}`, name: 'Empty CF Co.' };
+      const cr = await helper.createAccountBook(Number(currentUserId), teamId, 'Empty CF Co.');
+      // createAccountBookClient
+      //   .post(`/api/v2/user/${currentUserId}/account_book`)
+      //   .send(emptyData)
+      //   .set('Cookie', cookies.join('; '))
+      //   .expect(200);
+      // const emptyId = cr.body.payload.id;
+      const emptyId = cr.id;
       const emptyClient = createTestClient({
         handler: reportHandler,
         routeParams: { accountBookId: emptyId.toString() },
@@ -296,7 +309,7 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
   describe('Step 5: Complete Workflow Validation', () => {
     test('end-to-end cash flow report contains non-zero items', async () => {
       await helper.ensureAuthenticated();
-      const cookies = helper.getCurrentSession();
+
       const now = Math.floor(Date.now() / 1000);
 
       const res = await reportClient

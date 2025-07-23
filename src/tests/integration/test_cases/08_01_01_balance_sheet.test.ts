@@ -1,14 +1,15 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APIName } from '@/constants/api_connection';
 import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
 // Info: (20250717 - Julian) API Handler Imports
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
+// import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
+// import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getReportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
 // import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
+// import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250717 - Julian) 測試用 constants
 import { ReportSheetType } from '@/constants/report';
@@ -18,8 +19,7 @@ import { LocaleKey } from '@/constants/normal_setting';
 import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
-import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
-import { WORK_TAG } from '@/interfaces/account_book';
+// import { WORK_TAG } from '@/interfaces/account_book';
 
 describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   let authenticatedHelper: APITestHelper;
@@ -29,7 +29,7 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   let accountBookId: number;
 
   // Info: (20250721 - Julian) test clients
-  let createAccountBookClient: TestClient;
+  // let createAccountBookClient: TestClient;
   // let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
   let getBalanceSheetClient: TestClient;
@@ -62,37 +62,34 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     //   handler: getAccountBookHandler,
     //   routeParams: { accountBookId: accountBookId.toString() },
     // });
-
-    connectAccountBookClient = createTestClient({
-      handler: connectAccountBookHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    getBalanceSheetClient = createTestClient({
-      handler: getReportHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    voucherPostClient = createTestClient({
-      handler: voucherPostHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
+    // connectAccountBookClient = createTestClient({
+    //   handler: connectAccountBookHandler,
+    //   routeParams: { accountBookId: accountBookId.toString() },
+    // });
+    // getBalanceSheetClient = createTestClient({
+    //   handler: getReportHandler,
+    //   routeParams: { accountBookId: accountBookId.toString() },
+    // });
+    // voucherPostClient = createTestClient({
+    //   handler: voucherPostHandler,
+    //   routeParams: { accountBookId: accountBookId.toString() },
+    // });
   };
 
   beforeAll(async () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     authenticatedHelper = sharedContext.helper;
     currentUserId = sharedContext.userId.toString();
-    teamId = sharedContext.teamId;
+    teamId = sharedContext.teamId || (await BaseTestContext.createTeam(sharedContext.userId)).id;
     accountBook = await authenticatedHelper.createAccountBook(Number(currentUserId), teamId);
     accountBookId = accountBook.id;
 
     // Info: (20250721 - Julian) 建立測試用的帳本
-    createAccountBookClient = createTestClient({
-      handler: createAccountBookHandler,
-      routeParams: { userId: currentUserId },
-    });
-
+    const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
+    // createAccountBookClient = clients.createAccountBookClient;
+    connectAccountBookClient = clients.connectAccountBookClient;
+    voucherPostClient = clients.voucherPostClient;
+    getBalanceSheetClient = clients.reportClient;
     /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
     // Info: (20250717 - Julian) 設定 Helper
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
@@ -997,20 +994,25 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const cookies = authenticatedHelper.getCurrentSession();
 
         // Info: (20250721 - Julian) Create a new account book with no vouchers/transactions
-        const emptyTestCompanyData = {
-          name: 'Empty Test Company 空資料測試公司',
-          taxId: (Math.floor(Math.random() * 90000000) + 10000000).toString(),
+        // const emptyTestCompanyData = {
+        //   name: 'Empty Test Company 空資料測試公司',
+        //   taxId: (Math.floor(Math.random() * 90000000) + 10000000).toString(),
+        //   teamId,
+        //   tag: WORK_TAG.FINANCIAL,
+        // };
+
+        // const createResponse = await createAccountBookClient
+        //   .post(`/api/v2/user/${currentUserId}/account_book`)
+        //   .send(emptyTestCompanyData)
+        //   .set('Cookie', cookies.join('; '));
+
+        // expect(createResponse.status).toBe(200);
+        const emptyAccountBook = await authenticatedHelper.createAccountBook(
+          Number(currentUserId),
           teamId,
-          tag: WORK_TAG.FINANCIAL,
-        };
-
-        const createResponse = await createAccountBookClient
-          .post(`/api/v2/user/${currentUserId}/account_book`)
-          .send(emptyTestCompanyData)
-          .set('Cookie', cookies.join('; '));
-
-        expect(createResponse.status).toBe(200);
-        const emptyAccountBookId = createResponse.body.payload.id;
+          'Empty Test Company 空資料測試公司'
+        );
+        const emptyAccountBookId = emptyAccountBook.id;
 
         // Info: (20250721 - Julian) 用空帳本產生報表
         const emptyReportClient = createTestClient({

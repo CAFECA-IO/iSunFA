@@ -1,22 +1,25 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
-
+/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250721 - Shirley) Import API handlers for ledger integration testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
+import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
+*/
 import getLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger';
 import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger/export';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250721 - Shirley) Import required types and constants
-import { WORK_TAG } from '@/interfaces/account_book';
-import { LocaleKey } from '@/constants/normal_setting';
-import { CurrencyType } from '@/constants/currency';
+// import { WORK_TAG } from '@/interfaces/account_book';
+// import { LocaleKey } from '@/constants/normal_setting';
+// import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-
+import { TestClient } from '@/interfaces/test_client';
+/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250721 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
   __esModule: true,
@@ -44,6 +47,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(),
   };
 });
+  */
 
 /**
  * Info: (20250721 - Shirley) Integration Test - Ledger Integration (Test Case 8.4)
@@ -65,7 +69,11 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   let currentUserId: string;
   let teamId: number;
   let accountBookId: number;
+  let cookies: string[];
+  let connectAccountBookClient: TestClient;
+  let voucherPostClient: TestClient;
 
+  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
 
   // Info: (20250721 - Shirley) Test company data
@@ -84,8 +92,20 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
     district: 'Xinyi District',
     enteredAddress: '123 Test Street, Xinyi District, Taipei',
   };
+  */
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    authenticatedHelper = sharedContext.helper;
+    currentUserId = String(sharedContext.userId);
+    teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
+    cookies = sharedContext.cookies;
+    accountBookId = (await authenticatedHelper.createAccountBook(Number(currentUserId), teamId)).id;
+    const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
+    // createAccountBookClient = clients.createAccountBookClient;
+    connectAccountBookClient = clients.connectAccountBookClient;
+    voucherPostClient = clients.voucherPostClient;
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     // Info: (20250721 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
@@ -108,7 +128,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
     // Info: (20250721 - Shirley) Refresh session to ensure team membership is updated
     await authenticatedHelper.getStatusInfo();
-
+*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250722 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
@@ -117,9 +137,10 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   });
 
   afterAll(async () => {
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     // Info: (20250721 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
+*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250722 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
@@ -130,6 +151,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 1: Create Account Book
    */
+  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
       const createAccountBookClient = createTestClient({
@@ -138,7 +160,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await createAccountBookClient
         .post(`/api/v2/user/${currentUserId}/account_book`)
@@ -176,7 +197,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await getAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}`)
@@ -194,6 +214,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       }
     });
   });
+  */
 
   /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
@@ -201,13 +222,12 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   describe('Step 2: Create Sample Vouchers for Ledger', () => {
     test('should create vouchers and verify ledger data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       // Info: (20250721 - Shirley) Connect to account book first
-      const connectAccountBookClient = createTestClient({
-        handler: connectAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
+      // const connectAccountBookClient = createTestClient({
+      //   handler: connectAccountBookHandler,
+      //   routeParams: { accountBookId: accountBookId.toString() },
+      // });
 
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
@@ -217,10 +237,10 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
 
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
+      // const voucherPostClient = createTestClient({
+      //   handler: voucherPostHandler,
+      //   routeParams: { accountBookId: accountBookId.toString() },
+      // });
 
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
       const createdVouchers = [];
@@ -280,7 +300,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   describe('Step 3: Generate Ledger Report', () => {
     test('should generate ledger report with proper structure', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getLedgerClient = createTestClient({
         handler: getLedgerHandler,
@@ -326,7 +345,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
     test('should validate ledger data structure and calculations', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getLedgerClient = createTestClient({
         handler: getLedgerHandler,
@@ -388,7 +406,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
       // Info: (20250721 - Shirley) Step 2: Verify ledger API is working
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getLedgerClient = createTestClient({
         handler: getLedgerHandler,
@@ -479,7 +496,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   describe('Step 5: Ledger Export Testing', () => {
     test('should export ledger to CSV format', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const exportLedgerClient = createTestClient({
         handler: exportLedgerHandler,
@@ -597,7 +613,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
     test('should handle invalid file type for export', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const exportLedgerClient = createTestClient({
         handler: exportLedgerHandler,
@@ -631,7 +646,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
 
     test('should handle missing date parameters for export', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const exportLedgerClient = createTestClient({
         handler: exportLedgerHandler,
