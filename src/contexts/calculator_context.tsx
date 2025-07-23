@@ -1,6 +1,6 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
-import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
+import { ISalaryCalculator, defaultSalaryCalculatorResult } from '@/interfaces/calculator';
 
 type TabStep = {
   step: number;
@@ -20,7 +20,7 @@ interface ICalculatorContext {
   completeSteps: TabStep[]; // Info: (20250710 - Julian) 已完成的步驟
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
-  salaryCalculator: ISalaryCalculator;
+  salaryCalculatorResult: ISalaryCalculator;
 
   // Info: (20250714 - Julian) 表單選項
   yearOptions: string[];
@@ -31,6 +31,8 @@ interface ICalculatorContext {
   changeEmployeeName: (name: string) => void;
   employeeNumber: string;
   changeEmployeeNumber: (number: string) => void;
+  employeeEmail: string; // Info: (20250723 - Julian) 員工電子郵件
+  changeEmployeeEmail: (email: string) => void;
   selectedYear: string;
   changeSelectedYear: (year: string) => void;
   selectedMonth: MonthType;
@@ -122,13 +124,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
+
   // ToDo: (20250710 - Julian) 計算機的整體計算結果
-  const [salaryCalculator, setSalaryCalculator] =
-    useState<ISalaryCalculator>(defaultSalaryCalculator);
+  const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
+    defaultSalaryCalculatorResult
+  );
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
+  const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(monthOptions[0]);
   const [workedDays, setWorkedDays] = useState<number>(31);
@@ -212,6 +217,79 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTotalLeaveHours(totalLeave);
   }, [sickLeaveHours, personalLeaveHours]);
 
+  // ToDo: (20250723 - Julian) 待計算
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const calculatorResultHandler = useMemo(() => {
+    const result: ISalaryCalculator = {
+      monthlySalary: {
+        baseSalaryWithTax: 0,
+        overtimePayWithTax: 0,
+        otherAllowanceWithTax: 0,
+        totalSalaryWithTax: 0,
+        mealAllowanceWithoutTax: 0,
+        overtimePayWithoutTax: 0,
+        otherAllowanceWithoutTax: 0,
+        totalSalaryWithoutTax: 0,
+        totalMonthlySalary: 0,
+      },
+      employeeContribution: {
+        employeePaidLaborInsurance: 0,
+        employeePaidHealthInsurance: 0,
+        voluntaryPensionContribution: 0,
+        withheldIncomeTax: 0,
+        withheldSecondGenerationNHIPremium: 0,
+        salaryDeductionForLeave: 0,
+        totalEmployeeContribution: 0,
+      },
+      insuredSalary: {
+        healthInsuranceSalaryBracket: 0,
+        laborInsuranceSalaryBracket: 0,
+        employmentInsuranceSalaryBracket: 0,
+        occupationalInjuryInsuranceSalaryBracket: 0,
+        laborPensionSalaryBracket: 0,
+        occupationalInjuryIndustryRate: 0,
+        insuredSalary: 0,
+      },
+      employerContribution: {
+        employerContributions: 0,
+        employerPaidLaborInsurance: 0,
+        employerPaidHealthInsurance: 0,
+        employerPaidPensionContribution: 0,
+        totalEmployerCost: 0,
+      },
+      totalSalary: 0,
+    };
+    setSalaryCalculatorResult(result);
+  }, [
+    workedDays,
+    baseSalary,
+    mealAllowance,
+    otherAllowanceWithTax,
+    otherAllowanceWithoutTax,
+    isNameError,
+    oneAndOneThirdHoursForNonTax,
+    oneAndTwoThirdsHoursForNonTax,
+    twoHoursForNonTax,
+    twoAndOneThirdsHoursForNonTax,
+    twoAndTwoThirdsHoursForNonTax,
+    threeAndTwoThirdsHoursForNonTax,
+    totalNonTaxableHours,
+    oneAndOneThirdHoursForTaxable,
+    oneAndTwoThirdsHoursForTaxable,
+    twoHoursForTaxable,
+    twoAndOneThirdsHoursForTaxable,
+    twoAndTwoThirdsHoursForTaxable,
+    threeAndTwoThirdsHoursForTaxable,
+    totalTaxableHours,
+    sickLeaveHours,
+    personalLeaveHours,
+    totalLeaveHours,
+    nhiBackPremium,
+    secondGenNhiTax,
+    otherAdjustments,
+    voluntaryPensionContribution,
+  ]);
+
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
     // Info: (20250714 - Julian) 將當前步驟標記為已完成
@@ -232,6 +310,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName('');
     setEmployeeNumber('');
+    setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(monthOptions[0]);
     setWorkedDays(31);
@@ -261,7 +340,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAdjustments(0);
     setVoluntaryPensionContribution(0);
     // Info: (20250710 - Julian) 重置計算機狀態
-    setSalaryCalculator(defaultSalaryCalculator);
+    setSalaryCalculatorResult(defaultSalaryCalculatorResult);
     // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
@@ -275,6 +354,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
+  };
+  const changeEmployeeEmail = (email: string) => {
+    setEmployeeEmail(email);
   };
   const changeSelectedYear = (year: string) => {
     setSelectedYear(year);
@@ -296,13 +378,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       monthOptions,
       currentStep,
       completeSteps,
-      salaryCalculator,
+      salaryCalculatorResult,
       switchStep,
       resetFormHandler,
       employeeName,
       changeEmployeeName,
       employeeNumber,
       changeEmployeeNumber,
+      employeeEmail,
+      changeEmployeeEmail,
       selectedYear,
       changeSelectedYear,
       selectedMonth,
@@ -364,9 +448,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       monthOptions,
       currentStep,
       completeSteps,
-      salaryCalculator,
+      salaryCalculatorResult,
       employeeName,
       employeeNumber,
+      employeeEmail,
       selectedYear,
       selectedMonth,
       workedDays,

@@ -53,7 +53,7 @@ export interface ISalaryCalculator {
   totalSalary: number; // Info: (20250710 - Julian) 薪資合計
 }
 
-export const defaultSalaryCalculator: ISalaryCalculator = {
+export const defaultSalaryCalculatorResult: ISalaryCalculator = {
   monthlySalary: {
     baseSalaryWithTax: 0,
     overtimePayWithTax: 0,
