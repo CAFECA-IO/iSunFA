@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import Image from 'next/image';
 import { TbDownload } from 'react-icons/tb';
 import { FiSend } from 'react-icons/fi';
@@ -9,14 +9,18 @@ import ResultBlock from '@/components/salary_calculator/result_block';
 import { RowItem } from '@/interfaces/calculator';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import html2canvas from 'html2canvas';
+import SendingPaySlipModal from '@/components/salary_calculator/sending_pay_slip';
 
 const SalaryCalculatorResult: React.FC = () => {
   const { t } = useTranslation('calculator');
   const downloadRef = useRef<HTMLDivElement>(null);
+  const [isShowModal, setIsShowModal] = useState<boolean>(false);
 
-  const { employeeName, selectedMonth, selectedYear, salaryCalculator } = useCalculatorCtx();
+  const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
 
-  const username = employeeName !== '' ? employeeName : '-';
+  const { employeeName, selectedMonth, selectedYear, salaryCalculatorResult } = useCalculatorCtx();
+
+  const showingName = employeeName !== '' ? employeeName : '-';
   // Info: (20250709 - Julian) 格式化日期
   const formattedMonth =
     selectedMonth.name.length > 3 ? `${selectedMonth.name.slice(0, 3)}.` : selectedMonth.name;
@@ -85,7 +89,7 @@ const SalaryCalculatorResult: React.FC = () => {
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
     totalSalary, // Info: (20250710 - Julian) 薪資合計
-  } = salaryCalculator;
+  } = salaryCalculatorResult;
 
   // Info: (20250708 - Julian) 月薪資項目
   const monthlyRowItems: RowItem[] = [
@@ -213,54 +217,65 @@ const SalaryCalculatorResult: React.FC = () => {
   ];
 
   return (
-    <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">
-      {/* Info: (20250708 - Julian) Result Block */}
-      <div
-        id="salary-result"
-        ref={downloadRef}
-        className="flex flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
-      >
-        {/* Info: (20250708 - Julian) Result Title */}
-        <div className="grid grid-cols-2 gap-12px">
-          {/* Info: (20250708 - Julian) 姓名和日期 */}
-          <div className="flex flex-col items-start gap-8px">
-            <p className="text-base font-semibold text-text-brand-primary-lv1">{formattedDate}</p>
-            <p className="text-28px font-bold text-text-neutral-primary">{username}</p>
+    <>
+      <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">
+        {/* Info: (20250708 - Julian) Result Block */}
+        <div
+          id="salary-result"
+          ref={downloadRef}
+          className="flex flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
+        >
+          {/* Info: (20250708 - Julian) Result Title */}
+          <div className="grid grid-cols-2 gap-12px">
+            {/* Info: (20250708 - Julian) 姓名和日期 */}
+            <div className="flex flex-col items-start gap-8px">
+              <p className="text-base font-semibold text-text-brand-primary-lv1">{formattedDate}</p>
+              <p className="text-28px font-bold text-text-neutral-primary">{showingName}</p>
+            </div>
+            {/* Info: (20250708 - Julian) 薪資合計 */}
+            <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
+              <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
+              <p>NT ${numberWithCommas(totalSalary)}</p>
+            </div>
           </div>
-          {/* Info: (20250708 - Julian) 薪資合計 */}
-          <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
-            <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
-            <p>NT ${numberWithCommas(totalSalary)}</p>
+          {/* Info: (20250708 - Julian) Result Field */}
+          <div className="grid grid-cols-2 gap-12px">
+            {/* Info: (20250708 - Julian) 月薪資合計 */}
+            <ResultBlock
+              backgroundColor="bg-surface-support-soft-maple"
+              rowItems={monthlyRowItems}
+            />
+            {/* Info: (20250708 - Julian) 員工負擔 */}
+            <ResultBlock
+              backgroundColor="bg-surface-support-soft-rose"
+              rowItems={employeeRowItems}
+            />
+            {/* Info: (20250708 - Julian) 投保薪資 */}
+            <ResultBlock
+              backgroundColor="bg-surface-support-soft-baby"
+              rowItems={insuredSalaryRowItems}
+            />
+            {/* Info: (20250708 - Julian) 雇主總負擔 */}
+            <ResultBlock
+              backgroundColor="bg-surface-support-soft-green"
+              rowItems={employerRowItems}
+            />
           </div>
         </div>
-        {/* Info: (20250708 - Julian) Result Field */}
-        <div className="grid grid-cols-2 gap-12px">
-          {/* Info: (20250708 - Julian) 月薪資合計 */}
-          <ResultBlock backgroundColor="bg-surface-support-soft-maple" rowItems={monthlyRowItems} />
-          {/* Info: (20250708 - Julian) 員工負擔 */}
-          <ResultBlock backgroundColor="bg-surface-support-soft-rose" rowItems={employeeRowItems} />
-          {/* Info: (20250708 - Julian) 投保薪資 */}
-          <ResultBlock
-            backgroundColor="bg-surface-support-soft-baby"
-            rowItems={insuredSalaryRowItems}
-          />
-          {/* Info: (20250708 - Julian) 雇主總負擔 */}
-          <ResultBlock
-            backgroundColor="bg-surface-support-soft-green"
-            rowItems={employerRowItems}
-          />
+        {/* Info: (20250708 - Julian) Buttons */}
+        <div className="grid grid-cols-2 gap-24px">
+          <Button type="button" variant="tertiary" onClick={downloadPng}>
+            {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
+          </Button>
+          <Button type="button" variant="tertiary" onClick={modalVisibleHandler}>
+            {t('calculator:BUTTON.SEND')} <FiSend size={20} />
+          </Button>
         </div>
       </div>
-      {/* Info: (20250708 - Julian) Buttons */}
-      <div className="grid grid-cols-2 gap-24px">
-        <Button type="button" variant="tertiary" onClick={downloadPng}>
-          {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
-        </Button>
-        <Button type="button" variant="tertiary">
-          {t('calculator:BUTTON.SEND')} <FiSend size={20} />
-        </Button>
-      </div>
-    </div>
+
+      {/* Info: (20250723 - Julian) Sending Pay Slip Modal */}
+      {isShowModal && <SendingPaySlipModal modalVisibleHandler={modalVisibleHandler} />}
+    </>
   );
 };
 

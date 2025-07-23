@@ -34,7 +34,7 @@ const HourCounter: React.FC<{
           value={value}
           setValue={setValue}
           min={MIN_WORK_HOURS}
-          // max={maxValue}
+          max={maxValue}
           className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
         />
         <button
@@ -90,6 +90,11 @@ const WorkHoursForm: React.FC = () => {
     totalLeaveHours,
   } = useCalculatorCtx();
 
+  const totalNonTaxableStyle =
+    totalNonTaxableHours >= 46 ? 'text-text-state-error' : 'text-text-brand-secondary-lv1';
+  const totalTaxableStyle =
+    totalTaxableHours >= 46 ? 'text-text-state-error' : 'text-text-brand-secondary-lv1';
+
   return (
     <form className="flex flex-col gap-lv-8">
       {/* Info: (20250709 - Julian) 加班時數（免稅） */}
@@ -98,9 +103,7 @@ const WorkHoursForm: React.FC = () => {
           <h2 className="flex-1 text-lg font-bold text-text-brand-secondary-lv1">
             {t('calculator:WORK_HOURS_FORM.OVERTIME_HOUR_WITHOUT_TAX')}
           </h2>
-          <p className="text-lg font-bold text-text-brand-secondary-lv1">
-            {totalNonTaxableHours} hrs
-          </p>
+          <p className={`text-lg font-bold ${totalNonTaxableStyle}`}>{totalNonTaxableHours} hrs</p>
         </div>
         <div className="grid grid-cols-3 gap-24px">
           {/* Info: (20250709 - Julian) 1.33 小時 */}
@@ -154,7 +157,7 @@ const WorkHoursForm: React.FC = () => {
           <h2 className="flex-1 text-lg font-bold text-text-brand-secondary-lv1">
             {t('calculator:WORK_HOURS_FORM.OVERTIME_HOUR_WITH_TAX')}
           </h2>
-          <p className="text-lg font-bold text-text-brand-secondary-lv1">{totalTaxableHours} hrs</p>
+          <p className={`text-lg font-bold ${totalTaxableStyle}`}>{totalTaxableHours} hrs</p>
         </div>
         <div className="grid grid-cols-3 gap-24px">
           {/* Info: (20250709 - Julian) 1.33 小時 */}

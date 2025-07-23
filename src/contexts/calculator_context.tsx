@@ -1,6 +1,6 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
-import { ISalaryCalculator, defaultSalaryCalculator } from '@/interfaces/calculator';
+import { ISalaryCalculator, defaultSalaryCalculatorResult } from '@/interfaces/calculator';
 
 type TabStep = {
   step: number;
@@ -20,7 +20,7 @@ interface ICalculatorContext {
   completeSteps: TabStep[]; // Info: (20250710 - Julian) 已完成的步驟
   switchStep: (step: number) => void;
   resetFormHandler: () => void;
-  salaryCalculator: ISalaryCalculator;
+  salaryCalculatorResult: ISalaryCalculator;
 
   // Info: (20250714 - Julian) 表單選項
   yearOptions: string[];
@@ -31,6 +31,8 @@ interface ICalculatorContext {
   changeEmployeeName: (name: string) => void;
   employeeNumber: string;
   changeEmployeeNumber: (number: string) => void;
+  employeeEmail: string; // Info: (20250723 - Julian) 員工電子郵件
+  changeEmployeeEmail: (email: string) => void;
   selectedYear: string;
   changeSelectedYear: (year: string) => void;
   selectedMonth: MonthType;
@@ -123,12 +125,14 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
   // ToDo: (20250710 - Julian) 計算機的整體計算結果
-  const [salaryCalculator, setSalaryCalculator] =
-    useState<ISalaryCalculator>(defaultSalaryCalculator);
+  const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
+    defaultSalaryCalculatorResult
+  );
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
+  const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(monthOptions[0]);
   const [workedDays, setWorkedDays] = useState<number>(31);
@@ -232,6 +236,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName('');
     setEmployeeNumber('');
+    setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(monthOptions[0]);
     setWorkedDays(31);
@@ -261,7 +266,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAdjustments(0);
     setVoluntaryPensionContribution(0);
     // Info: (20250710 - Julian) 重置計算機狀態
-    setSalaryCalculator(defaultSalaryCalculator);
+    setSalaryCalculatorResult(defaultSalaryCalculatorResult);
     // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
@@ -275,6 +280,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
+  };
+  const changeEmployeeEmail = (email: string) => {
+    setEmployeeEmail(email);
   };
   const changeSelectedYear = (year: string) => {
     setSelectedYear(year);
@@ -296,13 +304,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       monthOptions,
       currentStep,
       completeSteps,
-      salaryCalculator,
+      salaryCalculatorResult,
       switchStep,
       resetFormHandler,
       employeeName,
       changeEmployeeName,
       employeeNumber,
       changeEmployeeNumber,
+      employeeEmail,
+      changeEmployeeEmail,
       selectedYear,
       changeSelectedYear,
       selectedMonth,
@@ -364,9 +374,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       monthOptions,
       currentStep,
       completeSteps,
-      salaryCalculator,
+      salaryCalculatorResult,
       employeeName,
       employeeNumber,
+      employeeEmail,
       selectedYear,
       selectedMonth,
       workedDays,
