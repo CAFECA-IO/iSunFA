@@ -15,7 +15,8 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
   const { t } = useTranslation('calculator');
 
   const [keyword, setKeyword] = useState<string>('');
-  const { changeEmployeeName, changeEmployeeNumber, setBaseSalary } = useCalculatorCtx();
+  const { changeEmployeeName, changeEmployeeNumber, changeEmployeeEmail, setBaseSalary } =
+    useCalculatorCtx();
 
   // Info: (20250711 - Julian) Get data from API
   const employeesList = dummyEmployeeForCalc.filter(
@@ -36,6 +37,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
         const handleClick = () => {
           changeEmployeeName(employee.name);
           changeEmployeeNumber(employee.number ?? '');
+          changeEmployeeEmail(employee.email);
           setBaseSalary(employee.baseSalary);
           modalVisibleHandler();
         };

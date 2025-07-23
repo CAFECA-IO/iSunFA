@@ -93,6 +93,27 @@
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
     "TOTAL_EMPLOYER_COST": "Total Employer Cost"
   },
+  "LOGIN_MODAL": {
+    "TITLE": "Please Login in",
+    "CONTENT": "You need to log in first before using this function.",
+    "SUBMIT": "Go Log in"
+  },
+  "RESET_MODAL": {
+    "TITLE": "Reset the Numbers",
+    "CONTENT": "Are you sure you want to reset all the numbers?",
+    "SUBMIT": "Yes, Reset"
+  },
+  "SENDING_PAY_SLIP_MODAL": {
+    "TITLE": "Sending Pay Slip",
+    "CONTENT_1": "Are you sure you want to send the",
+    "CONTENT_BOLD_1": " pay slip for {{month}} ",
+    "CONTENT_2": "to",
+    "CONTENT_BOLD_2": " {{employeeName}} ?",
+    "EMAIL": "Email",
+    "EMAIL_PLACEHOLDER": "Please enter the employee’s email",
+    "INVALID_EMAIL_HINT": "Wrong format of email address, please check.",
+    "SUBMIT": "Send the pay Slip"
+  },
   "MY_PAY_SLIP": {
     "MAIN_TITLE": "My Pay Slip",
     "TAB_RECEIVED": "Pay Slip I Received",
