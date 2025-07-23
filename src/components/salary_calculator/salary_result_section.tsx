@@ -6,19 +6,27 @@ import { useTranslation } from 'next-i18next';
 import { numberWithCommas } from '@/lib/utils/common';
 import { Button } from '@/components/button/button';
 import ResultBlock from '@/components/salary_calculator/result_block';
+import SendingPaySlipModal from '@/components/salary_calculator/sending_pay_slip_modal';
+import LoginModal from '@/components/salary_calculator/login_modal';
 import { RowItem } from '@/interfaces/calculator';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
+import { useUserCtx } from '@/contexts/user_context';
 import html2canvas from 'html2canvas';
-import SendingPaySlipModal from '@/components/salary_calculator/sending_pay_slip';
 
 const SalaryCalculatorResult: React.FC = () => {
   const { t } = useTranslation('calculator');
   const downloadRef = useRef<HTMLDivElement>(null);
-  const [isShowModal, setIsShowModal] = useState<boolean>(false);
+  const [isShowLoginModal, setIsShowLoginModal] = useState<boolean>(false);
+  const [isShowSendingModal, setIsShowSendingModal] = useState<boolean>(false);
 
-  const modalVisibleHandler = () => setIsShowModal((prev) => !prev);
+  const toggleShowLoginModal = () => setIsShowLoginModal((prev) => !prev);
+  const toggleShowSendingModal = () => setIsShowSendingModal((prev) => !prev);
 
   const { employeeName, selectedMonth, selectedYear, salaryCalculatorResult } = useCalculatorCtx();
+  const { isSignIn } = useUserCtx();
+
+  // Info: (20250723 - Julian) 判斷按鈕是否禁用
+  const btnDisabled = employeeName === '';
 
   const showingName = employeeName !== '' ? employeeName : '-';
   // Info: (20250709 - Julian) 格式化日期
@@ -49,6 +57,15 @@ const SalaryCalculatorResult: React.FC = () => {
       link.click();
       document.body.removeChild(link);
     });
+  };
+
+  // Info: (20250723 - Julian) 登入才能使用寄出薪資單的功能
+  const sendingBtnClickHandler = () => {
+    if (isSignIn) {
+      toggleShowSendingModal();
+    } else {
+      toggleShowLoginModal();
+    }
   };
 
   const {
@@ -218,12 +235,12 @@ const SalaryCalculatorResult: React.FC = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col gap-24px py-80px pl-24px pr-60px">
+      <div className="flex w-full flex-col gap-24px">
         {/* Info: (20250708 - Julian) Result Block */}
         <div
           id="salary-result"
           ref={downloadRef}
-          className="flex flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
+          className="flex w-650px shrink-0 flex-col gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
         >
           {/* Info: (20250708 - Julian) Result Title */}
           <div className="grid grid-cols-2 gap-12px">
@@ -264,17 +281,25 @@ const SalaryCalculatorResult: React.FC = () => {
         </div>
         {/* Info: (20250708 - Julian) Buttons */}
         <div className="grid grid-cols-2 gap-24px">
-          <Button type="button" variant="tertiary" onClick={downloadPng}>
+          <Button type="button" variant="tertiary" onClick={downloadPng} disabled={btnDisabled}>
             {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
           </Button>
-          <Button type="button" variant="tertiary" onClick={modalVisibleHandler}>
+          <Button
+            type="button"
+            variant="tertiary"
+            onClick={sendingBtnClickHandler}
+            disabled={btnDisabled}
+          >
             {t('calculator:BUTTON.SEND')} <FiSend size={20} />
           </Button>
         </div>
       </div>
 
+      {/* Info: (20250723 - Julian) Login Modal */}
+      {isShowLoginModal && <LoginModal modalVisibleHandler={toggleShowLoginModal} />}
+
       {/* Info: (20250723 - Julian) Sending Pay Slip Modal */}
-      {isShowModal && <SendingPaySlipModal modalVisibleHandler={modalVisibleHandler} />}
+      {isShowSendingModal && <SendingPaySlipModal modalVisibleHandler={toggleShowSendingModal} />}
     </>
   );
 };
