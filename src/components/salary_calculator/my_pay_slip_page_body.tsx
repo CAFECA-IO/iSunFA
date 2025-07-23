@@ -158,7 +158,7 @@ const MyPaySlipPageBody: React.FC = () => {
   const { t } = useTranslation('calculator');
 
   const [currentTab, setCurrentTab] = useState<'received' | 'sent'>('received');
-  //  // Info: (20250723 - Julian) 查詢條件
+  // Info: (20250723 - Julian) 查詢條件
   const [selectedYear, setSelectedYear] = useState<string>('All');
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
