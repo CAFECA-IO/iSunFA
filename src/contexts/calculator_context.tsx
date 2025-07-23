@@ -124,6 +124,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
+
   // ToDo: (20250710 - Julian) 計算機的整體計算結果
   const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
     defaultSalaryCalculatorResult
@@ -215,6 +216,79 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const totalLeave = sickLeaveHours + personalLeaveHours;
     setTotalLeaveHours(totalLeave);
   }, [sickLeaveHours, personalLeaveHours]);
+
+  // ToDo: (20250723 - Julian) 待計算
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const calculatorResultHandler = useMemo(() => {
+    const result: ISalaryCalculator = {
+      monthlySalary: {
+        baseSalaryWithTax: 0,
+        overtimePayWithTax: 0,
+        otherAllowanceWithTax: 0,
+        totalSalaryWithTax: 0,
+        mealAllowanceWithoutTax: 0,
+        overtimePayWithoutTax: 0,
+        otherAllowanceWithoutTax: 0,
+        totalSalaryWithoutTax: 0,
+        totalMonthlySalary: 0,
+      },
+      employeeContribution: {
+        employeePaidLaborInsurance: 0,
+        employeePaidHealthInsurance: 0,
+        voluntaryPensionContribution: 0,
+        withheldIncomeTax: 0,
+        withheldSecondGenerationNHIPremium: 0,
+        salaryDeductionForLeave: 0,
+        totalEmployeeContribution: 0,
+      },
+      insuredSalary: {
+        healthInsuranceSalaryBracket: 0,
+        laborInsuranceSalaryBracket: 0,
+        employmentInsuranceSalaryBracket: 0,
+        occupationalInjuryInsuranceSalaryBracket: 0,
+        laborPensionSalaryBracket: 0,
+        occupationalInjuryIndustryRate: 0,
+        insuredSalary: 0,
+      },
+      employerContribution: {
+        employerContributions: 0,
+        employerPaidLaborInsurance: 0,
+        employerPaidHealthInsurance: 0,
+        employerPaidPensionContribution: 0,
+        totalEmployerCost: 0,
+      },
+      totalSalary: 0,
+    };
+    setSalaryCalculatorResult(result);
+  }, [
+    workedDays,
+    baseSalary,
+    mealAllowance,
+    otherAllowanceWithTax,
+    otherAllowanceWithoutTax,
+    isNameError,
+    oneAndOneThirdHoursForNonTax,
+    oneAndTwoThirdsHoursForNonTax,
+    twoHoursForNonTax,
+    twoAndOneThirdsHoursForNonTax,
+    twoAndTwoThirdsHoursForNonTax,
+    threeAndTwoThirdsHoursForNonTax,
+    totalNonTaxableHours,
+    oneAndOneThirdHoursForTaxable,
+    oneAndTwoThirdsHoursForTaxable,
+    twoHoursForTaxable,
+    twoAndOneThirdsHoursForTaxable,
+    twoAndTwoThirdsHoursForTaxable,
+    threeAndTwoThirdsHoursForTaxable,
+    totalTaxableHours,
+    sickLeaveHours,
+    personalLeaveHours,
+    totalLeaveHours,
+    nhiBackPremium,
+    secondGenNhiTax,
+    otherAdjustments,
+    voluntaryPensionContribution,
+  ]);
 
   // Info: (20250709 - Julian) 切換步驟
   const switchStep = (step: number) => {
