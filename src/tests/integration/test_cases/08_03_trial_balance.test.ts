@@ -556,6 +556,12 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         expect(csvItem).toBeDefined();
 
         if (csvItem) {
+          // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log(`Comparing CSV item:`, csvItem);
+          // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
+          // eslint-disable-next-line no-console
+          console.log(`Against expected item:`, expectedItem);
           expect(csvItem.accountingTitle).toBe(expectedItem.accountingTitle);
           expect(csvItem.beginningDebitAmount).toBe(expectedItem.beginningDebitAmount);
           expect(csvItem.beginningCreditAmount).toBe(expectedItem.beginningCreditAmount);
