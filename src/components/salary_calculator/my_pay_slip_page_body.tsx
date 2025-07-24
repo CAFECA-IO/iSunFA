@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
 import ReceivedTab from '@/components/salary_calculator/pay_slip_received_tab';
+import SentTab from '@/components/salary_calculator/pay_slip_sent_tab';
 import { useCalculatorCtx, CalculatorProvider } from '@/contexts/calculator_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import { dummyReceivedData } from '@/interfaces/pay_slip';
+import {
+  IReceivedRecord,
+  ISentRecord,
+  dummyReceivedData,
+  dummySentData,
+} from '@/interfaces/pay_slip';
+import { SortOrder } from '@/constants/sort';
 
 const FilterSection: React.FC<{
   selectedYear: string;
@@ -23,7 +30,7 @@ const FilterSection: React.FC<{
   searchQuery,
   setSearchQuery,
 }) => {
-  const { t } = useTranslation(['calculator', 'date_picker']);
+  const { t } = useTranslation('calculator');
   const { yearOptions: defaultYearOptions, monthOptions: defaultMonthOptions } = useCalculatorCtx();
 
   const yearOptions = ['All', ...defaultYearOptions];
@@ -146,7 +153,7 @@ const FilterSection: React.FC<{
           type="text"
           value={searchQuery}
           onChange={changeSearchQuery}
-          placeholder="Search for pay slip"
+          placeholder={t('calculator:MY_PAY_SLIP.SEARCH_PLACEHOLDER')}
           className="flex-1 bg-transparent px-12px py-10px text-base font-medium placeholder:text-input-text-input-placeholder"
         />
       </div>
@@ -158,10 +165,61 @@ const MyPaySlipPageBody: React.FC = () => {
   const { t } = useTranslation('calculator');
 
   const [currentTab, setCurrentTab] = useState<'received' | 'sent'>('received');
+  const [receivedRecords, setReceivedRecords] = useState<IReceivedRecord[]>(dummyReceivedData);
+  const [sentRecords, setSentRecords] = useState<ISentRecord[]>(dummySentData);
+
   // Info: (20250723 - Julian) 查詢條件
   const [selectedYear, setSelectedYear] = useState<string>('All');
   const [selectedMonth, setSelectedMonth] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Info: (20250724 - Julian) 排序
+  const [receivedPayPeriodSortOrder, setReceivedPayPeriodSortOrder] = useState<null | SortOrder>(
+    null
+  );
+  const [receivedNetPaySortOrder, setReceivedNetPaySortOrder] = useState<null | SortOrder>(null);
+  const [sentPayPeriodSortOrder, setSentPayPeriodSortOrder] = useState<null | SortOrder>(null);
+  const [sentIssuedDateSortOrder, setSentIssuedDateSortOrder] = useState<null | SortOrder>(null);
+
+  // Deprecated: (20250724 - Julian) 之後會用 API 取代
+  useEffect(() => {
+    const sortedReceived = [...receivedRecords].sort((a, b) => {
+      if (receivedPayPeriodSortOrder === SortOrder.ASC) {
+        return a.payPeriod - b.payPeriod;
+      }
+      if (receivedPayPeriodSortOrder === SortOrder.DESC) {
+        return b.payPeriod - a.payPeriod;
+      }
+      if (receivedNetPaySortOrder === SortOrder.ASC) {
+        return a.netPay - b.netPay;
+      }
+      if (receivedNetPaySortOrder === SortOrder.DESC) {
+        return b.netPay - a.netPay;
+      }
+      return 0;
+    });
+    setReceivedRecords(sortedReceived);
+  }, [receivedPayPeriodSortOrder, receivedNetPaySortOrder]);
+
+  // Deprecated: (20250724 - Julian) 之後會用 API 取代
+  useEffect(() => {
+    const sortedSent = [...sentRecords].sort((a, b) => {
+      if (sentPayPeriodSortOrder === SortOrder.ASC) {
+        return a.payPeriod - b.payPeriod;
+      }
+      if (sentPayPeriodSortOrder === SortOrder.DESC) {
+        return b.payPeriod - a.payPeriod;
+      }
+      if (sentIssuedDateSortOrder === SortOrder.ASC) {
+        return a.issuedDate - b.issuedDate;
+      }
+      if (sentIssuedDateSortOrder === SortOrder.DESC) {
+        return b.issuedDate - a.issuedDate;
+      }
+      return 0;
+    });
+    setSentRecords(sortedSent);
+  }, [sentPayPeriodSortOrder, sentIssuedDateSortOrder]);
 
   const receivedStyle =
     currentTab === 'received'
@@ -216,9 +274,21 @@ const MyPaySlipPageBody: React.FC = () => {
               setSearchQuery={setSearchQuery}
             />
             {currentTab === 'received' ? (
-              <ReceivedTab receivedRecords={dummyReceivedData} />
+              <ReceivedTab
+                receivedRecords={receivedRecords}
+                payPeriodSortOrder={receivedPayPeriodSortOrder}
+                setPayPeriodSortOrder={setReceivedPayPeriodSortOrder}
+                netPaySortOrder={receivedNetPaySortOrder}
+                setNetPaySortOrder={setReceivedNetPaySortOrder}
+              />
             ) : (
-              <div>To be continued...</div>
+              <SentTab
+                sentRecords={sentRecords}
+                payPeriodSortOrder={sentPayPeriodSortOrder}
+                setPayPeriodSortOrder={setSentPayPeriodSortOrder}
+                issuedDateSortOrder={sentIssuedDateSortOrder}
+                setIssuedDateSortOrder={setSentIssuedDateSortOrder}
+              />
             )}
           </div>
         </div>
