@@ -1,18 +1,18 @@
 import React from 'react';
-import { numberWithCommas, timestampToString } from '@/lib/utils/common';
-import { FiCalendar, FiDownload } from 'react-icons/fi';
-import { RiMoneyDollarCircleLine } from 'react-icons/ri';
-import { IReceivedRecord } from '@/interfaces/pay_slip';
+import { PiUserFill } from 'react-icons/pi';
+import { FiCalendar } from 'react-icons/fi';
+import { LuSend } from 'react-icons/lu';
+import { ISentRecord } from '@/interfaces/pay_slip';
+import { timestampToString } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
 import SortingButton from '@/components/salary_calculator/sorting_button';
 
 const cellStyle =
   'table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle';
 
-const ReceivedItem: React.FC<IReceivedRecord> = ({ payPeriod, fromEmail, netPay }) => {
+const SentItem: React.FC<ISentRecord> = ({ payPeriod, toEmail, issuedDate }) => {
   const payPeriodDate = timestampToString(payPeriod);
   const periodStr = `${payPeriodDate.monthShortName} ${payPeriodDate.year}`;
-  const amountStr = `NT $${numberWithCommas(netPay)}`;
 
   return (
     <div className="table-row h-50px">
@@ -26,42 +26,33 @@ const ReceivedItem: React.FC<IReceivedRecord> = ({ payPeriod, fromEmail, netPay 
       {/* Info: (20250723 - Julian) From */}
       <div className={cellStyle}>
         <div className="flex items-center gap-8px">
-          <FiCalendar size={16} className="text-text-neutral-tertiary" />
-          <p>{fromEmail}</p>
+          <PiUserFill size={16} className="text-text-neutral-tertiary" />
+          <p>{toEmail}</p>
         </div>
       </div>
       {/* Info: (20250723 - Julian) Net Pay */}
       <div className={cellStyle}>
         <div className="flex items-center gap-8px">
-          <RiMoneyDollarCircleLine size={16} className="text-text-neutral-tertiary" />
-          <p>{amountStr}</p>
+          <LuSend size={16} className="text-text-neutral-tertiary" />
+          <p>{timestampToString(issuedDate).date}</p>
         </div>
-      </div>
-      {/* Info: (20250723 - Julian) Action */}
-      <div className={`${cellStyle} w-50px text-center`}>
-        <button
-          type="button"
-          className="text-button-text-secondary hover:text-button-text-secondary-hover"
-        >
-          <FiDownload size={16} />
-        </button>
       </div>
     </div>
   );
 };
 
-const ReceivedTab: React.FC<{
-  receivedRecords: IReceivedRecord[];
+const SentTab: React.FC<{
+  sentRecords: ISentRecord[];
   payPeriodSortOrder: SortOrder | null;
   setPayPeriodSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  netPaySortOrder: SortOrder | null;
-  setNetPaySortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  issuedDateSortOrder: SortOrder | null;
+  setIssuedDateSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
 }> = ({
-  receivedRecords,
+  sentRecords,
   payPeriodSortOrder,
   setPayPeriodSortOrder,
-  netPaySortOrder,
-  setNetPaySortOrder,
+  issuedDateSortOrder,
+  setIssuedDateSortOrder,
 }) => {
   return (
     <div className="table w-full text-sm font-medium text-text-neutral-secondary">
@@ -75,27 +66,25 @@ const ReceivedTab: React.FC<{
               setSortOrder={setPayPeriodSortOrder}
             />
           </div>
-          <div className={cellStyle}>From</div>
+          <div className={cellStyle}>To</div>
           <div className={cellStyle}>
             <SortingButton
-              string="Net Pay"
-              sortOrder={netPaySortOrder}
-              setSortOrder={setNetPaySortOrder}
-              className="text-text-neutral-secondary"
+              string="Payslip Issued Date"
+              sortOrder={issuedDateSortOrder}
+              setSortOrder={setIssuedDateSortOrder}
             />
           </div>
-          <div className={`${cellStyle} w-50px text-center text-text-neutral-primary`}>Action</div>
         </div>
       </div>
 
       {/* Info: (20250723 - Julian) Table Body */}
       <div className="table-row-group">
-        {receivedRecords.map((record) => (
-          <ReceivedItem key={record.id} {...record} />
+        {sentRecords.map((record) => (
+          <SentItem key={record.id} {...record} />
         ))}
       </div>
     </div>
   );
 };
 
-export default ReceivedTab;
+export default SentTab;
