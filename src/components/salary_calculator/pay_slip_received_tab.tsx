@@ -1,8 +1,9 @@
 import React from 'react';
-import { numberWithCommas, timestampToString } from '@/lib/utils/common';
+import { useTranslation } from 'next-i18next';
 import { FiCalendar, FiDownload } from 'react-icons/fi';
 import { RiMoneyDollarCircleLine } from 'react-icons/ri';
 import { IReceivedRecord } from '@/interfaces/pay_slip';
+import { numberWithCommas, timestampToString } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
 import SortingButton from '@/components/salary_calculator/sorting_button';
 
@@ -63,6 +64,7 @@ const ReceivedTab: React.FC<{
   netPaySortOrder,
   setNetPaySortOrder,
 }) => {
+  const { t } = useTranslation('calculator');
   return (
     <div className="table w-full text-sm font-medium text-text-neutral-secondary">
       {/* Info: (20250723 - Julian) Table Header */}
@@ -70,15 +72,15 @@ const ReceivedTab: React.FC<{
         <div className="table-row">
           <div className={cellStyle}>
             <SortingButton
-              string="Pay Period"
+              string={t('calculator:MY_PAY_SLIP.PAY_PERIOD')}
               sortOrder={payPeriodSortOrder}
               setSortOrder={setPayPeriodSortOrder}
             />
           </div>
-          <div className={cellStyle}>From</div>
+          <div className={cellStyle}>{t('calculator:MY_PAY_SLIP.FROM')}</div>
           <div className={cellStyle}>
             <SortingButton
-              string="Net Pay"
+              string={t('calculator:MY_PAY_SLIP.NET_PAY')}
               sortOrder={netPaySortOrder}
               setSortOrder={setNetPaySortOrder}
               className="text-text-neutral-secondary"

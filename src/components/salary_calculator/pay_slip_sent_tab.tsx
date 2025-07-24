@@ -2,6 +2,7 @@ import React from 'react';
 import { PiUserFill } from 'react-icons/pi';
 import { FiCalendar } from 'react-icons/fi';
 import { LuSend } from 'react-icons/lu';
+import { useTranslation } from 'next-i18next';
 import { ISentRecord } from '@/interfaces/pay_slip';
 import { timestampToString } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
@@ -54,6 +55,7 @@ const SentTab: React.FC<{
   issuedDateSortOrder,
   setIssuedDateSortOrder,
 }) => {
+  const { t } = useTranslation(['calculator', 'date_picker']);
   return (
     <div className="table w-full text-sm font-medium text-text-neutral-secondary">
       {/* Info: (20250723 - Julian) Table Header */}
@@ -61,15 +63,15 @@ const SentTab: React.FC<{
         <div className="table-row">
           <div className={cellStyle}>
             <SortingButton
-              string="Pay Period"
+              string={t('calculator:MY_PAY_SLIP.PAY_PERIOD')}
               sortOrder={payPeriodSortOrder}
               setSortOrder={setPayPeriodSortOrder}
             />
           </div>
-          <div className={cellStyle}>To</div>
+          <div className={cellStyle}>{t('calculator:MY_PAY_SLIP.TO')}</div>
           <div className={cellStyle}>
             <SortingButton
-              string="Payslip Issued Date"
+              string={t('calculator:MY_PAY_SLIP.PAYSLIP_ISSUED_DATE')}
               sortOrder={issuedDateSortOrder}
               setSortOrder={setIssuedDateSortOrder}
             />

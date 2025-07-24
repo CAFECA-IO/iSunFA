@@ -30,7 +30,7 @@ const FilterSection: React.FC<{
   searchQuery,
   setSearchQuery,
 }) => {
-  const { t } = useTranslation(['calculator', 'date_picker']);
+  const { t } = useTranslation('calculator');
   const { yearOptions: defaultYearOptions, monthOptions: defaultMonthOptions } = useCalculatorCtx();
 
   const yearOptions = ['All', ...defaultYearOptions];
@@ -153,7 +153,7 @@ const FilterSection: React.FC<{
           type="text"
           value={searchQuery}
           onChange={changeSearchQuery}
-          placeholder="Search for pay slip"
+          placeholder={t('calculator:MY_PAY_SLIP.SEARCH_PLACEHOLDER')}
           className="flex-1 bg-transparent px-12px py-10px text-base font-medium placeholder:text-input-text-input-placeholder"
         />
       </div>
