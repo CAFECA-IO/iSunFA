@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import { TbLogin2, TbLogout2 } from 'react-icons/tb';
+import { /* TbLogin2, */ TbLogout2 } from 'react-icons/tb';
 import { GrHomeRounded } from 'react-icons/gr';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -87,15 +87,15 @@ const CalculatorNavbar: React.FC = () => {
           )}
         </div>
       </div>
-    ) : (
-      <Link
-        href={ISUNFA_ROUTE.LOGIN}
-        className="flex items-center gap-8px px-24px py-10px font-medium text-button-text-primary"
-      >
-        <TbLogin2 size={24} />
-        {t('calculator:NAVBAR.LOGIN')}
-      </Link>
-    );
+    ) : // Info: (20250724 - Julian) 先隱藏
+    // <Link
+    //   href={ISUNFA_ROUTE.LOGIN}
+    //   className="flex items-center gap-8px px-24px py-10px font-medium text-button-text-primary"
+    // >
+    //   <TbLogin2 size={24} />
+    //   {t('calculator:NAVBAR.LOGIN')}
+    // </Link>
+    null;
   return (
     <div className="flex w-full items-center justify-between bg-surface-neutral-main-background px-60px py-12px">
       {/* Info: (20250715 - Julian) Logo and Title */}
