@@ -501,7 +501,11 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     throw error;
   }
 
-  const planType = team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
+  const subscription = team.subscriptions[0];
+  const startAt = subscription?.startDate ?? 0;
+  const isValid = startAt <= nowInSecond && expiredAt > nowInSecond;
+  const isExpired = !(isValid || inGracePeriod);
+  const planType = isExpired ? TPlanType.BEGINNER : (subscription?.plan?.type as TPlanType);
 
   return {
     id: team.id,

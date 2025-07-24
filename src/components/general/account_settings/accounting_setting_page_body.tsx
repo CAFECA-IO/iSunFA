@@ -20,6 +20,7 @@ import { ToastId } from '@/constants/toast_id';
 import AccountingTitleSettingModal from '@/components/general/account_settings/accounting_title_setting_modal';
 import { useCurrencyCtx } from '@/contexts/currency_context';
 import CurrencyDropdown from '@/components/dropdown/currency_dropdown';
+import { CurrencyType } from '@/constants/currency';
 
 type ITaxTypeForFrontend =
   | number
@@ -76,7 +77,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const [currentSalesTax, setCurrentSalesTax] = useState<ITaxTypeForFrontend>(0);
   const [currentPurchaseTax, setCurrentPurchaseTax] = useState<ITaxTypeForFrontend>(0);
   const [currentTaxPeriod, setCurrentTaxPeriod] = useState<ITaxPeriod>(TaxPeriod.MONTH);
-  const [currentCurrency, setCurrentCurrency] = useState<string>('');
+  const [currentCurrency, setCurrentCurrency] = useState<CurrencyType | undefined>();
   const [fiscalPeriod, setFiscalPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [reportGenerateDay, setReportGenerateDay] = useState<number>(10);
 
@@ -84,7 +85,7 @@ const AccountingSettingPageBody: React.FC = () => {
   const [defaultSalesTax, setDefaultSalesTax] = useState<ITaxTypeForFrontend>(0);
   const [defaultPurchaseTax, setDefaultPurchaseTax] = useState<ITaxTypeForFrontend>(0);
   const [defaultTaxPeriod, setDefaultTaxPeriod] = useState<ITaxPeriod>(TaxPeriod.MONTH);
-  const [defaultCurrency, setDefaultCurrency] = useState<string>('');
+  const [defaultCurrency, setDefaultCurrency] = useState<CurrencyType | undefined>();
 
   const {
     targetRef: salesTaxRef,
