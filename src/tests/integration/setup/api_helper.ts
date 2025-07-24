@@ -943,11 +943,6 @@ export class APITestHelper {
       })
     );
 
-    // eslint-disable-next-line no-console
-    console.log(
-      `Created ${created.length} vouchers successfully. isLengthEqual = ${created.length === samples.length}, created: ${JSON.stringify(created)}`
-    );
-
     return created;
   }
 }
