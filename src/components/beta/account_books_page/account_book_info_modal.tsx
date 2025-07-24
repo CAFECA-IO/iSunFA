@@ -46,6 +46,8 @@ const AccountBookInfoModal = ({
     // representativeName,
     taxId,
     taxSerialNumber,
+    businessLocation,
+    accountingCurrency,
     // contactPerson,
     // phoneNumber,
     // tag,
@@ -70,6 +72,8 @@ const AccountBookInfoModal = ({
         fileId: passedFileId, // Info: (20250527 - Liz) 上傳圖片的 ID
         // representativeName,
         taxSerialNumber,
+        businessLocation,
+        accountingCurrency,
         // contactPerson,
         // phoneNumber,
         // city: city || '',
@@ -127,6 +131,8 @@ const AccountBookInfoModal = ({
         toTeamId: team.id, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
         // representativeName,
         taxSerialNumber,
+        businessLocation,
+        accountingCurrency,
         // contactPerson,
         // phoneNumber,
         // city: city ?? '',
