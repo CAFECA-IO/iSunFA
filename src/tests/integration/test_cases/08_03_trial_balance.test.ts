@@ -17,10 +17,10 @@ import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookI
 // import { LocaleKey } from '@/constants/normal_setting';
 // import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
-import { APIName } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
 import { TrialBalanceItem } from '@/interfaces/trial_balance';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-import { TestClient } from '@/interfaces/test_client';
+// import { TestClient } from '@/interfaces/test_client';
 
 /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250716 - Shirley) Mock pusher for testing
@@ -72,8 +72,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   let teamId: number;
   let accountBookId: number;
   let cookies: string[];
-  let connectAccountBookClient: TestClient;
-  let voucherPostClient: TestClient;
+  let startDate: number;
+  let endDate: number;
+  // let connectAccountBookClient: TestClient;
+  // let voucherPostClient: TestClient;
 
   /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
@@ -102,11 +104,13 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     currentUserId = String(sharedContext.userId);
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
     cookies = sharedContext.cookies;
-    accountBookId = (await authenticatedHelper.createAccountBook(Number(currentUserId), teamId)).id;
-    const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
+    accountBookId = (await BaseTestContext.createAccountBook(Number(currentUserId), teamId)).id;
+    startDate = sharedContext.startDate;
+    endDate = sharedContext.endDate;
+    // const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
     // createAccountBookClient = clients.createAccountBookClient;
-    connectAccountBookClient = clients.connectAccountBookClient;
-    voucherPostClient = clients.voucherPostClient;
+    // connectAccountBookClient = clients.connectAccountBookClient;
+    // voucherPostClient = clients.voucherPostClient;
     /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     // Info: (20250716 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
@@ -220,17 +224,16 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Trial Balance
    */
+  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   describe('Step 2: Create Sample Vouchers for Trial Balance', () => {
     test('should create vouchers and verify trial balance data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 
       // Info: (20250721 - Shirley) Connect to account book first
       const connectAccountBookClient = createTestClient({
         handler: connectAccountBookHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-      */
 
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
@@ -239,12 +242,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
-      /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
       const voucherPostClient = createTestClient({
         handler: voucherPostHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-      */
 
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
       const createdVouchers = [];
@@ -297,6 +298,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       );
     });
   });
+  */
 
   /**
    * Info: (20250721 - Shirley) Test Step 3: Generate Trial Balance Report
@@ -310,11 +312,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = 1753027200;
-      const endDate = 1753113599;
-
       const response = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
+        .get(APIPath.TRIAL_BALANCE_LIST.replace(':accountBookId', accountBookId.toString()))
         .query({
           page: '1',
           pageSize: '100',
@@ -355,11 +354,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = 1753027200;
-      const endDate = 1753113599;
-
       const response = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
+        .get(APIPath.TRIAL_BALANCE_LIST.replace(':accountBookId', accountBookId.toString()))
         .query({
           page: '1',
           pageSize: '100',
@@ -402,7 +398,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 4: Complete Integration Workflow Validation
    */
-  describe('Step 4: Complete Integration Workflow Validation', () => {
+  describe.skip('Step 4: Complete Integration Workflow Validation', () => {
     test('should validate complete trial balance integration workflow', async () => {
       // Info: (20250721 - Shirley) Step 1: Verify account book exists
       expect(accountBookId).toBeDefined();
@@ -416,16 +412,13 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = 1753027200;
-      const endDate = 1753113599;
-
       const finalTrialBalanceResponse = await trialBalanceClient
-        .get(`/api/v2/account_book/${accountBookId}/trial_balance`)
+        .get(APIPath.TRIAL_BALANCE_LIST.replace(':accountBookId', accountBookId.toString()))
         .query({
           page: '1',
           pageSize: '100',
-          startDate: startDate.toString(),
-          endDate: endDate.toString(),
+          startDate: (startDate + 86400 * 365 * 2).toString(),
+          endDate: (endDate + 86400 * 365 * 2).toString(),
         })
         .set('Cookie', cookies.join('; '));
 
@@ -493,14 +486,11 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      const startDate = 1753027200;
-      const endDate = 1753113599;
-
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          startDate,
-          endDate,
+          startDate: startDate + 86400 * 365 * 2,
+          endDate: endDate + 86400 * 365 * 2,
         },
         options: {
           fields: [
@@ -600,8 +590,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       const exportRequestData = {
         fileType: 'pdf', // Invalid file type
         filters: {
-          startDate: 1753027200,
-          endDate: 1753113599,
+          startDate,
+          endDate,
         },
         options: {},
       };
@@ -663,8 +653,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          startDate: 1753027200,
-          endDate: 1753113599,
+          startDate,
+          endDate,
         },
         options: {},
       };

@@ -22,6 +22,8 @@ export interface SharedContext {
   uploadedFileIdForOutput?: number;
   inputInvoice?: IInvoiceRC2Input;
   outputInvoice?: IInvoiceRC2Input;
+  startDate: number;
+  endDate: number;
 }
 
 export class BaseTestContext {
@@ -30,6 +32,8 @@ export class BaseTestContext {
 
   /** Info: (20250717 - Tzuhan) 解決多個 getSharedContext() 併發呼叫時的 race condition */
   private static initializing: Promise<SharedContext> | null = null;
+
+  private static isTestVouchersCreated = false;
 
   private constructor() {
     /* Info: (20250717 - Tzuhan) 禁止實例化 */
@@ -53,6 +57,8 @@ export class BaseTestContext {
         userId: 0,
         teamId: 0,
         accountBookId: 0,
+        startDate: 0,
+        endDate: 0,
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
@@ -108,7 +114,16 @@ export class BaseTestContext {
       this.ctx.accountBook = accountBook;
       this.ctx.accountBookId = accountBook.id;
     }
-    return this.ctx.accountBook;
+    this.ctx.startDate = this.ctx.accountBook!.startDate - 86400 * 365;
+    this.ctx.endDate = this.ctx.accountBook!.startDate + 86400 * 30;
+    if (!this.isTestVouchersCreated) {
+      await BaseTestContext.createTestVouchers(
+        this.ctx.accountBookId!,
+        this.ctx.accountBook!.startDate
+      );
+      this.isTestVouchersCreated = true;
+    }
+    return this.ctx.accountBook!;
   }
 
   static async uploadEncryptedFile(
@@ -156,6 +171,13 @@ export class BaseTestContext {
       this.ctx.outputInvoice = invoice as IInvoiceRC2Input;
     }
     return invoice;
+  }
+
+  static async createTestVouchers(accountBookId: number, testBaseTs: number) {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    return this.ctx.helper.createTestVouchers(accountBookId, testBaseTs);
   }
 
   // -----------------------------------------

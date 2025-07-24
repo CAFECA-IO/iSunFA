@@ -898,4 +898,56 @@ export class APITestHelper {
       voucherPostClient,
     };
   }
+
+  async createTestVouchers(accountBookId: number, baseTs: number) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Creating test vouchers for account book ID: ${accountBookId} at base timestamp: ${baseTs}`
+    );
+    const samples = TestDataFactory.sampleVoucherData(baseTs);
+    const cookies = this.getCurrentSession();
+
+    const { default: voucherHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/voucher'
+    );
+
+    const client = createTestClient({
+      handler: voucherHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    const created = await Promise.all(
+      samples.map(async (v, idx) => {
+        const payload = {
+          actions: [],
+          certificateIds: [],
+          invoiceRC2Ids: [],
+          voucherDate: v.date,
+          type: v.type,
+          note: v.note,
+          lineItems: v.lineItems,
+          assetIds: [],
+          counterPartyId: null,
+        };
+
+        const res = await client
+          .post(`/api/v2/account_book/${accountBookId}/voucher`)
+          .send(payload)
+          .set('Cookie', cookies.join('; '));
+
+        if (res.status !== 201) {
+          throw new Error(`Voucher #${idx + 1} failed: ${res.status} – ${res.text}`);
+        }
+
+        return res.body.payload;
+      })
+    );
+
+    // eslint-disable-next-line no-console
+    console.log(
+      `Created ${created.length} vouchers successfully. isLengthEqual = ${created.length === samples.length}, created: ${JSON.stringify(created)}`
+    );
+
+    return created;
+  }
 }

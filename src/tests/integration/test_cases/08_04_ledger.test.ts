@@ -18,7 +18,7 @@ import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/led
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-import { TestClient } from '@/interfaces/test_client';
+// import { TestClient } from '@/interfaces/test_client';
 /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250721 - Shirley) Mock pusher for testing
 jest.mock('pusher', () => ({
@@ -70,8 +70,10 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   let teamId: number;
   let accountBookId: number;
   let cookies: string[];
-  let connectAccountBookClient: TestClient;
-  let voucherPostClient: TestClient;
+  let startDate: number;
+  let endDate: number;
+  // let connectAccountBookClient: TestClient;
+  // let voucherPostClient: TestClient;
 
   /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
@@ -100,11 +102,14 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
     currentUserId = String(sharedContext.userId);
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
     cookies = sharedContext.cookies;
-    accountBookId = (await authenticatedHelper.createAccountBook(Number(currentUserId), teamId)).id;
-    const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
+    accountBookId = (await BaseTestContext.createAccountBook(Number(currentUserId), teamId)).id;
+    startDate = sharedContext.startDate;
+    endDate = sharedContext.endDate;
+
+    // const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
     // createAccountBookClient = clients.createAccountBookClient;
-    connectAccountBookClient = clients.connectAccountBookClient;
-    voucherPostClient = clients.voucherPostClient;
+    // connectAccountBookClient = clients.connectAccountBookClient;
+    // voucherPostClient = clients.voucherPostClient;
     /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     // Info: (20250721 - Shirley) Setup authenticated helper and complete user registration
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
@@ -219,6 +224,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
    */
+  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   describe('Step 2: Create Sample Vouchers for Ledger', () => {
     test('should create vouchers and verify ledger data', async () => {
       await authenticatedHelper.ensureAuthenticated();
@@ -293,7 +299,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       console.log(`\n🎉 Successfully created ${createdVouchers.length} vouchers for ledger test`);
     });
   });
-
+*/
   /**
    * Info: (20250721 - Shirley) Test Step 3: Generate Ledger Report
    */
@@ -305,9 +311,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         handler: getLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-
-      const startDate = 1753027200;
-      const endDate = 1753113599;
 
       const response = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
@@ -350,9 +353,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         handler: getLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-
-      const startDate = 1753027200;
-      const endDate = 1753113599;
 
       const response = await getLedgerClient
         .get(`/api/v2/account_book/${accountBookId}/ledger`)
@@ -411,9 +411,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         handler: getLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-
-      const startDate = 1753027200;
-      const endDate = 1753113599;
 
       // Info: (20250722 - Shirley) Wait for database operations to complete before fetching ledger data
       await new Promise((resolve) => {
@@ -501,9 +498,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         handler: exportLedgerHandler,
         routeParams: { accountBookId: accountBookId.toString() },
       });
-
-      const startDate = 1753027200;
-      const endDate = 1753113599;
 
       // Info: (20250722 - Shirley) Wait for database operations to complete before exporting ledger data
       await new Promise((resolve) => {

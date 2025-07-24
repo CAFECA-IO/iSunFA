@@ -15,7 +15,7 @@ import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator
 import { APIName } from '@/constants/api_connection';
 import { ReportSheetType } from '@/constants/report';
 import { FinancialReportTypesKey } from '@/interfaces/report_type';
-import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+// import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
 import { TestClient } from '@/interfaces/test_client';
 
@@ -28,9 +28,11 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
 
   // let createAccountBookClient: TestClient;
   // let getAccountBookClient: TestClient;
-  let connectAccountBookClient: TestClient;
+  // let connectAccountBookClient: TestClient;
   let reportClient: TestClient;
-  let voucherPostClient: TestClient;
+  let startDate: number;
+  let endDate: number;
+  // let voucherPostClient: TestClient;
 
   // const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
   // const testCompanyData = {
@@ -55,12 +57,15 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
     currentUserId = String(sharedContext.userId);
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
     cookies = sharedContext.cookies;
-    accountBookId = (await helper.createAccountBook(Number(currentUserId), teamId)).id;
+    accountBookId = (await BaseTestContext.createAccountBook(Number(currentUserId), teamId)).id;
     const clients = await helper.getAccountBookClients(accountBookId);
     // createAccountBookClient = clients.createAccountBookClient;
-    connectAccountBookClient = clients.connectAccountBookClient;
-    voucherPostClient = clients.voucherPostClient;
+    // connectAccountBookClient = clients.connectAccountBookClient;
+    // voucherPostClient = clients.voucherPostClient;
     reportClient = clients.reportClient;
+    startDate = sharedContext.startDate;
+    endDate = sharedContext.endDate;
+
     /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     helper = await APITestHelper.createHelper({ autoAuth: true });
     const status = await helper.getStatusInfo();
@@ -137,6 +142,7 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
     });
   });
     */
+  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   describe('Step 2: Create Sample Vouchers for Cash Flow', () => {
     test('posts cash flow vouchers via API', async () => {
       await helper.ensureAuthenticated();
@@ -174,17 +180,9 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
       expect(created.length).toBe(vouchers.length);
     });
   });
+  */
 
   describe('Step 3: Generate Cash Flow Statement Report', () => {
-    let startDate: number;
-    let endDate: number;
-
-    beforeAll(() => {
-      const now = Math.floor(Date.now() / 1000);
-      startDate = now - 86400 * 30;
-      endDate = now + 86400 * 30;
-    });
-
     test('returns valid cash flow report structure', async () => {
       await helper.ensureAuthenticated();
 
@@ -228,13 +226,12 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
     });
 
     test('rejects unauthenticated', async () => {
-      const now = Math.floor(Date.now() / 1000);
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
         .query({
           reportType: FinancialReportTypesKey.cash_flow_statement,
-          startDate: now.toString(),
-          endDate: now.toString(),
+          startDate,
+          endDate,
           language: 'en',
         })
         .expect(401);
@@ -245,13 +242,12 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
     test('invalid reportType yields 422', async () => {
       await helper.ensureAuthenticated();
 
-      const now = Math.floor(Date.now() / 1000);
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
         .query({
           reportType: 'foo',
-          startDate: now.toString(),
-          endDate: now.toString(),
+          startDate,
+          endDate,
           language: 'en',
         })
         .set('Cookie', cookies.join('; '))
@@ -288,13 +284,12 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
         routeParams: { accountBookId: emptyId.toString() },
       });
 
-      const now = Math.floor(Date.now() / 1000);
       const res = await emptyClient
         .get(`/api/v2/account_book/${emptyId}/report`)
         .query({
           reportType: FinancialReportTypesKey.cash_flow_statement,
-          startDate: now.toString(),
-          endDate: now.toString(),
+          startDate,
+          endDate,
           language: 'en',
         })
         .set('Cookie', cookies.join('; '))
@@ -310,14 +305,12 @@ describe('Integration Test - Cash Flow Statement Report Integration', () => {
     test('end-to-end cash flow report contains non-zero items', async () => {
       await helper.ensureAuthenticated();
 
-      const now = Math.floor(Date.now() / 1000);
-
       const res = await reportClient
         .get(`/api/v2/account_book/${accountBookId}/report`)
         .query({
           reportType: FinancialReportTypesKey.cash_flow_statement,
-          startDate: (now - 86400 * 30).toString(),
-          endDate: (now + 86400 * 30).toString(),
+          startDate,
+          endDate,
           language: 'en',
         })
         .set('Cookie', cookies.join('; '))

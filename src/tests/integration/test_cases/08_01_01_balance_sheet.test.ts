@@ -1,5 +1,5 @@
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
-import { APIName } from '@/constants/api_connection';
+import { APIName, APIPath } from '@/constants/api_connection';
 import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
@@ -17,7 +17,7 @@ import { LocaleKey } from '@/constants/normal_setting';
 // import { WORK_TAG } from '@/interfaces/account_book';
 // import { CurrencyType } from '@/constants/currency';
 import { TestClient } from '@/interfaces/test_client';
-import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+// import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
 // import { WORK_TAG } from '@/interfaces/account_book';
 
@@ -27,13 +27,16 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   let teamId: number;
   let accountBook: { id: number; name: string; taxId: string };
   let accountBookId: number;
+  let cookies: string[];
+  let startDate: number;
+  let endDate: number;
 
   // Info: (20250721 - Julian) test clients
   // let createAccountBookClient: TestClient;
   // let getAccountBookClient: TestClient;
-  let connectAccountBookClient: TestClient;
   let getBalanceSheetClient: TestClient;
-  let voucherPostClient: TestClient;
+  // let connectAccountBookClient: TestClient;
+  // let voucherPostClient: TestClient;
 
   /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
@@ -54,41 +57,43 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     district: 'Xinyi District',
     enteredAddress: '123 Test Street, Xinyi District, Taipei',
   };
-  */
 
   // Info: (20250721 - Julian) 基於 accountBookId 的 client 初始化
   const initializeAccountBookDependentClients = () => {
-    // getAccountBookClient = createTestClient({
-    //   handler: getAccountBookHandler,
-    //   routeParams: { accountBookId: accountBookId.toString() },
-    // });
-    // connectAccountBookClient = createTestClient({
-    //   handler: connectAccountBookHandler,
-    //   routeParams: { accountBookId: accountBookId.toString() },
-    // });
-    // getBalanceSheetClient = createTestClient({
-    //   handler: getReportHandler,
-    //   routeParams: { accountBookId: accountBookId.toString() },
-    // });
-    // voucherPostClient = createTestClient({
-    //   handler: voucherPostHandler,
-    //   routeParams: { accountBookId: accountBookId.toString() },
-    // });
+    getAccountBookClient = createTestClient({
+      handler: getAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    connectAccountBookClient = createTestClient({
+      handler: connectAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    getBalanceSheetClient = createTestClient({
+      handler: getReportHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    voucherPostClient = createTestClient({
+      handler: voucherPostHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
   };
-
+ */
   beforeAll(async () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     authenticatedHelper = sharedContext.helper;
     currentUserId = sharedContext.userId.toString();
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(sharedContext.userId)).id;
-    accountBook = await authenticatedHelper.createAccountBook(Number(currentUserId), teamId);
+    accountBook = await BaseTestContext.createAccountBook(Number(currentUserId), teamId);
     accountBookId = accountBook.id;
+    cookies = sharedContext.cookies;
+    startDate = sharedContext.startDate;
+    endDate = sharedContext.endDate;
 
     // Info: (20250721 - Julian) 建立測試用的帳本
     const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
     // createAccountBookClient = clients.createAccountBookClient;
-    connectAccountBookClient = clients.connectAccountBookClient;
-    voucherPostClient = clients.voucherPostClient;
+    // connectAccountBookClient = clients.connectAccountBookClient;
+    // voucherPostClient = clients.voucherPostClient;
     getBalanceSheetClient = clients.reportClient;
     /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
     // Info: (20250717 - Julian) 設定 Helper
@@ -129,7 +134,7 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     */
 
     // Info: (20250721 - Julian) 有了 accountBookId 後就初始化相關的 client
-    initializeAccountBookDependentClients();
+    // initializeAccountBookDependentClients();
   });
 
   afterAll(async () => {
@@ -148,8 +153,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   describe('Step 1: Account Book Creation', () => {
     test('should create account book with proper structure', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
       const response = await createAccountBookClient
         .post(`/api/v2/user/${currentUserId}/account_book`)
         .send(testCompanyData)
@@ -184,8 +187,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
 
     test('should verify account book connection', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
       const response = await getAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}`)
         .set('Cookie', cookies.join('; '))
@@ -207,12 +208,11 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   /**
    * Info: (20250721 - Julian) Test Step 2: Create Sample Vouchers for Income Statement
    */
+  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   describe('Step 2: Create Sample Vouchers for Income Statement', () => {
     it('should create income and expense vouchers', async () => {
       // Info: (20250717 - Julian) 確保登入流程正確
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -300,6 +300,7 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       );
     });
   });
+  */
 
   /**
    * Info: (20250721 - Julian) Test Step 3: Generate Balance Sheet Report
@@ -308,14 +309,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     it('should generate balance sheet report with proper structure', async () => {
       // Info: (20250718 - Julian) 確保登入流程正確
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
       const response = await getBalanceSheetClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
         .query({
           reportType: ReportSheetType.BALANCE_SHEET,
           startDate: startDate.toString(),
@@ -323,6 +319,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           language: LocaleKey.en,
         })
         .set('Cookie', cookies.join('; '));
+
+      // eslint-disable-next-line no-console
+      console.log('[BalanceSheetReport] Response:', response.body);
 
       // Deprecated: (20250721 - Julian) remove eslint-disable
       // eslint-disable-next-line no-console
@@ -402,14 +401,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     it('should validate balance sheet report structure and calculations', async () => {
       // Info: (20250718 - Julian) 確保登入流程正確
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
       const response = await getBalanceSheetClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
         .query({
           reportType: ReportSheetType.BALANCE_SHEET,
           startDate: startDate.toString(),
@@ -545,14 +539,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     it('should handle invalid report type gracefully', async () => {
       // Info: (20250718 - Julian) 確保登入流程正確
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
       const response = await getBalanceSheetClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
         .query({
           reportType: 'invalid_report_type',
           startDate: startDate.toString(),
@@ -588,10 +577,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     it('should handle invalid date range gracefully', async () => {
       // Info: (20250718 - Julian) 確保登入流程正確
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await getBalanceSheetClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
         .query({
           reportType: ReportSheetType.BALANCE_SHEET,
           startDate: 'invalid_date',
@@ -617,14 +605,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
 
       // Info: (20250718 - Julian) Step 2: 確認報表 API 正常運作
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-      const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-      const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
       const finalBalanceSheetResponse = await getBalanceSheetClient
-        .get(`/api/v2/account_book/${accountBookId}/report`)
+        .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
         .query({
           reportType: ReportSheetType.BALANCE_SHEET,
           startDate: startDate.toString(),
@@ -709,13 +692,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
      */
     describe('6.1 Authentication Failure Cases', () => {
       it('should reject unauthenticated requests', async () => {
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
-
         // Info: (20250721 - Julian) 沒有 cookie = 未認證請求
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -738,13 +717,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       });
 
       it('should reject requests with invalid session cookies', async () => {
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
-
         // Info: (20250721 - Julian) 使用無效的 session cookie
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -776,7 +751,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should reject access to non-existent account book', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
 
         const nonExistentAccountBookId = 999999;
         const nonExistentReportClient = createTestClient({
@@ -784,12 +758,8 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           routeParams: { accountBookId: nonExistentAccountBookId.toString() },
         });
 
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
-
         const response = await nonExistentReportClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -826,14 +796,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should reject invalid reportType parameter', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: 'completely_invalid_report_type', // Info: (20250721 - Julian) 無效的 input
             startDate: startDate.toString(),
@@ -861,14 +826,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       xit('should reject invalid date range (endDate < startDate)', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往前 30 天
-        const endDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往後 365 天
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             // Info: (20250721 - Julian) 故意將 startDate 設在 endDate 之後
@@ -895,10 +855,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should reject missing required parameters', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             // Info: (20250721 - Julian) 故意不傳入 reportType, startDate, endDate
             language: LocaleKey.en,
@@ -923,14 +882,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       xit('should reject invalid language code', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -956,10 +910,9 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should reject non-numeric date values', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             // Info: (20250721 - Julian) 非數字的日期格式
@@ -991,7 +944,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should handle account book with no accounting data gracefully', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
 
         // Info: (20250721 - Julian) Create a new account book with no vouchers/transactions
         // const emptyTestCompanyData = {
@@ -1020,12 +972,8 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           routeParams: { accountBookId: emptyAccountBookId.toString() },
         });
 
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
-
         const response = await emptyReportClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -1061,14 +1009,8 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should handle extremely large date ranges', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365 * 10; // Info: (20250721 - Julian) 從現在起往前 10 年
-        const endDate = currentTimestamp + 86400 * 365 * 10; // Info: (20250721 - Julian) 從現在起往後 10 年
-
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: startDate.toString(),
@@ -1092,13 +1034,12 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should handle same start and end date', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
 
         const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
         const sameDate = currentTimestamp;
 
         const response = await getBalanceSheetClient
-          .get(`/api/v2/account_book/${accountBookId}/report`)
+          .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
           .query({
             reportType: ReportSheetType.BALANCE_SHEET,
             startDate: sameDate.toString(),
@@ -1122,11 +1063,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       it('should handle all supported language codes', async () => {
         // Info: (20250718 - Julian) 確保登入流程正確
         await authenticatedHelper.ensureAuthenticated();
-        const cookies = authenticatedHelper.getCurrentSession();
-
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Info: (20250721 - Julian) 取得當前時間
-        const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Julian) 從現在起往前 365 天
-        const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Julian) 從現在起往後 30 天
 
         const supportedLanguages = Object.values(LocaleKey);
 
@@ -1137,7 +1073,7 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           // Deprecated: (20250721 - Julian) remove eslint-disable
           // eslint-disable-next-line no-await-in-loop
           const response = await getBalanceSheetClient
-            .get(`/api/v2/account_book/${accountBookId}/report`)
+            .get(APIPath.REPORT_GET_V2.replace(':accountBookId', accountBookId.toString()))
             .query({
               reportType: ReportSheetType.BALANCE_SHEET,
               startDate: startDate.toString(),
