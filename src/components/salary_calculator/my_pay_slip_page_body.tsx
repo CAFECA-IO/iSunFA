@@ -181,7 +181,7 @@ const MyPaySlipPageBody: React.FC = () => {
   const [sentPayPeriodSortOrder, setSentPayPeriodSortOrder] = useState<null | SortOrder>(null);
   const [sentIssuedDateSortOrder, setSentIssuedDateSortOrder] = useState<null | SortOrder>(null);
 
-  // Duplicated: (20250724 - Julian) 之後會用 API 取代
+  // Deprecated: (20250724 - Julian) 之後會用 API 取代
   useEffect(() => {
     const sortedReceived = [...receivedRecords].sort((a, b) => {
       if (receivedPayPeriodSortOrder === SortOrder.ASC) {
@@ -201,7 +201,7 @@ const MyPaySlipPageBody: React.FC = () => {
     setReceivedRecords(sortedReceived);
   }, [receivedPayPeriodSortOrder, receivedNetPaySortOrder]);
 
-  // Duplicated: (20250724 - Julian) 之後會用 API 取代
+  // Deprecated: (20250724 - Julian) 之後會用 API 取代
   useEffect(() => {
     const sortedSent = [...sentRecords].sort((a, b) => {
       if (sentPayPeriodSortOrder === SortOrder.ASC) {
