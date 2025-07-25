@@ -8,7 +8,7 @@ import SentTab from '@/components/salary_calculator/pay_slip_sent_tab';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
-  IReceivedRecordDetail,
+  IReceivedRecord,
   ISentRecord,
   dummyReceivedData,
   dummySentData,
@@ -165,8 +165,7 @@ const MyPaySlipPageBody: React.FC = () => {
   const { t } = useTranslation('calculator');
 
   const [currentTab, setCurrentTab] = useState<'received' | 'sent'>('received');
-  const [receivedRecords, setReceivedRecords] =
-    useState<IReceivedRecordDetail[]>(dummyReceivedData);
+  const [receivedRecords, setReceivedRecords] = useState<IReceivedRecord[]>(dummyReceivedData);
   const [sentRecords, setSentRecords] = useState<ISentRecord[]>(dummySentData);
 
   // Info: (20250723 - Julian) 查詢條件

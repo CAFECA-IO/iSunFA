@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { FiCalendar, FiDownload } from 'react-icons/fi';
 import { RiMoneyDollarCircleLine } from 'react-icons/ri';
-import { IReceivedRecord, IReceivedRecordDetail } from '@/interfaces/pay_slip';
+import { IReceivedRecord } from '@/interfaces/pay_slip';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
 import { SortOrder } from '@/constants/sort';
 import SortingButton from '@/components/salary_calculator/sorting_button';
-import ViewMyPaySlipModal from '@/components/salary_calculator/view_my_pay_slip_modal';
+import ViewPaySlipModal from '@/components/salary_calculator/view_pay_slip_modal';
 
 const cellStyle =
   'table-cell border-b border-stroke-neutral-quaternary px-24px py-12px align-middle';
@@ -62,7 +62,7 @@ const ReceivedItem: React.FC<{
 };
 
 const ReceivedTab: React.FC<{
-  receivedRecords: IReceivedRecordDetail[];
+  receivedRecords: IReceivedRecord[];
   payPeriodSortOrder: SortOrder | null;
   setPayPeriodSortOrder: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   netPaySortOrder: SortOrder | null;
@@ -77,7 +77,7 @@ const ReceivedTab: React.FC<{
   const { t } = useTranslation('calculator');
 
   const [isShowModal, setIsShowModal] = useState<boolean>(false);
-  const [currentRecord, setCurrentRecord] = useState<IReceivedRecordDetail | null>(null);
+  const [currentRecord, setCurrentRecord] = useState<IReceivedRecord | null>(null);
 
   const currentMonth = currentRecord
     ? timestampToString(currentRecord.payPeriod).monthFullName
@@ -135,8 +135,9 @@ const ReceivedTab: React.FC<{
         </div>
       </div>
 
+      {/* Info: (20250725 - Julian) View My Pay Slip Modal */}
       {isShowModal && currentRecord && (
-        <ViewMyPaySlipModal
+        <ViewPaySlipModal
           monthStr={currentMonth}
           yearStr={currentYear}
           paySlipData={currentRecord.paySlipData}
