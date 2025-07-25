@@ -363,7 +363,7 @@ export async function getSubscriptionByTeamId(
   tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
-  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  const { expiredAt, inGracePeriod, effectiveRole } = await assertUserIsTeamMember(userId, teamId);
   // Info: (20250410 - tzuhan) Step 2: 強化 session 資料一致性
   await updateTeamMemberSession(userId, teamId, effectiveRole);
   // Info: (20250410 - tzuhan) Step 3: 查詢訂閱資料
@@ -404,6 +404,14 @@ export async function getSubscriptionByTeamId(
   if (!team) return null;
 
   const latestSub = team.subscriptions[0];
+
+  const now = new Date();
+  const nowInSecond = getUnixTime(now);
+  const startAt = latestSub?.startDate ?? 0;
+  const isValid = startAt <= nowInSecond && expiredAt > nowInSecond;
+  const isExpired = !(isValid || inGracePeriod);
+  const planType = isExpired ? TPlanType.BEGINNER : (latestSub?.plan?.type as TPlanType);
+
   const latestOrder = team.teamOrder[0];
   const latestTxn = latestOrder?.teamPaymentTransaction[0];
   const hasInvoice = latestTxn?.teamInvoice?.length > 0;
@@ -423,7 +431,7 @@ export async function getSubscriptionByTeamId(
   return {
     id: team.id,
     name: team.name,
-    plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+    plan: planType,
     enableAutoRenewal: true,
     expiredTimestamp: latestSub?.expiredDate ?? 0,
     nextRenewalTimestamp: latestSub?.expiredDate ?? 0,

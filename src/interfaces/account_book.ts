@@ -1,6 +1,7 @@
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
 import { TPlanType } from '@/interfaces/subscription';
+import { CurrencyType } from '@/constants/currency';
 
 export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
 export const NO_ACCOUNT_BOOK_ID = 555;
@@ -88,8 +89,8 @@ export interface IAccountBookInfo {
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
   // Info: (20250604 - Liz) RC3 新增表單欄位
-  businessLocation?: string; // Info: (20250604 - Liz) 商業地址
-  accountingCurrency?: string; // Info: (20250604 - Liz) 會計幣別
+  businessLocation?: LocaleKey; // Info: (20250604 - Liz) 商業地址
+  accountingCurrency?: CurrencyType; // Info: (20250604 - Liz) 會計幣別
 
   // Info: (20250523 - Liz) RC2 新增表單欄位
   representativeName: string; // Info: (20250423 - Liz) 負責人姓名
@@ -161,6 +162,8 @@ export interface ICreateAccountBookReqBody {
   city?: string; // Info: (20250523 - Liz) 縣市
   district?: string; // Info: (20250523 - Liz) 行政區
   enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+  businessLocation?: string;
+  accountingCurrency?: string;
 }
 
 export interface IUpdateAccountBookReqBody {
@@ -180,6 +183,8 @@ export interface IUpdateAccountBookReqBody {
   city?: string; // Info: (20250523 - Liz) 縣市
   district?: string; // Info: (20250523 - Liz) 行政區
   enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+  businessLocation?: string;
+  accountingCurrency?: string;
 }
 
 export interface ICompanyTaxIdAndName {

@@ -1,9 +1,6 @@
 export interface IPaySlipRecord {
   id: string;
-  payPeriod: {
-    month: string;
-    year: string;
-  };
+  payPeriod: number;
 }
 
 export interface IReceivedRecord extends IPaySlipRecord {
@@ -19,13 +16,13 @@ export interface ISentRecord extends IPaySlipRecord {
 export const dummyReceivedData: IReceivedRecord[] = [
   {
     id: '1',
-    payPeriod: { month: 'July', year: '2025' },
+    payPeriod: 1723012933,
     fromEmail: 'XYZ@wfe.efwe',
     netPay: 50000,
   },
   {
     id: '2',
-    payPeriod: { month: 'August', year: '2025' },
+    payPeriod: 1725691200,
     fromEmail: 'ABC@fwe.fe',
     netPay: 60000,
   },
@@ -34,13 +31,13 @@ export const dummyReceivedData: IReceivedRecord[] = [
 export const dummySentData: ISentRecord[] = [
   {
     id: '1',
-    payPeriod: { month: 'July', year: '2025' },
+    payPeriod: 1728732974,
     toEmail: 'ASDF@dfwf.efw',
     issuedDate: 1725120000,
   },
   {
     id: '2',
-    payPeriod: { month: 'August', year: '2025' },
+    payPeriod: 1754032975,
     toEmail: 'QWER@dfwf.efw',
     issuedDate: 1727808000,
   },

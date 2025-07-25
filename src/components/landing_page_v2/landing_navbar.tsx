@@ -3,8 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import { FaChevronDown } from 'react-icons/fa6';
+import { FaChevronDown, FaChevronRight, FaChevronLeft } from 'react-icons/fa6';
 import { BsFillRocketTakeoffFill } from 'react-icons/bs';
+import { RxCross2 } from 'react-icons/rx';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import version from '@/lib/version';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -39,6 +40,10 @@ const LandingNavbar: React.FC = () => {
     setComponentVisible: setIsLangOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  // Info: (20250723 - Julian) Language 側邊欄
+  const { componentVisible: isLangMenuOpen, setComponentVisible: setIsLangMenuOpen } =
+    useOuterClick<HTMLDivElement>(false);
+
   // Info: (20241227 - Julian) 取得當前語言
   const internationalization =
     internationalizationList.find((item) => item.value === locale) ?? internationalizationList[0];
@@ -53,6 +58,7 @@ const LandingNavbar: React.FC = () => {
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
   const toggleLangDropdown = () => setIsLangOpen((prev) => !prev);
+  const toggleLangMenu = () => setIsLangMenuOpen((prev) => !prev);
 
   // Info: (20241227 - Julian) Language 選項
   const langOptions = internationalizationList.map((item) => (
@@ -82,27 +88,13 @@ const LandingNavbar: React.FC = () => {
     </Link>
   ));
 
-  const langBtn = (
-    <div ref={langDropdownRef} className="relative flex flex-col gap-8px whitespace-nowrap">
-      <LandingButton
-        type="button"
-        onClick={toggleLangDropdown}
-        className="w-170px rounded-sm bg-landing-nav px-24px font-bold shadow-landing-nav"
-      >
-        <div className="h-20px w-20px overflow-hidden rounded-full">
-          <Image
-            src={`/flags/${currentLanguage.value}.svg`}
-            alt={`${currentLanguage.value}_icon`}
-            width={24}
-            height={24}
-          />
-        </div>
-        <div className="flex-1">{currentLanguage.label}</div>
-        <div className={isLangOpen ? 'rotate-180' : 'rotate-0'}>
-          <FaChevronDown />
-        </div>
+  const tryBtn = (
+    <Link href={ISUNFA_ROUTE.DASHBOARD}>
+      <LandingButton type="button" variant="primary" className="w-full justify-center">
+        <BsFillRocketTakeoffFill size={20} />
+        <p>{t('landing_page_v2:NAVBAR.TRY_IT_NOW')}</p>
       </LandingButton>
-    </div>
+    </Link>
   );
 
   // ToDo: (20241219 - Julian) 補上正確的路徑
@@ -113,7 +105,7 @@ const LandingNavbar: React.FC = () => {
           {t('landing_page_v2:NAVBAR.USERS')}
         </LandingButton>
       </Link> */}
-      <Link href={ISUNFA_ROUTE.PRICING} className="p-10px">
+      <Link href={ISUNFA_ROUTE.PRICING} className="md:p-10px">
         <LandingButton type="button" className="w-full">
           {t('landing_page_v2:NAVBAR.PRICING')}
         </LandingButton>
@@ -128,19 +120,12 @@ const LandingNavbar: React.FC = () => {
           {t('landing_page_v2:NAVBAR.JOIN_US')}
         </LandingButton>
       </Link> */}
-      {/* ToDO: (20241204 - Julian) Button */}
-      <Link href={ISUNFA_ROUTE.DASHBOARD}>
-        <LandingButton type="button" variant="primary" className="w-full">
-          <BsFillRocketTakeoffFill size={20} />
-          <p>{t('landing_page_v2:NAVBAR.TRY_IT_NOW')}</p>
-        </LandingButton>
-      </Link>
     </>
   );
 
   return (
-    <nav className="z-40 w-full">
-      <div className="z-50 flex items-center justify-between rounded-sm border-b bg-landing-nav px-16px py-12px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:mx-36px md:px-40px lg:px-112px">
+    <nav className="z-40 w-full px-16px md:px-36px">
+      <div className="flex items-center justify-between rounded-sm border-b bg-landing-nav px-16px py-8px shadow-landing-nav backdrop-blur-md md:inset-x-36px md:px-40px lg:px-112px">
         <div className="flex items-center gap-16px">
           {/* Info: (20241204 - Julian) Logo */}
           <Link href={ISUNFA_ROUTE.LANDING_PAGE} className="h-40px w-150px flex-none">
@@ -153,8 +138,30 @@ const LandingNavbar: React.FC = () => {
             </p>
           </div>
 
-          {/* Info: (20241204 - Julian) Language Button */}
-          <div className="hidden lg:block">{langBtn}</div>
+          {/* Info: (20250724 - Julian) Language Button */}
+          <div
+            ref={langDropdownRef}
+            className="relative hidden flex-col gap-8px whitespace-nowrap lg:flex"
+          >
+            <LandingButton
+              type="button"
+              onClick={toggleLangDropdown}
+              className="w-170px rounded-sm bg-landing-nav px-24px font-bold shadow-landing-nav"
+            >
+              <div className="h-20px w-20px overflow-hidden rounded-full">
+                <Image
+                  src={`/flags/${currentLanguage.value}.svg`}
+                  alt={`${currentLanguage.value}_icon`}
+                  width={24}
+                  height={24}
+                />
+              </div>
+              <div className="flex-1">{currentLanguage.label}</div>
+              <div className={isLangOpen ? 'rotate-180' : 'rotate-0'}>
+                <FaChevronDown />
+              </div>
+            </LandingButton>
+          </div>
         </div>
 
         {/* Info: (20241204 - Julian) Hamburger Button */}
@@ -171,26 +178,51 @@ const LandingNavbar: React.FC = () => {
         {/* Info: (20241204 - Julian) Links */}
         <div className="hidden items-center justify-between whitespace-nowrap font-bold lg:flex">
           {navigationOptions}
+          {tryBtn}
         </div>
       </div>
 
       {/* Info: (20241227 - Julian) Dropdown */}
       <div
-        ref={dropdownRef}
-        className={`absolute right-0 flex flex-col rounded-sm border-b bg-landing-page-white/30 px-20px py-12px font-bold shadow-landing-nav backdrop-blur-md transition-all duration-300 ease-in-out md:right-40px lg:hidden ${isOpen ? 'visible top-110px opacity-100' : 'invisible top-50px opacity-0'}`}
+        className={`fixed inset-0 right-0 top-0 z-120 block bg-black/50 transition-all duration-300 ease-in-out lg:hidden ${isOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}
       >
-        {/* Info: (20241227 - Julian) I18n */}
-        {langBtn}
-        {/* Info: (20241227 - Julian) Language Dropdown */}
         <div
-          className={`grid w-full overflow-hidden rounded-sm border-b bg-landing-page-white/30 shadow-landing-nav transition-all duration-300 ease-in-out ${
-            isLangOpen ? 'mt-10px grid-rows-1 opacity-100' : 'grid-rows-0 opacity-0'
-          }`}
+          ref={dropdownRef}
+          className={`ml-auto flex h-full w-210px flex-col gap-16px bg-landing-page-mute px-20px py-12px font-bold transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-210px'}`}
         >
-          <div className="flex flex-col items-start py-12px">{langOptions}</div>
+          <button type="button" className="h-56px w-full" onClick={toggleDropdown}>
+            <RxCross2 size={20} />
+          </button>
+          {/* Info: (20241227 - Julian) Navigation */}
+          {navigationOptions}
+
+          {/* Info: (20250724 - Julian) I18n */}
+          <LandingButton type="button" onClick={toggleLangMenu}>
+            <div className="h-20px w-20px overflow-hidden rounded-full">
+              <Image
+                src={`/flags/${currentLanguage.value}.svg`}
+                alt={`${currentLanguage.value}_icon`}
+                width={20}
+                height={20}
+              />
+            </div>
+            <div className="flex-1">{currentLanguage.label}</div>
+            <FaChevronRight size={16} />
+          </LandingButton>
+
+          {/* Info: (20250724 - Julian) Try It Now Button */}
+          {tryBtn}
         </div>
-        {/* Info: (20241227 - Julian) Navigation */}
-        {navigationOptions}
+
+        {/* Info: (20250724 - Julian) Language Side Menu */}
+        <div
+          className={`absolute right-0 top-0 z-10 flex h-full w-210px flex-col gap-16px bg-landing-page-mute px-20px py-12px font-bold transition-all duration-300 ${isLangMenuOpen ? 'visible translate-x-0 opacity-100' : 'invisible translate-x-210px opacity-0'}`}
+        >
+          <button type="button" className="h-56px w-full" onClick={toggleLangMenu}>
+            <FaChevronLeft size={16} />
+          </button>
+          {langOptions}
+        </div>
       </div>
 
       {/* Info: (20241227 - Julian) Language Dropdown */}

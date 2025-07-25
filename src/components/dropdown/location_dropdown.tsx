@@ -3,21 +3,40 @@ import Image from 'next/image';
 import { LOCATION_OPTION, currencyByLocation, LocationType } from '@/constants/location';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { LocaleKey } from '@/constants/normal_setting';
+
+export const localeByLocation: Record<LocationType, LocaleKey> = {
+  [LocationType.TW]: LocaleKey.tw,
+  [LocationType.HK]: LocaleKey.hk,
+  [LocationType.JP]: LocaleKey.jp,
+  [LocationType.US]: LocaleKey.en,
+  [LocationType.CN]: LocaleKey.cn,
+};
+
+export const locationByLocale: Record<LocaleKey, LocationType> = {
+  [LocaleKey.tw]: LocationType.TW,
+  [LocaleKey.cn]: LocationType.CN,
+  [LocaleKey.en]: LocationType.US,
+  [LocaleKey.jp]: LocationType.JP,
+  [LocaleKey.hk]: LocationType.HK,
+};
 
 interface ILocationDropdownProps {
-  currentLocation: string;
-  setCurrentLocation: (location: string) => void;
+  currentLocation: LocaleKey | undefined;
+  setCurrentLocation: (location: LocaleKey) => void;
 }
 
 const LocationDropdown: React.FC<ILocationDropdownProps> = ({
   currentLocation,
   setCurrentLocation,
 }) => {
-  const isSelected = currentLocation !== '';
+  const isSelected = currentLocation !== undefined;
 
   const locationList = Object.values(LOCATION_OPTION);
-  const currStr =
-    currencyByLocation[currentLocation as LocationType] ?? currencyByLocation[LocationType.TW];
+
+  const currStr = currentLocation
+    ? currencyByLocation[locationByLocale[currentLocation]]
+    : LocationType.TW;
 
   const {
     targetRef,
@@ -30,7 +49,10 @@ const LocationDropdown: React.FC<ILocationDropdownProps> = ({
   const imgSrc = `/currencies/${currStr.toLowerCase()}.svg`;
 
   const dropMenu = locationList.map((local) => {
-    const countryClickHandler = () => setCurrentLocation(local);
+    const countryClickHandler = () => {
+      setCurrentLocation(localeByLocation[local]);
+      setIsOpen(false);
+    };
     const localSrc =
       currencyByLocation[local as LocationType] ?? currencyByLocation[LocationType.TW];
 
@@ -61,7 +83,7 @@ const LocationDropdown: React.FC<ILocationDropdownProps> = ({
         src={imgSrc}
         className="aspect-square rounded-full object-cover"
       />
-      <div className="flex-1 text-input-text-input-filled">{currentLocation}</div>
+      <div className="flex-1 text-input-text-input-filled">{locationByLocale[currentLocation]}</div>
     </>
   ) : (
     <div className="flex-1 text-input-text-input-placeholder">請選擇地區</div>

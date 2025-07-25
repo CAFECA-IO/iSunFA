@@ -24,6 +24,7 @@ import { getSession } from '@/lib/utils/session';
 import { validateOutputData } from '@/lib/utils/validator';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
+import { CurrencyType } from '@/constants/currency';
 
 /**
  * Info: (20250424 - Shirley) Handle GET request for accounting settings
@@ -195,10 +196,10 @@ async function handlePutRequest(req: NextApiRequest) {
     }
 
     // Info: (20250424 - Shirley) Update accounting settings
-    const updatedAccountingSetting = await updateAccountingSettingById(
-      accountBookId,
-      accountingSetting
-    );
+    const updatedAccountingSetting = await updateAccountingSettingById(accountBookId, {
+      ...accountingSetting,
+      currency: accountingSetting.currency as CurrencyType,
+    });
 
     if (updatedAccountingSetting) {
       payload = formatAccountingSetting(updatedAccountingSetting);
