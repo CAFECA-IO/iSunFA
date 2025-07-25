@@ -124,12 +124,15 @@
     "TO": "收件人",
     "NET_PAY": "淨薪資",
     "PAYSLIP_ISSUED_DATE": "薪資單發行日期",
-    "ACTION": "操作"
+    "ACTION": "操作",
+    "PAY_SLIP": "薪資單",
+    "SENT_ON": "寄出日期"
   },
   "BUTTON": {
     "DOWNLOAD": "下載為 PNG",
     "SEND": "寄出薪資單",
-    "RESET": "重置"
+    "RESET": "重置",
+    "RESEND": "重新寄送薪資單"
   },
   "MESSAGE": {
     "NAME_ERROR_TITLE": "員工姓名未填寫",
@@ -138,6 +141,16 @@
     "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。",
     "REMOVE_EMPLOYEE_TITLE": "移除員工",
     "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
-    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。"
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。",
+    "RESEND_PAY_SLIP_TITLE": "重新寄送薪資單",
+    "RESEND_PAY_SLIP_CONTENT_1": "您已經將",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_1": " {{month}} 的薪資單",
+    "RESEND_PAY_SLIP_CONTENT_2": "寄送給",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_2": " {{name}}",
+    "RESEND_PAY_SLIP_CONTENT_3": " 了。是否要重新寄送？",
+    "RESEND_PAY_SLIP_CANCEL_BTN": "不，取消",
+    "RESEND_PAY_SLIP_SUBMIT_BTN": "是的，重寄薪資單",
+    "RESEND_SUCCESS_TITLE": "薪資單已寄出！",
+    "RESEND_SUCCESS_CONTENT": "薪資單已成功寄送至員工的電子郵件。"
   }
 }
