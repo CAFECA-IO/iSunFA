@@ -52,10 +52,12 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
       backgroundColor: null,
       scale: 2,
       onclone: (clonedNode) => {
-        // Info: (20250710 - Julian) 調整樣式
-        const frame = clonedNode.querySelector<HTMLIFrameElement>('#payslip-download');
+        // Info: (20250725 - Julian) 調整樣式
+        const frame = clonedNode.querySelector<HTMLIFrameElement>('#download-area');
         if (frame) {
-          frame.style.borderRadius = '0px';
+          frame.style.width = '100%';
+          frame.style.height = 'auto';
+          frame.style.overflowY = 'visible'; // Info: (20250725 - Julian) 取消滾動條
         }
       },
     }).then((canvas) => {
@@ -86,7 +88,11 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
           </button>
         </div>
         {/* Info: (20250725 - Julian) Modal Body */}
-        <div ref={downloadRef} className="flex h-600px w-full flex-col overflow-y-auto">
+        <div
+          id="download-area"
+          ref={downloadRef}
+          className="flex h-600px w-full flex-col overflow-y-auto"
+        >
           <PaySlip
             employeeName={employeeName}
             selectedMonth={monthStr}
