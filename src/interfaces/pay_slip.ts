@@ -1,3 +1,5 @@
+import { ISalaryCalculator, defaultSalaryCalculatorResult } from '@/interfaces/calculator';
+
 export interface IPaySlipRecord {
   id: string;
   payPeriod: number;
@@ -8,23 +10,29 @@ export interface IReceivedRecord extends IPaySlipRecord {
   netPay: number;
 }
 
+export interface IReceivedRecordDetail extends IReceivedRecord {
+  paySlipData: ISalaryCalculator;
+}
+
 export interface ISentRecord extends IPaySlipRecord {
   toEmail: string;
   issuedDate: number;
 }
 
-export const dummyReceivedData: IReceivedRecord[] = [
+export const dummyReceivedData: IReceivedRecordDetail[] = [
   {
     id: '1',
     payPeriod: 1723012933,
     fromEmail: 'XYZ@wfe.efwe',
     netPay: 50000,
+    paySlipData: defaultSalaryCalculatorResult,
   },
   {
     id: '2',
     payPeriod: 1725691200,
     fromEmail: 'ABC@fwe.fe',
     netPay: 60000,
+    paySlipData: defaultSalaryCalculatorResult,
   },
 ];
 
