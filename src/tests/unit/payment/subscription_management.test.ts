@@ -553,7 +553,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
       expect(result).toMatchObject({
         id: mockTeamId,
         name: 'Test Team',
-        plan: TPlanType.PROFESSIONAL,
+        plan: TPlanType.BEGINNER,
         enableAutoRenewal: true,
         paymentStatus: TPaymentStatus.PAID,
       });

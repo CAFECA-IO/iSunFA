@@ -7,6 +7,8 @@ import {
   IAccountBookWithTeam,
 } from '@/interfaces/account_book';
 import { ITeam } from '@/interfaces/team';
+import { LocaleKey } from '@/constants/normal_setting';
+import { CurrencyType } from '@/constants/currency';
 
 export const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }];
 
@@ -30,8 +32,8 @@ export const FILING_METHOD_OPTIONS = [
 export interface Step1FormState {
   imageId: string;
   companyName: string;
-  businessLocation: string; // Info: (20250604 - Liz) 商業地址
-  accountingCurrency: string; // Info: (20250604 - Liz) 會計幣別
+  businessLocation: LocaleKey | undefined; // Info: (20250604 - Liz) 商業地址
+  accountingCurrency: CurrencyType | undefined; // Info: (20250604 - Liz) 會計幣別
   taxId: string;
   taxSerialNumber: string;
   team: ITeam | null;
@@ -62,8 +64,8 @@ export interface Step1FormState {
 export const initialStep1FormState: Step1FormState = {
   imageId: '',
   companyName: '',
-  businessLocation: '',
-  accountingCurrency: '',
+  businessLocation: undefined,
+  accountingCurrency: undefined,
   taxId: '',
   taxSerialNumber: '',
   team: null,

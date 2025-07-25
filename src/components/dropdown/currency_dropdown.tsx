@@ -1,19 +1,19 @@
 import React from 'react';
 import Image from 'next/image';
-import { OEN_CURRENCY } from '@/constants/currency';
+import { CurrencyType, OEN_CURRENCY } from '@/constants/currency';
 import { FaChevronDown } from 'react-icons/fa6';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 
 interface ICurrencyDropdownProps {
-  currentCurrency: string;
-  setCurrentCurrency: (currency: string) => void;
+  currentCurrency: CurrencyType | undefined;
+  setCurrentCurrency: (currency: CurrencyType) => void;
 }
 
 const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
   currentCurrency,
   setCurrentCurrency,
 }) => {
-  const isSelected = currentCurrency !== '';
+  const isSelected = currentCurrency !== undefined;
   const currencyList = Object.values(OEN_CURRENCY);
 
   const {
@@ -24,7 +24,7 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
 
   const toggleCurrencyMenu = () => setIsOpen((prev) => !prev);
 
-  const imgSrc = `/currencies/${currentCurrency.toLowerCase()}.svg`;
+  const imgSrc = `/currencies/${(currentCurrency || '').toLowerCase()}.svg`;
 
   const dropMenu = currencyList.map((curr) => {
     const countryClickHandler = () => setCurrentCurrency(curr);
@@ -56,7 +56,7 @@ const CurrencyDropdown: React.FC<ICurrencyDropdownProps> = ({
         className="aspect-square rounded-full object-cover"
       />
       <div className="flex-1 text-input-text-input-filled">
-        {currentCurrency.toLocaleUpperCase()}
+        {(currentCurrency || '').toLocaleUpperCase()}
       </div>
     </>
   ) : (
