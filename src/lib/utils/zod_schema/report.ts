@@ -11,6 +11,7 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { getTimestampNow, getTimestampOfLastSecondOfDate } from '@/lib/utils/common';
 
 const reportGetQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   startDate: zodTimestampInSecondsNoDefault(),
   endDate: zodTimestampInSecondsNoDefault(),
   language: z.string(),
