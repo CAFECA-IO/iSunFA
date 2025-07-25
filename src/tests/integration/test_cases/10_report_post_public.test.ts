@@ -122,12 +122,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       handler: createAccountBookHandler,
       routeParams: { userId: currentUserId },
     });
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
   // Info: (20250724 - Shirley) Initialize clients that depend on accountBookId
@@ -156,12 +150,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
   afterAll(async () => {
     // Info: (20250724 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
@@ -196,12 +184,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
 
       // Info: (20250724 - Shirley) Initialize account book dependent clients now that we have accountBookId
       initializeAccountBookDependentClients();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
     });
 
     test('should verify account book connection', async () => {
@@ -216,12 +198,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       expect(response.body.success).toBe(true);
       expect(response.body.payload.id).toBe(accountBookId);
       expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
     });
   });
 
@@ -286,12 +262,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
 
       // Info: (20250724 - Shirley) Verify all vouchers were created
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
-
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for report generation test`
-      );
     });
   });
 
@@ -308,11 +278,9 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       const endDate = currentTimestamp; // Info: (20250724 - Shirley) Current date
 
       const reportPayload = {
-        // projectId: null,
         // type: ReportSheetType.BALANCE_SHEET,
-        // reportLanguage: 'en',
-        // from: startDate,
-        // to: endDate,
+        startDate,
+        endDate,
         reportType: 'financial',
       };
 
@@ -333,45 +301,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      const reportId = response.body.payload;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Balance sheet report generated successfully with ID:', reportId);
-      }
-
-      // Info: (20250724 - Shirley) Log the result for record keeping
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== REPORT POST TEST RESULTS ===');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report Type: Balance Sheet');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report ID:', reportId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Account Book ID:', accountBookId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'Date Range:',
-        new Date(startDate * 1000).toISOString(),
-        'to',
-        new Date(endDate * 1000).toISOString()
-      );
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Status:', response.status);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END REPORT POST TEST RESULTS ===\n');
     });
 
     test('should generate income statement report with proper structure', async () => {
@@ -383,12 +312,9 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       const endDate = currentTimestamp; // Info: (20250724 - Shirley) Current date
 
       const reportPayload = {
-        // projectId: 1,
         type: ReportSheetType.INCOME_STATEMENT,
-        // type: ReportSheetType.INCOME_STATEMENT,
-        // reportLanguage: 'en',
-        // from: startDate,
-        // to: endDate,
+        startDate,
+        endDate,
         reportType: 'financial',
       };
 
@@ -409,45 +335,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      const reportId = response.body.payload;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Income statement report generated successfully with ID:', reportId);
-      }
-
-      // Info: (20250724 - Shirley) Log the result for record keeping
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== INCOME STATEMENT REPORT POST TEST RESULTS ===');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report Type: Income Statement');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report ID:', reportId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Account Book ID:', accountBookId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'Date Range:',
-        new Date(startDate * 1000).toISOString(),
-        'to',
-        new Date(endDate * 1000).toISOString()
-      );
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Status:', response.status);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END INCOME STATEMENT REPORT POST TEST RESULTS ===\n');
     });
 
     test('should generate cash flow report with proper structure', async () => {
@@ -459,11 +346,9 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       const endDate = currentTimestamp; // Info: (20250724 - Shirley) Current date
 
       const reportPayload = {
-        // projectId: 1,
+        startDate,
+        endDate,
         type: ReportSheetType.CASH_FLOW_STATEMENT,
-        // reportLanguage: 'en',
-        // from: startDate,
-        // to: endDate,
         reportType: 'financial',
       };
 
@@ -475,7 +360,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.payload).toBeDefined();
-      // expect(typeof response.body.payload).toBe('number');
 
       // Info: (20250724 - Shirley) Validate output with production validator
       const { isOutputDataValid, outputData } = validateOutputData(
@@ -484,45 +368,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      const reportId = response.body.payload;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Cash flow report generated successfully with ID:', reportId);
-      }
-
-      // Info: (20250724 - Shirley) Log the result for record keeping
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== CASH FLOW REPORT POST TEST RESULTS ===');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report Type: Cash Flow Statement');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report ID:', reportId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Account Book ID:', accountBookId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'Date Range:',
-        new Date(startDate * 1000).toISOString(),
-        'to',
-        new Date(endDate * 1000).toISOString()
-      );
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Status:', response.status);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Response Body:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END CASH FLOW REPORT POST TEST RESULTS ===\n');
     });
   });
 
@@ -550,12 +395,6 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250724 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Unauthenticated request properly rejected with 401');
-      }
     });
 
     test('should handle invalid report type gracefully', async () => {
@@ -639,16 +478,8 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // const currentTimestamp = Math.floor(Date.now() / 1000);
-      // const startDate = currentTimestamp - 86400 * 365;
-      // const endDate = currentTimestamp;
-
       const reportPayload = {
-        // projectId: 1,
-        // type: ReportSheetType.BALANCE_SHEET,
-        // reportLanguage: 'en',
-        // from: startDate,
-        // to: endDate,
+        type: ReportSheetType.BALANCE_SHEET,
         reportType: 'financial',
       };
 
@@ -659,33 +490,12 @@ describe('Integration Test - Report Post Public API Integration (Test Case 10)',
 
       expect(finalReportResponse.status).toBe(201);
       expect(finalReportResponse.body.success).toBe(true);
-      // expect(typeof finalReportResponse.body.payload).toBe('number');
 
       const finalReportId = finalReportResponse.body.payload;
 
       // Info: (20250724 - Shirley) Final validation
       expect(finalReportId).toBeDefined();
       expect(finalReportId).toBeGreaterThan(0);
-
-      // Info: (20250724 - Shirley) Log final test results for record keeping
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== FINAL INTEGRATION TEST RESULTS ===');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Complete integration workflow validated successfully');
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Account Book ID:', accountBookId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Report ID:', finalReportId);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Test Company:', testCompanyData.name);
-      // Deprecated: (20250724 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL INTEGRATION TEST RESULTS ===\n');
     });
   });
 });
