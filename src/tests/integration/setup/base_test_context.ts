@@ -124,6 +124,14 @@ export class BaseTestContext {
       })
       .then((ins) => ins.map((i) => i.id));
 
+    // Info: (20250725 - Shirley) Get report IDs that reference the companies to be deleted
+    const reportIdsToPurge = await prisma.report
+      .findMany({
+        where: { companyId: { in: orphanAccountBookIds } },
+        select: { id: true },
+      })
+      .then((reports) => reports.map((report) => report.id));
+
     await prisma.$transaction([
       // Info: (20250717 - Tzuhan) ── asset_voucher / associate_line_item / voucher_salary_record / invoice_voucher_journal …
       prisma.associateLineItem.deleteMany({
@@ -169,6 +177,14 @@ export class BaseTestContext {
       }),
       prisma.account.deleteMany({
         where: { companyId: { in: orphanAccountBookIds } },
+      }),
+      // Info: (20250725 - Shirley) Delete audit reports before reports (foreign key dependency)
+      prisma.auditReport.deleteMany({
+        where: { companyId: { in: orphanAccountBookIds } },
+      }),
+      // Info: (20250725 - Shirley) Delete reports before companies (foreign key constraint)
+      prisma.report.deleteMany({
+        where: { id: { in: reportIdsToPurge } },
       }),
       prisma.company.deleteMany({
         where: { id: { in: orphanAccountBookIds } },
