@@ -29,7 +29,7 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     helper = sharedContext.helper;
     userId = sharedContext.userId;
-    teamId = sharedContext.teamId;
+    teamId = sharedContext.teamId || (await BaseTestContext.createTeam(userId)).id;
     cookies = sharedContext.cookies;
     accountBookId = (await helper.createAccountBook(userId, teamId)).id;
 

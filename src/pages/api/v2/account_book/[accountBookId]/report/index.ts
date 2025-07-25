@@ -379,7 +379,6 @@ const reportHandlers: ReportHandlers = {
  */
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { companyId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: APIResponse = null;
 
@@ -393,7 +392,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250502 - Shirley) 獲取報表參數
-  const { startDate, endDate, language, reportType } = query;
+  const { accountBookId: companyId, startDate, endDate, language, reportType } = query;
 
   // Info: (20250502 - Shirley) 根據報表類型生成報表
   const reportHandler = reportHandlers[reportType as FinancialReportTypesKey];

@@ -1,3 +1,4 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
@@ -11,6 +12,7 @@ import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { IAccount, IPaginatedAccount } from '@/interfaces/accounting_account';
 import { CurrencyType } from '@/constants/currency';
 
+/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250715 - Shirley) Mock pusher and crypto for accounting setting testing
 jest.mock('pusher', () => ({
   // Info: (20250715 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -41,6 +43,8 @@ jest.mock('@/lib/utils/crypto', () => {
   };
 });
 
+*/
+
 /**
  * Info: (20250715 - Shirley) Integration Test - Accounting Setting Configuration
  *
@@ -66,9 +70,19 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   let testAccountBookId: number;
   let accountingSettingClient: TestClient;
   let accountListClient: TestClient;
+  let cookies: string[];
   // let accountByIdClient: TestClient;
 
   beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    authenticatedHelper = sharedContext.helper;
+    const currentUserId = String(sharedContext.userId);
+    cookies = sharedContext.cookies;
+    const teamId =
+      sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
+    testAccountBookId = (await authenticatedHelper.createAccountBook(Number(currentUserId), teamId))
+      .id;
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
 
     // Info: (20250711 - Shirley) Complete user registration with default values
@@ -81,6 +95,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     // Info: (20250715 - Shirley) Refresh session to include new team membership
     await authenticatedHelper.getStatusInfo();
+    */
 
     // Info: (20250711 - Shirley) Initialize test clients
     accountingSettingClient = createTestClient({
@@ -100,7 +115,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   });
 
   afterAll(() => {
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     authenticatedHelper.clearAllUserSessions();
+    */
   });
 
   // ========================================
@@ -109,7 +126,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   describe('GET /api/v2/account_book/{accountBookId}/accounting_setting', () => {
     it('should successfully get accounting settings with proper permissions', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await accountingSettingClient
         .get(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
@@ -182,7 +198,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject access to non-existent account book', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const nonExistentAccountBookClient = createTestClient({
         handler: accountingSettingHandler,
@@ -208,7 +223,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject missing accountBookId parameter', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidClient = createTestClient({
         handler: accountingSettingHandler,
@@ -242,7 +256,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     beforeAll(async () => {
       // Info: (20250711 - Shirley) Get existing accounting setting for updates
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getResponse = await accountingSettingClient
         .get(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
@@ -254,7 +267,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should successfully update accounting settings with valid data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const updateData = {
         ...existingAccountingSetting,
@@ -342,7 +354,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject invalid request data format', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidData = {
         id: 'invalid_id',
@@ -370,7 +381,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject missing required fields', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await accountingSettingClient
         .put(`/api/v2/account_book/${testAccountBookId}/accounting_setting`)
@@ -392,7 +402,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should handle method not allowed errors properly', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       // Info: (20250711 - Shirley) Test wrong HTTP method for accounting setting
       const response = await accountingSettingClient
@@ -419,7 +428,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
   describe('GET /api/v2/account_book/{accountBookId}/account', () => {
     it('should successfully get chart of accounts with proper permissions', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await accountListClient
         .get(`/api/v2/account_book/${testAccountBookId}/account`)
@@ -495,7 +503,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject access to non-existent account book', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const nonExistentAccountBookClient = createTestClient({
         handler: accountListHandler,
@@ -521,7 +528,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should handle invalid query parameters', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await accountListClient
         .get(`/api/v2/account_book/${testAccountBookId}/account`)
@@ -550,7 +556,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should successfully create new sub-account with valid data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const newAccountData = {
         name: `Test Sub Account ${Date.now()}`,
@@ -630,7 +635,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject invalid request data format', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidData = {
         name: '', // Info: (20250715 - Shirley) Empty name should be invalid
@@ -659,7 +663,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject missing required fields', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const response = await accountListClient
         .post(`/api/v2/account_book/${testAccountBookId}/account`)
@@ -684,7 +687,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       if (createdAccountId) {
         try {
           await authenticatedHelper.ensureAuthenticated();
-          const cookies = authenticatedHelper.getCurrentSession();
 
           const deleteClient = createTestClient({
             handler: accountByIdHandler,
@@ -713,7 +715,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     beforeAll(async () => {
       // Info: (20250715 - Shirley) Create a test account for the GET by ID tests
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const newAccountData = {
         name: `Test Account for GET ${Date.now()}`,
@@ -734,7 +735,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should successfully get account details with valid ID', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getByIdClient = createTestClient({
         handler: accountByIdHandler,
@@ -806,7 +806,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject access to non-existent account', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getByIdClient = createTestClient({
         handler: accountByIdHandler,
@@ -835,7 +834,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject invalid account ID parameter', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const getByIdClient = createTestClient({
         handler: accountByIdHandler,
@@ -867,7 +865,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       if (testAccountId) {
         try {
           await authenticatedHelper.ensureAuthenticated();
-          const cookies = authenticatedHelper.getCurrentSession();
 
           const deleteClient = createTestClient({
             handler: accountByIdHandler,
@@ -897,7 +894,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
     beforeAll(async () => {
       // Info: (20250715 - Shirley) Create a test account for the PUT tests
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const newAccountData = {
         name: `Test Account for PUT ${Date.now()}`,
@@ -926,7 +922,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should successfully update account info with valid data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const updateData = {
         ...originalAccountData,
@@ -1016,7 +1011,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject invalid request data format', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const invalidData = {
         id: 'invalid_id',
@@ -1052,7 +1046,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should reject access to non-existent account', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const updateData = {
         ...originalAccountData,
@@ -1087,7 +1080,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
     it('should handle method not allowed errors properly', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
 
       const putByIdClient = createTestClient({
         handler: accountByIdHandler,
@@ -1120,7 +1112,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       if (testAccountId) {
         try {
           await authenticatedHelper.ensureAuthenticated();
-          const cookies = authenticatedHelper.getCurrentSession();
 
           const deleteClient = createTestClient({
             handler: accountByIdHandler,

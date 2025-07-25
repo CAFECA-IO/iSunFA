@@ -1,10 +1,4 @@
-import {
-  clearInvoiceTestContext,
-  getInvoiceTestContext,
-  createInvoice,
-  InvoiceTestContext,
-} from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';
-
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import invoiceInputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/input';
 import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
@@ -15,13 +9,31 @@ import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
 import { STATUS_CODE } from '@/constants/status_code';
 
 describe('Invoice RC2 - Validation', () => {
-  let ctx: InvoiceTestContext;
+  let accountBookId: number;
+  let cookies: string[];
+  let fileIdForInput: number;
+  let fileIdForOutput: number;
   let invoiceId: number;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext();
-    const invoice = await createInvoice(ctx, InvoiceDirection.OUTPUT);
-    invoiceId = invoice.id;
+    const ctx = await BaseTestContext.getSharedContext();
+    cookies = ctx.cookies;
+    const teamId = ctx.teamId || (await ctx.helper.createTeam(ctx.userId)).id;
+    accountBookId =
+      ctx.accountBookId || (await ctx.helper.createAccountBook(ctx.userId, teamId)).id;
+    fileIdForInput =
+      ctx.uploadedFileIdForInput ||
+      (await ctx.helper.uploadEncryptedFile('invoice_input', accountBookId));
+    fileIdForOutput =
+      ctx.uploadedFileIdForOutput ||
+      (await ctx.helper.uploadEncryptedFile('invoice_output', accountBookId));
+
+    const invoiceInput = await BaseTestContext.createInvoice(
+      accountBookId,
+      fileIdForInput,
+      InvoiceDirection.INPUT
+    );
+    invoiceId = invoiceInput.id;
   });
 
   /* ------------------------------------------------------------------ */
@@ -31,11 +43,11 @@ describe('Invoice RC2 - Validation', () => {
     // Info: (20250711 - Tzuhan) 建第一張
     const client = createTestClient({
       handler: invoiceOutputCreateHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     const body = {
-      fileId: ctx.fileIdForOutput,
+      fileId: fileIdForOutput,
       direction: InvoiceDirection.OUTPUT,
       currencyCode: CurrencyCode.TWD,
       isGenerated: false,
@@ -44,20 +56,16 @@ describe('Invoice RC2 - Validation', () => {
     };
 
     await client
-      .post(
-        APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .post(APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', accountBookId.toString()))
       .send(body)
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(200);
 
     // Info: (20250711 - Tzuhan) 建第二張（同號碼）── 期待未來 409
     await client
-      .post(
-        APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .post(APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', accountBookId.toString()))
       .send(body)
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(409) // Info: (20250711 - Tzuhan) ← 後端實作好之後改回來
       .then((res) => {
         expect(res.body.success).toBe(false);
@@ -71,15 +79,13 @@ describe('Invoice RC2 - Validation', () => {
   test.skip('should reject wrong tax amount → 422', async () => {
     const client = createTestClient({
       handler: invoiceInputCreateHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     await client
-      .post(
-        APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .post(APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId.toString()))
       .send({
-        fileId: ctx.fileIdForInput,
+        fileId: fileIdForInput,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
@@ -88,7 +94,7 @@ describe('Invoice RC2 - Validation', () => {
         taxAmount: 999, // Info: (20250711 - Tzuhan) 錯誤
         totalAmount: 1999,
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(422) // Info: (20250711 - Tzuhan) ← 後端實作好之後改回來
       .then((res) => {
         expect(res.body.success).toBe(false);
@@ -102,20 +108,18 @@ describe('Invoice RC2 - Validation', () => {
   it('should reject when required field missing → 422', async () => {
     const client = createTestClient({
       handler: invoiceInputCreateHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     await client
-      .post(
-        APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .post(APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId.toString()))
       .send({
-        // Info: (20250711 - Tzuhan) 缺 fileId: ctx.fileIdForInput,
+        // Info: (20250711 - Tzuhan) 缺 fileId: fileIdForInput,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(422)
       .then((res) => {
         expect(res.body.success).toBe(false);
@@ -129,15 +133,13 @@ describe('Invoice RC2 - Validation', () => {
   it('should block unauthorized create invoice → 401', async () => {
     const client = createTestClient({
       handler: invoiceInputCreateHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     await client
-      .post(
-        APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .post(APIPath.CREATE_INVOICE_RC2_INPUT.replace(':accountBookId', accountBookId.toString()))
       .send({
-        fileId: ctx.fileIdForInput,
+        fileId: fileIdForInput,
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
@@ -157,7 +159,7 @@ describe('Invoice RC2 - Validation', () => {
     const client = createTestClient({
       handler: invoiceOutputModifyHandler,
       routeParams: {
-        accountBookId: ctx.accountBookId.toString(),
+        accountBookId: accountBookId.toString(),
         invoiceId: invoiceId.toString(),
       },
     });
@@ -166,13 +168,13 @@ describe('Invoice RC2 - Validation', () => {
       .put(
         APIPath.UPDATE_INVOICE_RC2_OUTPUT.replace(
           ':accountBookId',
-          ctx.accountBookId.toString()
+          accountBookId.toString()
         ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
         currencyCode: 'ETH',
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(422)
       .then((res) => {
         expect(res.body.success).toBe(false);
@@ -187,7 +189,7 @@ describe('Invoice RC2 - Validation', () => {
     const client = createTestClient({
       handler: invoiceOutputModifyHandler,
       routeParams: {
-        accountBookId: ctx.accountBookId.toString(),
+        accountBookId: accountBookId.toString(),
         invoiceId: invoiceId.toString(),
       },
     });
@@ -196,21 +198,17 @@ describe('Invoice RC2 - Validation', () => {
       .put(
         APIPath.UPDATE_INVOICE_RC2_OUTPUT.replace(
           ':accountBookId',
-          ctx.accountBookId.toString()
+          accountBookId.toString()
         ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
         taxAmount: 'ABC', // Info: (20250711 - Tzuhan) ❌ 應為 number
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(422)
       .then((res) => {
         expect(res.body.success).toBe(false);
         expect(res.body.code).toBe(STATUS_CODE.INVALID_INPUT_PARAMETER);
       });
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });
