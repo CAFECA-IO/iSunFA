@@ -38,7 +38,8 @@
     "LEAVE_HOUR": "Leave Hour",
     "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
     "PERSONAL_LEAVE": "Personal Leave",
-    "TOTAL_LEAVE_HOUR": "Total Leave Hour"
+    "TOTAL_LEAVE_HOUR": "Total Leave Hour",
+    "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
   },
   "OTHERS_FORM": {
     "NHI_BACK_PREMIUM": "NHI Back Premium",

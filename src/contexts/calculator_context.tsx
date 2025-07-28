@@ -69,8 +69,6 @@ interface ICalculatorContext {
   setTwoAndOneThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
   twoAndTwoThirdsHoursForNonTax: number;
   setTwoAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
-  threeAndTwoThirdsHoursForNonTax: number;
-  setThreeAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
   totalNonTaxableHours: number; // Info: (20250710 - Julian) 總免稅加班時數
   // Info: (20250722 - Julian) Taxable hours
   oneAndOneThirdHoursForTaxable: number;
@@ -83,8 +81,6 @@ interface ICalculatorContext {
   setTwoAndOneThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
   twoAndTwoThirdsHoursForTaxable: number;
   setTwoAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
-  threeAndTwoThirdsHoursForTaxable: number;
-  setThreeAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
   totalTaxableHours: number; // Info: (20250710 - Julian) 總應稅加班時數
   // Info: (20250722 - Julian) Leave hours
   sickLeaveHours: number;
@@ -154,15 +150,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [twoHoursForNonTax, setTwoHoursForNonTax] = useState<number>(0);
   const [twoAndOneThirdsHoursForNonTax, setTwoAndOneThirdsHoursForNonTax] = useState<number>(0);
   const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] = useState<number>(0);
-  const [threeAndTwoThirdsHoursForNonTax, setThreeAndTwoThirdsHoursForNonTax] = useState<number>(0);
   const [totalNonTaxableHours, setTotalNonTaxableHours] = useState<number>(0);
   const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdsHoursForTaxable] = useState<number>(0);
   const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] = useState<number>(0);
   const [twoHoursForTaxable, setTwoHoursForTaxable] = useState<number>(0);
   const [twoAndOneThirdsHoursForTaxable, setTwoAndOneThirdsHoursForTaxable] = useState<number>(0);
   const [twoAndTwoThirdsHoursForTaxable, setTwoAndTwoThirdsHoursForTaxable] = useState<number>(0);
-  const [threeAndTwoThirdsHoursForTaxable, setThreeAndTwoThirdsHoursForTaxable] =
-    useState<number>(0);
   const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
@@ -181,8 +174,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       oneAndTwoThirdsHoursForNonTax +
       twoHoursForNonTax +
       twoAndOneThirdsHoursForNonTax +
-      twoAndTwoThirdsHoursForNonTax +
-      threeAndTwoThirdsHoursForNonTax;
+      twoAndTwoThirdsHoursForNonTax;
     setTotalNonTaxableHours(totalHours);
   }, [
     oneAndOneThirdsHoursForNonTax,
@@ -190,7 +182,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     twoHoursForNonTax,
     twoAndOneThirdsHoursForNonTax,
     twoAndTwoThirdsHoursForNonTax,
-    threeAndTwoThirdsHoursForNonTax,
   ]);
 
   useEffect(() => {
@@ -200,8 +191,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       oneAndTwoThirdsHoursForTaxable +
       twoHoursForTaxable +
       twoAndOneThirdsHoursForTaxable +
-      twoAndTwoThirdsHoursForTaxable +
-      threeAndTwoThirdsHoursForTaxable;
+      twoAndTwoThirdsHoursForTaxable;
     setTotalTaxableHours(totalHours);
   }, [
     oneAndOneThirdHoursForTaxable,
@@ -209,7 +199,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     twoHoursForTaxable,
     twoAndOneThirdsHoursForTaxable,
     twoAndTwoThirdsHoursForTaxable,
-    threeAndTwoThirdsHoursForTaxable,
   ]);
 
   useEffect(() => {
@@ -387,14 +376,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTwoHoursForNonTax(0);
     setTwoAndOneThirdsHoursForNonTax(0);
     setTwoAndTwoThirdsHoursForNonTax(0);
-    setThreeAndTwoThirdsHoursForNonTax(0);
     setTotalNonTaxableHours(0);
     setOneAndOneThirdsHoursForTaxable(0);
     setOneAndTwoThirdsHoursForTaxable(0);
     setTwoHoursForTaxable(0);
     setTwoAndOneThirdsHoursForTaxable(0);
     setTwoAndTwoThirdsHoursForTaxable(0);
-    setThreeAndTwoThirdsHoursForTaxable(0);
     setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
@@ -476,8 +463,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setTwoAndOneThirdsHoursForNonTax,
       twoAndTwoThirdsHoursForNonTax,
       setTwoAndTwoThirdsHoursForNonTax,
-      threeAndTwoThirdsHoursForNonTax,
-      setThreeAndTwoThirdsHoursForNonTax,
       totalNonTaxableHours,
       oneAndOneThirdHoursForTaxable,
       setOneAndOneThirdsHoursForTaxable,
@@ -489,8 +474,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setTwoAndOneThirdsHoursForTaxable,
       twoAndTwoThirdsHoursForTaxable,
       setTwoAndTwoThirdsHoursForTaxable,
-      threeAndTwoThirdsHoursForTaxable,
-      setThreeAndTwoThirdsHoursForTaxable,
       totalTaxableHours,
       sickLeaveHours,
       setSickLeaveHours,
@@ -528,14 +511,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       twoHoursForNonTax,
       twoAndOneThirdsHoursForNonTax,
       twoAndTwoThirdsHoursForNonTax,
-      threeAndTwoThirdsHoursForNonTax,
       totalNonTaxableHours,
       oneAndOneThirdHoursForTaxable,
       oneAndTwoThirdsHoursForTaxable,
       twoHoursForTaxable,
       twoAndOneThirdsHoursForTaxable,
       twoAndTwoThirdsHoursForTaxable,
-      threeAndTwoThirdsHoursForTaxable,
       totalTaxableHours,
       sickLeaveHours,
       personalLeaveHours,
