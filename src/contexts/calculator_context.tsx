@@ -219,7 +219,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   }, [sickLeaveHours, personalLeaveHours]);
 
   // Info: (20250728 - Julian) 計算結果
-  // ToDo: (20250728 - Julian)
+  // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
   const salaryCalculatorResult: ISalaryCalculator = useMemo(() => {
     const yearInt = parseInt(selectedYear, 10);
     const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name);
