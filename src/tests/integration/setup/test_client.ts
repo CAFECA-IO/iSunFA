@@ -18,6 +18,11 @@
  * const client = createTestClient({ handler, routeParams: { email: 'test@example.com' } });
  * const response = await client.get('/api/users/test@example.com');
  */
+
+/**
+ * Info: (20250709 - Tzuhan)
+ * - 如果需要測試檔案上傳，請見 04_upload.test.ts 的技術限制說明。
+ */
 import { createServer, RequestListener, IncomingMessage, ServerResponse, Server } from 'http';
 import { NextApiHandler } from 'next';
 import { apiResolver } from 'next/dist/server/api-utils/node/api-resolver';
@@ -38,35 +43,6 @@ export const createSingleTestClient = (handler: NextApiHandler) => {
 
   if (!server) {
     const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
-      return apiResolver(
-        req,
-        res,
-        req.query,
-        handler,
-        {
-          previewModeEncryptionKey: '',
-          previewModeId: '',
-          previewModeSigningKey: '',
-        },
-        false
-      );
-    };
-    server = createServer(listener);
-    serverCache.set(handler, server);
-    activeServers.add(server);
-  }
-
-  return request(server);
-};
-
-const dynamicServerCache = new Map<string, Server>();
-
-const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<string, string>) => {
-  const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
-  let server = dynamicServerCache.get(cacheKey);
-
-  if (!server) {
-    const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
       const url = new URL(req.url || '/', 'http://localhost');
 
       if (!req.query) {
@@ -78,12 +54,6 @@ const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<st
           req.query[key] = value;
         }
       });
-
-      if (req.query) {
-        Object.assign(req.query, routeParams);
-      } else {
-        req.query = routeParams;
-      }
 
       if (!req.headers) {
         req.headers = {};
@@ -107,6 +77,62 @@ const createDynamicTestClient = (handler: NextApiHandler, routeParams: Record<st
       );
     };
     server = createServer(listener);
+    serverCache.set(handler, server);
+    activeServers.add(server);
+  }
+
+  return request(server);
+};
+
+const dynamicServerCache = new Map<string, Server>();
+
+const createDynamicTestClient = (
+  handler: NextApiHandler,
+  routeParams: Record<string, string>,
+  queryParams: Record<string, string | string[]>
+) => {
+  const cacheKey = `${handler.toString()}_${JSON.stringify(routeParams)}`;
+  let server = dynamicServerCache.get(cacheKey);
+
+  if (!server) {
+    const listener: RequestListener = (req: ExtendedIncomingMessage, res: ServerResponse) => {
+      const url = new URL(req.url || '/', 'http://localhost');
+
+      const mergedQuery = {
+        ...(req.query || {}),
+        ...Object.fromEntries(url.searchParams.entries()),
+        ...queryParams,
+        ...routeParams,
+      };
+
+      url.searchParams.forEach((value, key) => {
+        if (req.query) {
+          req.query[key] = value;
+        }
+      });
+
+      if (!req.headers) {
+        req.headers = {};
+      }
+
+      req.headers['user-agent'] = req.headers['user-agent'] || 'supertest-agent';
+      req.headers['x-forwarded-for'] = req.headers['x-forwarded-for'] || '127.0.0.1';
+      req.headers['x-real-ip'] = req.headers['x-real-ip'] || '127.0.0.1';
+
+      return apiResolver(
+        req,
+        res,
+        mergedQuery,
+        handler,
+        {
+          previewModeEncryptionKey: '',
+          previewModeId: '',
+          previewModeSigningKey: '',
+        },
+        false
+      );
+    };
+    server = createServer(listener);
     dynamicServerCache.set(cacheKey, server);
     activeServers.add(server);
   }
@@ -119,8 +145,12 @@ export const createTestClient = (options: TestClientOptions | NextApiHandler) =>
     return createSingleTestClient(options);
   }
 
-  if (options.routeParams && Object.keys(options.routeParams).length > 0) {
-    return createDynamicTestClient(options.handler, options.routeParams);
+  if ((options.routeParams && Object.keys(options.routeParams).length > 0) || options.queryParams) {
+    return createDynamicTestClient(
+      options.handler,
+      options.routeParams || {},
+      options.queryParams || {}
+    );
   }
 
   return createSingleTestClient(options.handler);

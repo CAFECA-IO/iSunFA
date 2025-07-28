@@ -670,13 +670,19 @@ export function convertToAPIFormat(
 
   function processAccount(
     item: ILineItemInTrialBalanceItemWithHierarchy,
-    period: 'beginning' | 'midterm' | 'ending'
+    period: 'beginning' | 'midterm' | 'ending',
+    visitedIds: Set<number> = new Set()
   ): void {
+    // Info: (20250716 - Shirley) Prevent circular references in account hierarchy
+    if (visitedIds.has(item.account.id)) {
+      return;
+    }
+    visitedIds.add(item.account.id);
     let account = accountMap.get(item.account.id);
 
     // Info: (20250106 - Shirley) 遞迴將子科目展平
     if (item.children && item.children.length > 0) {
-      item.children.forEach((child) => processAccount(child, period));
+      item.children.forEach((child) => processAccount(child, period, visitedIds));
     }
 
     if (!account) {
@@ -717,9 +723,9 @@ export function convertToAPIFormat(
   }
 
   // Info: (20250106 - Shirley) 處理所有期間的資料
-  data.beginning.forEach((item) => processAccount(item, 'beginning'));
-  data.midterm.forEach((item) => processAccount(item, 'midterm'));
-  data.ending.forEach((item) => processAccount(item, 'ending'));
+  data.beginning.forEach((item) => processAccount(item, 'beginning', new Set()));
+  data.midterm.forEach((item) => processAccount(item, 'midterm', new Set()));
+  data.ending.forEach((item) => processAccount(item, 'ending', new Set()));
 
   // Info: (20250106 - Shirley) 計算總計
   const total = {

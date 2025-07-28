@@ -147,8 +147,8 @@ export const addMembersToTeam = async (
         },
         actionUrl: `/team/${teamId}`,
         imageUrl: inviter?.imageFile?.url,
-        pushPusher: true,
-        sendEmail: true,
+        pushPusher: process.env.TEST_TYPE !== 'integration',
+        sendEmail: process.env.TEST_TYPE !== 'integration',
       });
     });
   } catch (err) {

@@ -120,7 +120,7 @@ const VacancyDetailBody: React.FC<IVacancyDetailBodyProps> = ({ jobData }) => {
   return (
     <div className="relative flex flex-auto flex-col bg-landing-page-black py-32px font-dm-sans text-landing-page-white">
       {/* Info: (20250407 - Julian) Background */}
-      <div className="absolute inset-x-0 top-0 h-546px w-full bg-job-detail bg-contain bg-top bg-no-repeat md:h-670px lg:h-1024px"></div>
+      <div className="absolute inset-x-0 -top-24 h-546px w-full bg-job-detail bg-cover bg-top bg-no-repeat md:h-670px lg:top-0 lg:h-1024px lg:bg-contain"></div>
 
       {/* Info: (20250407 - Julian) Header */}
       <LandingNavbar />

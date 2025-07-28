@@ -1,0 +1,157 @@
+{
+  "PAGE": {
+    "MAIN_TITLE": "Salary Calculator"
+  },
+  "NAVBAR": {
+    "CALCULATOR": "Calculator",
+    "PAY_SLIP": "My Pay Slip",
+    "EMPLOYEE_LIST": "Employee List",
+    "LOGIN": "Login",
+    "LOGOUT": "Logout"
+  },
+  "TABS": {
+    "COMPLETED": "Completed",
+    "BASIC_INFO": "Basic Info",
+    "BASE_PAY": " Base Pay",
+    "WORK_HOURS": "Work Hours",
+    "OTHERS": "Others"
+  },
+  "BASIC_INFO_FORM": {
+    "EMPLOYEE_NAME": "Employee Name",
+    "EMPLOYEE_NAME_PLACEHOLDER": "Enter employee name",
+    "EMPLOYEE_NUMBER": "Employee Number",
+    "EMPLOYEE_NUMBER_PLACEHOLDER": "Enter employee number",
+    "YEAR": "Year",
+    "MONTH": "Month",
+    "DAYS_WORKED": "Days Worked"
+  },
+  "BASE_PAY_FORM": {
+    "BASE_SALARY": "Base Salary (Taxable)",
+    "MEAL_ALLOWANCE": "Meal Allowance (Non-taxable)",
+    "OTHER_ALLOWANCE_WITH_TAX": "Other Allowance (Taxable)",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "Other Allowance (Non-taxable)",
+    "ADDITIONAL_INFORMATION": "Travel, injury, funeral, retirement pay, social insurance benefits, or government grants"
+  },
+  "WORK_HOURS_FORM": {
+    "OVERTIME_HOUR_WITHOUT_TAX": "Overtime Hour (Non-taxable)",
+    "OVERTIME_HOUR_WITH_TAX": "Overtime Hour (Taxable)",
+    "LEAVE_HOUR": "Leave Hour",
+    "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
+    "PERSONAL_LEAVE": "Personal Leave",
+    "TOTAL_LEAVE_HOUR": "Total Leave Hour",
+    "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
+  },
+  "OTHERS_FORM": {
+    "NHI_BACK_PREMIUM": "NHI Back Premium",
+    "INCOME_TAX_SECOND_GEN_NHI_TAX": "Income Tax / 2nd Gen NHI Tax",
+    "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
+    "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
+  },
+  "EMPLOYEE_LIST": {
+    "MAIN_TITLE": "Employee List",
+    "NAME": "Employee’s Name",
+    "NUMBER": "Employee Number",
+    "EMAIL": "Email",
+    "ACTION": "Action",
+    "SEARCH_PLACEHOLDER": "Search for employee",
+    "ADD_EMPLOYEE": "Add New Employee",
+    "EDIT_EMPLOYEE": "Edit Employee",
+    "NAME_PLACEHOLDER": "Please enter employee name",
+    "NUMBER_PLACEHOLDER": "Please enter employee number",
+    "EMAIL_PLACEHOLDER": "Please enter employee email",
+    "EMAIL_VALID": "Please enter a valid email",
+    "NO_DATA": "No employee found",
+    "ADD_SUCCESS_TOAST": "Employee has been added",
+    "EDIT_SUCCESS_TOAST": "Employee data has been updated"
+  },
+  "RESULT": {
+    "BASE_SALARY_WITH_TAX": "Base Salary (Taxable)",
+    "OVERTIME_PAY_WITH_TAX": "Overtime Pay (Taxable)",
+    "OTHER_ALLOWANCE_WITH_TAX": "Other Allowance (Taxable)",
+    "TOTAL_SALARY_WITH_TAX": "Total Salary (Taxable)",
+    "MEAL_ALLOWANCE_WITHOUT_TAX": "Meal Allowance (Non-taxable)",
+    "OVERTIME_PAY_WITHOUT_TAX": "Overtime Pay (Non-taxable)",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "Other Allowance (Non-taxable)",
+    "TOTAL_SALARY_WITHOUT_TAX": "Total Salary (Non-taxable)",
+    "TOTAL_MONTHLY_SALARY": "Total Monthly Salary",
+    "EMPLOYEE_PAID_LABOR_INSURANCE": "Employee Paid Labor Insurance",
+    "EMPLOYEE_PAID_HEALTH_INSURANCE": "Employee Paid Health Insurance",
+    "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution",
+    "WITHHELD_INCOME_TAX": "Withheld Income Tax",
+    "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "Withheld 2nd Gen NHI Premium",
+    "SALARY_DEDUCTION_FOR_LEAVE": "Salary Deduction for Leave",
+    "TOTAL_EMPLOYEE_CONTRIBUTION": "Total Employee Contribution",
+    "HEALTH_INSURANCE_SALARY_BRACKET": "Health Insurance Salary Bracket",
+    "LABOR_INSURANCE_SALARY_BRACKET": "Labor Insurance Salary Bracket",
+    "EMPLOYMENT_INSURANCE_SALARY_BRACKET": "Employment Insurance Salary Bracket",
+    "OCCUPATIONAL_INJURY_INSURANCE_SALARY_BRACKET": "Occupational Injury Insurance Salary Bracket",
+    "LABOR_PENSION_SALARY_BRACKET": "Labor Pension Salary Bracket",
+    "OCCUPATIONAL_INJURY_INDUSTRY_RATE": "Occupational Injury Industry Rate",
+    "INSURED_SALARY": "Insured Salary",
+    "EMPLOYER_CONTRIBUTIONS": "Employer Contributions",
+    "EMPLOYER_PAID_LABOR_INSURANCE": "Employer Paid Labor Insurance",
+    "EMPLOYER_PAID_HEALTH_INSURANCE": "Employer Paid Health Insurance",
+    "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
+    "TOTAL_EMPLOYER_COST": "Total Employer Cost"
+  },
+  "LOGIN_MODAL": {
+    "TITLE": "Please Login in",
+    "CONTENT": "You need to log in first before using this function.",
+    "SUBMIT": "Go Log in"
+  },
+  "RESET_MODAL": {
+    "TITLE": "Reset the Numbers",
+    "CONTENT": "Are you sure you want to reset all the numbers?",
+    "SUBMIT": "Yes, Reset"
+  },
+  "SENDING_PAY_SLIP_MODAL": {
+    "TITLE": "Sending Pay Slip",
+    "CONTENT_1": "Are you sure you want to send the",
+    "CONTENT_BOLD_1": " pay slip for {{month}} ",
+    "CONTENT_2": "to",
+    "CONTENT_BOLD_2": " {{employeeName}} ?",
+    "EMAIL": "Email",
+    "EMAIL_PLACEHOLDER": "Please enter the employee’s email",
+    "INVALID_EMAIL_HINT": "Wrong format of email address, please check.",
+    "SUBMIT": "Send the pay Slip"
+  },
+  "MY_PAY_SLIP": {
+    "MAIN_TITLE": "My Pay Slip",
+    "TAB_RECEIVED": "Pay Slip I Received",
+    "TAB_SENT": "Pay Slip I Sent",
+    "SEARCH_PLACEHOLDER": "Search for pay slip",
+    "PAY_PERIOD": "Pay Period",
+    "FROM": "From",
+    "TO": "To",
+    "NET_PAY": "Net Pay",
+    "PAYSLIP_ISSUED_DATE": "Payslip Issued Date",
+    "ACTION": "Action",
+    "PAY_SLIP": "Pay Slip",
+    "SENT_ON": "Sent on"
+  },
+  "BUTTON": {
+    "DOWNLOAD": "Download as png",
+    "SEND": "Send the Pay Slip",
+    "RESET": "Reset",
+    "RESEND": "Resend the Pay Slip"
+  },
+  "MESSAGE": {
+    "NAME_ERROR_TITLE": "Employee’s Name is not Filled",
+    "NAME_ERROR_CONTENT": "You need to enter the employee’s name before you go to next step",
+    "SALARY_ERROR_TITLE": "Base Salary is not Filled",
+    "SALARY_ERROR_CONTENT": "Base salary must be greater than or equal to the minimum wage.",
+    "REMOVE_EMPLOYEE_TITLE": "Remove Employee",
+    "REMOVE_EMPLOYEE_CONTENT": "Are you sure you want to remove {{name}} from your employee list?",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "Yes, remove employee.",
+    "RESEND_PAY_SLIP_TITLE": "Resending Pay Slip",
+    "RESEND_PAY_SLIP_CONTENT_1": "You’ve already sent the",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_1": " pay slip for {{month}} ",
+    "RESEND_PAY_SLIP_CONTENT_2": " to ",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_2": "{{name}}.",
+    "RESEND_PAY_SLIP_CONTENT_3": " Do you want to send it again?",
+    "RESEND_PAY_SLIP_CANCEL_BTN": "No, Cancel",
+    "RESEND_PAY_SLIP_SUBMIT_BTN": "Yes, Send the pay Slip",
+    "RESEND_SUCCESS_TITLE": "Pay Slip Sent !",
+    "RESEND_SUCCESS_CONTENT": "The pay slip has been sent to the employee’s email successfully."
+  }
+}

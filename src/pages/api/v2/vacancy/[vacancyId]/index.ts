@@ -16,10 +16,17 @@ export const handleGetRequest = async (req: NextApiRequest) => {
   const vacancyIdNum = Number(vacancyId);
   const vacancy = await getVacancyById({ vacancyId: vacancyIdNum });
 
-  const result = {
-    statusMessage: STATUS_MESSAGE.SUCCESS_GET,
-    result: vacancy,
-  };
+  // Info: (20250704 - Julian) 如果沒有找到對應的職缺，則回傳 resource not found
+  const result = vacancy
+    ? {
+        statusMessage: STATUS_MESSAGE.SUCCESS_GET,
+        result: vacancy,
+      }
+    : {
+        statusMessage: STATUS_MESSAGE.RESOURCE_NOT_FOUND,
+        result: null,
+      };
+
   return result;
 };
 

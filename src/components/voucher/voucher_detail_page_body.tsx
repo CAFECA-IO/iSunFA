@@ -53,11 +53,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
     data: voucherData,
     isLoading,
     error,
-  } = APIHandler<IVoucherDetailForFrontend>(
-    APIName.VOUCHER_GET_BY_ID_V2,
-    // { params } // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
-    { params: { companyId: accountBookId, voucherId } }
-  );
+  } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2);
 
   // Info: (20241029 - Julian) Delete voucher API
   const {
@@ -161,7 +157,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when accountBookId and voucherId are ready
     if (accountBookId && voucherId) {
-      getVoucherDetail();
+      // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
+      getVoucherDetail({ params: { accountBookId, voucherId } });
     }
   }, [accountBookId, voucherId]);
 
@@ -470,6 +467,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   return (
     <div className="overflow-y-auto pb-32px tablet:px-40px tablet:pt-10px">
+      <div>帳本：{connectedAccountBook?.id}</div>
+
       {/* Info: (20250526 - Julian) Mobile back button */}
       <div className="flex items-center gap-lv-2 tablet:hidden">
         <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>

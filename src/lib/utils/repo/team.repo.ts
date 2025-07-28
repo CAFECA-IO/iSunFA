@@ -160,16 +160,21 @@ export const createTeamWithTrial = async (
 ): Promise<ITeam> => {
   return prisma.$transaction(async (tx) => {
     loggerBack.info(
-      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with trial subscription.`
+      `User ${userId} is creating a new team (teamData: ${JSON.stringify(teamData)}) with 1-month TRIAL subscription.`
     );
 
     const now = new Date();
     const nowInSeconds = getUnixTime(now);
-    const expired = getUnixTime(addMonths(now, 1));
+    const trialEndDate = addMonths(now, 1); // Info: (20250708 - Shirley) Always 1 month trial for new teams
+    const expired = getUnixTime(trialEndDate);
     const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expired);
+    // Info: (20250708 - Shirley) All new teams start with TRIAL plan for 1 month
     const plan = await tx.teamPlan.findFirst({
       where: {
-        type: teamData.planType === TPlanType.BEGINNER ? TPlanType.TRIAL : teamData.planType,
+        type:
+          teamData.planType === TPlanType.BEGINNER || !teamData.planType
+            ? TPlanType.TRIAL
+            : teamData.planType,
       },
       select: { type: true },
     });
@@ -205,8 +210,6 @@ export const createTeamWithTrial = async (
         joinedAt: nowInSeconds,
       },
     });
-
-    await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0);
 
     // Info: (20250409 - Tzuhan) 4. 處理邀請成員
     if (teamData.members?.length) {
@@ -268,6 +271,9 @@ export const createTeamWithTrial = async (
         expiredDate: expired,
       },
     });
+
+    // Info: (20250708 - Shirley) Remove check team member limit after subscription is created
+    // await checkTeamMemberLimit(newTeam.id, teamData.members?.length ?? 0, tx);
 
     // Info: (20250409 - Tzuhan) 6. 回傳 ITeam 格式
     return {
@@ -495,7 +501,11 @@ export const getTeamByTeamId = async (teamId: number, userId: number): Promise<I
     throw error;
   }
 
-  const planType = team.subscriptions[0]?.plan?.type ?? TPlanType.BEGINNER;
+  const subscription = team.subscriptions[0];
+  const startAt = subscription?.startDate ?? 0;
+  const isValid = startAt <= nowInSecond && expiredAt > nowInSecond;
+  const isExpired = !(isValid || inGracePeriod);
+  const planType = isExpired ? TPlanType.BEGINNER : (subscription?.plan?.type as TPlanType);
 
   return {
     id: team.id,
