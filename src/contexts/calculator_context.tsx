@@ -211,7 +211,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
   const salaryCalculatorResult: ISalaryCalculator = useMemo(() => {
     const yearInt = parseInt(selectedYear, 10);
-    const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name);
+    const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
 
     // Info: (20250728 - Julian) 計算加班費（應稅）
     const salaryPerHour = baseSalary / workedDays / 8;
