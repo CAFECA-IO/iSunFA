@@ -55,8 +55,8 @@ const WorkHoursForm: React.FC = () => {
 
   const {
     // Info: (20250722 - Julian) non-taxable overtime hours state
-    oneAndOneThirdHoursForNonTax,
-    setOneAndOneThirdHoursForNonTax,
+    oneAndOneThirdsHoursForNonTax,
+    setOneAndOneThirdsHoursForNonTax,
     oneAndTwoThirdsHoursForNonTax,
     setOneAndTwoThirdsHoursForNonTax,
     twoHoursForNonTax,
@@ -70,7 +70,7 @@ const WorkHoursForm: React.FC = () => {
     totalNonTaxableHours,
     // Info: (20250722 - Julian) taxable overtime hours state
     oneAndOneThirdHoursForTaxable,
-    setOneAndOneThirdHoursForTaxable,
+    setOneAndOneThirdsHoursForTaxable,
     oneAndTwoThirdsHoursForTaxable,
     setOneAndTwoThirdsHoursForTaxable,
     twoHoursForTaxable,
@@ -109,8 +109,8 @@ const WorkHoursForm: React.FC = () => {
           {/* Info: (20250709 - Julian) 1.33 小時 */}
           <HourCounter
             title="1.33"
-            value={oneAndOneThirdHoursForNonTax}
-            setValue={setOneAndOneThirdHoursForNonTax}
+            value={oneAndOneThirdsHoursForNonTax}
+            setValue={setOneAndOneThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
@@ -164,7 +164,7 @@ const WorkHoursForm: React.FC = () => {
           <HourCounter
             title="1.33"
             value={oneAndOneThirdHoursForTaxable}
-            setValue={setOneAndOneThirdHoursForTaxable}
+            setValue={setOneAndOneThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
