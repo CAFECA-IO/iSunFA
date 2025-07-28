@@ -943,3 +943,8 @@ export const randomCode = (n: number = 6): string => {
   }
   return result;
 };
+
+export const sleep = (ms: number): Promise<void> =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
