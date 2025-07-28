@@ -50,6 +50,20 @@ const HourCounter: React.FC<{
   );
 };
 
+const TotalHours: React.FC<{
+  title: string;
+  totalHours: number;
+}> = ({ title, totalHours }) => {
+  return (
+    <div className="flex flex-col gap-8px">
+      <p className="text-sm font-semibold text-input-text-primary">{title}</p>
+      <div className="flex w-full items-center rounded-sm bg-surface-brand-primary-10 px-12px py-10px">
+        {totalHours}
+      </div>
+    </div>
+  );
+};
+
 const WorkHoursForm: React.FC = () => {
   const { t } = useTranslation('calculator');
 
@@ -65,8 +79,6 @@ const WorkHoursForm: React.FC = () => {
     setTwoAndOneThirdsHoursForNonTax,
     twoAndTwoThirdsHoursForNonTax,
     setTwoAndTwoThirdsHoursForNonTax,
-    threeAndTwoThirdsHoursForNonTax,
-    setThreeAndTwoThirdsHoursForNonTax,
     totalNonTaxableHours,
     // Info: (20250722 - Julian) taxable overtime hours state
     oneAndOneThirdHoursForTaxable,
@@ -79,8 +91,6 @@ const WorkHoursForm: React.FC = () => {
     setTwoAndOneThirdsHoursForTaxable,
     twoAndTwoThirdsHoursForTaxable,
     setTwoAndTwoThirdsHoursForTaxable,
-    threeAndTwoThirdsHoursForTaxable,
-    setThreeAndTwoThirdsHoursForTaxable,
     totalTaxableHours,
     // Info: (20250709 - Julian) leave hour state
     sickLeaveHours,
@@ -141,12 +151,10 @@ const WorkHoursForm: React.FC = () => {
             setValue={setTwoAndTwoThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
           />
-          {/* Info: (20250722 - Julian) 3.66 小時 */}
-          <HourCounter
-            title="3.66"
-            value={threeAndTwoThirdsHoursForNonTax}
-            setValue={setThreeAndTwoThirdsHoursForNonTax}
-            maxValue={MAX_OVERWORK_HOURS}
+          {/* Info: (20250728 - Julian) 總加班時數 */}
+          <TotalHours
+            title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
+            totalHours={totalNonTaxableHours}
           />
         </div>
       </div>
@@ -195,12 +203,10 @@ const WorkHoursForm: React.FC = () => {
             setValue={setTwoAndTwoThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
           />
-          {/* Info: (20250722 - Julian) 3.66 小時 */}
-          <HourCounter
-            title="3.66"
-            value={threeAndTwoThirdsHoursForTaxable}
-            setValue={setThreeAndTwoThirdsHoursForTaxable}
-            maxValue={MAX_OVERWORK_HOURS}
+          {/* Info: (20250728 - Julian) 總加班時數 */}
+          <TotalHours
+            title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
+            totalHours={totalTaxableHours}
           />
         </div>
       </div>
@@ -226,14 +232,10 @@ const WorkHoursForm: React.FC = () => {
             maxValue={MAX_LEAVE_HOURS}
           />
           {/* Info: (20250709 - Julian) 總休假時數 */}
-          <div className="flex flex-col gap-8px">
-            <p className="text-sm font-semibold text-input-text-primary">
-              {t('calculator:WORK_HOURS_FORM.TOTAL_LEAVE_HOUR')}
-            </p>
-            <div className="flex w-full items-center rounded-sm bg-surface-brand-primary-10 px-12px py-10px">
-              {totalLeaveHours}
-            </div>
-          </div>
+          <TotalHours
+            title={t('calculator:WORK_HOURS_FORM.TOTAL_LEAVE_HOUR')}
+            totalHours={totalLeaveHours}
+          />
         </div>
       </div>
     </form>
