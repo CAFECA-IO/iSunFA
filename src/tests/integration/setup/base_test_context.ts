@@ -33,7 +33,7 @@ export class BaseTestContext {
   /** Info: (20250717 - Tzuhan) 解決多個 getSharedContext() 併發呼叫時的 race condition */
   private static initializing: Promise<SharedContext> | null = null;
 
-  private static isTestVouchersCreated = false;
+  private static createdAccountBooks = new Set<number>();
 
   private constructor() {
     /* Info: (20250717 - Tzuhan) 禁止實例化 */
@@ -105,7 +105,15 @@ export class BaseTestContext {
     return this.ctx.team;
   }
 
-  static async createAccountBook(userId: number, teamId: number, name?: string) {
+  static async createAccountBook(
+    userId: number,
+    teamId: number,
+    name?: string,
+    options?: {
+      useFixedTimestamp?: boolean;
+      customTimestamp?: number;
+    }
+  ) {
     if (!this.ctx) {
       throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
     }
@@ -114,14 +122,25 @@ export class BaseTestContext {
       this.ctx.accountBook = accountBook;
       this.ctx.accountBookId = accountBook.id;
     }
-    this.ctx.startDate = this.ctx.accountBook!.startDate - 86400 * 365;
-    this.ctx.endDate = this.ctx.accountBook!.startDate + 86400 * 30;
-    if (!this.isTestVouchersCreated) {
-      await BaseTestContext.createTestVouchers(
-        this.ctx.accountBookId!,
-        this.ctx.accountBook!.startDate
-      );
-      this.isTestVouchersCreated = true;
+
+    // Info: (20250728 - Shirley) Set timestamp and date range based on test requirements
+    let baseTimestamp: number;
+    if (options?.useFixedTimestamp) {
+      // Info: (20250728 - Shirley) For trial balance test - use fixed timestamp to match TestDataFactory expectations
+      baseTimestamp = options.customTimestamp || 1733155200; // 2024-12-02T16:00:00.000Z
+      this.ctx.startDate = baseTimestamp + 86400 * 10; // Start after voucher creation, so vouchers are in "beginning"
+      this.ctx.endDate = baseTimestamp + 86400 * 40; // End after start
+    } else {
+      // Info: (20250728 - Shirley) For other tests - use today's midnight as before
+      const now = Date.now();
+      baseTimestamp = Math.floor(now / 86400000) * 86400;
+      this.ctx.startDate = baseTimestamp;
+      this.ctx.endDate = baseTimestamp + 86400 * 30;
+    }
+
+    if (!this.createdAccountBooks.has(this.ctx.accountBookId!)) {
+      await BaseTestContext.createTestVouchers(this.ctx.accountBookId!, baseTimestamp);
+      this.createdAccountBooks.add(this.ctx.accountBookId!);
     }
     return this.ctx.accountBook!;
   }
@@ -306,6 +325,9 @@ export class BaseTestContext {
       }),
       prisma.user.deleteMany({ where: { id: { in: userIds } } }),
     ]);
+
+    // Info: (20250728 - Shirley) Clear the created account books set
+    this.createdAccountBooks.clear();
 
     // Deprecated: (20250717 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console

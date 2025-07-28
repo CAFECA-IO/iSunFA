@@ -10,7 +10,7 @@
     "generate": "prisma generate",
     "start": "next start",
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
-    "test": "npm run test:unit && npm run test:integration:sequential",
+    "test": "npm run test:unit && npm run test:integration",
     "test:integration": "TEST_TYPE=integration jest --config=jest.supertest.config.ts",
     "test:integration:sequential": "npm run test:integration -- --testPathPattern=\"00_api_health_check\" && npm run test:integration -- --testPathPattern=\"01_user_email_authentication\" && npm run test:integration -- --testPathPattern=\"02_team_management\" && npm run test:integration -- --testPathPattern=\"03_upload\" && npm run test:integration -- --testPathPattern=\"05_account_book_setup\" && npm run test:integration -- --testPathPattern=\"06_accounting_setting\" && npm run test:integration -- --testPathPattern=\"07_invoice_rc2\" && npm run test:integration -- --testPathPattern=\"08_01_01_balance_sheet\" && npm run test:integration -- --testPathPattern=\"08_01_02_income_statement\" && npm run test:integration -- --testPathPattern=\"08_02_report_post_public\" && npm run test:integration -- --testPathPattern=\"08_03_trial_balance\" && npm run test:integration -- --testPathPattern=\"08_04_ledger\" && npm run test:integration -- --testPathPattern=\"08_05_cash_flow\" && npm run test:integration -- --testPathPattern=\"09_voucher_crud\"",
     "test:unit": "jest --testPathPatterns=src/tests/unit",

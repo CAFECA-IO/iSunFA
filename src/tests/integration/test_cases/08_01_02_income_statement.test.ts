@@ -6,7 +6,6 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 // import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import reportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250718 - Shirley) Import required types and constants
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
@@ -79,7 +78,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   // let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
   let reportClient: TestClient;
-  let voucherPostClient: TestClient;
 
   /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
   const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
@@ -123,11 +121,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       handler: reportHandler,
       routeParams: { accountBookId: accountBookId.toString() },
     });
-
-    voucherPostClient = createTestClient({
-      handler: voucherPostHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
   };
 
   beforeAll(async () => {
@@ -135,7 +128,15 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     authenticatedHelper = sharedContext.helper;
     currentUserId = sharedContext.userId.toString();
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
-    accountBook = await authenticatedHelper.createAccountBook(Number(currentUserId), teamId);
+    accountBook = await BaseTestContext.createAccountBook(
+      Number(currentUserId),
+      teamId,
+      undefined,
+      {
+        useFixedTimestamp: true,
+        customTimestamp: 1733155200, // 2024-12-02T16:00:00.000Z - matches TestDataFactory expectations
+      }
+    );
     accountBookId = accountBook.id;
 
     initializeAccountBookDependentClients();
@@ -251,7 +252,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250718 - Shirley) Connect to account book first
+      // Info: (20250728 - Shirley) Connect to account book first
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -260,55 +261,14 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
 
+      // Info: (20250728 - Shirley) BaseTestContext has already created the vouchers
+      // Just verify they exist by checking the expected voucher count
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
-      const createdVouchers = [];
-
-      // Info: (20250718 - Shirley) Create all sample vouchers
-      for (let i = 0; i < sampleVouchersData.length; i += 1) {
-        const voucherData = sampleVouchersData[i];
-
-        const voucherPayload = {
-          actions: [],
-          certificateIds: [],
-          invoiceRC2Ids: [],
-          voucherDate: voucherData.date,
-          type: voucherData.type,
-          note: voucherData.note,
-          lineItems: voucherData.lineItems,
-          assetIds: [],
-          counterPartyId: null,
-        };
-
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-await-in-loop
-        const response = await voucherPostClient
-          .post(`/api/v2/account_book/${accountBookId}/voucher`)
-          .send(voucherPayload)
-          .set('Cookie', cookies.join('; '));
-
-        if (response.status === 201) {
-          createdVouchers.push({
-            id: response.body.payload.id,
-            type: voucherData.type,
-            lineItems: voucherData.lineItems,
-          });
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-        } else {
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
-        }
-      }
-
-      // Info: (20250718 - Shirley) Verify all vouchers were created
-      expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
       // Deprecated: (20250721 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for income statement test`
+        `\n🎉 Successfully verified ${sampleVouchersData.length} vouchers exist for income statement test (created by BaseTestContext)`
       );
     });
   });

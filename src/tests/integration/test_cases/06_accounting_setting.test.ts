@@ -164,12 +164,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof accountingSetting.taxSettings.salesTax.rate).toBe('number');
       expect(typeof accountingSetting.taxSettings.purchaseTax.taxable).toBe('boolean');
       expect(typeof accountingSetting.taxSettings.purchaseTax.rate).toBe('number');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Accounting setting GET validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated requests', async () => {
@@ -188,12 +182,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const validatedError = validateAndFormatData(errorSchema, response.body);
       expect(validatedError.success).toBe(false);
       expect(validatedError.code).toBe('401ISF0000');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Accounting setting GET error response validated with Zod successfully');
-      }
     });
 
     it('should reject access to non-existent account book', async () => {
@@ -311,12 +299,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(updatedSetting.taxSettings.purchaseTax.rate).toBe(0.05);
       expect(updatedSetting.taxSettings.returnPeriodicity).toBe('Monthly');
       expect(updatedSetting.currency).toBe(CurrencyType.TWD);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Accounting setting PUT validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated update requests', async () => {
@@ -448,10 +430,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      // Deprecated: (20250715 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('outputData in GET /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate paginated account list structure
       const accountList = outputData as IPaginatedAccount;
@@ -585,9 +563,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      // eslint-disable-next-line no-console
-      console.log('outputData in POST /api/v2/account_book/{accountBookId}/account', outputData);
 
       // Info: (20250715 - Shirley) Validate created account structure
       const createdAccount = outputData as IAccount;

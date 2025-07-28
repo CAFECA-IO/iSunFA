@@ -104,7 +104,12 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     currentUserId = String(sharedContext.userId);
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
     cookies = sharedContext.cookies;
-    accountBookId = (await BaseTestContext.createAccountBook(Number(currentUserId), teamId)).id;
+    accountBookId = (
+      await BaseTestContext.createAccountBook(Number(currentUserId), teamId, undefined, {
+        useFixedTimestamp: true,
+        customTimestamp: 1733155200, // 2024-12-02T16:00:00.000Z - matches TestDataFactory expectations
+      })
+    ).id;
     startDate = sharedContext.startDate;
     endDate = sharedContext.endDate;
     // const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
@@ -417,8 +422,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         .query({
           page: '1',
           pageSize: '100',
-          startDate: (startDate + 86400 * 365 * 2).toString(),
-          endDate: (endDate + 86400 * 365 * 2).toString(),
+          startDate: startDate.toString(),
+          endDate: endDate.toString(),
         })
         .set('Cookie', cookies.join('; '));
 
@@ -489,8 +494,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          startDate: startDate + 86400 * 365 * 2,
-          endDate: endDate + 86400 * 365 * 2,
+          startDate,
+          endDate,
         },
         options: {
           fields: [
@@ -548,6 +553,22 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       // Info: (20250721 - Shirley) Get expected data from TestDataFactory for comparison
       const expectedData = TestDataFactory.expectedTrialBalanceData();
 
+      // Info: (20250728 - Shirley) Debug actual CSV data
+      if (process.env.DEBUG_TESTS === 'true') {
+        // Deprecated: (20250728 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('Actual CSV data length:', csvData.length);
+        // Deprecated: (20250728 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('Expected data length:', expectedData.payload.data.length);
+        // Deprecated: (20250728 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('First few CSV items:', csvData.slice(0, 3));
+        // Deprecated: (20250728 - Shirley) Remove eslint-disable
+        // eslint-disable-next-line no-console
+        console.log('First few expected items:', expectedData.payload.data.slice(0, 3));
+      }
+
       // Info: (20250721 - Shirley) Compare CSV data with expected data
       expect(csvData.length).toBe(expectedData.payload.data.length);
 
@@ -556,12 +577,15 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         expect(csvItem).toBeDefined();
 
         if (csvItem) {
-          // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`Comparing CSV item:`, csvItem);
-          // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`Against expected item:`, expectedItem);
+          // Info: (20250728 - Shirley) Debug log to see actual vs expected data
+          if (process.env.DEBUG_TESTS === 'true') {
+            // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
+            // eslint-disable-next-line no-console
+            console.log(`Comparing CSV item:`, csvItem);
+            // Deprecated: (20250730 - Tzuhan) Remove eslint-disable
+            // eslint-disable-next-line no-console
+            console.log(`Against expected item:`, expectedItem);
+          }
           expect(csvItem.accountingTitle).toBe(expectedItem.accountingTitle);
           expect(csvItem.beginningDebitAmount).toBe(expectedItem.beginningDebitAmount);
           expect(csvItem.beginningCreditAmount).toBe(expectedItem.beginningCreditAmount);

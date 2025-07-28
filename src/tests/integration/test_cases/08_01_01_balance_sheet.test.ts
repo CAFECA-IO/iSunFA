@@ -361,9 +361,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       console.log('Other Info:', response.body.payload?.otherInfo);
       // Deprecated: (20250721 - Julian) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('Full Response:', JSON.stringify(response.body, null, 2));
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
       console.log('=== END BALANCE SHEET REPORT RESULT ===');
 
       expect(response.status).toBe(200);
