@@ -1,6 +1,7 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
-import { ISalaryCalculator, defaultSalaryCalculatorResult } from '@/interfaces/calculator';
+import { ISalaryCalculator } from '@/interfaces/calculator';
+import { salaryCalculator } from '@/lib/utils/salary_calculator';
 
 type TabStep = {
   step: number;
@@ -58,8 +59,8 @@ interface ICalculatorContext {
 
   // Info: (20250710 - Julian) Step 3: 工作時數相關 state 和 functions
   // Info: (20250722 - Julian) Non-taxable hours
-  oneAndOneThirdHoursForNonTax: number;
-  setOneAndOneThirdHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
+  oneAndOneThirdsHoursForNonTax: number;
+  setOneAndOneThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
   oneAndTwoThirdsHoursForNonTax: number;
   setOneAndTwoThirdsHoursForNonTax: React.Dispatch<React.SetStateAction<number>>;
   twoHoursForNonTax: number;
@@ -71,7 +72,7 @@ interface ICalculatorContext {
   totalNonTaxableHours: number; // Info: (20250710 - Julian) 總免稅加班時數
   // Info: (20250722 - Julian) Taxable hours
   oneAndOneThirdHoursForTaxable: number;
-  setOneAndOneThirdHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
+  setOneAndOneThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
   oneAndTwoThirdsHoursForTaxable: number;
   setOneAndTwoThirdsHoursForTaxable: React.Dispatch<React.SetStateAction<number>>;
   twoHoursForTaxable: number;
@@ -122,9 +123,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
 
   // ToDo: (20250710 - Julian) 計算機的整體計算結果
-  const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
-    defaultSalaryCalculatorResult
-  );
+  // const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
+  //   defaultSalaryCalculatorResult
+  // );
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
@@ -144,13 +145,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [otherAllowanceWithoutTax, setOtherAllowanceWithoutTax] = useState<number>(0);
 
   // Info: (20250709 - Julian) Step 3: 工作時數相關 state
-  const [oneAndOneThirdHoursForNonTax, setOneAndOneThirdHoursForNonTax] = useState<number>(0);
+  const [oneAndOneThirdsHoursForNonTax, setOneAndOneThirdsHoursForNonTax] = useState<number>(0);
   const [oneAndTwoThirdsHoursForNonTax, setOneAndTwoThirdsHoursForNonTax] = useState<number>(0);
   const [twoHoursForNonTax, setTwoHoursForNonTax] = useState<number>(0);
   const [twoAndOneThirdsHoursForNonTax, setTwoAndOneThirdsHoursForNonTax] = useState<number>(0);
   const [twoAndTwoThirdsHoursForNonTax, setTwoAndTwoThirdsHoursForNonTax] = useState<number>(0);
   const [totalNonTaxableHours, setTotalNonTaxableHours] = useState<number>(0);
-  const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdHoursForTaxable] = useState<number>(0);
+  const [oneAndOneThirdHoursForTaxable, setOneAndOneThirdsHoursForTaxable] = useState<number>(0);
   const [oneAndTwoThirdsHoursForTaxable, setOneAndTwoThirdsHoursForTaxable] = useState<number>(0);
   const [twoHoursForTaxable, setTwoHoursForTaxable] = useState<number>(0);
   const [twoAndOneThirdsHoursForTaxable, setTwoAndOneThirdsHoursForTaxable] = useState<number>(0);
@@ -169,14 +170,14 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   useEffect(() => {
     // Info: (20250710 - Julian) 計算總免稅加班時數
     const totalHours =
-      oneAndOneThirdHoursForNonTax +
+      oneAndOneThirdsHoursForNonTax +
       oneAndTwoThirdsHoursForNonTax +
       twoHoursForNonTax +
       twoAndOneThirdsHoursForNonTax +
       twoAndTwoThirdsHoursForNonTax;
     setTotalNonTaxableHours(totalHours);
   }, [
-    oneAndOneThirdHoursForNonTax,
+    oneAndOneThirdsHoursForNonTax,
     oneAndTwoThirdsHoursForNonTax,
     twoHoursForNonTax,
     twoAndOneThirdsHoursForNonTax,
@@ -206,71 +207,118 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTotalLeaveHours(totalLeave);
   }, [sickLeaveHours, personalLeaveHours]);
 
-  // ToDo: (20250723 - Julian) 待計算
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const calculatorResultHandler = useMemo(() => {
-    const result: ISalaryCalculator = {
+  // Info: (20250728 - Julian) 計算結果
+  // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
+  const salaryCalculatorResult: ISalaryCalculator = useMemo(() => {
+    const yearInt = parseInt(selectedYear, 10);
+    const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
+
+    // Info: (20250728 - Julian) 計算加班費（應稅）
+    const overTimeHoursTaxable100 = 0; // ToDo: (20250728 - Julian) 要補欄位
+    const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
+    const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
+    const overTimeHoursTaxable200 = twoHoursForTaxable;
+    const overTimeHoursTaxable233 = twoAndOneThirdsHoursForTaxable;
+    const overTimeHoursTaxable266 = twoAndTwoThirdsHoursForTaxable;
+
+    // Info: (20250728 - Julian) 計算加班費（免稅）
+    const overTimeHoursTaxFree100 = 0; // ToDo: (20250728 - Julian) 要補欄位
+    const overTimeHoursTaxFree133 = oneAndOneThirdsHoursForNonTax;
+    const overTimeHoursTaxFree166 = oneAndTwoThirdsHoursForNonTax;
+    const overTimeHoursTaxFree200 = twoHoursForNonTax;
+    const overTimeHoursTaxFree233 = twoAndOneThirdsHoursForNonTax;
+    const overTimeHoursTaxFree266 = twoAndTwoThirdsHoursForNonTax;
+
+    const result = salaryCalculator({
+      year: yearInt,
+      month: monthIndex,
+      workedDays,
+      baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
+      baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
+      otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
+      otherAllowancesTaxFree: otherAllowanceWithoutTax, // Info: (20250728 - Julian) 當月免稅其他津貼
+      overTimeHoursTaxable100, // Info: (20250728 - Julian) 當月 100% 加班費（應稅）
+      overTimeHoursTaxable133, // Info: (20250728 - Julian) 當月 133% 加班費（應稅）
+      overTimeHoursTaxable166, // Info: (20250728 - Julian) 當月 166% 加班費（應稅）
+      overTimeHoursTaxable200, // Info: (20250728 - Julian) 當月 200% 加班費（應稅）
+      overTimeHoursTaxable233, // Info: (20250728 - Julian) 當月 233% 加班費（應稅）
+      overTimeHoursTaxable266, // Info: (20250728 - Julian) 當月 266% 加班費（應稅）
+      overTimeHoursTaxFree100, // Info: (20250728 - Julian) 當月 100% 加班費（免稅）
+      overTimeHoursTaxFree133, // Info: (20250728 - Julian) 當月 133% 加班費（免稅）
+      overTimeHoursTaxFree166, // Info: (20250728 - Julian) 當月 166% 加班費（免稅）
+      overTimeHoursTaxFree200, // Info: (20250728 - Julian) 當月 200% 加班費（免稅）
+      overTimeHoursTaxFree233, // Info: (20250728 - Julian) 當月 233% 加班費（免稅）
+      overTimeHoursTaxFree266, // Info: (20250728 - Julian) 當月 266% 加班費（免稅）
+      sickLeaveHours, // Info: (20250728 - Julian) 當月病假時數
+      personalLeaveHours, // Info: (20250728 - Julian) 當月事假時數
+      employeeBurdenHealthInsurancePremiums: nhiBackPremium, // Info: (20250728 - Julian) 健保加保費用
+      employeeBurdenSecondGenerationHealthInsurancePremiums: secondGenNhiTax, // Info: (20250728 - Julian) 二代健保費用
+      employeeBurdenOtherOverflowDeductions: otherAdjustments, // Info: (20250728 - Julian) 其他溢扣／補收
+      employeeBurdenPensionInsurance: voluntaryPensionContribution, // Info: (20250728 - Julian) 勞退自提金額
+    });
+
+    const formattedResult: ISalaryCalculator = {
+      totalSalary: result.totalPayment,
       monthlySalary: {
-        baseSalaryWithTax: 0,
-        overtimePayWithTax: 0,
-        otherAllowanceWithTax: 0,
-        totalSalaryWithTax: 0,
-        mealAllowanceWithoutTax: 0,
-        overtimePayWithoutTax: 0,
-        otherAllowanceWithoutTax: 0,
-        totalSalaryWithoutTax: 0,
-        totalMonthlySalary: 0,
+        baseSalaryWithTax: result.baseSalaryTaxable,
+        overtimePayWithTax: result.overTimePayTaxable,
+        otherAllowanceWithTax: result.otherAllowancesTaxable,
+        totalSalaryWithTax: result.totalSalaryTaxable,
+        mealAllowanceWithoutTax: result.baseSalaryTaxFree,
+        overtimePayWithoutTax: result.overTimePayTaxFree,
+        otherAllowanceWithoutTax: result.otherAllowancesTaxFree,
+        totalSalaryWithoutTax: result.totalSalaryTaxFree,
+        totalMonthlySalary: result.totalSalary,
       },
       employeeContribution: {
-        employeePaidLaborInsurance: 0,
-        employeePaidHealthInsurance: 0,
-        voluntaryPensionContribution: 0,
-        withheldIncomeTax: 0,
-        withheldSecondGenerationNHIPremium: 0,
-        salaryDeductionForLeave: 0,
-        totalEmployeeContribution: 0,
+        employeePaidLaborInsurance: result.employeeBurdenLaborInsurance,
+        employeePaidHealthInsurance: result.employeeBurdenHealthInsurance,
+        voluntaryPensionContribution: result.employeeBurdenPensionInsurance,
+        withheldIncomeTax: result.employeeBurdenIncomeTax,
+        withheldSecondGenerationNHIPremium:
+          result.employeeBurdenSecondGenerationHealthInsurancePremiums,
+        salaryDeductionForLeave: result.leaveDeduction,
+        totalEmployeeContribution: result.totalEmployeeBurden,
       },
       insuredSalary: {
-        healthInsuranceSalaryBracket: 0,
-        laborInsuranceSalaryBracket: 0,
-        employmentInsuranceSalaryBracket: 0,
-        occupationalInjuryInsuranceSalaryBracket: 0,
-        laborPensionSalaryBracket: 0,
-        occupationalInjuryIndustryRate: 0,
-        insuredSalary: 0,
+        healthInsuranceSalaryBracket: result.healthInsuranceLevel,
+        laborInsuranceSalaryBracket: result.laborInsuranceLevel,
+        employmentInsuranceSalaryBracket: result.employmentInsuranceLevel,
+        occupationalInjuryInsuranceSalaryBracket: result.occupationalDisasterInsuranceLevel,
+        laborPensionSalaryBracket: result.pensionInsuranceLevel,
+        occupationalInjuryIndustryRate: result.occupationalDisasterIndustryRate,
+        insuredSalary: result.insuredSalary,
       },
       employerContribution: {
-        employerContributions: 0,
-        employerPaidLaborInsurance: 0,
-        employerPaidHealthInsurance: 0,
-        employerPaidPensionContribution: 0,
-        totalEmployerCost: 0,
+        employerContributions: result.totalCompanyBurden,
+        employerPaidLaborInsurance: result.companyBurdenLaborInsurance,
+        employerPaidHealthInsurance: result.companyBurdenHealthInsurance,
+        employerPaidPensionContribution: result.companyBurdenPensionInsurance,
+        totalEmployerCost: result.totalCompanyBurden,
       },
-      totalSalary: 0,
     };
-    setSalaryCalculatorResult(result);
+
+    return formattedResult;
   }, [
+    selectedYear,
+    selectedMonth,
     workedDays,
     baseSalary,
-    mealAllowance,
-    otherAllowanceWithTax,
-    otherAllowanceWithoutTax,
-    isNameError,
-    oneAndOneThirdHoursForNonTax,
-    oneAndTwoThirdsHoursForNonTax,
-    twoHoursForNonTax,
-    twoAndOneThirdsHoursForNonTax,
-    twoAndTwoThirdsHoursForNonTax,
-    totalNonTaxableHours,
     oneAndOneThirdHoursForTaxable,
     oneAndTwoThirdsHoursForTaxable,
     twoHoursForTaxable,
     twoAndOneThirdsHoursForTaxable,
     twoAndTwoThirdsHoursForTaxable,
-    totalTaxableHours,
+    mealAllowance,
+    oneAndOneThirdsHoursForNonTax,
+    oneAndTwoThirdsHoursForNonTax,
+    twoHoursForNonTax,
+    twoAndOneThirdsHoursForNonTax,
+    twoAndTwoThirdsHoursForNonTax,
+    otherAllowanceWithTax,
+    otherAllowanceWithoutTax,
     sickLeaveHours,
     personalLeaveHours,
-    totalLeaveHours,
     nhiBackPremium,
     secondGenNhiTax,
     otherAdjustments,
@@ -306,13 +354,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAllowanceWithTax(0);
     setOtherAllowanceWithoutTax(0);
     // Info: (20250722 - Julian) 重置工作時數相關 state
-    setOneAndOneThirdHoursForNonTax(0);
+    setOneAndOneThirdsHoursForNonTax(0);
     setOneAndTwoThirdsHoursForNonTax(0);
     setTwoHoursForNonTax(0);
     setTwoAndOneThirdsHoursForNonTax(0);
     setTwoAndTwoThirdsHoursForNonTax(0);
     setTotalNonTaxableHours(0);
-    setOneAndOneThirdHoursForTaxable(0);
+    setOneAndOneThirdsHoursForTaxable(0);
     setOneAndTwoThirdsHoursForTaxable(0);
     setTwoHoursForTaxable(0);
     setTwoAndOneThirdsHoursForTaxable(0);
@@ -325,7 +373,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setOtherAdjustments(0);
     setVoluntaryPensionContribution(0);
     // Info: (20250710 - Julian) 重置計算機狀態
-    setSalaryCalculatorResult(defaultSalaryCalculatorResult);
+    // setSalaryCalculatorResult(defaultSalaryCalculatorResult);
     // Info: (20250710 - Julian) 重置步驟狀態
     setCompleteSteps(defaultTabSteps);
     setCurrentStep(1);
@@ -388,8 +436,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setOtherAllowanceWithoutTax,
       isNameError,
       setIsNameError,
-      oneAndOneThirdHoursForNonTax,
-      setOneAndOneThirdHoursForNonTax,
+      oneAndOneThirdsHoursForNonTax,
+      setOneAndOneThirdsHoursForNonTax,
       oneAndTwoThirdsHoursForNonTax,
       setOneAndTwoThirdsHoursForNonTax,
       twoHoursForNonTax,
@@ -400,7 +448,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setTwoAndTwoThirdsHoursForNonTax,
       totalNonTaxableHours,
       oneAndOneThirdHoursForTaxable,
-      setOneAndOneThirdHoursForTaxable,
+      setOneAndOneThirdsHoursForTaxable,
       oneAndTwoThirdsHoursForTaxable,
       setOneAndTwoThirdsHoursForTaxable,
       twoHoursForTaxable,
@@ -441,7 +489,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       otherAllowanceWithTax,
       otherAllowanceWithoutTax,
       isNameError,
-      oneAndOneThirdHoursForNonTax,
+      oneAndOneThirdsHoursForNonTax,
       oneAndTwoThirdsHoursForNonTax,
       twoHoursForNonTax,
       twoAndOneThirdsHoursForNonTax,

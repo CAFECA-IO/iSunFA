@@ -1,5 +1,20 @@
 const data = [
   {
+    salary: 0,
+    laborInsurance: {
+      employee: 0,
+      company: 0,
+    },
+    healthInsurance: {
+      employee: 0,
+      company: 0,
+    },
+    pensionInsurance: {
+      employee: 0,
+      company: 0,
+    },
+  },
+  {
     salary: 1500,
     laborInsurance: {
       employee: 277,
