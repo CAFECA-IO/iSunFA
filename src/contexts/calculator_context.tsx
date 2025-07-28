@@ -214,37 +214,20 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
 
     // Info: (20250728 - Julian) 計算加班費（應稅）
-    const salaryPerHour = baseSalary / workedDays / 8;
     const overTimeHoursTaxable100 = 0; // ToDo: (20250728 - Julian) 要補欄位
-    const overTimeHoursTaxable133 = Math.floor(
-      oneAndOneThirdHoursForTaxable * salaryPerHour * 1.33
-    );
-    const overTimeHoursTaxable166 = Math.floor(
-      oneAndTwoThirdsHoursForTaxable * salaryPerHour * 1.66
-    );
-    const overTimeHoursTaxable200 = Math.floor(twoHoursForTaxable * salaryPerHour * 2);
-    const overTimeHoursTaxable233 = Math.floor(
-      twoAndOneThirdsHoursForTaxable * salaryPerHour * 2.33
-    );
-    const overTimeHoursTaxable266 = Math.floor(
-      twoAndTwoThirdsHoursForTaxable * salaryPerHour * 2.66
-    );
+    const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
+    const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
+    const overTimeHoursTaxable200 = twoHoursForTaxable;
+    const overTimeHoursTaxable233 = twoAndOneThirdsHoursForTaxable;
+    const overTimeHoursTaxable266 = twoAndTwoThirdsHoursForTaxable;
 
-    const mealAllowancePerHour = mealAllowance / workedDays / 8;
+    // Info: (20250728 - Julian) 計算加班費（免稅）
     const overTimeHoursTaxFree100 = 0; // ToDo: (20250728 - Julian) 要補欄位
-    const overTimeHoursTaxFree133 = Math.floor(
-      oneAndOneThirdsHoursForNonTax * mealAllowancePerHour * 1.33
-    );
-    const overTimeHoursTaxFree166 = Math.floor(
-      oneAndTwoThirdsHoursForNonTax * mealAllowancePerHour * 1.66
-    );
-    const overTimeHoursTaxFree200 = Math.floor(twoHoursForNonTax * mealAllowancePerHour * 2);
-    const overTimeHoursTaxFree233 = Math.floor(
-      twoAndOneThirdsHoursForNonTax * mealAllowancePerHour * 2.33
-    );
-    const overTimeHoursTaxFree266 = Math.floor(
-      twoAndTwoThirdsHoursForNonTax * mealAllowancePerHour * 2.66
-    );
+    const overTimeHoursTaxFree133 = oneAndOneThirdsHoursForNonTax;
+    const overTimeHoursTaxFree166 = oneAndTwoThirdsHoursForNonTax;
+    const overTimeHoursTaxFree200 = twoHoursForNonTax;
+    const overTimeHoursTaxFree233 = twoAndOneThirdsHoursForNonTax;
+    const overTimeHoursTaxFree266 = twoAndTwoThirdsHoursForNonTax;
 
     const result = salaryCalculator({
       year: yearInt,

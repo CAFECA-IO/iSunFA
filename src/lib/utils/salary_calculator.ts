@@ -17,7 +17,11 @@ const getSalaryLevelsByYear = (year: number): iSalaryLevel[] => {
 const getSalaryLevel = (options: iGetSalaryLevelOptions) => {
   const { year, salary } = options;
   const salaryLevels = getSalaryLevelsByYear(year);
-  const salaryLevel = salaryLevels.find((level) => level.salary >= salary);
+  let salaryLevel = salaryLevels.find((level) => level.salary >= salary);
+  // Info: (20250727 - Luphia) 如果薪資超過最大級距，則使用最大級距
+  if (salary > salaryLevels[salaryLevels.length - 1].salary) {
+    salaryLevel = salaryLevels[salaryLevels.length - 1];
+  }
   if (!salaryLevel) {
     // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
     throw new Error(`No salary level found for year ${year} and salary ${salary}`);
@@ -54,8 +58,11 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
     employeeBurdenPensionInsurance,
   } = options;
 
+  // Info: (20250727 - Luphia) 計算表定薪資
+  const baseSalary = baseSalaryTaxable + baseSalaryTaxFree;
+
   // Info: (20250727 - Luphia) 計算勞保、健保、勞退費用
-  const salaryLevel = getSalaryLevel({ year, salary: baseSalaryTaxable });
+  const salaryLevel = getSalaryLevel({ year, salary: baseSalary });
   const healthInsuranceLevel = salaryLevel.salary;
   const laborInsuranceLevel = salaryLevel.salary;
   const employmentInsuranceLevel = salaryLevel.salary;
@@ -72,11 +79,15 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算當月總日數
   const daysInMonth = new Date(year, month, 0).getDate();
   const hoursInMonth = daysInMonth * 8;
-  const resultBaseSalaryTaxable = Math.ceil((baseSalaryTaxable / daysInMonth) * workedDays);
-  const baseSalaryPerHourTaxable = baseSalaryTaxable / (daysInMonth * 8);
+
+  // Info: (20250727 - Luphia) 計算每小時薪資
+  const baseSalaryPerHour = baseSalary / (daysInMonth * 8);
 
   // Info: (20250727 - Luphia) 計算在職小時數
   const workedHours = workedDays * 8;
+
+  // Info: (20250727 - Luphia) 總請假時數
+  const totalLeaveHours = sickLeaveHours * 0.5 + personalLeaveHours;
 
   // Info: (20250727 - Luphia) 計算加班費，無條件進入整數位
   const overTimePayTaxable = Math.ceil(
@@ -86,7 +97,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
       overTimeHoursTaxable200 * 2 +
       overTimeHoursTaxable233 * 2.33 +
       overTimeHoursTaxable266 * 2.66) *
-      baseSalaryPerHourTaxable
+      baseSalaryPerHour
   );
   const overTimePayTaxFree = Math.ceil(
     (overTimeHoursTaxFree100 +
@@ -95,16 +106,21 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
       overTimeHoursTaxFree200 * 2 +
       overTimeHoursTaxFree233 * 2.33 +
       overTimeHoursTaxFree266 * 2.66) *
-      baseSalaryPerHourTaxable
+      baseSalaryPerHour
   );
 
   // Info: (20250727 - Luphia) 計算請假扣薪，無條件捨棄小數位
-  const leaveDeduction = Math.floor(
-    (sickLeaveHours / 2 + personalLeaveHours) * baseSalaryPerHourTaxable
+  const leaveDeduction = Math.floor((sickLeaveHours / 2 + personalLeaveHours) * baseSalaryPerHour);
+
+  // Info: (20250727 - Luphia) 計算本薪（應稅），無條件進入整數位
+  const resultBaseSalaryTaxable = Math.ceil(
+    (baseSalaryTaxable / hoursInMonth) * (workedHours - totalLeaveHours)
   );
 
   // Info: (20250727 - Luphia) 計算伙食費，無條件進入整數位
-  const resultBaseSalaryTaxFree = Math.ceil((baseSalaryTaxFree / hoursInMonth) * workedHours);
+  const resultBaseSalaryTaxFree = Math.ceil(
+    (baseSalaryTaxFree / hoursInMonth) * (workedHours - totalLeaveHours)
+  );
 
   // Info: (20250727 - Luphia) 計算薪資加項
   const totalSalaryTaxable = resultBaseSalaryTaxable + overTimePayTaxable + otherAllowancesTaxable;
@@ -121,8 +137,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
     employeeBurdenPensionInsurance +
     employeeBurdenIncomeTax +
     employeeBurdenSecondGenerationHealthInsurancePremiums +
-    employeeBurdenOtherOverflowDeductions +
-    leaveDeduction;
+    employeeBurdenOtherOverflowDeductions;
 
   // Info: (20250727 - Luphia) 計算公司負擔
   const companyBurdenHealthInsurance = salaryLevel.healthInsurance.company;
