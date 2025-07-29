@@ -14,6 +14,7 @@ import voucherListByAccHandler from '@/pages/api/v2/account_book/[accountBookId]
 import { voucherGetAllFrontendValidatorV2 as FrontendSchema } from '@/lib/utils/zod_schema/voucher';
 import { VoucherListTabV2 } from '@/constants/voucher';
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
+import { sleep } from '@/lib/utils/common';
 
 describe('Voucher V2 – 完整 CRUD + Restore', () => {
   let helper: APITestHelper;
@@ -219,6 +220,8 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       handler: voucherPostHandler,
       routeParams: { accountBookId: accountBookId.toString() },
     });
+
+    sleep(1000);
 
     const res = await listClient
       .get(APIPath.VOUCHER_LIST_V2.replace(':accountBookId', accountBookId.toString()))
