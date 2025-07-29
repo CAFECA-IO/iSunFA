@@ -3,52 +3,12 @@ import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
 // Info: (20250721 - Shirley) Import API handlers for trial balance integration testing
-/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
-*/
 import trialBalanceHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance';
 import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookId]/trial_balance/export';
 
 // Info: (20250716 - Shirley) Import required types and constants
-// import { WORK_TAG } from '@/interfaces/account_book';
-// import { LocaleKey } from '@/constants/normal_setting';
-// import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName, APIPath } from '@/constants/api_connection';
-// import { TestClient } from '@/interfaces/test_client';
-
-/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-// Info: (20250716 - Shirley) Mock pusher for testing
-jest.mock('pusher', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({ trigger: jest.fn() })),
-}));
-
-jest.mock('@/lib/utils/crypto', () => {
-  const real = jest.requireActual('@/lib/utils/crypto');
-
-  const keyPairPromise = crypto.subtle.generateKey(
-    {
-      name: 'RSA-OAEP',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-    },
-    true,
-    ['encrypt', 'decrypt']
-  );
-
-  return {
-    ...real,
-    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
-    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
-    storeKeyByCompany: jest.fn(),
-  };
-});
-*/
 
 /**
  * Info: (20250721 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
@@ -72,29 +32,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   let cookies: string[];
   let startDate: number;
   let endDate: number;
-  // let connectAccountBookClient: TestClient;
-  // let voucherPostClient: TestClient;
-
-  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-  const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
-
-  // Info: (20250716 - Shirley) Test company data
-  const testCompanyData = {
-    name: 'Trial Balance Test Company 試算表測試公司',
-    taxId: randomNumber.toString(),
-    tag: WORK_TAG.ALL,
-    teamId: 0,
-    businessLocation: LocaleKey.tw,
-    accountingCurrency: CurrencyType.TWD,
-    representativeName: 'Test Representative',
-    taxSerialNumber: `A${randomNumber}`,
-    contactPerson: 'Test Contact',
-    phoneNumber: '+886-2-1234-5678',
-    city: 'Taipei',
-    district: 'Xinyi District',
-    enteredAddress: '123 Test Street, Xinyi District, Taipei',
-  };
-  */
 
   beforeAll(async () => {
     const sharedContext = await BaseTestContext.getSharedContext();
@@ -107,34 +44,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     startDate = currentTimestamp - 86400 * 365; // 1 year ago
     endDate = currentTimestamp + 86400 * 30; // 30 days from now
-    // const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
-    // createAccountBookClient = clients.createAccountBookClient;
-    // connectAccountBookClient = clients.connectAccountBookClient;
-    // voucherPostClient = clients.voucherPostClient;
-    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-    // Info: (20250716 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
-
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
-
-    // Info: (20250716 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
-
-    // Info: (20250716 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
-
-    // Info: (20250716 - Shirley) Update test company data with actual team ID
-    testCompanyData.teamId = teamId;
-
-    // Info: (20250716 - Shirley) Refresh session to ensure team membership is updated
-    await authenticatedHelper.getStatusInfo();
-*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
@@ -143,162 +52,12 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   });
 
   afterAll(async () => {
-    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-    // Info: (20250716 - Shirley) Cleanup test data
-    await authenticatedHelper.clearSession();
-*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250730 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('✅ Test cleanup completed');
     }
   });
-
-  /**
-   * Info: (20250716 - Shirley) Test Step 1: Create Account Book
-   */
-  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-  describe('Step 1: Account Book Creation', () => {
-    test('should create account book with proper structure', async () => {
-      const createAccountBookClient = createTestClient({
-        handler: createAccountBookHandler,
-        routeParams: { userId: currentUserId },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-
-      const response = await createAccountBookClient
-        .post(`/api/v2/user/${currentUserId}/account_book`)
-        .send(testCompanyData)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-      expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
-
-      // Info: (20250716 - Shirley) Validate output with production validator
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.CREATE_ACCOUNT_BOOK,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData?.id).toBeDefined();
-      expect(typeof outputData?.id).toBe('number');
-
-      accountBookId = response.body.payload.id;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
-    });
-
-    test('should verify account book connection', async () => {
-      const getAccountBookClient = createTestClient({
-        handler: getAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-
-      const response = await getAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload.id).toBe(accountBookId);
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
-    });
-  });
-*/
-  /**
-   * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Trial Balance
-   */
-  /** Info: (20250722 - Tzuhan) replaced by BaseTestContent
-  describe('Step 2: Create Sample Vouchers for Trial Balance', () => {
-    test('should create vouchers and verify trial balance data', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-
-      // Info: (20250721 - Shirley) Connect to account book first
-      const connectAccountBookClient = createTestClient({
-        handler: connectAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      const responseForConnect = await connectAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}/connect`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(responseForConnect.body.success).toBe(true);
-      expect(responseForConnect.body.payload).toBeDefined();
-      const voucherPostClient = createTestClient({
-        handler: voucherPostHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      const sampleVouchersData = TestDataFactory.sampleVoucherData();
-      const createdVouchers = [];
-
-      // Info: (20250721 - Shirley) Create all sample vouchers
-      for (let i = 0; i < sampleVouchersData.length; i += 1) {
-        const voucherData = sampleVouchersData[i];
-
-        const voucherPayload = {
-          actions: [],
-          certificateIds: [],
-          invoiceRC2Ids: [],
-          voucherDate: voucherData.date,
-          type: voucherData.type,
-          note: voucherData.note,
-          lineItems: voucherData.lineItems,
-          assetIds: [],
-          counterPartyId: null,
-        };
-
-        // eslint-disable-next-line no-await-in-loop
-        const response = await voucherPostClient
-          .post(`/api/v2/account_book/${accountBookId}/voucher`)
-          .send(voucherPayload)
-          .set('Cookie', cookies.join('; '));
-
-        if (response.status === 201) {
-          createdVouchers.push({
-            id: response.body.payload.id,
-            type: voucherData.type,
-            lineItems: voucherData.lineItems,
-          });
-          // Deprecated: (20250730 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-        } else {
-          // Deprecated: (20250730 - Shirley) Remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
-        }
-      }
-
-      // Info: (20250721 - Shirley) Verify all vouchers were created
-      expect(createdVouchers.length).toBe(sampleVouchersData.length);
-
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for trial balance test`
-      );
-    });
-  });
-  */
 
   /**
    * Info: (20250721 - Shirley) Test Step 3: Generate Trial Balance Report
@@ -426,6 +185,20 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(finalTrialBalanceResponse.body.success).toBe(true);
 
       const finalTrialBalanceData = finalTrialBalanceResponse.body.payload;
+
+      const noteObj = JSON.parse(finalTrialBalanceData.note);
+      const beginningDebitAmount = noteObj.total.beginningDebitAmount || 0;
+      const beginningCreditAmount = noteObj.total.beginningCreditAmount || 0;
+
+      const midtermDebitAmount = noteObj.total.midtermDebitAmount || 0;
+      const midtermCreditAmount = noteObj.total.midtermCreditAmount || 0;
+
+      const endingDebitAmount = finalTrialBalanceData.endingDebitAmount || 0;
+      const endingCreditAmount = finalTrialBalanceData.endingCreditAmount || 0;
+
+      expect(beginningDebitAmount).toEqual(beginningCreditAmount);
+      expect(midtermDebitAmount).toEqual(midtermCreditAmount);
+      expect(endingDebitAmount).toEqual(endingCreditAmount);
 
       // Info: (20250729 - Shirley) 驗證試算表基本結構而非固定數據
       expect(finalTrialBalanceData.totalCount).toBeGreaterThanOrEqual(0);

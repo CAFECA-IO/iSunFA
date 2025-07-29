@@ -1,54 +1,12 @@
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
-/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-// Info: (20250721 - Shirley) Import API handlers for ledger integration testing
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
-*/
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import getLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger';
 import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/ledger/export';
 
 // Info: (20250721 - Shirley) Import required types and constants
-// import { WORK_TAG } from '@/interfaces/account_book';
-// import { LocaleKey } from '@/constants/normal_setting';
-// import { CurrencyType } from '@/constants/currency';
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
-import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-import { TestClient } from '@/interfaces/test_client';
-// import { TestClient } from '@/interfaces/test_client';
-/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-// Info: (20250721 - Shirley) Mock pusher for testing
-jest.mock('pusher', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({ trigger: jest.fn() })),
-}));
-
-jest.mock('@/lib/utils/crypto', () => {
-  const real = jest.requireActual('@/lib/utils/crypto');
-
-  const keyPairPromise = crypto.subtle.generateKey(
-    {
-      name: 'RSA-OAEP',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-    },
-    true,
-    ['encrypt', 'decrypt']
-  );
-
-  return {
-    ...real,
-    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
-    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
-    storeKeyByCompany: jest.fn(),
-  };
-});
-  */
 
 /**
  * Info: (20250721 - Shirley) Integration Test - Ledger Integration (Test Case 8.4)
@@ -73,29 +31,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   let cookies: string[];
   let endDate: number;
 
-  let connectAccountBookClient: TestClient;
-
-  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-  const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
-
-  // Info: (20250721 - Shirley) Test company data
-  const testCompanyData = {
-    name: 'Ledger Test Company 分類帳測試公司',
-    taxId: randomNumber.toString(),
-    tag: WORK_TAG.ALL,
-    teamId: 0,
-    businessLocation: LocaleKey.tw,
-    accountingCurrency: CurrencyType.TWD,
-    representativeName: 'Test Representative',
-    taxSerialNumber: `A${randomNumber}`,
-    contactPerson: 'Test Contact',
-    phoneNumber: '+886-2-1234-5678',
-    city: 'Taipei',
-    district: 'Xinyi District',
-    enteredAddress: '123 Test Street, Xinyi District, Taipei',
-  };
-  */
-
   beforeAll(async () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     authenticatedHelper = sharedContext.helper;
@@ -107,40 +42,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     endDate = currentTimestamp + 86400 * 30; // 30 days from now
 
-    // Info: (20250728 - Shirley) Initialize connect account book client
-    connectAccountBookClient = createTestClient({
-      handler: connectAccountBookHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
-
-    // const clients = await authenticatedHelper.getAccountBookClients(accountBookId);
-    // createAccountBookClient = clients.createAccountBookClient;
-    // connectAccountBookClient = clients.connectAccountBookClient;
-    // voucherPostClient = clients.voucherPostClient;
-    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-    // Info: (20250721 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
-
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
-
-    // Info: (20250721 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
-
-    // Info: (20250721 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
-
-    // Info: (20250721 - Shirley) Update test company data with actual team ID
-    testCompanyData.teamId = teamId;
-
-    // Info: (20250721 - Shirley) Refresh session to ensure team membership is updated
-    await authenticatedHelper.getStatusInfo();
-*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250722 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
@@ -149,10 +50,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   });
 
   afterAll(async () => {
-    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-    // Info: (20250721 - Shirley) Cleanup test data
-    await authenticatedHelper.clearSession();
-*/
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250722 - Shirley) Remove eslint-disable
       // eslint-disable-next-line no-console
@@ -161,100 +58,8 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   });
 
   /**
-   * Info: (20250721 - Shirley) Test Step 1: Create Account Book
-   */
-  /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
-  describe('Step 1: Account Book Creation', () => {
-    test('should create account book with proper structure', async () => {
-      const createAccountBookClient = createTestClient({
-        handler: createAccountBookHandler,
-        routeParams: { userId: currentUserId },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-
-      const response = await createAccountBookClient
-        .post(`/api/v2/user/${currentUserId}/account_book`)
-        .send(testCompanyData)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-      expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
-
-      // Info: (20250721 - Shirley) Validate output with production validator
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.CREATE_ACCOUNT_BOOK,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData?.id).toBeDefined();
-      expect(typeof outputData?.id).toBe('number');
-
-      accountBookId = response.body.payload.id;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
-    });
-
-    test('should verify account book connection', async () => {
-      const getAccountBookClient = createTestClient({
-        handler: getAccountBookHandler,
-        routeParams: { accountBookId: accountBookId.toString() },
-      });
-
-      await authenticatedHelper.ensureAuthenticated();
-
-      const response = await getAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload.id).toBe(accountBookId);
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
-    });
-  });
-  */
-
-  /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
    */
-  xdescribe('Step 2: Create Sample Vouchers for Ledger', () => {
-    test('should verify vouchers exist for ledger test', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-
-      // Info: (20250728 - Shirley) Connect to account book first
-      const responseForConnect = await connectAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}/connect`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(responseForConnect.body.success).toBe(true);
-      expect(responseForConnect.body.payload).toBeDefined();
-
-      // Info: (20250728 - Shirley) BaseTestContext has already created the vouchers
-      // Just verify they exist by checking the expected voucher count
-      const sampleVouchersData = TestDataFactory.sampleVoucherData();
-
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully verified ${sampleVouchersData.length} vouchers exist for ledger test (created by BaseTestContext)`
-      );
-    });
-  });
   /**
    * Info: (20250721 - Shirley) Test Step 3: Generate Ledger Report
    */
@@ -426,12 +231,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         expect(finalNoteData.currencyAlias).toBeDefined();
         expect(finalNoteData.total.totalDebitAmount).toBe(finalNoteData.total.totalCreditAmount);
       }
-
-      // Info: (20250721 - Shirley) Ledger should have proper structure
-      // expect(finalLedgerData.page).toBeDefined();
-      // expect(finalLedgerData.totalPages).toBeDefined();
-      // expect(finalLedgerData.hasNextPage).toBeDefined();
-      // expect(finalLedgerData.hasPreviousPage).toBeDefined();
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable
