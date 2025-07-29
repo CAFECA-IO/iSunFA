@@ -403,7 +403,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 4: Complete Integration Workflow Validation
    */
-  describe.skip('Step 4: Complete Integration Workflow Validation', () => {
+  describe('Step 4: Complete Integration Workflow Validation', () => {
     test('should validate complete trial balance integration workflow', async () => {
       // Info: (20250721 - Shirley) Step 1: Verify account book exists
       expect(accountBookId).toBeDefined();
