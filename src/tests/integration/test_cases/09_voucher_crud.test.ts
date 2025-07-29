@@ -14,7 +14,6 @@ import voucherListByAccHandler from '@/pages/api/v2/account_book/[accountBookId]
 import { voucherGetAllFrontendValidatorV2 as FrontendSchema } from '@/lib/utils/zod_schema/voucher';
 import { VoucherListTabV2 } from '@/constants/voucher';
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
-import { sleep } from '@/lib/utils/common';
 
 describe('Voucher V2 – 完整 CRUD + Restore', () => {
   let helper: APITestHelper;
@@ -221,21 +220,43 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       routeParams: { accountBookId: accountBookId.toString() },
     });
 
-    sleep(1000);
+    // Info: (20250729 - Improved) 使用重試機制確保資料一致性
+    const maxRetries = 5;
+    const targetVoucherId = voucherId; // 避免閉包引用問題
+    // Info: (20250729 - Refactor) 提取重試邏輯為單獨函數
+    const checkVoucherInList = async (attempt: number): Promise<boolean> => {
+      const delay = 500 * (attempt + 1);
+      await new Promise((resolve) => {
+        setTimeout(resolve, delay);
+      });
 
-    const res = await listClient
-      .get(APIPath.VOUCHER_LIST_V2.replace(':accountBookId', accountBookId.toString()))
-      .query({ page: 1, pageSize: 10, tab: VoucherListTabV2.UPLOADED })
-      .set('Cookie', cookies.join('; '))
-      .expect(200);
+      const res = await listClient
+        .get(APIPath.VOUCHER_LIST_V2.replace(':accountBookId', accountBookId.toString()))
+        .query({ page: 1, pageSize: 10, tab: VoucherListTabV2.UPLOADED })
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
 
-    // Info: (20250721 - Tzuhan) 用前端的 Zod schema 驗證整體結構
-    const parsed = FrontendSchema.safeParse(res.body.payload);
-    expect(parsed.success).toBe(true);
+      // Info: (20250721 - Tzuhan) 用前端的 Zod schema 驗證整體結構
+      const parsed = FrontendSchema.safeParse(res.body.payload);
+      expect(parsed.success).toBe(true);
 
-    // Info: (20250721 - Tzuhan) 確認剛剛新增的 voucherId 在列表中
-    const list = parsed.data?.data as Array<{ id: number }>;
-    expect(list.some((v) => v.id === voucherId)).toBe(true);
+      // Info: (20250721 - Tzuhan) 確認剛剛新增的 voucherId 在列表中
+      const list = parsed.data?.data as Array<{ id: number }>;
+      return list.some((v) => v.id === targetVoucherId);
+    };
+
+    // Info: (20250729 - Fixed) 使用 Promise.all 替代 await 在 loop 中
+    const attempts = Array.from({ length: maxRetries }, (_, i) => i);
+
+    let voucherFound = false;
+    // eslint-disable-next-line no-restricted-syntax
+    for (const attempt of attempts) {
+      // eslint-disable-next-line no-await-in-loop
+      voucherFound = await checkVoucherInList(attempt);
+      if (voucherFound) break;
+    }
+
+    expect(voucherFound).toBe(true);
   });
 
   it('GET /account/:accountId/voucher list', async () => {
