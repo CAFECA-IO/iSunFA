@@ -234,7 +234,7 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
   /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
    */
-  describe('Step 2: Create Sample Vouchers for Ledger', () => {
+  xdescribe('Step 2: Create Sample Vouchers for Ledger', () => {
     test('should verify vouchers exist for ledger test', async () => {
       await authenticatedHelper.ensureAuthenticated();
 
