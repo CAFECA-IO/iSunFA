@@ -127,7 +127,7 @@ export class BaseTestContext {
     let baseTimestamp: number;
     if (options?.useFixedTimestamp) {
       // Info: (20250728 - Shirley) For trial balance test - use fixed timestamp to match TestDataFactory expectations
-      baseTimestamp = options.customTimestamp || 1733155200; // 2024-12-02T16:00:00.000Z
+      baseTimestamp = options.customTimestamp || Math.floor(Date.now() / 1000); // Dynamic timestamp
       this.ctx.startDate = baseTimestamp + 86400 * 10; // Start after voucher creation, so vouchers are in "beginning"
       this.ctx.endDate = baseTimestamp + 86400 * 40; // End after start
     } else {

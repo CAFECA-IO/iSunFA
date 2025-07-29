@@ -128,15 +128,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     authenticatedHelper = sharedContext.helper;
     currentUserId = sharedContext.userId.toString();
     teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
-    accountBook = await BaseTestContext.createAccountBook(
-      Number(currentUserId),
-      teamId,
-      undefined,
-      {
-        useFixedTimestamp: true,
-        customTimestamp: 1733155200, // 2024-12-02T16:00:00.000Z - matches TestDataFactory expectations
-      }
-    );
+    accountBook = await BaseTestContext.createAccountBook(Number(currentUserId), teamId);
     accountBookId = accountBook.id;
 
     initializeAccountBookDependentClients();

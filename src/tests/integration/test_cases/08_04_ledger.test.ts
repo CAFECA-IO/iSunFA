@@ -267,10 +267,9 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         routeParams: { accountBookId: accountBookId.toString() },
       });
 
-      // Info: (20250728 - Shirley) Use a date range that includes voucher creation time
-      // Vouchers are created at customTimestamp (1733155200), but startDate is 10 days later
-      const voucherTimestamp = 1733155200; // Same as customTimestamp used in BaseTestContext
-      const queryStartDate = voucherTimestamp - 86400; // 1 day before voucher creation
+      // Info: (20250729 - Shirley) 使用動態時間戳計算查詢範圍
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const queryStartDate = currentTimestamp - 86400 * 365; // 1 year ago
       const queryEndDate = endDate; // Use the configured end date
 
       const response = await getLedgerClient
@@ -316,8 +315,8 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       // Info: (20250728 - Shirley) Use a date range that includes voucher creation time
-      const voucherTimestamp = 1733155200; // Same as customTimestamp used in BaseTestContext
-      const queryStartDate = voucherTimestamp - 86400; // 1 day before voucher creation
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const queryStartDate = currentTimestamp - 86400 * 365; // 1 year ago
       const queryEndDate = endDate; // Use the configured end date
 
       const response = await getLedgerClient
@@ -384,8 +383,8 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       // Info: (20250728 - Shirley) Use a date range that includes voucher creation time
-      const voucherTimestamp = 1733155200; // Same as customTimestamp used in BaseTestContext
-      const queryStartDate = voucherTimestamp - 86400; // 1 day before voucher creation
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const queryStartDate = currentTimestamp - 86400 * 365; // 1 year ago
       const queryEndDate = endDate; // Use the configured end date
 
       const finalLedgerResponse = await getLedgerClient
@@ -469,8 +468,8 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       });
 
       // Info: (20250728 - Shirley) Use a date range that includes voucher creation time
-      const voucherTimestamp = 1733155200; // Same as customTimestamp used in BaseTestContext
-      const queryStartDate = voucherTimestamp - 86400; // 1 day before voucher creation
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const queryStartDate = currentTimestamp - 86400 * 365; // 1 year ago
 
       const exportRequestData = {
         fileType: 'csv',
