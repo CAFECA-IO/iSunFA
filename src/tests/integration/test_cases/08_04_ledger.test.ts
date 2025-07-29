@@ -8,6 +8,8 @@ import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/led
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
+import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+
 /**
  * Info: (20250721 - Shirley) Integration Test - Ledger Integration (Test Case 8.4)
  *
@@ -231,6 +233,16 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         expect(finalNoteData.currencyAlias).toBeDefined();
         expect(finalNoteData.total.totalDebitAmount).toBe(finalNoteData.total.totalCreditAmount);
       }
+
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('finalLedgerData.data.length:', finalLedgerData.data.length);
+      // Deprecated: (20250722 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log(
+        'expectedLedgerData.totalCount:',
+        TestDataFactory.expectedLedgerData().payload.data.length
+      );
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250722 - Shirley) Remove eslint-disable

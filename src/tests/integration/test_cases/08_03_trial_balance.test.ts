@@ -10,6 +10,8 @@ import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookI
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName, APIPath } from '@/constants/api_connection';
 
+import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
+
 /**
  * Info: (20250721 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
  *
@@ -200,6 +202,16 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(midtermDebitAmount).toEqual(midtermCreditAmount);
       expect(endingDebitAmount).toEqual(endingCreditAmount);
 
+      // Deprecated: (20250810 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('finalTrialBalanceData.data.length:', finalTrialBalanceData.data.length);
+      // Deprecated: (20250810 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log(
+        'expectedTrialBalanceData.data.length:',
+        TestDataFactory.expectedTrialBalanceData().payload.data.length
+      );
+
       // Info: (20250729 - Shirley) 驗證試算表基本結構而非固定數據
       expect(finalTrialBalanceData.totalCount).toBeGreaterThanOrEqual(0);
       expect(finalTrialBalanceData.data.length).toBeGreaterThanOrEqual(0);
@@ -328,6 +340,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         expect(typeof firstCsvItem.endingDebitAmount).toBe('number');
         expect(typeof firstCsvItem.endingCreditAmount).toBe('number');
       }
+
+      // Deprecated: (20250730 - Shirley) Remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('csvData.length:', csvData.length);
 
       if (process.env.DEBUG_TESTS === 'true') {
         // Deprecated: (20250730 - Shirley) Remove eslint-disable
