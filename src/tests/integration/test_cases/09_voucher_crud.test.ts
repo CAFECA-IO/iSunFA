@@ -220,10 +220,10 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       routeParams: { accountBookId: accountBookId.toString() },
     });
 
-    // Info: (20250729 - Improved) 使用重試機制確保資料一致性
+    // Info: (20250729 - Shirley) 使用重試機制確保資料一致性
     const maxRetries = 5;
-    const targetVoucherId = voucherId; // 避免閉包引用問題
-    // Info: (20250729 - Refactor) 提取重試邏輯為單獨函數
+    const targetVoucherId = voucherId; // Info: (20250729 - Shirley) 避免閉包引用問題
+    // Info: (20250729 - Shirley) 提取重試邏輯為單獨函數
     const checkVoucherInList = async (attempt: number): Promise<boolean> => {
       const delay = 500 * (attempt + 1);
       await new Promise((resolve) => {
@@ -249,8 +249,10 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
     const attempts = Array.from({ length: maxRetries }, (_, i) => i);
 
     let voucherFound = false;
+    // Deprecated: (20250730 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-restricted-syntax
     for (const attempt of attempts) {
+      // Deprecated: (20250730 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-await-in-loop
       voucherFound = await checkVoucherInList(attempt);
       if (voucherFound) break;
