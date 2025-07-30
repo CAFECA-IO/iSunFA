@@ -8,8 +8,8 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { APIName, HttpMethod } from '@/constants/api_connection';
-import { ITeam } from '@/interfaces/team';
-import { getSession } from '@/lib/utils/session';
+import { ITeam, TeamRole } from '@/interfaces/team';
+import { getSession, updateTeamMemberSession } from '@/lib/utils/session';
 import { HTTP_STATUS } from '@/constants/http';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
@@ -32,7 +32,10 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const createdTeam = await createTeamWithTrial(userId, body);
 
-  statusMessage = STATUS_MESSAGE.SUCCESS;
+  // Info: (20250715 - Shirley) Update session to include new team membership
+  await updateTeamMemberSession(userId, createdTeam.id, TeamRole.OWNER);
+
+  statusMessage = STATUS_MESSAGE.CREATED;
 
   const { isOutputDataValid, outputData } = validateOutputData(APIName.CREATE_TEAM, createdTeam);
   if (!isOutputDataValid) {
@@ -65,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     const err = error as Error;
+    loggerBack.error(`Team creation error: ${err.message}`, err);
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }

@@ -1,5 +1,9 @@
 import prisma from '@/client';
+<<<<<<< HEAD
 import { AccountBook, AccountBookSetting, File } from '@prisma/client';
+=======
+import { File, Prisma } from '@prisma/client';
+>>>>>>> feature/fix-integration-test-refactoring
 import {
   TeamRole,
   LeaveStatus,
@@ -19,8 +23,9 @@ import {
   FILING_METHOD,
   DECLARANT_FILING_METHOD,
   AGENT_FILING_ROLE,
+  IBaifaAccountBook,
 } from '@/interfaces/account_book';
-import { listByTeamIdQuerySchema } from '@/lib/utils/zod_schema/team';
+import { listByTeamIdQuerySchema, transferAccountBookSchema } from '@/lib/utils/zod_schema/team';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 import loggerBack from '@/lib/utils/logger_back';
 import { SUBSCRIPTION_PLAN_LIMITS } from '@/constants/team/permissions';
@@ -46,6 +51,19 @@ import {
 import { createNotificationsBulk } from '@/lib/utils/repo/notification.repo';
 import { NotificationEvent, NotificationType } from '@/interfaces/notification';
 import { EmailTemplateName } from '@/constants/email_template';
+
+type MessageKeys = {
+  fromTeam: string;
+  toTeam: string;
+};
+
+export function getAccountBookTransferMessageKeys(event: NotificationEvent): MessageKeys {
+  const baseKey = `ACCOUNT_BOOK_TRANSFER.${event.toUpperCase()}`;
+  return {
+    fromTeam: `${baseKey}.FROM_TEAM`,
+    toTeam: `${baseKey}.TO_TEAM`,
+  };
+}
 
 const buildAccountBookTransferNotification = async (
   userId: number,
@@ -113,8 +131,8 @@ const buildAccountBookTransferNotification = async (
   }));
 
   const content = {
-    ledgerId: accountBook.id,
-    ledgerName: accountBook.name,
+    accountBookId: accountBook.id,
+    accountBookName: accountBook.name,
     fromTeamName: fromTeam.name,
     toTeamName: toTeam.name,
     operatorName: operator.name,
@@ -123,38 +141,11 @@ const buildAccountBookTransferNotification = async (
   const actionUrl = `/team/${toTeamId}/account_book/${accountBook.id}`;
   const imageUrl = operator.imageFile?.url;
 
-  const getMessages = (notificationEvent: NotificationEvent) => {
-    switch (notificationEvent) {
-      case NotificationEvent.TRANSFER:
-        return {
-          fromTeam: '已發起帳本轉移請求',
-          toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 發出，待本團隊處理`,
-        };
-      case NotificationEvent.APPROVED:
-        return {
-          fromTeam: `帳本「${accountBook.name}」已成功轉移至 ${toTeam.name}`,
-          toTeam: `帳本「${accountBook.name}」已成功轉入團隊`,
-        };
-      case NotificationEvent.CANCELLED:
-        return {
-          fromTeam: `帳本「${accountBook.name}」轉移請求已取消`,
-          toTeam: `帳本「${accountBook.name}」轉移請求已由 ${fromTeam.name} 取消`,
-        };
-      case NotificationEvent.REJECTED:
-        return {
-          fromTeam: `帳本「${accountBook.name}」轉移請求已被拒絕`,
-          toTeam: `帳本「${accountBook.name}」轉移請求已被 ${toTeam.name} 拒絕`,
-        };
-      default:
-        throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
-    }
-  };
-
-  const messages = getMessages(event);
+  const messageKeys = getAccountBookTransferMessageKeys(event);
 
   return [
-    { recipients: toTeamRecipients, message: messages.toTeam },
-    { recipients: fromTeamRecipients, message: messages.fromTeam },
+    { recipients: toTeamRecipients, message: messageKeys.toTeam },
+    { recipients: fromTeamRecipients, message: messageKeys.fromTeam },
   ].map(({ recipients, message }) => ({
     userEmailMap: recipients,
     teamId: toTeamId,
@@ -306,6 +297,8 @@ export const createAccountBook = async (
     taxId: string;
     teamId: number;
     fileId?: number;
+    businessLocation?: string;
+    accountingCurrency?: string;
     representativeName?: string;
     taxSerialNumber?: string;
     contactPerson?: string;
@@ -330,6 +323,8 @@ export const createAccountBook = async (
     name,
     tag,
     fileId,
+    businessLocation = '',
+    accountingCurrency = '',
     representativeName = '',
     taxSerialNumber = '',
     contactPerson = '',
@@ -448,7 +443,7 @@ export const createAccountBook = async (
           country: '',
           phone: phoneNumber || '',
           address: addressJson,
-          countryCode: 'tw',
+          countryCode: businessLocation || 'tw',
           contactPerson: contactPerson || '',
           filingFrequency,
           filingMethod,
@@ -471,7 +466,7 @@ export const createAccountBook = async (
           purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
           purchaseTaxRate: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_RATE,
           returnPeriodicity: DEFAULT_ACCOUNTING_SETTING.RETURN_PERIODICITY,
-          currency: DEFAULT_ACCOUNTING_SETTING.CURRENCY,
+          currency: accountingCurrency || DEFAULT_ACCOUNTING_SETTING.CURRENCY,
           createdAt: nowInSecond,
           updatedAt: nowInSecond,
         },
@@ -590,6 +585,13 @@ export const listAccountBookByUserId = async (
         },
         take: 1,
       },
+      // Info: (20250606 - Shirley) 添加 accountingSettings 以獲取會計幣別
+      accountingSettings: {
+        where: {
+          deletedAt: null,
+        },
+        take: 1,
+      },
     },
     skip: (page - 1) * pageSize,
     take: pageSize,
@@ -604,8 +606,14 @@ export const listAccountBookByUserId = async (
       const expiredAt = book.team?.subscriptions[0]?.expiredDate ?? 0;
       const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
 
+<<<<<<< HEAD
       // Info: (20250516 - Shirley) 獲取 accountBookSetting 欄位，如果不存在則提供默認值
       const setting = book.accountBookSettings?.[0] || {};
+=======
+      // Info: (20250516 - Shirley) 獲取 companySetting 欄位，如果不存在則提供默認值
+      const setting = book.companySettings?.[0] || {};
+      const accountingSetting = book.accountingSettings?.[0] || {};
+>>>>>>> feature/fix-integration-test-refactoring
       const address = setting.address
         ? typeof setting.address === 'string'
           ? JSON.parse(setting.address)
@@ -633,6 +641,8 @@ export const listAccountBookByUserId = async (
         city: address.city || '',
         district: address.district || '',
         enteredAddress: address.enteredAddress || '',
+        businessLocation: setting.countryCode || '', // Info: (20250606 - Shirley) businessLocation 來自 country 欄位
+        accountingCurrency: accountingSetting.currency || '', // Info: (20250606 - Shirley) accountingCurrency 來自 accountingSetting
 
         // Info: (20250517 - Shirley) 添加選填欄位
         filingFrequency: setting.filingFrequency,
@@ -1107,9 +1117,8 @@ export const requestTransferAccountBook = async (
     error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
     throw error;
   }
-
-  await prisma.$transaction([
-    prisma.accountBookTransfer.create({
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.create({
       data: {
         accountBookId,
         fromTeamId,
@@ -1118,18 +1127,25 @@ export const requestTransferAccountBook = async (
         status: TransferStatus.PENDING,
         pendingAt: now,
       },
+<<<<<<< HEAD
     }),
     prisma.accountBook.update({ where: { id: accountBookId }, data: { isTransferring: true } }),
   ]);
+=======
+    });
+    await tx.company.update({ where: { id: accountBookId }, data: { isTransferring: true } });
+>>>>>>> feature/fix-integration-test-refactoring
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
-    accountBookId,
-    fromTeamId,
-    toTeamId,
-    NotificationEvent.TRANSFER
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      fromTeamId,
+      toTeamId,
+      NotificationEvent.TRANSFER
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
 
   return { accountBookId, fromTeamId, toTeamId, status: TransferStatus.PENDING };
 };
@@ -1138,7 +1154,7 @@ export const requestTransferAccountBook = async (
 export const cancelTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   loggerBack.info(`User ${userId} is canceling transfer for AccountBook ${accountBookId}`);
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1177,6 +1193,7 @@ export const cancelTransferAccountBook = async (
     throw error;
   }
 
+<<<<<<< HEAD
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `accountBook.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
@@ -1184,26 +1201,43 @@ export const cancelTransferAccountBook = async (
       data: { status: TransferStatus.CANCELED },
     }),
     prisma.accountBook.update({
+=======
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
+      where: { id: transfer.id },
+      data: { status: TransferStatus.CANCELED },
+    });
+    await tx.company.update({
+>>>>>>> feature/fix-integration-test-refactoring
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.CANCELLED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.CANCEL
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.CANCELED,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 接受帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const acceptTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   const transfer = await prisma.accountBookTransfer.findFirst({
@@ -1240,35 +1274,49 @@ export const acceptTransferAccountBook = async (
     throw error;
   }
 
+<<<<<<< HEAD
   await prisma.$transaction([
     prisma.accountBook.update({
       where: { id: accountBookId },
       data: { teamId: transfer.toTeamId, isTransferring: false },
     }),
     prisma.accountBookTransfer.update({
+=======
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
+>>>>>>> feature/fix-integration-test-refactoring
       where: { id: transfer.id },
-      data: {
-        status: TransferStatus.COMPLETED,
-        completedAt: now,
-      },
-    }),
-  ]);
+      data: { status: TransferStatus.COMPLETED },
+    });
+    await tx.company.update({
+      where: { id: accountBookId },
+      data: { isTransferring: false },
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.APPROVED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.APPROVED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.COMPLETED,
+    transferredAt: now,
+  };
 };
 
 // Info: (20250314 - Tzuhan) 拒絕帳本轉移: 邏輯部分實作未檢查是否充分也還未測試
 export const declineTransferAccountBook = async (
   userId: number,
   accountBookId: number
-): Promise<void> => {
+): Promise<z.infer<typeof transferAccountBookSchema>> => {
   const now = getTimestampNow();
 
   // Info: (20250311 - Tzuhan) 找到帳本的 `transfer` 記錄
@@ -1292,6 +1340,7 @@ export const declineTransferAccountBook = async (
     throw error;
   }
 
+<<<<<<< HEAD
   // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `accountBook.isTransferring`
   await prisma.$transaction([
     prisma.accountBookTransfer.update({
@@ -1302,19 +1351,35 @@ export const declineTransferAccountBook = async (
       },
     }),
     prisma.accountBook.update({
+=======
+  // Info: (20250311 - Tzuhan) 更新 `accountBook_transfer` 狀態 & `company.isTransferring`
+  await transaction(async (tx) => {
+    await tx.accountBookTransfer.update({
+      where: { id: transfer.id },
+      data: { status: TransferStatus.DECLINED, updatedAt: now },
+    });
+    await tx.company.update({
+>>>>>>> feature/fix-integration-test-refactoring
       where: { id: accountBookId },
       data: { isTransferring: false },
-    }),
-  ]);
+    });
 
-  const notifications = await buildAccountBookTransferNotification(
-    userId,
+    const notifications = await buildAccountBookTransferNotification(
+      userId,
+      accountBookId,
+      transfer.fromTeamId,
+      transfer.toTeamId,
+      NotificationEvent.REJECTED
+    );
+
+    await Promise.all(notifications.map((n) => createNotificationsBulk(tx, n)));
+  });
+  return {
     accountBookId,
-    transfer.fromTeamId,
-    transfer.toTeamId,
-    NotificationEvent.DELETED
-  );
-  await Promise.all(notifications.map((n) => createNotificationsBulk(n)));
+    fromTeamId: transfer.fromTeamId,
+    toTeamId: transfer.toTeamId,
+    status: TransferStatus.DECLINED,
+  };
 };
 
 /**
@@ -1746,6 +1811,7 @@ export const getAccountBookTeamId = async (accountBookId: number): Promise<numbe
   }
 };
 
+<<<<<<< HEAD
 export async function getCompanyById(
   accountBookId: number
 ): Promise<(AccountBook & { imageFile: File | null }) | null> {
@@ -1840,3 +1906,122 @@ export async function putCompanyIcon(options: { accountBookId: number; fileId: n
   });
   return updatedAccountBook;
 }
+=======
+export const listBaifaAccountBooks = async (queryParams: {
+  page?: number;
+  pageSize?: number;
+  startDate?: number;
+  endDate?: number;
+  searchQuery?: string;
+  sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
+}): Promise<IPaginatedOptions<IBaifaAccountBook[]>> => {
+  const nowInSecond = getTimestampNow();
+  const {
+    page = 1,
+    pageSize = 10,
+    startDate = 0,
+    endDate = nowInSecond,
+    searchQuery = '',
+    sortOption = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }],
+  } = queryParams;
+
+  const whereCondition = {
+    name: searchQuery ? { contains: searchQuery, mode: Prisma.QueryMode.insensitive } : undefined,
+    createdAt: { gte: startDate, lte: endDate },
+    AND: [{ OR: [{ deletedAt: 0 }, { deletedAt: null }] }],
+  };
+
+  const [totalCount, accountBooks] = await prisma.$transaction([
+    prisma.company.count({ where: whereCondition }),
+    prisma.company.findMany({
+      where: whereCondition,
+      include: {
+        team: {
+          include: {
+            subscriptions: {
+              where: {
+                startDate: { lte: nowInSecond },
+                expiredDate: { gt: nowInSecond },
+              },
+              include: { plan: true },
+            },
+            imageFile: { select: { url: true } },
+          },
+        },
+        imageFile: { select: { url: true } },
+        companySettings: { where: { deletedAt: null }, take: 1 },
+        accountingSettings: { where: { deletedAt: null }, take: 1 },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: createOrderByList(sortOption),
+    }),
+  ]);
+
+  const result = toPaginatedData({
+    data: accountBooks.map((book) => {
+      const setting = book.companySettings?.[0] || {};
+      const accountingSetting = book.accountingSettings?.[0] || {};
+      const address = setting.address
+        ? typeof setting.address === 'string'
+          ? JSON.parse(setting.address)
+          : setting.address
+        : { city: '', district: '', enteredAddress: '' };
+
+      const subscription = book.team?.subscriptions[0];
+      const expiredAt = subscription?.expiredDate ?? 0;
+      const { inGracePeriod, gracePeriodEndAt } = getGracePeriodInfo(expiredAt);
+
+      return {
+        id: book.id,
+        teamId: book.teamId,
+        ownerId: book.userId,
+        imageId: book.imageFile?.url ?? '/images/fake_company_img.svg',
+        name: book.name,
+        taxId: book.taxId,
+        tag: book.tag as WORK_TAG,
+        isPrivate: book.isPrivate ?? false,
+        startDate: book.startDate,
+        createdAt: book.createdAt,
+        updatedAt: book.updatedAt,
+
+        representativeName: setting.representativeName || '',
+        taxSerialNumber: setting.taxSerialNumber || '',
+        contactPerson: setting.contactPerson || '',
+        phoneNumber: setting.phone || '',
+        city: address.city || '',
+        district: address.district || '',
+        enteredAddress: address.enteredAddress || '',
+        businessLocation: setting.countryCode || '',
+        accountingCurrency: accountingSetting.currency || '',
+
+        isTransferring: book.isTransferring,
+
+        team: book.team
+          ? {
+              id: book.team.id,
+              name: book.team.name,
+              imageId: book.team.imageFile?.url ?? '/images/fake_team_img.svg',
+              about: book.team.about ?? '',
+              profile: book.team.profile ?? '',
+              planType: subscription?.plan?.type ?? TPlanType.BEGINNER,
+              expiredAt,
+              inGracePeriod,
+              gracePeriodEndAt,
+              bankAccount: book.team.bankInfo
+                ? `${(book.team.bankInfo as { code: string }).code}-${(book.team.bankInfo as { number: string }).number}`
+                : '',
+            }
+          : null,
+      } as IBaifaAccountBook;
+    }),
+    page,
+    totalPages: Math.ceil(totalCount / pageSize),
+    totalCount,
+    pageSize,
+    sort: sortOption,
+  });
+
+  return result;
+};
+>>>>>>> feature/fix-integration-test-refactoring

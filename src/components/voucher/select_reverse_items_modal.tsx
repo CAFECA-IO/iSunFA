@@ -13,6 +13,7 @@ import { useAccountingCtx } from '@/contexts/accounting_context';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface ISelectReverseItemsModal {
   isModalVisible: boolean;
@@ -25,50 +26,81 @@ interface IReverseItemProps {
   // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
   selectHandler: (id: number, itemIndex: number) => void;
   amountChangeHandler: (id: number, itemIndex: number, value: number) => void;
+  currency: string;
 }
 
 const ReverseItem: React.FC<IReverseItemProps> = ({
   reverseData,
   selectHandler,
   amountChangeHandler,
+  currency,
 }) => {
   const { t } = useTranslation('common');
 
-  const { voucherId, voucherNo, account, description, amount, isSelected, reverseAmount } =
-    reverseData;
-
-  // Info: (20250326 - Anna) 初始化 displayAmount：將 reverseAmount 加上千分位符號，用來顯示在 input 上
-  const [displayAmount, setDisplayAmount] = useState<string>(
-    numberWithCommas(reverseAmount.toString())
-  );
+  const {
+    voucherId,
+    voucherNo,
+    account,
+    description,
+    amount,
+    isSelected,
+    reverseAmount,
+    lineItemIndex,
+  } = reverseData;
 
   const accountCode = account?.code ?? '';
   const accountName = account?.name ?? '';
 
   // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
-  const checkboxChangeHandler = () => selectHandler(voucherId, reverseData.lineItemIndex);
+  const checkboxChangeHandler = () => selectHandler(voucherId, lineItemIndex);
 
   const reverseAmountChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Info: (20241105 - Julian) 金額只能輸入數字
-    const num = parseInt(e.target.value, 10);
+    // Info: (20250528 - Julian) 先移除千分位符號，再轉換為數字
+    const withoutCommas = e.target.value.replace(/,/g, '');
+    const num = parseFloat(withoutCommas);
     const numValue = Number.isNaN(num) ? 0 : num;
+
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
     const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
-    // Info: (20250326 - Anna) 顯示值加上千分位
-    setDisplayAmount(numberWithCommas(e.target.value));
+
     // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
-    amountChangeHandler(voucherId, reverseData.lineItemIndex, valueInRange);
+    amountChangeHandler(voucherId, lineItemIndex, valueInRange);
   };
 
-  // Info: (20250326 - Anna) 當 reverseAmount 改變，同步更新顯示值 displayAmount
-  useEffect(() => {
-    setDisplayAmount(numberWithCommas(reverseAmount.toString()));
-  }, [reverseAmount]);
+  const reverseAmountInput = (
+    <div
+      className={`ml-auto flex w-180px items-center divide-x rounded-sm border ${
+        isSelected
+          ? 'divide-input-stroke-input border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled'
+          : 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable text-input-text-disable'
+      } transition-all duration-150 ease-in-out`}
+    >
+      <input
+        id="input-reverse-amount"
+        name="input-reverse-amount"
+        type="text"
+        value={numberWithCommas(reverseAmount)}
+        onChange={reverseAmountChangeHandler}
+        className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
+      />
+      <div className="flex items-center gap-8px px-12px py-10px">
+        <Image
+          src={`/currencies/${currency.toLowerCase()}.svg`}
+          width={16}
+          height={16}
+          alt="tw_icon"
+          className="aspect-square rounded-full object-cover"
+        />
+        <p className="text-input-text-input-placeholder">{currency}</p>
+      </div>
+    </div>
+  );
 
   return (
     <>
+      {/* Info: (20250528 - Julian) ============== Desktop Layout ============== */}
       {/* Info: (20241104 - Julian) Checkbox */}
-      <div className="col-start-1 col-end-2">
+      <div className="col-start-1 col-end-2 hidden tablet:block">
         <input
           type="checkbox"
           className={checkboxStyle}
@@ -77,47 +109,53 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
         />
       </div>
       {/* Info: (20241104 - Julian) Voucher No */}
-      <div className="col-start-2 col-end-4">{voucherNo}</div>
+      <div className="col-start-2 col-end-4 hidden tablet:block">{voucherNo}</div>
       {/* Info: (20241104 - Julian) Accounting */}
-      <div className="col-start-4 col-end-7 truncate">
+      <div className="col-start-4 col-end-7 hidden truncate tablet:block">
         {accountCode} - <span className="text-text-neutral-tertiary">{accountName}</span>
       </div>
       {/* Info: (20241104 - Julian) Particulars */}
-      <div className="col-start-7 col-end-9">{description}</div>
+      <div className="col-start-7 col-end-9 hidden tablet:block">{description}</div>
       {/* Info: (20241104 - Julian) Amount */}
-      <div className="col-start-9 col-end-11">
+      <div className="col-start-9 col-end-11 hidden tablet:block">
         {numberWithCommas(amount)}
         <span className="text-text-neutral-tertiary"> {t('journal:JOURNAL.TWD')}</span>
       </div>
       {/* Info: (20241104 - Julian) Reverse Amount */}
-      <div className="col-start-11 col-end-15 text-right">
-        <div
-          className={`flex items-center divide-x rounded-sm border ${
-            isSelected
-              ? 'divide-input-stroke-input border-input-stroke-input bg-input-surface-input-background text-input-text-input-filled'
-              : 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable text-input-text-disable'
-          } transition-all duration-150 ease-in-out`}
+      <div className="col-start-11 col-end-15 hidden text-right tablet:block">
+        {reverseAmountInput}
+      </div>
+
+      {/* Info: (20250528 - Julian) ============== Mobile Layout ============== */}
+      <div className="flex justify-center gap-lv-4 border-b border-divider-stroke-lv-4 py-lv-2 tablet:hidden">
+        {/* Info: (20250528 - Julian) Checkbox */}
+        <input
+          id={`${lineItemIndex}-checkbox-mobile`}
+          type="checkbox"
+          className={`${checkboxStyle} mt-1`}
+          checked={isSelected}
+          onChange={checkboxChangeHandler}
+        />
+        <label
+          htmlFor={`${lineItemIndex}-checkbox-mobile`}
+          className="flex flex-col gap-lv-3 text-sm font-medium text-text-neutral-primary"
         >
-          <input
-            type="string"
-            className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
-            // Info: (20250326 - Anna) 傳入有千分位符號的顯示值(displayAmount)
-            value={displayAmount}
-            placeholder="0"
-            onChange={reverseAmountChangeHandler}
-            disabled={!isSelected}
-          />
-          <div className="flex items-center gap-8px px-12px py-10px">
-            <Image
-              src="/flags/tw.svg"
-              width={16}
-              height={16}
-              alt="tw_icon"
-              className="rounded-full"
-            />
-            <p className="text-input-text-input-placeholder">{t('journal:JOURNAL.TWD')}</p>
-          </div>
-        </div>
+          {/* Info: (20250528 - Julian) Voucher No */}
+          <p>{voucherNo}</p>
+          {/* Info: (20250528 - Julian) Accounting */}
+          <p>
+            {account?.code} - <span className="text-text-neutral-tertiary">{account?.name}</span>
+          </p>
+          {/* Info: (20250528 - Julian) Particulars */}
+          {description !== '' && <p>{description}</p>}
+          {/* Info: (20250528 - Julian) Amount */}
+          <p>
+            {numberWithCommas(amount)}
+            <span className="text-text-neutral-tertiary"> {t('journal:JOURNAL.TWD')}</span>
+          </p>
+          {/* Info: (20250528 - Julian) Reverse Amount */}
+          {reverseAmountInput}
+        </label>
       </div>
     </>
   );
@@ -129,6 +167,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
   modalData,
 }) => {
   const { t } = useTranslation(['common', 'journal']);
+  const { currency } = useCurrencyCtx();
   const { addReverseListHandler } = useAccountingCtx();
   const { connectedAccountBook } = useUserCtx();
 
@@ -251,36 +290,39 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
         };
 
         return (
-          // Info: (2025-213 - Anna) 確保 key 唯一
+          // Info: (20250213 - Anna) 確保 key 唯一
           <ReverseItem
             key={`${reverse.voucherId}-${reverse.lineItemIndex}`}
             reverseData={reverse}
             selectHandler={selectCountHandler}
             amountChangeHandler={amountChangeHandler}
+            currency={currency}
           />
         );
       })
     ) : (
-      <div className="col-start-1 col-end-15 text-center text-lg">
+      <div className="col-start-1 col-end-15 text-center text-sm tablet:text-lg">
         {t('journal:REVERSE_MODAL.NOT_FOUND')}
       </div>
     );
 
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex h-500px w-90vw flex-col items-center gap-16px rounded-sm bg-surface-neutral-surface-lv2 px-20px py-16px shadow-lg md:w-750px">
-        {/* Info: (20241104 - Julian) Close button */}
-        <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">
-          <RxCross2 size={24} className="text-icon-surface-single-color-primary" />
-        </button>
+      <div className="relative flex h-max w-90vw flex-col items-center rounded-sm bg-surface-neutral-surface-lv2 shadow-lg md:w-750px">
+        <div className="flex px-20px py-16px">
+          {/* Info: (20241104 - Julian) Close button */}
+          <button type="button" onClick={modalVisibilityHandler} className="absolute right-4 top-4">
+            <RxCross2 size={24} className="text-icon-surface-single-color-primary" />
+          </button>
 
-        {/* Info: (20241104 - Julian) Modal title */}
-        <h2 className="text-xl font-bold text-card-text-primary">
-          {t('journal:REVERSE_MODAL.MODAL_TITLE')}
-        </h2>
+          {/* Info: (20241104 - Julian) Modal title */}
+          <h2 className="text-xl font-bold text-card-text-primary">
+            {t('journal:REVERSE_MODAL.MODAL_TITLE')}
+          </h2>
+        </div>
 
         {/* Info: (20241104 - Julian) Modal body */}
-        <div className="flex w-full flex-1 flex-col items-center gap-16px px-20px">
+        <div className="flex w-full flex-1 flex-col items-center gap-16px px-lv-4 py-lv-3 tablet:px-20px">
           {/* Info: (20241104 - Julian) Filter */}
           <FilterSection<IReverseItem[]>
             apiName={APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2}
@@ -292,84 +334,79 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           />
 
           {/* Info: (20241104 - Julian) Table */}
-          <div className="flex w-full flex-1 flex-col overflow-hidden rounded-md border border-stroke-neutral-quaternary">
-            <div className="max-h-300px overflow-y-auto">
-              {/* Info: (20241104 - Julian) summary */}
-              <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px font-medium">
-                {/* Info: (20241104 - Julian) Select */}
-                <p className="text-text-neutral-secondary">
-                  ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
-                </p>
-                {/* Info: (20241104 - Julian) Total reverse amount */}
-                <p className="text-text-neutral-secondary">
-                  {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
-                  <span className="text-text-neutral-primary">
-                    {numberWithCommas(totalReverseAmount)}
-                  </span>
-                  {t('common:CURRENCY_ALIAS.TWD')}
-                </p>
-              </div>
-              <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
-                {/* Info: (20241104 - Julian) Table header */}
-                <div className="grid w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary">
-                  {/* Info: (20241104 - Julian) Checkbox */}
-                  <div className="col-start-1 col-end-2">
-                    <input
-                      type="checkbox"
-                      className={checkboxStyle}
-                      checked={isSelectedAll}
-                      onChange={checkAllHandler}
-                      disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
-                    />
-                  </div>
-                  {/* Info: (20241104 - Julian) Voucher No */}
-                  <div className="col-start-2 col-end-4">
-                    {t('journal:REVERSE_MODAL.VOUCHER_NO')}
-                  </div>
-                  {/* Info: (20241104 - Julian) Accounting */}
-                  <div className="col-start-4 col-end-7">
-                    {t('journal:REVERSE_MODAL.ACCOUNTING')}
-                  </div>
-                  {/* Info: (20241104 - Julian) Particulars */}
-                  <div className="col-start-7 col-end-9">
-                    {t('journal:REVERSE_MODAL.PARTICULARS')}
-                  </div>
-                  {/* Info: (20241104 - Julian) Amount */}
-                  <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
-                  {/* Info: (20241104 - Julian) Reverse Amount */}
-                  <div className="col-start-11 col-end-15 text-right">
-                    {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
-                  </div>
+          <div className="flex w-full flex-1 flex-col items-stretch overflow-hidden rounded-md border border-stroke-neutral-quaternary">
+            {/* Info: (20241104 - Julian) summary */}
+            <div className="flex items-center justify-between bg-surface-neutral-main-background px-16px py-8px text-xs font-medium tablet:text-base">
+              {/* Info: (20241104 - Julian) Select */}
+              <p className="hidden text-text-neutral-secondary tablet:block">
+                ({t('journal:REVERSE_MODAL.SELECT')} {selectCount}/{totalItems})
+              </p>
+              {/* Info: (20241104 - Julian) Total reverse amount */}
+              <p className="ml-auto text-text-neutral-secondary">
+                {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
+                <span className="text-text-neutral-primary">
+                  {numberWithCommas(totalReverseAmount)}{' '}
+                </span>
+                {t('common:CURRENCY_ALIAS.TWD')}
+              </p>
+            </div>
+            <div className="flex flex-1 flex-col items-center px-16px py-8px text-sm">
+              {/* Info: (20241104 - Julian) Table header */}
+              <div className="hidden w-full grid-cols-14 gap-8px border-b border-divider-stroke-lv-4 pb-4px text-text-neutral-tertiary tablet:grid">
+                {/* Info: (20241104 - Julian) Checkbox */}
+                <div className="col-start-1 col-end-2">
+                  <input
+                    type="checkbox"
+                    className={checkboxStyle}
+                    checked={isSelectedAll}
+                    onChange={checkAllHandler}
+                    disabled={totalItems === 0} // Info: (20241212 - Julian) 無 reverse item 時，全選無效
+                  />
                 </div>
+                {/* Info: (20241104 - Julian) Voucher No */}
+                <div className="col-start-2 col-end-4">{t('journal:REVERSE_MODAL.VOUCHER_NO')}</div>
+                {/* Info: (20241104 - Julian) Accounting */}
+                <div className="col-start-4 col-end-7">{t('journal:REVERSE_MODAL.ACCOUNTING')}</div>
+                {/* Info: (20241104 - Julian) Particulars */}
+                <div className="col-start-7 col-end-9">
+                  {t('journal:REVERSE_MODAL.PARTICULARS')}
+                </div>
+                {/* Info: (20241104 - Julian) Amount */}
+                <div className="col-start-9 col-end-11">{t('journal:REVERSE_MODAL.AMOUNT')}</div>
+                {/* Info: (20241104 - Julian) Reverse Amount */}
+                <div className="col-start-11 col-end-15 text-right">
+                  {t('journal:REVERSE_MODAL.REVERSE_AMOUNT')}
+                </div>
+              </div>
 
-                {/* Info: (20241104 - Julian) Table body */}
-                <div className="grid w-full grid-cols-14 items-center gap-x-8px gap-y-4px overflow-y-auto py-4px text-text-neutral-primary">
+              {/* Info: (20241104 - Julian) Table body */}
+              <div className="h-250px w-full overflow-y-auto">
+                <div className="grid w-full grid-cols-1 flex-col items-center gap-x-8px gap-y-4px py-4px text-text-neutral-primary tablet:grid-cols-14">
                   {reverseList}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Info: (20241104 - Julian) Confirm Button */}
-          <div className="ml-auto flex items-center gap-12px">
-            <Button
-              type="button"
-              variant="tertiaryOutline"
-              className="px-16px py-8px"
-              onClick={modalVisibilityHandler}
-            >
-              {t('common:COMMON.CANCEL')}
-            </Button>
-            <Button
-              type="button"
-              variant="tertiary"
-              className="px-16px py-8px"
-              disabled={confirmDisabled}
-              onClick={confirmHandler}
-            >
-              {t('common:COMMON.CONFIRM')}
-            </Button>
-          </div>
+        </div>
+        {/* Info: (20241104 - Julian) Confirm Button */}
+        <div className="flex w-full items-center gap-12px px-lv-4 py-16px tablet:justify-end">
+          <Button
+            type="button"
+            variant="tertiaryOutline"
+            className="w-full px-16px py-8px tablet:w-auto"
+            onClick={modalVisibilityHandler}
+          >
+            {t('common:COMMON.CANCEL')}
+          </Button>
+          <Button
+            type="button"
+            variant="tertiary"
+            className="w-full px-16px py-8px tablet:w-auto"
+            disabled={confirmDisabled}
+            onClick={confirmHandler}
+          >
+            {t('common:COMMON.CONFIRM')}
+          </Button>
         </div>
       </div>
     </div>

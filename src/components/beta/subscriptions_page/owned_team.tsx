@@ -15,7 +15,6 @@ interface OwnedTeamProps {
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForCancelSubscription?: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  isBillingButtonHidden?: boolean;
 }
 
 const OwnedTeam = ({
@@ -23,19 +22,27 @@ const OwnedTeam = ({
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
   setTeamForCancelSubscription,
-  isBillingButtonHidden = false,
 }: OwnedTeamProps) => {
   const { t } = useTranslation(['subscriptions']);
+  const { id, plan, name, paymentStatus, enableAutoRenewal, expiredTimestamp } = team;
 
-  const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}`;
-  const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/billing`;
-  const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${team.id}/payment`;
+  const nowTimestamp = Date.now() / 1000;
 
-  const isPlanBeginner = team.plan === TPlanType.BEGINNER;
-  const teamUsingPlan = PLANS.find((plan) => plan.id === team.plan);
+  const TEAM_SUBSCRIPTION_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}`;
+  const BILLING_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}/billing`;
+  const PAYMENT_PAGE = `${ISUNFA_ROUTE.SUBSCRIPTIONS}/${id}/payment`;
 
-  // Info: (20250422 - Julian) 是否為試用期
-  const isTrial = team.paymentStatus === TPaymentStatus.TRIAL;
+  // Info: (20250526 - Julian) 「plan 為 Beginner」或「已過期」
+  const isPlanBeginner = plan === TPlanType.BEGINNER || expiredTimestamp < nowTimestamp;
+  const teamUsingPlan = PLANS.find((item) => item.id === plan);
+
+  // Info: (20250526 - Julian) 「paymentStatus 為 Trial」且「還沒過期」
+  const isTrial = paymentStatus === TPaymentStatus.TRIAL && expiredTimestamp > nowTimestamp;
+
+  // Info: (20250526 - Julian) 免費版名稱固定
+  const planName = isPlanBeginner
+    ? t('subscriptions:PLAN_NAME.BEGINNER')
+    : t(`subscriptions:PLAN_NAME.${plan.toUpperCase()}`);
 
   const formatPrice = teamUsingPlan
     ? `$ ${teamUsingPlan.price.toLocaleString('zh-TW')} / ${t('subscriptions:SUBSCRIPTION_PLAN_CONTENT.MONTH')}`
@@ -46,9 +53,6 @@ const OwnedTeam = ({
       ? `(${t('subscriptions:SUBSCRIPTIONS_PAGE.FREE_TRIAL')})`
       : formatPrice;
 
-  // Info: (20250422 - Julian) 是否開啟自動續訂
-  const isAutoRenewalEnabled = team.enableAutoRenewal;
-
   const openTurnOnAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(team);
   };
@@ -58,17 +62,15 @@ const OwnedTeam = ({
   };
 
   // Info: (20250110 - Liz) 付款失敗三天後會自動降級到 Beginner 方案
-  const remainingDays = getRemainingDays(team.expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
+  const remainingDays = getRemainingDays(expiredTimestamp * 1000 + THREE_DAYS_IN_MS);
   // Info: (20250422 - Julian) 計算試用期剩餘天數
-  // const trialRemainingDays = getRemainingDays(team.nextRenewalTimestamp * 1000);
+  // const trialRemainingDays = getRemainingDays(nextRenewalTimestamp * 1000);
 
   // Info: (20250110 - Liz) 檢查是否即將降級
   const isReturningToBeginnerSoon = remainingDays > 0 && remainingDays <= 3;
 
   // Info: (20250422 - Julian) 檢查是否顯示到期日等資訊
   const isShowExpiredDate = !isPlanBeginner && !isTrial;
-  // Info: (20250422 - Julian) 檢查是否顯示「帳單」按鈕
-  const isShowBillingButton = !isPlanBeginner && !isBillingButtonHidden && !isTrial;
 
   const changePlanBtn = (
     // ToDo: (20250425 - Julian) 暫時不會用到
@@ -88,48 +90,48 @@ const OwnedTeam = ({
   );
 
   return (
-    <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
-      <div className="w-24px flex-none bg-surface-brand-primary"></div>
+    <main className="flex flex-col overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2 tablet:flex-row">
+      <div className="hidden w-24px flex-none bg-surface-brand-primary tablet:block"></div>
+      <div className="block h-24px flex-none bg-surface-brand-primary tablet:hidden"></div>
 
-      <section className="flex flex-auto gap-40px bg-surface-brand-primary-5 p-24px">
+      <section className="flex flex-auto flex-col gap-40px bg-surface-brand-primary-5 p-24px tablet:flex-row">
         <div className="flex flex-col gap-12px">
-          <h2 className="text-xl font-semibold text-text-brand-secondary-lv1">{team.name}</h2>
-          <h1 className="w-200px text-36px font-bold text-text-brand-primary-lv1">
-            {t(`subscriptions:PLAN_NAME.${team.plan.toUpperCase()}`)}
+          <h2 className="text-base font-semibold text-text-brand-secondary-lv1 tablet:text-xl">
+            {name}
+          </h2>
+          <h1 className="w-200px text-28px font-bold text-text-brand-primary-lv1 tablet:text-36px">
+            {planName}
           </h1>
-          <p className="text-lg font-medium text-text-neutral-tertiary">{price}</p>
+          <p className="text-sm font-medium text-text-neutral-tertiary tablet:text-lg">{price}</p>
         </div>
 
-        <div className="w-1px bg-surface-neutral-depth"></div>
+        <div className="hidden w-1px bg-surface-neutral-depth tablet:block"></div>
+        <div className="block h-1px bg-surface-neutral-depth tablet:hidden"></div>
 
         {/* Info: (20250421 - Julian) 下次續訂/到期日 */}
         {isShowExpiredDate ? (
           <section className="flex flex-auto flex-col justify-center gap-24px">
             <div>
               {/* Info: (20250421 - Julian) 已付款 */}
-              {team.paymentStatus === TPaymentStatus.PAID &&
-                (team.enableAutoRenewal ? (
-                  <div className="text-2xl font-semibold text-text-neutral-tertiary">
+              {paymentStatus === TPaymentStatus.PAID &&
+                (enableAutoRenewal ? (
+                  <div className="text-lg font-semibold text-text-neutral-tertiary tablet:text-2xl">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.NEXT_RENEWAL')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp
-                        ? timestampToString(team.expiredTimestamp).dateWithSlash
-                        : ''}
+                      {expiredTimestamp ? timestampToString(expiredTimestamp).dateWithSlash : ''}
                     </span>
                   </div>
                 ) : (
                   <div className="text-2xl font-semibold text-text-neutral-tertiary">
                     {`${t('subscriptions:SUBSCRIPTIONS_PAGE.EXPIRED_DATE')}: `}
                     <span className="text-text-neutral-primary">
-                      {team.expiredTimestamp
-                        ? timestampToString(team.expiredTimestamp).dateWithSlash
-                        : ''}
+                      {expiredTimestamp ? timestampToString(expiredTimestamp).dateWithSlash : ''}
                     </span>
                   </div>
                 ))}
 
               {/* Info: (20250421 - Julian) 付款失敗 */}
-              {team.paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
+              {paymentStatus === TPaymentStatus.PAYMENT_FAILED && (
                 <div>
                   <div className="flex items-center gap-8px">
                     <p className="text-2xl font-semibold text-text-state-error">
@@ -171,9 +173,9 @@ const OwnedTeam = ({
                 </span>
 
                 <SimpleToggle
-                  isOn={isAutoRenewalEnabled}
+                  isOn={enableAutoRenewal}
                   onClick={
-                    isAutoRenewalEnabled ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
+                    enableAutoRenewal ? openTurnOffAutoRenewalModal : openTurnOnAutoRenewalModal
                   }
                 />
               </div>
@@ -183,17 +185,15 @@ const OwnedTeam = ({
           <section className="flex-auto"></section>
         )}
 
-        <section className="flex flex-none flex-col justify-center gap-16px">
+        <div className="flex flex-none flex-col justify-center gap-16px">
           {changePlanBtn}
 
-          {isShowBillingButton && (
-            <Link href={BILLING_PAGE}>
-              <Button type="button" className="w-full">
-                {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
-              </Button>
-            </Link>
-          )}
-        </section>
+          <Link href={BILLING_PAGE}>
+            <Button type="button" className="w-full" variant="hollowYellow">
+              {t('subscriptions:SUBSCRIPTIONS_PAGE.BILLING')}
+            </Button>
+          </Link>
+        </div>
       </section>
     </main>
   );

@@ -219,7 +219,6 @@ export async function createInvoice(
       formattedInvoice.payment.price * (formattedInvoice.payment.taxPercentage / 100),
     taxType: 'taxable',
     deductible: true,
-    // counterParty: { connect: { id: 555 } },
     taxRatio: formattedInvoice.payment.taxPercentage,
     taxPrice: formattedInvoice.payment.price * (formattedInvoice.payment.taxPercentage / 100),
     totalPrice: formattedInvoice.payment.price,

@@ -11,6 +11,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import loggerFront from '@/lib/utils/logger_front';
 
 const InvoicePage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -46,9 +47,7 @@ const InvoicePage = () => {
           setTeam(teamData);
         }
       } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得團隊資料失敗');
+        loggerFront.error('取得團隊資料失敗');
       } finally {
         setIsLoading(false);
       }
@@ -64,17 +63,13 @@ const InvoicePage = () => {
           params: { teamId: teamIdString, invoiceId: invoiceIdString },
         });
 
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('invoiceData:', invoiceData);
+        loggerFront.log('invoiceData:', invoiceData);
 
         if (success && invoiceData) {
           setInvoice(invoiceData);
         }
       } catch (error) {
-        // Deprecated: (20250117 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得發票資料失敗');
+        loggerFront.error('取得發票資料失敗');
       } finally {
         setIsLoading(false);
       }

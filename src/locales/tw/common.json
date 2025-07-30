@@ -51,15 +51,16 @@
     "PARTNER_S_NAME": "交易夥伴名稱",
     "TAX_ID": "統一編號",
     "SUBMIT": "送出",
-    "BACK": "返回"
+    "BACK": "返回",
+    "FILTER": "篩選"
   },
   "LOADING_MODAL": {
     "LOADING": "正在載入中，請稍等..."
   },
   "UPLOAD_AREA": {
-    "DROP_YOUR_FILES_HERE_OR": "將您的文件拖放到此處或",
+    "DROP_YOUR_FILES_HERE_OR": "將發票、電子發票媒體文件拖放到此處或",
     "BROWSE": "瀏覽",
-    "MAXIMUM_SIZE": "最大檔案大小：4MB"
+    "MAXIMUM_SIZE": "jpeg、gif、png、tiff、bmp、pdf、txt（檔案大小：< 4 MB）"
   },
   "CURRENCY_ALIAS": {
     "TWD": "新臺幣",

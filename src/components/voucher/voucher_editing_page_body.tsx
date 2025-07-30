@@ -46,6 +46,7 @@ import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import { TbArrowBackUp } from 'react-icons/tb';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
@@ -246,6 +247,8 @@ const VoucherEditingPageBody: React.FC<{
     (acc, item) => (item.debit === true ? acc + item.amount : acc),
     0
   );
+
+  const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
 
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
@@ -500,6 +503,7 @@ const VoucherEditingPageBody: React.FC<{
   useHotkeys('tab', handleTabPress);
 
   const dateRef = useRef<HTMLDivElement>(null);
+  const counterpartyRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
@@ -787,22 +791,24 @@ const VoucherEditingPageBody: React.FC<{
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
+      const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        [newCertificate.id]: {
+          ...newCertificate,
+          isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
+          actions: !newCertificate.voucherNo
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        },
+      };
+
       setCertificates((prev) => {
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
-          [newCertificate.id]: {
-            ...newCertificate,
-            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
-            actions: !newCertificate.voucherNo
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-          },
-        };
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
             ...certificate,
+            isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
         return newCertificatesUI;
@@ -836,6 +842,16 @@ const VoucherEditingPageBody: React.FC<{
 
   return (
     <div className="relative flex flex-col items-center gap-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex w-full items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('journal:EDIT_VOUCHER.PAGE_TITLE')}
+        </p>
+      </div>
+
       <CertificateSelectorModal
         accountBookId={accountBookId}
         isOpen={openSelectorModal}
@@ -873,7 +889,11 @@ const VoucherEditingPageBody: React.FC<{
       />
 
       {/* Info: (20240926 - Julian) form */}
-      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+      <form
+        ref={formRef}
+        onSubmit={submitForm}
+        className="grid w-full grid-cols-1 gap-lv-5 tablet:grid-cols-2 tablet:gap-24px"
+      >
         {/* Info: (20240926 - Julian) Date */}
         <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
@@ -916,7 +936,7 @@ const VoucherEditingPageBody: React.FC<{
         </div>
 
         {/* Info: (20240926 - Julian) Note */}
-        <div className="col-span-2 flex flex-col gap-8px">
+        <div className="flex flex-col gap-8px tablet:col-span-2">
           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
           <input
             id="voucher-note"
@@ -929,16 +949,17 @@ const VoucherEditingPageBody: React.FC<{
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <CounterpartyInput
-            counterparty={counterparty}
-            onSelect={handleCounterpartySelect}
-            className="col-span-2"
-            flagOfSubmit={flagOfSubmit}
-          />
+          <div ref={counterpartyRef} className="tablet:col-span-2">
+            <CounterpartyInput
+              counterparty={counterparty}
+              onSelect={handleCounterpartySelect}
+              isShowRedHint={isCounterpartyRequired && !counterparty}
+            />
+          </div>
         )}
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
-          <div ref={assetRef} className="col-span-2 flex flex-col">
+          <div ref={assetRef} className="flex flex-col tablet:col-span-2">
             <AssetSection
               isShowAssetHint={isShowAssetHint}
               lineItems={lineItems}
@@ -960,7 +981,7 @@ const VoucherEditingPageBody: React.FC<{
                 {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
               </p>
             ) : null}
-            <div ref={voucherLineRef} className="col-span-2">
+            <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
               <VoucherLineBlock
                 lineItems={lineItems}
                 setLineItems={setLineItems}
@@ -979,12 +1000,13 @@ const VoucherEditingPageBody: React.FC<{
           </>
         )}
         {/* Info: (20240926 - Julian) buttons */}
-        <div className="col-span-2 ml-auto flex items-center gap-12px">
+        <div className="flex items-center justify-end gap-12px tablet:col-span-2">
           <Button
             id="voucher-clear-button"
             type="button"
             variant="secondaryOutline"
             onClick={clearClickHandler}
+            className="w-full tablet:w-auto"
           >
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
@@ -995,6 +1017,7 @@ const VoucherEditingPageBody: React.FC<{
               if (e.key === KEYBOARD_EVENT_CODE.ENTER) e.preventDefault();
             }}
             disabled={isUpdating || isDeleting || isCreating} // Info: (20241119 - Julian) 防止重複送出
+            className="w-full tablet:w-auto"
           >
             <p>{t('common:COMMON.SAVE')}</p>
             <BiSave size={20} />

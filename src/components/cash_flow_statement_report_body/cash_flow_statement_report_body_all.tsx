@@ -1,4 +1,5 @@
 import { APIName } from '@/constants/api_connection';
+import { useUserCtx } from '@/contexts/user_context';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import APIHandler from '@/lib/utils/api_handler';
 import React, { useEffect, useState } from 'react';
@@ -20,6 +21,7 @@ interface ICashFlowStatementReportBodyAllProps {
 
 const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBodyAllProps) => {
   const { t } = useTranslation(['reports']);
+  const { connectedAccountBook } = useUserCtx();
 
   const [financialReport, setFinancialReport] = useState<CashFlowStatementReport | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -41,33 +43,26 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           code: getFRCode,
           success: getFRSuccess,
         } = await getFinancialReportAPI({
-          params: { companyId: 1, reportId: reportId ?? NON_EXISTING_REPORT_ID },
+          params: {
+            companyId: 1,
+            reportId: reportId ?? NON_EXISTING_REPORT_ID,
+            accountBookId: connectedAccountBook?.id,
+          },
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
         setFinancialReport(reportFinancial);
         setIsGetFinancialReportSuccess(getFRSuccess);
         setErrorCode(getFRCode);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
-      } catch (error) {
-        // console.log('error:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in CashFlowStatementReportBodyAll');
   }, [reportId]);
 
   const [curDate, setCurDate] = useStateRef<{ from: string; to: string }>({ from: '', to: '' });
@@ -420,7 +415,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
           <div className="flex items-center">
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
           </div>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page1Table}
       </section>
@@ -444,7 +442,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page2Table}
         <div className="relative -z-10">
@@ -487,7 +488,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page3Table}
 
@@ -521,7 +525,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page4Table}
 
@@ -555,7 +562,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page5Table}
 
@@ -589,7 +599,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page6Table}
 
@@ -623,7 +636,10 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="mb-1 mt-8 flex justify-between text-xs font-semibold text-surface-brand-secondary">
           <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-          <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+          <p>
+            {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {financialReport.company.accountingSetting?.currency}
+          </p>
         </div>
         {page7Table}
 

@@ -10,6 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { INews } from '@/interfaces/news';
 import { NewsType } from '@/constants/news';
+import loggerFront from '@/lib/utils/logger_front';
 
 const LatestNews = () => {
   const { t } = useTranslation('dashboard');
@@ -31,19 +32,12 @@ const LatestNews = () => {
 
         if (success && data) {
           setNewsList(data);
-
-          // Deprecated: (20241126 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getNewsListAPI success:', 'data:', data);
+          loggerFront.log('getNewsListAPI success:', 'data:', data);
         } else {
-          // Deprecated: (20241126 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getNewsListAPI failed:', code);
+          loggerFront.log('getNewsListAPI failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241126 - Liz)
-        // eslint-disable-next-line no-console
-        console.log(error);
+        loggerFront.error(error);
       }
     };
 

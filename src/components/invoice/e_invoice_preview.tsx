@@ -53,6 +53,8 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
     return (
       <div ref={ref} className={`relative h-600px w-400px shrink-0 bg-neutral-50 ${className}`}>
         {/* Info: (20250430 - Anna) e-invoice header */}
+        {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉，使用 <img> 而不是 <Image> */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/e_invoice_header.png" alt="e_invoice_header" width={400} height={136} />
         <p className="absolute left-0 right-0 top-8 flex justify-center text-xl font-bold leading-8 text-neutral-600">
           {t('certificate:EDIT.ELECTRONIC_INVOICE_INFO')}
@@ -112,6 +114,8 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
         </div>
         {/* Info: (20250430 - Anna) e-invoice bottom */}
         <div className="absolute bottom-0 left-0 right-0">
+          {/* Info: (20250622 - Anna) 為了正確被 html2canvas 捕捉，使用 <img> 而不是 <Image> */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/e_invoice_bottom.png" alt="e_invoice_bottom" width={400} height={85} />
           <div className="absolute inset-0 flex items-end justify-between px-10 pb-6 text-neutral-25">
             <p className="text-xl font-medium leading-8"> {t('certificate:EDIT.LUMP_SUM')}：</p>

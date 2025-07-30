@@ -298,6 +298,7 @@ export const certificateAPIPostUtils = {
   ): Promise<Blob> => {
     const { companyId } = options;
     const filePath = parseFilePathWithBaseUrlPlaceholder(file.url);
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 憑證)
     const fileBuffer = await readFile(filePath);
     const decryptFileBuffer = await decryptImageFile({
       imageBuffer: fileBuffer,

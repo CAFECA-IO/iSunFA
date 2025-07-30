@@ -1,0 +1,143 @@
+{
+  "PAGE": {
+    "MAIN_TITLE": "薪資計算機"
+  },
+  "NAVBAR": {
+    "CALCULATOR": "計算機",
+    "PAY_SLIP": "我的薪資單",
+    "EMPLOYEE_LIST": "員工列表",
+    "LOGIN": "登入",
+    "LOGOUT": "登出"
+  },
+  "TABS": {
+    "COMPLETED": "已完成",
+    "BASIC_INFO": "基本資料",
+    "BASE_PAY": " 基本薪資",
+    "WORK_HOURS": "工作時數",
+    "OTHERS": "其他項目"
+  },
+  "BASIC_INFO_FORM": {
+    "EMPLOYEE_NAME": "員工姓名",
+    "EMPLOYEE_NAME_PLACEHOLDER": "請輸入員工姓名",
+    "EMPLOYEE_NUMBER": "員工編號",
+    "EMPLOYEE_NUMBER_PLACEHOLDER": "請輸入員工編號",
+    "YEAR": "年度",
+    "MONTH": "月份",
+    "DAYS_WORKED": "在職天數"
+  },
+  "BASE_PAY_FORM": {
+    "BASE_SALARY": "本薪（應稅）",
+    "MEAL_ALLOWANCE": "伙食費（免稅）",
+    "OTHER_ALLOWANCE_WITH_TAX": "其他加給（應稅）",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "其他加給（免稅）",
+    "ADDITIONAL_INFORMATION": "差旅費、傷病、喪葬、退休金、社會保險福利或政府補助"
+  },
+  "WORK_HOURS_FORM": {
+    "OVERTIME_HOUR_WITHOUT_TAX": "加班時數（免稅）",
+    "OVERTIME_HOUR_WITH_TAX": "加班時數（應稅）",
+    "LEAVE_HOUR": "請假時數",
+    "SICK_MENSTRUAL_LEAVE": "病假/生理假",
+    "PERSONAL_LEAVE": "事假",
+    "TOTAL_LEAVE_HOUR": "總請假時數"
+  },
+  "OTHERS_FORM": {
+    "NHI_BACK_PREMIUM": "健保加保費用",
+    "INCOME_TAX_SECOND_GEN_NHI_TAX": "代扣所得稅／二代健保費",
+    "OTHER_ADJUSTMENTS": "其他溢扣／補收",
+    "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
+  },
+  "EMPLOYEE_LIST": {
+    "MAIN_TITLE": "員工列表",
+    "NAME": "員工姓名",
+    "NUMBER": "員工編號",
+    "EMAIL": "電子郵件",
+    "ACTION": "操作",
+    "SEARCH_PLACEHOLDER": "搜尋員工",
+    "ADD_EMPLOYEE": "新增員工",
+    "EDIT_EMPLOYEE": "編輯員工",
+    "NAME_PLACEHOLDER": "請輸入員工姓名",
+    "NUMBER_PLACEHOLDER": "請輸入員工編號",
+    "EMAIL_PLACEHOLDER": "請輸入員工電子郵件",
+    "EMAIL_VALID": "請輸入有效的電子郵件地址",
+    "NO_DATA": "無員工資料",
+    "ADD_SUCCESS_TOAST": "員工已新增",
+    "EDIT_SUCCESS_TOAST": "員工資料已更新"
+  },
+  "RESULT": {
+    "BASE_SALARY_WITH_TAX": "本薪（應稅）",
+    "OVERTIME_PAY_WITH_TAX": "加班費（應稅）",
+    "OTHER_ALLOWANCE_WITH_TAX": "其他加給（應稅）",
+    "TOTAL_SALARY_WITH_TAX": "總應稅薪資",
+    "MEAL_ALLOWANCE_WITHOUT_TAX": "伙食費（免稅）",
+    "OVERTIME_PAY_WITHOUT_TAX": "加班費（免稅）",
+    "OTHER_ALLOWANCE_WITHOUT_TAX": "其他津貼（免稅）",
+    "TOTAL_SALARY_WITHOUT_TAX": "總免稅薪資",
+    "TOTAL_MONTHLY_SALARY": "月薪資合計",
+    "EMPLOYEE_PAID_LABOR_INSURANCE": "自行負擔勞保費",
+    "EMPLOYEE_PAID_HEALTH_INSURANCE": "自行負擔健保費",
+    "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退",
+    "WITHHELD_INCOME_TAX": "代扣所得稅款",
+    "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "代扣二代健保",
+    "SALARY_DEDUCTION_FOR_LEAVE": "請假扣薪",
+    "TOTAL_EMPLOYEE_CONTRIBUTION": "員工負擔總計",
+    "HEALTH_INSURANCE_SALARY_BRACKET": "健保投保級距",
+    "LABOR_INSURANCE_SALARY_BRACKET": "勞保投保級距",
+    "EMPLOYMENT_INSURANCE_SALARY_BRACKET": "就業保險級距",
+    "OCCUPATIONAL_INJURY_INSURANCE_SALARY_BRACKET": "職災保險級距",
+    "LABOR_PENSION_SALARY_BRACKET": "勞退級距",
+    "OCCUPATIONAL_INJURY_INDUSTRY_RATE": "職災行業別費率",
+    "INSURED_SALARY": "投保薪資",
+    "EMPLOYER_CONTRIBUTIONS": "公司負擔勞健退",
+    "EMPLOYER_PAID_LABOR_INSURANCE": "公司負擔勞保費",
+    "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
+    "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
+    "TOTAL_EMPLOYER_COST": "雇主總負擔"
+  },
+  "LOGIN_MODAL": {
+    "TITLE": "請先登入",
+    "CONTENT": "請先登入以使用這項功能。",
+    "SUBMIT": "前往登入頁面"
+  },
+  "RESET_MODAL": {
+    "TITLE": "重置計算機",
+    "CONTENT": "您確定要重置計算機嗎？這將清除所有輸入的數據。",
+    "SUBMIT": "是的，全部重置"
+  },
+  "SENDING_PAY_SLIP_MODAL": {
+    "TITLE": "寄出薪資單",
+    "CONTENT_1": "您確定要寄送",
+    "CONTENT_BOLD_1": " {{month}} 的薪資單",
+    "CONTENT_2": "給",
+    "CONTENT_BOLD_2": " {{employeeName}} 嗎？",
+    "EMAIL": "電子郵件",
+    "EMAIL_PLACEHOLDER": "請輸入員工的電子郵件",
+    "INVALID_EMAIL_HINT": "電子郵件格式錯誤，請再檢查一遍。",
+    "SUBMIT": "寄送薪資單"
+  },
+  "MY_PAY_SLIP": {
+    "MAIN_TITLE": "我的薪資單",
+    "TAB_RECEIVED": "我收到的薪資單",
+    "TAB_SENT": "我寄出的薪資單",
+    "SEARCH_PLACEHOLDER": "搜尋薪資單",
+    "PAY_PERIOD": "給付期間",
+    "FROM": "寄件人",
+    "TO": "收件人",
+    "NET_PAY": "淨薪資",
+    "PAYSLIP_ISSUED_DATE": "薪資單發行日期",
+    "ACTION": "操作"
+  },
+  "BUTTON": {
+    "DOWNLOAD": "下載為 PNG",
+    "SEND": "寄出薪資單",
+    "RESET": "重置"
+  },
+  "MESSAGE": {
+    "NAME_ERROR_TITLE": "員工姓名未填寫",
+    "NAME_ERROR_CONTENT": "請在前往下一步之前輸入員工姓名",
+    "SALARY_ERROR_TITLE": "本薪未填寫",
+    "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。",
+    "REMOVE_EMPLOYEE_TITLE": "移除員工",
+    "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。"
+  }
+}

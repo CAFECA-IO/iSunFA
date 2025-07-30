@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FaArrowRight, FaAngleDoubleDown } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa6';
 import { IoMailOutline } from 'react-icons/io5';
 import { PiSpinner } from 'react-icons/pi';
 import { RxCross2 } from 'react-icons/rx';
@@ -30,6 +32,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { ToastType } from '@/interfaces/toastify';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ICreateTeamModalProps {
   modalVisibilityHandler: () => void;
@@ -65,7 +68,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
     currentStep === 3 ? 'text-stepper-text-active' : 'text-stepper-text-default';
 
   return (
-    <div className="relative mx-auto flex w-320px items-center justify-between -space-x-10">
+    <div className="relative mx-auto flex items-center justify-between -space-x-10 tablet:w-320px">
       {/* Info: (20250218 - Julian) Step 1 */}
       <div className="z-10 flex w-75px flex-col items-center">
         <Image src={step1src} width={30} height={30} alt="create_team_step_1" />
@@ -75,7 +78,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
       </div>
 
       {/* Info: (20250218 - Julian) Line 1 */}
-      <div className={`z-0 h-4px w-120px -translate-y-8px ${line1Color}`}></div>
+      <div className={`z-0 h-4px w-100px -translate-y-8px tablet:w-120px ${line1Color}`}></div>
 
       {/* Info: (20250218 - Julian) Step 2 */}
       <div className="z-10 flex w-75px flex-col items-center">
@@ -86,7 +89,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
       </div>
 
       {/* Info: (20250218 - Julian) Line 2 */}
-      <div className={`z-0 h-4px w-120px -translate-y-8px ${line2Color}`}></div>
+      <div className={`z-0 h-4px w-100px -translate-y-8px tablet:w-120px ${line2Color}`}></div>
 
       {/* Info: (20250218 - Julian) Step 3 */}
       <div className="z-10 flex w-75px flex-col items-center">
@@ -101,6 +104,7 @@ const CreateTeamStepper: React.FC<{ currentStep: number }> = ({ currentStep }) =
 
 const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandler }) => {
   const { t } = useTranslation(['team', 'common']);
+  const router = useRouter();
   const { toastHandler } = useModalContext();
   const { userAuth, paymentMethod } = useUserCtx();
 
@@ -130,7 +134,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const { trigger: createTeam } = APIHandler<ITeam>(APIName.CREATE_TEAM);
 
   // Info: (20250226 - Julian) 邀請成員 API
-  const { trigger: inviteMember } = APIHandler(APIName.ADD_MEMBER_TO_TEAM);
+  const { trigger: inviteMember } = APIHandler(APIName.INVITE_MEMBER_TO_TEAM);
 
   // Info: (20250224 - Julian) 開啟自動續約、關閉自動續約 API
   const { trigger: updateSubscriptionAPI } = APIHandler<IUserOwnedTeam>(
@@ -251,8 +255,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   // deprecated: (20250326 - Julian) for testing
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const printResult = () => {
-    // eslint-disable-next-line no-console
-    console.log('createTeamBody:', {
+    loggerFront.log('createTeamBody:', {
       name: teamNameInput,
       members: teamMembers,
       planType: selectedPlan,
@@ -311,28 +314,33 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             toastHandler({
               id: 'subscribe-fail',
               type: ToastType.ERROR,
-              content: `Subscribe failed: ${subscriptionError?.message}`,
+              content: t('team:CREATE_TEAM_MODAL.TOAST_SUBSCRIBE_FAILED', {
+                error: subscriptionError?.message,
+              }),
               closeable: true,
             });
           }
         }
 
-        // Info: (20250326 - Julian) 全部步驟完成：顯示成功訊息，5 秒後跳轉到團隊頁面
+        // Info: (20250326 - Julian) 全部步驟完成：顯示成功訊息，2 秒後跳轉到團隊頁面，關閉 Modal
         toastHandler({
           id: 'create-team-success',
           type: ToastType.SUCCESS,
-          content: 'Create team success',
+          content: t('team:CREATE_TEAM_MODAL.TOAST_CREATE_SUCCESS'),
           closeable: true,
         });
         setTimeout(() => {
-          window.open(`${ISUNFA_ROUTE.TEAM_PAGE}/${data.id}`, '_self');
-        }, 5000);
+          router.push(`${ISUNFA_ROUTE.TEAM_PAGE}/${data.id}`);
+          modalVisibilityHandler();
+        }, 2000);
       } else {
         // Info: (20250326 - Julian) 建立失敗：顯示錯誤訊息
         toastHandler({
           id: 'create-team-fail',
           type: ToastType.ERROR,
-          content: `Create team failed: ${error?.message}`,
+          content: t('team:CREATE_TEAM_MODAL.TOAST_CREATE_FAILED', {
+            error: error?.message,
+          }),
           closeable: true,
         });
       }
@@ -382,6 +390,15 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     }
   };
 
+  // Info: (20250613 - Julian) Plus Button 點擊事件
+  const plusBtnClick = () => {
+    if (isValidEmail && teamMemberInput !== '') {
+      setTeamMembers([...teamMembers, teamMemberInput]);
+      setTeamMemberInput('');
+      emailInputRef.current?.focus();
+    }
+  };
+
   // Info: (20250224 - Julian) 將填寫的 Email 加入清單、清空 input、focus 到 input
   const emailKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === KEYBOARD_EVENT_CODE.ENTER && isValidEmail && teamMemberInput !== '') {
@@ -419,7 +436,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250224 - Julian) 訂閱方案
   const subscriptionOverview = (
-    <div className="flex justify-center gap-lv-7">
+    <div className="flex w-max justify-center gap-lv-7">
       {listPaymentPlan.length > 0 ? (
         listPaymentPlan.map((plan) => {
           const selectPlan = () => setSelectedPlan(plan);
@@ -444,7 +461,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
 
   // Info: (20250224 - Julian) 付款
   const paymentOverview = (
-    <div className="flex min-h-600px w-900px gap-40px">
+    <div className="flex min-h-600px w-300px flex-col gap-40px tablet:w-900px tablet:flex-row">
       <PlanInfo team={teamInfo} plan={selectedPlan} />
 
       <section className="flex flex-auto flex-col gap-24px">
@@ -455,7 +472,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           plan={selectedPlan}
           setTeamForAutoRenewalOn={setTeamForAutoRenewalOn}
           setTeamForAutoRenewalOff={setTeamForAutoRenewalOff}
-          setIsDirty={() => {}} // Info: (20250303 - Julian) 不需要使用
+          // setIsDirty={() => {}} // Info: (20250303 - Julian) 不需要使用
           isHideSubscribeButton // Info: (20250326 - Julian) 不需要顯示訂閱按鈕
         />
       </section>
@@ -501,10 +518,19 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
             ref={emailInputRef}
             value={teamMemberInput}
             onChange={(e) => setTeamMemberInput(e.target.value)}
-            className="w-full bg-transparent outline-none"
+            className="flex-1 bg-transparent outline-none"
             onKeyDown={emailKeyDown}
             onBlur={emailBlur}
+            placeholder={t('team:CREATE_TEAM_MODAL.MEMBER_EMAIL_PLACEHOLDER')}
           />
+          {/* Info: (20250613 - Julian) Plus Button */}
+          <button
+            type="button"
+            onClick={plusBtnClick}
+            className="text-icon-surface-single-color-primary"
+          >
+            <FaPlus size={16} />
+          </button>
         </div>
       </div>
       <p className={`text-red-600 ${isValidEmail ? 'opacity-0' : 'opacity-100'}`}>
@@ -538,9 +564,11 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
     ) : (
       <>
         {/* Info: (20250218 - Julian) Step 3 body */}
-        {step3Body}
+        <div className="min-h-max w-min max-w-300px overflow-x-auto pt-lv-5 tablet:max-w-90vw">
+          {step3Body}
+        </div>
 
-        <ul className="ml-20px list-outside list-disc font-normal text-text-neutral-primary marker:text-surface-support-strong-maple">
+        <ul className="ml-20px list-outside list-disc text-sm font-normal text-text-neutral-primary marker:text-surface-support-strong-maple tablet:text-base">
           <li>{t('team:CREATE_TEAM_MODAL.PLAN_HINT')}</li>
         </ul>
       </>
@@ -549,68 +577,75 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
       <div
-        className={`flex flex-col items-stretch gap-lv-5 rounded-md bg-surface-neutral-surface-lv1 p-lv-7 ${
-          currentStep === 3 ? 'w-min' : 'w-500px'
+        className={`flex flex-col items-stretch rounded-md bg-surface-neutral-surface-lv1 p-0 tablet:gap-lv-5 tablet:p-lv-7 ${
+          currentStep === 3 ? 'w-min' : 'w-90vw tablet:w-500px'
         }`}
       >
         {/* Info: (20250217 - Julian) Title */}
-        <div className="relative flex items-start justify-center">
+        <div className="relative flex items-start justify-center px-20px py-16px tablet:p-0">
           <h2 className="text-xl font-bold text-text-neutral-primary">
             {t('team:CREATE_TEAM_MODAL.MODAL_TITLE')}
           </h2>
           <button
             type="button"
-            className="absolute right-0 text-icon-surface-single-color-primary"
+            className="absolute right-20px text-icon-surface-single-color-primary tablet:right-0"
             onClick={modalVisibilityHandler}
           >
             <RxCross2 size={24} />
           </button>
         </div>
 
-        {/* Info: (20250217 - Julian) Stepper */}
-        <CreateTeamStepper currentStep={currentStep} />
+        <div className="flex flex-col items-stretch gap-lv-4 px-lv-5 py-lv-3 tablet:p-0">
+          {/* Info: (20250217 - Julian) Stepper */}
+          <CreateTeamStepper currentStep={currentStep} />
 
-        {/* Info: (20250217 - Julian) Form */}
-        <div
-          ref={formBodyRef}
-          className="relative flex max-h-600px flex-col gap-lv-7 overflow-y-auto py-20px"
-        >
-          {formBody}
+          {/* Info: (20250217 - Julian) Form */}
+          <div
+            ref={formBodyRef}
+            className="relative flex max-h-400px flex-col gap-lv-4 overflow-y-auto tablet:max-h-500px tablet:gap-lv-7"
+          >
+            {formBody}
 
-          {/* Info: (20250219 - Julian) 提示向下滾動的動畫 */}
-          {currentStep === 3 && (
-            <div
-              className={`sticky -bottom-20px left-0 min-h-100px w-full items-center justify-center bg-gradient-to-t from-surface-neutral-surface-lv1 to-transparent ${isHideArrow ? 'hidden' : 'flex'}`}
-            >
-              <div className="animate-bounce text-button-text-secondary">
-                <FaAngleDoubleDown size={32} />
+            {/* Info: (20250219 - Julian) 提示向下滾動的動畫 */}
+            {currentStep === 3 && (
+              <div
+                className={`sticky -bottom-20px left-0 min-h-100px w-full items-center justify-center bg-gradient-to-t from-surface-neutral-surface-lv1 to-transparent ${isHideArrow ? 'hidden' : 'flex'}`}
+              >
+                <div className="animate-bounce text-button-text-secondary">
+                  <FaAngleDoubleDown size={32} />
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
 
-          {/* Info: (20250217 - Julian) Buttons */}
-          <div className="flex items-center justify-between">
-            {currentStep > 1 && !teamInvoice && (
-              <Button type="button" variant="secondaryBorderless" onClick={backHandler}>
-                <TbArrowBackUp size={20} />
-                {t('common:COMMON.BACK')}
+        {/* Info: (20250217 - Julian) Buttons */}
+        <div className="flex items-center justify-between px-20px py-16px tablet:p-0">
+          {currentStep > 1 && !teamInvoice && (
+            <Button
+              type="button"
+              variant="secondaryBorderless"
+              onClick={backHandler}
+              className="hidden tablet:flex"
+            >
+              <TbArrowBackUp size={20} />
+              {t('common:COMMON.BACK')}
+            </Button>
+          )}
+          <div className="ml-auto flex items-center gap-24px">
+            {currentStep < 3 && (
+              <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
+                {cancelButtonText}
               </Button>
             )}
-            <div className="ml-auto flex items-center gap-24px">
-              {currentStep < 3 && (
-                <Button type="button" variant="secondaryBorderless" onClick={cancelOrSkip}>
-                  {cancelButtonText}
-                </Button>
-              )}
-              <Button
-                type="button"
-                variant="tertiary"
-                disabled={nextButtonDisabled}
-                onClick={toNextStep}
-              >
-                {nextButtonStr} <FaArrowRight />
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="tertiary"
+              disabled={nextButtonDisabled}
+              onClick={toNextStep}
+            >
+              {nextButtonStr} <FaArrowRight />
+            </Button>
           </div>
         </div>
       </div>

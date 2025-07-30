@@ -17,6 +17,7 @@ import LoginAnimation from '@/components/login/login_animation';
 import { findUnusedRoles } from '@/lib/utils/role';
 import { useRouter } from 'next/router';
 import Loader from '@/components/loader/loader';
+import loggerFront from '@/lib/utils/logger_front';
 
 enum RolePageStatus {
   LOADING = 'loading', // Info: (20250522 - Liz) 正在取得角色資料
@@ -41,18 +42,14 @@ const CreateRolePage = () => {
 
   useEffect(() => {
     const fetchAndComputeRoles = async () => {
-      // Deprecated: (20241122 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('觸發 useEffect, 取得系統角色與使用者角色 (in CreateRolePage)');
+      loggerFront.log('觸發 useEffect, 取得系統角色與使用者角色 (in CreateRolePage)');
 
       try {
         const systemRoles = await getSystemRoleList();
         const userRoles = await getUserRoleList();
 
         if (!systemRoles || !userRoles) {
-          // Deprecated: (20250522 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('取得系統角色或取得使用者角色尚未成功');
+          loggerFront.log('取得系統角色或取得使用者角色尚未成功');
           return;
         }
 
@@ -78,9 +75,7 @@ const CreateRolePage = () => {
         // Info: (20250523 - Liz) Case 5: 準備顯示角色介紹
         setStatus(RolePageStatus.READY);
       } catch (error) {
-        // Deprecated: (20241108 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Failed to fetch or compute roles:', error);
+        loggerFront.error('Failed to fetch or compute roles:', error);
         setStatus(RolePageStatus.ERROR);
       }
     };
@@ -203,7 +198,9 @@ const CreateRolePage = () => {
         />
 
         {/* Info: (20250329 - Liz) Modal */}
-        {isPreviewModalOpen && <PreviewModal togglePreviewModal={togglePreviewModal} />}
+        {isPreviewModalOpen && (
+          <PreviewModal togglePreviewModal={togglePreviewModal} displayedRole={displayedRole} />
+        )}
       </main>
     </>
   );

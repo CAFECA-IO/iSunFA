@@ -1,6 +1,7 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface BalanceSheetA4TemplateProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   preDate,
 }) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const [firstBlockSplitPages, setFirstBlockSplitPages] = useState<ReactNode[][]>([]);
   const [secondBlockSplitPages, setSecondBlockSplitPages] = useState<ReactNode[][]>([]);
 
@@ -61,10 +63,6 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   };
   // Info: (20241120 - Anna) 處理 pages[0] 表格分頁
   const firstTableRows = flattenChildren((pages[0] as React.ReactElement)?.props?.children);
-  const FirstBlockSplitPages = splitTableRows(firstTableRows, 10);
-  // Deprecated: (20241130 - Anna) remove eslint-disable
-  // eslint-disable-next-line no-console
-  console.log('FirstBlockSplitPages', FirstBlockSplitPages);
 
   // Info: (20241120 - Anna) 提取表格渲染邏輯，確保每頁表格結構完整
   const renderTableWithRows = (
@@ -81,10 +79,6 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
   );
   // Info: (20241120 - Anna) 處理 pages[1] 表格分頁
   const secondTableRows = flattenChildren((pages[1] as React.ReactElement)?.props?.children);
-  const SecondBlockSplitPages = splitTableRows(secondTableRows, 10);
-  // Deprecated: (20241130 - Anna) remove eslint-disable
-  // eslint-disable-next-line no-console
-  console.log('SecondBlockSplitPages', SecondBlockSplitPages);
 
   // Info: (20241130 - Anna) 在 useEffect 中使用 async/await 確保渲染完成後更新狀態
   useEffect(() => {
@@ -241,7 +235,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
             {renderedHeader(index === 0)}
             <div className="relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {renderTableWithRows(rows, firstTableHeaders, index >= 0)}
             {renderedFooter(index + 1)}
@@ -267,7 +264,10 @@ const BalanceSheetA4Template: React.FC<BalanceSheetA4TemplateProps> = ({
             {renderedHeader(false)}
             <div className="mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
               <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-              <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+              <p>
+                {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                {currency}
+              </p>
             </div>
             {renderTableWithRows(rows, secondTableHeaders, index >= 0)}
             {renderedFooter(firstBlockSplitPages.length + index + 1)}

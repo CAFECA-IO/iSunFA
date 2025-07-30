@@ -10,6 +10,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType, ToastPosition } from '@/interfaces/toastify';
 import DateTimePicker from '@/components/beta/todo_list_page/date_time_picker';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface CreateTodoModalProps {
   toggleModal: () => void;
@@ -95,9 +96,7 @@ const CreateTodoModal = ({
         closeModal();
         if (getTodoList) await getTodoList();
 
-        // Deprecated: (20241119 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('createTodoAPI success:', createdTodo);
+        loggerFront.log('createTodoAPI success:', createdTodo);
       } else {
         // Info: (20241119 - Liz) 新增待辦事項失敗時顯示錯誤訊息
         toastHandler({
@@ -109,9 +108,7 @@ const CreateTodoModal = ({
         });
       }
     } catch (error) {
-      // Deprecated: (20241119 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('createTodoAPI error:', error);
+      loggerFront.error('createTodoAPI error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +121,7 @@ const CreateTodoModal = ({
       try {
         const { data, success, code } = await getAccountBookListByUserIdAPI({
           params: { userId: userAuth.id },
-          query: { page: 1, pageSize: 999 },
+          query: { page: 1, pageSize: 999, simple: true },
         });
 
         const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
@@ -134,14 +131,10 @@ const CreateTodoModal = ({
           setAccountBookList(accountBookListData);
         } else {
           // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息
-          // Deprecated: (20241120 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('取得使用者擁有的帳本清單 failed:', code);
+          loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
         }
       } catch (error) {
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('取得使用者擁有的帳本清單 error:', error);
+        loggerFront.error('取得使用者擁有的帳本清單 error:', error);
       }
     };
 
@@ -150,7 +143,7 @@ const CreateTodoModal = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="overflow-hidden rounded-lg">
+      <div className="w-90vw overflow-hidden rounded-lg tablet:w-auto">
         <header className="flex items-center justify-between bg-surface-neutral-surface-lv2 px-40px pb-24px pt-40px">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
             {t('dashboard:TODO_LIST_PAGE.ADD_NEW_EVENT')}
@@ -160,7 +153,7 @@ const CreateTodoModal = ({
           </button>
         </header>
 
-        <div className="max-h-65vh w-400px overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px">
+        <div className="max-h-65vh overflow-y-auto bg-surface-neutral-surface-lv2 px-40px pb-40px tablet:w-400px">
           <main className="flex flex-col gap-40px">
             <section className="flex flex-col gap-24px">
               <div className="flex flex-col gap-8px">
@@ -218,7 +211,7 @@ const CreateTodoModal = ({
 
                   {isDropdownOpen && (
                     <div className="absolute inset-x-0 top-full z-10 mt-8px">
-                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_SM">
+                      <div className="mb-20px flex flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M">
                         {accountBookList.map((item) => (
                           <button
                             key={item.id}

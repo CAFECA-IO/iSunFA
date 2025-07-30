@@ -64,12 +64,16 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
           setRefreshKey={setRefreshKey}
         />
       )}
-      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 p-lv-7">
-        <section className="flex items-center justify-between">
-          <h1 className="grow text-center text-xl font-bold text-text-neutral-secondary">
+      <div className="flex max-h-90vh w-90vw max-w-920px flex-col gap-lv-5 overflow-y-hidden rounded-lg bg-surface-neutral-surface-lv2 px-20px py-16px tablet:p-lv-7">
+        <section className="relative flex items-center justify-center">
+          <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('account_book:LIST.ACCOUNT_BOOK_LIST_TITLE')}
           </h1>
-          <button type="button" onClick={closeToggleAccountBookListModal}>
+          <button
+            type="button"
+            onClick={closeToggleAccountBookListModal}
+            className="absolute right-0 text-icon-surface-single-color-primary"
+          >
             <IoCloseOutline size={24} />
           </button>
         </section>
@@ -85,12 +89,11 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
             pageSize={DEFAULT_PAGE_LIMIT}
             disableDateSearch
             // sort={{ by: SortBy.TAG, order: typeSort ?? SortOrder.DESC }} // ToDo: (20250506 - Liz) 工作標籤排序功能尚未實作
-            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
+            sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
           />
 
-          <div className="flex items-center gap-4">
-            <hr className="block flex-1 border-divider-stroke-lv-4 md:hidden" />
-            <div className="flex items-center gap-2 text-sm text-divider-text-lv-1">
+          <div className="flex items-center gap-lv-4">
+            <div className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
               <Image
                 src="/icons/asset_management_icon.svg"
                 width={16}
@@ -110,7 +113,7 @@ const AccountBookListModal = ({ closeToggleAccountBookListModal }: AccountBookLi
                   <div className="table-cell min-w-134px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
                     <div>{t('account_book:INFO.COMPANY_NAME')}</div>
                   </div>
-                  <div className="table-cell min-w-84px border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
+                  <div className="table-cell min-w-84px whitespace-nowrap border-b border-stroke-neutral-quaternary p-2 text-center align-middle">
                     <div>{t('account_book:INFO.TAX_ID')}</div>
                   </div>
                   <div className="table-cell w-full border-b border-stroke-neutral-quaternary"></div>

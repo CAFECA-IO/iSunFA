@@ -3,6 +3,7 @@ import { BalanceSheetReport } from '@/interfaces/report';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 let currentPage = 1;
 export const createRenderedFooter = () => {
@@ -30,13 +31,16 @@ export const createRenderedFooter = () => {
 interface DownloadBalanceSheetProps {
   reportFinancial: BalanceSheetReport | null;
   downloadRef: React.RefObject<HTMLDivElement>;
+  isDownloading: boolean;
 }
 
 const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   reportFinancial,
   downloadRef,
+  isDownloading,
 }) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   // Info: (20250401 - Anna) 每次渲染前先把頁碼重置為 1
   currentPage = 1;
 
@@ -69,8 +73,9 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
   const preYear = preDateFormatted.split('-')[0];
 
   // Info: (20241112 - Anna) 動態應用分頁樣式
-  const printContainerClass =
-    'mx-auto w-a4-width origin-top overflow-x-auto m-0  print:block  print:h-auto print:w-full p-0 download-page border border-stroke-neutral-quaternary';
+  const printContainerClass = `mx-auto w-a4-width origin-top overflow-x-auto m-0  print:block  print:h-auto print:w-full p-0 border border-stroke-neutral-quaternary ${
+    isDownloading ? 'download-page' : ''
+  }`;
   const printContentClass = 'relative h-a4-height overflow-hidden';
 
   // Info: (20241112 - Anna) 將頁眉封裝成函數，並使用 `isFirstPage` 參數區分不同頁面
@@ -248,9 +253,9 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
               <td className="border border-t-0 border-stroke-brand-secondary-soft p-10px text-sm"></td>
               <td className="items-center border border-t-0 border-stroke-brand-secondary-soft px-10px py-3px text-sm">
                 <div className="flex items-center justify-between">
-                  <div className="child-code-name-wrapper justify-start">
-                    <span className="child-code">{child.code}</span>
-                    <span className="child-name ml-2">
+                  <div className={`${isDownloading ? 'pb-2' : ''} justify-start`}>
+                    <span>{child.code}</span>
+                    <span className={`${isDownloading ? 'whitespace-normal' : ''} ml-2`}>
                       {t(`reports:ACCOUNTING_ACCOUNT.${child.name}`)}
                     </span>
                   </div>
@@ -367,9 +372,16 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
       <div key={`detail-page-${pageKey}`} className={printContainerClass}>
         <div className={`${printContentClass} relative h-a4-height overflow-y-hidden`}>
           {renderedHeader(false)}
-          <div className="download-header-label mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+          <div
+            className={`${
+              isDownloading ? 'pb-2' : ''
+            } mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary`}
+          >
             <p>{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
-            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+            <p>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </p>
           </div>
           <div className={`relative overflow-y-hidden px-14px print:break-before-page`}>
             <section className="text-text-neutral-secondary">
@@ -486,9 +498,16 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
       >
         <div className={`${printContentClass} relative h-a4-height overflow-y-hidden`}>
           {renderedHeader(true)}
-          <div className="download-header-label relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary">
+          <div
+            className={`${
+              isDownloading ? 'pb-2' : ''
+            } relative z-10 mx-14px mb-2 flex justify-between text-sm font-bold leading-5 text-surface-brand-secondary`}
+          >
             <p>{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
-            <p>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</p>
+            <p>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </p>
           </div>
           {ItemSummary}
         </div>

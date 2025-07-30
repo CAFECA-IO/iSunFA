@@ -10,6 +10,7 @@ import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data'
 import { useUserCtx } from '@/contexts/user_context';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import CreateTodoModal from '@/components/beta/todo_list_page/create_todo_modal';
+import loggerFront from '@/lib/utils/logger_front';
 
 const PENDING_TASK = [
   {
@@ -52,14 +53,10 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
         if (success) {
           setPendingTask(data);
         } else {
-          // Deprecated: (20241127 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('PendingTaskForAccountBook getAccountBookPendingTask code:', code);
+          loggerFront.log('PendingTaskForAccountBook getAccountBookPendingTask code:', code);
         }
       } catch (error) {
-        // Deprecated: (20241127 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('PendingTaskForAccountBook getAccountBookPendingTask error:', error);
+        loggerFront.error('PendingTaskForAccountBook getAccountBookPendingTask error:', error);
       }
     };
 
@@ -86,8 +83,10 @@ const PendingTaskForAccountBook = ({ getTodoList }: PendingTaskForCompanyProps) 
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate = pendingTask.missingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = pendingTask.unpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = Math.round(
+    pendingTask.missingCertificatePercentage * 100
+  );
+  const percentageForUnpostedVouchers = Math.round(pendingTask.unpostedVoucherPercentage * 100);
 
   return (
     <section className="flex flex-col gap-24px">

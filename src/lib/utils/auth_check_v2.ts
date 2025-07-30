@@ -7,18 +7,21 @@ import { ISessionData } from '@/interfaces/session';
 import { convertStringToNumber } from '@/lib/utils/common';
 import loggerBack from '@/lib/utils/logger_back';
 import { APIName } from '@/constants/api_connection';
+import { verifyApplySignature } from '@/lib/utils/ethers/verify_signature';
 
 export async function checkUser(session: ISessionData, req: NextApiRequest) {
   let isAuth = true;
   const { userId: queryUserId } = req.query;
   if (queryUserId) {
     const queryUserIdNumber = convertStringToNumber(queryUserId);
+
     isAuth = session.userId === queryUserIdNumber;
   }
   if (isAuth) {
     const user = await getUserById(session.userId);
     isAuth = !!user;
   }
+  loggerBack.info(`User authorization check for userId isAuth: ${isAuth}`);
 
   return isAuth;
 }
@@ -108,8 +111,34 @@ export const authFunctionsNew: AuthFunctionsNew = {
   admin: checkUserAdmin,
   owner: checkUserCompanyOwner,
   superAdmin: checkUserCompanySuperAdmin,
+<<<<<<< HEAD
   AccountBookAdminMatch: checkCompanyAdminMatch,
   projectAccountBookMatch: checkProjectCompanyMatch,
+=======
+  CompanyAdminMatch: checkCompanyAdminMatch,
+  projectCompanyMatch: checkProjectCompanyMatch,
+  internal: async (_session: ISessionData, req: NextApiRequest) => {
+    loggerBack.info(
+      `[internal verify] req.headers: ${JSON.stringify(req.headers)}, req.url: ${req.url}`
+    );
+    const rlpEncoded = req.headers['x-signature'];
+    loggerBack.info(`[internal verify] rlpEncoded: ${rlpEncoded}`);
+    const url = `http://${req.headers.host}${req.url}`;
+
+    if (typeof rlpEncoded !== 'string' || typeof url !== 'string') {
+      loggerBack.warn('驗證失敗：缺少 x-signature 或 x-url header');
+      return false;
+    }
+
+    const result = verifyApplySignature(url, rlpEncoded);
+
+    loggerBack.info(
+      `[internal verify] url=${url}, isValid=${result.isValid}, signer=${result.address}`
+    );
+
+    return result.isValid;
+  },
+>>>>>>> feature/fix-integration-test-refactoring
 };
 
 export async function checkAuthorizationNew<T extends APIName>(
@@ -118,6 +147,9 @@ export async function checkAuthorizationNew<T extends APIName>(
   session: ISessionData
 ): Promise<boolean> {
   const checkList = AUTH_CHECK[apiName];
+  loggerBack.info(
+    `Checking authorization for API: ${apiName}, CheckList: ${JSON.stringify(checkList)}`
+  );
 
   // Info: (20241111 - Jacky) 若 checkList 不存在，標記 hasFailed 為 true
   let hasFailed = false;
@@ -130,6 +162,9 @@ export async function checkAuthorizationNew<T extends APIName>(
     const results = await Promise.all(
       checkList.map(async (check) => {
         const authFunction = authFunctionsNew[check];
+        loggerBack.info(
+          `Executing auth check: ${check} with authFunction: ${JSON.stringify(authFunction)}`
+        );
         let isFail = false;
 
         // Info: (20241111 - Jacky) 若 authFunction 不存在或檢查未通過，回傳 true
@@ -150,6 +185,8 @@ export async function checkAuthorizationNew<T extends APIName>(
 
     hasFailed = results.some((result) => result === true);
   }
+
+  loggerBack.info(`Authorization check completed for API: ${apiName}, hasFailed: ${hasFailed}`);
 
   // Info: (20241111 - Jacky) 返回 hasFailed 的反向值，若 hasFailed 為 true 則回傳 false，反之亦然
   return !hasFailed;

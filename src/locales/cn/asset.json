@@ -48,12 +48,13 @@
     "STRAIGHT_LINE": "直线折旧法",
     "DOUBLE_DECLINING": "双倍余额递减法",
     "SUM_OF_YEAR_DIGIT": "年数总和法",
-    "NONE": "无",
+    "NONE": "不需折旧",
     "CONFIRM_MESSAGE_TITLE": "您确定要新增此资产吗？",
     "CONFIRM_MESSAGE_CONTENT": "30 天后将无法删除。",
     "CONFIRM_MESSAGE_BTN": "是的，新增资产",
     "TOAST_SUCCESS": "已新增资产",
-    "TOAST_ERROR": "发生错误，请再试一次"
+    "TOAST_ERROR": "发生错误，请再试一次",
+    "PLEASE_FILL_UP_THIS_FORM": "请填写此表格"
   },
   "ASSET_DETAIL_PAGE": {
     "TITLE": "资产",

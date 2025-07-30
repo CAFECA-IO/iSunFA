@@ -31,8 +31,13 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
+<<<<<<< HEAD
   const { userId, accountBookId } = session;
   const { voucherId } = query;
+=======
+  const { userId } = session;
+  const { accountBookId, voucherId } = query;
+>>>>>>> feature/fix-integration-test-refactoring
 
   try {
     const now = getTimestampNow();
@@ -49,7 +54,11 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
     }
     const restoredVoucher = await restoreUtils.restoreVoucherAndRelations({
       voucherId,
+<<<<<<< HEAD
       accountBookId,
+=======
+      companyId: accountBookId,
+>>>>>>> feature/fix-integration-test-refactoring
       now,
       userId,
     });

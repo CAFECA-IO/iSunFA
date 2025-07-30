@@ -19,7 +19,8 @@ import { EmailTemplateName } from '@/constants/email_template';
 import { transaction } from '@/lib/utils/repo/transaction';
 import { checkTeamMemberLimit } from '@/lib/utils/plan/check_plan_limit';
 import { NotificationEvent, NotificationType } from '@/interfaces/notification';
-import { createNotificationsBulk } from './notification.repo';
+import { createNotificationsBulk } from '@/lib/utils/repo/notification.repo';
+import loggerBack from '@/lib/utils/logger_back';
 
 export const addMembersToTeam = async (
   userId: number,
@@ -56,144 +57,112 @@ export const addMembersToTeam = async (
     where: { id: userId },
     include: { imageFile: true },
   });
-
-  await transaction(async (tx) => {
-    const inactiveMembers = await tx.teamMember.findMany({
-      where: {
-        teamId,
-        userId: { in: [...existingUserIds] },
-        status: LeaveStatus.NOT_IN_TEAM,
-      },
-      select: { userId: true },
-    });
-
-    const rejoinUserIds = new Set(inactiveMembers.map((m) => m.userId));
-
-    if (rejoinUserIds.size > 0) {
-      await tx.teamMember.updateMany({
+  try {
+    await transaction(async (tx) => {
+      const teamMembers = await tx.teamMember.findMany({
         where: {
           teamId,
-          userId: { in: [...rejoinUserIds] },
+          userId: { in: [...existingUserIds] },
         },
-        data: {
-          status: LeaveStatus.IN_TEAM,
-          leftAt: null,
-        },
+        select: { userId: true, status: true },
       });
-    }
 
-    const usersToInvite = existingUsers.filter((user) => !rejoinUserIds.has(user.id));
-    if (usersToInvite.length > 0) {
-      await tx.inviteTeamMember.createMany({
-        data: usersToInvite.map((user) => ({
-          teamId,
+      const alreadyInTeamIds = new Set(
+        teamMembers.filter((m) => m.status === LeaveStatus.IN_TEAM).map((m) => m.userId)
+      );
+
+      const usersToInvite = existingUsers
+        .filter((user) => !alreadyInTeamIds.has(user.id))
+        .map((user) => {
+          const prevStatus = teamMembers.find((m) => m.userId === user.id)?.status;
+          return {
+            ...user,
+            inviteNote: JSON.stringify({
+              reason:
+                prevStatus === LeaveStatus.NOT_IN_TEAM
+                  ? 'User previously left the team, waiting for rejoin approval'
+                  : 'User exists, waiting for accept',
+            }),
+          };
+        });
+
+      loggerBack.info(`usersToInvite: ${JSON.stringify(usersToInvite)}`);
+
+      if (usersToInvite.length > 0) {
+        const result = await tx.inviteTeamMember.createMany({
+          data: usersToInvite.map((user) => ({
+            teamId,
+            email: user.email!,
+            status: InviteStatus.PENDING,
+            createdAt: now,
+            note: user.inviteNote,
+          })),
+          // skipDuplicates: true,
+        });
+        loggerBack.info(`🔍 createMany result: ${JSON.stringify(result)}`);
+      }
+
+      if (unregisteredEmails.length > 0) {
+        await tx.inviteTeamMember.createMany({
+          data: unregisteredEmails.map((email) => ({
+            teamId,
+            email,
+            status: InviteStatus.PENDING,
+            createdAt: now,
+            note: JSON.stringify({
+              reason:
+                'User not exists, pending for join, when user register, will be added to team',
+            }),
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      // Info: (20250421 - tzuhan) 寫入 emailJob
+      const inviteLinkBase = `${process.env.NEXTAUTH_URL}/users/login`;
+
+      const userEmailMap = [
+        ...existingUsers.map((user) => ({
+          userId: user.id,
           email: user.email!,
-          status: InviteStatus.PENDING,
-          createdAt: now,
-          completedAt: now,
-          note: JSON.stringify({ reason: 'User exists, waiting for accept' }),
         })),
-        skipDuplicates: true,
-      });
-    }
-
-    if (unregisteredEmails.length > 0) {
-      await tx.inviteTeamMember.createMany({
-        data: unregisteredEmails.map((email) => ({
-          teamId,
+        ...unregisteredEmails.map((email) => ({
+          userId: undefined,
           email,
-          status: InviteStatus.PENDING,
-          createdAt: now,
-          note: JSON.stringify({
-            reason: 'User not exists, pending for join, when user register, will be added to team',
-          }),
         })),
-        skipDuplicates: true,
+      ];
+
+      await createNotificationsBulk(tx, {
+        userEmailMap,
+        template: EmailTemplateName.INVITE,
+        teamId,
+        type: NotificationType.INVITATION,
+        event: NotificationEvent.INVITED,
+        title: '加入團隊通知',
+        message: `${inviter?.name ?? '某人'} 邀請您加入團隊「${team?.name ?? ''}」`,
+        content: {
+          inviterName: inviter?.name || '有人',
+          teamName: team?.name || '某團隊',
+          inviteLink: `${inviteLinkBase}`,
+        },
+        actionUrl: `/team/${teamId}`,
+        imageUrl: inviter?.imageFile?.url,
+        pushPusher: process.env.TEST_TYPE !== 'integration',
+        sendEmail: process.env.TEST_TYPE !== 'integration',
       });
-    }
-
-    // Info: (20250421 - tzuhan) 寫入 emailJob
-    const inviteLinkBase = `${process.env.NEXTAUTH_URL}/users/login`;
-
-    const userEmailMap = [
-      ...existingUsers.map((user) => ({
-        userId: user.id,
-        email: user.email!,
-      })),
-      ...unregisteredEmails.map((email) => ({
-        userId: undefined,
-        email,
-      })),
-    ];
-
-    await createNotificationsBulk({
-      userEmailMap,
-      template: EmailTemplateName.INVITE,
-      teamId,
-      type: NotificationType.TEAM_INVITATION,
-      event: NotificationEvent.COMPLETED,
-      title: '加入團隊通知',
-      message: `${inviter?.name ?? '某人'} 邀請您加入團隊「${team?.name ?? ''}」`,
-      content: {
-        inviterName: inviter?.name || '有人',
-        teamName: team?.name || '某團隊',
-        inviteLink: `${inviteLinkBase}`,
-      },
-      actionUrl: `/team/${teamId}`,
-      imageUrl: inviter?.imageFile?.url,
-      pushPusher: true,
-      sendEmail: true,
     });
-  });
+  } catch (err) {
+    loggerBack.error({
+      msg: '❌ Failed to add member to team inside transaction',
+      err,
+    });
+    throw err; // 保持 rollback 行為
+  }
 
   return {
     invitedCount: emails.length,
     unregisteredEmails,
   };
-};
-
-export const respondToTeamInvitation = async (
-  userId: number,
-  teamId: number,
-  action: 'agree' | 'decline'
-): Promise<void> => {
-  const invitation = await prisma.inviteTeamMember.findFirst({
-    where: {
-      teamId,
-      email: { equals: (await prisma.user.findUnique({ where: { id: userId } }))?.email ?? '' },
-      status: InviteStatus.PENDING,
-    },
-  });
-  if (!invitation) {
-    throw new Error('找不到邀請或邀請已失效');
-  }
-
-  if (action === 'agree') {
-    await prisma.teamMember.create({
-      data: {
-        teamId,
-        userId,
-        role: TeamRole.EDITOR,
-        joinedAt: getTimestampNow(),
-      },
-    });
-
-    await prisma.inviteTeamMember.update({
-      where: { id: invitation.id },
-      data: {
-        status: InviteStatus.COMPLETED,
-        completedAt: getTimestampNow(),
-      },
-    });
-  } else {
-    await prisma.inviteTeamMember.update({
-      where: { id: invitation.id },
-      data: {
-        status: InviteStatus.DECLINED,
-        declinedAt: getTimestampNow(),
-      },
-    });
-  }
 };
 
 export const memberLeaveTeam = async (userId: number, teamId: number): Promise<ILeaveTeam> => {
@@ -607,4 +576,82 @@ export const getExistingUsersInTeam = async (
   });
 
   return existingUsers.map((user) => user.id);
+};
+
+export const acceptTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  loggerBack.info(
+    `🔍 invitation: ${JSON.stringify(invitation)}, teamId: ${teamId}, email: ${user.email}`
+  );
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  const now = getTimestampNow();
+
+  await prisma.$transaction([
+    prisma.teamMember.create({
+      data: {
+        teamId,
+        userId,
+        role: TeamRole.EDITOR, // Info: (20250523 - tzuhan) 預設角色
+        joinedAt: now,
+      },
+    }),
+    prisma.inviteTeamMember.update({
+      where: { id: invitation.id },
+      data: {
+        status: InviteStatus.COMPLETED,
+        completedAt: now,
+      },
+    }),
+  ]);
+};
+
+export const declineTeamInvitation = async (userId: number, teamId: number): Promise<void> => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user?.email) {
+    const error = new Error(STATUS_MESSAGE.UNAUTHORIZED_ACCESS);
+    error.name = STATUS_CODE.UNAUTHORIZED_ACCESS;
+    throw error;
+  }
+
+  const invitation = await prisma.inviteTeamMember.findFirst({
+    where: {
+      teamId,
+      email: user.email,
+      status: InviteStatus.PENDING,
+    },
+  });
+
+  if (!invitation) {
+    const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
+    error.name = STATUS_CODE.PERMISSION_DENIED;
+    throw error;
+  }
+
+  await prisma.inviteTeamMember.update({
+    where: { id: invitation.id },
+    data: {
+      status: InviteStatus.DECLINED,
+      declinedAt: getTimestampNow(),
+    },
+  });
 };

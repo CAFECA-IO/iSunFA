@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
+import { FaCodepen } from 'react-icons/fa';
+import { CgShoppingBag } from 'react-icons/cg';
 import { FiSend } from 'react-icons/fi';
 import Toggle from '@/components/toggle/toggle';
 import APIHandler from '@/lib/utils/api_handler';
@@ -80,12 +82,12 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
   const settings = [
     {
       key: 'systemNotification',
-      icon: '/icons/codepen.svg',
+      icon: <FaCodepen size={16} className="text-icon-surface-single-color-primary" />,
       label: t('settings:NORMAL.SYSTEM_NOTIFICATION'),
     },
     {
       key: 'updateAndSubscriptionNotification',
-      icon: '/icons/bag.svg',
+      icon: <CgShoppingBag size={16} className="text-icon-surface-single-color-primary" />,
       label: t('settings:NORMAL.UPDATES_N_SUBSCRIPTION_NOTIFICATION'),
     },
     {
@@ -97,20 +99,20 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <section className="flex items-center gap-16px">
-        <div className="flex items-center gap-8px">
+      <section className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2">
           <Image src="/icons/ringing_bell.svg" width={16} height={16} alt="notice_icon" />
-          <span className="text-sm font-medium text-divider-text-lv-1">
+          <span className="text-sm font-medium text-divider-text-lv-2">
             {t('settings:NORMAL.NOTICE_SETTINGS')}
           </span>
         </div>
-        <hr className="flex-auto border-t-2px border-divider-stroke-lv-1" />
+        <hr className="flex-auto border-t border-divider-stroke-lv-4" />
       </section>
 
-      <section className="flex flex-col gap-24px">
+      <section className="flex flex-col gap-lv-5">
         {settings.map(({ key, icon, label }) => (
           <div key={key} className="flex items-center gap-16px">
-            <p className="flex items-center gap-8px text-base font-medium text-switch-text-primary">
+            <p className="flex flex-auto items-center gap-8px text-base font-medium text-switch-text-primary tablet:flex-none">
               {typeof icon === 'string' ? (
                 <Image src={icon} width={16} height={16} alt={`${key}_icon`} />
               ) : (

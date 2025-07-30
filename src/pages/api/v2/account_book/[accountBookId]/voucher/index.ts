@@ -18,8 +18,6 @@ import {
 } from '@/pages/api/v2/account_book/[accountBookId]/voucher/route_utils';
 import { initVoucherEntity } from '@/lib/utils/voucher';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { PUBLIC_COUNTER_PARTY } from '@/constants/counterparty';
-import { initCounterPartyEntity } from '@/lib/utils/counterparty';
 import { IEventEntity } from '@/interfaces/event';
 import { IGetManyVoucherResponseButOne, IVoucherBeta, IVoucherEntity } from '@/interfaces/voucher';
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
@@ -79,9 +77,22 @@ export const buildVoucherBeta = (
 const handleGetRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_LIST_V2;
   const session = await getSession(req);
+<<<<<<< HEAD
   const { userId, accountBookId } = session;
+=======
+  const { userId } = session;
+>>>>>>> feature/fix-integration-test-refactoring
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
+
+  const { query } = checkRequestData(apiName, req, session);
+  if (!query) {
+    const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+    error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
+    throw error;
+  }
+
+  const { accountBookId } = query;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
@@ -92,13 +103,6 @@ const handleGetRequest = async (req: NextApiRequest) => {
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
     error.name = STATUS_CODE.PERMISSION_DENIED;
-    throw error;
-  }
-
-  const { query } = checkRequestData(apiName, req, session);
-  if (!query) {
-    const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-    error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
     throw error;
   }
 
@@ -135,7 +139,11 @@ const handleGetRequest = async (req: NextApiRequest) => {
   try {
     const typeFilter = getTypeFilter(type);
     const paginationVouchers = await getUtils.getVoucherListFromPrisma({
+<<<<<<< HEAD
       accountBookId,
+=======
+      companyId: accountBookId,
+>>>>>>> feature/fix-integration-test-refactoring
       page,
       pageSize,
       startDate,
@@ -196,16 +204,22 @@ const handlePostRequest = async (req: NextApiRequest) => {
   await checkSessionUser(session, apiName, req);
   await checkUserAuthorization(apiName, req, session);
 
-  const { body } = checkRequestData(apiName, req, session);
-  if (!body) {
+  const { query, body } = checkRequestData(apiName, req, session);
+  if (!query || !body) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
+<<<<<<< HEAD
   const { userId, accountBookId: companyId } = session;
+=======
+  const { userId } = session;
+
+  const { accountBookId } = query;
+>>>>>>> feature/fix-integration-test-refactoring
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.CREATE_VOUCHER,
   });
 
@@ -224,6 +238,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const {
       actions,
       certificateIds,
+      invoiceRC2Ids,
       lineItems,
       recurringInfo,
       assetIds,
@@ -243,6 +258,17 @@ const handlePostRequest = async (req: NextApiRequest) => {
     };
 
     const doRevert = postUtils.isDoAction({ actions, command: VoucherV2Action.REVERT });
+    const isOffsetOnly =
+      reverseVouchersInfo?.length > 0 && actions?.includes(VoucherV2Action.REVERT) === false;
+
+    if (isOffsetOnly && doRevert) {
+      loggerBack.info(`[防呆觸發] 嘗試在沖銷行為中建立 REVERT 傳票，已拒絕執行。body=${body}`);
+
+      const error = new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+      error.name = STATUS_CODE.INVALID_INPUT_PARAMETER;
+      throw error;
+    }
+
     const doAddAsset = postUtils.isDoAction({ actions, command: VoucherV2Action.ADD_ASSET });
 
     const isLineItemsHasItems = postUtils.isArrayHasItems(lineItems);
@@ -273,17 +299,22 @@ const handlePostRequest = async (req: NextApiRequest) => {
       }
     }
 
-    const company = await postUtils.initCompanyFromPrisma(companyId);
+    const company = await postUtils.initCompanyFromPrisma(accountBookId);
     const issuer = await postUtils.initIssuerFromPrisma(userId);
     const counterPartyEntity = postUtils.isItemExist(counterPartyId)
       ? await postUtils.initCounterPartyFromPrisma(counterPartyId)
-      : initCounterPartyEntity(PUBLIC_COUNTER_PARTY);
+      : null;
 
     const lineItemEntities = postUtils.initLineItemEntities(lineItems);
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
+<<<<<<< HEAD
       counterPartyId: counterPartyEntity.id!,
       accountBookId: company.id,
+=======
+      counterPartyId: counterPartyEntity?.id || null,
+      companyId: company.id,
+>>>>>>> feature/fix-integration-test-refactoring
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
       editable: true,
@@ -350,6 +381,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       company,
       issuer,
       certificateIds,
+      invoiceRC2Ids,
     });
     payload = parsePrismaVoucherToVoucherEntity(createdVoucher);
     // Todo: (20250416 - Tzuhan) 先前的 zod 寫法似乎有問題，導致無法正確驗證輸出資料

@@ -18,7 +18,7 @@
     "FINANCIAL_REPORTS": "Financial Reports",
     "TECH_ADVANTAGE": "Technical Advantage",
     "CONTINUOUS_AUDIT": "Continuous Audit",
-    "EARLY_ACCESS": "Early Access",
+    "EARLY_ACCESS": "latest features",
     "AI_MODEL_ASSISTANCE": "AI Model Assistance (Note)",
     "ENTERPRISE_SUPPORT": "Support",
     "UNSUBSCRIBE": "Unsubscribe"
@@ -61,7 +61,7 @@
       "FINANCIAL_REPORTS": "On-demand analysis and daily-downloadable financial data",
       "TECH_ADVANTAGE": "Industry-leading homomorphic encryption with blockchain certification",
       "CONTINUOUS_AUDIT": "Supports continuous audit with embeddable, auto-updating financial disclosures",
-      "EARLY_ACCESS": "Early access to the latest features",
+      "EARLY_ACCESS": "Partial Early Access",
       "UNSUBSCRIBE": "You can cancel your subscription anytime (Note)\nNote：Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period."
     },
     "BUTTON_TEXT": "Select this plan"
@@ -84,7 +84,7 @@
       "FINANCIAL_REPORTS": "On-demand analysis and daily-downloadable financial data",
       "TECH_ADVANTAGE": "Industry-leading homomorphic encryption with blockchain certification",
       "CONTINUOUS_AUDIT": "Supports continuous audit with embeddable, auto-updating financial disclosures",
-      "EARLY_ACCESS": "Early access to the latest features",
+      "EARLY_ACCESS": "Early Access",
       "AI_MODEL_ASSISTANCE": "* Meta Llama3.2-Vision 11B — coming soon\nLlamm3.2-FFM 11B — coming soon\nLlama3.3-FFM 70B — coming soon\n\nNote：\n* Meta Llama3.2-Vision 11B is well-suited for automatically recognizing and processing image-based accounting documents such as invoices, scanned reports, and handwritten bookkeeping slips.\n\n* Llama 3.2-FFM 11B is a Traditional Chinese optimized model tailored for finance and financial management. It is suitable for financial report generation, forecasting, audit support, and financial summarization.\n\n* Llama 3.3-FFM 70B is a larger-scale Traditional Chinese optimized model with higher accuracy, especially suitable for complex accounting analysis, strategic recommendations, and automated auditing. It can integrate multi-source data to generate ESG reports, provide high-level decision-making suggestions, and perform anomaly detection.",
       "ENTERPRISE_SUPPORT": "Turn Key Solution、\nModel Context Protocol (MCP) — coming soon",
       "UNSUBSCRIBE": "You can cancel your subscription anytime (Note)\nNote：Your current plan will remain active until the next renewal date, and no refunds will be issued for the current billing period."

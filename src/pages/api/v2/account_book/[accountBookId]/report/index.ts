@@ -354,7 +354,22 @@ const reportHandlers: ReportHandlers = {
   [FinancialReportTypesKey.report_401]: report401Handler,
 };
 
+<<<<<<< HEAD
 export async function handleGetRequest(req: NextApiRequest) {
+=======
+/**
+ * Info: (20250502 - Shirley) Handle GET request for financial reports
+ * This function follows the flat coding style pattern:
+ * 1. Get user session and validate authentication
+ * 2. Check user authorization
+ * 3. Validate request data
+ * 4. Process the report based on report type
+ * 5. Validate output data
+ * 6. Return formatted response
+ */
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+>>>>>>> feature/fix-integration-test-refactoring
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
 
@@ -377,12 +392,17 @@ export async function handleGetRequest(req: NextApiRequest) {
     }));
   }
 
+<<<<<<< HEAD
   return {
     statusMessage,
     payload,
     userId,
   };
 }
+=======
+  // Info: (20250502 - Shirley) 獲取報表參數
+  const { accountBookId: companyId, startDate, endDate, language, reportType } = query;
+>>>>>>> feature/fix-integration-test-refactoring
 
 const methodHandlers: {
   [key: string]: (

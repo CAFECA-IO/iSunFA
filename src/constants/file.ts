@@ -47,10 +47,12 @@ export enum UploadDocumentType {
 
 export const BASE_STORAGE_PLACEHOLDER = '{BASE_URL_PLACEHOLDER}';
 
+// ToDo: (20250710 - Luphia) Use IPFS to store files （S4: path 組合，僅組字串，不做 IO，需同步 S1/S2 重構檢查）
 export const BASE_STORAGE_FOLDER = process.env.BASE_STORAGE_PATH || '.';
 
 export const VERCEL_STORAGE_FOLDER = '/tmp';
 
+// ToDo: (20250710 - Luphia) Use IPFS to store files （S4: path 組合，僅組字串，不做 IO，需同步 S1/S2 重構檢查）
 export const LOG_FOLDER = path.join(BASE_STORAGE_FOLDER, './log');
 
 export const STORAGE_FOLDER =
@@ -58,6 +60,7 @@ export const STORAGE_FOLDER =
 
 // Info: (20240828 - Murky) To avoid cyclic dependency, we need to add function here not utils
 export function getFileFolder(folder: FileFolder): string {
+  // ToDo: (20250710 - Luphia) Use IPFS to store files （S4: path 組合，僅組字串，不做 IO，需同步 S1/S2 重構檢查）
   const filePath = path.join(STORAGE_FOLDER, folder);
   return filePath;
 }

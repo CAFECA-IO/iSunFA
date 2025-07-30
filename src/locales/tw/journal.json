@@ -158,7 +158,7 @@
   "ASSET_SECTION": {
     "TITLE": "資產",
     "EMPTY": "無資料",
-    "EMPTY_HINT": "請新增至少 1 筆資產！",
+    "EMPTY_HINT": "傳票仍可儲存，後續請返回至本筆傳票，新增至少 1 筆資產！",
     "ADD_BTN": "新增資產"
   },
   "VOUCHER_LINE_BLOCK": {
@@ -166,6 +166,7 @@
     "PARTICULARS": "摘要",
     "CREDIT": "貸方金額",
     "DEBIT": "借方金額",
+    "EMPTY": "無資料",
     "EMPTY_HINT": "請新增至少 1 筆會計分錄！",
     "REVERSE_ITEM": "沖銷項目",
     "REVERSE_HINT": "請新增至少 1 筆沖銷傳票！"

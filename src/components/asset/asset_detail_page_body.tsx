@@ -19,9 +19,10 @@ import { ASSET_DELETE_TERM } from '@/constants/common';
 import { AssetModalType } from '@/interfaces/asset_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastId } from '@/constants/toast_id';
+import { TbArrowBackUp } from 'react-icons/tb';
 
 const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const { t } = useTranslation('asset');
+  const { t } = useTranslation(['asset', 'filter_section_type']);
   const router = useRouter();
 
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
@@ -109,11 +110,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   // Info: (20250122 - Julian) 資產類別代碼
   const assetCode = assetType.split(' ')[0];
 
-  // ToDo: (20241016 - Julian) Call API to undo delete asset
-  // const undoDeleteAssetHandler = async () => {
-  //   // eslint-disable-next-line no-console
-  //   console.log('Asset restored');
-  // };
+  const goBack = () => router.push(ISUNFA_ROUTE.ASSET_LIST);
 
   const deleteClickHandler = () => {
     messageModalDataHandler({
@@ -257,9 +254,9 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   const isStatus = assetStatus !== AssetStatus.NORMAL ? displayAssetStatus : null;
 
   const isTitle = !isLoading ? (
-    <div className="flex items-center gap-10px font-bold">
-      <h1 className="text-44px text-text-neutral-primary">{assetName}</h1>
-      <p className="text-xl text-text-neutral-tertiary">{assetNumber}</p>
+    <div className="mt-lv-6 flex items-center gap-10px font-bold tablet:mt-0">
+      <h1 className="text-2xl text-text-neutral-primary tablet:text-44px">{assetName}</h1>
+      <p className="text-xs text-text-neutral-tertiary tablet:text-xl">{assetNumber}</p>
       {isStatus}
     </div>
   ) : (
@@ -336,9 +333,18 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
   );
 
   return (
-    <div className="overflow-y-auto px-40px pb-32px pt-40px">
+    <div className="overflow-y-auto pb-25px tablet:px-40px tablet:pb-32px tablet:pt-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('asset:ASSET_DETAIL_PAGE.TITLE')} {assetId}
+        </p>
+      </div>
       {/* Info: (20241016 - Julian) Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col items-start justify-between gap-y-lv-6 tablet:flex-row tablet:items-center">
         {isTitle}
         {/* Info: (20241016 - Julian) Action Buttons */}
         <div className="flex justify-end gap-16px">
@@ -373,7 +379,7 @@ const AssetDetailPageBody: React.FC<{ assetId: string }> = ({ assetId }) => {
         </div>
       </div>
       {/* Info: (20241016 - Julian) Asset Details */}
-      <div className="mt-40px flex w-full flex-col gap-24px">
+      <div className="mt-lv-6 flex w-full flex-col gap-24px text-xs tablet:mt-40px tablet:text-sm">
         {/* Info: (20241016 - Julian) Asset Type */}
         <div className="flex items-center justify-between font-semibold">
           <p className="text-text-neutral-tertiary">{t('asset:ASSET_DETAIL_PAGE.TYPE')}</p>

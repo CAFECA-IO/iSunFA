@@ -27,6 +27,8 @@ import Toggle from '@/components/toggle/toggle';
 import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import { FaArrowLeft } from 'react-icons/fa6';
+import { RxTrackNext, RxTrackPrevious } from 'react-icons/rx';
+// import { RiCheckboxMultipleBlankLine } from 'react-icons/ri';
 
 interface IViewReportSectionProps {
   reportTypesName: { id: FinancialReportTypesKey; name: string };
@@ -178,25 +180,15 @@ const ViewFinancialSection = ({
 
     const getFinancialReport = async () => {
       try {
-        const {
-          data: reportFinancial,
-          code: getFRCode,
-          success: getFRSuccess,
-        } = await getFinancialReportAPI({
+        const { data: reportFinancial, success: getFRSuccess } = await getFinancialReportAPI({
           params: { companyId: connectedAccountBook.id, reportId },
         });
 
         if (!getFRSuccess) {
-          // Deprecated: (20241129 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('getFinancialReportAPI failed:', getFRCode);
           return;
         }
 
         setFinancialReport(reportFinancial);
-        // Deprecated: (20241128 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('call getFinancialReportAPI and getFinancialReport:', reportFinancial);
       } catch (error) {
         // console.log('error:', error);
       } finally {
@@ -205,9 +197,6 @@ const ViewFinancialSection = ({
     };
 
     getFinancialReport();
-    // Deprecated: (20241128 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('in useEffect and calling getFinancialReport_in ViewFinancialSection');
   }, [isAuthLoading, reportId, connectedAccountBook]);
 
   const isInvalidReport = useMemo(() => {
@@ -318,28 +307,6 @@ const ViewFinancialSection = ({
     //   window.open(pdfFile, '_blank');
     // }
   };
-
-  // TODO: (20240802 - Shirley) [Beta] get PDF file
-  // const fetchPDF = async () => {
-  //   try {
-  //     const uri = encodeURIComponent(`${DOMAIN}/${reportLink}`);
-
-  //     const apiUrl = `${EXTERNAL_API.CFV_PDF}/${uri}`;
-
-  //     // TODO: (20240502 - Shirley) use API service
-  //     const response = await fetch(apiUrl, {
-  //       method: 'GET',
-  //     });
-
-  //     const blob = await response.blob();
-  //     const pdfUrl = URL.createObjectURL(blob);
-
-  //     setPdfFile(pdfUrl);
-  //   } catch (error) {
-  //     // TODO: (20240502 - Shirley) error handling
-  //     console.error(error);
-  //   }
-  // };
 
   useEffect(() => {
     switch (reportTypesName?.id ?? '') {
@@ -562,15 +529,14 @@ const ViewFinancialSection = ({
       >
         {/* Info: (20241002 - Anna) 只在 BalanceSheetReport 顯示 Toggle */}
         {reportTypesName.id === FinancialReportTypesKey.balance_sheet && (
-          <div className="flex gap-4">
-            <Toggle
-              id="subAccounts-toggle"
-              initialToggleState={subAccountsToggle}
-              getToggledState={subAccountsToggleHandler}
-              toggleStateFromParent={subAccountsToggle}
-            />
-            <span className="text-neutral-600">Display Sub-Accounts</span>
-          </div>
+          <Toggle
+            id="subAccounts-toggle"
+            initialToggleState={subAccountsToggle}
+            getToggledState={subAccountsToggleHandler}
+            toggleStateFromParent={subAccountsToggle}
+            label="Display Sub-Accounts"
+            labelClassName="text-neutral-600"
+          />
         )}
 
         <div className="my-auto flex flex-col justify-center self-stretch">
@@ -619,21 +585,7 @@ const ViewFinancialSection = ({
                 onClick={copyTokenContractClickHandler}
                 type="button"
               >
-                {' '}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill="#001840"
-                    fillRule="evenodd"
-                    d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
+                <RiCheckboxMultipleBlankLine size={16} />
               </Button> */}
             </div>
           </div>
@@ -656,21 +608,7 @@ const ViewFinancialSection = ({
                 onClick={copyTokenIdClickHandler}
                 type="button"
               >
-                {' '}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    fill="#001840"
-                    fillRule="evenodd"
-                    d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
-                    clipRule="evenodd"
-                  ></path>
-                </svg>
+                <RiCheckboxMultipleBlankLine size={16} />
               </Button> */}
             </div>
           </div>
@@ -693,21 +631,7 @@ const ViewFinancialSection = ({
                     onClick={copyTokenContractClickHandler}
                     type="button"
                   >
-                    {' '}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      viewBox="0 0 16 16"
-                    >
-                      <path
-                        fill="#001840"
-                        fillRule="evenodd"
-                        d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
+                    <RiCheckboxMultipleBlankLine size={16} />
                   </Button> */}
                 </div>
               </div>
@@ -733,21 +657,7 @@ const ViewFinancialSection = ({
                     onClick={copyTokenIdClickHandler}
                     type="button"
                   >
-                    {' '}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      fill="none"
-                      viewBox="0 0 16 16"
-                    >
-                      <path
-                        fill="#001840"
-                        fillRule="evenodd"
-                        d="M11.426 2.785c-.407-.033-.931-.034-1.69-.034H5.002a.75.75 0 010-1.5h4.765c.72 0 1.306 0 1.781.039.491.04.93.125 1.339.333.643.328 1.165.85 1.493 1.494.208.408.293.847.333 1.338.04.475.04 1.061.04 1.78v4.766a.75.75 0 01-1.5 0V6.268c0-.76-.001-1.284-.035-1.69-.032-.399-.092-.619-.175-.78a1.917 1.917 0 00-.837-.838c-.162-.083-.382-.143-.78-.175zm-7.319.8h5.457c.349 0 .655 0 .908.02.27.022.543.07.81.206.391.2.71.519.91.91.135.267.184.541.206.81.02.253.02.56.02.908v5.457c0 .35 0 .655-.02.908-.022.27-.07.543-.206.81-.2.391-.519.71-.91.91-.267.135-.54.184-.81.206-.253.021-.559.021-.908.021H4.107c-.349 0-.655 0-.908-.02a2.118 2.118 0 01-.81-.207c-.391-.2-.71-.518-.91-.91a2.119 2.119 0 01-.206-.81c-.02-.253-.02-.559-.02-.908V6.439c0-.349 0-.655.02-.908.022-.269.07-.543.206-.81.2-.391.519-.71.91-.91.267-.135.541-.184.81-.206.253-.02.56-.02.908-.02zM3.321 5.1c-.176.014-.231.038-.25.048a.583.583 0 00-.255.255c-.01.02-.034.074-.048.25-.015.185-.016.429-.016.815v5.4c0 .385 0 .63.016.814.014.176.038.231.048.25.056.11.145.2.255.255.019.01.074.034.25.048.185.015.429.016.815.016h5.4c.385 0 .63 0 .814-.016.176-.014.231-.038.25-.048a.584.584 0 00.255-.255c.01-.019.034-.074.048-.25.015-.184.016-.429.016-.814v-5.4c0-.386 0-.63-.016-.815-.014-.176-.038-.23-.048-.25a.583.583 0 00-.255-.255c-.019-.01-.074-.034-.25-.048a11.274 11.274 0 00-.814-.016h-5.4c-.386 0-.63 0-.815.016z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
+                    <RiCheckboxMultipleBlankLine size={16} />
                   </Button> */}
                 </div>
               </div>
@@ -768,19 +678,7 @@ const ViewFinancialSection = ({
           disabled={pageNumber <= 1 || isInvalidReport || isLoading}
           className="fixed left-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            viewBox="0 0 17 16"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10.973 3.525c.26.26.26.683 0 .943L7.445 7.997l3.528 3.528a.667.667 0 11-.942.943l-4-4a.667.667 0 010-.943l4-4c.26-.26.682-.26.942 0z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <RxTrackPrevious size={20} />
         </Button>
 
         {/* Info: (20240529 - Shirley) next button */}
@@ -791,19 +689,7 @@ const ViewFinancialSection = ({
           disabled={pageNumber >= numPages || isInvalidReport || isLoading}
           className="fixed right-4 top-2/3 z-10 -translate-y-1/2 fill-current disabled:opacity-80"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            fill="currentColor"
-            viewBox="0 0 17 16"
-          >
-            <path
-              fillRule="evenodd"
-              d="M6.03 3.525c.261-.26.683-.26.944 0l4 4c.26.26.26.683 0 .943l-4 4a.667.667 0 01-.943-.943l3.528-3.528-3.528-3.529a.667.667 0 010-.943z"
-              clipRule="evenodd"
-            ></path>
-          </svg>
+          <RxTrackNext size={16} />
         </Button>
       </div>
 

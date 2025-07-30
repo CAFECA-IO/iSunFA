@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { LuDownload } from 'react-icons/lu';
 import { BiPrinter } from 'react-icons/bi';
@@ -8,6 +9,8 @@ import { jsPDF } from 'jspdf';
 import { Button } from '@/components/button/button';
 import InvoiceDetail from '@/components/beta/invoice_page/invoice_detail';
 import { ITeamInvoice } from '@/interfaces/subscription';
+import { TbArrowBackUp } from 'react-icons/tb';
+import { ISUNFA_ROUTE } from '@/constants/url';
 
 interface InvoicePageBodyProps {
   invoice: ITeamInvoice;
@@ -16,6 +19,7 @@ interface InvoicePageBodyProps {
 const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   const { t } = useTranslation(['subscriptions', 'common']);
   const printRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { id: invoiceId } = invoice;
 
@@ -80,9 +84,19 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
   });
 
   const printClickHandler = () => handlePrint();
+  const goBack = () => router.push(ISUNFA_ROUTE.SUBSCRIPTIONS);
 
   return (
-    <main className="flex w-full flex-col gap-40px p-40px">
+    <main className="flex w-full flex-col gap-lv-6 tablet:gap-40px tablet:p-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('subscriptions:INVOICE_PAGE.PAGE_TITLE')} # {invoiceId}
+        </p>
+      </div>
       {/* Info: (20250115 - Julian) Buttons */}
       <div className="ml-auto flex items-center gap-16px">
         <Button
@@ -104,7 +118,9 @@ const InvoicePageBody: React.FC<InvoicePageBodyProps> = ({ invoice }) => {
       </div>
 
       {/* Info: (20250115 - Julian) Invoice Detail */}
-      <InvoiceDetail invoice={invoice} printRef={printRef} />
+      <div className="overflow-x-auto tablet:overflow-hidden">
+        <InvoiceDetail invoice={invoice} printRef={printRef} />
+      </div>
     </main>
   );
 };

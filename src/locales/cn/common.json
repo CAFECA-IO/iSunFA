@@ -51,15 +51,16 @@
     "PARTNER_S_NAME": "交易伙伴名称",
     "TAX_ID": "统一编号",
     "SUBMIT": "送出",
-    "BACK": "返回"
+    "BACK": "返回",
+    "FILTER": "筛选"
   },
   "LOADING_MODAL": {
     "LOADING": "正在加载中，请稍等..."
   },
   "UPLOAD_AREA": {
-    "DROP_YOUR_FILES_HERE_OR": "将您的文件拖放到此处或",
+    "DROP_YOUR_FILES_HERE_OR": "将发票、电子发票媒体文件拖放到此处或",
     "BROWSE": "浏览",
-    "MAXIMUM_SIZE": "最大档案大小：4MB"
+    "MAXIMUM_SIZE": "jpeg、gif、png、tiff、bmp、pdf、txt（档案大小：< 4 MB）"
   },
   "CURRENCY_ALIAS": {
     "TWD": "新台币",

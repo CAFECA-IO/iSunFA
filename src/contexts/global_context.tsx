@@ -6,7 +6,7 @@ import useWindowSize from '@/lib/hooks/use_window_size';
 import { LAYOUT_BREAKPOINT } from '@/constants/display';
 import { LayoutAssertion } from '@/interfaces/layout_assertion';
 import AddAssetModal from '@/components/asset/add_asset_modal';
-import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal';
+import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import Toast from '@/components/toast/toast';
 import { ToastPosition, ToastType } from '@/interfaces/toastify';
 import Link from 'next/link';
@@ -16,9 +16,7 @@ import FilterOptionsModal from '@/components/filter_options_modal/filter_options
 import { useUserCtx } from '@/contexts/user_context';
 import { useNotificationCtx } from '@/contexts/notification_context';
 import ProfileUploadModal from '@/components/profile_upload_modal/profile_upload_modal';
-import SalaryBookConfirmModal from '@/components/salary_book_confirm_modal/salary_book_confirm_modal';
 import { useTranslation } from 'next-i18next';
-import TransferCompanyModal from '@/components/transfer_company_modal/transfer_company_modal'; // Deprecated: (20250324 - Liz) 這好像是 Alpha 版本的元件
 import { UploadType } from '@/constants/file';
 import { useModalContext } from '@/contexts/modal_context';
 import ExportVoucherModal from '@/components/export_voucher_modal/export_voucher_modal';
@@ -44,9 +42,6 @@ interface IGlobalContext {
   isEmbedCodeModalVisible: boolean;
   embedCodeModalVisibilityHandler: () => void;
 
-  isSalaryBookConfirmModalVisible: boolean;
-  salaryBookConfirmModalVisibilityHandler: () => void;
-
   profileUploadModalVisible: boolean;
   profileUploadModalVisibilityHandler: () => void;
   profileUploadModalDataHandler: (type: UploadType) => void;
@@ -61,12 +56,6 @@ interface IGlobalContext {
   isFilterOptionsModalForPendingVisible: boolean;
   isFilterOptionsModalForContractVisible: boolean;
   filterOptionsModalVisibilityHandler: (filterType: FilterOptionsModalType) => void;
-
-  // isTeamSettingModalVisible: boolean;
-  // teamSettingModalVisibilityHandler: () => void;
-
-  isTransferCompanyModalVisible: boolean;
-  transferCompanyModalVisibilityHandler: () => void;
 
   isExportVoucherModalVisible: boolean;
   exportVoucherModalVisibilityHandler: () => void;
@@ -132,12 +121,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
   const [profileUploadModalVisible, setProfileUploadModalVisible] = useState(false);
   const [uploadImageType, setUploadImageType] = useState<UploadType>(UploadType.USER);
 
-  const [isSalaryBookConfirmModalVisible, setIsSalaryBookConfirmModalVisible] = useState(false);
-
-  // const [isTeamSettingModalVisible, setIsTeamSettingModalVisible] = useState(false);
-
-  const [isTransferCompanyModalVisible, setIsTransferCompanyModalVisible] = useState(false);
-
   const [isExportVoucherModalVisible, setIsExportVoucherModalVisible] = useState(false);
 
   const [isAssetStatusSettingModalVisible, setIsAssetStatusSettingModalVisible] = useState(false);
@@ -190,14 +173,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
 
   const profileUploadModalDataHandler = (type: UploadType) => {
     setUploadImageType(type);
-  };
-
-  const salaryBookConfirmModalVisibilityHandler = () => {
-    setIsSalaryBookConfirmModalVisible(!isSalaryBookConfirmModalVisible);
-  };
-
-  const transferCompanyModalVisibilityHandler = () => {
-    setIsTransferCompanyModalVisible(!isTransferCompanyModalVisible);
   };
 
   const filterOptionsModalVisibilityHandler = (filterType: FilterOptionsModalType) => {
@@ -306,8 +281,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       addAssetModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isSalaryBookConfirmModalVisible,
-      salaryBookConfirmModalVisibilityHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -322,9 +295,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisible,
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
-
-      isTransferCompanyModalVisible,
-      transferCompanyModalVisibilityHandler,
 
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
@@ -351,8 +321,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       addAssetModalDataHandler,
       isEmbedCodeModalVisible,
       embedCodeModalVisibilityHandler,
-      isSalaryBookConfirmModalVisible,
-      salaryBookConfirmModalVisibilityHandler,
 
       filterOptionsForHistory,
       filterOptionsForPending,
@@ -368,9 +336,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
       profileUploadModalVisible,
       profileUploadModalVisibilityHandler,
       profileUploadModalDataHandler,
-
-      isTransferCompanyModalVisible,
-      transferCompanyModalVisibilityHandler,
 
       isExportVoucherModalVisible,
       exportVoucherModalVisibilityHandler,
@@ -446,16 +411,6 @@ export const GlobalProvider = ({ children }: IGlobalProvider) => {
         isModalVisible={profileUploadModalVisible}
         modalVisibilityHandler={profileUploadModalVisibilityHandler}
         uploadType={uploadImageType}
-      />
-
-      <SalaryBookConfirmModal
-        isModalVisible={isSalaryBookConfirmModalVisible}
-        modalVisibilityHandler={salaryBookConfirmModalVisibilityHandler}
-      />
-
-      <TransferCompanyModal
-        isModalVisible={isTransferCompanyModalVisible}
-        modalVisibilityHandler={transferCompanyModalVisibilityHandler}
       />
 
       <ExportVoucherModal

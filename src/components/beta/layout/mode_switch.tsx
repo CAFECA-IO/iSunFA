@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
 import { cn } from '@/lib/utils/common';
@@ -67,8 +67,15 @@ const ModeSwitch = () => {
   const { isSideMenuOpen } = useDashboardCtx();
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
+  useEffect(() => {
+    // Info: (20250702 - Julian) 檢查 class是否已包含 'dark'
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
+  }, []);
+
   const handleModeSwitch = () => {
     setIsDarkMode((prev) => !prev);
+    document.documentElement.classList.toggle('dark');
   };
 
   return (

@@ -264,8 +264,8 @@ const AccountBookInfoModal = ({
 
         <div className="flex max-h-65vh flex-col gap-40px overflow-y-auto px-40px pb-40px">
           {/* Info: (20250415 - Liz) Divider */}
-          <section className="flex items-center gap-16px">
-            <div className="flex items-center gap-8px">
+          <section className="flex items-center gap-lv-4">
+            <div className="flex items-center gap-lv-2">
               <Image
                 src="/icons/asset_management_icon.svg"
                 width={16}
@@ -276,7 +276,7 @@ const AccountBookInfoModal = ({
                 {t('settings:ACCOUNT_BOOK_INFO.ACCOUNT_BOOK_INFORMATION')}
               </span>
             </div>
-            <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+            <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
           </section>
 
           <section className="flex items-start gap-40px">

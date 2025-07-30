@@ -35,24 +35,12 @@ const UserInfo: React.FC<UserInfoProps> = ({
   const currentDevice = loginDevices?.data.find((device) => device.userAgent === loginDevice);
   const isAbnormal = currentDevice?.normal === false;
 
-  // eslint-disable-next-line no-console
-  // console.log('登入裝置列表', loginDevices);
-
-  // eslint-disable-next-line no-console
-  // console.log('當前裝置:', currentDevice);
-
-  // eslint-disable-next-line no-console
-  // console.log('loginDevice', loginDevice);
-
-  // eslint-disable-next-line no-console
-  // console.log('是否異常登入:', isAbnormal);
-
   const toggleIPModal = () => {
     setIsIPModalOpen((prev) => !prev);
   };
 
   return (
-    <div className="bg-brand-gradient flex items-center justify-between gap-lv-7 rounded-md border border-stroke-brand-primary px-40px py-16px">
+    <div className="bg-brand-gradient flex flex-col items-center justify-between gap-lv-4 rounded-md border border-stroke-brand-primary px-40px py-16px tablet:flex-row tablet:gap-lv-7">
       {isIPModalOpen && (
         <IPModal userId={userId} toggleModal={toggleIPModal} pageData={loginDevices} />
       )}
@@ -60,7 +48,7 @@ const UserInfo: React.FC<UserInfoProps> = ({
         <Image alt="avatar" src={imageId} width={80} height={80} />
       </div>
 
-      <div className="flex flex-col gap-16px">
+      <div className="flex flex-col gap-lv-4">
         <div className="flex items-center gap-3 text-sm">
           <TbUserCircle size={16} className="flex-none text-icon-surface-single-color-primary" />
           <div className="flex flex-wrap items-center gap-1">

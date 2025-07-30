@@ -7,6 +7,8 @@ interface IToggleProps {
   getToggledState: (props: boolean) => void;
   toggleStateFromParent?: boolean;
   setToggleStateFromParent?: Dispatch<SetStateAction<boolean>>;
+  label?: string; // Info: (20250528 - Julian) 文字
+  labelClassName?: string; // Info: (20250528 - Julian) 文字樣式
 }
 
 const Toggle = ({
@@ -16,6 +18,8 @@ const Toggle = ({
   lockedToOpen = false,
   toggleStateFromParent = false,
   setToggleStateFromParent = () => {},
+  label,
+  labelClassName = '',
 }: IToggleProps) => {
   const [internalToggle, setInternalToggle] = useState(initialToggleState);
   const toggle = toggleStateFromParent !== undefined ? toggleStateFromParent : internalToggle;
@@ -45,14 +49,17 @@ const Toggle = ({
       : '';
 
   return (
-    <div
-      id={id}
-      onClick={toggleClickHandler}
-      className={`${toggleBackgroundStyle} inline-flex h-26px w-46px cursor-pointer items-center rounded-full p-3px duration-300 ease-in-out`}
-    >
+    <div onClick={toggleClickHandler} className="flex w-fit items-center gap-lv-2 tablet:gap-16px">
       <div
-        className={`${toggleSwitchStyle} h-20px w-20px rounded-full bg-switch-surface-controller shadow-md duration-300 ease-in-out`}
-      ></div>
+        id={id}
+        className={`${toggleBackgroundStyle} inline-flex h-26px w-46px cursor-pointer items-center rounded-full p-3px duration-300 ease-in-out hover:cursor-pointer`}
+      >
+        <div
+          className={`${toggleSwitchStyle} h-20px w-20px rounded-full bg-switch-surface-controller shadow-md duration-300 ease-in-out`}
+        ></div>
+      </div>
+
+      {label && <p className={`${labelClassName} hover:cursor-pointer`}>{label}</p>}
     </div>
   );
 };

@@ -19,6 +19,7 @@ import { Button } from '@/components/button/button';
 import { TiExport } from 'react-icons/ti';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface BusinessTaxListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
@@ -44,43 +45,22 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     },
   });
 
+  // Info: (20250624 - Anna) 下載狀態
+  const [isDownloading, setIsDownloading] = useState(false);
+
   // Info: (20250326 - Anna) 定義 handleDownload
   const handleDownload = async () => {
+    setIsDownloading(true);
     if (!printRef.current) {
-      // Info: (20250326 - Anna) Debug
-      // eslint-disable-next-line no-console
-      console.error('Print reference is null!');
       return;
     }
-
-    // Info: (20250401 - Anna) 插入修正樣式，避免文字向下偏移
-    const style = document.createElement('style');
-    style.innerHTML = `
-  .download-page td {
-    vertical-align: top !important;
-  }
-
-  .download-page h1,
-  .download-page p,
-  .download-page span {
-    vertical-align: top !important;
-    margin-top: -5px;
-    padding-bottom: 5px;
-  }
-
-  .download-page p span {
-    padding-top: 5px;
-  }
-`;
-
-    document.head.appendChild(style); // Info: (20250401 - Anna) 加入樣式
 
     // Info: (20250326 - Anna) 等待 0.5 秒，DOM 完全渲染，再執行之後的程式碼
     await new Promise<void>((resolve) => {
       setTimeout(() => resolve(), 500);
     });
 
-    const downloadPages = printRef.current.querySelectorAll('.download-page');
+    const downloadPages = printRef.current.querySelectorAll('.download-401-report');
     if (downloadPages.length === 0) {
       return;
     }
@@ -89,7 +69,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     // eslint-disable-next-line new-cap
     const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
 
-    // Info: (20250326 - Anna) 逐頁擷取 `.download-page` 並添加到 PDF
+    // Info: (20250326 - Anna) 逐頁擷取 `.download-401-report` 並添加到 PDF
     const canvasPromises = Array.from(downloadPages, async (page, index) => {
       const canvas = await html2canvas(page as HTMLElement, {
         scale: 2,
@@ -111,10 +91,9 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
     await Promise.all(canvasPromises);
 
-    style.remove(); // Info: (20250401 - Anna) 移除修正樣式，避免影響畫面
-
     // Info: (20250326 - Anna) 下載 PDF
     pdf.save('Business_Tax_Report.pdf');
+    setIsDownloading(false);
   };
 
   const displayedSelectArea = () => {
@@ -135,18 +114,13 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   //  Info: (20241204 - Anna) 新增 isReportGenerated 狀態
   const [isReportGenerated, setIsReportGenerated] = useState<boolean>(false);
 
-  // Info: (20241204 - Anna)
-  const {
-    trigger: generateFinancialReport,
-    code: generatedCode,
-    isLoading: generatedLoading,
-    success: generatedSuccess,
-  } = APIHandler<number | null>(APIName.REPORT_GENERATE);
+  const { trigger: generateFinancialReport } = APIHandler<number | null>(APIName.REPORT_GENERATE);
 
   const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 替換 defaultReportId
   const [financialReport, setFinancialReport] = useState<TaxReport401Content | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  // const [reportId, setReportId] = useState<string | null>(null); // Info: (20241204 - Anna) 保存後端返回的報告 ID
+
+  const downloadReport = `${isDownloading ? 'download-401-report' : ''}`;
 
   const { trigger: getFinancialReportAPI } = APIHandler<TaxReport401Content>(
     APIName.REPORT_GET_BY_ID
@@ -177,18 +151,12 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
       if (response.success && response.data) {
         setReportId(String(response.data)); // Info: (20241204 - Anna) 保存報告 ID
-      } else {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        // console.error('Failed to generate report. Response:', response);
       }
 
       // Info: (20241204 - Anna) 設定 isReportGenerated 為 true
       setIsReportGenerated(true);
     } catch (error) {
-      // Deprecate: (20241205 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.error('Error generating report:', error);
+      loggerFront.error('Error generating report:', error);
     }
   };
 
@@ -196,11 +164,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
   const getFinancialReport = async () => {
     setIsLoading(true);
     try {
-      const {
-        data: report,
-        code: getFRCode,
-        success: getFRSuccess,
-      } = await getFinancialReportAPI({
+      const { data: report, success: getFRSuccess } = await getFinancialReportAPI({
         params: {
           companyId: connectedAccountBook?.id,
           reportId: reportId ?? NON_EXISTING_REPORT_ID,
@@ -208,9 +172,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       });
 
       if (!getFRSuccess) {
-        // Deprecated: (20241129 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch report. Code:', getFRCode, 'Response:', report);
         return null; // Info: (20241204 - Anna) 添加返回值，避免報錯
       }
       setFinancialReport(report);
@@ -222,17 +183,6 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (generatedCode && !generatedLoading && generatedSuccess) {
-      // Deprecated: (20241204 - Anna)
-      // eslint-disable-next-line no-console
-      console.log('Report generation succeeded:', {
-        code: generatedCode,
-        message: 'The report is being generated.',
-      });
-    }
-  }, [generatedCode, generatedLoading, generatedSuccess]);
-
   // Info: (20241204 - Anna)  監聽 reportId，觸發報告加載 get report by id
   useEffect(() => {
     if (isAuthLoading || !connectedAccountBook || !reportId || isLoading) return;
@@ -242,7 +192,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
     getFinancialReport();
   }, [isAuthLoading, connectedAccountBook, reportId]);
 
-  // Deprecated: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
+  // Info: (20241204 - Anna) 在 useEffect 中監聽 selectedDateRange
   useEffect(() => {
     if (!selectedDateRange || !connectedAccountBook?.id) return;
 
@@ -257,16 +207,12 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       try {
         await handleGenerateReport();
       } catch (error) {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('Error in auto-generating report:', error);
+        loggerFront.error('Error in auto-generating report:', error);
       }
     };
 
     generateReport();
   }, [selectedDateRange, connectedAccountBook?.id]);
-
-  // Todo: (20240822 - Anna): [Beta] feat. Murky - 使用 logger('financialReport in reportId', financialReport)
 
   // Info: (20240730 - Anna) 格式化數字為千分位
   const formatNumber = (num: number) => num.toLocaleString();
@@ -294,9 +240,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       <Skeleton width={80} height={20} />
     </div>
   ) : (
-    /* Info: (20250326 - Anna) download-page 是自定義 class，用於轉 PDF 時選取每一頁，需關掉 tailwindcss/no-custom-classname */
-    /* eslint-disable-next-line tailwindcss/no-custom-classname */
-    <div id="1" className="download-page relative overflow-y-hidden bg-white">
+    <div id="1" className={`${downloadReport} relative overflow-y-hidden bg-white`}>
       <header className="flex w-full justify-between">
         <table className="border-collapse border border-black text-8px">
           <tbody>

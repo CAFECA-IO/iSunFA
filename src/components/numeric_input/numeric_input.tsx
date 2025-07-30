@@ -59,9 +59,26 @@ const NumericInput: React.FC<INumericInputProps> = ({
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
 
+    // Deprecated: (20250709 - Julian) 以下至 line 75 為 2025/7/9 新增的邏輯，如果 component 出錯請優先檢查這裡
+    // Info: (20250709 - Julian) 取得最大值和最小值，沒有則為 undefined
+    const maximum = props.max && typeof props.max === 'number' ? props.max : undefined;
+    const minimum = props.min && typeof props.min === 'number' ? props.min : undefined;
+
+    // Info: (20250709 - Julian) 移除逗號後轉為數字
+    const inputValueNum = parseFloat(inputValue.replace(/,/g, ''));
+
+    // Info: (20250709 - Julian) 限制輸入的值在最大值和最小值之間
+    const availableValue =
+      maximum && inputValueNum > maximum
+        ? maximum
+        : minimum && inputValueNum < minimum
+          ? minimum
+          : inputValueNum;
+
     // Info: (20240723 - Liz) 整理輸入的值
     const sanitizedValue =
-      inputValue
+      availableValue
+        .toString()
         .replace(/^0+(\d)/, '$1') // Info: (20250319 - Anna) 避免 01，但允許 0.1
         .replace(/[^0-9.]/g, '') // 移除非數字和小數點字符
         .replace(/(\..*)\./g, '$1') || '0'; // 只允許一個小數點
@@ -98,8 +115,33 @@ const NumericInput: React.FC<INumericInputProps> = ({
     }
   };
 
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+
+    const pasteData = event.clipboardData.getData('text');
+    const cleanedValue = pasteData
+      .replace(/[^\d.]/g, '') // Info: (20250603 - Anna) 僅保留數字與小數點
+      .replace(/(\..*)\./g, '$1'); // Info: (20250603 - Anna) 僅允許一個小數點
+
+    const target = event.target as HTMLInputElement;
+
+    // Info: (20250603 - Anna) 將處理過的值送到 handleChange
+    handleChange({ target: { value: cleanedValue } } as React.ChangeEvent<HTMLInputElement>);
+
+    // Info: (20250603 - Anna) 將游標移到最後
+    requestAnimationFrame(() => {
+      target.selectionStart = cleanedValue.length;
+      target.selectionEnd = cleanedValue.length;
+    });
+  };
+
   // Info: (20250306 - Julian) 處理在中文輸入法下，填入數字的情況
   function convertInput(event: React.KeyboardEvent<HTMLInputElement>) {
+    // Info: (20250603 - Anna)  忽略 Ctrl/Cmd + V（貼上）
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v') {
+      return;
+    }
+
     // Info: (20250313 - Julian) 執行預設行為: Tab, Backspace, Delete, ArrowLeft, ArrowRight
     if (
       event.code === KEYBOARD_EVENT_CODE.TAB ||
@@ -171,6 +213,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
       onBlur={handleBlur}
       onWheel={handleWheel}
       onKeyDown={convertInput}
+      onPaste={handlePaste}
       {...props}
     />
   );

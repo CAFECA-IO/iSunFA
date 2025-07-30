@@ -80,7 +80,9 @@ const BankCodeDropdown: React.FC<BankCodeDropdownProps> = ({
               : 'grid-rows-0 border-transparent'
           } overflow-hidden transition-all duration-300 ease-in-out`}
         >
-          <ul className={`z-20 flex max-h-400px w-full flex-col items-start overflow-y-auto p-2`}>
+          <ul
+            className={`z-20 flex max-h-200px w-full flex-col items-start overflow-y-auto p-2 tablet:max-h-400px`}
+          >
             {options.map((bank) => (
               <li
                 key={bank.code}

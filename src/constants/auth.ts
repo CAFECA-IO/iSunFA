@@ -6,8 +6,14 @@ export enum AuthFunctionsKeysNew {
   admin = 'admin',
   owner = 'owner',
   superAdmin = 'superAdmin',
+<<<<<<< HEAD
   AccountBookAdminMatch = 'AccountBookAdminMatch',
   projectAccountBookMatch = 'projectAccountBookMatch',
+=======
+  CompanyAdminMatch = 'CompanyAdminMatch',
+  projectCompanyMatch = 'projectCompanyMatch',
+  internal = 'internal',
+>>>>>>> feature/fix-integration-test-refactoring
 }
 
 export const AUTH_WHITELIST = {
@@ -56,6 +62,7 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_RESULT_V2]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_INVOICE_RC2]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
   [APIName.GET_INVOICE_RC2_INPUT]: [AuthFunctionsKeysNew.user],
@@ -90,7 +97,6 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.IMAGE_GET_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_STATUS]: [AuthFunctionsKeysNew.user],
   [APIName.ASK_AI_V2]: [AuthFunctionsKeysNew.user],
-  [APIName.VOUCHER_WAS_READ_V2]: [AuthFunctionsKeysNew.user],
   [APIName.JOURNAL_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.REPORT_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.REPORT_GET_BY_ID]: [AuthFunctionsKeysNew.user],
@@ -132,7 +138,9 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.DELETE_MEMBER]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_MEMBER_BY_TEAM_ID]: [AuthFunctionsKeysNew.user],
-  [APIName.ADD_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.INVITE_MEMBER_TO_TEAM]: [AuthFunctionsKeysNew.user],
+  [APIName.ACCEPT_TEAM_INVITATION]: [AuthFunctionsKeysNew.user],
+  [APIName.DECLINE_TEAM_INVITATION]: [AuthFunctionsKeysNew.user],
   [APIName.LEAVE_TEAM]: [AuthFunctionsKeysNew.user],
   [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
   [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.user],
@@ -170,4 +178,9 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_NOTIFICATION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_NOTIFICATION_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.READ_NOTIFICATION]: [AuthFunctionsKeysNew.user],
+
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: [AuthFunctionsKeysNew.internal],
+  [APIName.LIST_BAIFA_VOUCHER]: [AuthFunctionsKeysNew.internal],
+
+  [APIName.GET_VACANCY_BY_ID]: [AuthFunctionsKeysNew.user],
 };

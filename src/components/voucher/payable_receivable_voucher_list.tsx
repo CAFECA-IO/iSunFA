@@ -37,6 +37,8 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
   const tableCellStyles = 'table-cell text-center align-middle';
   const sideBorderStyles = 'border-r border-stroke-neutral-quaternary border-b';
 
+  const isNoData = voucherList.length === 0;
+
   // Info: (20240924 - Julian) 日期排序按鈕
   const displayedDate = SortingButton({
     string: t('journal:VOUCHER.VOUCHER_DATE'),
@@ -95,7 +97,7 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
     <PayableReceivableVoucherItem key={voucher.id} activeTab={activeTab} voucherData={voucher} />
   ));
 
-  return (
+  const displayedTable = !isNoData ? (
     <div className="table overflow-hidden rounded-lg bg-surface-neutral-surface-lv1">
       {/* Info: (20240924 - Julian) ---------------- Table Header ---------------- */}
       <div className="table-header-group h-60px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
@@ -132,6 +134,22 @@ const PayableReceivableVoucherList: React.FC<IPayableReceivableVoucherListProps>
       {/* Info: (20240924 - Julian) ---------------- Table Body ---------------- */}
       <div className="table-row-group">{displayedList}</div>
     </div>
+  ) : (
+    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Info: (20250604 - Julian) Table for mobile */}
+      <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
+        <div className={isNoData ? '' : 'w-max'}>{displayedTable}</div>
+      </div>
+
+      {/* Info: (20250604 - Julian) Table for desktop */}
+      <div className="hidden tablet:block">{displayedTable}</div>
+    </>
   );
 };
 

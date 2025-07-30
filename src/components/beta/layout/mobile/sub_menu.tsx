@@ -13,6 +13,7 @@ import {
   SubMenuOptionType,
   ISubMenuSection,
 } from '@/interfaces/side_menu';
+import { cn } from '@/lib/utils/common';
 
 type SubMenuOptionProps = TSubMenuOption & {
   closeMenu?: () => void;
@@ -35,7 +36,14 @@ const SubMenuOption = ({
   const { teamRole } = useUserCtx();
 
   const toggleEmbedCodeModal = () => {
-    setIsEmbedCodeModalOpen((prev) => !prev);
+    setIsEmbedCodeModalOpen((prev) => {
+      const next = !prev;
+      // Info: (20250602 - Anna) !next 為 true 時，再呼叫 closeMenu ，避免 modal 尚未顯示就被 menu 卸載
+      if (!next) {
+        closeMenu();
+      }
+      return next;
+    });
   };
 
   const showAccountBookNeededToast = () => {
@@ -68,6 +76,8 @@ const SubMenuOption = ({
 
     if (title === 'GENERATE_EMBED_CODE') {
       toggleEmbedCodeModal();
+      // Info: (20250602 - Anna) 點「嵌入程式碼」時，避免執行 closeMenu，否則 modal 會被立即卸載
+      return;
     }
     // Info: (20241126 - Liz) 如果有其他按鈕的 onClick 事件就新增在這裡: if (title === 'XXX') { ... }
     closeMenu();
@@ -85,15 +95,17 @@ const SubMenuOption = ({
 
   if (disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
-  if (hiddenForRole && hiddenForRole === teamRole) return null;
-
   if (type === SubMenuOptionType.LINK) {
     return (
       <Link
         href={link}
         onClick={onClickLink}
-        className="rounded-xs px-12px py-10px text-sm font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid"
+        className={cn('rounded-xs px-12px py-10px text-sm font-medium text-button-text-secondary', {
+          'pointer-events-none disabled:text-button-text-disable':
+            hiddenForRole && hiddenForRole === teamRole,
+          'hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid':
+            !hiddenForRole || hiddenForRole !== teamRole,
+        })}
       >
         {t(`layout:SIDE_MENU.${title}`)}
       </Link>
@@ -135,12 +147,17 @@ const SubMenuSection = ({ subMenuSection, closeMenu }: SubMenuSectionProps) => {
 
   if (subMenuSection.disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
-  if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
-
   return (
     <>
-      <h4 className="text-xs font-semibold uppercase leading-5 tracking-widest text-text-brand-primary-lv1">
+      <h4
+        className={cn(
+          'text-xs font-semibold uppercase leading-5 tracking-widest text-text-brand-primary-lv1',
+          {
+            'pointer-events-none disabled:text-button-text-disable':
+              subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole,
+          }
+        )}
+      >
         {t(`layout:SIDE_MENU.${subMenuSection.caption}`)}
       </h4>
 

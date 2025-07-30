@@ -11,7 +11,7 @@ interface SystemNewsPageProps {
 }
 
 const SystemNewsPage = ({ newsId }: SystemNewsPageProps) => {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation(['common', 'dashboard']);
 
   return (
     <>
@@ -19,7 +19,7 @@ const SystemNewsPage = ({ newsId }: SystemNewsPageProps) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
-        <title>{t('common:LATEST_NEWS_PAGE.SYSTEM_NEWS')}</title>
+        <title>{t('dashboard:LATEST_NEWS_PAGE.SYSTEM_NEWS')}</title>
         <meta
           name="description"
           content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
@@ -36,7 +36,7 @@ const SystemNewsPage = ({ newsId }: SystemNewsPageProps) => {
 
       <Layout
         isDashboard={false}
-        pageTitle={t('common:LATEST_NEWS_PAGE.SYSTEM_NEWS')}
+        pageTitle={t('dashboard:LATEST_NEWS_PAGE.SYSTEM_NEWS')}
         goBackUrl={ISUNFA_ROUTE.LATEST_NEWS_PAGE}
       >
         <SystemNewsPageBody newsId={newsId} />
@@ -55,7 +55,7 @@ export const getServerSideProps: GetServerSideProps = async ({ params, locale })
   return {
     props: {
       newsId: params.newsId,
-      ...(await serverSideTranslations(locale as string, ['layout', 'common'])),
+      ...(await serverSideTranslations(locale as string, ['layout', 'dashboard', 'common'])),
     },
   };
 };

@@ -13,15 +13,45 @@ import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { TeamRole } from '@/interfaces/team';
+<<<<<<< HEAD
 
 export const handleGetRequest: IHandleRequest<
   APIName.ACCOUNT_LIST,
   IPaginatedAccount | null
 > = async ({ query, session }) => {
   const { accountBookId, teams } = session;
+=======
+import { HTTP_STATUS } from '@/constants/http';
+import { getSession } from '@/lib/utils/session';
+import { validateOutputData } from '@/lib/utils/validator';
+import {
+  checkRequestData,
+  checkSessionUser,
+  checkUserAuthorization,
+  logUserAction,
+} from '@/lib/utils/middleware';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
+
+/**
+ * Info: (20250505 - Shirley) Handle GET request for account list
+ * This function follows the flat coding style pattern:
+ * 1. Get user session and validate authentication
+ * 2. Check user authorization
+ * 3. Validate request data
+ * 4. Perform team permission check
+ * 5. Fetch accounts
+ * 6. Validate output data
+ * 7. Return formatted response
+ */
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  const { userId } = session;
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+>>>>>>> feature/fix-integration-test-refactoring
   let payload: IPaginatedAccount | null = null;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   const {
+    accountBookId: companyId,
     includeDefaultAccount,
     liquidity,
     type,
@@ -36,8 +66,20 @@ export const handleGetRequest: IHandleRequest<
     isDeleted,
   } = query;
 
+<<<<<<< HEAD
   // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
   const company = await getCompanyById(accountBookId);
+=======
+  loggerBack.info(
+    `User: ${userId} Getting account list for companyId: ${companyId} with query: ${JSON.stringify(query)}`
+  );
+
+  // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
+  // const { teams } = session;
+
+  // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+>>>>>>> feature/fix-integration-test-refactoring
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -47,6 +89,12 @@ export const handleGetRequest: IHandleRequest<
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
+  await assertUserCanByAccountBook({
+    userId,
+    accountBookId: companyId,
+    action: TeamPermissionAction.ACCOUNTING_SETTING_GET,
+  });
+  /** Info: (20250715 - Tzuhan) 這裡的 assertUserCanByAccountBook 會檢查 userId 是否有權限訪問該帳本
   const userTeam = teams?.find((team) => team.id === companyTeamId);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
@@ -54,12 +102,13 @@ export const handleGetRequest: IHandleRequest<
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_GET,
   });
 
   if (!assertResult.can) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
+  */
 
   const accountRetriever = AccountRetrieverFactory.createRetriever({
     accountBookId,
@@ -86,6 +135,7 @@ export const handleGetRequest: IHandleRequest<
   };
 };
 
+<<<<<<< HEAD
 export const handlePostRequest: IHandleRequest<
   APIName.CREATE_NEW_SUB_ACCOUNT,
   IAccount | null
@@ -97,6 +147,44 @@ export const handlePostRequest: IHandleRequest<
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
 
   // Info: (20250414 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+=======
+/**
+ * Info: (20250505 - Shirley) Handle POST request for creating new sub-account
+ * This function follows the flat coding style pattern:
+ * 1. Get user session and validate authentication
+ * 2. Check user authorization
+ * 3. Validate request data
+ * 4. Perform team permission check
+ * 5. Create new sub-account
+ * 6. Validate output data
+ * 7. Return formatted response
+ */
+const handlePostRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: IAccount | null = null;
+
+  await checkSessionUser(session, APIName.CREATE_NEW_SUB_ACCOUNT, req);
+  await checkUserAuthorization(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
+
+  // Info: (20250505 - Shirley) 驗證請求資料
+  const { query, body } = checkRequestData(APIName.CREATE_NEW_SUB_ACCOUNT, req, session);
+  if (query === null || body === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const { accountBookId } = query;
+  const companyId = +accountBookId;
+
+  const { accountId, name, note } = body;
+
+  const nowInSecond = getTimestampNow();
+
+  // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
+  const { teams } = session;
+
+  // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+>>>>>>> feature/fix-integration-test-refactoring
   const company = await getCompanyById(companyId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
@@ -114,7 +202,7 @@ export const handlePostRequest: IHandleRequest<
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam?.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_CREATE,
   });
 
   if (!assertResult.can) {

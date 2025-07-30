@@ -74,8 +74,6 @@ const CertificateTable: React.FC<CertificateTableProps> = ({
 
   return (
     // Info: (20241210 - tzuhan) 隱藏 scrollbar
-    // Deprecate: (20241211 tzuhan) remove eslint-disable
-    // eslint-disable-next-line tailwindcss/no-custom-classname
     <div className="min-h-500px w-full flex-auto overflow-hidden rounded-md">
       <div className="table w-full rounded-md bg-surface-neutral-surface-lv2 shadow-normal_setting_brand">
         <div className="table-header-group w-full max-w-920px bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">

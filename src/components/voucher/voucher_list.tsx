@@ -18,6 +18,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 import { HiCheck } from 'react-icons/hi';
 import Toggle from '@/components/toggle/toggle';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IVoucherListProps {
   voucherList: IVoucherUI[];
@@ -55,6 +56,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   toggleSideMenu,
 }) => {
   const { t } = useTranslation('common');
+  const { currency } = useCurrencyCtx();
   const { connectedAccountBook } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
@@ -76,6 +78,9 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const tableCellStyles = 'table-cell text-xs text-center align-middle';
   const sideBorderStyles = 'border-b border-stroke-neutral-quaternary';
   const checkStyle = `${isCheckBoxOpen ? 'table-cell' : 'hidden'} text-center align-middle border-r border-stroke-neutral-quaternary`;
+
+  // Info: (20250527 - Julian) 如果 uiVoucherList 為空，則顯示無資料狀態
+  const isNoData = uiVoucherList.length === 0;
 
   // Info: (20250203 - Julian) 根據 voucher 的數量決定底色：奇數白色、偶數灰色
   const bottomColor =
@@ -368,26 +373,22 @@ const VoucherList: React.FC<IVoucherListProps> = ({
   const displayedSelectArea = (
     <div className="flex items-center justify-between">
       {/* Info: (20250107 - Julian) hidden delete voucher & reversals toggle */}
-      <div className="hidden items-center gap-16px tablet:flex">
+      <div className="hidden tablet:block">
         <Toggle
           id="hide-reversals-toggle"
           initialToggleState={isHideReversals}
           getToggledState={hideReversalsToggleHandler}
           toggleStateFromParent={isHideReversals}
           lockedToOpen={false}
+          label={t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
+          labelClassName="text-switch-text-primary hover:cursor-pointer"
         />
-        <div
-          onClick={hideReversalsToggleHandler}
-          className="text-switch-text-primary hover:cursor-pointer"
-        >
-          {t('journal:VOUCHER.HIDE_VOUCHER_TOGGLE')}
-        </div>
       </div>
       {/* Info: (20250521 - Julian) Filter button */}
       <button
         type="button"
         onClick={toggleSideMenu}
-        className="block p-10px text-button-text-secondary tablet:hidden"
+        className="block w-fit p-10px text-button-text-secondary tablet:hidden"
       >
         <VscSettings size={24} />
       </button>
@@ -410,7 +411,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         {/* Info: (20240920 - Julian) Select All & Cancel button */}
         <button
           type="button"
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
           onClick={selectAllHandler}
         >
           {isSelectedAll ? t('journal:VOUCHER.UNSELECT_ALL') : t('journal:VOUCHER.SELECT_ALL')}
@@ -419,7 +420,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <button
           type="button"
           onClick={selectToggleHandler}
-          className={`${isCheckBoxOpen ? 'block' : 'hidden'} font-semibold text-link-text-primary hover:opacity-70`}
+          className={`${isCheckBoxOpen ? 'block' : 'hidden'} text-sm font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
         >
           {t('common:COMMON.CANCEL')}
         </button>
@@ -427,7 +428,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
         <button
           type="button"
           onClick={selectToggleHandler}
-          className={`${isCheckBoxOpen ? 'hidden' : 'block'} font-semibold text-link-text-primary hover:opacity-70`}
+          className={`${isCheckBoxOpen ? 'hidden' : 'block'} text-sm font-semibold text-link-text-primary enabled:hover:underline disabled:text-link-text-disable`}
         >
           {t('journal:VOUCHER.SELECT')}
         </button>
@@ -452,7 +453,7 @@ const VoucherList: React.FC<IVoucherListProps> = ({
     );
   });
 
-  const displayedTable = (
+  const displayedTable = !isNoData ? (
     <div className={`table overflow-hidden rounded-lg tablet:shadow-Dropshadow_XS ${bottomColor}`}>
       {/* Info: (20240920 - Julian) ---------------- Table Header ---------------- */}
       <div className="table-header-group border-b bg-surface-neutral-surface-lv1 text-sm text-text-neutral-tertiary">
@@ -501,6 +502,10 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {/* Info: (20240920 - Julian) ---------------- Table Footer ---------------- */}
       <div className="table-footer-group h-20px"></div>
     </div>
+  ) : (
+    <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
+      <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
+    </div>
   );
 
   return (
@@ -508,12 +513,12 @@ const VoucherList: React.FC<IVoucherListProps> = ({
       {displayedSelectArea}
 
       <p className="text-xs font-semibold uppercase text-text-neutral-tertiary tablet:ml-auto">
-        {t('journal:VOUCHER.CURRENCY')}: TWD
+        {t('journal:VOUCHER.CURRENCY')}: {currency}
       </p>
 
       {/* Info: (20250521 - Julian) Table for mobile */}
       <div className="inline-block overflow-x-auto rounded-lg shadow-Dropshadow_XS tablet:hidden">
-        <div className="w-max">{displayedTable}</div>
+        <div className={isNoData ? '' : 'w-max'}>{displayedTable}</div>
       </div>
 
       {/* Info: (20250521 - Julian) Table for desktop */}

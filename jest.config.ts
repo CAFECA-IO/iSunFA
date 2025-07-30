@@ -1,4 +1,4 @@
-/**
+/** Info: (20250630 - Shirley)
  * For a detailed explanation regarding each configuration property, visit:
  * https://jestjs.io/docs/configuration
  */
@@ -6,40 +6,40 @@ import type { Config } from 'jest';
 import nextJest from 'next/jest';
 
 const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
+  // Info: (20250630 - Shirley) Provide the path to your Next.js app to load next.config.js and .env files in your test environment
   dir: './',
 });
 const config: Config = {
-  // All imported modules in your tests should be mocked automatically
+  // Info: (20250630 - Shirley) All imported modules in your tests should be mocked automatically
   // automock: false,
 
-  // Stop running tests after `n` failures
+  // Info: (20250630 - Shirley) Stop running tests after `n` failures
   // bail: 0,
 
-  // The directory where Jest should store its cached dependency information
+  // Info: (20250630 - Shirley) The directory where Jest should store its cached dependency information
   // cacheDirectory: "/private/var/folders/s9/ybzwh53178562g6r6k8kcbgr0000gn/T/jest_dx",
 
-  // Automatically clear mock calls, instances, contexts and results before every test
+  // Info: (20250630 - Shirley) Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
 
-  // Indicates whether the coverage information should be collected while executing the test
+  // Info: (20250630 - Shirley) Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
 
-  // An array of glob patterns indicating a set of files for which coverage information should be collected
+  // Info: (20250630 - Shirley) An array of glob patterns indicating a set of files for which coverage information should be collected
   // collectCoverageFrom: undefined,
 
-  // The directory where Jest should output its coverage files
+  // Info: (20250630 - Shirley) The directory where Jest should output its coverage files
   coverageDirectory: 'coverage',
 
-  // An array of regexp pattern strings used to skip coverage collection
+  // Info: (20250630 - Shirley) An array of regexp pattern strings used to skip coverage collection
   // coveragePathIgnorePatterns: [
   //   "/node_modules/"
   // ],
 
-  // Indicates which provider should be used to instrument code for coverage
+  // Info: (20250630 - Shirley) Indicates which provider should be used to instrument code for coverage
   coverageProvider: 'babel',
 
-  // A list of reporter names that Jest uses when writing coverage reports
+  // Info: (20250630 - Shirley) A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
   //   "json",
   //   "text",
@@ -47,41 +47,42 @@ const config: Config = {
   //   "clover"
   // ],
 
-  // An object that configures minimum threshold enforcement for coverage results
+  // Info: (20250630 - Shirley) An object that configures minimum threshold enforcement for coverage results
   // coverageThreshold: undefined,
 
-  // A path to a custom dependency extractor
+  // Info: (20250630 - Shirley) A path to a custom dependency extractor
   // dependencyExtractor: undefined,
 
-  // Make calling deprecated APIs throw helpful error messages
+  // Info: (20250630 - Shirley) Make calling deprecated APIs throw helpful error messages
   // errorOnDeprecated: false,
 
-  // The default configuration for fake timers
+  // Info: (20250630 - Shirley) The default configuration for fake timers
   // fakeTimers: {
   //   "enableGlobally": false
   // },
 
-  // Force coverage collection from ignored files using an array of glob patterns
+  // Info: (20250630 - Shirley) Force coverage collection from ignored files using an array of glob patterns
   // forceCoverageMatch: [],
 
-  // A path to a module which exports an async function that is triggered once before all test suites
+  // Info: (20250630 - Shirley) A path to a module which exports an async function that is triggered once before all test suites
   // globalSetup: undefined,
 
-  // A path to a module which exports an async function that is triggered once after all test suites
+  // Info: (20250630 - Shirley) A path to a module which exports an async function that is triggered once after all test suites
   // globalTeardown: undefined,
 
-  // A set of global variables that need to be available in all test environments
+  // Info: (20250630 - Shirley) A set of global variables that need to be available in all test environments
   // globals: {},
 
-  // The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
-  // maxWorkers: "50%",
+  // Info: (20250630 - Shirley) The maximum amount of workers used to run your tests. Can be specified as % or a number. E.g. maxWorkers: 10% will use 10% of your CPU amount + 1 as the maximum worker number. maxWorkers: 2 will use a maximum of 2 workers.
+  // Info: (20250630 - Shirley) For integration tests, limit to 1 worker to avoid server resource conflicts
+  maxWorkers: process.env.TEST_TYPE === 'integration' ? 1 : '50%',
 
-  // An array of directory names to be searched recursively up from the requiring module's location
+  // Info: (20250630 - Shirley) An array of directory names to be searched recursively up from the requiring module's location
   // moduleDirectories: [
   //   "node_modules"
   // ],
 
-  // An array of file extensions your modules use
+  // Info: (20250630 - Shirley) An array of file extensions your modules use
   // moduleFileExtensions: [
   //   "js",
   //   "mjs",
@@ -93,113 +94,132 @@ const config: Config = {
   //   "node"
   // ],
 
-  // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
-  // moduleNameMapper: {},
+  // Info: (20250630 - Shirley) A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
+  moduleNameMapper: {
+    '^@/client$': '<rootDir>/prisma/client.ts',
+    '^@package$': '<rootDir>/package.json',
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
 
-  // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
+  // Info: (20250630 - Shirley) An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
   // modulePathIgnorePatterns: [],
 
-  // Activates notifications for test results
+  // Info: (20250630 - Shirley) Activates notifications for test results
   // notify: false,
 
-  // An enum that specifies notification mode. Requires { notify: true }
+  // Info: (20250630 - Shirley) An enum that specifies notification mode. Requires { notify: true }
   // notifyMode: "failure-change",
 
-  // A preset that is used as a base for Jest's configuration
+  // Info: (20250630 - Shirley) A preset that is used as a base for Jest's configuration
   // preset: undefined,
 
-  // Run tests from one or more projects
+  // Info: (20250630 - Shirley) Run tests from one or more projects
   // projects: undefined,
 
-  // Use this configuration option to add custom reporters to Jest
+  // Info: (20250630 - Shirley) Use this configuration option to add custom reporters to Jest
   // reporters: undefined,
 
-  // Automatically reset mock state before every test
+  // Info: (20250630 - Shirley) Automatically reset mock state before every test
   // resetMocks: false,
 
-  // Reset the module registry before running each individual test
+  // Info: (20250630 - Shirley) Reset the module registry before running each individual test
   // resetModules: false,
 
-  // A path to a custom resolver
+  // Info: (20250630 - Shirley) A path to a custom resolver
   // resolver: undefined,
 
-  // Automatically restore mock state and implementation before every test
+  // Info: (20250630 - Shirley) Automatically restore mock state and implementation before every test
   // restoreMocks: false,
 
-  // The root directory that Jest should scan for tests and modules within
+  // Info: (20250630 - Shirley) The root directory that Jest should scan for tests and modules within
   // rootDir: undefined,
 
-  // A list of paths to directories that Jest should use to search for files in
+  // Info: (20250630 - Shirley) A list of paths to directories that Jest should use to search for files in
   // roots: [
   //   "<rootDir>"
   // ],
 
-  // Allows you to use a custom runner instead of Jest's default test runner
+  // Info: (20250630 - Shirley) Allows you to use a custom runner instead of Jest's default test runner
   // runner: "jest-runner",
 
-  // The paths to modules that run some code to configure or set up the testing environment before each test
+  // Info: (20250630 - Shirley) The paths to modules that run some code to configure or set up the testing environment before each test
   // setupFiles: [],
 
-  // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  // Info: (20250630 - Shirley) A list of paths to modules that run some code to configure or set up the testing framework before each test
+  setupFilesAfterEnv: ['<rootDir>/src/tests/utils/setup.ts'],
 
-  // The number of seconds after which a test is considered as slow and reported as such in the results.
+  // Info: (20250630 - Shirley) The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,
 
-  // A list of paths to snapshot serializer modules Jest should use for snapshot testing
+  // Info: (20250630 - Shirley) Test timeout - longer for integration tests and CI environment
+  testTimeout: process.env.TEST_TYPE === 'integration' ? 120000 : process.env.CI ? 15000 : 5000, // 15 seconds for CI, 5 seconds for unit tests locally
+
+  // Info: (20250630 - Shirley) Force Jest to exit when tests complete to prevent hanging
+  forceExit: true,
+
+  // Info: (20250630 - Shirley) Detect open handles to prevent hanging
+  detectOpenHandles: true,
+
+  // Info: (20250630 - Shirley) A list of paths to snapshot serializer modules Jest should use for snapshot testing
   // snapshotSerializers: [],
 
-  // The test environment that will be used for testing
-  // testEnvironment: "jest-environment-node",
+  // Info: (20250630 - Shirley) The test environment that will be used for testing
+  testEnvironment: 'node',
 
-  // Options that will be passed to the testEnvironment
+  // Info: (20250630 - Shirley) Node options for running tests
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
+
+  // Info: (20250630 - Shirley) Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
 
-  // Adds a location field to test results
+  // Info: (20250630 - Shirley) Adds a location field to test results
   // testLocationInResults: false,
 
-  // The glob patterns Jest uses to detect test files
+  // Info: (20250630 - Shirley) The glob patterns Jest uses to detect test files
   // testMatch: [
   //   "**/__tests__/**/*.[jt]s?(x)",
   //   "**/?(*.)+(spec|test).[tj]s?(x)"
   // ],
 
-  // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
-  // testPathIgnorePatterns: [
-  //   "/node_modules/"
-  // ],
+  // Info: (20250630 - Shirley) An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/src/tests/integration/', // Exclude integration tests from regular test runs
+  ],
 
-  // The regexp pattern or array of patterns that Jest uses to detect test files
+  // Info: (20250630 - Shirley) The regexp pattern or array of patterns that Jest uses to detect test files
   // testRegex: [],
 
-  // This option allows the use of a custom results processor
+  // Info: (20250630 - Shirley) This option allows the use of a custom results processor
   // testResultsProcessor: undefined,
 
-  // This option allows use of a custom test runner
+  // Info: (20250630 - Shirley) This option allows use of a custom test runner
   // testRunner: "jest-circus/runner",
 
-  // A map from regular expressions to paths to transformers
+  // Info: (20250630 - Shirley) A map from regular expressions to paths to transformers
   // transform: undefined,
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
-  // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
+  // Info: (20250630 - Shirley) An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
   //   "/node_modules/",
   //   "\\.pnp\\.[^\\/]+$"
   // ],
   transformIgnorePatterns: ['/node_modules/(?!@passwordless-id/webauthn)'],
 
-  // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
+  // Info: (20250630 - Shirley) An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,
 
-  // Indicates whether each individual test should be reported during the run
+  // Info: (20250630 - Shirley) Indicates whether each individual test should be reported during the run
   // verbose: undefined,
 
-  // An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
+  // Info: (20250630 - Shirley) An array of regexp patterns that are matched against all source file paths before re-running tests in watch mode
   // watchPathIgnorePatterns: [],
 
-  // Whether to use watchman for file crawling
+  // Info: (20250630 - Shirley) Whether to use watchman for file crawling
   // watchman: true,
 };
 

@@ -5,7 +5,6 @@ import InputInvoiceTable from '@/components/invoice/input_invoice_table';
 import CertificateGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { InvoiceTab } from '@/constants/invoice_rc2';
-import { CurrencyType } from '@/constants/currency';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 
 interface InputInvoiceProps {
@@ -15,7 +14,6 @@ interface InputInvoiceProps {
   totalCount: number;
   totalPages: number;
   certificates: IInvoiceRC2InputUI[]; // Info: (20240923 - Anna) 項目列表
-  currencyAlias: CurrencyType;
   viewType?: DISPLAY_LIST_VIEW_TYPE; // Info: (20240923 - Anna) 顯示模式
   activeSelection: boolean; // Info: (20240923 - Anna) 是否處於選擇狀態
   handleSelect: (ids: number[], isSelected: boolean) => void;
@@ -35,9 +33,10 @@ interface InputInvoiceProps {
   setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   isExporting: boolean;
+  uploaderAvatarMap: Record<string, string>;
 }
 
-// Deprecated: (20240919 - Anna) will be replaced by actual data type
+// Info: (20240919 - Anna) will be replaced by actual data type
 const InputInvoice: React.FC<InputInvoiceProps> = ({
   activeTab,
   page,
@@ -45,7 +44,6 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
   totalCount,
   totalPages,
   certificates,
-  currencyAlias,
   viewType,
   activeSelection,
   handleSelect,
@@ -65,6 +63,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
   setCertificateTypeSort,
   setCertificateNoSort,
   isExporting,
+  uploaderAvatarMap,
 }) => {
   return (
     <>
@@ -72,7 +71,6 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
         <InputInvoiceTable
           activeTab={activeTab}
           certificates={certificates}
-          currencyAlias={currencyAlias}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
           handleSelectAll={handleSelectAll}
@@ -89,6 +87,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setCertificateTypeSort={setCertificateTypeSort}
           setCertificateNoSort={setCertificateNoSort}
           isExporting={isExporting}
+          uploaderAvatarMap={uploaderAvatarMap}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
@@ -110,6 +109,7 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setCurrentPage={setPage}
           className="mt-4"
           totalCount={totalCount}
+          isExporting={isExporting}
         />
       </div>
     </>

@@ -15,6 +15,8 @@ import EmbedCodeModal from '@/components/embed_code_modal/embed_code_modal_new';
 import packageJson from '@package';
 import { TeamRole } from '@/interfaces/team';
 import { useDashboardCtx } from '@/contexts/dashboard_context';
+import { MENU_CONFIG } from '@/interfaces/side_menu';
+import { cn } from '@/lib/utils/common';
 
 interface IDefaultMenuOption {
   title: string;
@@ -65,195 +67,6 @@ interface ISubMenuOptionWithButton extends IDefaultSubMenuOption {
   type: SubMenuOptionType.BUTTON;
   link?: undefined;
 }
-
-const MENU_CONFIG: TMenuOption[] = [
-  {
-    title: 'INVOICE_MANAGEMENT',
-    iconSrc: '/icons/invoice_management_icon.svg',
-    iconSrcAlt: 'invoice_management_icon',
-    iconWidth: 24,
-    iconHeight: 24,
-    subMenu: [
-      {
-        caption: 'INVOICE',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'INPUT_INVOICE',
-            link: ISUNFA_ROUTE.INPUT_INVOICE_LIST,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'OUTPUT_INVOICE',
-            link: ISUNFA_ROUTE.OUTPUT_INVOICE_LIST,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'ACCOUNTING',
-    iconSrc: '/icons/accounting_icon_calculator.svg',
-    iconSrcAlt: 'accounting_icon_calculator',
-    iconWidth: 20.34,
-    iconHeight: 23.85,
-    subMenu: [
-      {
-        caption: 'ACCOUNTING',
-        hiddenForRole: TeamRole.VIEWER,
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'ADDING_VOUCHER',
-            link: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'VOUCHER_LIST',
-            link: ISUNFA_ROUTE.VOUCHER_LIST,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'PAYABLE_RECEIVABLE_LIST',
-            link: ISUNFA_ROUTE.PAYABLE_RECEIVABLE_LIST,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'ASSET_MANAGEMENT',
-    iconSrc: '/icons/asset_management_icon.svg',
-    iconSrcAlt: 'asset_management_icon',
-    iconWidth: 24,
-    iconHeight: 24,
-    hiddenForRole: TeamRole.VIEWER,
-    subMenu: [
-      {
-        caption: 'ASSET',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'ASSET_LIST',
-            link: ISUNFA_ROUTE.ASSET_LIST,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'REPORTS',
-    iconSrc: '/icons/reports_icon.svg',
-    iconSrcAlt: 'reports_icon',
-    iconWidth: 20.58,
-    iconHeight: 23.85,
-    hiddenForRole: TeamRole.VIEWER,
-    subMenu: [
-      {
-        caption: 'FINANCIAL_REPORT',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'BALANCE_SHEET',
-            link: ISUNFA_ROUTE.BALANCE_SHEET,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'INCOME_STATEMENT',
-            link: ISUNFA_ROUTE.INCOME_STATEMENT,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'STATEMENT_OF_CASH_FLOWS',
-            link: ISUNFA_ROUTE.CASH_FLOW,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-      {
-        caption: 'DAILY_REPORT',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'LEDGER',
-            link: ISUNFA_ROUTE.LEDGER,
-            needToConnectAccountBook: true,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'TRIAL_BALANCE',
-            link: ISUNFA_ROUTE.TRIAL_BALANCE,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-      {
-        caption: 'EMBED_CODE',
-        subMenu: [
-          {
-            type: SubMenuOptionType.BUTTON,
-            title: 'GENERATE_EMBED_CODE',
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'PARAMETER_SETTINGS',
-    iconSrc: '/icons/parameter_setting.svg',
-    iconSrcAlt: 'parameter_setting',
-    iconWidth: 23.77,
-    iconHeight: 23.73,
-    subMenu: [
-      {
-        caption: 'SETTINGS',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'GENERAL_SETTINGS',
-            link: ISUNFA_ROUTE.GENERAL_SETTINGS,
-            needToConnectAccountBook: false,
-          },
-        ],
-      },
-      {
-        caption: 'ACCOUNT_BOOK_SETTINGS',
-        subMenu: [
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'ACCOUNTING_SETTINGS',
-            link: ISUNFA_ROUTE.ACCOUNTING_SETTINGS,
-            needToConnectAccountBook: true,
-            hiddenForRole: TeamRole.VIEWER,
-          },
-          {
-            type: SubMenuOptionType.LINK,
-            title: 'CLIENTS_SUPPLIERS_MANAGEMENT',
-            link: ISUNFA_ROUTE.COUNTERPARTY,
-            needToConnectAccountBook: true,
-          },
-        ],
-      },
-    ],
-  },
-  {
-    title: 'BACK_TO_DASHBOARD',
-    iconSrc: '/icons/dashboard.svg',
-    iconSrcAlt: 'dashboard_icon',
-    iconWidth: 24,
-    iconHeight: 24,
-    link: ISUNFA_ROUTE.DASHBOARD,
-  },
-];
 
 type TSubMenuOption = ISubMenuOptionWithLink | ISubMenuOptionWithButton;
 type SubMenuOptionProps = TSubMenuOption & {
@@ -332,15 +145,17 @@ const SubMenuOption = ({
 
   if (disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 subMenuOption
-  if (hiddenForRole && hiddenForRole === teamRole) return null;
-
   if (type === SubMenuOptionType.LINK) {
     return (
       <Link
         href={link}
         onClick={onClickLink}
-        className="rounded-xs px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid"
+        className={cn('rounded-xs px-12px py-10px font-medium text-button-text-secondary', {
+          'pointer-events-none disabled:text-button-text-disable':
+            hiddenForRole && hiddenForRole === teamRole,
+          'hover:bg-button-surface-soft-secondary-hover hover:text-button-text-secondary-solid':
+            !hiddenForRole || hiddenForRole !== teamRole,
+        })}
       >
         {t(`layout:SIDE_MENU.${title}`)}
       </Link>
@@ -383,12 +198,17 @@ const SubMenuSection = ({ subMenuSection, toggleOverlay }: SubMenuSectionProps) 
 
   if (subMenuSection.disabled) return null;
 
-  // Info: (20250319 - Liz) 如果 subMenu 中的 hiddenForRole 符合使用者的角色，則不顯示該 subMenuSection
-  if (subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole) return null;
-
   return (
     <>
-      <h4 className="text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1">
+      <h4
+        className={cn(
+          'text-xs font-semibold uppercase tracking-widest text-text-brand-primary-lv1',
+          {
+            'pointer-events-none disabled:text-button-text-disable':
+              subMenuSection.hiddenForRole && subMenuSection.hiddenForRole === teamRole,
+          }
+        )}
+      >
         {t(`layout:SIDE_MENU.${subMenuSection.caption}`)}
       </h4>
 
@@ -410,7 +230,7 @@ const SubMenu = ({ selectedMenuOption, toggleOverlay }: SubMenuProps) => {
   if (!subMenu) return null;
 
   return (
-    <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-gray-200 before:to-transparent">
+    <div className="absolute left-full top-0 z-20 h-full w-280px bg-surface-neutral-surface-lv1 px-12px py-32px shadow-SideMenu before:absolute before:left-0 before:top-0 before:h-full before:w-12px before:bg-gradient-to-r before:from-shadow-lv-4 before:to-transparent">
       <div className="flex flex-col gap-24px">
         {subMenu.map((item) => (
           <SubMenuSection key={item.caption} subMenuSection={item} toggleOverlay={toggleOverlay} />
@@ -431,11 +251,13 @@ const MenuOption = ({
   iconWidth,
   iconHeight,
   disabled = false,
+  hiddenForRole,
   link,
   subMenu,
   onClickMenuOption,
 }: MenuOptionProps) => {
   const { t } = useTranslation(['layout']);
+  const { teamRole } = useUserCtx();
 
   if (disabled) return null;
 
@@ -444,7 +266,15 @@ const MenuOption = ({
       {link ? (
         <Link
           href={link}
-          className="flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary hover:bg-button-surface-soft-secondary-hover"
+          className={cn(
+            'flex w-full items-center gap-8px px-12px py-10px font-medium text-button-text-secondary',
+            {
+              'pointer-events-none disabled:text-button-text-disable':
+                hiddenForRole && hiddenForRole === teamRole,
+              'hover:bg-button-surface-soft-secondary-hover':
+                !hiddenForRole || hiddenForRole !== teamRole,
+            }
+          )}
         >
           <div className="flex h-24px w-24px items-center justify-center">
             <Image src={iconSrc} alt={iconSrcAlt} width={iconWidth} height={iconHeight}></Image>
@@ -474,11 +304,12 @@ interface SideMenuProps {
 }
 
 const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
-  const { version } = packageJson;
   const { t } = useTranslation(['layout']);
+  const { version, versionName } = packageJson;
+  const currentYear = new Date().getFullYear();
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
   const { isSideMenuOpen, toggleSideMenu } = useDashboardCtx();
-  const { teamRole, connectedAccountBook } = useUserCtx();
+  const { connectedAccountBook } = useUserCtx();
 
   const hasConnectedAccountBook = !!connectedAccountBook;
   const userAvatarSrc = hasConnectedAccountBook
@@ -517,7 +348,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         >
           {/* Info: (20241121 - Liz) Side Menu Icon */}
           <div>
-            <button type="button" onClick={toggleSideMenu} className="p-10px">
+            <button
+              type="button"
+              onClick={toggleSideMenu}
+              className="p-10px text-button-text-secondary"
+            >
               <FiLayout size={24} />
             </button>
           </div>
@@ -572,13 +407,9 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* Info: (20241121 - Liz) Side Menu Content */}
           <div className="flex flex-auto flex-col gap-24px">
-            {MENU_CONFIG.map((menu) => {
-              // Info: (20250319 - Liz) 如果 hiddenForRole 符合使用者的角色，則不顯示該 menuOption
-              if (menu.hiddenForRole && menu.hiddenForRole === teamRole) return null;
-              return (
-                <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
-              );
-            })}
+            {MENU_CONFIG.map((menu) => (
+              <MenuOption key={menu.title} {...menu} onClickMenuOption={onClickMenuOption} />
+            ))}
           </div>
 
           {isSubMenuOpen && (
@@ -587,7 +418,9 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
 
           {/* Info: (20241121 - Liz) Side Menu Footer */}
           <div className="flex flex-col items-center gap-8px">
-            <p className="text-xs text-text-neutral-tertiary">iSunFA 2024 Beta v{version}</p>
+            <p className="text-xs text-text-neutral-tertiary">
+              iSunFA {currentYear} {versionName} v{version}
+            </p>
 
             {/* Info: (20241212 - Liz) 隱私權政策和服務條款頁面 */}
             <div className="flex gap-8px text-sm font-semibold">
@@ -603,7 +436,11 @@ const SideMenu = ({ toggleOverlay, notPrint }: SideMenuProps) => {
         </section>
       ) : (
         <section className="h-full w-66px flex-none px-12px py-32px">
-          <button type="button" onClick={toggleSideMenu} className="p-10px">
+          <button
+            type="button"
+            onClick={toggleSideMenu}
+            className="p-10px text-button-text-secondary"
+          >
             <FiLayout size={24} />
           </button>
         </section>

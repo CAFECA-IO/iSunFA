@@ -1,3 +1,5 @@
+import { CurrencyType } from '@/constants/currency';
+
 interface ITaxRate {
   taxable: boolean;
   rate: number;
@@ -29,6 +31,6 @@ export interface IAccountingSetting {
   id: number;
   accountBookId: number;
   taxSettings: ITaxSetting;
-  currency: string; // ToDo: (20241210 - tzuhan) @Murky 這裡的 currency 是不是應該是 CurrencyType？
+  currency: CurrencyType; // ToDo: (20241210 - tzuhan) @Murky 這裡的 currency 是不是應該是 CurrencyType？
   shortcutList: IShortcut[];
 }

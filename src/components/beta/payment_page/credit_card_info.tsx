@@ -14,13 +14,14 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface CreditCardInfoProps {
   team: IUserOwnedTeam;
   plan: IPlan | undefined;
   setTeamForAutoRenewalOn: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
   setTeamForAutoRenewalOff: Dispatch<SetStateAction<IUserOwnedTeam | undefined>>;
-  setIsDirty: Dispatch<SetStateAction<boolean>>;
+  // setIsDirty: Dispatch<SetStateAction<boolean>>;
   isHideSubscribeButton?: boolean;
 }
 
@@ -29,7 +30,7 @@ const CreditCardInfo = ({
   team,
   setTeamForAutoRenewalOn,
   setTeamForAutoRenewalOff,
-  setIsDirty,
+  // setIsDirty,
   isHideSubscribeButton,
 }: CreditCardInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
@@ -37,13 +38,12 @@ const CreditCardInfo = ({
   const { toastHandler } = useModalContext();
   const router = useRouter();
 
+  // Info: (20250604 - Julian) 預設的信用卡資訊，取 paymentMethod 的最後一筆資料
+  const defaultCardInfo = paymentMethod ? paymentMethod[paymentMethod.length - 1] : null;
+
   const [isSubscribeBtnDisabled, setIsSubscribeBtnDisabled] = useState(false);
-
-  // Info: (20250120 - Liz) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
-  const hasCreditCardInfo = paymentMethod && paymentMethod.length > 0;
-
-  // Info: (20250120 - Liz) 取得信用卡 number
-  const creditCardNumber = hasCreditCardInfo ? paymentMethod[paymentMethod.length - 1].number : '';
+  const [cardInfo, setCardInfo] = useState<IPaymentMethod | null>(defaultCardInfo);
+  const [hasCreditCardInfo, setHasCreditCardInfo] = useState<boolean>(false);
 
   // Info: (20250120 - Liz) 取得信用卡資訊 API
   const { trigger: getCreditCardInfoAPI } = APIHandler<IPaymentMethod[]>(
@@ -77,9 +77,7 @@ const CreditCardInfo = ({
       },
     });
 
-    // Deprecated: (20250418 - Julian) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('sendEmailHandler');
+    loggerFront.log('sendEmailHandler');
   };
 
   // Info: (20250120 - Liz) 打 API 取得信用卡資料 (使用 teamId)，並且設定到 paymentMethod state
@@ -93,7 +91,14 @@ const CreditCardInfo = ({
 
       if (success) {
         // Info: (20250324 - Julian) 設定信用卡資料到 paymentMethod state
+        const cardData = data ?? [];
         handlePaymentMethod(data);
+
+        // Info: (20250604 - Julian) 如果 paymentMethod 是 undefined ，或者 paymentMethod 的長度是 0，就回傳 null
+        setHasCreditCardInfo(cardData.length > 0);
+
+        // Info: (20250604 - Julian) 取得信用卡 number
+        setCardInfo(cardData[cardData.length - 1]);
       } else {
         toastHandler({
           id: 'GET_CREDIT_CARD_INFO_FAILED',
@@ -141,7 +146,7 @@ const CreditCardInfo = ({
     // Info: (20250414 - Julian) 執行中，禁用訂閱按鈕
     setIsSubscribeBtnDisabled(true);
     // Info: (20250414 - Julian) 取消阻止離開頁面
-    setIsDirty(false);
+    // setIsDirty(false);
 
     try {
       const { success } = await updateSubscriptionAPI({
@@ -234,22 +239,28 @@ const CreditCardInfo = ({
       </div>
     </Button>
   ) : (
-    <Button type="button" variant="default" size="large" onClick={updateSubscription}>
+    <Button
+      type="button"
+      variant="default"
+      size="large"
+      onClick={updateSubscription}
+      disabled={!hasCreditCardInfo}
+    >
       {t('subscriptions:PAYMENT_PAGE.SUBSCRIBE')}
     </Button>
   );
 
   return (
-    <section className="flex flex-auto flex-col gap-16px rounded-md bg-surface-neutral-surface-lv2 px-32px py-24px shadow-Dropshadow_XS">
-      <div className="flex justify-between">
-        <span className="text-lg font-semibold text-text-brand-secondary-lv3">
+    <section className="flex flex-auto flex-col gap-lv-4 rounded-md bg-surface-neutral-surface-lv2 px-lv-6 py-lv-5 shadow-Dropshadow_XS">
+      <div className="flex flex-wrap items-center justify-between">
+        <span className="text-base font-semibold text-text-brand-secondary-lv3 tablet:text-lg">
           {t('subscriptions:PAYMENT_PAGE.PAYMENT')}
         </span>
-        {hasCreditCardInfo && plan ? (
+        {hasCreditCardInfo && cardInfo && plan ? (
           <div className="flex items-center gap-8px">
             <Image src="/icons/credit_card.svg" alt="credit card" width={24} height={24} />
             <span className="text-lg font-semibold text-text-neutral-primary">
-              {creditCardNumber}
+              {cardInfo.number}
             </span>
 
             <button type="button" className="pl-8px" onClick={bindCreditCard}>
@@ -271,7 +282,7 @@ const CreditCardInfo = ({
       <div className="h-1px bg-divider-stroke-lv-4"></div>
 
       <div className="flex flex-auto items-start justify-between gap-20px">
-        <span className="text-lg font-semibold text-text-brand-secondary-lv1">
+        <span className="text-base font-semibold text-text-brand-secondary-lv1 tablet:text-lg">
           {t('subscriptions:SUBSCRIPTIONS_PAGE.ENABLE_AUTO_RENEWAL')}
         </span>
         <SimpleToggle

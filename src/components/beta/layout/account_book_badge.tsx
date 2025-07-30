@@ -19,8 +19,8 @@ const AccountBookBadge = () => {
             width={14}
             height={14}
             className="h-14px w-14px rounded-full bg-surface-neutral-surface-lv2 object-contain"
-          ></Image>
-          <p className="truncate px-2.5px py-3px text-xs font-medium">
+          />
+          <p className="truncate px-2.5px py-3px text-xs font-medium text-badge-text-primary-solid">
             {connectedAccountBook.name}
           </p>
         </Link>

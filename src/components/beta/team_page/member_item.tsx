@@ -9,6 +9,7 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IMember } from '@/interfaces/member';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface MemberItemProps {
   member: ITeamMember;
@@ -46,15 +47,11 @@ const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
       });
 
       if (!success) {
-        // Deprecated: (20250320 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('刪除成員失敗!');
+        loggerFront.error('刪除成員失敗!');
       }
       getMemberList();
     } catch (error) {
-      // Deprecated: (20250320 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('刪除成員失敗:', error);
+      loggerFront.error('刪除成員失敗:', error);
     } finally {
       setIsDeleting(false);
     }
@@ -77,15 +74,11 @@ const MemberItem = ({ member, team, getMemberList }: MemberItemProps) => {
       });
 
       if (!success) {
-        // Deprecated: (20250320 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('更新成員角色失敗!');
+        loggerFront.error('更新成員角色失敗!');
       }
       getMemberList();
     } catch (error) {
-      // Deprecated: (20250320 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('更新成員角色失敗:', error);
+      loggerFront.error('更新成員角色失敗:', error);
     } finally {
       setIsUpdating(false);
     }

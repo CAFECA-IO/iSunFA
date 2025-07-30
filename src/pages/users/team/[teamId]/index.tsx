@@ -11,6 +11,7 @@ import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { ITeam } from '@/interfaces/team';
 import TeamPageBody from '@/components/beta/team_page/team_page_body';
+import loggerFront from '@/lib/utils/logger_front';
 
 const TeamPage = () => {
   const { t } = useTranslation(['team']);
@@ -37,9 +38,7 @@ const TeamPage = () => {
         setTeam(teamData);
       }
     } catch (error) {
-      // Deprecated: (20250218 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得團隊資料失敗');
+      loggerFront.error('取得團隊資料失敗');
     } finally {
       setIsLoading(false);
     }

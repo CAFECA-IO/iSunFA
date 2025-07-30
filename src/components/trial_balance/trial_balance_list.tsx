@@ -25,6 +25,7 @@ import { useReactToPrint } from 'react-to-print';
 import { ISortOption } from '@/interfaces/sort';
 import { CurrencyType } from '@/constants/currency';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface TrialBalanceListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241105 - Anna) 接收來自上層的日期範圍
@@ -128,15 +129,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
           setTotalPages(response.data.totalPages || 1); // Info: (20250312 - Anna) 設定 `totalPages`，確保分頁正常
           setHasFetchedOnce(true); // Info: (20241204 - Anna) 標記為已成功請求
           prevSelectedDateRange.current = selectedDateRange; // Info: (20241204 - Anna) 更新前一个日期範圍
-        } else {
-          // Deprecate: (20241205 - Anna) remove eslint-disable
-          // eslint-disable-next-line no-console
-          // console.error('API response error: ', response);
         }
-      } catch (error) {
-        // Deprecate: (20241205 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        // console.error('Error fetching trial balance data:', error);
       } finally {
         setIsLoading(false); // Info: (20241204 - Anna) 請求結束，設置加載狀態為 false
       }
@@ -473,9 +466,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       window.URL.revokeObjectURL(fileUrl);
       link.parentNode?.removeChild(link);
     } catch (error) {
-      // Deprecate: (20241218 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
+      loggerFront.error('Download failed:', error);
     }
   };
 
@@ -485,20 +476,17 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
         {/* Info: (20241101 - Anna) 幣別(md以上) */}
         <div className="mr-42px hidden w-fit items-center gap-5px rounded-full border border-badge-stroke-primary bg-badge-surface-base-soft px-10px py-6px text-sm font-medium text-badge-text-primary md:flex">
           <RiCoinsLine />
-          <p className="whitespace-nowrap">{t(`reports:REPORTS.${currencyAlias}`)}</p>
+          <p className="whitespace-nowrap">{currencyAlias}</p>
         </div>
         {/* Info: (20241028 - Anna) 新增 Display Sub-Accounts Toggle 開關 */}
-        <div className="flex items-center gap-4">
-          <Toggle
-            id="subAccounts-toggle"
-            initialToggleState={subAccountsToggle}
-            getToggledState={subAccountsToggleHandler}
-            toggleStateFromParent={subAccountsToggle}
-          />
-          <span className="font-normal text-switch-text-primary">
-            {t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
-          </span>
-        </div>
+        <Toggle
+          id="subAccounts-toggle"
+          initialToggleState={subAccountsToggle}
+          getToggledState={subAccountsToggleHandler}
+          toggleStateFromParent={subAccountsToggle}
+          label={t('reports:REPORTS.DISPLAY_SUB_ACCOUNTS')}
+          labelClassName="font-normal text-switch-text-primary"
+        />
         {/* Info: (20241028 - Anna) Display Sub-Accounts 結束  */}
         <div className="ml-auto flex items-center gap-8px md:gap-16px">
           <DownloadButton onClick={handleDownload} />

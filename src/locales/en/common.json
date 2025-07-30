@@ -51,15 +51,16 @@
     "PARTNER_S_NAME": "Partner’s Name",
     "TAX_ID": "Tax ID",
     "SUBMIT": "Submit",
-    "BACK": "Back"
+    "BACK": "Back",
+    "FILTER": "Filter"
   },
   "LOADING_MODAL": {
     "LOADING": "It is loading, please wait..."
   },
   "UPLOAD_AREA": {
-    "DROP_YOUR_FILES_HERE_OR": "Drop your files here or ",
+    "DROP_YOUR_FILES_HERE_OR": "Drop invoice, E-invoice media file or ",
     "BROWSE": "Browse",
-    "MAXIMUM_SIZE": "Maximum size: 4MB"
+    "MAXIMUM_SIZE": "jpeg, gif, png, tiff, bmp, pdf, txt (Size: < 4 MB)"
   },
   "CURRENCY_ALIAS": {
     "TWD": "TWD",

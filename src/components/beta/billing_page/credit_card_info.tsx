@@ -51,20 +51,23 @@ const CreditCardInfo = ({ team }: CreditCardInfoProps) => {
   }
 
   return (
-    <main className="flex overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2">
-      <div className="w-24px bg-surface-brand-primary"></div>
+    <main className="flex flex-col overflow-hidden rounded-lg border border-stroke-brand-primary bg-surface-neutral-surface-lv2 tablet:flex-row">
+      <div className="hidden w-24px bg-surface-brand-primary tablet:block"></div>
+      <div className="block h-24px flex-none bg-surface-brand-primary tablet:hidden"></div>
 
-      <section className="flex flex-auto items-center gap-24px bg-surface-brand-primary-5 p-24px">
-        {/* // ToDo: (20250120 - Liz) 根據 creditCardType 顯示該類型的卡片發行商 logo */}
-        <Image src="/images/master_card.svg" alt="master_card" width={71} height={47} />
-        <div className="text-lg font-medium">
-          <p className="text-text-neutral-primary">{creditCardType}</p>
-          <p className="text-text-neutral-tertiary">{creditCardNumber}</p>
+      <section className="flex flex-auto flex-col items-center gap-24px bg-surface-brand-primary-5 p-24px tablet:flex-row">
+        <div className="flex items-center gap-lv-5">
+          {/* // ToDo: (20250120 - Liz) 根據 creditCardType 顯示該類型的卡片發行商 logo */}
+          <Image src="/images/master_card.svg" alt="master_card" width={71} height={47} />
+          <div className="text-lg font-medium">
+            <p className="text-text-neutral-primary">{creditCardType}</p>
+            <p className="text-text-neutral-tertiary">{creditCardNumber}</p>
+          </div>
         </div>
 
         <button
           type="button"
-          className="ml-auto rounded-xs border border-button-stroke-primary px-24px py-10px text-base font-medium text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable"
+          className="w-full rounded-xs border border-button-stroke-primary px-24px py-10px text-base font-medium text-button-text-primary hover:border-button-stroke-secondary-hover hover:text-button-text-secondary-hover disabled:border-button-stroke-disable disabled:text-button-text-disable tablet:ml-auto tablet:w-fit"
           onClick={editCreditCard}
         >
           {t('subscriptions:SUBSCRIPTIONS_PAGE.CHANGE_CARD')}

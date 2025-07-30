@@ -75,9 +75,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   const params = { companyId: accountBookId, accountId }; // Info: (20241107 - Anna) 設定 API 請求的 params // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法 const params = { accountBookId, accountId };
 
   const handleApiResponse = (resData: IPaginatedData<IVoucherForSingleAccount[]>) => {
-    // Deprecated: (20250120 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('API Response resData:', resData);
     // Info: (20241107 - Anna) 處理 API 回應
     setDisplayedVoucherList(resData.data);
     // Info: (20241107 - Anna) 請求完成後關閉 shouldFetch
@@ -87,9 +84,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
   // Info: (20241003 - Anna) 使用 useEffect 在打開 Modal 時記錄 API 請求參數
   useEffect(() => {
     if (isModalVisible && shouldFetch) {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      // console.log('傳送 API 請求，參數:', params);
       setShouldFetch(false); // 避免多次觸發 API 請求
     }
   }, [isModalVisible, shouldFetch, params]);
@@ -105,15 +99,9 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
     contentRef: modalRef, // Info: (20241203 - Anna) 指定需要打印的內容 Ref
     documentTitle: `${accountName} - 科目餘額表`,
     onBeforePrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Preparing to print the modal content...');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
     onAfterPrint: async () => {
-      // Deprecate: (20241203 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Printing completed.');
       return Promise.resolve(); // Info: (20241203 - Anna) 確保回傳一個 Promise
     },
   });
@@ -125,9 +113,6 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
       setDisplayedVoucherList([]); // Info: (20241107 - Anna) 在開啟 Modal 時，將資料重置
       setShouldFetch(true); // Info: (20241107 - Anna) 打開 Modal 時啟動請求
     }
-    // Deprecate: (20241203 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    // console.log('渲染的 Voucher List:', displayedVoucherList);
   };
 
   // Info: (20241003 - Anna) CSS 樣式
@@ -191,7 +176,7 @@ const BalanceDetailsButton: React.FC<BalanceDetailsButtonProps> = ({
                     dateSort={dateSort}
                     otherSorts={[]}
                     */
-                      sort={dateSort ? { by: SortBy.DATE, order: dateSort } : undefined} // Info: (20250113 - Anna) 傳遞日期排序參數
+                      sort={dateSort ? { sortBy: SortBy.DATE, sortOrder: dateSort } : undefined} // Info: (20250113 - Anna) 傳遞日期排序參數
                     />
                   </div>
                 )}

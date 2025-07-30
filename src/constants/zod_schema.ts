@@ -53,7 +53,6 @@ import {
   voucherPostSchema,
   voucherPostValidatorV2,
   voucherPutSchema,
-  voucherWasReadValidatorV2,
   voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
 import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
@@ -136,6 +135,7 @@ import {
   deleteInvoiceRC2Output,
   getInvoiceRC2Input,
   getInvoiceRC2Output,
+  listInvoiceRC2Grouped,
   listInvoiceRC2Input,
   listInvoiceRC2Output,
   updateInvoiceRC2Input,
@@ -147,6 +147,8 @@ import {
   listNotificationByUserIdSchema,
   readNotificationSchema,
 } from '@/lib/utils/zod_schema/notification';
+import { listBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/account_book';
+import { listBaifaVoucherSchema } from '@/lib/utils/zod_schema/baifa/voucher';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -177,7 +179,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.VOUCHER_GET_BY_ID_V2]: voucherGetOneValidatorV2,
   [APIName.VOUCHER_LIST_V2]: voucherGetAllValidatorV2,
   [APIName.VOUCHER_POST_V2]: voucherPostValidatorV2,
-  [APIName.VOUCHER_WAS_READ_V2]: voucherWasReadValidatorV2,
 };
 
 // Info: (20241112 - Jacky) Cannot add type Record<APIName, ZodAPISchema> , because Record will make infer type to any
@@ -224,6 +225,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
   [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
+  [APIName.LIST_INVOICE_RC2]: listInvoiceRC2Grouped,
   [APIName.LIST_INVOICE_RC2_INPUT]: listInvoiceRC2Input,
   [APIName.CREATE_INVOICE_RC2_INPUT]: createInvoiceRC2Input,
   [APIName.GET_INVOICE_RC2_INPUT]: getInvoiceRC2Input,
@@ -253,7 +255,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
-  [APIName.VOUCHER_WAS_READ_V2]: nullAPISchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,
@@ -297,7 +298,9 @@ export const ZOD_SCHEMA_API = {
   [APIName.DELETE_MEMBER]: teamSchemas.deleteMember,
   [APIName.LIST_ACCOUNT_BOOK_BY_TEAM_ID]: listAccountBooksByTeamIdSchema,
   [APIName.LIST_MEMBER_BY_TEAM_ID]: teamSchemas.listMember,
-  [APIName.ADD_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.INVITE_MEMBER_TO_TEAM]: teamSchemas.addMember,
+  [APIName.ACCEPT_TEAM_INVITATION]: teamSchemas.acceptInvitation,
+  [APIName.DECLINE_TEAM_INVITATION]: teamSchemas.declineInvitation,
   [APIName.REQUEST_TRANSFER_ACCOUNT_BOOK]: teamSchemas.requestTransferAccountBook,
   [APIName.CANCEL_TRANSFER_ACCOUNT_BOOK]: teamSchemas.cancelTransferAccountBook,
   [APIName.ACCEPT_TRANSFER_ACCOUNT_BOOK]: teamSchemas.acceptTransferAccountBook,
@@ -336,4 +339,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_NOTIFICATION]: listNotificationByUserIdSchema,
   [APIName.GET_NOTIFICATION_BY_ID]: getNotificationByIdSchema,
   [APIName.READ_NOTIFICATION]: readNotificationSchema,
+  [APIName.LIST_BAIFA_ACCOUNT_BOOK]: listBaifaAccountBookSchema,
+  [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
+  [APIName.GET_VACANCY_BY_ID]: nullAPISchema, // ToDo: (20250704 - Julian) need to define the schema for get vacancy by id
 };

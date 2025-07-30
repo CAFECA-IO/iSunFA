@@ -125,6 +125,9 @@ export async function updateCompanySettingByCompanyId(options: {
       updateData.country = data.country;
       updateData.countryCode = data.country;
     }
+    if (data.businessLocation !== undefined) {
+      updateData.countryCode = data.businessLocation;
+    }
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.contactPerson !== undefined) updateData.contactPerson = data.contactPerson;
     if (data.filingFrequency !== undefined) updateData.filingFrequency = data.filingFrequency;

@@ -16,6 +16,7 @@ import { MessageType } from '@/interfaces/message_modal';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { TrialBalanceItem } from '@/interfaces/trial_balance';
 
 interface IAccountingTitleSettingModalProps {
   accountTitleList: IAccount[];
@@ -23,6 +24,7 @@ interface IAccountingTitleSettingModalProps {
   setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
   isLoading: boolean;
   setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
+  trialBalanceAccountList: TrialBalanceItem[];
 }
 
 interface IAccountSecondLayerItemProps {
@@ -31,6 +33,7 @@ interface IAccountSecondLayerItemProps {
   childList: IAccount[];
   setSelectedAccountTitle: React.Dispatch<React.SetStateAction<IAccount | null>>;
   setIsRecallApi: React.Dispatch<React.SetStateAction<boolean>>;
+  trialBalanceAccountList: TrialBalanceItem[];
 }
 
 interface IAccountThirdLayerItemProps {
@@ -39,6 +42,7 @@ interface IAccountThirdLayerItemProps {
   titleName: string;
   clickHandler: () => void;
   deleteHandler: () => void;
+  isUsed: boolean;
 }
 
 // Info: (20241111 - Julian) 會計科目的第三層項目(最底層)
@@ -48,11 +52,23 @@ const AccountThirdLayerItem: React.FC<IAccountThirdLayerItemProps> = ({
   titleName,
   clickHandler,
   deleteHandler,
+  isUsed,
 }) => {
   const { t } = useTranslation('common');
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
 
   const deleteBtnClickHandler = () => {
+    // Info: (20250617 - Anna) 如果該科目已經用來作帳，則不能刪除
+    if (isUsed) {
+      toastHandler({
+        id: ToastId.ACCOUNTING_DELETE_ERROR,
+        type: ToastType.WARNING,
+        content: t('settings:ACCOUNTING_SETTING_MODAL.DELETE_ACCOUNT_TITLE_USED_IN_TRIAL_BALANCE'),
+        closeable: true,
+      });
+      return;
+    }
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: t('settings:ACCOUNTING_SETTING_MODAL.REMOVE_ACCOUNT_TITLE_MESSAGE_TITLE'),
@@ -97,6 +113,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
   childList,
   setSelectedAccountTitle,
   setIsRecallApi,
+  trialBalanceAccountList,
 }) => {
   const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
@@ -172,6 +189,10 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
             setFormType(TitleFormType.EDIT); // Info: (20241113 - Julian) 將 formType 設為 edit
             setSelectedAccountTitle(child); // Info: (20241113 - Julian)  將 title 傳到右邊的 <AddNewTitleSection />
           };
+          // Info: (20250617 - Anna) 判斷該科目是否已經用來作帳
+          const isUsedInTrialBalance = trialBalanceAccountList.some((item) =>
+            item.subAccounts?.some((sub) => sub.id === child.id)
+          );
 
           // Info: (20241114 - Julian) 點擊刪除按鈕時，觸發刪除事件
           const deleteAccountHandler = async () => {
@@ -185,6 +206,7 @@ const AccountSecondLayerItem: React.FC<IAccountSecondLayerItemProps> = ({
               titleName={child.name}
               clickHandler={clickChildHandler}
               deleteHandler={deleteAccountHandler}
+              isUsed={isUsedInTrialBalance}
             />
           );
         })
@@ -233,6 +255,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
   setFormType,
   setSelectedAccountTitle,
   setIsRecallApi,
+  trialBalanceAccountList,
 }) => {
   const { t } = useTranslation('common');
 
@@ -291,6 +314,7 @@ const AccountTitleSection: React.FC<IAccountingTitleSettingModalProps> = ({
               childList={thirdLayer}
               setSelectedAccountTitle={setSelectedAccountTitle}
               setIsRecallApi={setIsRecallApi}
+              trialBalanceAccountList={trialBalanceAccountList}
             />
           );
         });

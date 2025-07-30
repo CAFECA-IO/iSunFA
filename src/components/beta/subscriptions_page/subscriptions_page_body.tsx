@@ -138,10 +138,21 @@ const SubscriptionsPageBody = ({
 
   return (
     <main className="flex min-h-full flex-col gap-40px">
-      <div className="flex items-center gap-8px">
-        <Image src="/icons/my_subscription.svg" alt="my_subscription_icon" width={16} height={16} />
-        <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.MY_SUBSCRIPTIONS')}</h1>
-        <span className="h-1px flex-auto bg-divider-stroke-lv-1"></span>
+      {/* Info: (20250529 - Julian) Page Title for mobile */}
+      <div className="block w-full text-left text-base font-semibold text-text-neutral-secondary tablet:hidden">
+        {t('subscriptions:SUBSCRIPTIONS_PAGE.SUBSCRIPTION_PLANS')}
+      </div>
+      <div className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2">
+          <Image
+            src="/icons/my_subscription.svg"
+            alt="my_subscription_icon"
+            width={16}
+            height={16}
+          />
+          <h1>{t('subscriptions:SUBSCRIPTIONS_PAGE.MY_SUBSCRIPTIONS')}</h1>
+        </div>
+        <span className="h-1px flex-auto bg-divider-stroke-lv-4"></span>
       </div>
       <OwnedTeams
         userOwnedTeams={userOwnedTeams}

@@ -6,6 +6,7 @@ import { ITeam, IInviteMemberResponse } from '@/interfaces/team';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface InviteMembersModalProps {
   team: ITeam;
@@ -26,7 +27,7 @@ const InviteMembersModal = ({
 
   // Info: (20250306 - Liz) 邀請成員 API (add member to team)
   const { trigger: addMemberToTeamAPI } = APIHandler<IInviteMemberResponse>(
-    APIName.ADD_MEMBER_TO_TEAM
+    APIName.INVITE_MEMBER_TO_TEAM
   );
 
   const closeInviteMembersModal = () => {
@@ -82,13 +83,9 @@ const InviteMembersModal = ({
       closeInviteMembersModal();
       getMemberList();
 
-      // Deprecated: (20250306 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('邀請成員成功');
+      loggerFront.log('邀請成員成功');
     } catch (error) {
-      // Deprecated: (20250306 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('邀請成員失敗');
+      loggerFront.error('邀請成員失敗');
     } finally {
       setIsLoading(false);
     }

@@ -4,7 +4,7 @@ import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { ITeamSubscription } from '@/interfaces/payment';
 import { getTimestampNow } from '@/lib/utils/common';
 import { ITeamInvoice, IUserOwnedTeam, TPaymentStatus, TPlanType } from '@/interfaces/subscription';
-import { LeaveStatus, TeamRole } from '@/interfaces/team';
+import { LeaveStatus } from '@/interfaces/team';
 import { SortBy, SortOrder } from '@/constants/sort';
 import { IPaginatedOptions } from '@/interfaces/pagination';
 import { updateTeamMemberSession } from '@/lib/utils/session';
@@ -113,11 +113,9 @@ export async function listTeamSubscription(
   pageSize = 20,
   tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IPaginatedOptions<IUserOwnedTeam[]>> {
-  // Info: (20250411 - Tzuhan) 權限檢查已透過 prisma 查詢條件限制為團隊成員成員，無需額外 assertUserCan。
-  const ownerTeams = await tx.teamMember.findMany({
+  const teamMemberships = await tx.teamMember.findMany({
     where: {
       userId,
-      // role: TeamRole.OWNER, // Info: (20250411 - Tzuhan) 這邊不需要限制角色，因為團隊擁有者均可查看訂閱資料
       status: LeaveStatus.IN_TEAM,
     },
     select: {
@@ -129,9 +127,7 @@ export async function listTeamSubscription(
           subscriptions: {
             orderBy: { createdAt: SortOrder.DESC },
             take: 1,
-            include: {
-              plan: true,
-            },
+            include: { plan: true },
           },
           teamOrder: {
             orderBy: { createdAt: SortOrder.DESC },
@@ -154,18 +150,23 @@ export async function listTeamSubscription(
   const totalCount = await tx.teamMember.count({
     where: {
       userId,
-      role: TeamRole.OWNER,
       status: LeaveStatus.IN_TEAM,
     },
   });
 
-  const data: IUserOwnedTeam[] = ownerTeams.map(({ team }) => {
+  const metas = await Promise.all(
+    teamMemberships.map(({ teamId }) => assertUserIsTeamMember(userId, teamId))
+  );
+
+  const data: IUserOwnedTeam[] = teamMemberships.map(({ team }, index) => {
+    const meta = metas[index];
     const latestSub = team.subscriptions[0];
     const latestOrder = team.teamOrder[0];
     const latestTxn = latestOrder?.teamPaymentTransaction[0];
     const hasInvoice = (latestTxn?.teamInvoice?.length ?? 0) > 0;
 
     let paymentStatus: TPaymentStatus = TPaymentStatus.FREE;
+
     if (latestSub) {
       if (!latestTxn) {
         paymentStatus = TPaymentStatus.TRIAL;
@@ -173,17 +174,18 @@ export async function listTeamSubscription(
         paymentStatus = hasInvoice ? TPaymentStatus.PAID : TPaymentStatus.PAYMENT_FAILED;
       }
     }
-    if (latestOrder?.status === 'CANCELED') {
+
+    if (latestOrder?.status === ORDER_STATUS.CANCELLED) {
       paymentStatus = TPaymentStatus.PAYMENT_FAILED;
     }
 
     return {
       id: team.id,
       name: team.name,
-      plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+      plan: meta.planType,
       enableAutoRenewal: true,
-      expiredTimestamp: latestSub?.expiredDate ?? 0,
-      nextRenewalTimestamp: latestSub?.expiredDate ?? 0,
+      expiredTimestamp: meta.expiredAt,
+      nextRenewalTimestamp: meta.expiredAt,
       paymentStatus,
     };
   });
@@ -361,7 +363,7 @@ export async function getSubscriptionByTeamId(
   tx: Prisma.TransactionClient | PrismaClient = prisma
 ): Promise<IUserOwnedTeam | null> {
   // Info: (20250410 - tzuhan) Step 1: 確認該用戶是團隊成員（任何角色都可以）
-  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  const { expiredAt, inGracePeriod, effectiveRole } = await assertUserIsTeamMember(userId, teamId);
   // Info: (20250410 - tzuhan) Step 2: 強化 session 資料一致性
   await updateTeamMemberSession(userId, teamId, effectiveRole);
   // Info: (20250410 - tzuhan) Step 3: 查詢訂閱資料
@@ -402,6 +404,14 @@ export async function getSubscriptionByTeamId(
   if (!team) return null;
 
   const latestSub = team.subscriptions[0];
+
+  const now = new Date();
+  const nowInSecond = getUnixTime(now);
+  const startAt = latestSub?.startDate ?? 0;
+  const isValid = startAt <= nowInSecond && expiredAt > nowInSecond;
+  const isExpired = !(isValid || inGracePeriod);
+  const planType = isExpired ? TPlanType.BEGINNER : (latestSub?.plan?.type as TPlanType);
+
   const latestOrder = team.teamOrder[0];
   const latestTxn = latestOrder?.teamPaymentTransaction[0];
   const hasInvoice = latestTxn?.teamInvoice?.length > 0;
@@ -421,7 +431,7 @@ export async function getSubscriptionByTeamId(
   return {
     id: team.id,
     name: team.name,
-    plan: (latestSub?.planType as TPlanType) || TPlanType.BEGINNER,
+    plan: planType,
     enableAutoRenewal: true,
     expiredTimestamp: latestSub?.expiredDate ?? 0,
     nextRenewalTimestamp: latestSub?.expiredDate ?? 0,

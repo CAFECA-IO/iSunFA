@@ -6,7 +6,6 @@ import { LuPlus } from 'react-icons/lu';
 import { Button } from '@/components/button/button';
 import VoucherList from '@/components/voucher/voucher_list';
 import FilterSection from '@/components/filter_section/filter_section';
-import FilterSideMenu from '@/components/filter_sidemenu/filter_sidemenu';
 import Pagination from '@/components/pagination/pagination';
 import { EventType } from '@/constants/account';
 import Tabs from '@/components/tabs/tabs';
@@ -22,6 +21,7 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { VoucherTabs } from '@/constants/voucher';
 import { ToastType } from '@/interfaces/toastify';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { ISortOption } from '@/interfaces/sort';
 
 const VoucherListPageBody: React.FC = () => {
   const router = useRouter();
@@ -57,13 +57,7 @@ const VoucherListPageBody: React.FC = () => {
   // Info: (20250107 - Julian) 是否顯示沖銷傳票
   // ToDo: (20250107 - Julian) API query
   const [isHideReversals, setIsHideReversals] = useState(true);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [voucherList, setVoucherList] = useState<IVoucherUI[]>([]);
 
   // Info: (20250324 - Anna) 流程2:為了將篩選條件傳遞給 VoucherItem，非用於給 FilterSection 打 API
@@ -110,19 +104,19 @@ const VoucherListPageBody: React.FC = () => {
   }, [router.isReady]);
 
   useEffect(() => {
-    let sort: { by: SortBy; order: SortOrder } | undefined;
+    let sort: ISortOption | undefined;
     // Info: (20241230 - Julian) 如果有借貸排序，則清除日期排序
     const newDateSort = !creditSort && !debitSort && dateSort ? dateSort : null;
     setDateSort(newDateSort);
     if (newDateSort) {
-      sort = { by: SortBy.DATE, order: newDateSort };
+      sort = { sortBy: SortBy.DATE, sortOrder: newDateSort };
     } else {
       // Info: (20241230 - Julian) 如果有日期排序，則清除借貸排序
       if (creditSort) {
-        sort = { by: SortBy.CREDIT, order: creditSort };
+        sort = { sortBy: SortBy.CREDIT, sortOrder: creditSort };
       }
       if (debitSort) {
-        sort = { by: SortBy.DEBIT, order: debitSort };
+        sort = { sortBy: SortBy.DEBIT, sortOrder: debitSort };
       }
     }
     setSelectedSort(sort);
@@ -151,10 +145,7 @@ const VoucherListPageBody: React.FC = () => {
         setTotalCount(data.totalCount);
 
         const voucherListUI: IVoucherUI[] = data.data.map((voucher) => {
-          return {
-            ...voucher,
-            isSelected: false,
-          };
+          return { ...voucher, isSelected: false };
         });
 
         setVoucherList(voucherListUI);
@@ -173,32 +164,6 @@ const VoucherListPageBody: React.FC = () => {
   const tabClick = (tab: string) => setActiveTab(tab as VoucherTabs);
   const hideReversalsToggleHandler = () => setIsHideReversals((prev) => !prev);
   const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
-
-  const displayVoucherList =
-    voucherList && voucherList.length > 0 ? (
-      <VoucherList
-        voucherList={voucherList}
-        dateSort={dateSort}
-        creditSort={creditSort}
-        debitSort={debitSort}
-        setDateSort={setDateSort}
-        setCreditSort={setCreditSort}
-        setDebitSort={setDebitSort}
-        isHideReversals={isHideReversals}
-        hideReversalsToggleHandler={hideReversalsToggleHandler}
-        // Info: (20250324 - Anna) 流程3:傳遞篩選條件
-        selectedStartDate={selectedStartDate}
-        selectedEndDate={selectedEndDate}
-        selectedType={selectedType}
-        keyword={keyword}
-        currentPage={page}
-        toggleSideMenu={toggleSideMenu} // Info: (20250522 - Julian) 手機版 filter 的開關
-      />
-    ) : (
-      <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-        <p>{t('journal:VOUCHER.NO_VOUCHER')}</p>
-      </div>
-    );
 
   return (
     <div ref={sideMenuRef} className="relative flex flex-col items-center gap-lv-6 tablet:gap-40px">
@@ -226,35 +191,54 @@ const VoucherListPageBody: React.FC = () => {
           counts={[incomplete.uploadedVoucher, incomplete.upcomingEvents]}
         />
         {/* Info: (20241022 - Julian) Filter Section */}
-        <div className="hidden tablet:block">
-          <FilterSection<IVoucherBeta[]>
-            params={params}
-            apiName={APIName.VOUCHER_LIST_V2}
-            onApiResponse={handleApiResponse}
-            page={page}
-            pageSize={DEFAULT_PAGE_LIMIT}
-            tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
-            types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
-            sort={selectedSort}
-            hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
-            flagOfRefresh={flagOfRefreshVoucherList}
-            // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
-            onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
-              setSelectedStartDate(startDate);
-              setSelectedEndDate(endDate);
-              setSelectedType(type);
-              setKeyword(passKeyword);
-            }}
-            // Info: (20250324 - Anna) 流程6:傳初始值
-            initialStartDate={queryStartDate}
-            initialEndDate={queryEndDate}
-            initialType={queryType}
-            initialKeyword={queryKeyword}
-            initialPage={queryPage}
-          />
-        </div>
+        <FilterSection<IVoucherBeta[]>
+          params={params}
+          apiName={APIName.VOUCHER_LIST_V2}
+          onApiResponse={handleApiResponse}
+          page={page}
+          pageSize={DEFAULT_PAGE_LIMIT}
+          tab={activeTab} // Info: (20241104 - Murky) @Julian, 後端用 VoucherListTabV2 這個 enum 來過濾, 在 src/constants/voucher.ts
+          types={voucherTypeList} // Info: (20241104 - Murky) @Julian, 後端用 EventType 這個 enum 來過濾, 在 src/constants/account.ts
+          sort={selectedSort}
+          hideReversedRelated={isHideReversals} // Info: (20250210 - Julian) 隱藏沖銷分錄
+          hideReversalsToggleHandler={hideReversalsToggleHandler}
+          flagOfRefresh={flagOfRefreshVoucherList}
+          // Info: (20250324 - Anna) 流程1:篩選條件（類型、日期、關鍵字）改變時，可透過此 prop 回傳給 voucher_list_page_body
+          onFilterChange={({ startDate, endDate, type, keyword: passKeyword }) => {
+            setSelectedStartDate(startDate);
+            setSelectedEndDate(endDate);
+            setSelectedType(type);
+            setKeyword(passKeyword);
+          }}
+          // Info: (20250324 - Anna) 流程6:傳初始值
+          initialStartDate={queryStartDate}
+          initialEndDate={queryEndDate}
+          initialType={queryType}
+          initialKeyword={queryKeyword}
+          initialPage={queryPage}
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
+          labelClassName="text-input-text-primary"
+        />
         {/* Info: (20240920 - Julian) Voucher List */}
-        {displayVoucherList}
+        <VoucherList
+          voucherList={voucherList}
+          dateSort={dateSort}
+          creditSort={creditSort}
+          debitSort={debitSort}
+          setDateSort={setDateSort}
+          setCreditSort={setCreditSort}
+          setDebitSort={setDebitSort}
+          isHideReversals={isHideReversals}
+          hideReversalsToggleHandler={hideReversalsToggleHandler}
+          // Info: (20250324 - Anna) 流程3:傳遞篩選條件
+          selectedStartDate={selectedStartDate}
+          selectedEndDate={selectedEndDate}
+          selectedType={selectedType}
+          keyword={keyword}
+          currentPage={page}
+          toggleSideMenu={toggleSideMenu} // Info: (20250522 - Julian) 手機版 filter 的開關
+        />
         {/* Info: (20240920 - Julian) Pagination */}
         <Pagination
           currentPage={page}
@@ -263,16 +247,6 @@ const VoucherListPageBody: React.FC = () => {
           totalCount={totalCount}
         />
       </div>
-
-      {/* Info: (20250522 - Julian) Filter Side Menu for mobile */}
-      <FilterSideMenu
-        isModalVisible={isShowSideMenu}
-        modalVisibleHandler={toggleSideMenu}
-        searchState={{
-          searchQuery: keyword,
-          setSearchQuery: setKeyword,
-        }}
-      />
     </div>
   );
 };

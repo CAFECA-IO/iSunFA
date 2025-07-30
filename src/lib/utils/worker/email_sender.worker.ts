@@ -2,6 +2,7 @@ import nodemailer from 'nodemailer';
 import { EmailTemplateData, EmailTemplateName } from '@/constants/email_template';
 import { compileTemplate } from '@/lib/email/template';
 import loggerBack from '@/lib/utils/logger_back';
+import { DefaultValue } from '@/constants/default_value';
 
 export const sendEmail = async (
   to: string,
@@ -10,6 +11,11 @@ export const sendEmail = async (
   data: EmailTemplateData[keyof EmailTemplateData]
 ): Promise<boolean> => {
   let result = false;
+  if (DefaultValue.EMAIL_LOGIN.EMAIL.includes(to)) {
+    // Info: (20250624 - Luphia) 測試帳戶不寄送 email
+    return true;
+  }
+
   try {
     const html = compileTemplate({
       templateName,

@@ -1,0 +1,65 @@
+[
+  {
+    "type": "BEGINNER",
+    "planName": "Beginner",
+    "price": 0,
+    "features": [
+      { "featureKey": "JOINABLE_TEAM_LIMIT", "featureValue": "UNLIMITED" },
+      { "featureKey": "OWNED_TEAM_MEMBER_LIMIT", "featureValue": "LIMIT_1_MEMBER" },
+      { "featureKey": "OWNED_TEAM_LEDGER_LIMIT", "featureValue": "LIMIT_1_LEDGER" },
+      { "featureKey": "CERTIFICATE_MANAGEMENT", "featureValue": "VIEW_ONLY" },
+      { "featureKey": "VOUCHER_MANAGEMENT", "featureValue": "VIEW_ONLY" },
+      { "featureKey": "STORAGE", "featureValue": "STORAGE_10GB" },
+      { "featureKey": "TRIAL_BALANCE", "featureValue": "AVAILABLE_TB" },
+      { "featureKey": "LEDGER", "featureValue": "AVAILABLE_LEDGER" },
+      { "featureKey": "FINANCIAL_REPORTS", "featureValue": "DAILY_DOWNLOADABLE" },
+      { "featureKey": "TECH_ADVANTAGE", "featureValue": "HOMOMORPHIC_ENCRYPTION_BLOCKCHAIN" }
+    ]
+  },
+  {
+    "type": "PROFESSIONAL",
+    "planName": "Professional",
+    "price": 899,
+    "extraMemberPrice": 89,
+    "features": [
+      {
+        "featureKey": "EVERY_OWNED_TEAM_MEMBER_LIMIT",
+        "featureValue": "LIMIT_3_MEMBERS_PAID_EXTENSION"
+      },
+      { "featureKey": "OWNED_TEAM_LEDGER_LIMIT", "featureValue": "UNLIMITED" },
+      { "featureKey": "CERTIFICATE_MANAGEMENT", "featureValue": "UPLOAD_UNLIMITED" },
+      { "featureKey": "VOUCHER_MANAGEMENT", "featureValue": "EDIT_UNLIMITED" },
+      { "featureKey": "STORAGE", "featureValue": "STORAGE_50GB" },
+      { "featureKey": "CONTINUOUS_AUDIT", "featureValue": "AUTO_EMBED_DISCLOSURE" },
+      { "featureKey": "EARLY_ACCESS", "featureValue": "LATEST_FEATURES_FIRST" }
+    ]
+  },
+  {
+    "type": "ENTERPRISE",
+    "planName": "Enterprise",
+    "price": 2399,
+    "extraMemberPrice": 89,
+    "features": [
+      { "featureKey": "STORAGE", "featureValue": "STORAGE_200GB" },
+      { "featureKey": "AI_MODEL_ASSISTANCE", "featureValue": "META_LLAMA" },
+      { "featureKey": "ENTERPRISE_SUPPORT", "featureValue": "TURN_KEY_AND_MCP" }
+    ]
+  },
+  {
+    "type": "TRIAL",
+    "planName": "Trial",
+    "price": 0,
+    "features": [
+      {
+        "featureKey": "EVERY_OWNED_TEAM_MEMBER_LIMIT",
+        "featureValue": "LIMIT_3_MEMBERS_PAID_EXTENSION"
+      },
+      { "featureKey": "OWNED_TEAM_LEDGER_LIMIT", "featureValue": "UNLIMITED" },
+      { "featureKey": "CERTIFICATE_MANAGEMENT", "featureValue": "UPLOAD_UNLIMITED" },
+      { "featureKey": "VOUCHER_MANAGEMENT", "featureValue": "EDIT_UNLIMITED" },
+      { "featureKey": "STORAGE", "featureValue": "STORAGE_50GB" },
+      { "featureKey": "CONTINUOUS_AUDIT", "featureValue": "AUTO_EMBED_DISCLOSURE" },
+      { "featureKey": "EARLY_ACCESS", "featureValue": "LATEST_FEATURES_FIRST" }
+    ]
+  }
+]

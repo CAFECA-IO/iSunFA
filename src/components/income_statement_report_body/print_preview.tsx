@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import Rows from '@/components/income_statement_report_body/rows';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface FirstHeaderProps {
   financialReport: FinancialReport;
@@ -88,6 +89,7 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     ref
   ) => {
     const { t } = useTranslation(['reports']);
+    const { currency } = useCurrencyCtx();
     // const [totalPagesForSummary, setTotalPagesForSummary] = useState<number>(0);
 
     const flattenAccounts = (accounts: IAccountReadyForFrontend[]): IAccountReadyForFrontend[] => {
@@ -104,10 +106,6 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
     const flattenGeneralAccounts = financialReport?.general
       ? flattenAccounts(financialReport.general)
       : [];
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // const flattenDetailsAccounts = financialReport?.details
-    //   ? flattenAccounts(financialReport.details)
-    //   : [];
 
     const firstPageSize = 10; // Info: (20250214 - Anna) 第一頁最多顯示 10 項
     const groupSize = 12;
@@ -155,23 +153,6 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
 
     const totalPagesForSummary = groupedGeneral.length;
 
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // const groupedDetails: IAccountReadyForFrontend[][] = [];
-    // flattenDetailsAccounts.forEach((account, index) => {
-    //   if (index < 10) {
-    //     if (groupedDetails.length === 0) groupedDetails.push([]);
-    //     groupedDetails[0].push(account);
-    //   } else {
-    //     const groupIndex = Math.floor((index - 10) / groupSize) + 1;
-    //     if (!groupedDetails[groupIndex]) groupedDetails[groupIndex] = [];
-    //     groupedDetails[groupIndex].push(account);
-    //   }
-    // });
-
-    // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // const totalPagesForDetails = groupedDetails.length;
-
     return (
       <div ref={ref} className="">
         {
@@ -201,7 +182,10 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
                         colSpan={4}
                         className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
                       >
-                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+                        <span>
+                          {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+                          {currency}
+                        </span>
                       </th>
                     </tr>
                     <tr className="h-16px"></tr>
@@ -266,105 +250,12 @@ const PrintPreview = React.forwardRef<HTMLDivElement, PrintPreviewProps>(
             </div>
           ))
         }
-        {/* Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail */}
-        {/* {
-          // Print ItemDetail
-          groupedDetails.map((group, index) => (
-            <div
-              key={group[0].name + group[0].code}
-              style={{
-                breakBefore: 'page',
-                breakAfter: 'page',
-              }}
-              className="relative h-screen overflow-hidden"
-            >
-              <NormalHeader />
-              <section className="relative px-20px text-text-neutral-secondary">
-                <table className="w-full border-collapse text-xxs">
-                  <thead>
-                    <tr>
-                      <th
-                        colSpan={2}
-                        className="text-left text-xs font-semibold leading-5 text-surface-brand-secondary"
-                      >
-                        {t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}
-                      </th>
-                      <th
-                        colSpan={4}
-                        className="whitespace-nowrap text-right text-xs font-semibold leading-5 text-surface-brand-secondary"
-                      >
-                        <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
-                      </th>
-                    </tr>
-                    <tr className="h-16px"></tr>
-
-                    <tr>
-                      <th className="whitespace-nowrap border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
-                        {t('reports:TAX_REPORT.CODE_NUMBER')}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-left font-semibold">
-                        {t('reports:REPORTS.ACCOUNTING_ITEMS')}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold">
-                        {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedCurFromDate}
-                            <br />
-                            {t('reports:COMMON.TO')} {formattedCurToDate}
-                          </p>
-                        )}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                        %
-                      </th>
-                      <th
-                        className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-3px text-end font-semibold"
-                        style={{ whiteSpace: 'nowrap' }}
-                      >
-                        {financialReport && financialReport.company && (
-                          <p className="whitespace-nowrap text-center font-barlow font-semibold leading-5">
-                            {formattedPreFromDate}
-                            <br />
-                            {t('reports:COMMON.TO')} {formattedPreToDate}
-                          </p>
-                        )}
-                      </th>
-                      <th className="border border-stroke-neutral-quaternary bg-surface-brand-primary-50 p-10px text-center font-semibold">
-                        %
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    <Rows flattenAccounts={group} isPrint />
-                  </tbody>
-                </table>
-              </section>
-              <footer
-                key={group[0].name + group[0].code + group[0].accountId}
-                className="absolute bottom-0 left-0 right-0 z-1 flex items-center justify-between bg-surface-brand-secondary p-10px"
-              >
-                <p className="text-xs text-white">{totalPagesForSummary + index + 1}</p>
-                <div className="text-base font-bold text-surface-brand-secondary">
-                  <Image
-                    width={80}
-                    height={20}
-                    src="/logo/white_isunfa_logo_light.svg"
-                    alt="iSunFA Logo"
-                  />
-                </div>
-              </footer>
-            </div>
-          ))
-        } */}
         <PrintCostRevRatio
           financialReport={financialReport}
           formattedCurFromDate={formattedCurFromDate}
           formattedCurToDate={formattedCurToDate}
           formattedPreFromDate={formattedPreFromDate}
           formattedPreToDate={formattedPreToDate}
-          // Todo: (20250115 - Anna) 目前 ItemSummary 資訊已足夠，暫時不需要 ItemDetail
-          // defaultPageNumber={totalPagesForSummary + totalPagesForDetails}
           defaultPageNumber={totalPagesForSummary}
         />
       </div>

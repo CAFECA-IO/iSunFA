@@ -48,12 +48,13 @@
     "STRAIGHT_LINE": "Straight line method",
     "DOUBLE_DECLINING": "Double declining balance method",
     "SUM_OF_YEAR_DIGIT": "Sum of the year digit method",
-    "NONE": "None",
+    "NONE": "No Depreciation Required",
     "CONFIRM_MESSAGE_TITLE": "Are you sure you want to add this asset?",
     "CONFIRM_MESSAGE_CONTENT": "It can not be deleted after 30 days.",
     "CONFIRM_MESSAGE_BTN": "Yes, add the asset",
     "TOAST_SUCCESS": "New asset has been added",
-    "TOAST_ERROR": "Something went wrong, please try again"
+    "TOAST_ERROR": "Something went wrong, please try again",
+    "PLEASE_FILL_UP_THIS_FORM": "Please fill up this form"
   },
   "ASSET_DETAIL_PAGE": {
     "TITLE": "Asset",

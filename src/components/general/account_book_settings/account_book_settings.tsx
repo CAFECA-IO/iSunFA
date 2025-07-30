@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import Image from 'next/image';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250428 - Liz) 預計替換成新版的建立帳本 Modal (AccountBookInfoModal)
-// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250428 - Liz) 預計會替換成這個 Modal !!
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 import AccountBookListModal from '@/components/general/account_book_settings/account_book_list_modal';
 
 const AccountBookSettings = () => {
@@ -21,11 +20,11 @@ const AccountBookSettings = () => {
       <section className="flex items-center gap-16px">
         <div className="flex items-center gap-8px">
           <Image src="/icons/asset_management_icon.svg" width={16} height={16} alt="company_icon" />
-          <span className="text-sm font-medium text-divider-text-lv-1">
+          <span className="text-sm font-medium text-divider-text-lv-2">
             {t('settings:NORMAL.ACCOUNT_BOOK_SETTINGS')}
           </span>
         </div>
-        <hr className="flex-auto border-t-2px border-divider-stroke-lv-1" />
+        <hr className="flex-auto border-t border-divider-stroke-lv-4" />
       </section>
 
       <section className="flex flex-col items-start gap-24px">
@@ -48,7 +47,7 @@ const AccountBookSettings = () => {
 
       {/* Info: (20250417 - Liz) modals */}
       {isCreateAccountBookModalOpen && (
-        <CreateAccountBookModal closeCreateAccountBookModal={closeCreateAccountBookModal} />
+        <AccountBookInfoModal closeAccountBookInfoModal={closeCreateAccountBookModal} />
       )}
       {isAccountBookListModalOpen && (
         <AccountBookListModal closeToggleAccountBookListModal={closeToggleAccountBookListModal} />

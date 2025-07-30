@@ -48,8 +48,6 @@ export const ISUNFA_ROUTE = {
 
   // Deprecated: (20250416 - Liz) Alpha routes: (start)=====
   KYC: '/users/kyc',
-  SALARY: '/users/salary',
-  SALARY_BOOKKEEPING: '/users/salary/bookkeeping',
   JOURNAL_LIST: '/users/accounting/journal_list',
   USERS_FINANCIAL_REPORTS: '/users/reports/financials',
   USERS_ANALYSES_REPORTS: '/users/reports/analyses',
@@ -62,6 +60,11 @@ export const ISUNFA_ROUTE = {
   UPLOAD: `mobile_upload`,
   JOIN_US: '/join_us',
   FINISH_PAGE: '/join_us/finish',
+
+  // Info: (20250715 - Julian) Salary Calculator
+  SALARY_CALCULATOR: '/salary_calculator',
+  EMPLOYEE_LIST: '/salary_calculator/employee_list',
+  PAY_SLIP: '/salary_calculator/my_pay_slip',
 };
 
 export const EXTERNAL_API = {
