@@ -38,7 +38,8 @@
     "LEAVE_HOUR": "Leave Hour",
     "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
     "PERSONAL_LEAVE": "Personal Leave",
-    "TOTAL_LEAVE_HOUR": "Total Leave Hour"
+    "TOTAL_LEAVE_HOUR": "Total Leave Hour",
+    "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
   },
   "OTHERS_FORM": {
     "NHI_BACK_PREMIUM": "NHI Back Premium",
@@ -124,12 +125,15 @@
     "TO": "To",
     "NET_PAY": "Net Pay",
     "PAYSLIP_ISSUED_DATE": "Payslip Issued Date",
-    "ACTION": "Action"
+    "ACTION": "Action",
+    "PAY_SLIP": "Pay Slip",
+    "SENT_ON": "Sent on"
   },
   "BUTTON": {
     "DOWNLOAD": "Download as png",
     "SEND": "Send the Pay Slip",
-    "RESET": "Reset"
+    "RESET": "Reset",
+    "RESEND": "Resend the Pay Slip"
   },
   "MESSAGE": {
     "NAME_ERROR_TITLE": "Employee’s Name is not Filled",
@@ -138,6 +142,16 @@
     "SALARY_ERROR_CONTENT": "Base salary must be greater than or equal to the minimum wage.",
     "REMOVE_EMPLOYEE_TITLE": "Remove Employee",
     "REMOVE_EMPLOYEE_CONTENT": "Are you sure you want to remove {{name}} from your employee list?",
-    "REMOVE_EMPLOYEE_SUBMIT_BTN": "Yes, remove employee."
+    "REMOVE_EMPLOYEE_SUBMIT_BTN": "Yes, remove employee.",
+    "RESEND_PAY_SLIP_TITLE": "Resending Pay Slip",
+    "RESEND_PAY_SLIP_CONTENT_1": "You’ve already sent the",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_1": " pay slip for {{month}} ",
+    "RESEND_PAY_SLIP_CONTENT_2": " to ",
+    "RESEND_PAY_SLIP_CONTENT_BOLD_2": "{{name}}.",
+    "RESEND_PAY_SLIP_CONTENT_3": " Do you want to send it again?",
+    "RESEND_PAY_SLIP_CANCEL_BTN": "No, Cancel",
+    "RESEND_PAY_SLIP_SUBMIT_BTN": "Yes, Send the pay Slip",
+    "RESEND_SUCCESS_TITLE": "Pay Slip Sent !",
+    "RESEND_SUCCESS_CONTENT": "The pay slip has been sent to the employee’s email successfully."
   }
 }

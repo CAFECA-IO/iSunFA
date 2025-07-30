@@ -85,7 +85,7 @@ const FlexibleFeatureSelection: React.FC = () => {
     { title: 'Asset Management', link: ISUNFA_ROUTE.ASSET_LIST },
     // { title: 'CRM', link: '/' }, // ToDo: (20250106 - Julian) 客戶關係管理先隱藏
     { title: 'Calendar', link: ISUNFA_ROUTE.TODO_LIST_PAGE },
-    { title: 'Reports System', link: ISUNFA_ROUTE.REPORTS },
+    { title: 'Reports System', link: ISUNFA_ROUTE.TRIAL_BALANCE },
     // { title: 'Outsourcing Matching', link: '/' }, // ToDo: (20250106 - Julian) 平台媒合先隱藏
     // { title: 'Technical Support', link: '/' }, // ToDo: (20250106 - Julian) 技術支援先隱藏
     { title: 'Salary Calculator', link: ISUNFA_ROUTE.SALARY_CALCULATOR },

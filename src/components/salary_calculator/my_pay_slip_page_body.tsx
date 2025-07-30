@@ -5,7 +5,7 @@ import { FiSearch } from 'react-icons/fi';
 import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
 import ReceivedTab from '@/components/salary_calculator/pay_slip_received_tab';
 import SentTab from '@/components/salary_calculator/pay_slip_sent_tab';
-import { useCalculatorCtx, CalculatorProvider } from '@/contexts/calculator_context';
+import { useCalculatorCtx } from '@/contexts/calculator_context';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import {
   IReceivedRecord,
@@ -234,66 +234,64 @@ const MyPaySlipPageBody: React.FC = () => {
   const clickSentTab = () => setCurrentTab('sent');
 
   return (
-    <CalculatorProvider>
-      <main className="min-h-screen overflow-x-hidden bg-white">
-        {/* Info: (20250718 - Julian) Header */}
-        <CalculatorNavbar />
+    <main className="min-h-screen overflow-x-hidden bg-white">
+      {/* Info: (20250718 - Julian) Header */}
+      <CalculatorNavbar />
 
-        {/* Info: (20250718 - Julian) Main Content */}
-        <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
-          <h1 className="text-center text-32px font-bold text-text-brand-primary-lv1">
-            {t('calculator:MY_PAY_SLIP.MAIN_TITLE')}
-          </h1>
+      {/* Info: (20250718 - Julian) Main Content */}
+      <div className="flex flex-col items-stretch gap-56px px-240px py-56px">
+        <h1 className="text-center text-32px font-bold text-text-brand-primary-lv1">
+          {t('calculator:MY_PAY_SLIP.MAIN_TITLE')}
+        </h1>
 
-          {/* Info: (20250718 - Julian) Tabs */}
-          <div className="grid grid-cols-2 gap-16px">
-            <button
-              type="button"
-              onClick={clickReceivedTab}
-              className={`${receivedStyle} w-full border-b-2 px-12px py-8px`}
-            >
-              {t('calculator:MY_PAY_SLIP.TAB_RECEIVED')}
-            </button>
-            <button
-              type="button"
-              onClick={clickSentTab}
-              className={`${sentStyle} w-full border-b-2 px-12px py-8px`}
-            >
-              {t('calculator:MY_PAY_SLIP.TAB_SENT')}
-            </button>
-          </div>
-
-          {/* Info: (20250718 - Julian) List */}
-          <div className="flex w-full flex-col gap-24px">
-            <FilterSection
-              selectedYear={selectedYear}
-              setSelectedYear={setSelectedYear}
-              selectedMonth={selectedMonth}
-              setSelectedMonth={setSelectedMonth}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
-            {currentTab === 'received' ? (
-              <ReceivedTab
-                receivedRecords={receivedRecords}
-                payPeriodSortOrder={receivedPayPeriodSortOrder}
-                setPayPeriodSortOrder={setReceivedPayPeriodSortOrder}
-                netPaySortOrder={receivedNetPaySortOrder}
-                setNetPaySortOrder={setReceivedNetPaySortOrder}
-              />
-            ) : (
-              <SentTab
-                sentRecords={sentRecords}
-                payPeriodSortOrder={sentPayPeriodSortOrder}
-                setPayPeriodSortOrder={setSentPayPeriodSortOrder}
-                issuedDateSortOrder={sentIssuedDateSortOrder}
-                setIssuedDateSortOrder={setSentIssuedDateSortOrder}
-              />
-            )}
-          </div>
+        {/* Info: (20250718 - Julian) Tabs */}
+        <div className="grid grid-cols-2 gap-16px">
+          <button
+            type="button"
+            onClick={clickReceivedTab}
+            className={`${receivedStyle} w-full border-b-2 px-12px py-8px`}
+          >
+            {t('calculator:MY_PAY_SLIP.TAB_RECEIVED')}
+          </button>
+          <button
+            type="button"
+            onClick={clickSentTab}
+            className={`${sentStyle} w-full border-b-2 px-12px py-8px`}
+          >
+            {t('calculator:MY_PAY_SLIP.TAB_SENT')}
+          </button>
         </div>
-      </main>
-    </CalculatorProvider>
+
+        {/* Info: (20250718 - Julian) List */}
+        <div className="flex w-full flex-col gap-24px">
+          <FilterSection
+            selectedYear={selectedYear}
+            setSelectedYear={setSelectedYear}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+          {currentTab === 'received' ? (
+            <ReceivedTab
+              receivedRecords={receivedRecords}
+              payPeriodSortOrder={receivedPayPeriodSortOrder}
+              setPayPeriodSortOrder={setReceivedPayPeriodSortOrder}
+              netPaySortOrder={receivedNetPaySortOrder}
+              setNetPaySortOrder={setReceivedNetPaySortOrder}
+            />
+          ) : (
+            <SentTab
+              sentRecords={sentRecords}
+              payPeriodSortOrder={sentPayPeriodSortOrder}
+              setPayPeriodSortOrder={setSentPayPeriodSortOrder}
+              issuedDateSortOrder={sentIssuedDateSortOrder}
+              setIssuedDateSortOrder={setSentIssuedDateSortOrder}
+            />
+          )}
+        </div>
+      </div>
+    </main>
   );
 };
 
