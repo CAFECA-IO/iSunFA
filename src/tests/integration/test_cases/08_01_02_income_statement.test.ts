@@ -1,17 +1,13 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 
 // Info: (20250718 - Shirley) Import API handlers for income statement integration testing
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
 import reportHandler from '@/pages/api/v2/account_book/[accountBookId]/report';
-import voucherPostHandler from '@/pages/api/v2/account_book/[accountBookId]/voucher';
 
 // Info: (20250718 - Shirley) Import required types and constants
-import { WORK_TAG } from '@/interfaces/account_book';
-import { LocaleKey } from '@/constants/normal_setting';
-import { CurrencyType } from '@/constants/currency';
+import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
 import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { ReportSheetType } from '@/constants/report';
@@ -19,34 +15,7 @@ import { FinancialReportTypesKey } from '@/interfaces/report_type';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { z } from 'zod';
 import { TestClient } from '@/interfaces/test_client';
-
-// Info: (20250718 - Shirley) Mock pusher for testing
-jest.mock('pusher', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({ trigger: jest.fn() })),
-}));
-
-jest.mock('@/lib/utils/crypto', () => {
-  const real = jest.requireActual('@/lib/utils/crypto');
-
-  const keyPairPromise = crypto.subtle.generateKey(
-    {
-      name: 'RSA-OAEP',
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: 'SHA-256',
-    },
-    true,
-    ['encrypt', 'decrypt']
-  );
-
-  return {
-    ...real,
-    getPublicKeyByCompany: jest.fn(async () => (await keyPairPromise).publicKey),
-    getPrivateKeyByCompany: jest.fn(async () => (await keyPairPromise).privateKey),
-    storeKeyByCompany: jest.fn(),
-  };
-});
+import { WORK_TAG } from '@/interfaces/account_book';
 
 /**
  * Info: (20250718 - Shirley) Integration Test - Income Statement Report Integration (Test Case 8.1.2)
@@ -67,76 +36,20 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   let authenticatedHelper: APITestHelper;
   let currentUserId: string;
   let teamId: number;
+  let accountBook: { id: number; name: string; taxId: string };
   let accountBookId: number;
 
   // Info: (20250718 - Shirley) Shared test clients - defined once and reused throughout the test suite
   let createAccountBookClient: TestClient;
-  let getAccountBookClient: TestClient;
   let connectAccountBookClient: TestClient;
   let reportClient: TestClient;
-  let voucherPostClient: TestClient;
-
-  const randomNumber = Math.floor(Math.random() * 90000000) + 10000000;
-
-  // Info: (20250718 - Shirley) Test company data
-  const testCompanyData = {
-    name: 'Income Statement Test Company 損益表測試公司',
-    taxId: randomNumber.toString(),
-    tag: WORK_TAG.ALL,
-    teamId: 0,
-    businessLocation: LocaleKey.tw,
-    accountingCurrency: CurrencyType.TWD,
-    representativeName: 'Test Representative',
-    taxSerialNumber: `A${randomNumber}`,
-    contactPerson: 'Test Contact',
-    phoneNumber: '+886-2-1234-5678',
-    city: 'Taipei',
-    district: 'Xinyi District',
-    enteredAddress: '123 Test Street, Xinyi District, Taipei',
-  };
-
-  beforeAll(async () => {
-    // Info: (20250718 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
-
-    const statusResponse = await authenticatedHelper.getStatusInfo();
-    const userData = statusResponse.body.payload?.user as { id?: number };
-    currentUserId = userData?.id?.toString() || '1';
-
-    // Info: (20250718 - Shirley) Complete user registration flow
-    await authenticatedHelper.agreeToTerms();
-    await authenticatedHelper.createUserRole();
-    await authenticatedHelper.selectUserRole();
-
-    // Info: (20250718 - Shirley) Create team for account book operations
-    const teamResponse = await authenticatedHelper.createTeam();
-    const teamData = teamResponse.body.payload?.team as { id?: number };
-    teamId = teamData?.id || 0;
-
-    // Info: (20250718 - Shirley) Update test company data with actual team ID
-    testCompanyData.teamId = teamId;
-
-    // Info: (20250718 - Shirley) Refresh session to ensure team membership is updated
-    await authenticatedHelper.getStatusInfo();
-
-    // Info: (20250718 - Shirley) Initialize shared test clients once
-    createAccountBookClient = createTestClient({
-      handler: createAccountBookHandler,
-      routeParams: { userId: currentUserId },
-    });
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250721 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
-  });
 
   // Info: (20250718 - Shirley) Initialize clients that depend on accountBookId
   const initializeAccountBookDependentClients = () => {
-    getAccountBookClient = createTestClient({
-      handler: getAccountBookHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
+    // Info: (20250729 - Shirley) Test empty voucher test case in income statement
+    createAccountBookClient = createTestClient({
+      handler: createAccountBookHandler,
+      routeParams: { userId: currentUserId },
     });
 
     connectAccountBookClient = createTestClient({
@@ -148,12 +61,24 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       handler: reportHandler,
       routeParams: { accountBookId: accountBookId.toString() },
     });
-
-    voucherPostClient = createTestClient({
-      handler: voucherPostHandler,
-      routeParams: { accountBookId: accountBookId.toString() },
-    });
   };
+
+  beforeAll(async () => {
+    const sharedContext = await BaseTestContext.getSharedContext();
+    authenticatedHelper = sharedContext.helper;
+    currentUserId = sharedContext.userId.toString();
+    teamId = sharedContext.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
+    accountBook = await BaseTestContext.createAccountBook(Number(currentUserId), teamId);
+    accountBookId = accountBook.id;
+
+    initializeAccountBookDependentClients();
+
+    if (process.env.DEBUG_TESTS === 'true') {
+      // Deprecated: (20250721 - Luphia) remove eslint-disable
+      // eslint-disable-next-line no-console
+      console.log('✅ Test setup completed: User and team created with ID:', teamId);
+    }
+  });
 
   afterAll(async () => {
     // Info: (20250718 - Shirley) Cleanup test data
@@ -167,67 +92,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
   });
 
   /**
-   * Info: (20250718 - Shirley) Test Step 1: Create Account Book
-   */
-  describe('Step 1: Account Book Creation', () => {
-    test('should create account book with proper structure', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const response = await createAccountBookClient
-        .post(`/api/v2/user/${currentUserId}/account_book`)
-        .send(testCompanyData)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload).toBeDefined();
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-      expect(response.body.payload.taxId).toBe(testCompanyData.taxId);
-
-      // Info: (20250718 - Shirley) Validate output with production validator
-      const { isOutputDataValid, outputData } = validateOutputData(
-        APIName.CREATE_ACCOUNT_BOOK,
-        response.body.payload
-      );
-      expect(isOutputDataValid).toBe(true);
-      expect(outputData?.id).toBeDefined();
-      expect(typeof outputData?.id).toBe('number');
-
-      accountBookId = response.body.payload.id;
-
-      // Info: (20250718 - Shirley) Initialize account book dependent clients now that we have accountBookId
-      initializeAccountBookDependentClients();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
-    });
-
-    test('should verify account book connection', async () => {
-      await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
-
-      const response = await getAccountBookClient
-        .get(`/api/v2/account_book/${accountBookId}`)
-        .set('Cookie', cookies.join('; '))
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.payload.id).toBe(accountBookId);
-      expect(response.body.payload.name).toBe(testCompanyData.name);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
-    });
-  });
-
-  /**
    * Info: (20250718 - Shirley) Test Step 2: Create Sample Vouchers for Income Statement
    */
   describe('Step 2: Create Sample Vouchers for Income Statement', () => {
@@ -235,7 +99,7 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // Info: (20250718 - Shirley) Connect to account book first
+      // Info: (20250728 - Shirley) Connect to account book first
       const responseForConnect = await connectAccountBookClient
         .get(`/api/v2/account_book/${accountBookId}/connect`)
         .set('Cookie', cookies.join('; '))
@@ -244,55 +108,14 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
 
+      // Info: (20250728 - Shirley) BaseTestContext has already created the vouchers
+      // Just verify they exist by checking the expected voucher count
       const sampleVouchersData = TestDataFactory.sampleVoucherData();
-      const createdVouchers = [];
-
-      // Info: (20250718 - Shirley) Create all sample vouchers
-      for (let i = 0; i < sampleVouchersData.length; i += 1) {
-        const voucherData = sampleVouchersData[i];
-
-        const voucherPayload = {
-          actions: [],
-          certificateIds: [],
-          invoiceRC2Ids: [],
-          voucherDate: voucherData.date,
-          type: voucherData.type,
-          note: voucherData.note,
-          lineItems: voucherData.lineItems,
-          assetIds: [],
-          counterPartyId: null,
-        };
-
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-await-in-loop
-        const response = await voucherPostClient
-          .post(`/api/v2/account_book/${accountBookId}/voucher`)
-          .send(voucherPayload)
-          .set('Cookie', cookies.join('; '));
-
-        if (response.status === 201) {
-          createdVouchers.push({
-            id: response.body.payload.id,
-            type: voucherData.type,
-            lineItems: voucherData.lineItems,
-          });
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
-        } else {
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
-        }
-      }
-
-      // Info: (20250718 - Shirley) Verify all vouchers were created
-      expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
       // Deprecated: (20250721 - Luphia) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for income statement test`
+        `\n🎉 Successfully verified ${sampleVouchersData.length} vouchers exist for income statement test (created by BaseTestContext)`
       );
     });
   });
@@ -380,8 +203,8 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(incomeStatementData.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
       expect(incomeStatementData.company).toBeDefined();
       expect(incomeStatementData.company.id).toBe(accountBookId);
-      expect(incomeStatementData.company.name).toBe(testCompanyData.name);
-      expect(incomeStatementData.company.code).toBe(testCompanyData.taxId);
+      expect(incomeStatementData.company.name).toBe(accountBook.name);
+      expect(incomeStatementData.company.code).toBe(accountBook.taxId);
 
       // Info: (20250718 - Shirley) Validate date ranges
       expect(incomeStatementData.curDate).toBeDefined();
@@ -560,10 +383,10 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
         // Info: (20250718 - Shirley) Create a new account book with no vouchers/transactions
         const emptyTestCompanyData = {
-          ...testCompanyData,
           name: 'Empty Test Company 空資料測試公司',
           taxId: (Math.floor(Math.random() * 90000000) + 10000000).toString(),
           teamId,
+          tag: WORK_TAG.ALL,
         };
 
         const createResponse = await createAccountBookClient

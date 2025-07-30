@@ -1,6 +1,10 @@
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import prisma from '@/client';
+import { IAccountBookInfo } from '@/interfaces/account_book';
+import { InvoiceDirection } from '@/constants/invoice_rc2';
+import { IInvoiceRC2Base, IInvoiceRC2Input } from '@/interfaces/invoice_rc2';
+import { ITeam } from '@/interfaces/team';
 
 /** Info: (20250717 - Tzuhan)
  * 在整個整合測試階段持有「所有測試資料的 ID」
@@ -10,8 +14,16 @@ export interface SharedContext {
   helper: APITestHelper;
   cookies: string[];
   userId: number;
-  teamId: number;
-  // accountBookId: number;
+  team?: ITeam;
+  teamId?: number;
+  accountBook?: IAccountBookInfo;
+  accountBookId?: number;
+  uploadedFileIdForInput?: number;
+  uploadedFileIdForOutput?: number;
+  inputInvoice?: IInvoiceRC2Input;
+  outputInvoice?: IInvoiceRC2Input;
+  startDate: number;
+  endDate: number;
 }
 
 export class BaseTestContext {
@@ -20,6 +32,8 @@ export class BaseTestContext {
 
   /** Info: (20250717 - Tzuhan) 解決多個 getSharedContext() 併發呼叫時的 race condition */
   private static initializing: Promise<SharedContext> | null = null;
+
+  private static createdAccountBooks = new Set<number>();
 
   private constructor() {
     /* Info: (20250717 - Tzuhan) 禁止實例化 */
@@ -42,7 +56,9 @@ export class BaseTestContext {
         cookies: [],
         userId: 0,
         teamId: 0,
-        // accountBookId: 0,
+        accountBookId: 0,
+        startDate: 0,
+        endDate: 0,
       };
 
       // Info: (20250717 - Tzuhan) === ↓ 真正呼叫 API、產生測試基礎資料 ↓ ===
@@ -57,8 +73,7 @@ export class BaseTestContext {
       await helper.selectUserRole();
 
       // Info: (20250717 - Tzuhan) 建立 Team
-      const teamRes = await helper.createTeam('IT Shared Team');
-      const teamId = teamRes.body.payload!.id as number;
+      // const team = await helper.createTeam(userId, 'IT Shared Team');
 
       // Info: (20250721 - Tzuhan) 建立 Account Book
       // const accountBookId = await helper.createAccountBook(userId, teamId);
@@ -67,7 +82,8 @@ export class BaseTestContext {
         helper,
         cookies,
         userId,
-        teamId,
+        // team,
+        // teamId: team.id,
         // accountBookId,
       });
 
@@ -75,6 +91,112 @@ export class BaseTestContext {
     })();
 
     return this.initializing;
+  }
+
+  static async createTeam(userId: number, teamName?: string): Promise<ITeam> {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    if (!this.ctx.team) {
+      const team = await this.ctx.helper.createTeam(userId, teamName);
+      this.ctx.team = team;
+      this.ctx.teamId = team.id;
+    }
+    return this.ctx.team;
+  }
+
+  static async createAccountBook(
+    userId: number,
+    teamId: number,
+    name?: string,
+    options?: {
+      useFixedTimestamp?: boolean;
+      customTimestamp?: number;
+    }
+  ) {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    if (!this.ctx.accountBook) {
+      const accountBook = await this.ctx.helper.createAccountBook(userId, teamId, name);
+      this.ctx.accountBook = accountBook;
+      this.ctx.accountBookId = accountBook.id;
+    }
+
+    // Info: (20250728 - Shirley) Set timestamp and date range based on test requirements
+    let baseTimestamp: number;
+    if (options?.useFixedTimestamp) {
+      // Info: (20250728 - Shirley) For trial balance test - use fixed timestamp to match TestDataFactory expectations
+      baseTimestamp = options.customTimestamp || Math.floor(Date.now() / 1000); // Dynamic timestamp
+      this.ctx.startDate = baseTimestamp + 86400 * 10; // Start after voucher creation, so vouchers are in "beginning"
+      this.ctx.endDate = baseTimestamp + 86400 * 40; // End after start
+    } else {
+      // Info: (20250728 - Shirley) For other tests - use today's midnight as before
+      const now = Date.now();
+      baseTimestamp = Math.floor(now / 86400000) * 86400;
+      this.ctx.startDate = baseTimestamp;
+      this.ctx.endDate = baseTimestamp + 86400 * 30;
+    }
+
+    if (!this.createdAccountBooks.has(this.ctx.accountBookId!)) {
+      await BaseTestContext.createTestVouchers(this.ctx.accountBookId!, baseTimestamp);
+      this.createdAccountBooks.add(this.ctx.accountBookId!);
+    }
+    return this.ctx.accountBook!;
+  }
+
+  static async uploadEncryptedFile(
+    filename: string,
+    accountBookId: number,
+    direction: InvoiceDirection
+  ) {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    if (direction === InvoiceDirection.INPUT && this.ctx.uploadedFileIdForInput) {
+      return this.ctx.uploadedFileIdForInput;
+    }
+    if (direction === InvoiceDirection.OUTPUT && this.ctx.uploadedFileIdForOutput) {
+      return this.ctx.uploadedFileIdForOutput;
+    }
+    const fileId = await this.ctx.helper.uploadEncryptedFile(filename, accountBookId);
+    if (direction === InvoiceDirection.INPUT) {
+      this.ctx.uploadedFileIdForInput = fileId;
+    }
+    if (direction === InvoiceDirection.OUTPUT) {
+      this.ctx.uploadedFileIdForOutput = fileId;
+    }
+    return fileId;
+  }
+
+  static async createInvoice<T extends IInvoiceRC2Base>(
+    accountBookId: number,
+    fileId: number,
+    direction: InvoiceDirection
+  ) {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    if (direction === InvoiceDirection.INPUT && this.ctx.inputInvoice) {
+      return this.ctx.inputInvoice as T;
+    }
+    if (direction === InvoiceDirection.OUTPUT && this.ctx.outputInvoice) {
+      return this.ctx.outputInvoice as T;
+    }
+    const invoice = await this.ctx.helper.createInvoice<T>(accountBookId, fileId, direction);
+    if (direction === InvoiceDirection.INPUT) {
+      this.ctx.inputInvoice = invoice as IInvoiceRC2Input;
+    } else {
+      this.ctx.outputInvoice = invoice as IInvoiceRC2Input;
+    }
+    return invoice;
+  }
+
+  static async createTestVouchers(accountBookId: number, testBaseTs: number) {
+    if (!this.ctx) {
+      throw new Error('BaseTestContext not initialized. Call getSharedContext() first.');
+    }
+    return this.ctx.helper.createTestVouchers(accountBookId, testBaseTs);
   }
 
   // -----------------------------------------
@@ -203,6 +325,9 @@ export class BaseTestContext {
       }),
       prisma.user.deleteMany({ where: { id: { in: userIds } } }),
     ]);
+
+    // Info: (20250728 - Shirley) Clear the created account books set
+    this.createdAccountBooks.clear();
 
     // Deprecated: (20250717 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console

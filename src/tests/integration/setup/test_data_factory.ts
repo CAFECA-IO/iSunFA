@@ -67,14 +67,20 @@ export class TestDataFactory {
     };
   }
 
+  private static todayMidnight() {
+    const now = Date.now();
+    return Math.floor(now / 86400000) * 86400; // 當天 00:00 (Unix 秒)
+  }
+
   /**
    * Info: (20250716 - Shirley) Sample voucher data referring to company_id 10000007
    */
-  static sampleVoucherData() {
+  static sampleVoucherData(baseTimestamp = this.todayMidnight()) {
+    const oneHour = 60 * 60;
     const sampleVouchersData = [
       {
         type: 'payment',
-        date: 1733900543,
+        date: baseTimestamp + oneHour * 0,
         note: 'Financial report sample voucher 1',
         lineItems: [
           {
@@ -93,7 +99,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1733468990,
+        date: baseTimestamp + oneHour * 1,
         note: 'Financial report sample voucher 2',
         lineItems: [
           {
@@ -112,7 +118,7 @@ export class TestDataFactory {
       },
       {
         type: 'transfer',
-        date: 1733467495,
+        date: baseTimestamp + oneHour * 2,
         note: 'Financial report sample voucher 3',
         lineItems: [
           {
@@ -131,7 +137,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1733467636,
+        date: baseTimestamp + oneHour * 3,
         note: 'Financial report sample voucher 4',
         lineItems: [
           {
@@ -150,7 +156,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1733467693,
+        date: baseTimestamp + oneHour * 4,
         note: 'Financial report sample voucher 5',
         lineItems: [
           {
@@ -169,7 +175,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1733462850,
+        date: baseTimestamp + oneHour * 5,
         note: 'Financial report sample voucher 6',
         lineItems: [
           {
@@ -188,7 +194,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1729493349,
+        date: baseTimestamp + oneHour * 6,
         note: 'Financial report sample voucher 7',
         lineItems: [
           {
@@ -207,7 +213,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1729494105,
+        date: baseTimestamp + oneHour * 7,
         note: 'Financial report sample voucher 8',
         lineItems: [
           {
@@ -392,7 +398,7 @@ export class TestDataFactory {
       },
       {
         type: 'payment',
-        date: 1733155200,
+        date: baseTimestamp + oneHour * 8,
         note: 'Financial report sample voucher 9 (10000942)',
         lineItems: [
           {
