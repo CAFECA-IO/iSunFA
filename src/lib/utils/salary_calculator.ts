@@ -79,7 +79,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算當月總日數
   // const daysInMonth = new Date(year, month, 0).getDate();
   // ToDo: (20250730 - Luphia) 暫時用固定 30 日制
-  const daysInMonth = 30;
+  const daysInMonth = month < 13 ? 30 : new Date(year, month, 0).getDate();
   const hoursInMonth = daysInMonth * 8;
 
   // Info: (20250727 - Luphia) 計算每小時薪資
