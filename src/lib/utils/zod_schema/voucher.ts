@@ -275,7 +275,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       note: voucher.note ?? '',
       counterParty: voucher.counterParty
         ? {
-            accountBookId: voucher.counterParty.companyId ?? 0,
+            accountBookId: voucher.counterParty.accountBookId ?? 0,
             name: voucher.counterParty.name ?? '',
             taxId: voucher.counterParty.taxId ?? '',
           }
@@ -670,7 +670,7 @@ const voucherGetOneOutputValidatorV2 = z
             name: 'InvoiceName',
             counterParty: {
               id: data.counterParty?.id,
-              accountBookId: data.counterParty?.companyId,
+              accountBookId: data.counterParty?.accountBookId,
               name: data.counterParty?.name,
               taxId: data.counterParty?.taxId,
               type: data.counterParty?.type,
