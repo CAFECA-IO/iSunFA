@@ -20,7 +20,7 @@ const Tabs: React.FC<TabProps> = ({ tabs, tabsString, activeTab, onTabClick, cou
         onClick={() => onTabClick(tab)}
       >
         <p
-          className={`flex items-center gap-4px whitespace-nowrap text-xs leading-normal lg:text-base ${activeTab === tab ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
+          className={`flex items-center gap-4px whitespace-nowrap text-xs leading-normal tablet:text-base ${activeTab === tab ? 'text-tabs-text-active' : 'text-tabs-text-default'}`}
         >
           {tabsString[index]}
         </p>

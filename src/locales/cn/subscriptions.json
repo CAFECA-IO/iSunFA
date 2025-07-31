@@ -83,7 +83,7 @@
     "TECH_ADVANTAGE": "技术优势",
     "FREE_TRIAL": "免费试用",
     "CONTINUOUS_AUDIT": "持续审计",
-    "EARLY_ACCESS": "优先体验",
+    "EARLY_ACCESS": "最新推出功能",
     "AI_MODEL_ASSISTANCE": "人工智能模型辅助 (注)",
     "ENTERPRISE_SUPPORT": "支持",
     "NOTE": "注"
@@ -108,7 +108,8 @@
     "UPLOAD_UNLIMITED": "可上传凭证，数量不限",
     "EDIT_UNLIMITED": "可编制传票，数量不限",
     "AUTO_EMBED_DISCLOSURE": "支持持续审计，可嵌入网页展示自动更新的财务披露信息",
-    "LATEST_FEATURES_FIRST": "优先体验最新功能",
+    "LATEST_FEATURES_FIRST": "部分优先体验",
+    "LATEST_FEATURES_FIRST_ENTERPRISE": "优先体验",
     "META_LLAMA": "\n* Meta Llama3.2-Vision 11B（即将推出）\n* Llamm3.2-FFM 11B（即将推出）\n* Llama3.3-FFM 70B（即将推出）\n",
     "TURN_KEY_AND_MCP": "Turn Key Solution、Model Context Protocol, MCP（即将推出）",
     "NOTE_DES": "Meta Llama3.2-Vision 11B 适合自动识别与处理发票、报表扫描件、手写记帐单据等图像型会计资料。\n* Llama 3.2-FFM 11B 繁体中文优化模型，针对金融与财务管理优化，适用于财务报表生成、预测、审计支持、财务摘要撰写。\n* Llama 3.3-FFM 70B 更大规模的繁体中文优化模型，精度更高，特别适合复杂的会计分析、策略建议、自动化审核，能整合多源数据实现 ESG 报告生成，进行高层级决策建议与异常侦测。"

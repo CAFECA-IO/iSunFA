@@ -13,6 +13,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useUserCtx } from '@/contexts/user_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 const PaymentPage = () => {
   const { t } = useTranslation(['subscriptions']);
@@ -48,9 +49,7 @@ const PaymentPage = () => {
         setTeam(teamData);
       }
     } catch (error) {
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得團隊資料失敗');
+      loggerFront.error('取得團隊資料失敗');
     } finally {
       setIsLoading(false);
     }

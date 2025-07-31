@@ -4,10 +4,18 @@
  */
 export enum CurrencyType {
   TWD = 'TWD',
-  EUR = 'EUR',
+  // EUR = 'EUR',
+  USD = 'USD',
+  CNY = 'CNY',
+  HKD = 'HKD',
+  JPY = 'JPY',
 }
 
 export const OEN_CURRENCY = {
   [CurrencyType.TWD]: CurrencyType.TWD,
-  [CurrencyType.EUR]: CurrencyType.EUR,
+  // [CurrencyType.EUR]: CurrencyType.EUR,
+  [CurrencyType.USD]: CurrencyType.USD,
+  [CurrencyType.CNY]: CurrencyType.CNY,
+  [CurrencyType.HKD]: CurrencyType.HKD,
+  [CurrencyType.JPY]: CurrencyType.JPY,
 };

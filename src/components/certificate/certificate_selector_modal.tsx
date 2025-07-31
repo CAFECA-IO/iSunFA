@@ -5,7 +5,7 @@ import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import { APIName } from '@/constants/api_connection';
 import SelectionPanel from '@/components/certificate/certificate_selection_panel';
 import { Button } from '@/components/button/button';
-import { RxCross1 } from 'react-icons/rx';
+import { RxCross2 } from 'react-icons/rx';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { InvoiceTabs } from '@/constants/invoice_rc2';
 // import { InvoiceType } from '@/constants/invoice';
@@ -79,60 +79,67 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-450px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 p-20px md:max-h-90vh">
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-20px top-16px text-checkbox-text-primary"
-          onClick={onClose}
-        >
-          <RxCross1 size={24} />
-        </button>
-        {/* Info: (20240924 - tzuhan) 模態框標題 */}
-        <h2 className="flex justify-center gap-2 text-xl font-semibold">
-          {t('certificate:SELECT.TITLE')}
-        </h2>
-        <p className="flex justify-center text-card-text-secondary">
-          {t('certificate:SELECT.CONTENT')}
-        </p>
-        <FilterSection
-          apiName={APIName.CERTIFICATE_LIST_V2}
-          params={{ accountBookId }}
-          page={1}
-          pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
-          tab={InvoiceTabs.WITHOUT_VOUCHER}
-          onApiResponse={handleApiResponse}
-          types={Object.keys(InvoiceType)}
-        />
-        <div className="mt-12px px-4">
-          <div className="flex items-center justify-between">
-            <div className="font-medium text-text-neutral-secondary">
-              ({t('certificate:COMMON.SELECT')} {selectedIds.length}/{certificates.length})
-            </div>
-            <button
-              type="button"
-              className="text-link-text-primary enabled:hover:underline disabled:text-link-text-disable"
-              onClick={handleSelectAll}
-              disabled={certificates.length === 0} // Info: (20250331 - Julian) 如果沒有發票，則不能全選
-            >
-              {isSelectAll
-                ? t('certificate:COMMON.UNSELECT_ALL')
-                : t('certificate:COMMON.SELECT_ALL')}
-            </button>
-          </div>
+      <div className="relative flex max-h-600px w-90vw max-w-800px flex-col rounded-sm bg-surface-neutral-surface-lv2 tablet:max-h-90vh">
+        <div className="px-20px py-16px">
+          {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+          <button
+            type="button"
+            className="absolute right-20px top-16px text-icon-surface-single-color-primary"
+            onClick={onClose}
+          >
+            <RxCross2 size={24} />
+          </button>
+          {/* Info: (20240924 - tzuhan) 模態框標題 */}
+          <h2 className="flex justify-center gap-2 text-xl font-bold text-card-text-primary">
+            {t('certificate:SELECT.TITLE')}
+          </h2>
+          <p className="flex justify-center text-xs text-card-text-secondary">
+            {t('certificate:SELECT.CONTENT')}
+          </p>
         </div>
-        <SelectionPanel
-          certificates={certificates}
-          selectedIds={selectedIds}
-          handleSelect={handleSelectOne}
-          openUploaderModal={openUploaderModal}
-        />
-        <div className="flex items-center justify-end gap-2">
+
+        {/* Info: (20250527 - Julian) content */}
+        <div className="overflow-y-auto overflow-x-hidden px-lv-4 py-lv-3">
+          <FilterSection
+            apiName={APIName.CERTIFICATE_LIST_V2}
+            params={{ accountBookId }}
+            page={1}
+            pageSize={DEFAULT_MAX_PAGE_LIMIT} // Info: (20241022 - tzuhan) @Murky, 這裡需要一次性取得所有證書
+            tab={InvoiceTabs.WITHOUT_VOUCHER}
+            onApiResponse={handleApiResponse}
+            types={Object.keys(InvoiceType)}
+          />
+          <div className="mt-12px tablet:px-4">
+            <div className="flex items-center justify-between">
+              <div className="font-medium text-text-neutral-secondary">
+                ({t('certificate:COMMON.SELECT')} {selectedIds.length}/{certificates.length})
+              </div>
+              <button
+                type="button"
+                className="text-link-text-primary enabled:hover:underline disabled:text-link-text-disable"
+                onClick={handleSelectAll}
+                disabled={certificates.length === 0} // Info: (20250331 - Julian) 如果沒有發票，則不能全選
+              >
+                {isSelectAll
+                  ? t('certificate:COMMON.UNSELECT_ALL')
+                  : t('certificate:COMMON.SELECT_ALL')}
+              </button>
+            </div>
+          </div>
+          <SelectionPanel
+            certificates={certificates}
+            selectedIds={selectedIds}
+            handleSelect={handleSelectOne}
+            openUploaderModal={openUploaderModal}
+          />
+        </div>
+
+        <div className="flex items-center gap-12px px-lv-4 py-16px tablet:justify-end">
           <Button
             id="upload-image-button"
             type="button"
             variant="secondaryOutline"
-            className="gap-x-4px px-4 py-2"
+            className="w-full px-4 py-2 tablet:w-auto"
             onClick={onClose}
           >
             {t('common:COMMON.CANCEL')}
@@ -141,7 +148,7 @@ const CertificateSelectorModal: React.FC<CertificateSelectorModalProps> = ({
             id="upload-image-button"
             type="button"
             variant="tertiary"
-            className="gap-x-4px px-4 py-2"
+            className="w-full px-4 py-2 tablet:w-auto"
             onClick={handleConfirm}
           >
             {t('common:COMMON.CONFIRM')}

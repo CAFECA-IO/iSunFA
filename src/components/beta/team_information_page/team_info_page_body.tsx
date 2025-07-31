@@ -23,12 +23,12 @@ const TeamInformationPageBody = ({ team, setTeam }: TeamPageBodyProps) => {
       <div className="flex items-center">
         <TeamHeader team={team} setTeamToChangeImage={setTeamToChangeImage} />
       </div>
-      <div className="flex items-center gap-16px">
-        <div className="flex items-center gap-8px">
+      <div className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2 font-medium text-divider-text-lv-2">
           <Image src="/icons/team_info.svg" alt="team_info" width={16} height={16} />
           <span>{t('team:TEAM_PAGE.INFORMATION')}</span>
         </div>
-        <div className="h-1px flex-auto bg-divider-stroke-lv-1"></div>
+        <div className="h-1px flex-auto bg-divider-stroke-lv-4"></div>
       </div>
       {isNoTeamInfo && <NoTeamInfo />}
 

@@ -433,7 +433,10 @@ enum InvoiceType {
 
 enum CurrencyCode {
   TWD
-  EUR
+  USD
+  CNY
+  HKD
+  JPY
 }
 
 enum TaxType {
@@ -1043,6 +1046,7 @@ model User {
   teamOrder            TeamOrder[]
   InvoiceRC2           InvoiceRC2[]
   Notification         Notification[]
+  ExternalUser         ExternalUser[]
 
   @@map("user")
 }
@@ -1207,9 +1211,9 @@ model Voucher {
   originalVouchers AssociateVoucher[] @relation("original_voucher")
   resultVouchers   AssociateVoucher[] @relation("result_voucher")
 
-  accountBook  AccountBook  @relation(fields: [accountBookId], references: [id])
-  issuer       User         @relation(fields: [issuerId], references: [id])
-  counterparty Counterparty @relation(fields: [counterPartyId], references: [id])
+  accountBook  AccountBook   @relation(fields: [accountBookId], references: [id])
+  issuer       User          @relation(fields: [issuerId], references: [id])
+  counterparty Counterparty? @relation(fields: [counterPartyId], references: [id])
 
   @@map("voucher")
 }
@@ -1312,6 +1316,7 @@ model TeamPlanFeature {
   createdAt    Int      @map("created_at")
   updatedAt    Int      @map("updated_at")
 
+  @@unique([planId, featureKey])
   @@map("team_plan_feature")
 }
 
@@ -1359,7 +1364,7 @@ enum InviteStatus {
 model InviteTeamMember {
   id          Int          @id @default(autoincrement())
   teamId      Int          @map("team_id")
-  email       String       @unique @map("email")
+  email       String       @map("email")
   status      InviteStatus @default(PENDING) @map("status") // Info: (20250314 - Tzuhan) 新增邀請狀態
   createdAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("created_at") // Info: (20250314 - Tzuhan) 記錄邀請時間
   updatedAt   Int          @default(dbgenerated("EXTRACT(EPOCH FROM NOW())::int")) @map("updated_at") // Info: (20250314 - Tzuhan) 記錄狀態變更時間
@@ -1770,4 +1775,17 @@ model ResumeCertificateSkills {
   file   File   @relation("resume_certificate_file", fields: [fileId], references: [id])
 
   @@map("resume_certificate_skills")
+}
+
+model ExternalUser {
+  id               Int    @id @default(autoincrement())
+  userId           Int    @map("user_id") // Info: (20250626 - Luphia) 關聯到系統內的用戶 ID，可能為 null
+  externalId       String @map("external_id") // Info: (20250626 - Luphia) 外部系統的用戶 ID
+  externalProvider String @map("external_provider") // Info: (20250626 - Luphia) 外部系統的提供者名稱（如 Fundswap、TigerTrade、POTEX）
+  createdAt        Int    @map("created_at")
+  updatedAt        Int    @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("external_user")
 }

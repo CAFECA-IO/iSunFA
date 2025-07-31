@@ -83,7 +83,7 @@
     "TECH_ADVANTAGE": "Technical Advantage",
     "FREE_TRIAL": "Free Trial",
     "CONTINUOUS_AUDIT": "Continuous Audit",
-    "EARLY_ACCESS": "Early Access",
+    "EARLY_ACCESS": "latest features",
     "AI_MODEL_ASSISTANCE": "AI Model Assistance (Note)",
     "ENTERPRISE_SUPPORT": "Support",
     "NOTE": "Note"
@@ -108,7 +108,8 @@
     "UPLOAD_UNLIMITED": "Unlimited certificate uploads",
     "EDIT_UNLIMITED": "Unlimited voucher creation",
     "AUTO_EMBED_DISCLOSURE": "Supports continuous audit with embeddable, auto-updating financial disclosures",
-    "LATEST_FEATURES_FIRST": "Early access to the latest features",
+    "LATEST_FEATURES_FIRST": "Partial early access",
+    "LATEST_FEATURES_FIRST_ENTERPRISE": "Early access",
     "META_LLAMA": "\n* Meta Llama3.2-Vision 11B — coming soon\n* Llamm3.2-FFM 11B — coming soon\n* Llama3.3-FFM 70B — coming soon\n",
     "TURN_KEY_AND_MCP": "Turn Key Solution, Model Context Protocol (MCP) — coming soon",
     "NOTE_DES": "Meta Llama3.2-Vision 11B is well-suited for automatically recognizing and processing image-based accounting documents such as invoices, scanned reports, and handwritten bookkeeping slips.\n* Llama 3.2-FFM 11B is a Traditional Chinese optimized model tailored for finance and financial management. It is suitable for financial report generation, forecasting, audit support, and financial summarization.\n* Llama 3.3-FFM 70B is a larger-scale Traditional Chinese optimized model with higher accuracy, especially suitable for complex accounting analysis, strategic recommendations, and automated auditing. It can integrate multi-source data to generate ESG reports, provide high-level decision-making suggestions, and perform anomaly detection."

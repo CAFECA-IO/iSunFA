@@ -6,6 +6,7 @@ import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { numberWithCommas } from '@/lib/utils/common';
+import loggerFront from '@/lib/utils/logger_front';
 
 export interface ISelectionToolBarOperation {
   operation: string;
@@ -28,9 +29,6 @@ interface SelectionToolbarProps {
   handleSelectAll: () => void; // Info: (20240920 - tzuhan) 全選
   onDelete?: () => void; // Info: (20240920 - tzuhan) 添加刪除的回調函數
   addOperations?: ISelectionToolBarOperation[];
-  // Deprecated: (20250116 - Julian) remove eslint-disable
-  // eslint-disable-next-line react/no-unused-prop-types
-  exportOperations?: ISelectionToolBarOperation[];
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
@@ -62,9 +60,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
 
   // Info: (20240920 - tzuhan) 取消操作
   const handleCancel = () => {
-    // Deprecated: (20240920 - tzuhan) debugging purpose
-    // eslint-disable-next-line no-console
-    console.log('Cancel operation');
+    loggerFront.log('Cancel operation');
     handleUnselectAll();
     onActiveChange(false);
   };

@@ -1,3 +1,4 @@
+import { CurrencyType } from '@/constants/currency';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { AccountingSetting, Shortcut } from '@prisma/client';
 
@@ -33,7 +34,7 @@ export function formatAccountingSetting(
   return {
     id: accountingSetting.id,
     accountBookId: accountingSetting.accountBookId,
-    currency: accountingSetting.currency,
+    currency: accountingSetting.currency as CurrencyType,
     taxSettings,
     shortcutList,
   };

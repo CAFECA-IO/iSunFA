@@ -8,6 +8,7 @@ import TaskType from '@/components/beta/dashboard/task_type';
 import { IPendingTaskTotal, PendingTaskIconName, TaskTitle } from '@/interfaces/pending_task';
 import PendingTaskNoData from '@/components/beta/dashboard/pending_task_no_data';
 import AccountBookListForPendingTask from '@/components/beta/dashboard/account_book_list_for_pending_task';
+import loggerFront from '@/lib/utils/logger_front';
 
 const PendingTaskForAll = () => {
   const { t } = useTranslation('dashboard');
@@ -31,14 +32,10 @@ const PendingTaskForAll = () => {
         if (success && data) {
           setUserPendingTaskTotal(data);
         } else {
-          // Deprecated: (20241127 - Liz)
-          // eslint-disable-next-line no-console
-          console.log('PendingTaskForAll getUserPendingTaskAPI code:', code);
+          loggerFront.log('PendingTaskForAll getUserPendingTaskAPI code:', code);
         }
       } catch (error) {
-        // Deprecated: (20241127 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('PendingTaskForAll getUserPendingTaskAPI error:', error);
+        loggerFront.error('PendingTaskForAll getUserPendingTaskAPI error:', error);
       }
     };
 
@@ -59,9 +56,12 @@ const PendingTaskForAll = () => {
     return <PendingTaskNoData />;
   }
 
-  const percentageForMissingCertificate =
-    userPendingTaskTotal.totalMissingCertificatePercentage * 100;
-  const percentageForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucherPercentage * 100;
+  const percentageForMissingCertificate = Math.round(
+    userPendingTaskTotal.totalMissingCertificatePercentage * 100
+  );
+  const percentageForUnpostedVouchers = Math.round(
+    userPendingTaskTotal.totalUnpostedVoucherPercentage * 100
+  );
   const countForMissingCertificate = userPendingTaskTotal.totalMissingCertificate;
   const countForUnpostedVouchers = userPendingTaskTotal.totalUnpostedVoucher;
 

@@ -24,6 +24,7 @@ import { getSession } from '@/lib/utils/session';
 import { validateOutputData } from '@/lib/utils/validator';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
+import { CurrencyType } from '@/constants/currency';
 
 /**
  * Info: (20250424 - Shirley) Handle GET request for accounting settings
@@ -72,13 +73,14 @@ async function handleGetRequest(req: NextApiRequest) {
   }
 
   const userTeam = teams?.find((team) => team.id === accountBookTeamId);
+  loggerBack.info(`User team: ${JSON.stringify(userTeam)}, company team ID: ${accountBookTeamId}`);
   if (!userTeam) {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_GET,
   });
 
   if (!assertResult.can) {
@@ -161,13 +163,15 @@ async function handlePutRequest(req: NextApiRequest) {
   }
 
   const userTeam = teams?.find((team) => team.id === companyTeamId);
+  loggerBack.info(`User team: ${JSON.stringify(userTeam)}, company team ID: ${companyTeamId}`);
+
   if (!userTeam) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
+    throw new Error(STATUS_MESSAGE.TEAM_NOT_FOUND_FROM_COMPANY);
   }
 
   const assertResult = convertTeamRoleCanDo({
     teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.ACCOUNTING_SETTING,
+    canDo: TeamPermissionAction.ACCOUNTING_SETTING_UPDATE,
   });
 
   if (!assertResult.can) {
@@ -194,7 +198,7 @@ async function handlePutRequest(req: NextApiRequest) {
     // Info: (20250424 - Shirley) Update accounting settings
     const updatedAccountingSetting = await updateAccountingSettingById(accountBookId, {
       ...accountingSetting,
-      accountBookId,
+      currency: accountingSetting.currency as CurrencyType,
     });
 
     if (updatedAccountingSetting) {

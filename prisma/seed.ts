@@ -1,6 +1,7 @@
-import { PrismaClient, Tag } from '@prisma/client';
-// import { PrismaClient, TeamPlanType } from '@prisma/client';
-import accounts from '@/seed_json/account_new.json';
+import { Tag, TeamPlanType } from '@prisma/client';
+import prisma from '@/client';
+import files from '@/seed_json/file.json';
+import users from '@/seed_json/user.json';
 import teams from '@/seed_json/team.json';
 import country from '@/seed_json/country.json';
 import companies from '@/seed_json/account_book.json';
@@ -62,58 +63,9 @@ async function createFile() {
   });
 }
 
-async function createCountry() {
-  await prisma.country.createMany({
-    data: country,
-  });
-}
-
-async function createSalaryRecord() {
-  await prisma.salaryRecord.createMany({
-    data: salaryRecords,
-  });
-}
-
-async function createVoucherSalaryRecordFolder() {
-  await prisma.voucherSalaryRecordFolder.createMany({
-    data: voucherSalaryRecordFolder,
-  });
-}
-
-async function createMilestones() {
-  await prisma.milestone.createMany({
-    data: milestones,
-  });
-}
-
-// Info (20240722 - Murky) - Uncomment this line to seed generated reports
-// async function createGeneratedReports() {
-//   await prisma.report.createMany({
-//     data: generatedReports,
-//   });
-// }
-
-async function createPendingReports() {
-  await prisma.report.createMany({
-    data: pendingReports,
-  });
-}
-
-// async function createRole() {
-//   await prisma.role.createMany({
-//     data: roles,
-//   });
-// }
-
 async function createUser() {
   await prisma.user.createMany({
     data: users,
-  });
-}
-
-async function createAccount() {
-  await prisma.account.createMany({
-    data: accounts,
   });
 }
 
@@ -165,6 +117,9 @@ async function createEmployeeProject() {
 async function createValue() {
   await prisma.value.createMany({
     data: values,
+async function createCountry() {
+  await prisma.country.createMany({
+    data: country,
   });
 }
 async function createSale() {
@@ -239,157 +194,60 @@ async function createVoucher() {
   });
 }
 
-async function createVoucherCertificate() {
-  await prisma.voucherCertificate.createMany({
-    data: voucherCertificates,
-  });
-}
-
-async function createLineItem(lineItem: {
-  id: number;
-  amount: number;
-  description: string;
-  accountCode: string;
-  debit: boolean;
-  voucherId: number;
-  createdAt: number;
-  updatedAt: number;
-}) {
-  const account = await prisma.account.findFirst({
-    where: {
-      code: lineItem.accountCode,
-    },
-    select: {
-      id: true,
-    },
-  });
-  if (!account) {
-    throw new Error(`Account with code ${lineItem.accountCode} not found`);
-  }
-  await prisma.lineItem.createMany({
-    data: [
-      {
-        id: lineItem.id,
-        amount: lineItem.amount,
-        description: lineItem.description,
-        debit: lineItem.debit,
-        createdAt: lineItem.createdAt,
-        updatedAt: lineItem.updatedAt,
-        accountId: account.id,
-        voucherId: lineItem.voucherId,
-      },
-    ],
-  });
-}
-
-async function createLineItems() {
-  await Promise.all(lineItems.map((lineItem) => createLineItem(lineItem)));
-}
-
-async function createAssociateLineItem() {
-  await prisma.associateLineItem.createMany({
-    data: associateLineItems,
-  });
-}
-
-async function createAssociateVoucher() {
-  await prisma.associateVoucher.createMany({
-    data: associateVouchers,
-  });
-}
-
-async function createEvent() {
-  await prisma.event.createMany({
-    data: event,
-  });
-}
-
-async function createAsset() {
-  await prisma.asset.createMany({
-    data: assets,
-  });
-}
-
-async function createAssetVoucher() {
-  await prisma.assetVoucher.createMany({
-    data: assetVouchers,
-  });
-}
-
-async function createCounterparty() {
-  await prisma.counterparty.createMany({
-    data: counterpartys,
-  });
-}
-
-async function createAccountingSetting() {
-  await prisma.accountingSetting.createMany({
-    data: accountingSettings,
-  });
-}
-
-async function createUserSetting() {
-  await prisma.userSetting.createMany({
-    data: userSettings,
-  });
-}
-
-// async function createCompanySetting() {
-//   await prisma.companySetting.createMany({
-//     data: companySettings,
-//   });
-// }
-
-async function createUserActionLog() {
-  await prisma.userActionLog.createMany({
-    data: userActionLogs,
-  });
-}
-
-async function createInvoice() {
-  await prisma.invoice.createMany({
-    data: invoice,
-  });
-}
-
-/*
-async function createTPlan() {
+async function createTeamPlans() {
+  const now = Math.floor(Date.now() / 1000);
   await Promise.all(
-    tPlans.map(async (plan) => {
-      const createdPlan = await prisma.teamPlan.create({
-        data: {
+    teamPlans.map(async (plan) => {
+      const createdPlan = await prisma.teamPlan.upsert({
+        where: { type: plan.type as TeamPlanType },
+        update: {
+          planName: plan.planName,
+          price: plan.price,
+          extraMemberPrice: plan.extraMemberPrice ?? null,
+          updatedAt: now,
+        },
+        create: {
           type: plan.type as TeamPlanType,
           planName: plan.planName,
           price: plan.price,
-          extraMemberPrice: plan.extraMemberPrice || null,
-          createdAt: Math.floor(new Date().getTime() / 1000),
-          updatedAt: Math.floor(new Date().getTime() / 1000),
+          extraMemberPrice: plan.extraMemberPrice ?? null,
+          createdAt: now,
+          updatedAt: now,
         },
       });
 
-      // Info: (20250221 - tzuhan) 插入 Feature 資料
-      if (plan.features) {
-        await prisma.teamPlanFeature.createMany({
-          data: plan.features.map((feature) => ({
-            planId: createdPlan.id,
-            featureKey: feature.featureKey,
-            featureValue: Array.isArray(feature.featureValue)
-              ? JSON.stringify(feature.featureValue)
-              : feature.featureValue,
-            createdAt: Math.floor(new Date().getTime() / 1000),
-            updatedAt: Math.floor(new Date().getTime() / 1000),
-          })),
-        });
-      }
+      await Promise.all(
+        plan.features.map((feature) =>
+          prisma.teamPlanFeature.upsert({
+            where: {
+              planId_featureKey: {
+                planId: createdPlan.id,
+                featureKey: feature.featureKey,
+              },
+            },
+            update: {
+              featureValue: feature.featureValue,
+              updatedAt: now,
+            },
+            create: {
+              planId: createdPlan.id,
+              featureKey: feature.featureKey,
+              featureValue: feature.featureValue,
+              createdAt: now,
+              updatedAt: now,
+            },
+          })
+        )
+      );
     })
   );
 }
-*/
 
 async function main() {
   try {
-    await createFile();
+    await createTeamPlans();
     await createCountry();
+    await createFile();
     await createUser();
     await createTeam();
     await createAccountBook();
@@ -407,60 +265,6 @@ async function main() {
     // await createRole();
     await createAccountBookKYC();
     await createAccount();
-    // await createAdmin();
-    await createDepartment();
-    await createEmployee();
-    await createProjects();
-    await createSale();
-    await createValue();
-    await createEmployeeProject();
-    await createWorkRate();
-    await createPlan();
-    // await createTPlan();
-    await createOrder();
-    await createPaymentRecord();
-    await createSubscription();
-    // await createInvitation();
-    await new Promise((resolve) => {
-      setTimeout(resolve, 5000);
-    });
-    await createIncomeExpenses();
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-    await createMilestones();
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-
-    // Info (20240316 - Murky) - Uncomment this line to seed generated reports
-    // await createGeneratedReports();
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-    await createPendingReports();
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-
-    await createJournal();
-    await createCertificate();
-    await createVoucher();
-    await createVoucherCertificate();
-    await createAsset();
-
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-    await createLineItems();
-    await createSalaryRecord();
-    await createVoucherSalaryRecordFolder();
-    await createAssetVoucher();
-
-    await createEvent();
-    await createAssociateVoucher();
-    await createAssociateLineItem();
-    await createInvoice();
   } finally {
     await prisma.$disconnect();
   }

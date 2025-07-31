@@ -1,12 +1,14 @@
 import { SortBy, SortOrder } from '@/constants/sort';
 import {
-  WORK_TAG,
   AGENT_FILING_ROLE,
   DECLARANT_FILING_METHOD,
   FILING_FREQUENCY,
   FILING_METHOD,
+  IAccountBookWithTeam,
 } from '@/interfaces/account_book';
 import { ITeam } from '@/interfaces/team';
+import { LocaleKey } from '@/constants/normal_setting';
+import { CurrencyType } from '@/constants/currency';
 
 export const DEFAULT_SORT_OPTIONS = [{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }];
 
@@ -30,55 +32,83 @@ export const FILING_METHOD_OPTIONS = [
 export interface Step1FormState {
   imageId: string;
   companyName: string;
-  representativeName: string;
+  businessLocation: LocaleKey | undefined; // Info: (20250604 - Liz) 商業地址
+  accountingCurrency: CurrencyType | undefined; // Info: (20250604 - Liz) 會計幣別
   taxId: string;
   taxSerialNumber: string;
-  contactPerson: string;
-  isSameAsResponsiblePerson: boolean;
-  phoneNumber: string;
-  tag: WORK_TAG | null;
   team: ITeam | null;
-  city: string | null;
-  district: string | null;
-  districtOptions: string[];
-  enteredAddress: string;
-  isTagDropdownOpen: boolean;
+  // tag: WORK_TAG | null;
+  // representativeName: string;
+  // contactPerson: string;
+  // isSameAsResponsiblePerson: boolean;
+  // phoneNumber: string;
+  // city: string | null;
+  // district: string | null;
+  // districtOptions: string[];
+  // enteredAddress: string;
+  // isTagDropdownOpen: boolean;
   isTeamDropdownOpen: boolean;
-  isCityDropdownOpen: boolean;
-  isDistrictDropdownOpen: boolean;
+  // isCityDropdownOpen: boolean;
+  // isDistrictDropdownOpen: boolean;
+  // responsiblePersonError: string | null;
+  // taxSerialNumberError: string | null;
+  // tagError: string | null;
   companyNameError: string | null;
-  responsiblePersonError: string | null;
   taxIdError: string | null;
-  taxSerialNumberError: string | null;
+  businessLocationError: string | null;
+  accountingCurrencyError: string | null;
   teamError: string | null;
-  tagError: string | null;
 }
 
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值
 export const initialStep1FormState: Step1FormState = {
   imageId: '',
   companyName: '',
-  representativeName: '',
+  businessLocation: undefined,
+  accountingCurrency: undefined,
   taxId: '',
   taxSerialNumber: '',
-  contactPerson: '',
-  isSameAsResponsiblePerson: false,
-  phoneNumber: '',
-  tag: null,
   team: null,
-  city: null,
-  district: null,
-  districtOptions: [],
-  enteredAddress: '',
-  isTagDropdownOpen: false,
+  // tag: null,
+  // representativeName: '',
+  // contactPerson: '',
+  // isSameAsResponsiblePerson: false,
+  // phoneNumber: '',
+  // city: null,
+  // district: null,
+  // districtOptions: [],
+  // enteredAddress: '',
+  // isTagDropdownOpen: false,
   isTeamDropdownOpen: false,
-  isCityDropdownOpen: false,
-  isDistrictDropdownOpen: false,
+  // isCityDropdownOpen: false,
+  // isDistrictDropdownOpen: false,
+  // responsiblePersonError: null,
+  // taxSerialNumberError: null,
+  // tagError: null,
   companyNameError: null,
-  responsiblePersonError: null,
   taxIdError: null,
-  taxSerialNumberError: null,
+  businessLocationError: null,
+  accountingCurrencyError: null,
   teamError: null,
-  tagError: null,
+};
+
+// Info: (20250526 - Liz) 第一步驟表單狀態的初始值建立函式 => 判斷目前是否是「編輯模式」，如果是，就從現有資料中填入表單欄位，否則就用初始值
+export const createInitialStep1FormState = (
+  accountBookToEdit?: IAccountBookWithTeam
+): Step1FormState => {
+  if (!accountBookToEdit) return initialStep1FormState;
+
+  return {
+    ...initialStep1FormState,
+    companyName: accountBookToEdit.name ?? initialStep1FormState.companyName,
+    taxId: accountBookToEdit.taxId ?? initialStep1FormState.taxId,
+    team: accountBookToEdit.team ?? initialStep1FormState.team,
+    imageId: accountBookToEdit.imageId ?? initialStep1FormState.imageId,
+    businessLocation: accountBookToEdit.businessLocation ?? initialStep1FormState.businessLocation,
+    accountingCurrency:
+      accountBookToEdit.accountingCurrency ?? initialStep1FormState.accountingCurrency,
+    taxSerialNumber: accountBookToEdit.taxSerialNumber ?? initialStep1FormState.taxSerialNumber,
+  };
 };
 
 export type Step1FormAction =

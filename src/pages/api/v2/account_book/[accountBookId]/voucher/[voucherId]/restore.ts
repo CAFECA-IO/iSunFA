@@ -31,8 +31,8 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
 }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: number | null = null;
-  const { userId, accountBookId } = session;
-  const { voucherId } = query;
+  const { userId } = session;
+  const { accountBookId, voucherId } = query;
 
   try {
     const now = getTimestampNow();

@@ -18,26 +18,28 @@ import PrintButton from '@/components/button/print_button';
 import DownloadButton from '@/components/button/download_button';
 import CashFlowA4Template from '@/components/cash_flow_statement_report_body/cash_flow_statement_a4_template';
 import DownloadCashFlowStatement from '@/components/cash_flow_statement_report_body/download_cash_flow_statement';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface CashFlowStatementListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241024 - Anna) 接收來自上層的日期範圍
-  isPrinting: boolean; // Info: (20241122 - Anna)  從父層傳入的列印狀態
   printRef: React.RefObject<HTMLDivElement>; // Info: (20241122 - Anna) 從父層傳入的 Ref
   downloadRef: React.RefObject<HTMLDivElement>; // Info: (20250327 - Anna) 從父層傳入的 Ref
   printFn: () => void; // Info: (20241122 - Anna) 從父層傳入的列印函數
   downloadFn: () => void; // Info: (20250327 - Anna) 從父層傳入的下載函數
+  isDownloading: boolean;
 }
 
 const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   selectedDateRange,
-  isPrinting, // Info: (20241122 - Anna) 使用打印狀態
   printRef, // Info: (20241122 - Anna) 使用打印範圍 Ref
   downloadRef, // Info: (20250327 - Anna) 使用下載範圍 Ref
   printFn, // Info: (20241122 - Anna) 使用打印函數
   downloadFn, // Info: (20250327 - Anna) 使用下載函數
+  isDownloading,
 }) => {
   const { t, i18n } = useTranslation('reports'); // Info: (20250108 - Anna) 使用 i18n 來獲取當前語言
   const isChinese = i18n.language === 'tw' || i18n.language === 'cn'; // Info: (20250108 - Anna) 判斷當前語言是否為中文
+  const { currency } = useCurrencyCtx();
   const { isAuthLoading, connectedAccountBook } = useUserCtx();
   const hasCompanyId = isAuthLoading === false && !!connectedAccountBook?.id;
   // Info: (20241024 - Anna) 用 useRef 追蹤之前的日期範圍
@@ -99,7 +101,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     try {
       const response = await trigger({
         params: {
-          companyId: connectedAccountBook?.id,
+          accountBookId: connectedAccountBook?.id,
         },
         query: {
           startDate: selectedDateRange.startTimeStamp, // Info: (20241001 - Anna) 根據選擇的日期範圍傳遞參數
@@ -158,21 +160,6 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       setPreYear(previousYear);
     }
   }, [reportFinancial]);
-
-  useEffect(() => {
-    if (isPrinting && printRef.current) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('cash_flow_statement_list 觀察 Printing content:', printRef.current.innerHTML);
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('cash_flow_statement_list received isPrinting?', isPrinting);
-    } else {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('cash_flow_statement_list printRef is null');
-    }
-  }, [isPrinting]);
 
   // Info: (20241024 - Anna) 檢查報表數據和載入狀態
   if (!hasFetchedOnce && !getReportFinancialIsLoading) {
@@ -415,7 +402,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
 
     return (
       <div className="hide-scrollbar mt-4 overflow-x-auto">
-        <div className="min-w-900px">
+        <div className="min-w-900px print:min-w-0">
           <table className="w-full border-collapse bg-white">
             <thead>
               <tr className="bg-surface-brand-primary-50">
@@ -435,9 +422,6 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     );
   };
   const displayedSelectArea = () => {
-    // Deprecated: (20241130 - Anna) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('[displayedSelectArea] Display Area Rendered');
     return (
       <div className="mb-16px flex items-center justify-between px-px max-md:flex-wrap print:hidden">
         <div className="ml-auto flex items-center gap-2 tablet:gap-24px">
@@ -452,13 +436,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
   const ItemSummary = (
     <div id="1" className="relative overflow-y-hidden">
       <section className="mx-1 text-text-neutral-secondary">
-        <div className="relative z-1 mb-16px flex justify-between font-semibold text-surface-brand-secondary items-center">
+        <div className="relative z-1 mb-16px flex items-center justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.ITEM_SUMMARY_FORMAT')}</p>
             <CollapseButton onClick={toggleSummaryTable} isCollapsed={isSummaryCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isSummaryCollapsed &&
@@ -472,13 +457,14 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
     <div id="2" className="relative overflow-hidden">
       <section className="relative mx-1 text-text-neutral-secondary">
         <div className="relative -z-10"></div>
-        <div className="mb-4 mt-8 flex justify-between font-semibold text-surface-brand-secondary items-center">
+        <div className="mb-4 mt-8 flex items-center justify-between font-semibold text-surface-brand-secondary">
           <div className="flex items-center">
             <p className="mb-0">{t('reports:REPORTS.DETAILED_CLASSIFICATION_FORMAT')}</p>
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
             {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+            {currency}
           </p>
         </div>
         {!isDetailCollapsed &&
@@ -781,8 +767,6 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         >
           {ItemSummary}
           {ItemDetail}
-          {/* {operatingCF5Y} Todo: (20241202- Anna) 圖表列印有問題 */}
-          {/* {investmentRatio} Todo: (20241202- Anna) 圖表列印有問題 */}
           {freeCashFlow}
         </CashFlowA4Template>
       </div>
@@ -794,7 +778,11 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         {investmentRatio}
         {freeCashFlow}
       </div>
-      <DownloadCashFlowStatement reportFinancial={reportFinancial} downloadRef={downloadRef} />
+      <DownloadCashFlowStatement
+        reportFinancial={reportFinancial}
+        downloadRef={downloadRef}
+        isDownloading={isDownloading}
+      />
     </div>
   );
 };

@@ -8,14 +8,14 @@ const AccountSettings = () => {
 
   return (
     <main className="flex flex-col gap-40px">
-      <section className="flex items-center gap-16px">
-        <div className="flex items-center gap-8px">
+      <section className="flex items-center gap-lv-4">
+        <div className="flex items-center gap-lv-2">
           <Image src="/icons/attribution.svg" width={16} height={16} alt="notice_icon" />
-          <span className="text-sm font-medium text-divider-text-lv-1">
+          <span className="text-sm font-medium text-divider-text-lv-2">
             {t('settings:NORMAL.ACCOUNT_SETTINGS')}
           </span>
         </div>
-        <hr className="flex-auto border-t-2px border-divider-stroke-lv-1" />
+        <hr className="flex-auto border-t border-divider-stroke-lv-4" />
       </section>
 
       <section className="flex flex-col items-start gap-24px">

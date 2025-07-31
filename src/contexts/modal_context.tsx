@@ -5,6 +5,7 @@ import { IToastify, ToastPosition, ToastType } from '@/interfaces/toastify';
 import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface ModalContextType {
   isMessageModalVisible: boolean;
@@ -46,9 +47,7 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
     setIsAddCounterPartyModalVisible(!isAddCounterPartyModalVisible);
   };
   const addCounterPartyModalDataHandler = (data: IAddCounterPartyModalData) => {
-    // Deprecate: (20241224 - tzuhan) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log(`addCounterPartyModalDataHandler: data`, data);
+    loggerFront.log(`addCounterPartyModalDataHandler: data`, data);
     setAddCounterPartyModalData(data);
   };
 

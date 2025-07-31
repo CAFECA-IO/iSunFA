@@ -15,6 +15,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface EditCounterPartyModalProps {
   onClose: () => void;
@@ -154,10 +155,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         note: inputNote,
       });
       onClose();
-    } else if (editError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update counterparty:', editError);
     }
   }, [success, editError, onSave, onClose, inputName, inputTaxId, inputType, inputNote]);
 
@@ -167,10 +164,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
       // Info: (20241118 - Anna) 回傳空資料表示該項目已刪除
       onSave({ id: counterpartyId, name: '', taxId: '', type: CounterpartyType.BOTH, note: '' });
       onClose();
-    } else if (deleteError) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to delete counterparty:', deleteError);
     }
   }, [deleteSuccess, deleteError, onSave, onClose, counterpartyId]);
 
@@ -193,9 +186,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         try {
           await deleteCounterpartyTrigger(); // Info: (20241115 - Anna) 呼叫 deleteCounterpartyTrigger 以執行刪除
         } catch (error) {
-          // Deprecate: (20241118 - Anna) debug
-          // eslint-disable-next-line no-console
-          console.error('Error deleting counterparty:', error);
+          loggerFront.error('Error deleting counterparty:', error);
         }
       },
       backBtnStr: t('common:COMMON.CANCEL'),
@@ -203,20 +194,6 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
     });
     messageModalVisibilityHandler();
   };
-
-  // Todo:(20241110 - Anna) Id要改成動態
-  // const editCounterparty = async (counterpartyData: {
-  //   name: string;
-  //   taxId: string;
-  //   type: CounterpartyType;
-  //   note: string;
-  //   counterpartyId: number; // Info:(20241110 - Anna) 新增 counterpartyId 属性
-  // }) => {
-  //   await APIHandler(APIName.COUNTERPARTY_UPDATE, {
-  //     body: counterpartyData,
-  //     params: { companyId: connectedAccountBook?.id || 0 }, // Info: (20241105 - Anna) 如果為 null，使用一個預設值
-  //   });
-  // };
 
   const editCounterparty = async () => {
     if (!hasChanges) return; // Info: (20241118 - Anna) 判斷是否有更動
@@ -240,9 +217,7 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
         onClose();
       }
     } catch (error) {
-      // Deprecate: (20241118 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Error updating counterparty:', error);
+      loggerFront.error('Error updating counterparty:', error);
     }
   };
 
@@ -257,23 +232,25 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="relative flex max-h-620px w-90vw max-w-480px flex-col gap-4 rounded-sm bg-surface-neutral-surface-lv2 p-8">
-        {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-4 top-4 text-checkbox-text-primary"
-          onClick={onClose}
-        >
-          <RxCross1 size={32} />
-        </button>
-        <h2 className="flex justify-center text-xl font-semibold">
-          {t('certificate:COUNTERPARTY.EDIT_NEW')}
-        </h2>
+      <div className="flex max-h-700px w-90vw max-w-480px flex-col gap-lv-5 rounded-sm bg-surface-neutral-surface-lv2 p-lv-7">
+        <div className="relative flex items-center justify-center">
+          {/* Info: (20240924 - tzuhan) 關閉按鈕 */}
+          <button
+            type="button"
+            className="absolute right-0 text-checkbox-text-primary"
+            onClick={onClose}
+          >
+            <RxCross1 size={24} />
+          </button>
+          <h2 className="flex justify-center text-xl font-semibold text-text-neutral-primary">
+            {t('certificate:COUNTERPARTY.EDIT_NEW')}
+          </h2>
+        </div>
         <form
           onSubmit={EditNewCounterParterHandler}
-          className="flex w-full flex-col gap-4 text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-lv-7 text-sm text-input-text-primary"
         >
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 tablet:gap-lv-7">
             {/* Info: (20241018 - tzuhan) name */}
             <div className="relative flex w-full flex-1 flex-col items-start gap-2">
               <div id="counterparty-name" className="absolute -top-20"></div>
@@ -349,13 +326,13 @@ const EditCounterPartyModal: React.FC<EditCounterPartyModalProps> = ({
           </div>
           {/* Info: (20241111 - Anna) 绑定删除操作 */}
           <div
-            className="flex cursor-pointer items-center justify-start gap-1 py-6"
+            className="flex cursor-pointer items-center justify-start gap-lv-1"
             onClick={deleteCounterpartyHandler}
           >
             <RiDeleteBinLine className="text-red-600" />
             <p className="text-red-600">{t('certificate:COUNTERPARTY.REMOVE_THIS')}</p>
           </div>
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center justify-end gap-24px">
             <Button
               className="px-16px py-8px"
               type="button"

@@ -51,12 +51,12 @@ const Todo = ({ todo, setTodoToUpdate, setTodoToDelete }: TodoProps) => {
   };
 
   return (
-    <section className="flex divide-x-2 divide-stroke-neutral-quaternary bg-surface-neutral-surface-lv2">
+    <section className="flex bg-surface-neutral-surface-lv2">
       <div className="flex w-120px items-center justify-center px-16px pb-8px pt-16px">
         <CalendarIcon timestamp={unixTimeStamp} incomplete={false} />
       </div>
 
-      <div className="flex grow items-center truncate px-16px py-8px text-base font-semibold text-surface-brand-secondary">
+      <div className="flex min-w-220px grow items-center truncate px-16px py-8px text-base font-semibold text-surface-brand-secondary">
         <p>{todo.name}</p>
       </div>
 

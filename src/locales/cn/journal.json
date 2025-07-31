@@ -158,7 +158,7 @@
   "ASSET_SECTION": {
     "TITLE": "资产",
     "EMPTY": "无资料",
-    "EMPTY_HINT": "请新增至少 1 笔资产！",
+    "EMPTY_HINT": "传票仍可储存，后续请返回至本笔传票，新增至少 1 笔资产！",
     "ADD_BTN": "新增资产"
   },
   "VOUCHER_LINE_BLOCK": {
@@ -166,6 +166,7 @@
     "PARTICULARS": "摘要",
     "CREDIT": "贷方金额",
     "DEBIT": "借方金额",
+    "EMPTY": "无资料",
     "EMPTY_HINT": "请新增至少 1 笔会计分录！",
     "REVERSE_ITEM": "冲销项目",
     "REVERSE_HINT": "请新增至少 1 笔冲销传票！"

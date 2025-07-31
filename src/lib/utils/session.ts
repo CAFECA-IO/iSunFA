@@ -90,6 +90,7 @@ class SessionHandler {
       const data = Buffer.from(encryptedString).toString('base64');
       // Info: (20250108 - Luphia) save session data to file
       const { filePath } = this;
+      // ToDo: (20250108 - Luphia) Use IPFS to store files (S1: Session 管理)
       fs.promises.writeFile(filePath, data);
     } catch (error) {
       // Info: (20250108 - Luphia) log error message and nothing to do
@@ -102,6 +103,7 @@ class SessionHandler {
     try {
       // Info: (20250108 - Luphia) read session data from file
       const { filePath } = this;
+      // ToDo: (20250108 - Luphia) Use IPFS to store files (S1: Session 管理)
       const data = await fs.promises.readFile(filePath, 'utf-8');
       const rawString = Buffer.from(data, 'base64').toString('utf-8');
       const decryptedString = decryptString(rawString, this.secret);
@@ -215,7 +217,11 @@ const sessionHandler = SessionHandler.getInstance(sessionHandlerOption);
  * 5. 回傳 session 資料
  */
 export const getSession = async (req: NextApiRequest) => {
-  const options = req.headers as unknown as ISessionOption;
+  const options: ISessionOption = {
+    'x-forwarded-for': req.headers['x-forwarded-for'] as string,
+    'user-agent': req.headers['user-agent'] as string,
+    cookie: req.headers.cookie as string,
+  };
   const defaultSession = sessionOptionToSession(options);
   const sessionId = parseSessionId(options);
   const currentSession = await sessionHandler.read(sessionId);
@@ -242,6 +248,7 @@ export const setSession = async (
     companyId?: number;
     challenge?: string;
     roleId?: number;
+    external?: { provider: string; uid: string };
     teams?: { id: number; role: string }[];
   }
 ) => {
@@ -316,13 +323,6 @@ export async function updateTeamMemberSession(
         if (role === null) {
           // Info: (20250402 - Shirley) 移除用戶
           updatedTeams = teams.filter((team) => team.id !== teamId);
-          // Deprecated: (20250416 - Shirley) 移除 log
-          loggerBack.info({
-            message: 'Removing team from user session',
-            userId,
-            teamId,
-            sessionId: session.isunfa,
-          });
         } else {
           // Info: (20250402 - Shirley) 檢查用戶是否已在團隊中
           const existingTeamIndex = teams.findIndex((team) => team.id === teamId);
@@ -330,41 +330,15 @@ export async function updateTeamMemberSession(
           if (existingTeamIndex === -1) {
             // Info: (20250402 - Shirley) 用戶不在團隊中，新增團隊資訊
             updatedTeams = [...teams, { id: teamId, role }];
-            // Deprecated: (20250416 - Shirley) 移除 log
-            loggerBack.info({
-              message: 'Adding team to user session',
-              userId,
-              teamId,
-              role,
-              sessionId: session.isunfa,
-            });
           } else {
             // Info: (20250402 - Shirley) 用戶已在團隊中，更新角色
             updatedTeams = teams.map((team) => (team.id === teamId ? { ...team, role } : team));
-            // Deprecated: (20250416 - Shirley) 移除 log
-            loggerBack.info({
-              message: 'Updating user role in team session',
-              userId,
-              teamId,
-              role,
-              sessionId: session.isunfa,
-            });
           }
         }
 
-        const beforeSession = { ...session };
         const updatedSession = await sessionHandlerInstance.update(session.isunfa, {
           ...session,
           teams: updatedTeams,
-        });
-        // Deprecated: (20250416 - Shirley) 移除 log
-        loggerBack.info({
-          message: 'Session updated successfully',
-          userId,
-          teamId,
-          sessionId: session.isunfa,
-          beforeTeams: beforeSession.teams?.length || 0,
-          afterTeams: updatedSession.teams?.length || 0,
         });
 
         return updatedSession;

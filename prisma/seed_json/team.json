@@ -9,27 +9,5 @@
     "createdAt": 1740652650,
     "imageFileId": null,
     "updatedAt": 1743133039
-  },
-  {
-    "id": 2,
-    "ownerId": 1002,
-    "name": "Test_User_3's Team",
-    "about": "",
-    "profile": "",
-    "bankInfo": "{\"code\": \"\", \"number\": \"\"}",
-    "createdAt": 1740652650,
-    "imageFileId": null,
-    "updatedAt": 1741152233
-  },
-  {
-    "id": 3,
-    "ownerId": 1003,
-    "name": "Test_User's Team",
-    "about": "",
-    "profile": "",
-    "bankInfo": "{\"code\": \"\", \"number\": \"\"}",
-    "createdAt": 1740652650,
-    "imageFileId": null,
-    "updatedAt": 1741152233
   }
 ]

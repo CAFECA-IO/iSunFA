@@ -4,6 +4,7 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { AnalysisReportTypesKey, FinancialReportTypesKey } from '@/interfaces/report_type';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { Prisma } from '@prisma/client';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 export interface IAnalysisReportRequest {
   project_id: string;
@@ -154,6 +155,7 @@ export interface FinancialReport {
     id: number;
     code: string;
     name: string;
+    accountingSetting?: IAccountingSetting;
   };
   preDate: {
     from: number;

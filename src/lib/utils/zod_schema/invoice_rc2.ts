@@ -88,6 +88,17 @@ export const listInvoiceRC2QuerySchema = paginatedDataQuerySchema.extend({
     .transform((val) => (val === InvoiceType.ALL ? undefined : val)),
 });
 
+export const listInvoiceRC2Grouped = {
+  input: {
+    querySchema: listInvoiceRC2QuerySchema.extend({
+      direction: z.nativeEnum(InvoiceDirection).optional(),
+    }),
+    bodySchema: nullSchema,
+  },
+  outputSchema: paginatedDataSchema(z.union([InvoiceRC2OutputSchema, InvoiceRC2InputSchema])),
+  frontend: paginatedDataSchema(z.union([InvoiceRC2OutputSchema, InvoiceRC2InputSchema])),
+};
+
 export const listInvoiceRC2Input = {
   input: {
     querySchema: listInvoiceRC2QuerySchema,

@@ -43,7 +43,7 @@ const CertificateItem: React.FC<CertificateListIrops> = ({
 
   return (
     <div
-      className={`group table-row h-72px w-full max-w-920px overflow-y-hidden text-sm text-text-neutral-primary hover:bg-surface-brand-primary-10`}
+      className={`group table-row h-72px w-full max-w-920px overflow-y-hidden text-sm text-text-neutral-primary odd:bg-surface-neutral-surface-lv2 even:bg-surface-neutral-surface-lv1 hover:bg-surface-brand-primary-10`}
       onClick={() => {
         return activeSelection
           ? handleSelect([certificate.id], !certificate.isSelected)

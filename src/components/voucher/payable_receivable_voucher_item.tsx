@@ -88,9 +88,9 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
   const displayedCounterparty = (
     <div className="flex flex-col items-start gap-4px text-hxs">
       {/* eslint-disable-next-line react/prop-types */}
-      <p className="text-text-neutral-tertiary">{counterParty.taxId}</p>
+      <p className="text-text-neutral-tertiary">{counterParty?.taxId || ''}</p>
       {/* eslint-disable-next-line react/prop-types */}
-      <p className="text-text-neutral-primary">{counterParty.name}</p>
+      <p className="text-text-neutral-primary">{counterParty?.name || '-'}</p>
     </div>
   );
 

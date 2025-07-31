@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { FiTrash2 } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
 import { haloStyle, orangeRadioStyle } from '@/constants/display';
 import { LandingButton } from '@/components/landing_page_v2/landing_button';
 import { ILanguageSkill, Proficiency } from '@/interfaces/skill';
 import { useHiringCtx } from '@/contexts/hiring_context';
+import { IoClose } from 'react-icons/io5';
 
 interface ILanguageSkillModalProps {
   modalVisibilityHandler: () => void;
@@ -137,7 +137,7 @@ const LanguageSkillModal: React.FC<ILanguageSkillModalProps> = ({
           </h2>
           {/* Info: (20250428 - Julian) Close Button */}
           <button type="button" className="p-12px" onClick={modalVisibilityHandler}>
-            <Image src="/icons/x_close.svg" width={24} height={24} alt="close_icon" />
+            <IoClose size={24} />
           </button>
         </div>
         {/* Info: (20250428 - Julian) Form Content */}

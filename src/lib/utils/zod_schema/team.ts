@@ -178,7 +178,7 @@ export const teamSchemas = {
       bodySchema: z.object({
         name: z.string(),
         members: z.array(z.string().email()).optional(),
-        planType: z.nativeEnum(TPlanType).optional(),
+        planType: z.nativeEnum(TPlanType).optional().default(TPlanType.BEGINNER),
         about: z.string().optional(),
         profile: z.string().optional(),
         bankInfo: z.object({ code: z.number(), number: z.string() }).optional(),
@@ -227,6 +227,42 @@ export const teamSchemas = {
     },
     outputSchema: addMemberResponseSchema,
     frontend: addMemberResponseSchema,
+  },
+  acceptInvitation: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
+    },
+    outputSchema: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+    frontend: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+  },
+  declineInvitation: {
+    input: {
+      querySchema: getByTeamIdSchema,
+      bodySchema: z.object({}).optional(),
+    },
+    outputSchema: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
+    frontend: z.object({
+      teamId: z.number(),
+      userId: z.number(),
+      role: z.nativeEnum(TeamRole),
+      status: z.nativeEnum(LeaveStatus),
+    }),
   },
   leaveTeam: {
     input: {

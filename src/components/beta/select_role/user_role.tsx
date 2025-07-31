@@ -8,6 +8,7 @@ import { FiArrowRight } from 'react-icons/fi';
 import { IUserRole } from '@/interfaces/user_role';
 import { RoleName } from '@/constants/role';
 import { DEFAULT_AVATAR_URL } from '@/constants/display';
+import loggerFront from '@/lib/utils/logger_front';
 
 // Info: (20250523 - Liz) 每個角色對應的小圖示
 const ROLES_ICON: Record<RoleName, string> = {
@@ -40,17 +41,13 @@ const UserRole = ({ userRole, lastLoginAt }: UserRoleProps) => {
       const { success } = await selectRole(userRole.roleName);
 
       if (!success) {
-        // Deprecated: (20250329 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('selectUserRole error (選擇角色失敗):', success);
+        loggerFront.log('selectUserRole error (選擇角色失敗):', success);
       }
 
       // Info: (20241107 - Liz) 選擇角色成功後，導向到儀表板
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } catch (error) {
-      // Deprecated: (20241107 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('selectUserRole error (選擇角色失敗):', error);
+      loggerFront.error('selectUserRole error (選擇角色失敗):', error);
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ import { useTranslation } from 'next-i18next';
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { numberWithCommas } from '@/lib/utils/common';
 import { IInvoiceRC2InputUI, IInvoiceRC2OutputUI } from '@/interfaces/invoice_rc2';
+import { VscSettings } from 'react-icons/vsc';
 
 export interface ISelectionToolBarOperation {
   operation: string;
@@ -29,10 +30,8 @@ interface SelectionToolbarProps {
   handleSelectAll: () => void; // Info: (20240920 - Anna) 全選
   onDelete?: () => void; // Info: (20240920 - Anna) 添加刪除的回調函數
   addOperations?: ISelectionToolBarOperation[];
-  // Deprecated: (20250116 - Julian) remove eslint-disable
-  // eslint-disable-next-line react/no-unused-prop-types
-  exportOperations?: ISelectionToolBarOperation[];
   onDownload?: () => void;
+  toggleSideMenu: () => void;
 }
 
 const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
@@ -51,6 +50,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   onDelete,
   addOperations,
   onDownload,
+  toggleSideMenu,
 }) => {
   const { t } = useTranslation(['certificate']);
 
@@ -110,35 +110,60 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
         </>
       ) : (
         <>
-          {/* Info: (20240920 - Anna) 左側選擇計數顯示 */}
+          {/* Info: (20240920 - Anna) 左側選擇計數顯示(tablet以上) */}
           {subtitle && currency && (
-            <div className="font-medium text-text-neutral-tertiary">
-              <span>{subtitle} </span>
-              <span className="text-black">{numberWithCommas(totalPrice ?? 0)}</span>
+            <div className="hidden font-medium text-text-neutral-tertiary tablet:flex">
+              <span className="mr-1 whitespace-nowrap">{subtitle} </span>
+              <span className="mr-1 text-text-neutral-primary">
+                {numberWithCommas(totalPrice ?? 0)}
+              </span>
               <span>{currency}</span>
             </div>
           )}
-          <div className="flex h-42px items-center justify-end space-x-4 text-link-text-primary">
-            {/* Info: (20250418 - Anna) 匯出憑證 */}
-            {onDownload && (
-              <Button
-                type="button"
-                variant="tertiaryOutline"
-                className="h-36px py-1.5"
-                onClick={onDownload}
-              >
-                <FiDownload />
-                <div>{t('certificate:COMMON.EXPORT_INVOICES')}</div>
-              </Button>
-            )}
-            {isSelectable && (
+          <div className="w-full">
+            <div className="flex h-42px items-center justify-between space-x-4 text-link-text-primary tablet:justify-end">
+              {/* Info: (20250528 - Anna) Filter button */}
               <button
                 type="button"
-                className="hover:underline"
-                onClick={() => onActiveChange(true)}
+                onClick={toggleSideMenu}
+                className="block w-fit p-10px text-button-text-secondary tablet:hidden"
               >
-                {t('certificate:COMMON.SELECT')}
+                <VscSettings size={24} />
               </button>
+
+              <div className="flex gap-3">
+                {/* Info: (20250418 - Anna) 匯出憑證 */}
+                {onDownload && (
+                  <Button
+                    type="button"
+                    variant="tertiaryOutline"
+                    className="h-36px w-36px !p-0 tablet:w-auto tablet:!px-4 tablet:!py-1.5"
+                    onClick={onDownload}
+                  >
+                    <FiDownload size={16} />
+                    <div className="hidden tablet:block">
+                      {t('certificate:COMMON.EXPORT_INVOICES')}
+                    </div>
+                  </Button>
+                )}
+                {isSelectable && (
+                  <button
+                    type="button"
+                    className="hover:underline"
+                    onClick={() => onActiveChange(true)}
+                  >
+                    {t('certificate:COMMON.SELECT')}
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* Info: (20250527 - Anna) 左側選擇計數顯示(tablet以下) */}
+            {subtitle && currency && (
+              <div className="mb-6 mt-18px flex font-medium text-text-neutral-tertiary tablet:hidden">
+                <span className="mr-1">{subtitle} </span>
+                <span className="mr-1 text-black">{numberWithCommas(totalPrice ?? 0)}</span>
+                <span>{currency}</span>
+              </div>
             )}
           </div>
         </>

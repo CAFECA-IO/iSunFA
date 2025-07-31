@@ -19,6 +19,7 @@ import { voucherAPIPostUtils as postUtils } from '@/pages/api/v2/account_book/[a
 import { parsePrismaVoucherToVoucherEntity } from '@/lib/utils/formatter/voucher.formatter';
 import {
   deleteVoucherByCreateReverseVoucher,
+  postVoucherV2,
   putVoucherWithoutCreateNew,
 } from '@/lib/utils/repo/voucher.repo';
 import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
@@ -36,6 +37,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileEntity } from '@/interfaces/file';
 import { ILineItemEntity } from '@/interfaces/line_item';
 import { IAccountEntity } from '@/interfaces/accounting_account';
+import { InvoiceRC2WithFullRelations } from '@/lib/utils/repo/invoice_rc2.repo';
 
 type GetOneVoucherResponse = IVoucherEntity & {
   issuer: IUserEntity;
@@ -48,6 +50,7 @@ type GetOneVoucherResponse = IVoucherEntity & {
     invoice: IInvoiceEntity;
     file: IFileEntity;
   })[];
+  invoiceRC2List: InvoiceRC2WithFullRelations[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   payableInfo?: {
     total: number;
@@ -70,11 +73,12 @@ const handleGetRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(apiName, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { userId, accountBookId: companyId } = session;
+  const { userId } = session;
+  const { accountBookId } = query;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.VIEW_VOUCHER,
   });
 
@@ -94,14 +98,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
       voucherId,
       {
         isVoucherNo,
-        companyId,
+        companyId: accountBookId,
       }
     );
 
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
     const lineItems = getUtils.initLineItemEntities(voucherFromPrisma);
     const accountSetting: PrismaAccountingSetting =
-      await getUtils.getAccountingSettingFromPrisma(companyId);
+      await getUtils.getAccountingSettingFromPrisma(accountBookId);
     const issuer: IUserEntity = getUtils.initIssuerEntity(voucherFromPrisma);
     const counterParty: ICounterPartyEntityPartial =
       getUtils.initCounterPartyEntity(voucherFromPrisma);
@@ -122,6 +126,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       resultEvents,
       asset,
       certificates,
+      invoiceRC2List: voucherFromPrisma.InvoiceRC2,
       lineItems,
       payableInfo,
       receivingInfo,
@@ -149,6 +154,13 @@ const handleGetRequest = async (req: NextApiRequest) => {
   return { response, statusMessage };
 };
 
+/**  Info: (Tzuhan - 20250612)
+ * 若 lineItem 有變更，則整張傳票視為需重建，
+ * 執行：1. 建立 delete version 傳票並與 event 綁定
+ *       2. 建立新傳票並儲存新內容
+ * 若 lineItem 無變，才執行 partial update：
+ * 包含 certificate/invoiceRC2/asset/reverseVoucher 等維度的關聯性變更
+ */
 const handlePutRequest = async (req: NextApiRequest) => {
   const apiName = APIName.VOUCHER_PUT_V2;
   const session = await getSession(req);
@@ -158,12 +170,12 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { query, body } = checkRequestData(apiName, req, session);
   if (!query || !body) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { voucherId, isVoucherNo } = query;
-  const { userId, accountBookId: companyId } = session;
+  const { accountBookId, voucherId, isVoucherNo } = query;
+  const { userId } = session;
 
   const { can } = await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.MODIFY_VOUCHER,
   });
 
@@ -177,15 +189,24 @@ const handlePutRequest = async (req: NextApiRequest) => {
   let payload = null;
 
   try {
-    const origin = await getUtils.getVoucherFromPrisma(voucherId, { isVoucherNo, companyId });
+    const origin = await getUtils.getVoucherFromPrisma(voucherId, {
+      isVoucherNo,
+      companyId: accountBookId,
+    });
     const originLineItems = getUtils.initLineItemEntities(origin);
     const certificates = getUtils.initCertificateEntities(origin);
     const asset = getUtils.initAssetEntities(origin);
 
-    const { certificateIds, lineItems, assetIds, reverseVouchers, counterPartyId, ...voucherInfo } =
-      body;
+    const {
+      certificateIds,
+      invoiceRC2Ids,
+      lineItems,
+      assetIds,
+      reverseVouchers,
+      counterPartyId,
+      ...voucherInfo
+    } = body;
 
-    // 驗證輸入資料完整性與一致性
     if (!postUtils.isArrayHasItems(lineItems)) {
       const error = new Error(STATUS_MESSAGE.MISSING_LINE_ITEMS);
       error.name = STATUS_CODE.MISSING_LINE_ITEMS;
@@ -218,10 +239,54 @@ const handlePutRequest = async (req: NextApiRequest) => {
     const issuer = await postUtils.initIssuerFromPrisma(userId);
     const newLineItems = postUtils.initLineItemEntities(lineItems);
 
-    if (!putUtils.isLineItemEntitiesSame(originLineItems, newLineItems)) {
-      const error = new Error(STATUS_MESSAGE.MODIFY_LINE_ITEMS_USE_POST_DELETE);
-      error.name = STATUS_CODE.MODIFY_LINE_ITEMS_USE_POST_DELETE;
-      throw error;
+    const hasLineItemChanged = !putUtils.isLineItemEntitiesSame(originLineItems, newLineItems);
+
+    // Info: (Tzuhan - 20250612) 若 lineItem 有改變，觸發反轉與新增流程
+    if (hasLineItemChanged) {
+      const nowInSecond = getTimestampNow();
+      const { deleteVoucher, deleteEvent, newVoucher } = putUtils.createReversedAndNewVoucherEntity(
+        {
+          nowInSecond,
+          voucherFromPrisma: origin,
+          newLineItems,
+        }
+      );
+
+      const company = await postUtils.initCompanyFromPrisma(accountBookId);
+      const originLineItemsWithEntity = deleteUtils.initOriginalLineItemEntities(origin);
+
+      const deleteVersionReverseLineItemPairs =
+        deleteUtils.getDeleteVersionReverseLineItemPairs(originLineItemsWithEntity);
+
+      await deleteVoucherByCreateReverseVoucher({
+        nowInSecond,
+        companyId: accountBookId,
+        issuerId: issuer.id,
+        voucherDeleteOtherEntity: deleteVoucher,
+        deleteVersionOriginVoucher: parsePrismaVoucherToVoucherEntity(origin),
+        deleteEvent,
+        deleteVersionReverseLineItemPairs,
+      });
+
+      const savedNewVoucher = await postVoucherV2({
+        nowInSecond,
+        company,
+        originalVoucher: newVoucher,
+        issuer,
+        eventControlPanel: {
+          revertEvent: deleteEvent,
+          recurringEvent: null,
+          assetEvent: null,
+        },
+        certificateIds,
+        invoiceRC2Ids,
+      });
+
+      // Info: (Tzuhan - 20250612) 提前 return，不再做後續 update（因為新的已建立）
+      payload = savedNewVoucher.id;
+      statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
+      const response = formatApiResponse(statusMessage, payload);
+      return { response, statusMessage };
     }
 
     const { assetIdsNeedToBeRemoved, assetIdsNeedToBeAdded } = putUtils.getDifferentAssetId({
@@ -247,6 +312,14 @@ const handlePutRequest = async (req: NextApiRequest) => {
         newCertificateIds: certificateIds,
       });
 
+    const {
+      idNeedToBeRemoved: invoiceRC2IdsNeedToBeRemoved,
+      idNeedToBeAdded: invoiceRC2IdsNeedToBeAdded,
+    } = putUtils.getDifferentIds(
+      origin.InvoiceRC2.map((i) => i.id),
+      invoiceRC2Ids
+    );
+
     const updated = await putVoucherWithoutCreateNew(voucherId, {
       issuerId: issuer.id,
       counterPartyId,
@@ -254,6 +327,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
       certificateOptions: {
         certificateIdsNeedToBeRemoved,
         certificateIdsNeedToBeAdded,
+      },
+      invoiceRC2Options: {
+        invoiceRC2IdsNeedToBeRemoved,
+        invoiceRC2IdsNeedToBeAdded,
       },
       assetOptions: {
         assetIdsNeedToBeRemoved,
@@ -281,8 +358,8 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   const { query } = checkRequestData(apiName, req, session);
   if (!query) throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
 
-  const { voucherId, isVoucherNo } = query;
-  const { userId, accountBookId } = session;
+  const { accountBookId, voucherId, isVoucherNo } = query;
+  const { userId } = session;
   const { can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
@@ -333,7 +410,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
     const result = await deleteVoucherByCreateReverseVoucher({
       nowInSecond,
-      accountBookId: +accountBookId,
+      companyId: accountBookId,
       issuerId: userId,
       voucherDeleteOtherEntity: deleteEntity,
       deleteVersionOriginVoucher: origin,

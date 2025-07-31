@@ -17,7 +17,7 @@ import { IAssetEntity } from '@/interfaces/asset';
 export function initVoucherEntity(
   dto: Partial<PrismaVoucher> & {
     issuerId: number;
-    counterPartyId: number;
+    counterPartyId: number | null;
     accountBookId: number;
     status: JOURNAL_EVENT;
     editable: boolean;

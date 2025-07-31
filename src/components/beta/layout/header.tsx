@@ -9,9 +9,6 @@ import PageTitle from '@/components/beta/layout/page_title';
 import useOuterClick from '@/lib/hooks/use_outer_click';
 import HeaderMobile from '@/components/beta/layout/mobile/header_mobile';
 
-// ToDo: (20241226 - Liz) Beta 版沒有切換明暗模式功能
-const IS_MODE_SWITCH_AVAILABLE = false;
-
 interface HeaderProps {
   isDashboard: boolean;
   pageTitle?: string;
@@ -65,7 +62,7 @@ const Header = ({ isDashboard, pageTitle, goBackUrl, notPrint, toggleOverlay }: 
         </section>
 
         <section className="ml-auto flex flex-none items-center gap-16px">
-          {IS_MODE_SWITCH_AVAILABLE && <ModeSwitch />}
+          <ModeSwitch />
 
           <div ref={globalRef}>
             <I18n

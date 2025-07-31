@@ -78,7 +78,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
           {t('team:CREATE_TEAM_MODAL.TEAM_NAME')}
         </div>
-        <div className="text-right font-semibold text-neutral-600">
+        <div className="flex items-center justify-end gap-16px text-right font-semibold text-text-neutral-primary">
           {teamInfo.name.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
           {teamInfo.name.editable && visibleEditButton && (
@@ -86,9 +86,9 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               type="button"
               variant="tertiary"
               size="defaultSquare"
-              className="ml-4"
               disabled={!modifyName.can}
               onClick={openNameEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -98,7 +98,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
           {t('team:TEAM_INFO_PAGE.ABOUT')}
         </div>
-        <div className="text-right font-semibold text-neutral-600">
+        <div className="flex items-center justify-end gap-16px text-right font-semibold text-text-neutral-primary">
           {teamInfo.about.value}
           {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
           {teamInfo.about.editable && visibleEditButton && (
@@ -106,9 +106,9 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               type="button"
               variant="tertiary"
               size="defaultSquare"
-              className="ml-4"
               disabled={!modifyAbout.can}
               onClick={openDescriptionEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -133,9 +133,9 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               type="button"
               variant="tertiary"
               size="defaultSquare"
-              className="ml-4"
               disabled={!modifyProfile.can}
               onClick={openProfileEditModal}
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -155,9 +155,9 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
               type="button"
               variant="tertiary"
               size="defaultSquare"
-              className="ml-4"
               disabled={!modifyPlan.can}
               onClick={() => router.push(`/users/subscriptions/${teamInfo.id}`)} // Info:(20250226 - Anna) 點擊後導航
+              className="shrink-0"
             >
               <FiEdit size={16} />
             </Button>
@@ -167,7 +167,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
           {t('team:TEAM_INFO_PAGE.TEAM_MEMBER')}
         </div>
-        <div className="text-right font-semibold text-neutral-600">
+        <div className="flex items-center justify-end gap-16px text-right font-semibold text-text-neutral-primary">
           {teamInfo.totalMembers}{' '}
           {t(
             teamInfo.totalMembers > 1
@@ -179,7 +179,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
         <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
           {t('team:TEAM_INFO_PAGE.LIBRARIES')}
         </div>
-        <div className="text-right font-semibold text-neutral-600">
+        <div className="flex items-center justify-end gap-16px text-right font-semibold text-text-neutral-primary">
           {teamInfo.totalAccountBooks}{' '}
           {t(
             teamInfo.totalAccountBooks > 1
@@ -193,7 +193,7 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
             <div className="flex h-11 items-center text-left font-semibold text-neutral-300">
               {t('team:TEAM_INFO_PAGE.TEAM_BANK_ACCOUNT')}
             </div>
-            <div className="text-right font-semibold text-neutral-600">
+            <div className="flex items-center justify-end gap-16px text-right font-semibold text-text-neutral-primary">
               {teamInfo.bankAccount.value}
               {/* Info:(20250224 - Anna) 如果 editable 為 true，顯示編輯按鈕 */}
               {teamInfo.bankAccount.editable && (
@@ -201,9 +201,9 @@ const TeamInformation = ({ teamInfo, setTeamInfo }: teamInfoProps) => {
                   type="button"
                   variant="tertiary"
                   size="defaultSquare"
-                  className="ml-4"
                   disabled={!modifyBankAccount.can}
                   onClick={openBankAccountEditModal}
+                  className="shrink-0"
                 >
                   <FiEdit size={16} />
                 </Button>

@@ -52,7 +52,7 @@
     "ENTER_NUMBER": "輸入號碼",
     "PHONE_NUMBER": "電話號碼",
     "COST": "成本",
-    "CLIENT_SUPPLIER_SETTINGS": "客戶/供應商",
+    "CLIENT_SUPPLIER_SETTINGS": "客戶/供應商設定",
     "ADD_NEW_CLIENT_SUPPLIER": "新增客戶/供應商"
   },
   "ACCOUNTING": {
@@ -121,7 +121,8 @@
     "DELETE_BTN": "是的，刪除科目",
     "NO_ACCOUNTING_FOUND": "找不到會計科目。",
     "LOADING_ERROR": "加載錯誤。",
-    "TRY_AGAIN": "請稍後重試。"
+    "TRY_AGAIN": "請稍後重試。",
+    "DELETE_ACCOUNT_TITLE_USED_IN_TRIAL_BALANCE": "此會計科目已有交易紀錄，無法刪除。"
   },
   "MANUAL_ACCOUNT_OPENING_MODAL": {
     "MODAL_TITLE": "手動開帳",

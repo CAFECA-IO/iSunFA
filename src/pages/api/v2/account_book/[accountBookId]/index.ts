@@ -42,6 +42,12 @@ import {
 } from '@/lib/utils/repo/account_book_setting.repo';
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 import { DefaultValue } from '@/constants/default_value';
+import {
+  getAccountingCurrencyByCompanyId,
+  updateAccountingCurrency,
+} from '@/lib/utils/repo/accounting_setting.repo';
+import { CurrencyType } from '@/constants/currency';
+import { LocaleKey } from '@/constants/normal_setting';
 
 /**
  * Info: (20250310 - Shirley) Handle PUT request
@@ -147,6 +153,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
         }
       }
 
+      // Info: (20250606 - Shirley) 獲取會計設定中的幣別
+      const accountingCurrency = await getAccountingCurrencyByCompanyId(accountBookId);
+
       // Info: (20250521 - Shirley) 返回符合 IGetAccountBookResponse 格式的資料
       payload = {
         id: accountBookId,
@@ -170,6 +179,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
         district: (companySetting.address as { district: string })?.district || '',
         enteredAddress:
           (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+        businessLocation: companySetting.countryCode as LocaleKey, // Info: (20250606 - Shirley) 國家
+        accountingCurrency: accountingCurrency as CurrencyType, // Info: (20250606 - Shirley) 會計幣別
 
         // Info: (20250521 - Shirley) RC2 欄位
         filingFrequency: companySetting.filingFrequency
@@ -316,6 +327,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
       if (updateData.licenseId !== undefined) {
         updateSettingData.licenseId = updateData.licenseId;
       }
+      if (updateData.businessLocation !== undefined) {
+        updateSettingData.countryCode = updateData.businessLocation; // Info: (20250606 - Shirley) businessLocation 對應到 country 欄位
+      }
 
       // Info: (20250731 - Shirley) 更新公司設定，只更新請求中包含的欄位
       const updatedSetting = await updateCompanySettingByCompanyId({
@@ -326,6 +340,23 @@ const handlePutRequest = async (req: NextApiRequest) => {
       if (!updatedSetting) {
         loggerBack.warn(`Failed to update company setting for accountBookId: ${accountBookId}`);
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      }
+
+      // Info: (20250606 - Shirley) 處理會計幣別更新到 AccountingSetting
+      if (updateData.accountingCurrency !== undefined) {
+        const updateResult = await updateAccountingCurrency(
+          accountBookId,
+          updateData.accountingCurrency
+        );
+        if (updateResult) {
+          loggerBack.info(
+            `Updated accounting currency for account book ${accountBookId} to ${updateData.accountingCurrency}`
+          );
+        } else {
+          loggerBack.error(
+            `Failed to update accounting currency for account book ${accountBookId}`
+          );
+        }
       }
 
       // Info: (20250515 - Shirley) 記錄更新後的狀態
@@ -339,6 +370,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
         loggerBack.warn(`Failed to get updated company for accountBookId: ${accountBookId}`);
         throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
       }
+
+      // Info: (20250606 - Shirley) 獲取會計設定中的幣別
+      const accountingCurrency = await getAccountingCurrencyByCompanyId(accountBookId);
 
       // Info: (20250515 - Shirley) 獲取國家資訊
       const countryCode = updatedSetting.countryCode || 'tw';
@@ -393,6 +427,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
         district: (updatedSetting.address as { district: string })?.district || '',
         enteredAddress:
           (updatedSetting.address as { enteredAddress: string })?.enteredAddress || '',
+        businessLocation: updatedSetting.countryCode as LocaleKey, // Info: (20250606 - Shirley) 國家來自 country 欄位
+        accountingCurrency: accountingCurrency as CurrencyType, // Info: (20250606 - Shirley) 會計幣別
 
         // Info: (20250521 - Shirley) RC2 欄位
         filingFrequency: updatedSetting.filingFrequency
@@ -623,26 +659,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
       dbCountry = await getCountryByCode(countryCode);
     }
 
-    // Info: (20250326 - Shirley) 構建國家資訊
-    // const country: ICountry = dbCountry
-    //   ? {
-    //       id: String(dbCountry.id),
-    //       code: dbCountry.code,
-    //       name: dbCountry.name,
-    //       localeKey: dbCountry.localeKey,
-    //       currencyCode: dbCountry.currencyCode,
-    //       phoneCode: dbCountry.phoneCode,
-    //       phoneExample: dbCountry.phoneExample,
-    //     }
-    //   : {
-    //       id: String(companySetting.id),
-    //       code: countryCode,
-    //       name: 'Taiwan', // Info: (20250326 - Shirley) 預設為台灣
-    //       localeKey: countryLocaleKey,
-    //       currencyCode: 'TWD', // Info: (20250326 - Shirley) 預設貨幣代碼
-    //       phoneCode: '+886', // Info: (20250326 - Shirley) 預設電話國碼
-    //       phoneExample: '0902345678', // Info: (20250326 - Shirley) 預設電話範例
-    //     };
+    // Info: (20250606 - Shirley) 獲取會計設定中的幣別
+    const accountingCurrency = await getAccountingCurrencyByCompanyId(+accountBookId);
 
     // Info: (20250326 - Shirley) 構建回應資料
     const accountBookData: IGetAccountBookResponse = {
@@ -666,6 +684,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
       city: (companySetting.address as { city: string })?.city || '',
       district: (companySetting.address as { district: string })?.district || '',
       enteredAddress: (companySetting.address as { enteredAddress: string })?.enteredAddress || '',
+      businessLocation: companySetting.countryCode as LocaleKey, // Info: (20250606 - Shirley) 國家來自 country 欄位
+      accountingCurrency: accountingCurrency as CurrencyType, // Info: (20250606 - Shirley) 會計幣別來自 AccountingSetting
 
       // Info: (20250521 - Shirley) RC2 欄位
       filingFrequency: companySetting.filingFrequency

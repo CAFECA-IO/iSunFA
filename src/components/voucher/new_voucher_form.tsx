@@ -51,6 +51,8 @@ import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
+import { TbArrowBackUp } from 'react-icons/tb';
+import loggerFront from '@/lib/utils/logger_front';
 
 // enum RecurringUnit {
 //   MONTH = 'month',
@@ -156,6 +158,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Info: (20241009 - Julian) 追加項目
   const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
   const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
+  // Info: (20250603 - Tzuhan) 目前只有刪除傳票時需要建立反轉分錄
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isReverseRequired, setIsReverseRequired] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 交易對象相關 state
@@ -163,6 +167,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 是否顯示提示
   const [isShowDateHint, setIsShowDateHint] = useState<boolean>(false);
+  const [isShowCounterpartyHint, setIsShowCounterpartyHint] = useState<boolean>(false);
   // const [isShowRecurringPeriodHint, setIsShowRecurringPeriodHint] = useState<boolean>(false);
   // const [isShowRecurringArrayHint, setIsShowRecurringArrayHint] = useState<boolean>(false);
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
@@ -206,6 +211,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     (acc, item) => (item.debit === true ? acc + item.amount : acc),
     0
   );
+
+  const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
 
   const getResult = useCallback(async () => {
     // Info: (20241220 - Julian) 問 AI 分析結果
@@ -290,8 +297,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   );
 
   useEffect(() => {
+    /* (20250603 - Tzuhan) Fix: Prevent incorrect REVERT on offset]
+    * 原本根據 voucherLineItems 中是否存在 isReverse=true 來推斷是否需要建立反轉分錄（REVERT）
+    但實務上「沖銷行為」也會產生 isReverse=true 的項目，並不代表使用者要刪除原始傳票
+    因此這段邏輯會造成「沖銷時誤送出 actions: ['revert']」，導致建立錯誤的反轉傳票
+    目前僅允許由刪除傳票流程（明確執行 delete API）觸發 REVERT，因此這段先行註解
     const isReverse = voucherLineItems.some((item) => item.isReverse);
     setIsReverseRequired(isReverse);
+    */
     setIsShowReverseHint(false); // Info: (20250304 - Julian) 重置沖銷提示
   }, [voucherLineItems]);
 
@@ -439,6 +452,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const dateRef = useRef<HTMLDivElement>(null);
   const assetRef = useRef<HTMLDivElement>(null);
+  const counterpartyRef = useRef<HTMLDivElement>(null);
   const voucherLineRef = useRef<HTMLDivElement>(null);
 
   // Info: (20241007 - Julian) 如果單位改變，則重設 Recurring Array
@@ -452,6 +466,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       setIsShowDateHint(false);
     }
   }, [date]);
+
+  // Info: (20241007 - Julian) 交易對象未選擇時顯示提示
+  useEffect(() => {
+    if (isCounterpartyRequired && counterparty) {
+      setIsShowCounterpartyHint(false);
+    }
+  }, [counterparty, isCounterpartyRequired]);
 
   // Info: (20241007 - Julian) 週期區間未選擇時顯示提示
   // useEffect(() => {
@@ -578,7 +599,9 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const saveVoucher = async () => {
     // Info: (20241105 - Julian) 如果有資產，則加入 VoucherV2Action.ADD_ASSET；如果有反轉傳票，則加入 VoucherV2Action.REVERT
     const actions = [];
-    if (isAssetRequired) actions.push(VoucherV2Action.ADD_ASSET);
+    if (isAssetRequired && temporaryAssetListByUser.length > 0) {
+      actions.push(VoucherV2Action.ADD_ASSET);
+    }
     if (isReverseRequired) actions.push(VoucherV2Action.REVERT);
 
     const lineItems = voucherLineItems.map((lineItem) => {
@@ -645,7 +668,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
       if (dateRef.current) dateRef.current.scrollIntoView();
-      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示類型提示，並定位到類型欄位
+      // Info: (20241004 - Julian) 如果需填入交易對象，則交易對象不可為空：顯示交易對象提示，並定位到交易對象欄位、吐司通知
+    } else if (isCounterpartyRequired && (!counterparty || counterparty?.name === '')) {
+      setIsShowCounterpartyHint(true);
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: `${t('journal:ADD_NEW_VOUCHER.TOAST_FILL_UP_FORM')}:${t('journal:ADD_NEW_VOUCHER.COUNTERPARTY')}`,
+        closeable: true,
+      });
+      if (counterpartyRef.current) counterpartyRef.current.scrollIntoView();
       // } else if (
       //   // Info: (20241007 - Julian) 如果開啟週期，但週期區間未選擇，則顯示週期提示，並定位到週期欄位
       //   isRecurring &&
@@ -680,16 +712,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         ),
         closeable: true,
       });
-    } else if (isAssetRequired && temporaryAssetListByUser.length === 0) {
-      // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
-      setIsShowAssetHint(true);
-      toastHandler({
-        id: ToastId.FILL_UP_VOUCHER_FORM,
-        type: ToastType.ERROR,
-        content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
-        closeable: true,
-      });
-      if (assetRef.current) assetRef.current.scrollIntoView();
     } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
@@ -700,11 +722,23 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         closeable: true,
       });
     } else {
+      if (isAssetRequired && temporaryAssetListByUser.length === 0) {
+        // Info: (20241007 - Julian) 如果需填入資產，但資產為空，則顯示資產提示，並定位到資產欄位、吐司通知
+        toastHandler({
+          id: ToastId.FILL_UP_VOUCHER_FORM,
+          type: ToastType.WARNING,
+          content: `${t('journal:ASSET_SECTION.EMPTY_HINT')}`,
+          closeable: true,
+        });
+        if (assetRef.current) assetRef.current.scrollIntoView();
+      }
+
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);
+      setIsShowCounterpartyHint(false);
       // setIsShowRecurringPeriodHint(false);
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
@@ -732,7 +766,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [createSuccess, isCreating]);
 
   const typeDropdownMenu = typeVisible ? (
-    <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
+    <div className="absolute left-0 top-50px z-10 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">
       {typeList.map((voucherType) => {
         const typeClickHandler = () => {
           setType(voucherType);
@@ -885,33 +919,32 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const certificateCreatedHandler = useCallback(
     (data: { message: string }) => {
       const newCertificate: ICertificate = JSON.parse(data.message);
-      // Deprecated: (20241122 - tzuhan) Debugging purpose
-      // eslint-disable-next-line no-console
-      console.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
+
+      const newCertificatesUI: { [id: string]: ICertificateUI } = {
+        [newCertificate.id]: {
+          ...newCertificate,
+          isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
+          actions: !newCertificate.voucherNo
+            ? [
+                CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
+                CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
+              ]
+            : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
+        },
+      };
+
+      loggerFront.log(`NewVoucherForm handleNewCertificateComing: newCertificate`, newCertificate);
       setCertificates((prev) => {
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
-        const newCertificatesUI: { [id: string]: ICertificateUI } = {
-          [newCertificate.id]: {
-            ...newCertificate,
-            isSelected: true, // Info: (20250312 - Julian) 新增的發票預設為選取
-            actions: !newCertificate.voucherNo
-              ? [
-                  CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
-                  CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
-                ]
-              : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
-          },
-        };
+        loggerFront.log(`NewVoucherForm handleNewCertificateComing: prev`, prev);
+
         Object.values(prev).forEach((certificate) => {
           newCertificatesUI[certificate.id] = {
             ...certificate,
+            // Info: (20250604 - Julian) 保留原有的 isSelected 狀態
+            isSelected: newCertificatesUI[certificate.id]?.isSelected ?? certificate.isSelected,
           };
         });
-        // Deprecated: (20241122 - tzuhan) Debugging purpose
-        // eslint-disable-next-line no-console
-        console.log(
+        loggerFront.log(
           `NewVoucherForm handleNewCertificateComing: newCertificates`,
           newCertificatesUI
         );
@@ -939,9 +972,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // const aiResultHandler = useCallback(
   //   (data: { message: string }) => {
   //     const aiResult: IAIResultVoucher = JSON.parse(data.message);
-  //     // Deprecated: (20241127 - Julian) Debugging purpose
-  //     // eslint-disable-next-line no-console
-  //     console.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
+  // loggerFront.log(`NewVoucherForm aiResultHandler: aiResult`, aiResult);
   //     setAiVoucherResult(aiResult);
   //     setAiState(AIState.FINISH);
   //   },
@@ -977,7 +1008,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   }, [selectedData]);
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div className="relative flex flex-col gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')}
+        </p>
+      </div>
+
       <CertificateSelectorModal
         accountBookId={accountBookId}
         isOpen={openSelectorModal}
@@ -1015,7 +1056,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       />
 
       {/* Info: (20240926 - Julian) form */}
-      <form ref={formRef} onSubmit={submitForm} className="grid w-full grid-cols-2 gap-24px">
+      <form
+        ref={formRef}
+        onSubmit={submitForm}
+        className="grid w-full grid-cols-1 gap-lv-5 tablet:grid-cols-2 tablet:gap-24px"
+      >
         {/* Info: (20240926 - Julian) Date */}
         <div ref={dateRef} className="flex flex-col gap-8px whitespace-nowrap">
           <p className="font-bold text-input-text-primary">
@@ -1030,6 +1075,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             btnClassName={
               isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
             }
+            calenderClassName="w-full tablet:w-auto"
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
@@ -1060,7 +1106,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         </div>
 
         {/* Info: (20240926 - Julian) Note */}
-        <div className="col-span-2 flex flex-col gap-8px">
+        <div className="flex flex-col gap-8px tablet:col-span-2">
           <p className="font-bold text-input-text-primary">{t('journal:ADD_NEW_VOUCHER.NOTE')}</p>
           <input
             id="voucher-note"
@@ -1068,23 +1114,24 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             value={note.note}
             onChange={noteChangeHandler}
             placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+            className={`rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
         {isShowCounter && (
-          <CounterpartyInput
-            counterparty={counterparty}
-            onSelect={handleCounterpartySelect}
-            flagOfSubmit={flagOfSubmit}
-            className="col-span-2"
-          />
+          <div ref={counterpartyRef} className="tablet:col-span-2">
+            <CounterpartyInput
+              counterparty={counterparty}
+              onSelect={handleCounterpartySelect}
+              isShowRedHint={isShowCounterpartyHint}
+            />
+          </div>
         )}
         {/* Info: (20241007 - Julian) Recurring */}
 
         {/* Info: (20241009 - Julian) Asset */}
         {isAssetRequired && (
-          <div ref={assetRef} className="col-span-2 flex flex-col">
+          <div ref={assetRef} className="flex flex-col tablet:col-span-2">
             <AssetSection isShowAssetHint={isShowAssetHint} lineItems={voucherLineItems} />
           </div>
         )}
@@ -1096,7 +1143,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             lineItems={aiLineItems}
           />
         ) : (
-          <div ref={voucherLineRef} className="col-span-2">
+          <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
             <VoucherLineBlock
               lineItems={voucherLineItems}
               setLineItems={setLineItems}
@@ -1114,12 +1161,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           </div>
         )}
         {/* Info: (20240926 - Julian) buttons */}
-        <div className="col-span-2 ml-auto flex items-center gap-12px">
+        <div className="flex items-center gap-24px tablet:col-span-2 tablet:ml-auto tablet:gap-12px">
           <Button
             id="voucher-clear-button"
             type="button"
             variant="secondaryOutline"
             onClick={clearClickHandler}
+            className="w-full tablet:w-auto"
           >
             {t('journal:JOURNAL.CLEAR_ALL')}
           </Button>
@@ -1129,6 +1177,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             onKeyDown={(e) => {
               if (e.key === KEYBOARD_EVENT_CODE.ENTER) e.preventDefault();
             }}
+            className="w-full tablet:w-auto"
             disabled={isCreating} // Info: (20241120 - Julian) 防止重複送出
           >
             <p>{t('common:COMMON.SAVE')}</p>

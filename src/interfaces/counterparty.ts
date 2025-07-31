@@ -153,4 +153,4 @@ export interface ICounterPartyEntity {
   company?: IAccountBookWithoutTeamEntity;
 }
 
-export type ICounterPartyEntityPartial = Partial<ICounterPartyEntity>;
+export type ICounterPartyEntityPartial = Partial<ICounterPartyEntity> | null;

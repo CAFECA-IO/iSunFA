@@ -11,6 +11,7 @@ import { AccountingProvider } from '@/contexts/accounting_context';
 import { HiringProvider } from '@/contexts/hiring_context';
 import { SessionProvider } from 'next-auth/react';
 import { ModalProvider } from '@/contexts/modal_context';
+import { CurrencyProvider } from '@/contexts/currency_context';
 import '@/styles/globals.css';
 
 function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
@@ -23,13 +24,15 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
           <UserProvider>
             <DashboardProvider>
               <AccountingProvider>
-                <ModalProvider>
-                  <HiringProvider>
-                    <GlobalProvider>
-                      <Component {...pageProps} />
-                    </GlobalProvider>
-                  </HiringProvider>
-                </ModalProvider>
+                <CurrencyProvider>
+                  <ModalProvider>
+                    <HiringProvider>
+                      <GlobalProvider>
+                        <Component {...pageProps} />
+                      </GlobalProvider>
+                    </HiringProvider>
+                  </ModalProvider>
+                </CurrencyProvider>
               </AccountingProvider>
             </DashboardProvider>
           </UserProvider>

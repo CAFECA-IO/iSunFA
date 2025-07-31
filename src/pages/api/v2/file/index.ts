@@ -108,7 +108,7 @@ async function handleFileUpload(
   });
 
   if (!fileInDB) {
-    throw new Error(STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR);
+    throw new Error(STATUS_MESSAGE.FAILED_TO_SAVE_FILE);
   }
 
   let thumbnailInfo = null;
@@ -119,6 +119,7 @@ async function handleFileUpload(
     if (isEncrypted) {
       // Info: (20250513 - Shirley) 獲取公司ID和私鑰
       const companyId = convertStringToNumber(targetId);
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 上傳檔案（加密）)
       const encryptedFileBuffer = await fs.readFile(fileForSave.filepath);
       const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
       const privateKey = await getPrivateKeyByCompany(companyId);
@@ -138,6 +139,7 @@ async function handleFileUpload(
 
       // Info: (20250513 - Shirley) 寫入臨時解密檔案
       tempDecryptedPath = `${fileForSave.filepath.replace(/\.[^/.]+$/, '')}_decrypted.pdf`;
+      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 解密暫存、後續產縮圖)
       await fs.writeFile(tempDecryptedPath, Buffer.from(decryptedBuffer));
       pdfPath = tempDecryptedPath;
     }
@@ -162,12 +164,14 @@ async function handleFileUpload(
     const thumbnailFileName = path.basename(thumbnailInfo.filepath);
     const thumbnailUrl = generateFilePathWithBaseUrlPlaceholder(thumbnailFileName, fileType);
 
+    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 刪除暫存檔)
     // Info: (20250513 - Shirley) Remove the decrypted PDF file after thumbnail generation
     fs.unlink(tempDecryptedPath);
     if (isEncrypted) {
       try {
         // Info: (20250513 - Shirley) 加密 thumbnail 之後存到 DB
         const companyId = convertStringToNumber(targetId);
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 讀縮圖)
         const thumbnailBuffer = await fs.readFile(thumbnailInfo.filepath);
 
         const publicKey = await getPublicKeyByCompany(companyId);
@@ -194,6 +198,7 @@ async function handleFileUpload(
 
         // Info: (20250513 - Shirley) 寫入加密縮略圖
         const encryptedThumbnailPath = `${thumbnailInfo.filepath}`;
+        // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 寫加密縮圖)
         await fs.writeFile(encryptedThumbnailPath, Buffer.from(encryptedContent));
 
         // Info: (20250513 - Shirley) 將新的 IV 轉換為 Buffer 以存儲在數據庫中
@@ -439,7 +444,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const { isEncrypted, encryptedSymmetricKey, iv } = extractKeyAndIvFromFields(fields);
 
     if (!file) {
-      statusMessage = STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
+      statusMessage = STATUS_MESSAGE.UPLOAD_FILE_IS_EMPTY;
       loggerBack.info(`API POST File: No file uploaded`);
     } else {
       const returnFile = await handleFileUpload(
@@ -462,9 +467,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   } catch (error) {
     const err = error as Error;
     loggerBack.error(`Error uploading file: ${err.message}`);
-    statusMessage =
-      STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
-      STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    statusMessage = err.message || STATUS_MESSAGE.IMAGE_UPLOAD_FAILED_ERROR;
   }
 
   return { response: formatApiResponse(statusMessage, payload), statusMessage };

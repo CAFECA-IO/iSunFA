@@ -3,7 +3,9 @@ import { ISessionData } from '@/interfaces/session';
 import { TeamRole } from '@/interfaces/team';
 
 const DEV_NO_LOGIN: boolean = true;
-export const ALWAYS_LOGIN: boolean = process.env.NODE_ENV === 'development' && DEV_NO_LOGIN;
+// Info: (20250625 - Shirley) turn off ALWAYS_LOGIN in integration test environment, to test real login process
+export const ALWAYS_LOGIN: boolean =
+  process.env.NODE_ENV === 'development' && DEV_NO_LOGIN && !process.env.INTEGRATION_TEST;
 
 export const SESSION_DEVELOPER: ISessionData = {
   isunfa: DefaultValue.SESSION_ID,
@@ -27,7 +29,7 @@ export const SESSION_DEVELOPER: ISessionData = {
       role: TeamRole.OWNER,
     },
     {
-      id: 3,
+      id: 10000000, // Info: (20250602 - Liz) 新的 team id 格式
       role: TeamRole.OWNER,
     },
     {

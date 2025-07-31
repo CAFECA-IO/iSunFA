@@ -46,6 +46,7 @@ export function generateDestinationFileNameInGoogleBucket(filePath: string) {
 // Info: (20240604 - Murky) if process.env is not set, the error will stop all process, error can't be caught
 export const googleBucket = googleStorage.bucket(GOOGLE_STORAGE_BUCKET_NAME);
 
+// ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 上傳檔案到 GCS)
 export async function uploadFileToGoogleCloud(
   uploadedFile: SaveData,
   destFileName: string,
@@ -80,6 +81,7 @@ export async function uploadFile(file: File) {
   const googlePath = await generateSavePath(ext);
   const destFileName = generateDestinationFileNameInGoogleBucket(googlePath);
 
+  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 上傳檔案到 GCS)
   const uploadedFile = await fs.readFile(file.filepath);
   const url = await uploadFileToGoogleCloud(uploadedFile, destFileName, mimeType);
   return url;

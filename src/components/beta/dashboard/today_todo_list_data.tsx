@@ -56,7 +56,7 @@ const TodayTodoListData = ({ todayTodoList }: TodayTodoListDataProps) => {
       </div>
 
       <div className="flex items-start gap-10px">
-        <div className="flex w-64px flex-none justify-center pt-5px">
+        <div className="flex w-64px shrink-0 justify-center pt-5px">
           <CalendarIcon timestamp={Date.now() / 1000} incomplete={false} />
         </div>
 

@@ -47,7 +47,8 @@
     "DELETE": "Delete",
     "DELETE_MESSAGE_TITLE": "Delete the Account Book",
     "DELETE_MESSAGE_CONTENT": "Are you sure you want to delete the account book?",
-    "WAITING_FOR_TRANSFERRING": "Waiting for transferring"
+    "WAITING_FOR_TRANSFERRING": "Waiting for transferring",
+    "ADD_NEW_ACCOUNT_BOOK": "Add New Account Book"
   },
   "DELETE": {
     "TITLE": "Delete the Account Book",
@@ -68,5 +69,28 @@
   },
   "EDIT_ACCOUNT_BOOK_MODAL": {
     "EDIT_ACCOUNT_BOOK": "Edit Account Book"
+  },
+  "ACCOUNT_BOOK_TRANSFER": {
+    "TRANSFER": {
+      "FROM_TEAM": "Transfer request initiated",
+      "TO_TEAM": "Transfer request for account book \"{{accountBookName}}\" was initiated by {{fromTeamName}}, pending your team's action"
+    },
+    "APPROVED": {
+      "FROM_TEAM": "Account book \"{{accountBookName}}\" has been successfully transferred to {{toTeamName}}",
+      "TO_TEAM": "Account book \"{{accountBookName}}\" has been successfully received by your team"
+    },
+    "CANCELLED": {
+      "FROM_TEAM": "Transfer request for account book \"{{accountBookName}}\" has been cancelled",
+      "TO_TEAM": "Transfer request for account book \"{{accountBookName}}\" was cancelled by {{fromTeamName}}"
+    },
+    "REJECTED": {
+      "FROM_TEAM": "Transfer request for account book \"{{accountBookName}}\" was rejected",
+      "TO_TEAM": "Your team has rejected the transfer request for account book \"{{accountBookName}}\""
+    }
+  },
+  "TOAST": {
+    "FAILED_CONNECT_ACCOUNT_BOOK": "Failed to connect account book.",
+    "FAILED_DISCONNECT_ACCOUNT_BOOK": "Failed to disconnect account book.",
+    "FAILED_CANCEL_TRANSFER": "Failed to cancel transfer request."
   }
 }

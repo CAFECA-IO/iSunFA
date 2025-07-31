@@ -8,6 +8,7 @@ import { useUserCtx } from '@/contexts/user_context';
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface LayoutProps {
   children: ReactNode;
@@ -35,10 +36,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
 
   useEffect(() => {
     if (!userAuth?.deletedAt) return;
-
-    // Deprecated: (20241121 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('useEffect for warning deleted user in Layout is called!');
+    loggerFront.log('useEffect for warning deleted user in Layout is called!');
 
     toastHandler({
       id: ToastId.USER_DELETE_WARNING,
@@ -103,7 +101,7 @@ const Layout = ({ children, isDashboard, pageTitle, goBackUrl }: LayoutProps) =>
           {isOverlayVisible && <div className="absolute inset-0 z-10 backdrop-blur-sm"></div>}
 
           {/* Info: (20241018 - Liz) Content Body */}
-          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden p-lv-7 screen1280:px-56px">
+          <main className="hide-scrollbar h-full overflow-y-auto overflow-x-hidden px-lv-4 py-lv-5">
             {children}
           </main>
         </div>

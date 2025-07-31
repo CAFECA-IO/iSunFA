@@ -27,6 +27,8 @@ export interface IAccountBookInfo {
     | string; // Info: (20250516 - Shirley) 支援新舊格式
   createdAt: number;
   updatedAt: number;
+  businessLocation?: string; // Info: (20250606 - Shirley) 國家
+  accountingCurrency?: string; // Info: (20250606 - Shirley) 會計幣別
 
   // Info: (20250516 - Shirley) RC2 新增欄位
   contactPerson?: string;

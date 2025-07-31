@@ -9,6 +9,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { useReactToPrint } from 'react-to-print';
 import { useUserCtx } from '@/contexts/user_context';
 import { CurrencyType } from '@/constants/currency';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
@@ -120,9 +121,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       window.URL.revokeObjectURL(url); // Info: (20241218 - Anna) 釋放 URL 資源
       link.parentNode?.removeChild(link);
     } catch (error) {
-      // Deprecate: (20241218 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('Download failed:', error);
+      loggerFront.error('Download failed:', error);
     }
   };
 

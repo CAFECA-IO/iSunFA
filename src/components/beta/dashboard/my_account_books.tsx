@@ -7,13 +7,13 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { useUserCtx } from '@/contexts/user_context';
-import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250428 - Liz) 預計替換成新版的建立帳本 Modal (AccountBookInfoModal)
-// import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250428 - Liz) 預計會替換成這個 Modal !!
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import MyAccountBookListNoData from '@/components/beta/dashboard/my_account_book_list_no_data';
 import MyAccountBookList from '@/components/beta/dashboard/my_account_book_list';
 import { IPaginatedData } from '@/interfaces/pagination';
+import loggerFront from '@/lib/utils/logger_front';
 
 const MyAccountBooks = () => {
   const { t } = useTranslation('dashboard');
@@ -29,16 +29,9 @@ const MyAccountBooks = () => {
   // Info: (20241126 - Liz) 連結帳本 API (原為公司)
   const { connectAccountBook, connectedAccountBook } = useUserCtx();
 
-  const closeMessageModal = () => {
-    setAccountBookToSelect(undefined);
-  };
-
-  const openCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(true);
-  };
-  const closeCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(false);
-  };
+  const closeMessageModal = () => setAccountBookToSelect(undefined);
+  const openCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(true);
+  const closeCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(false);
 
   // Info: (20241126 - Liz) 打 API 連結帳本(原為公司)
   const handleSelectAccountBook = async () => {
@@ -50,14 +43,10 @@ const MyAccountBooks = () => {
     try {
       const { success } = await connectAccountBook(accountBookToSelect.id);
       if (!success) {
-        // Deprecated: (20250314 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('連結帳本失敗');
+        loggerFront.log('連結帳本失敗');
       }
     } catch (error) {
-      // Deprecated: (20241126 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('AccountBookList handleConnect error:', error);
+      loggerFront.error('AccountBookList handleConnect error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +83,7 @@ const MyAccountBooks = () => {
     try {
       const { data, success, code } = await getAccountBookListByUserIdAPI({
         params: { userId: userAuth.id },
-        query: { page: 1, pageSize: 999 },
+        query: { page: 1, pageSize: 999, simple: true },
       });
       const accountBookListData = data?.data ?? []; // Info: (20250306 - Liz) 取出帳本清單
 
@@ -114,14 +103,10 @@ const MyAccountBooks = () => {
         setAccountBookList(accountBookListData);
       } else {
         // Info: (20241120 - Liz) 取得使用者擁有的帳本清單失敗時顯示錯誤訊息(原為公司)
-        // Deprecated: (20241120 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('取得使用者擁有的帳本清單 failed:', code);
+        loggerFront.log('取得使用者擁有的帳本清單 failed:', code);
       }
     } catch (error) {
-      // Deprecated: (20241120 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('取得使用者擁有的帳本清單 error:', error);
+      loggerFront.error('取得使用者擁有的帳本清單 error:', error);
     }
   }, [connectedAccountBook, userAuth]);
 
@@ -159,8 +144,8 @@ const MyAccountBooks = () => {
         )}
 
         {isCreateAccountBookModalOpen && (
-          <CreateAccountBookModal
-            closeCreateAccountBookModal={closeCreateAccountBookModal}
+          <AccountBookInfoModal
+            closeAccountBookInfoModal={closeCreateAccountBookModal}
             getAccountBookList={getAccountBookList}
           />
         )}

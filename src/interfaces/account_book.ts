@@ -1,5 +1,7 @@
 import { LocaleKey } from '@/constants/normal_setting';
 import { ITeam } from '@/interfaces/team';
+import { TPlanType } from '@/interfaces/subscription';
+import { CurrencyType } from '@/constants/currency';
 
 export const PUBLIC_ACCOUNT_BOOK_ID = 1002;
 export const NO_ACCOUNT_BOOK_ID = 555;
@@ -86,6 +88,10 @@ export interface IAccountBookInfo {
   updatedAt: number;
   isPrivate?: boolean; // Deprecated: (20250423 - Liz) 已棄用
 
+  // Info: (20250604 - Liz) RC3 新增表單欄位
+  businessLocation?: LocaleKey; // Info: (20250604 - Liz) 商業地址
+  accountingCurrency?: CurrencyType; // Info: (20250604 - Liz) 會計幣別
+
   // Info: (20250523 - Liz) RC2 新增表單欄位
   representativeName: string; // Info: (20250423 - Liz) 負責人姓名
   taxSerialNumber: string; // Info: (20250423 - Liz) 稅籍編號
@@ -156,6 +162,29 @@ export interface ICreateAccountBookReqBody {
   city?: string; // Info: (20250523 - Liz) 縣市
   district?: string; // Info: (20250523 - Liz) 行政區
   enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+  businessLocation?: string;
+  accountingCurrency?: string;
+}
+
+export interface IUpdateAccountBookReqBody {
+  accountBookId: string;
+  fromTeamId?: number; // Info: (20250523 - Liz) 轉移帳本的原團隊 ID (轉移帳本 API)
+  toTeamId?: number; // Info: (20250523 - Liz) 接收帳本的目標團隊 ID (轉移帳本 API)
+  action?: ACCOUNT_BOOK_UPDATE_ACTION;
+  tag?: WORK_TAG;
+  name?: string;
+  taxId?: string;
+  teamId?: number;
+  fileId?: number; // Info: (20250523 - Liz) 圖片 ID
+  representativeName?: string; // Info: (20250523 - Liz) 負責人姓名
+  taxSerialNumber?: string; // Info: (20250523 - Liz) 稅籍編號
+  contactPerson?: string; // Info: (20250523 - Liz) 聯絡人姓名
+  phoneNumber?: string; // Info: (20250523 - Liz) 電話號碼
+  city?: string; // Info: (20250523 - Liz) 縣市
+  district?: string; // Info: (20250523 - Liz) 行政區
+  enteredAddress?: string; // Info: (20250523 - Liz) (使用者輸入的)地址
+  businessLocation?: string;
+  accountingCurrency?: string;
 }
 
 export interface IAccountBookTaxIdAndName {
@@ -220,4 +249,42 @@ export interface IAccountBookWithoutTeamEntity {
    * @note need to be in seconds, null if not
    */
   deletedAt: number | null;
+}
+
+export interface IBaifaAccountBook {
+  id: number;
+  teamId: number;
+  ownerId: number;
+  imageId: string;
+  name: string;
+  taxId: string;
+  tag: WORK_TAG;
+  startDate: number;
+  createdAt: number;
+  updatedAt: number;
+
+  businessLocation?: string;
+  accountingCurrency?: string;
+  representativeName: string;
+  taxSerialNumber: string;
+  contactPerson: string;
+  phoneNumber: string;
+  city: string;
+  district: string;
+  enteredAddress: string;
+
+  isTransferring: boolean;
+
+  team: {
+    id: number;
+    name: string;
+    imageId: string;
+    about: string;
+    profile: string;
+    planType: TPlanType;
+    expiredAt: number;
+    inGracePeriod: boolean;
+    gracePeriodEndAt: number;
+    bankAccount: string;
+  };
 }

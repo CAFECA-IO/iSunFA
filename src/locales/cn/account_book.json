@@ -47,7 +47,8 @@
     "DELETE": "删除",
     "DELETE_MESSAGE_TITLE": "删除账本",
     "DELETE_MESSAGE_CONTENT": "您确定要删除此账本吗？",
-    "WAITING_FOR_TRANSFERRING": "等待转移中"
+    "WAITING_FOR_TRANSFERRING": "等待转移中",
+    "ADD_NEW_ACCOUNT_BOOK": "新增账本"
   },
   "DELETE": {
     "TITLE": "删除账本",
@@ -68,5 +69,10 @@
   },
   "EDIT_ACCOUNT_BOOK_MODAL": {
     "EDIT_ACCOUNT_BOOK": "编辑账本"
+  },
+  "TOAST": {
+    "FAILED_CONNECT_ACCOUNT_BOOK": "连结帐本失败",
+    "FAILED_DISCONNECT_ACCOUNT_BOOK": "取消连结失败",
+    "FAILED_CANCEL_TRANSFER": "取消转移帐本失败"
   }
 }

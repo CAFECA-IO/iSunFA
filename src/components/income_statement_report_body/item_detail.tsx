@@ -4,6 +4,7 @@ import CollapseButton from '@/components/button/collapse_button';
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
 import { FinancialReport } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface ItemDetailProps {
   financialReport: FinancialReport;
@@ -20,6 +21,7 @@ const ItemDetail = ({
   formattedPreToDate,
 }: ItemDetailProps) => {
   const { t } = useTranslation(['reports']);
+  const { currency } = useCurrencyCtx();
   const [isDetailCollapsed, setIsDetailCollapsed] = useState(false);
   const toggleDetailTable = () => {
     setIsDetailCollapsed((prev) => !prev);
@@ -52,7 +54,10 @@ const ItemDetail = ({
             <CollapseButton onClick={toggleDetailTable} isCollapsed={isDetailCollapsed} />
           </div>
           <p className="text-xs font-semibold leading-5">
-            <span>{t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}</span>
+            <span>
+              {t('reports:REPORTS.UNIT_NEW_TAIWAN_DOLLARS')}
+              {currency}
+            </span>
           </p>
         </div>
         {!isDetailCollapsed && (

@@ -68,7 +68,23 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
 
   // Info: (20250313 - Tzuhan) 帳務相關
   [TeamPermissionAction.BOOKKEEPING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
-  [TeamPermissionAction.ACCOUNTING_SETTING]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.ACCOUNTING_SETTING_CREATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+  ],
+  [TeamPermissionAction.ACCOUNTING_SETTING_GET]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.ACCOUNTING_SETTING_UPDATE]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+  ],
+  [TeamPermissionAction.ACCOUNTING_SETTING_DELETE]: [TeamRole.OWNER, TeamRole.ADMIN],
   [TeamPermissionAction.VIEW_TRIAL_BALANCE]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.VIEW_LEDGER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.VIEW_ASSET]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
@@ -115,8 +131,18 @@ export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   [TeamPermissionAction.MODIFY_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.DELETE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
   [TeamPermissionAction.RESTORE_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
-  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
-  [TeamPermissionAction.VIEW_VOUCHER]: [TeamRole.OWNER, TeamRole.ADMIN, TeamRole.EDITOR],
+  [TeamPermissionAction.VIEW_VOUCHER_LIST]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
+  [TeamPermissionAction.VIEW_VOUCHER]: [
+    TeamRole.OWNER,
+    TeamRole.ADMIN,
+    TeamRole.EDITOR,
+    TeamRole.VIEWER,
+  ],
 };
 
 // Info: (20250313 - Tzuhan) ✅ 角色變更權限獨立處理

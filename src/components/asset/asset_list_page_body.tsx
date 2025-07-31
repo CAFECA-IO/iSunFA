@@ -9,17 +9,26 @@ import { APIName } from '@/constants/api_connection';
 import { DEFAULT_PAGE_LIMIT, FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { AssetStatus, AccountCodesOfAsset, AssetEntityType } from '@/constants/asset';
 import { SortBy, SortOrder } from '@/constants/sort';
-import { IAssetItem } from '@/interfaces/asset';
+import { IAssetItem, IAssetItemUI } from '@/interfaces/asset';
 import { IPaginatedData } from '@/interfaces/pagination';
 import APIHandler from '@/lib/utils/api_handler';
 import { IPaginatedAccount } from '@/interfaces/accounting_account';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
+import { ISortOption } from '@/interfaces/sort';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 
 const AssetListPageBody: React.FC = () => {
   const { t } = useTranslation('asset');
   const { connectedAccountBook } = useUserCtx();
   const { toastHandler } = useModalContext();
+
+  // Info: (20250522 - Julian) for mobile: Filter Side Menu
+  const {
+    targetRef: sideMenuRef,
+    componentVisible: isShowSideMenu,
+    setComponentVisible: setIsShowSideMenu,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const params = { accountBookId };
@@ -28,7 +37,7 @@ const AssetListPageBody: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
-  const [assetList, setAssetList] = useState<IAssetItem[]>([]);
+  const [assetList, setAssetList] = useState<IAssetItemUI[]>([]);
   // Info: (20241024 - Julian) 排序狀態
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [purchasePriceSort, setPurchasePriceSort] = useState<null | SortOrder>(null);
@@ -37,31 +46,27 @@ const AssetListPageBody: React.FC = () => {
   );
   const [residualValueSort, setResidualValueSort] = useState<null | SortOrder>(null);
   const [remainingLifeSort, setRemainingLifeSort] = useState<null | SortOrder>(null);
-  const [selectedSort, setSelectedSort] = useState<
-    | {
-        by: SortBy;
-        order: SortOrder;
-      }
-    | undefined
-  >();
+  const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
 
   const [assetTypeOptions, setAssetTypeOptions] = useState<string[]>([AssetEntityType.ALL]);
 
+  const toggleSideMenu = () => setIsShowSideMenu((prev) => !prev);
+
   useEffect(() => {
-    let sort: { by: SortBy; order: SortOrder } | undefined;
+    let sort: ISortOption | undefined;
     if (dateSort) {
-      sort = { by: SortBy.DATE, order: dateSort };
+      sort = { sortBy: SortBy.DATE, sortOrder: dateSort };
     } else if (purchasePriceSort) {
-      sort = { by: SortBy.PURCHASE_PRICE, order: purchasePriceSort };
+      sort = { sortBy: SortBy.PURCHASE_PRICE, sortOrder: purchasePriceSort };
     } else if (accumulatedDepreciationSort) {
       sort = {
-        by: SortBy.ACCUMULATED_DEPRECIATION,
-        order: accumulatedDepreciationSort,
+        sortBy: SortBy.ACCUMULATED_DEPRECIATION,
+        sortOrder: accumulatedDepreciationSort,
       };
     } else if (residualValueSort) {
-      sort = { by: SortBy.RESIDUAL_VALUE, order: residualValueSort };
+      sort = { sortBy: SortBy.RESIDUAL_VALUE, sortOrder: residualValueSort };
     } else if (remainingLifeSort) {
-      sort = { by: SortBy.REMAINING_LIFE, order: remainingLifeSort };
+      sort = { sortBy: SortBy.REMAINING_LIFE, sortOrder: remainingLifeSort };
     }
     setSelectedSort(sort);
   }, [
@@ -106,13 +111,18 @@ const AssetListPageBody: React.FC = () => {
   const assetStatusList = Object.values(AssetStatus);
 
   const handleApiResponse = (resData: IPaginatedData<IAssetItem[]>) => {
-    setAssetList(resData.data);
     setTotalPage(resData.totalPages);
     setCurrentPage(resData.page);
+
+    const assetListUI: IAssetItemUI[] = resData.data.map((asset) => ({
+      ...asset,
+      isSelected: false,
+    }));
+    setAssetList(assetListUI);
   };
 
   return (
-    <div className="relative flex flex-col items-center gap-40px">
+    <div ref={sideMenuRef} className="relative flex flex-col items-center gap-40px">
       {/* Info: (20240925 - Julian) Asset List */}
       <div className="flex w-full flex-col items-stretch gap-40px">
         {/* Info: (20241024 - Julian) Filter Section */}
@@ -125,27 +135,25 @@ const AssetListPageBody: React.FC = () => {
           page={currentPage}
           pageSize={DEFAULT_PAGE_LIMIT}
           sort={selectedSort}
+          isShowSideMenu={isShowSideMenu}
+          toggleSideMenu={toggleSideMenu}
+          labelClassName="text-input-text-primary"
         />
         {/* Info: (20240925 - Julian) Asset List */}
-        {assetList && assetList.length > 0 ? (
-          <AssetList
-            assetList={assetList}
-            dateSort={dateSort}
-            setDateSort={setDateSort}
-            priceSort={purchasePriceSort}
-            setPriceSort={setPurchasePriceSort}
-            depreciationSort={accumulatedDepreciationSort}
-            setDepreciationSort={setAccumulatedDepreciationSort}
-            residualSort={residualValueSort}
-            setResidualSort={setResidualValueSort}
-            remainingLifeSort={remainingLifeSort}
-            setRemainingLifeSort={setRemainingLifeSort}
-          />
-        ) : (
-          <div className="flex items-center justify-center rounded-lg bg-surface-neutral-surface-lv2 p-20px text-text-neutral-tertiary">
-            <p>{t('asset:ASSET_DETAIL_PAGE.NO_ASSET')}</p>
-          </div>
-        )}
+        <AssetList
+          assetList={assetList}
+          dateSort={dateSort}
+          setDateSort={setDateSort}
+          priceSort={purchasePriceSort}
+          setPriceSort={setPurchasePriceSort}
+          depreciationSort={accumulatedDepreciationSort}
+          setDepreciationSort={setAccumulatedDepreciationSort}
+          residualSort={residualValueSort}
+          setResidualSort={setResidualValueSort}
+          remainingLifeSort={remainingLifeSort}
+          setRemainingLifeSort={setRemainingLifeSort}
+          toggleSideMenu={toggleSideMenu}
+        />
 
         {/* Info: (20240925 - Julian) Pagination */}
         <div className="mx-auto">

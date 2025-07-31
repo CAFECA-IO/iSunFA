@@ -354,20 +354,35 @@ const reportHandlers: ReportHandlers = {
   [FinancialReportTypesKey.report_401]: report401Handler,
 };
 
-export async function handleGetRequest(req: NextApiRequest) {
+/**
+ * Info: (20250502 - Shirley) Handle GET request for financial reports
+ * This function follows the flat coding style pattern:
+ * 1. Get user session and validate authentication
+ * 2. Check user authorization
+ * 3. Validate request data
+ * 4. Process the report based on report type
+ * 5. Validate output data
+ * 6. Return formatted response
+ */
+const handleGetRequest = async (req: NextApiRequest) => {
+  const session = await getSession(req);
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: object | null = null;
 
   const session = await getSession(req);
   const { userId, accountBookId: companyId } = session;
 
-  // ToDo: (20240924 - Murky) We need to check auth
-  const { query } = validateRequest(APIName.REPORT_GET_V2, req, userId);
+  // Info: (20250502 - Shirley) 驗證請求資料
+  const { query } = checkRequestData(APIName.REPORT_GET_V2, req, session);
+  if (query === null) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
 
-  if (query) {
-    // ToDo: (20240924 - Murky) Remember to use sortBy, sortOrder, startDate, endDate, searchQuery, hasBeenUsed
-    const { startDate, endDate, language, reportType } = query;
-    const reportHandler = reportHandlers[reportType];
+  // Info: (20250502 - Shirley) 獲取報表參數
+  const { accountBookId: companyId, startDate, endDate, language, reportType } = query;
+
+  // Info: (20250502 - Shirley) 根據報表類型生成報表
+  const reportHandler = reportHandlers[reportType as FinancialReportTypesKey];
 
     ({ payload, statusMessage } = await reportHandler({
       companyId,

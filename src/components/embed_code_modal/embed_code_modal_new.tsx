@@ -1,5 +1,3 @@
-// Deprecated: (20241114 - Liz) 這是 Alpha 版本的元件，目前沒有使用到，翻譯也已拔除。
-
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { ReportLanguagesKey, ReportLanguagesMap } from '@/interfaces/report_language';
@@ -18,6 +16,7 @@ import { PiCopySimpleBold } from 'react-icons/pi';
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { ToastType } from '@/interfaces/toastify';
 import { useModalContext } from '@/contexts/modal_context';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IEmbedCodeModal {
   isModalVisible: boolean;
@@ -34,7 +33,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
   const [isIncomeStatementChecked, setIsIncomeStatementChecked] = useState(true);
   const [isCashFlowStatementChecked, setIsCashFlowStatementChecked] = useState(true);
   const [selectedReportLanguage, setSelectedReportLanguage] = useState<ReportLanguagesKey>(
-    ReportLanguagesKey.en
+    ReportLanguagesKey.tw
   );
   const [step, setStep] = useState<number>(0);
   const [generatedIframeCode, setGeneratedIframeCode] = useState<string>('');
@@ -88,8 +87,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           content: t('layout:EMBED_CODE_MODAL.COPY_FAILED'),
           closeable: true,
         });
-        // eslint-disable-next-line no-console
-        console.error('Failed to copy iframe code:', error);
+        loggerFront.error('Failed to copy iframe code:', error);
       }
     );
   };
@@ -110,27 +108,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       if (isCashFlowStatementChecked) {
         selectedReportTypes.push(FinancialReportTypesKey.cash_flow_statement);
       }
-
-      selectedReportTypes.forEach((type) => {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('Report generation succeeded:', {
-          code: generatedCode,
-          message: 'We received your application. The report will be ready in a few minutes.',
-          request: {
-            params: {
-              companyId: connectedAccountBook?.id,
-            },
-            body: {
-              type: FinancialReportTypesKeyReportSheetTypeMapping[type],
-              reportLanguage: selectedReportLanguage,
-              from: dayjs().unix(),
-              to: dayjs().unix(),
-              reportType: ReportType.FINANCIAL,
-            },
-          },
-        });
-      });
     }
 
     // Info: (20241130 - Anna) 確保返回 void
@@ -148,9 +125,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     const period = getPeriod();
 
     if (!period) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -164,9 +138,6 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     }
 
     if (selectedReportTypes.length === 0) {
-      // Deprecated: (20241130 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.error('No report type selected.');
       return;
     }
 
@@ -205,19 +176,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               `<iframe src="${reportLink}" title="${reportType}" width="1280" height="720"></iframe>`
             );
           } catch (error) {
-            // Deprecated: (20241130 - Anna) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.error(`Failed to generate report for type: ${reportType}`, error);
+            loggerFront.error(`Failed to generate report for type: ${reportType}`, error);
           }
         })
       );
 
       if (iframeCodes.length > 0) {
         setGeneratedIframeCode(iframeCodes.join('\n')); // Info: (20241130 - Anna) 設置 iframe 到狀態
-      } else {
-        // Deprecated: (20241130 - Anna) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error('No matching reports found or no report type selected.');
       }
     }
 
@@ -261,16 +226,28 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
         }`}
       >
         <ul className="z-10 flex w-full flex-col items-start bg-dropdown-surface-menu-background-primary p-2">
-          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => (
-            <li
-              key={id}
-              onClick={() => languageMenuOptionClickHandler(id as ReportLanguagesKey)}
-              className="mt-1 flex w-full cursor-pointer items-center space-x-5 px-1 py-2.5 text-dropdown-text-primary hover:text-text-brand-primary-lv2"
-            >
-              <Image src={icon} alt={name} width={20} height={20} />
-              <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
-            </li>
-          ))}
+          {Object.entries(ReportLanguagesMap).map(([id, { name, icon }]) => {
+            const isDisabled = id !== ReportLanguagesKey.tw; // Info: (20250602 - Anna) 目前只有繁體中文可用
+
+            return (
+              <li
+                key={id}
+                onClick={() => {
+                  if (!isDisabled) {
+                    languageMenuOptionClickHandler(id as ReportLanguagesKey);
+                  }
+                }}
+                className={`mt-1 flex w-full items-center space-x-5 px-1 py-2.5 ${
+                  isDisabled
+                    ? 'cursor-default text-neutral-300'
+                    : 'cursor-pointer text-dropdown-text-primary hover:text-text-brand-primary-lv2'
+                }`}
+              >
+                <Image src={icon} alt={name} width={20} height={20} />
+                <p className="text-base font-medium leading-5 tracking-normal">{name}</p>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
@@ -283,10 +260,10 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           <div className="flex flex-col justify-end text-sm leading-5 tracking-normal max-md:max-w-full">
             <div className="flex flex-col justify-center max-md:max-w-full"></div>
 
-            <div className="mt-5 font-semibold text-input-text-input-filled max-md:max-w-full">
+            <div className="mt-5 font-semibold text-neutral-300 max-md:max-w-full">
               {t('layout:EMBED_CODE_MODAL.WHAT_TYPE_OF_REPORT')}
             </div>
-            <div className="mt-4 flex flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2">
+            <div className="mt-4 flex flex-col flex-wrap justify-between gap-1 text-input-text-input-filled sm:gap-2 tablet:flex-row">
               <div
                 className="flex gap-2 py-2.5"
                 onClick={() => {
@@ -335,7 +312,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
           </div>
           <div className="mt-10 flex flex-col justify-center max-md:max-w-full">
             <div className="flex flex-col space-y-3 max-md:max-w-full">
-              <div className="text-sm font-semibold leading-5 tracking-normal text-input-text-input-filled max-md:max-w-full">
+              <div className="text-sm font-semibold leading-5 tracking-normal text-neutral-300 max-md:max-w-full">
                 {t('layout:EMBED_CODE_MODAL.REPORT_LANGUAGE')}
               </div>
               {displayedLanguageMenu}
@@ -345,7 +322,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
       </div>
       <div className="flex w-full flex-col items-end justify-center whitespace-nowrap px-5 py-4 text-sm font-medium leading-5 tracking-normal max-md:max-w-full">
         <div className="flex gap-3">
-          <Button type="button" onClick={cancelClickHandler} variant="tertiaryBorderless">
+          <Button type="button" onClick={cancelClickHandler} variant="tertiaryOutline">
             {t('layout:EMBED_CODE_MODAL.CANCEL')}
           </Button>
           {/* Info: (20241128 - Anna) 當 isGenerateClicked 為 true 時，按鈕會被禁用，防止重複點擊。 */}
@@ -373,7 +350,7 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
     <>
       <div className="flex w-full flex-col justify-center px-4 py-2.5">
         <div className="flex flex-col">
-          <div className="w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
+          <div className="hide-scrollbar w-300px justify-center self-center overflow-x-auto overflow-y-auto text-wrap border border-solid border-stroke-neutral-quaternary bg-surface-neutral-main-background px-3 py-4 text-sm leading-5 tracking-normal text-neutral-800 md:w-full">
             {generatedIframeCode}
           </div>
 
@@ -393,19 +370,25 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
               {isBalanceSheetChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('layout:EMBED_CODE_MODAL.BALANCE_SHEET')}
+                  <span className="text-neutral-300">
+                    {t('layout:EMBED_CODE_MODAL.BALANCE_SHEET')}
+                  </span>
                 </li>
               )}
               {isIncomeStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('layout:EMBED_CODE_MODAL.COMPREHENSIVE_INCOME_STATEMENT')}
+                  <span className="text-neutral-300">
+                    {t('layout:EMBED_CODE_MODAL.COMPREHENSIVE_INCOME_STATEMENT')}
+                  </span>
                 </li>
               )}
               {isCashFlowStatementChecked && (
                 <li className="flex items-center gap-1">
                   <IoMdCheckmark />
-                  {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
+                  <span className="text-neutral-300">
+                    {t('layout:EMBED_CODE_MODAL.CASH_FLOW_STATEMENT')}
+                  </span>
                 </li>
               )}
               {!isBalanceSheetChecked &&
@@ -441,13 +424,13 @@ const EmbedCodeModal = ({ isModalVisible, modalVisibilityHandler }: IEmbedCodeMo
 
   const isDisplayedEmbedCodeModal = isModalVisible ? (
     <div className="fixed inset-0 z-70 flex items-center justify-center bg-black/50 font-barlow">
-      <div className="relative mx-auto flex flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
+      <div className="relative mx-auto flex max-w-90vw flex-col items-center rounded-md bg-card-surface-primary p-6 shadow-lg shadow-black/80 sm:max-w-lg sm:px-3">
         <div className="flex w-full gap-2.5 pl-10 pr-5 max-md:max-w-full max-md:flex-wrap max-md:pl-5">
           <div className="flex flex-1 flex-col items-center justify-center px-20 text-center max-md:px-5">
             <div className="justify-center text-xl font-bold leading-8 text-input-text-input-filled">
               {t('layout:SIDE_MENU.EMBED_CODE')}
             </div>
-            <div className="text-xs leading-5 tracking-normal text-card-text-secondary">
+            <div className="text-xs leading-5 tracking-normal text-neutral-400">
               {t('layout:EMBED_CODE_MODAL.THE_LATEST_REPORT')}
             </div>
           </div>

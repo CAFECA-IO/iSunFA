@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import Image from 'next/image';
 import AccountBookItem from '@/components/beta/account_books_page/account_book_item';
 import { IAccountBookWithTeam } from '@/interfaces/account_book';
@@ -38,17 +38,20 @@ const AccountBookList = ({
       }, {}) // Info: (20250227 - Liz) 初始值是一個空物件
     : { all: { teamName: '', accountBooks: accountBookList } }; // Info: (20250227 - Liz) 不需要分組的情況用 key 'all' 讓結構保持一致
 
+  // Info: (20250527 - Liz) 用來控制 OptionsDropdown 的開關 id
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
   return (
-    <main className="flex flex-auto flex-col gap-40px">
+    <main className="flex flex-auto flex-col gap-lv-7">
       {Object.entries(groupedByTeam).map(([teamId, { teamName, accountBooks }]) => (
         <section key={teamId} className="flex flex-auto flex-col gap-40px">
           {shouldGroupByTeam && (
-            <div className="flex items-center gap-16px">
-              <h2 className="flex items-center gap-8px text-sm font-medium text-divider-text-lv-1">
+            <div className="flex items-center gap-lv-4">
+              <h2 className="flex items-center gap-lv-2 text-sm font-medium text-divider-text-lv-2">
                 <Image src="/icons/team_icon.svg" alt="team icon" width={24} height={24} />
                 {teamName}
               </h2>
-              <hr className="flex-auto border-divider-stroke-lv-1"></hr>
+              <hr className="flex-auto border-divider-stroke-lv-4"></hr>
             </div>
           )}
 
@@ -62,6 +65,8 @@ const AccountBookList = ({
                 setAccountBookToChangeTag={setAccountBookToChangeTag}
                 setAccountBookToDelete={setAccountBookToDelete}
                 setRefreshKey={setRefreshKey}
+                openDropdownId={openDropdownId}
+                setOpenDropdownId={setOpenDropdownId}
               />
             ))}
           </div>

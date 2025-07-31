@@ -90,17 +90,21 @@ const Search = ({ toggleOverlay }: SearchProps) => {
       <input
         type="text"
         placeholder={t('dashboard:HEADER.SEARCH')}
-        className="min-w-0 grow rounded-l-sm bg-transparent px-12px py-10px outline-none"
+        className="min-w-0 grow rounded-l-sm bg-transparent px-12px py-10px text-input-text-input-filled outline-none"
         onChange={handleSearch}
         value={inputValue}
       />
 
       {hasSearchResults ? (
-        <button type="button" className="px-12px py-10px" onClick={clearSearch}>
+        <button
+          type="button"
+          className="px-12px py-10px text-icon-surface-single-color-primary"
+          onClick={clearSearch}
+        >
           <FiX size={20} />
         </button>
       ) : (
-        <button type="button" className="px-12px py-10px">
+        <button type="button" className="px-12px py-10px text-icon-surface-single-color-primary">
           <FiSearch size={20} />
         </button>
       )}

@@ -430,8 +430,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           id="input-debit"
           name="input-debit"
           value={debitInput}
-          // Todo: (20250423 - Anna) RC1不允許小數，RC2之後再解開
-          // isDecimal
+          isDecimal
           required
           hasComma
           className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}
@@ -443,8 +442,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
           id="input-credit"
           name="input-credit"
           value={creditInput}
-          // Todo: (20250423 - Anna) RC1不允許小數，RC2之後再解開
-          // isDecimal
+          isDecimal
           required
           hasComma
           className={`${amountStyle} col-span-3 mt-lv-5 rounded-sm border bg-input-surface-input-background px-12px py-10px text-right disabled:bg-input-surface-input-disable`}

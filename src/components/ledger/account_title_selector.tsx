@@ -86,6 +86,13 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
     });
   }, [searchKeyword]);
 
+  useEffect(() => {
+    // Info: (20250528 - Anna) 在 tablet 以下搜尋時，切換到右側
+    if (window.innerWidth < 745 && searchKeyword !== '') {
+      setIsRightPartVisible(true);
+    }
+  }, [searchKeyword]);
+
   // Info: (20241004 - Julian) 取得會計科目列表
   useEffect(() => {
     if (accountTitleList) {

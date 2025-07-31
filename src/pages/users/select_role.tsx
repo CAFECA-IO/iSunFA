@@ -16,6 +16,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { findUnusedRoles } from '@/lib/utils/role';
 import UserRole from '@/components/beta/select_role/user_role';
 import Loader from '@/components/loader/loader';
+import loggerFront from '@/lib/utils/logger_front';
 
 const SelectRolePage = () => {
   const { t } = useTranslation(['dashboard']);
@@ -27,9 +28,7 @@ const SelectRolePage = () => {
 
   useEffect(() => {
     const initializeRolesData = async () => {
-      // Deprecated: (20241122 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('觸發 useEffect, 取得系統角色與使用者角色 (in SelectRolePage)');
+      loggerFront.log('觸發 useEffect, 取得系統角色與使用者角色 (in SelectRolePage)');
 
       setIsLoading(true);
       try {
@@ -48,9 +47,7 @@ const SelectRolePage = () => {
           setIsAbleToCreateRole(unusedRoles.length > 0);
         }
       } catch (error) {
-        // Deprecated: (20241122 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('Failed to fetch or compute roles:', error);
+        loggerFront.error('Failed to fetch or compute roles:', error);
       } finally {
         setIsLoading(false);
       }

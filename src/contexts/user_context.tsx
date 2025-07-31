@@ -6,10 +6,11 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import {
-  WORK_TAG,
+  ACCOUNT_BOOK_UPDATE_ACTION,
   IAccountBook,
   IAccountBookInfo,
   ICreateAccountBookReqBody,
+  IUpdateAccountBookReqBody,
 } from '@/interfaces/account_book';
 import { IUser } from '@/interfaces/user';
 import { throttle } from '@/lib/utils/common';
@@ -20,10 +21,11 @@ import { Hash } from '@/constants/hash';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { clearAllItems } from '@/lib/utils/indexed_db/ocr';
 import { IUserRole } from '@/interfaces/user_role';
-import { ITeam, TeamRole } from '@/interfaces/team';
+import { ITeam, ITransferAccountBook, TeamRole } from '@/interfaces/team';
 import { RoleName } from '@/constants/role';
 import { IPaymentMethod } from '@/interfaces/payment';
 import { IStatusInfo } from '@/interfaces/status_info';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface UserContextType {
   credential: string | null;
@@ -55,23 +57,34 @@ interface UserContextType {
     enteredAddress,
   }: ICreateAccountBookReqBody) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
-  connectedAccountBook: IAccountBook | null;
-  team: ITeam | null;
-  teamRole: TeamRole | null;
-  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
-
-  disconnectAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
+  updateAccountBookTag: ({
+    accountBookId,
+    action,
+    tag,
+  }: IUpdateAccountBookReqBody) => Promise<{ success: boolean }>;
 
   updateAccountBook: ({
     accountBookId,
     action,
     tag,
-  }: {
-    accountBookId: string;
-    action: string;
-    tag: WORK_TAG;
-  }) => Promise<{ success: boolean }>;
+    name,
+    taxId,
+    teamId,
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: IUpdateAccountBookReqBody) => Promise<{ success: boolean; code: string; errorMsg: string }>;
 
+  connectedAccountBook: IAccountBook | null;
+  team: ITeam | null;
+  teamRole: TeamRole | null;
+  connectAccountBook: (companyId: number) => Promise<{ success: boolean }>;
+  disconnectAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
   deleteAccountBook: (accountBookId: number) => Promise<{ success: boolean }>;
 
   errorCode: string | null;
@@ -104,13 +117,14 @@ export const UserContext = createContext<UserContextType>({
   selectedRole: null,
   switchRole: () => {},
   createAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
+  updateAccountBook: async () => ({ success: false, code: '', errorMsg: '' }),
+  updateAccountBookTag: async () => ({ success: false }),
 
   connectedAccountBook: null,
   team: null,
   teamRole: null,
   connectAccountBook: async () => ({ success: false }),
   disconnectAccountBook: async () => ({ success: false }),
-  updateAccountBook: async () => ({ success: false }),
   deleteAccountBook: async () => ({ success: false }),
 
   errorCode: null,
@@ -170,12 +184,17 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Info: (20241101 - Liz) 選擇角色 API
   const { trigger: selectRoleAPI } = APIHandler<IUserRole>(APIName.USER_SELECT_ROLE);
 
-  // Info: (20241104 - Liz) 建立帳本 API(原為公司) // ToDo: (20250422 - Liz) 此 api 會再改版
+  // Info: (20241104 - Liz) 建立帳本 API
   const { trigger: createAccountBookAPI } = APIHandler<IAccountBookInfo>(
     APIName.CREATE_ACCOUNT_BOOK
   );
 
-  // Info: (20241111 - Liz) 連結帳本 API(原為選擇公司)
+  // Info: (20241113 - Liz) 更新帳本 API
+  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBookInfo>(
+    APIName.UPDATE_ACCOUNT_BOOK
+  );
+
+  // Info: (20241111 - Liz) 連結帳本 API
   const { trigger: connectAccountBookAPI } = APIHandler<IAccountBook>(
     APIName.CONNECT_ACCOUNT_BOOK_BY_ID
   );
@@ -184,11 +203,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     success: boolean;
   }>(APIName.DISCONNECT_ACCOUNT_BOOK);
 
-  // Info: (20241113 - Liz) 更新帳本 API(原為公司)
-  const { trigger: updateAccountBookAPI } = APIHandler<IAccountBook>(APIName.UPDATE_ACCOUNT_BOOK);
-
-  // Info: (20241115 - Liz) 刪除帳本 API(原為公司)
+  // Info: (20241115 - Liz) 刪除帳本 API
   const { trigger: deleteAccountBookAPI } = APIHandler<IAccountBook>(APIName.DELETE_ACCOUNT_BOOK);
+
+  // Info: (20250311 - Liz) 轉移帳本 API
+  const { trigger: transferAccountBookAPI } = APIHandler<ITransferAccountBook>(
+    APIName.REQUEST_TRANSFER_ACCOUNT_BOOK
+  );
 
   // Info: (20250329 - Liz) 取得團隊資訊 API
   const { trigger: getTeamAPI } = APIHandler<ITeam>(APIName.GET_TEAM_BY_ID);
@@ -228,14 +249,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20250108 - Liz) 前往登入頁面
   const goToLoginPage = () => {
-    // Deprecated: (20241001 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToLoginPage (尚未導向)');
+    loggerFront.log('呼叫 goToLoginPage (尚未導向)');
 
     if (router.pathname.startsWith('/users') && !router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
+      loggerFront.log('呼叫 goToLoginPage 並且重新導向到登入頁面');
 
       router.push(ISUNFA_ROUTE.LOGIN);
     }
@@ -243,9 +260,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Info: (20250108 - Liz) 前往選擇角色頁面
   const goToSelectRolePage = () => {
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
+    loggerFront.log('呼叫 goToSelectRolePage 重新導向到選擇角色頁面 (因為沒有選擇角色)');
 
     router.push(ISUNFA_ROUTE.SELECT_ROLE);
   };
@@ -256,17 +271,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
     router.push(ISUNFA_ROUTE.DASHBOARD);
 
-    // Deprecated: (20241111 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
+    loggerFront.log('呼叫 goToDashboard 重新導向到儀表板 (因為沒有選擇公司)');
   };
 
   const goBackToOriginalPath = () => {
     const redirectPath = localStorage.getItem('redirectPath');
 
-    // Deprecated: (20241008 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
+    loggerFront.log('呼叫 goBackToOriginalPath, redirectPath:', redirectPath);
 
     if (redirectPath && redirectPath !== ISUNFA_ROUTE.LOGIN) {
       router.push(redirectPath);
@@ -284,9 +295,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
-    // Deprecated: (20241111 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
+    loggerFront.log('call signOut 登出並且清除 user context 所有狀態 以及 localStorage');
 
     await signoutAPI(); // Info: (20241004 - Liz) 登出 NextAuth 清除前端 session
     clearStates(); // Info: (20241004 - Liz) 清除 context 中的狀態
@@ -308,9 +317,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const hasLocalStorageData = userId && expiredAt;
     const isSessionExpired = expiredAt && Date.now() >= Number(expiredAt);
 
-    // Deprecated: (20250329 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('userId:', userId, 'expiredAt:', expiredAt, 'isSessionExpired:', isSessionExpired);
+    loggerFront.log(
+      'userId:',
+      userId,
+      'expiredAt:',
+      expiredAt,
+      'isSessionExpired:',
+      isSessionExpired
+    );
 
     if (isSessionExpired) {
       signOut();
@@ -423,9 +437,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname === ISUNFA_ROUTE.LANDING_PAGE) return; // Info: (20250329 - Liz) 在首頁不獲取使用者資料
 
     if (!isProfileFetchNeeded()) {
-      // Deprecated: (20241113 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
+      loggerFront.log('isProfileFetchNeeded 為 false, 不需要重新獲取使用者資料');
       return;
     }
 
@@ -436,9 +448,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const currentPath = router.asPath;
       localStorage.setItem('redirectPath', currentPath);
 
-      // Deprecated: (20241008 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
+      loggerFront.log('執行 getStatusInfo() 並且儲存現在路由 currentPath:', currentPath);
 
       const {
         data: statusInfo,
@@ -446,9 +456,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         code: getStatusInfoCode,
       } = await getStatusInfoAPI();
 
-      // Deprecated: (20241001 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('getStatusInfo data:', statusInfo, 'getStatusInfoSuccess:', getStatusInfoSuccess);
+      loggerFront.log(
+        'getStatusInfo data:',
+        statusInfo,
+        'getStatusInfoSuccess:',
+        getStatusInfoSuccess
+      );
 
       if (getStatusInfoSuccess && statusInfo) {
         handleProcessData(statusInfo);
@@ -460,9 +473,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setErrorCode(getStatusInfoCode ?? '');
       }
     } catch (error) {
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('getStatusInfo 發生錯誤:', error);
+      loggerFront.error('getStatusInfo 發生錯誤:', error);
       clearStates();
       clearLocalStorage();
       goToLoginPage();
@@ -496,9 +507,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return response.success;
     } catch (error) {
-      // Deprecated: (20241116 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('Error handling user agreement:', error);
+      loggerFront.error('Error handling user agreement:', error);
       return false;
     } finally {
       setIsAuthLoading(false);
@@ -539,9 +548,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Info: (20241029 - Liz) 檢查建立角色的成功狀態
       if (success && userRole) {
-        // Deprecated: (20241111 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
+        loggerFront.log('打 USER_CREATE_ROLE 成功, userRole:', userRole);
         return { success, userRole };
       }
 
@@ -606,7 +613,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241104 - Liz) 建立帳本的功能(原為公司)
+  // Info: (20241104 - Liz) 建立帳本的功能
   const createAccountBook = async ({
     name,
     taxId,
@@ -614,6 +621,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     teamId,
     fileId,
     representativeName,
+    businessLocation,
+    accountingCurrency,
     taxSerialNumber,
     contactPerson,
     phoneNumber,
@@ -631,6 +640,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           teamId,
           fileId,
           representativeName,
+          businessLocation,
+          accountingCurrency,
           taxSerialNumber,
           contactPerson,
           phoneNumber,
@@ -650,7 +661,85 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241111 - Liz) 連結帳本的功能(原為選擇公司)
+  // Info: (20250526 - Liz) 更新帳本的功能
+  const updateAccountBook = async ({
+    accountBookId,
+    fromTeamId, // Info: (20250526 - Liz) 轉移帳本的原團隊 ID
+    toTeamId, // Info: (20250526 - Liz) 接收帳本的目標團隊 ID
+    name,
+    taxId,
+    tag,
+    fileId,
+    representativeName,
+    taxSerialNumber,
+    contactPerson,
+    phoneNumber,
+    city,
+    district,
+    enteredAddress,
+  }: IUpdateAccountBookReqBody) => {
+    try {
+      const { success, code, error } = await updateAccountBookAPI({
+        params: { accountBookId },
+        body: {
+          action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_INFO,
+          name,
+          taxId,
+          tag,
+          fileId,
+          representativeName,
+          taxSerialNumber,
+          contactPerson,
+          phoneNumber,
+          city,
+          district,
+          enteredAddress,
+        },
+      });
+
+      if (!success) {
+        return { success: false, code, errorMsg: error?.message ?? '' };
+      }
+
+      // Info: (20250526 - Liz) 如果 fromTeamId 和 toTeamId 不同，才需要轉移帳本
+      if (fromTeamId && toTeamId && fromTeamId !== toTeamId) {
+        // Info: (20250526 - Liz) 呼叫轉移帳本的 API
+        const {
+          success: transferSuccess,
+          code: transferCode,
+          error: transferError,
+        } = await transferAccountBookAPI({
+          params: { accountBookId },
+          body: { fromTeamId, toTeamId },
+        });
+
+        if (!transferSuccess) {
+          return { success: false, code: transferCode, errorMsg: transferError?.message ?? '' };
+        }
+      }
+
+      return { success: true, code: '', errorMsg: '' };
+    } catch (error) {
+      return { success: false, code: '', errorMsg: 'unknown error' };
+    }
+  };
+
+  // Info: (20250526 - Liz) 更新帳本工作標籤
+  const updateAccountBookTag = async ({ accountBookId, tag }: IUpdateAccountBookReqBody) => {
+    try {
+      const { success } = await updateAccountBookAPI({
+        params: { accountBookId },
+        body: { action: ACCOUNT_BOOK_UPDATE_ACTION.UPDATE_TAG, tag },
+      });
+
+      if (!success) return { success: false };
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  };
+
+  // Info: (20241111 - Liz) 連結帳本的功能
   const connectAccountBook = async (accountBookId: number) => {
     try {
       const { success, data } = await connectAccountBookAPI({
@@ -665,9 +754,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         params: { teamId: data.teamId },
       });
       if (!getTeamSuccess || !team) return { success: false };
-      // Deprecated: (20250329 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('connectAccountBook 取得團隊資訊成功: team', team);
+      loggerFront.log('connectAccountBook 取得團隊資訊成功: team', team);
       setTeam(team);
       return { success: true };
     } catch (error) {
@@ -691,30 +778,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Info: (20241113 - Liz) 更新帳本的功能(原為公司) - 變更工作標籤
-  const updateAccountBook = async ({
-    accountBookId,
-    action,
-    tag,
-  }: {
-    accountBookId: string;
-    action: string;
-    tag: WORK_TAG;
-  }) => {
-    try {
-      const { success } = await updateAccountBookAPI({
-        params: { accountBookId },
-        body: { action, tag },
-      });
-
-      if (!success) return { success: false };
-      return { success: true };
-    } catch (error) {
-      return { success: false };
-    }
-  };
-
-  // Info: (20241115 - Liz) 刪除帳本的功能(原為公司)
+  // Info: (20241115 - Liz) 刪除帳本的功能
   const deleteAccountBook = async (accountBookId: number) => {
     try {
       const { success, data: accountBook } = await deleteAccountBookAPI({
@@ -751,9 +815,9 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     if (router.pathname.includes(ISUNFA_ROUTE.LOGIN)) {
       isRouteChanging.current = true;
       throttledGetStatusInfo();
-      // Deprecated: (20241107 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動');
+      loggerFront.log(
+        'handleRouteChangeStart 並且 pathname 包含 ISUNFA_ROUTE.LOGIN 這個條件被啟動'
+      );
     }
   }, [throttledGetStatusInfo, router.pathname]);
 
@@ -762,9 +826,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    // Deprecated: (20241004 - Liz)
-    // eslint-disable-next-line no-console
-    console.log(
+    loggerFront.log(
       '觸發 useEffect (dependency: handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete)'
     );
 
@@ -781,30 +843,22 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [handleVisibilityChange, handleRouteChangeStart, handleRouteChangeComplete, router.events]);
 
   useEffect(() => {
-    // Deprecated: (20250108 - Liz)
-    // eslint-disable-next-line no-console
-    console.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
+    loggerFront.log('觸發 useEffect (監聽 UNAUTHORIZED_ACCESS)');
 
     let isSigningOut = false;
 
     const handleUnauthorizedAccess = async () => {
       if (isSigningOut) {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.warn('正在執行 signOut 所以跳過此次觸發');
+        loggerFront.warn('正在執行 signOut 所以跳過此次觸發');
         return;
       }
       isSigningOut = true;
 
       try {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('觸發 useEffect 並且呼叫 signOut 函數');
+        loggerFront.log('觸發 useEffect 並且呼叫 signOut 函數');
         await signOut();
       } catch (error) {
-        // Deprecated: (20250108 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Sign out failed:', error);
+        loggerFront.error('Sign out failed:', error);
 
         isSigningOut = false; // Info: (20250108 - Liz) 失敗後重置狀態，允許再次嘗試
       }
@@ -835,9 +889,10 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       selectedRole: selectedRoleRef.current,
       switchRole,
       createAccountBook,
+      updateAccountBookTag,
+      updateAccountBook,
       connectAccountBook,
       disconnectAccountBook,
-      updateAccountBook,
       deleteAccountBook,
       connectedAccountBook: connectedAccountBookRef.current,
       team: teamRef.current,

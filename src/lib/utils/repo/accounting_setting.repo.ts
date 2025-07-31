@@ -133,3 +133,46 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
 
   return accountingSetting;
 }
+
+export async function updateAccountingCurrency(companyId: number, currency: string) {
+  let result = null;
+  const nowInSecond = getTimestampNow();
+
+  try {
+    result = await prisma.accountingSetting.updateMany({
+      where: { companyId },
+      data: {
+        currency,
+        updatedAt: nowInSecond,
+      },
+    });
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'update accounting currency in updateAccountingCurrency failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return result;
+}
+
+export async function getAccountingCurrencyByCompanyId(companyId: number) {
+  let currency = '';
+
+  try {
+    const accountingSetting = await prisma.accountingSetting.findFirst({
+      where: { companyId },
+      select: { currency: true },
+    });
+    currency = accountingSetting?.currency || '';
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'get accounting currency in getAccountingCurrencyByCompanyId failed',
+      errorMessage: (error as Error).message,
+    });
+  }
+
+  return currency;
+}

@@ -47,7 +47,8 @@
     "DELETE": "刪除",
     "DELETE_MESSAGE_TITLE": "刪除帳本",
     "DELETE_MESSAGE_CONTENT": "您確定要刪除此帳本嗎？",
-    "WAITING_FOR_TRANSFERRING": "等待轉移中"
+    "WAITING_FOR_TRANSFERRING": "等待轉移中",
+    "ADD_NEW_ACCOUNT_BOOK": "新增帳本"
   },
   "DELETE": {
     "TITLE": "刪除帳本",
@@ -68,5 +69,10 @@
   },
   "EDIT_ACCOUNT_BOOK_MODAL": {
     "EDIT_ACCOUNT_BOOK": "編輯帳本"
+  },
+  "TOAST": {
+    "FAILED_CONNECT_ACCOUNT_BOOK": "連結帳本失敗",
+    "FAILED_DISCONNECT_ACCOUNT_BOOK": "取消連結失敗",
+    "FAILED_CANCEL_TRANSFER": "取消轉移帳本失敗"
   }
 }

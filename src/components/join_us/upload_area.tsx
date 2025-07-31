@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 import { FaRegCircleCheck } from 'react-icons/fa6';
 import { FiTrash2 } from 'react-icons/fi';
 import { MimeType } from '@/constants/mime_type';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface IUploadItemProps {
   file: File;
@@ -119,14 +120,10 @@ const UploadArea: React.FC<IUploadAreaProps> = ({
       } else {
         // Info: (20250502 - Julian) 文件類型不正確
         const validFileTypes = limitedTypes.join(', ');
-        // Deprecated: (20250502 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.error(`Invalid file type. Please upload files of type: ${validFileTypes}`);
+        loggerFront.error(`Invalid file type. Please upload files of type: ${validFileTypes}`);
       }
     } else {
-      // ToDo: (20250429 - Julian) for debugging
-      // eslint-disable-next-line no-console
-      console.error('No files selected');
+      loggerFront.error('No files selected');
     }
   };
 

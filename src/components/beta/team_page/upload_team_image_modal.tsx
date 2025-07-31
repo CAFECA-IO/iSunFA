@@ -7,6 +7,7 @@ import { APIName } from '@/constants/api_connection';
 import { IFileUIBeta } from '@/interfaces/file';
 import { UploadType } from '@/constants/file';
 import { useTranslation } from 'next-i18next';
+import loggerFront from '@/lib/utils/logger_front';
 
 interface UploadTeamImageModalProps {
   teamToChangeImage: ITeam;
@@ -46,9 +47,7 @@ const UploadTeamImageModal = ({
         });
 
         if (!uploadFileSuccess || !fileMeta) {
-          // Deprecated: (20250218 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('Failed to upload file:', file.name);
+          loggerFront.error('Failed to upload file:', file.name);
           return;
         }
 
@@ -59,23 +58,17 @@ const UploadTeamImageModal = ({
         });
 
         if (!success) {
-          // Deprecated: (20250218 - Liz)
-          // eslint-disable-next-line no-console
-          console.error('更新團隊的圖片失敗! error message:', error?.message);
+          loggerFront.error('更新團隊的圖片失敗! error message:', error?.message);
           return;
         }
 
-        // Deprecated: (20250310 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('success:', success, 'data:', data);
+        loggerFront.log('success:', success, 'data:', data);
 
         closeUploadTeamPictureModal();
         // Info: (20250310 - Liz) 更新畫面(重新取得團隊資料)
         getTeamData();
       } catch (error) {
-        // Deprecated: (20250218 - Liz)
-        // eslint-disable-next-line no-console
-        console.error('Failed to upload file:', error);
+        loggerFront.error('Failed to upload file:', error);
       } finally {
         setIsLoading(false);
       }
@@ -85,7 +78,7 @@ const UploadTeamImageModal = ({
 
   return (
     <main className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex w-400px flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 p-40px">
+      <div className="flex w-90vw flex-col gap-24px rounded-lg bg-surface-neutral-surface-lv2 px-20px py-16px tablet:w-400px tablet:p-40px">
         <section className="flex items-center">
           <h1 className="grow text-center text-xl font-bold text-text-neutral-primary">
             {t('team:TEAM_PAGE.CHANGE_TEAM_PICTURE')}

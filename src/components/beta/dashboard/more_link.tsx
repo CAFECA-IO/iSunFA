@@ -15,10 +15,10 @@ const MoreLink = ({ href, disabled, className }: MoreLinkProps) => {
     <Link
       href={href}
       className={cn(
-        'rounded-xs border border-button-stroke-secondary px-16px py-8px text-sm font-medium text-button-text-secondary hover:border-button-stroke-primary-hover hover:text-button-text-primary-hover',
+        'rounded-xs bg-button-surface-strong-primary px-16px py-8px text-sm font-medium text-button-text-primary-solid hover:bg-button-surface-strong-primary-hover',
         className,
         {
-          'pointer-events-none border-button-stroke-disable text-button-text-disable': disabled,
+          'pointer-events-none bg-button-surface-strong-disable text-button-text-disable': disabled,
         }
       )}
     >

@@ -23,6 +23,7 @@ import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { IAssetDetails } from '@/interfaces/asset';
 import { AssetModalType, IAssetModal } from '@/interfaces/asset_modal';
 import { AssetDepreciationMethod } from '@/constants/asset';
+import { useCurrencyCtx } from '@/contexts/currency_context';
 
 interface IAddAssetModalProps {
   isModalVisible: boolean;
@@ -36,6 +37,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   defaultData,
 }) => {
   const { t } = useTranslation(['common', 'journal', 'asset']);
+  const { currency } = useCurrencyCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
   const { connectedAccountBook } = useUserCtx();
@@ -130,6 +132,12 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
 
   // Info: (20241028 - Julian) 重置 Modal
   useEffect(() => {
+    // Info: (20250603 - Anna) 為了打開 Modal 時翻譯不出錯
+    if (isModalVisible && modalType === AssetModalType.ADD) {
+      setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
+      // Info: (20250603 - Anna) 聚焦到第一個欄位
+      accountRef.current?.focus();
+    }
     if (!isModalVisible) {
       setAccountTitle(t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING'));
       setSearchKeyword('');
@@ -306,6 +314,14 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
   };
 
   useEffect(() => {
+    if (selectedDepreciationMethod === AssetDepreciationMethod.NONE) {
+      setInputResidualValue(inputTotal); // Info: (20250603 - Anna) 殘值自動設為總價
+      setInputUsefulLife(0); // Info: (20250603 - Anna) 壽命設為 0
+      setDepreciationStartDate(acquisitionDate); // Info: (20250610 - Anna) 折舊開始日期自動設為取得日期
+    }
+  }, [selectedDepreciationMethod, inputTotal, acquisitionDate]);
+
+  useEffect(() => {
     if (!isLoading) {
       if (success && assetResult) {
         switch (modalType) {
@@ -392,8 +408,13 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     } else if (depreciationStartDate.startTimeStamp === 0 && isLandCost === false) {
       // Info: (20241015 - Julian) 土地成本不需要 Depreciation Start Date
       setIsShowDepreciationStartDateHint(true);
-    } else if (inputUsefulLife === 0 && isLandCost === false) {
-      //  Info: (20241015 - Julian) 土地成本不需要 Useful Life
+    } else if (
+      inputUsefulLife === 0 &&
+      isLandCost === false &&
+      selectedDepreciationMethod !== AssetDepreciationMethod.NONE
+    ) {
+      // Info: (20250603 - Anna) 選擇 None 時不需要 Useful Life
+      // Info: (20241015 - Julian) 土地成本不需要 Useful Life
       setIsShowUsefulLifeHint(true);
     } else {
       messageModalDataHandler({
@@ -477,13 +498,18 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
       className="w-full truncate bg-transparent outline-none"
     />
   ) : (
-    <p className="truncate">{accountTitle}</p>
+    <p
+      className={`truncate ${
+        accountTitle === t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING')
+          ? 'text-input-text-input-placeholder'
+          : 'text-input-text-input-filled'
+      }`}
+    >
+      {accountTitle}
+    </p>
   );
 
-  // Info: (20241210 - Julian) 排除 NONE
-  const depreciationMethodList = Object.values(AssetDepreciationMethod).filter(
-    (method) => method !== AssetDepreciationMethod.NONE
-  );
+  const depreciationMethodList = Object.values(AssetDepreciationMethod);
 
   const depreciationMethodMenu = depreciationMethodList.map((method) => (
     <button
@@ -499,37 +525,42 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
     </button>
   ));
 
+  const labelClassName = 'font-semibold text-neutral-300';
+  const getInputTextColorClass = (value: number) => {
+    return value > 0 ? 'text-input-text-input-filled' : 'text-input-text-input-placeholder';
+  };
+
   const isDisplayModal = isModalVisible ? (
     <div className="fixed inset-0 z-120 flex items-center justify-center bg-black/50">
-      <div className="flex max-h-450px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 md:max-h-90vh">
+      <div className="flex max-h-600px w-90vw max-w-600px flex-col overflow-hidden rounded-sm bg-surface-neutral-surface-lv2 tablet:max-h-450px md:max-h-90vh">
         {/* Info: (20241015 - Julian) title */}
         <div className="relative flex flex-col items-center px-20px py-16px">
           {/* Info: (20241015 - Julian) desktop title */}
           <h1 className="whitespace-nowrap text-xl font-bold text-card-text-primary">
             {modalTitle}
           </h1>
-          <p className="text-sm text-card-text-secondary">{modalSubtitle}</p>
+          <p className="text-xs text-card-text-secondary tablet:text-sm">{modalSubtitle}</p>
           {/* Info: (20241015 - Julian) close button */}
           <button
             type="button"
             onClick={modalVisibilityHandler}
             className="absolute right-20px top-16px text-icon-surface-single-color-primary"
           >
-            <RxCross2 size={20} />
+            <RxCross2 size={24} />
           </button>
         </div>
 
         {/* Info: (20241015 - Julian) content */}
         <form
           onSubmit={addAssetSubmitHandler}
-          className="flex w-full flex-col gap-y-40px px-30px py-24px text-sm text-input-text-primary"
+          className="flex w-full flex-col gap-y-16px px-lv-4 py-16px text-sm text-input-text-primary tablet:gap-y-40px tablet:px-30px tablet:py-24px"
         >
           {/* Info: (20241015 - Julian) input fields */}
-          <div className="grid max-h-500px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center md:grid-cols-2">
+          <div className="grid max-h-400px flex-1 grid-cols-1 items-center gap-16px overflow-y-auto overflow-x-hidden px-10px text-center tablet:max-h-500px md:grid-cols-2">
             {/* Info: (20241015 - Julian) Asset Type */}
             {modalType === AssetModalType.ADD ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">
+                <p className={labelClassName}>
                   {t('asset:ADD_ASSET_MODAL.ASSET_TYPE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -553,7 +584,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             ) : null}
             {/* Info: (20241015 - Julian) Asset no */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.ASSET_NO')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -570,7 +601,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             </div>
             {/* Info: (20241015 - Julian) Asset name */}
             <div className="flex w-full flex-col items-start gap-y-8px">
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.ASSET_NAME')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -584,11 +615,105 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                 className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
               />
             </div>
+            {/* Info: (20241015 - Julian) Amount */}
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+              <p className={labelClassName}>
+                {t('asset:ADD_ASSET_MODAL.AMOUNT')}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <NumericInput
+                id="input-amount"
+                value={inputAmount}
+                setValue={setInputAmount}
+                isDecimal
+                hasComma
+                required
+                min={1}
+                disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
+                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
+              />
+            </div>
+            {/* Info: (20241015 - Julian) Total Price */}
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+              <p className={labelClassName}>
+                {t('asset:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+
+              <div
+                className={`flex h-46px w-full items-center justify-between divide-x ${isShowTotalHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+              >
+                <NumericInput
+                  id="input-total"
+                  name="input-total"
+                  value={inputTotal}
+                  setValue={setInputTotal}
+                  isDecimal
+                  hasComma
+                  required
+                  min={1}
+                  className={`flex-1 bg-transparent px-10px text-right outline-none disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable ${getInputTextColorClass(inputTotal)}`}
+                />
+                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
+                  <Image
+                    src={`/currencies/${currency.toLowerCase()}.svg`}
+                    width={16}
+                    height={16}
+                    alt="twd_icon"
+                    className="aspect-square rounded-full object-cover"
+                  />
+                  <p>{currency}</p>
+                </div>
+              </div>
+
+              {selectedDepreciationMethod === AssetDepreciationMethod.NONE && (
+                <p className="w-full text-right text-text-state-error">
+                  {t('asset:ADD_ASSET_MODAL.PLEASE_FILL_UP_THIS_FORM')}
+                </p>
+              )}
+            </div>
+            {/* Info: (20241021 - Julian) Residual Value */}
+            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
+              <p className={labelClassName}>
+                {t('asset:ADD_ASSET_MODAL.RESIDUAL_VALUE')}{' '}
+                <span className="text-text-state-error">*</span>
+              </p>
+              <div
+                className={`flex h-46px w-full items-center justify-between divide-x rounded-sm border bg-input-surface-input-background text-neutral-300 placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder ${
+                  selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                    ? 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable'
+                    : 'divide-input-stroke-input border-input-stroke-input'
+                }`}
+              >
+                <NumericInput
+                  id="input-residual-value"
+                  name="input-residual-value"
+                  value={inputResidualValue}
+                  setValue={setInputResidualValue}
+                  isDecimal
+                  hasComma
+                  required
+                  min={0}
+                  className={`flex-1 bg-transparent px-10px text-right outline-none ${getInputTextColorClass(inputResidualValue)}`}
+                  disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
+                />
+                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
+                  <Image
+                    src={`/currencies/${currency.toLowerCase()}.svg`}
+                    width={16}
+                    height={16}
+                    alt="twd_icon"
+                    className="aspect-square rounded-full object-cover"
+                  />
+                  <p>{currency}</p>
+                </div>
+              </div>
+            </div>
             {/* Info: (20241015 - Julian) Acquisition Date */}
             <div
               className={`flex w-full flex-col items-start gap-y-8px ${isLandCost ? 'md:col-span-2' : ''}`}
             >
-              <p className="font-semibold">
+              <p className={labelClassName}>
                 {t('asset:ADD_ASSET_MODAL.ACQUISITION_DATE')}{' '}
                 <span className="text-text-state-error">*</span>
               </p>
@@ -602,7 +727,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Depreciation Start Date */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px">
-                <p className="font-semibold">
+                <p className={labelClassName}>
                   {t('asset:ADD_ASSET_MODAL.DEPRECIATION_START_DATE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
@@ -610,100 +735,29 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                   type={DatePickerType.TEXT_DATE}
                   period={depreciationStartDate}
                   setFilteredPeriod={setDepreciationStartDate}
-                  btnClassName={isShowDepreciationStartDateHint ? inputStyle.ERROR : ''}
+                  btnClassName={`${isShowDepreciationStartDateHint ? inputStyle.ERROR : ''} ${
+                    selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                      ? 'border-input-stroke-disable bg-input-surface-input-disable'
+                      : ''
+                  }`}
                   calenderClassName="right-0"
+                  disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
                 />
               </div>
             ) : null}
-            {/* Info: (20241015 - Julian) Amount */}
-            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.AMOUNT')}</p>
-              <NumericInput
-                id="input-amount"
-                type="number"
-                value={inputAmount}
-                setValue={setInputAmount}
-                isDecimal
-                hasComma
-                required
-                min={1}
-                disabled={modalType === AssetModalType.EDIT} // Info: (20241209 - Julian) 編輯時不能修改
-                className={`${inputStyle.NORMAL} h-46px w-full rounded-sm border px-12px outline-none disabled:border-input-stroke-disable disabled:bg-input-surface-input-disable`}
-              />
-            </div>
-            {/* Info: (20241015 - Julian) Total Price */}
-            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
-                {t('asset:ADD_ASSET_MODAL.TOTAL_PRICE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div
-                className={`flex h-46px w-full items-center justify-between divide-x ${isShowTotalHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
-              >
-                <NumericInput
-                  id="input-total"
-                  name="input-total"
-                  value={inputTotal}
-                  setValue={setInputTotal}
-                  isDecimal
-                  hasComma
-                  required
-                  min={1}
-                  className="flex-1 bg-transparent px-10px text-right outline-none disabled:border-input-stroke-disable disabled:bg-input-stroke-disable disabled:text-input-text-disable"
-                />
-                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
-                  <Image
-                    src="/currencies/twd.svg"
-                    width={16}
-                    height={16}
-                    alt="twd_icon"
-                    className="rounded-full"
-                  />
-                  <p>{t('asset:COMMON.TWD')}</p>
-                </div>
-              </div>
-            </div>
-            {/* Info: (20241021 - Julian) Residual Value */}
-            <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">
-                {t('asset:ADD_ASSET_MODAL.RESIDUAL_VALUE')}{' '}
-                <span className="text-text-state-error">*</span>
-              </p>
-              <div
-                className={`flex h-46px w-full items-center justify-between divide-x ${inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
-              >
-                <NumericInput
-                  id="input-residual-value"
-                  name="input-residual-value"
-                  value={inputResidualValue}
-                  setValue={setInputResidualValue}
-                  isDecimal
-                  hasComma
-                  required
-                  min={0}
-                  className="flex-1 bg-transparent px-10px text-right outline-none"
-                />
-                <div className="flex items-center gap-4px p-12px text-sm text-input-text-input-placeholder">
-                  <Image
-                    src="/currencies/twd.svg"
-                    width={16}
-                    height={16}
-                    alt="twd_icon"
-                    className="rounded-full"
-                  />
-                  <p>{t('asset:COMMON.TWD')}</p>
-                </div>
-              </div>
-            </div>
             {/* Info: (20241015 - Julian) Useful Life (Month) */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">
+                <p className={labelClassName}>
                   {t('asset:ADD_ASSET_MODAL.USEFUL_LIFE')}{' '}
                   <span className="text-text-state-error">*</span>
                 </p>
                 <div
-                  className={`flex h-46px w-full items-center justify-between divide-x ${isShowUsefulLifeHint ? inputStyle.ERROR : inputStyle.NORMAL} rounded-sm border bg-input-surface-input-background`}
+                  className={`flex h-46px w-full items-center justify-between divide-x text-neutral-300 ${isShowUsefulLifeHint ? inputStyle.ERROR : 'text-input-text-input-filled placeholder:text-input-text-input-placeholder disabled:text-input-text-input-placeholder'} rounded-sm border ${
+                    selectedDepreciationMethod === AssetDepreciationMethod.NONE
+                      ? 'divide-input-stroke-disable border-input-stroke-disable bg-input-surface-input-disable'
+                      : 'divide-input-stroke-input border-input-stroke-input bg-input-surface-input-background'
+                  }`}
                 >
                   <NumericInput
                     id="input-useful-life"
@@ -713,7 +767,8 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
                     isDecimal
                     hasComma
                     required={!isLandCost}
-                    className="flex-1 bg-transparent px-10px text-right outline-none"
+                    className={`flex-1 bg-transparent px-10px text-right outline-none ${getInputTextColorClass(inputUsefulLife)}`}
+                    disabled={selectedDepreciationMethod === AssetDepreciationMethod.NONE}
                   />
                   <div className="flex w-60px items-center justify-center p-12px text-sm text-input-text-input-placeholder">
                     <p>{t('asset:COMMON.M')}</p>
@@ -724,7 +779,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             {/* Info: (20241015 - Julian) Depreciation Method */}
             {!isLandCost ? (
               <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-                <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
+                <p className={labelClassName}>{t('asset:ADD_ASSET_MODAL.DEPRECIATION_METHOD')}</p>
                 <div
                   ref={methodRef}
                   onClick={toggleMethodMenu}
@@ -748,7 +803,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
             ) : null}
             {/* Info: (20241015 - Julian) Note */}
             <div className="flex w-full flex-col items-start gap-y-8px md:col-span-2">
-              <p className="font-semibold">{t('asset:ADD_ASSET_MODAL.NOTE')}</p>
+              <p className={labelClassName}>{t('asset:ADD_ASSET_MODAL.NOTE')}</p>
               <input
                 id="input-note"
                 type="text"
@@ -761,9 +816,9 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
           </div>
 
           {/* Info: (20240503 - Julian) confirm buttons */}
-          <div className="flex items-center justify-end gap-12px">
+          <div className="flex items-center gap-12px tablet:justify-end">
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="button"
               onClick={modalVisibilityHandler}
               variant="secondaryOutline"
@@ -771,7 +826,7 @@ const AddAssetModal: React.FC<IAddAssetModalProps> = ({
               {t('common:COMMON.CANCEL')}
             </Button>
             <Button
-              className="px-16px py-8px"
+              className="w-full px-16px py-8px tablet:w-auto"
               type="submit"
               variant="tertiary"
               disabled={isLoading} // Info: (20241202 - Julian) 避免重複送出

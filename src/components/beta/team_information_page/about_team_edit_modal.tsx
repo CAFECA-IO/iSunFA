@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/button/button';
-import { RxCross1 } from 'react-icons/rx';
+import { RxCross2 } from 'react-icons/rx';
 import { BiSave } from 'react-icons/bi';
 import { useTranslation } from 'next-i18next';
 import APIHandler from '@/lib/utils/api_handler';
@@ -43,10 +43,6 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
     if (success) {
       onSave(teamDescription);
       onClose();
-    } else if (updateError) {
-      // Deprecate: (20250301 - Anna) debug
-      // eslint-disable-next-line no-console
-      console.error('Failed to update team description:', updateError);
     }
   }, [success, updateError, onSave, onClose, teamDescription]);
 
@@ -66,23 +62,25 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative w-96 rounded-md bg-white p-10 shadow-lg">
-        {/* Info:(20250225 - Anna) 關閉按鈕 */}
-        <button
-          type="button"
-          className="absolute right-10 top-12 text-neutral-500 hover:text-black"
-          onClick={onClose}
-        >
-          <RxCross1 size={16} />
-        </button>
+      <div className="w-90vw rounded-md bg-white px-lv-5 py-16px shadow-lg tablet:w-96 tablet:p-10">
+        <div className="relative flex items-center justify-center">
+          {/* Info:(20250225 - Anna) 關閉按鈕 */}
+          <button
+            type="button"
+            className="absolute right-0 text-icon-surface-single-color-primary"
+            onClick={onClose}
+          >
+            <RxCross2 size={24} />
+          </button>
 
-        {/* Info:(20250225 - Anna) 標題 */}
-        <h2 className="text-center text-lg font-semibold text-neutral-600">
-          {t('team:TEAM_INFO_PAGE.ADD_DESCRIPTION')}
-        </h2>
+          {/* Info:(20250225 - Anna) 標題 */}
+          <h2 className="text-center text-xl font-semibold text-card-text-primary">
+            {t('team:TEAM_INFO_PAGE.ADD_DESCRIPTION')}
+          </h2>
+        </div>
 
         {/* Info:(20250225 - Anna) 輸入框 */}
-        <div className="mt-6 flex flex-col">
+        <div className="mt-28px flex flex-col tablet:mt-6">
           <label htmlFor="team-description" className="mb-2 text-sm font-semibold text-neutral-300">
             {t('team:TEAM_INFO_PAGE.ABOUT')}
           </label>
@@ -90,7 +88,7 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
           <input
             id="team-description"
             type="text"
-            className="w-full rounded-sm border border-navy-blue-100 p-2"
+            className="w-full rounded-sm border border-input-stroke-input p-2 text-input-text-input-filled"
             value={teamDescription}
             placeholder={
               initialDescription.trim() === ''
@@ -102,19 +100,15 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
         </div>
 
         {/* Info:(20250225 - Anna) 取消 */}
-        <div className="mt-10 flex justify-end gap-4">
-          <button
-            type="button"
-            className="text-sm font-medium text-neutral-700 hover:underline"
-            onClick={onClose}
-          >
+        <div className="mt-28px flex justify-end gap-4 tablet:mt-10">
+          <Button type="button" variant="tertiaryOutline" size="medium" onClick={onClose}>
             {t('common:COMMON.CANCEL')}
-          </button>
+          </Button>
           {/* Info:(20250225 - Anna) 保存 */}
           <Button
             type="button"
             variant="tertiary"
-            className="flex items-center gap-1 px-4 py-2 disabled:bg-gray-300"
+            size="medium"
             disabled={!hasChanges}
             onClick={updateTeamDescriptionHandler} // Info:(20250301 - Anna) 讓 API 先執行
           >

@@ -10,6 +10,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { SkeletonList } from '@/components/skeleton/skeleton';
+import loggerFront from '@/lib/utils/logger_front';
 // import { FAKE_OWNED_TEAMS } from '@/lib/services/subscription_service'; // Deprecated: (20250117 - Liz) 測試可以使用:假資料 FAKE_OWNED_TEAMS
 
 const SubscriptionsPage = () => {
@@ -34,9 +35,7 @@ const SubscriptionsPage = () => {
         setUserOwnedTeams(ownedTeams.data);
       }
     } catch (error) {
-      // Deprecated: (20250117 - Liz)
-      // eslint-disable-next-line no-console
-      console.log('取得使用者擁有的所有團隊失敗');
+      loggerFront.error('取得使用者擁有的所有團隊失敗');
     } finally {
       setIsLoading(false);
     }

@@ -11,12 +11,12 @@ import Pagination from '@/components/pagination/pagination';
 import MessageModal from '@/components/message_modal/message_modal';
 import FilterSection from '@/components/filter_section/filter_section';
 import NoData from '@/components/beta/account_books_page/no_data';
-// import CreateAccountBookModal from '@/components/beta/account_books_page/create_account_book_modal'; // ToDo: (20250411 - Liz) 未來會替換成下個版本的建立帳本 Modal (AccountBookInfoModal)
-import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal'; // ToDo: (20250411 - Liz) 未來會使用這個 Modal
+import AccountBookInfoModal from '@/components/beta/account_books_page/account_book_info_modal';
 import ChangeTagModal from '@/components/beta/account_books_page/change_tag_modal';
 import AccountBookList from '@/components/beta/account_books_page/account_book_list';
 import TransferAccountBookModal from '@/components/beta/account_books_page/transfer_account_book_modal';
 import { SortBy, SortOrder } from '@/constants/sort';
+import loggerFront from '@/lib/utils/logger_front';
 
 const AccountBooksPageBody = () => {
   const { t } = useTranslation(['account_book']);
@@ -25,8 +25,7 @@ const AccountBooksPageBody = () => {
 
   const [refreshKey, setRefreshKey] = useState<number>(0); // Info: (20241114 - Liz) This is a workaround to refresh the FilterSection component to retrigger the API call. This is not the best solution.
 
-  const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState(false);
-
+  const [isCreateAccountBookModalOpen, setIsCreateAccountBookModalOpen] = useState<boolean>(false);
   const [accountBookToEdit, setAccountBookToEdit] = useState<IAccountBookWithTeam | undefined>();
   const [accountBookToTransfer, setAccountBookToTransfer] = useState<
     IAccountBookWithTeam | undefined
@@ -38,26 +37,16 @@ const AccountBooksPageBody = () => {
     IAccountBookWithTeam | undefined
   >();
 
-  const [totalPage, setTotalPage] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPage, setTotalPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [accountBookList, setAccountBookList] = useState<IAccountBookWithTeam[]>([]);
 
   const isNoData = accountBookList.length === 0;
 
-  const openCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(true);
-  };
-  const closeCreateAccountBookModal = () => {
-    setIsCreateAccountBookModalOpen(false);
-  };
-
-  const closeEditAccountBookModal = () => {
-    setAccountBookToEdit(undefined);
-  };
-
-  const closeDeleteModal = () => {
-    setAccountBookToDelete(undefined);
-  };
+  const openCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(true);
+  const closeCreateAccountBookModal = () => setIsCreateAccountBookModalOpen(false);
+  const closeEditAccountBookModal = () => setAccountBookToEdit(undefined);
+  const closeDeleteModal = () => setAccountBookToDelete(undefined);
 
   // Info: (20241115 - Liz) 打 API 刪除帳本(原為公司)
   const handleDeleteAccountBook = async () => {
@@ -67,17 +56,13 @@ const AccountBooksPageBody = () => {
       const success = await deleteAccountBook(accountBookToDelete.id);
 
       if (!success) {
-        // Deprecated: (20241115 - Liz)
-        // eslint-disable-next-line no-console
-        console.log('刪除帳本失敗');
+        loggerFront.log('刪除帳本失敗');
         return;
       }
 
       setRefreshKey((prev) => prev + 1); // Info: (20250418 - Liz) 更新帳本清單
     } catch (error) {
-      // Deprecated: (20241115 - Liz)
-      // eslint-disable-next-line no-console
-      console.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
+      loggerFront.error('AccountBooksPageBody handleDeleteAccountBook error:', error);
     }
   };
 
@@ -99,64 +84,116 @@ const AccountBooksPageBody = () => {
     if (resData.page !== currentPage) setCurrentPage(resData.page);
   };
 
+  const filterSection = userId && (
+    <FilterSection<IAccountBookWithTeam[]>
+      key={refreshKey}
+      disableDateSearch
+      className="flex-auto"
+      params={{ userId }}
+      apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
+      onApiResponse={handleApiResponse}
+      page={currentPage}
+      pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
+      sort={{ sortBy: SortBy.CREATED_AT, sortOrder: SortOrder.DESC }}
+    />
+  );
+
   return (
-    <main className="flex min-h-full flex-col gap-40px">
-      <section className="flex items-center gap-40px">
-        {userId && (
-          <FilterSection<IAccountBookWithTeam[]>
-            key={refreshKey}
-            disableDateSearch
-            className="flex-auto"
-            params={{ userId }}
-            apiName={APIName.LIST_ACCOUNT_BOOK_BY_USER_ID}
-            onApiResponse={handleApiResponse}
-            page={currentPage}
-            pageSize={DEFAULT_PAGE_LIMIT_FOR_ACCOUNT_BOOK_LIST}
-            sort={{ by: SortBy.CREATED_AT, order: SortOrder.DESC }}
-          />
+    <>
+      {/* Info: (20250602 - Liz) Desktop Version */}
+      <main className="hidden min-h-full flex-col gap-40px tablet:flex">
+        <section className="flex flex-col gap-40px laptop:flex-row laptop:items-center">
+          {filterSection}
+
+          <div className="flex items-center gap-16px">
+            <button
+              type="button"
+              onClick={openCreateAccountBookModal}
+              className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            >
+              <BsPlusLg size={20} />
+              <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW')}</p>
+            </button>
+
+            <button
+              type="button"
+              className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+            >
+              <BsEnvelope size={20} />
+              <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.INVITE_CODE')}</p>
+            </button>
+          </div>
+        </section>
+
+        {isNoData ? (
+          <NoData />
+        ) : (
+          <>
+            <AccountBookList
+              accountBookList={accountBookList}
+              setAccountBookToEdit={setAccountBookToEdit}
+              setAccountBookToTransfer={setAccountBookToTransfer}
+              setAccountBookToChangeTag={setAccountBookToChangeTag}
+              setAccountBookToDelete={setAccountBookToDelete}
+              setRefreshKey={setRefreshKey}
+              shouldGroupByTeam
+            />
+            <Pagination
+              totalPages={totalPage}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+            />
+          </>
         )}
+      </main>
 
-        <div className="flex items-center gap-16px">
-          <button
-            type="button"
-            onClick={openCreateAccountBookModal}
-            className="flex items-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          >
-            <BsPlusLg size={20} />
-            <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW')}</p>
-          </button>
+      {/* Info: (20250602 - Liz) Mobile Version */}
+      <main className="flex min-h-full flex-col gap-32px tablet:hidden">
+        <h1 className="text-base font-semibold text-text-neutral-secondary">
+          {t('dashboard:ACCOUNT_BOOKS_PAGE.PAGE_TITLE')}
+        </h1>
+        {filterSection}
+        <button
+          type="button"
+          onClick={openCreateAccountBookModal}
+          className="flex items-center justify-center gap-8px rounded-xs bg-button-surface-strong-secondary px-24px py-10px text-base font-medium text-button-text-invert hover:bg-button-surface-strong-secondary-hover disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
+        >
+          <BsPlusLg size={20} />
+          <span>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.ADD_NEW_ACCOUNT_BOOK')}</span>
+        </button>
 
-          <button
-            type="button"
-            className="flex items-center gap-8px rounded-xs border border-button-stroke-secondary bg-button-surface-soft-secondary px-24px py-10px text-base font-medium text-button-text-secondary-solid hover:border-button-stroke-secondary-hover hover:bg-button-surface-soft-secondary-hover disabled:border-button-stroke-disable disabled:bg-button-surface-strong-disable disabled:text-button-text-disable"
-          >
-            <BsEnvelope size={20} />
-            <p>{t('account_book:ACCOUNT_BOOKS_PAGE_BODY.INVITE_CODE')}</p>
-          </button>
-        </div>
-      </section>
+        {isNoData ? (
+          <NoData />
+        ) : (
+          <>
+            <AccountBookList
+              accountBookList={accountBookList}
+              setAccountBookToEdit={setAccountBookToEdit}
+              setAccountBookToTransfer={setAccountBookToTransfer}
+              setAccountBookToChangeTag={setAccountBookToChangeTag}
+              setAccountBookToDelete={setAccountBookToDelete}
+              setRefreshKey={setRefreshKey}
+              shouldGroupByTeam
+            />
+            <Pagination
+              totalPages={totalPage}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+            />
+          </>
+        )}
+      </main>
 
-      {isNoData && <NoData />}
-      {!isNoData && (
-        <>
-          <AccountBookList
-            accountBookList={accountBookList}
-            setAccountBookToEdit={setAccountBookToEdit}
-            setAccountBookToTransfer={setAccountBookToTransfer}
-            setAccountBookToChangeTag={setAccountBookToChangeTag}
-            setAccountBookToDelete={setAccountBookToDelete}
-            setRefreshKey={setRefreshKey}
-            shouldGroupByTeam
-          />
-          <Pagination
-            totalPages={totalPage}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
-        </>
+      {/* Info: (20250602 - Liz) Modals */}
+      {accountBookToEdit && (
+        <AccountBookInfoModal
+          accountBookToEdit={accountBookToEdit}
+          closeAccountBookInfoModal={closeEditAccountBookModal}
+          setRefreshKey={setRefreshKey}
+        />
       )}
 
-      {/* // Info: (20241108 - Liz) Modals */}
+      {/* Info: (20241108 - Liz) Modals */}
       {isCreateAccountBookModalOpen && (
         <AccountBookInfoModal
           closeAccountBookInfoModal={closeCreateAccountBookModal}
@@ -195,7 +232,7 @@ const AccountBooksPageBody = () => {
           modalVisibilityHandler={closeDeleteModal}
         />
       )}
-    </main>
+    </>
   );
 };
 

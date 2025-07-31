@@ -9,8 +9,11 @@ import { INews } from '@/interfaces/news';
 import FilterSection from '@/components/filter_section/filter_section';
 import { IPaginatedData } from '@/interfaces/pagination';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
+import { useTranslation } from 'next-i18next';
 
 const LatestNewsPageBody = () => {
+  const { t } = useTranslation(['dashboard']);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [type, setType] = useState<NewsType>(NewsType.FINANCIAL);
@@ -55,7 +58,12 @@ const LatestNewsPageBody = () => {
   };
 
   return (
-    <main className="flex min-h-full flex-col gap-40px">
+    <main className="flex min-h-full flex-col gap-lv-6 tablet:gap-40px">
+      {/* Info: (20250526 - Julian) Mobile title */}
+      <p className="block text-base font-semibold text-text-neutral-secondary tablet:hidden">
+        {t('dashboard:LATEST_NEWS_PAGE.LATEST_NEWS')}
+      </p>
+
       <FilterSection<INews[]>
         key={refreshKey}
         apiName={APIName.NEWS_LIST}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { TbArrowBackUp } from 'react-icons/tb';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { FiTrash2, FiEdit, FiBookOpen } from 'react-icons/fi';
@@ -22,13 +23,20 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { IVoucherDetailForFrontend, defaultVoucherDetail } from '@/interfaces/voucher';
 import { EVENT_TYPE_TO_VOUCHER_TYPE_MAP, EventType } from '@/constants/account';
 import { AccountCodesOfAPRegex } from '@/constants/asset';
+import { IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
+import InvoiceSelection from './invoice_selection';
 
 interface IVoucherDetailPageBodyProps {
   voucherId: string;
   voucherNo: string | undefined;
+  goBackUrl: string;
 }
 
-const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherId, voucherNo }) => {
+const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
+  voucherId,
+  voucherNo,
+  goBackUrl,
+}) => {
   const { t } = useTranslation(['common', 'journal']);
   const router = useRouter();
   const { connectedAccountBook } = useUserCtx();
@@ -37,6 +45,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   const accountBookId = connectedAccountBook?.id;
 
   const [certificates, setCertificates] = useState<ICertificateUI[]>([]);
+  const [invoices, setInvoices] = useState<IInvoiceRC2UI[]>([]);
 
   // Info: (20241029 - Julian) Get voucher details from API
   const {
@@ -44,11 +53,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     data: voucherData,
     isLoading,
     error,
-  } = APIHandler<IVoucherDetailForFrontend>(
-    APIName.VOUCHER_GET_BY_ID_V2,
-    // { params } // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
-    { params: { companyId: accountBookId, voucherId } }
-  );
+  } = APIHandler<IVoucherDetailForFrontend>(APIName.VOUCHER_GET_BY_ID_V2);
 
   // Info: (20241029 - Julian) Delete voucher API
   const {
@@ -135,6 +140,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
     }
   };
 
+  const goBack = () => router.push(goBackUrl);
+
   const deleteClickHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
@@ -150,10 +157,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   useEffect(() => {
     // Info: (20241121 - Julian) Get voucher detail when accountBookId and voucherId are ready
     if (accountBookId && voucherId) {
-      // Deprecated: (20250124 - Anna) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('API Params:', { companyId: accountBookId, voucherId }); // Info: (20250122 - Anna) 檢查 accountBookId 和 voucherId 是否正確
-      getVoucherDetail();
+      // ToDo: (20250429 - Liz) 目前 API 正在大規模調整參數中，會將 companyId 統一改成 accountBookId，屆時可再把 params 調整回原本的寫法
+      getVoucherDetail({ params: { accountBookId, voucherId } });
     }
   }, [accountBookId, voucherId]);
 
@@ -168,6 +173,16 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
       });
 
       setCertificates(certificateUIList);
+    }
+    if (voucherData?.invoiceRC2List) {
+      const invoiceUIList = voucherData.invoiceRC2List.map((invoice) => {
+        return {
+          ...invoice,
+          isSelected: false,
+          actions: [],
+        };
+      });
+      setInvoices(invoiceUIList);
     }
   }, [voucherData]);
 
@@ -451,10 +466,22 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
   }
 
   return (
-    <div className="overflow-y-auto px-40px pb-32px pt-10px">
-      <div className="flex justify-end gap-2 p-4">
+    <div className="overflow-y-auto pb-32px tablet:px-40px tablet:pt-10px">
+      <div>帳本：{connectedAccountBook?.id}</div>
+
+      {/* Info: (20250526 - Julian) Mobile back button */}
+      <div className="flex items-center gap-lv-2 tablet:hidden">
+        <Button variant="secondaryBorderless" size="defaultSquare" onClick={goBack}>
+          <TbArrowBackUp size={24} />
+        </Button>
+        <p className="text-base font-semibold text-text-neutral-secondary">
+          {t('journal:VOUCHER_DETAIL_PAGE.TITLE')} {voucherNo ?? voucherId}
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-lv-5 py-lv-6 tablet:gap-lv-4 tablet:p-4">
         <Button id="download-voucher-btn" type="button" variant="tertiary" size={'defaultSquare'}>
-          <MdOutlineFileDownload size={16} />
+          <MdOutlineFileDownload size={20} />
         </Button>
         <Button
           id="delete-voucher-btn"
@@ -465,7 +492,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           onClick={isReverseRelated ? () => {} : deleteClickHandler}
           disabled={isReverseRelated} // Info: (20250120 - Julian) 被刪除或反轉的傳票不能再次刪除
         >
-          <FiTrash2 size={16} />
+          <FiTrash2 size={20} />
         </Button>
 
         <Button
@@ -479,22 +506,30 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
           className="disabled:cursor-not-allowed"
           onClick={() => {
             if (!(isReverseRelated || type === EventType.OPENING)) {
-              router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              if (certificates.length > 0 || (certificates.length === 0 && invoices.length === 0)) {
+                router.push(`/users/accounting/${voucherId}/editing?voucherNo=${voucherNo}`);
+              } else if (certificates.length === 0 && invoices.length > 0) {
+                router.push(`/users/accounting/${voucherId}/editing_rc2?voucherNo=${voucherNo}`);
+              }
             }
           }}
         >
-          <FiEdit size={16} />
+          <FiEdit size={20} />
         </Button>
       </div>
       {/* Info: (20240926 - tzuhan) CertificateSelection */}
-      <CertificateSelection
-        selectedCertificates={certificates}
-        isSelectable={false}
-        isDeletable={false}
-      />
-
+      {(certificates.length > 0 || (certificates.length === 0 && invoices.length === 0)) && (
+        <CertificateSelection
+          selectedCertificates={certificates}
+          isSelectable={false}
+          isDeletable={false}
+        />
+      )}
+      {certificates.length === 0 && invoices.length > 0 && (
+        <InvoiceSelection selectedInvoices={invoices} isSelectable={false} isDeletable={false} />
+      )}
       {/* Info: (20241008 - Julian) Voucher Detail */}
-      <div className="flex flex-col items-stretch gap-24px font-semibold">
+      <div className="mt-lv-6 flex flex-col items-stretch gap-24px text-xs font-semibold tablet:mt-40px tablet:text-sm">
         {/* Info: (20241007 - Julian) Voucher date */}
         <div className="flex justify-between">
           <p className="text-text-neutral-tertiary">{t('journal:VOUCHER_DETAIL_PAGE.DATE')}</p>
@@ -533,23 +568,25 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({ voucherI
         {isAsset}
       </div>
 
-      {/* Info: (20241008 - Julian) Voucher Line Block */}
-      <div className="mt-40px flex flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px">
-        {/* Info: (20241008 - Julian) Voucher Line Header */}
-        <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.PARTICULARS')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.DEBIT')}</p>
-          <p>{t('journal:VOUCHER_DETAIL_PAGE.CREDIT')}</p>
-        </div>
-        {/* Info: (20241008 - Julian) Voucher Line Items */}
-        <div className="grid grid-cols-4 gap-24px font-medium text-input-text-input-filled">
-          {voucherLineBlock}
-        </div>
-        {/* Info: (20241008 - Julian) Voucher Line Total */}
-        <div className="grid grid-cols-4 gap-24px text-right text-sm text-text-neutral-solid-dark">
-          <div className="col-start-3">{numberWithCommas(totalDebit)}</div>
-          <div>{numberWithCommas(totalCredit)}</div>
+      <div className="mt-lv-6 w-full overflow-x-auto tablet:mt-40px">
+        {/* Info: (20241008 - Julian) Voucher Line Block */}
+        <div className="flex w-max flex-col gap-8px rounded-md bg-surface-brand-secondary-soft px-24px py-12px text-xs tablet:w-auto tablet:text-base">
+          {/* Info: (20241008 - Julian) Voucher Line Header */}
+          <div className="grid grid-cols-4 gap-24px font-semibold text-text-neutral-solid-dark">
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.ACCOUNTING')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.PARTICULARS')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.DEBIT')}</p>
+            <p>{t('journal:VOUCHER_DETAIL_PAGE.CREDIT')}</p>
+          </div>
+          {/* Info: (20241008 - Julian) Voucher Line Items */}
+          <div className="grid grid-cols-4 gap-24px font-medium text-input-text-input-filled">
+            {voucherLineBlock}
+          </div>
+          {/* Info: (20241008 - Julian) Voucher Line Total */}
+          <div className="grid grid-cols-4 gap-24px text-right text-sm text-text-neutral-solid-dark">
+            <div className="col-start-3">{numberWithCommas(totalDebit)}</div>
+            <div>{numberWithCommas(totalCredit)}</div>
+          </div>
         </div>
       </div>
     </div>
