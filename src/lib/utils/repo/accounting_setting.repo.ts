@@ -134,13 +134,13 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
   return accountingSetting;
 }
 
-export async function updateAccountingCurrency(companyId: number, currency: string) {
+export async function updateAccountingCurrency(accountBookId: number, currency: string) {
   let result = null;
   const nowInSecond = getTimestampNow();
 
   try {
     result = await prisma.accountingSetting.updateMany({
-      where: { companyId },
+      where: { accountBookId },
       data: {
         currency,
         updatedAt: nowInSecond,
@@ -157,12 +157,12 @@ export async function updateAccountingCurrency(companyId: number, currency: stri
   return result;
 }
 
-export async function getAccountingCurrencyByCompanyId(companyId: number) {
+export async function getAccountingCurrencyByCompanyId(accountBookId: number) {
   let currency = '';
 
   try {
     const accountingSetting = await prisma.accountingSetting.findFirst({
-      where: { companyId },
+      where: { accountBookId },
       select: { currency: true },
     });
     currency = accountingSetting?.currency || '';

@@ -1187,7 +1187,7 @@ model UserTodoAccountBook {
 model Voucher {
   id             Int     @id @default(autoincrement())
   issuerId       Int     @map("issuer_id")
-  counterPartyId Int     @map("counter_party_id")
+  counterPartyId Int?    @map("counter_party_id")
   accountBookId  Int     @map("account_book_id")
   aiResultId     String  @default("0") @map("ai_result_id")
   status         String  @default("journal:JOURNAL.UPLOADED")

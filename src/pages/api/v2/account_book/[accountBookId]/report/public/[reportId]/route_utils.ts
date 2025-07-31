@@ -20,6 +20,7 @@ import {
   isCashFlowStatementOtherInfo,
   isIncomeStatementOtherInfo,
 } from '@/lib/utils/type_guard/report';
+import { IAccountingSetting } from '@/interfaces/accounting_setting';
 
 export const getPublicReportUtils = {
   getMappingByReportType: (
@@ -134,7 +135,11 @@ export const getPublicReportUtils = {
     return otherInfo;
   },
 
-  formatPayloadFromIReport: (report: IReport, company: AccountBook): FinancialReport => {
+  formatPayloadFromIReport: (
+    report: IReport,
+    company: AccountBook,
+    accountingSetting?: IAccountingSetting
+  ): FinancialReport => {
     const { reportType } = report;
     const details = report.content;
 
@@ -152,6 +157,7 @@ export const getPublicReportUtils = {
         id: company.id,
         code: company.taxId,
         name: company.name,
+        accountingSetting,
       },
       reportType,
       preDate: {
