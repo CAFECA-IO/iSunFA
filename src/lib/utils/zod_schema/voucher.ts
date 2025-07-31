@@ -90,7 +90,7 @@ export const voucherEntityValidator = z.object({
   id: z.number(),
   issuerId: z.number(),
   counterPartyId: z.number().int().nullable().optional(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   status: z.nativeEnum(JOURNAL_EVENT),
   editable: z.boolean(),
   no: z.string(),
@@ -125,7 +125,7 @@ export const IVoucherBetaValidator = z.object({
   counterParty: z
     .object({
       id: z.number().optional(),
-      companyId: z.number().optional(),
+      accountBookId: z.number().optional(),
       name: z.string().optional(),
       taxId: z.string().optional(),
       type: z.string().optional(),
@@ -267,7 +267,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
 
     const parsedVoucher = {
       id: voucher.id,
-      accountBookId: voucher.companyId,
+      accountBookId: voucher.accountBookId,
       status: voucher.status,
       voucherDate: voucher.date,
       voucherNo: voucher.no,
@@ -275,7 +275,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
       note: voucher.note ?? '',
       counterParty: voucher.counterParty
         ? {
-            companyId: voucher.counterParty.companyId ?? 0,
+            accountBookId: voucher.counterParty.companyId ?? 0,
             name: voucher.counterParty.name ?? '',
             taxId: voucher.counterParty.taxId ?? '',
           }
@@ -604,7 +604,7 @@ const voucherGetOneOutputValidatorV2 = z
       type: data.type,
       note: data.note ?? '',
       counterParty: {
-        companyId: data.companyId,
+        companyId: data.accountBookId,
         name: data.counterParty?.name,
         taxId: data.counterParty?.taxId,
       },
@@ -670,7 +670,7 @@ const voucherGetOneOutputValidatorV2 = z
             name: 'InvoiceName',
             counterParty: {
               id: data.counterParty?.id,
-              companyId: data.counterParty?.companyId,
+              accountBookId: data.counterParty?.companyId,
               name: data.counterParty?.name,
               taxId: data.counterParty?.taxId,
               type: data.counterParty?.type,
@@ -802,7 +802,7 @@ const IVoucherDetailForFrontendValidator = z.object({
   note: z.string(),
   counterParty: z.object({
     id: z.number().optional(),
-    companyId: z.number().optional(),
+    accountBookId: z.number().optional(),
     name: z.string().optional(),
     taxId: z.string().optional(),
     type: z.string().optional(),
