@@ -16,7 +16,7 @@ export interface IAnalysisReportRequest {
 
 export interface IReport {
   id: number;
-  companyId: number;
+  accountBookId: number;
   tokenContract: string;
   tokenId: string;
   name: string;
@@ -50,7 +50,7 @@ export const MOCK_TOTAL_PAGES = 10;
 export const MOCK_REPORTS: IReport[] = [
   {
     id: 1,
-    companyId: 123,
+    accountBookId: 123,
     tokenContract: '0x123abc',
     tokenId: '456def',
     name: 'Mock Report',
@@ -74,7 +74,7 @@ export const MOCK_REPORTS: IReport[] = [
   },
   {
     id: 2,
-    companyId: 123,
+    accountBookId: 123,
     tokenContract: '0x123abc',
     tokenId: '456def',
     name: 'Mock Report',
@@ -389,7 +389,7 @@ export interface Imports {
 
 export interface TaxReport401Content {
   id: number;
-  companyId: number;
+  accountBookId: number;
   tokenContract: string;
   tokenId: string;
   name: string;

@@ -246,7 +246,7 @@ export const getReportByUserId = async (
     const teamIds = teams.map((team) => team.teamId);
 
     // Info: (20250703 - Julian) Step 2: 再從 team 取得 accountBook
-    const accountBooks = await tx.company.findMany({
+    const accountBooks = await tx.accountBook.findMany({
       where: {
         teamId: {
           in: teamIds,
@@ -263,14 +263,14 @@ export const getReportByUserId = async (
     // Info: (20250704 - Julian) Step 3: 最後從 accountBook 取得 report id
     const reports = await tx.report.findMany({
       where: {
-        companyId: {
+        accountBookId: {
           in: accountBookIds,
         },
       },
       select: {
         id: true,
         reportType: true,
-        companyId: true,
+        accountBookId: true,
       },
     });
 
@@ -279,16 +279,17 @@ export const getReportByUserId = async (
       .map((accountBook) => {
         const balanceReport = reports.find(
           (report) =>
-            report.companyId === accountBook && report.reportType === ReportSheetType.BALANCE_SHEET
+            report.accountBookId === accountBook &&
+            report.reportType === ReportSheetType.BALANCE_SHEET
         );
         const cashFlowReport = reports.find(
           (report) =>
-            report.companyId === accountBook &&
+            report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.CASH_FLOW_STATEMENT
         );
         const comprehensiveIncomeReport = reports.find(
           (report) =>
-            report.companyId === accountBook &&
+            report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.INCOME_STATEMENT
         );
 

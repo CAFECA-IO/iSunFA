@@ -32,28 +32,28 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
   private incomeStatementGeneratorFromBeginOfYearToEndDate: IncomeStatementGenerator;
 
-  constructor(companyId: number, startDateInSecond: number, endDateInSecond: number) {
+  constructor(accountBookId: number, startDateInSecond: number, endDateInSecond: number) {
     const reportSheetType = ReportSheetType.BALANCE_SHEET;
-    super(companyId, startDateInSecond, endDateInSecond, reportSheetType);
+    super(accountBookId, startDateInSecond, endDateInSecond, reportSheetType);
 
     this.startSecondOfYear = getTimestampOfFirstDateOfThisYear(endDateInSecond);
     this.endSecondOfLastYear = this.startSecondOfYear - 1;
     this.incomeStatementGenerator = new IncomeStatementGenerator(
-      companyId,
+      accountBookId,
       startDateInSecond,
       endDateInSecond
     );
 
     // Info: (20241011 - Murky) For Accumulate Profit and Loss
     this.incomeStatementGeneratorFromTimeZeroToBeginOfYear = new IncomeStatementGenerator(
-      companyId,
+      accountBookId,
       0,
       this.endSecondOfLastYear
     );
 
     // Info: (20241011 - Murky) For NetIncome
     this.incomeStatementGeneratorFromBeginOfYearToEndDate = new IncomeStatementGenerator(
-      companyId,
+      accountBookId,
       this.startSecondOfYear,
       endDateInSecond
     );
@@ -127,7 +127,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY,
             id: -1,
-            accountBookId: this.companyId,
+            accountBookId: this.accountBookId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
@@ -158,7 +158,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS,
             id: -1,
-            accountBookId: this.companyId,
+            accountBookId: this.accountBookId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,
@@ -191,7 +191,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         : {
             ...SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER,
             id: -1,
-            accountBookId: this.companyId,
+            accountBookId: this.accountBookId,
             createdAt: 1,
             updatedAt: 1,
             deletedAt: null,

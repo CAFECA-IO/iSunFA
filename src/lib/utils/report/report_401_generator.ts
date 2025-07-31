@@ -434,7 +434,7 @@ export default class Report401Generator extends ReportGenerator {
     content: TaxReport401;
   }> {
     const report401 = await Report401Generator.generate401Report(
-      this.companyId,
+      this.accountBookId,
       this.startDateInSecond,
       this.endDateInSecond
     );

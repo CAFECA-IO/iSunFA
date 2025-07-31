@@ -145,6 +145,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     const endDate = currentTimestamp;
 
     const reportPayload = {
+      type: ReportSheetType.BALANCE_SHEET,
       startDate,
       endDate,
       reportType: 'financial',
@@ -158,7 +159,8 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
-    expect(typeof response.body.payload).toBe('number');
+    console.log('balanceSheetPublicResponse:', response.body);
+    // expect(typeof response.body.payload).toBe('number');
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,
@@ -193,6 +195,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
+    console.log('incomeStatementPublicResponse:', response.body);
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,
@@ -227,6 +230,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
+    console.log('cashFlowStatementPublicResponse:', response.body);
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,

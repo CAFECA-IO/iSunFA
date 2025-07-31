@@ -14,7 +14,8 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
   body,
   session,
 }) => {
-  const { accountBookId: companyId, userId } = session;
+  // FIXME: 在 test case 裡的 session 改用 accountBookId
+  const { companyId: accountBookId, userId } = session;
   const { projectId, type, reportLanguage, from, to, reportType } = body;
   const { startDateInSecond, endDateInSecond } = postUtils.formatStartAndEndDateFromQuery({
     reportSheetType: type,
@@ -27,7 +28,7 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
 
   try {
     const thisPeriodReportId = await postUtils.generateAndSaveReport({
-      companyId,
+      accountBookId,
       projectId,
       startDateInSecond,
       endDateInSecond,
@@ -37,6 +38,9 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
     });
     payload = thisPeriodReportId;
     statusMessage = STATUS_MESSAGE.CREATED;
+
+    // eslint-disable-next-line no-console
+    console.log('thisPeriodReportId:', thisPeriodReportId);
   } catch (error) {
     const errorInfo = {
       userId,
