@@ -100,7 +100,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     const paginationCertificates = await getListUtils.getPaginatedCertificateList({
       tab,
-      companyId: accountBookId,
+      accountBookId,
       startDate,
       endDate,
       page,

@@ -369,7 +369,7 @@ export const certificateAPIGetListUtils = {
   },
 
   getPaginatedCertificateList: (options: {
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     page: number;
@@ -388,8 +388,8 @@ export const certificateAPIGetListUtils = {
       where: Prisma.CertificateWhereInput;
     }
   > => {
-    const { companyId, ...restOptions } = options;
-    return getCertificatesV2({ ...restOptions, accountBookId: companyId });
+    const { accountBookId, ...restOptions } = options;
+    return getCertificatesV2({ ...restOptions, accountBookId });
   },
 
   getCurrencyFromSetting: async (companyId: number) => {
@@ -401,7 +401,7 @@ export const certificateAPIGetListUtils = {
   },
 
   getSumOfTotalInvoicePrice: async (options: {
-    companyId: number;
+    accountBookId: number;
     startDate?: number;
     endDate?: number;
     searchQuery?: string;
@@ -409,8 +409,8 @@ export const certificateAPIGetListUtils = {
     tab?: InvoiceTabs;
     isDeleted?: boolean;
   }): Promise<number> => {
-    const { companyId, ...restOptions } = options;
-    const result = await getAllFilteredInvoice({ ...restOptions, accountBookId: companyId });
+    const { accountBookId, ...restOptions } = options;
+    const result = await getAllFilteredInvoice({ ...restOptions, accountBookId });
     const totalPrice = result.reduce((acc, certificate) => {
       const invoiceTotalPrice = certificate.invoices[0]?.totalPrice || 0;
       return acc + invoiceTotalPrice;

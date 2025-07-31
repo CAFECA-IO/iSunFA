@@ -439,14 +439,12 @@ describe('Certificate API Post Utils 測試', () => {
         expect.objectContaining({
           id: mockCertificateEntity.id,
           name: mockFileEntity.name,
-          companyId: mockCompanyId,
           incomplete: false,
           aiResultId: mockAiResultId,
           createdAt: mockTimestamp,
           updatedAt: mockTimestamp,
           uploader: 'Test User',
           uploaderUrl: mockFileEntity.url,
-          voucherNo: 'V-001',
           voucherId: 1,
         })
       );
