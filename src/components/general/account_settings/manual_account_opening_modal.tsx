@@ -394,7 +394,9 @@ const ManualAccountOpeningModal: React.FC<IManualAccountOpeningModalProps> = ({
 
           {/* Info: (20241112 - Julian) table */}
           <div className="flex w-full flex-col">
-            <div className="max-h-300px overflow-y-auto rounded-md hide-scrollbar">{displayTable}</div>
+            <div className="hide-scrollbar max-h-300px overflow-y-auto rounded-md">
+              {displayTable}
+            </div>
           </div>
 
           {/* Info: (20250102 - Julian) Calculate total amount */}

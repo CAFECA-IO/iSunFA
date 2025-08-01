@@ -90,7 +90,7 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
   }
 
   protected async buildAccountForestFromDB(accountType: AccountType) {
-    const accounts = await easyFindManyAccountsInPrisma(this.companyId, accountType);
+    const accounts = await easyFindManyAccountsInPrisma(this.accountBookId, accountType);
     const forest = buildAccountForest(accounts);
 
     return forest;
@@ -127,7 +127,7 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     const lineItemsFromDBArray = await Promise.all(
       accountTypes.map((type) => {
         return getLineItemsInPrisma(
-          this.companyId,
+          this.accountBookId,
           type,
           startDateInSecond,
           endDateInSecond,

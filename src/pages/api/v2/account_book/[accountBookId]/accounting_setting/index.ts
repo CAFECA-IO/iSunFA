@@ -10,7 +10,7 @@ import {
 } from '@/lib/utils/repo/accounting_setting.repo';
 import { APIName, HttpMethod } from '@/constants/api_connection';
 import { formatAccountingSetting } from '@/lib/utils/formatter/accounting_setting.formatter';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';

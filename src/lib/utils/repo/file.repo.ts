@@ -8,7 +8,7 @@ import loggerBack from '@/lib/utils/logger_back';
  * Info: (20240830 - Murky)
  * This function is used to create a file record in the database.
  * @param name: string - The name of the file.
- * @param companyId: number - The id of the company that the file connect to.
+ * @param accountBookId: number - The id of the company that the file connect to.
  * @param size: number - The size of the file, it's bytes.
  * @param mimeType: string - The mime type of the file. ex: image/png
  * @param type: FileFolder - The type of the file store in local Folder. ex: FileFolder.TMP if not store in local

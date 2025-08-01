@@ -320,9 +320,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         })
         .set('Cookie', cookies.join('; '));
 
-      // eslint-disable-next-line no-console
-      console.log('[BalanceSheetReport] Response:', response.body);
-
       // Deprecated: (20250721 - Julian) remove eslint-disable
       // eslint-disable-next-line no-console
       console.log('=== BALANCE SHEET REPORT RESULT ===');

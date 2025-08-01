@@ -27,7 +27,7 @@ const handleGetRequest: IHandleRequest<
   GetVoucherByAccountResponse
 > = async ({ query, session }) => {
   const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { userId, companyId } = session;
+  const { userId, accountBookId } = session;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;
@@ -35,7 +35,7 @@ const handleGetRequest: IHandleRequest<
   try {
     const paginatedLineItemsFromDB = await getUtils.getLineItemsByAccountIdFromPrisma({
       accountId,
-      companyId,
+      accountBookId,
       startDate,
       endDate,
       page,

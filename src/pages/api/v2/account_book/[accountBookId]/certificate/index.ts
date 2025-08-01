@@ -32,7 +32,7 @@ import {
   certificateAPIDeleteMultipleUtils as deleteUtils,
 } from '@/pages/api/v2/account_book/[accountBookId]/certificate/route_utils';
 import { IVoucherEntity } from '@/interfaces/voucher';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -100,7 +100,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     const paginationCertificates = await getListUtils.getPaginatedCertificateList({
       tab,
-      companyId: accountBookId,
+      accountBookId,
       startDate,
       endDate,
       page,
@@ -135,7 +135,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
         invoice: invoiceEntity,
         file: fileEntity,
         uploader: uploaderEntity,
-        vouchers: voucherCertificateEntity.map((v) => v.voucher),
+        vouchers: voucherCertificateEntity.map((v: { voucher: IVoucherEntity }) => v.voucher),
       };
 
       return getListUtils.transformCertificateEntityToResponse(certificateReadyForTransfer);
@@ -146,7 +146,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     const incompleteSummary = summarizeIncompleteCertificates(certificates);
 
     const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
-      companyId: accountBookId,
+      accountBookId,
       startDate,
       endDate,
       searchQuery,
@@ -260,7 +260,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       fileIds.map(async (fileId) => {
         const certificateFromPrisma = await postUtils.createCertificateInPrisma({
           nowInSecond,
-          companyId: accountBookId,
+          accountBookId,
           uploaderId: userId,
           fileId,
         });
@@ -285,7 +285,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
           file: fileEntity,
           uploader: uploaderEntity,
           vouchers: voucherCertificateEntity.map(
-            (voucherCertificate) => voucherCertificate.voucher
+            (voucherCertificate: { voucher: IVoucherEntity }) => voucherCertificate.voucher
           ),
         };
 

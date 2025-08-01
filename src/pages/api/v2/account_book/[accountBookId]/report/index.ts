@@ -13,10 +13,10 @@ import {
   getReportFilterByReportType,
   transformAccountsMapToFilterSequence,
   transformAccountsToMap,
-} from '@/pages/api/v2/company/[companyId]/report/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/report/route_utils';
 import { ReportSheetType } from '@/constants/report';
 import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { FinancialReport } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';

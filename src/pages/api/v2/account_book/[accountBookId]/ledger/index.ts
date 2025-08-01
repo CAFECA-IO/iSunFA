@@ -15,7 +15,7 @@ import {
   sortAndCalculateBalances,
 } from '@/lib/utils/ledger';
 import { CurrencyType } from '@/constants/currency';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';

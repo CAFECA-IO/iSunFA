@@ -7,7 +7,7 @@ import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
-import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';

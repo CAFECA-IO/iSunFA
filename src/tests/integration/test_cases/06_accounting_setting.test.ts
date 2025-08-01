@@ -151,7 +151,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const accountingSetting = outputData as IAccountingSetting;
       expect(accountingSetting.id).toBeDefined();
       expect(typeof accountingSetting.id).toBe('number');
-      expect(accountingSetting.companyId).toBe(testAccountBookId);
+      expect(accountingSetting.accountBookId).toBe(testAccountBookId);
       expect(accountingSetting.taxSettings).toBeDefined();
       expect(accountingSetting.currency).toBeDefined();
       expect(Array.isArray(accountingSetting.shortcutList)).toBe(true);

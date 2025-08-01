@@ -16,7 +16,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { InvoiceTaxType } from '@/constants/invoice';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -89,10 +89,10 @@ const handlePostRequest = async (req: NextApiRequest) => {
     // Info: (20250417 - Shirley) 獲取 certificate ，從中獲取公司ID
     const certificateData =
       await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
-    const { companyId } = certificateData;
+    const { accountBookId } = certificateData;
 
     // Info: (20250417 - Shirley) 獲取公司以檢查團隊權限
-    const company = await getCompanyById(companyId);
+    const company = await getCompanyById(accountBookId);
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -121,7 +121,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const currencyAlias = await postUtils.getCurrencyFromSetting(userId);
 
     const certificateFromPrisma = await postUtils.postInvoiceInPrisma({
-      companyId,
+      accountBookId,
       nowInSecond,
       certificateId,
       inputOrOutput,

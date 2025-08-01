@@ -1,6 +1,6 @@
 export interface ISubscription {
   id: number;
-  companyId: number;
+  accountBookId: number;
   planId: number;
   autoRenewal: boolean;
   startDate: number;

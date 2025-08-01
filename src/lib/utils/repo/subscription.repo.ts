@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 
 // Info: (20240620 - Jacky) Create
 export async function createSubscription(
-  companyId: number,
+  accountBookId: number,
   planId: number,
   status: boolean,
   subscriptionPeriod: SubscriptionPeriod
@@ -18,7 +18,7 @@ export async function createSubscription(
   const expiredDate = nowTimestamp + subscriptionPeriod * ONE_DAY_IN_S;
   const newSubscription = await prisma.subscription.create({
     data: {
-      companyId,
+      accountBookId,
       planId,
       autoRenewal: true,
       startDate: nowTimestamp,
@@ -80,10 +80,10 @@ export async function deleteSubscription(id: number): Promise<ISubscription> {
 }
 
 // Info: (20240620 - Jacky) List
-export async function listSubscriptions(companyId: number): Promise<ISubscription[]> {
+export async function listSubscriptions(accountBookId: number): Promise<ISubscription[]> {
   const subscriptions = await prisma.subscription.findMany({
     where: {
-      companyId,
+      accountBookId,
     },
     orderBy: {
       id: SortOrder.ASC,

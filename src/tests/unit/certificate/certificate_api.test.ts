@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import handler from '@/pages/api/v2/account_book/[accountBookId]/certificate/index';
 import { getSession } from '@/lib/utils/session';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import {
   checkRequestData,
@@ -28,7 +28,7 @@ import { Tag } from '@prisma/client';
 
 // Info: (20250609 - Shirley) 模擬所有依賴
 jest.mock('@/lib/utils/session');
-jest.mock('@/lib/utils/repo/company.repo');
+jest.mock('@/lib/utils/repo/account_book.repo');
 jest.mock('@/lib/shared/permission');
 jest.mock('@/lib/utils/middleware');
 jest.mock('@/lib/utils/validator');
@@ -78,7 +78,7 @@ describe('Certificate API 端點測試', () => {
 
   const mockSession = {
     userId: mockUserId,
-    companyId: mockCompanyId,
+    accountBookId: mockCompanyId,
     isunfa: 'test-session-id',
     deviceId: 'test-device-id',
     ipAddress: '127.0.0.1',
@@ -364,7 +364,7 @@ describe('Certificate API 端點測試', () => {
 
       expect(mockCertificateAPIGetListUtils.getPaginatedCertificateList).toHaveBeenCalledWith(
         expect.objectContaining({
-          companyId: '1',
+          accountBookId: '1',
           page: '2',
           pageSize: '20',
           startDate: '1640908800',
@@ -479,7 +479,7 @@ describe('Certificate API 端點測試', () => {
       });
       expect(mockCertificateAPIPostUtils.createCertificateInPrisma).toHaveBeenCalledWith({
         nowInSecond: mockTimestamp,
-        companyId: '1', // Info: (20250609 - Shirley) accountBookId 在 API 中作為字串處理
+        accountBookId: '1', // Info: (20250609 - Shirley) accountBookId 在 API 中作為字串處理
         uploaderId: mockUserId,
         fileId: 1,
       });
@@ -572,7 +572,7 @@ describe('Certificate API 端點測試', () => {
 
       expect(mockCertificateAPIPostUtils.createCertificateInPrisma).toHaveBeenCalledWith({
         nowInSecond: mockTimestamp,
-        companyId: '1', // Info: (20250609 - Shirley) accountBookId 在 API 中作為字串處理
+        accountBookId: '1', // Info: (20250609 - Shirley) accountBookId 在 API 中作為字串處理
         uploaderId: mockUserId,
         fileId: 1,
       });
@@ -781,7 +781,7 @@ describe('Certificate API 端點測試', () => {
       expect(mockLogUserAction).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: mockUserId,
-          companyId: mockCompanyId,
+          accountBookId: mockCompanyId,
         }),
         'CERTIFICATE_LIST_V2',
         expect.any(Object),

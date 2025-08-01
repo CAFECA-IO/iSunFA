@@ -2,7 +2,7 @@ import { ReportSheetType } from '@/constants/report';
 import { IReportContent } from '@/interfaces/report';
 
 export default abstract class ReportGenerator {
-  protected companyId: number;
+  protected accountBookId: number;
 
   protected startDateInSecond: number;
 
@@ -16,7 +16,7 @@ export default abstract class ReportGenerator {
     endDateInSecond: number,
     reportSheetType: ReportSheetType
   ) {
-    this.companyId = companyId;
+    this.accountBookId = companyId;
     this.startDateInSecond = startDateInSecond;
     this.endDateInSecond = endDateInSecond;
     this.reportSheetType = reportSheetType;

@@ -3,7 +3,6 @@ import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { getUserById } from '@/lib/utils/repo/user.repo';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { IStatusInfo } from '@/interfaces/status_info';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
@@ -37,7 +36,7 @@ const handleGetRequest: IHandleRequest<
     teams: [],
   };
 
-  const { userId, companyId, roleId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
+  const { userId, accountBookId, roleId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
 
   if (userId > 0) {
     const userFromDB = await getUserById(userId);
@@ -52,13 +51,13 @@ const handleGetRequest: IHandleRequest<
     }
   }
 
-  if (companyId > 0 && userId > 0) {
+  if (accountBookId > 0 && userId > 0) {
     // Info: (20250401 - Shirley) 使用高效率的函數查詢用戶的帳本
     // 該函數使用 Prisma 的關聯查詢能力一次性獲取所需資料，大幅減少數據庫查詢次數
     const teamIds = teams?.map((t) => t.id);
 
     // Info: (20250401 - Shirley) 傳入可選的 teamIds 來縮小查詢範圍，提高效率
-    payload.company = await findUserAccountBook(userId, companyId, teamIds);
+    payload.company = await findUserAccountBook(userId, accountBookId, teamIds);
   }
 
   if (roleId > 0) {
@@ -86,7 +85,12 @@ const methodHandlers: {
     res: NextApiResponse
   ) => Promise<{
     statusMessage: string;
-    payload: IStatusInfo | null;
+    payload: {
+      user: IUser | null;
+      company: IAccountBookWithTeamEntity | null;
+      role: IUserRole | null;
+      teams: ITeam[] | null;
+    } | null;
   }>;
 } = {
   GET: (req) => withRequestValidation(APIName.STATUS_INFO_GET, req, handleGetRequest),
@@ -94,10 +98,22 @@ const methodHandlers: {
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IStatusInfo | null>>
+  res: NextApiResponse<
+    IResponseData<{
+      user: IUser | null;
+      company: IAccountBookWithTeamEntity | null;
+      role: IUserRole | null;
+      teams: ITeam[] | null;
+    } | null>
+  >
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IStatusInfo | null = {
+  let payload: {
+    user: IUser | null;
+    company: IAccountBookWithTeamEntity | null;
+    role: IUserRole | null;
+    teams: ITeam[] | null;
+  } | null = {
     user: null,
     company: null,
     role: null,
@@ -116,7 +132,12 @@ export default async function handler(
     statusMessage = error.message;
     payload = { user: null, company: null, role: null, teams: [] };
   } finally {
-    const { httpCode, result } = formatApiResponse<IStatusInfo | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<{
+      user: IUser | null;
+      company: IAccountBookWithTeamEntity | null;
+      role: IUserRole | null;
+      teams: ITeam[] | null;
+    } | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

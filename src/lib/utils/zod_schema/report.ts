@@ -18,6 +18,10 @@ const reportGetQueryValidatorV2 = z.object({
   reportType: z.nativeEnum(FinancialReportTypesKey),
 });
 
+const reportPostQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
+});
+
 const reportGetBodyValidatorV2 = z.object({});
 
 export const reportGetValidatorV2: IZodValidator<
@@ -96,7 +100,7 @@ const generatePublicReportBodySchemaV2 = z.object({
 
 export const generatePublicReportSchemaV2 = {
   input: {
-    querySchema: nullSchema,
+    querySchema: reportPostQueryValidatorV2,
     bodySchema: generatePublicReportBodySchemaV2,
   },
   outputSchema: z.number().nullable(),

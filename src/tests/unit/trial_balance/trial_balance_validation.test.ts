@@ -83,7 +83,7 @@ const createMockAccount = (
   updatedAt: Math.floor(Date.now() / 1000),
   deletedAt: null,
   rootId: 1,
-  companyId: 1,
+  accountBookId: 1,
   system: 'IFRS',
   parentCode: code,
   rootCode: code,

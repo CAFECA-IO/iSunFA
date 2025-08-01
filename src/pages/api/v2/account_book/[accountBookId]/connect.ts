@@ -10,7 +10,7 @@ import {
   IConnectAccountBookQueryParams,
 } from '@/lib/utils/zod_schema/account_book';
 import { getSession, setSession } from '@/lib/utils/session';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
@@ -79,7 +79,7 @@ const handleGetRequest: IHandleRequest<
     tag: company.tag as WORK_TAG,
   };
 
-  await setSession(session, { companyId: accountBookId });
+  await setSession(session, { accountBookId });
 
   return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload: result };
 };

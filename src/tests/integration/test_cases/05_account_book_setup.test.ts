@@ -75,7 +75,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
   // Info: (20250710 - Shirley) Test data for account book creation
   const validAccountBookData = {
-    name: 'Test Company 測試公司',
+    name: 'Final Updated Company Name',
     taxId: randomNumber.toString(),
     tag: WORK_TAG.ALL,
     teamId: 0, // Info: (20250711 - Shirley) Will be set after team creation

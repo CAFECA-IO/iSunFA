@@ -22,6 +22,7 @@ export function formatProject(
     });
     project = {
       ...rest,
+      companyId: rest.accountBookId, // Map accountBookId to companyId for interface compatibility
       members: employeeList,
       income: value ? value.totalExpense : 0,
       expense: value ? value.totalRevenue : 0,

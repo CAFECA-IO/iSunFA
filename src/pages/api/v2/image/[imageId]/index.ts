@@ -18,7 +18,7 @@ const handleGetRequest: IHandleRequest<APIName.IMAGE_GET_BY_ID, Buffer> = async 
   let payload: Buffer | null = null;
 
   try {
-    const { companyId } = session;
+    const { accountBookId } = session;
     const { imageId } = query;
     const file = await findFileById(imageId);
 
@@ -37,7 +37,7 @@ const handleGetRequest: IHandleRequest<APIName.IMAGE_GET_BY_ID, Buffer> = async 
       throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
     }
 
-    payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId });
+    payload = await decryptImageFile({ imageBuffer: fileBuffer, file, companyId: accountBookId });
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;

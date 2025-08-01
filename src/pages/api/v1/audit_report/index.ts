@@ -79,7 +79,7 @@ export default async function handler(
       },
       include: {
         // Info: (20240621 - Gibbs) 關聯 company, report 資料
-        company: true,
+        accountBook: true,
         report: true,
       },
       skip: offset,
@@ -87,9 +87,9 @@ export default async function handler(
     });
     const responseDataArray = auditReports.map((auditReport) => ({
       id: auditReport.id,
-      companyId: auditReport.companyId,
-      code: auditReport.company.taxId,
-      company: auditReport.company.name,
+      accountBookId: auditReport.accountBookId,
+      code: auditReport.accountBook.taxId,
+      company: auditReport.accountBook.name,
       informationYear: auditReport.informationYear,
       detailedInformation: auditReport.report.name,
       creditRating: auditReport.creditRating,

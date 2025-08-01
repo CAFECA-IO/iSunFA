@@ -1,5 +1,5 @@
 import type { IVoucherEntity } from '@/interfaces/voucher';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import { AssetDepreciationMethod, AssetEntityType, AssetStatus } from '@/constants/asset';
 import { z } from 'zod';
 import {
@@ -280,7 +280,7 @@ export interface IAssetEntity {
    * Info: (20241024 - Murky)
    * @description Company that own the asset
    */
-  company?: ICompanyEntity;
+  company?: IAccountBookWithoutTeamEntity;
 }
 
 /**

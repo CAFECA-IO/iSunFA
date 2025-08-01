@@ -6,8 +6,8 @@ export enum AuthFunctionsKeys {
   user = 'user',
   owner = 'owner',
   superAdmin = 'superAdmin',
-  CompanyAdminMatch = 'CompanyAdminMatch',
-  projectCompanyMatch = 'projectCompanyMatch',
+  AccountBookAdminMatch = 'AccountBookAdminMatch',
+  projectAccountBookMatch = 'projectAccountBookMatch',
 }
 
 export type AuthFunctionsNew = {
@@ -16,18 +16,21 @@ export type AuthFunctionsNew = {
 
 export interface AuthFunctions {
   [AuthFunctionsKeys.user]: (params: { userId: number }) => Promise<boolean>;
-  [AuthFunctionsKeys.owner]: (params: { userId: number; companyId: number }) => Promise<boolean>;
+  [AuthFunctionsKeys.owner]: (params: {
+    userId: number;
+    accountBookId: number;
+  }) => Promise<boolean>;
   [AuthFunctionsKeys.superAdmin]: (params: {
     userId: number;
-    companyId: number;
+    accountBookId: number;
   }) => Promise<boolean>;
-  [AuthFunctionsKeys.CompanyAdminMatch]: (params: {
-    companyId: number;
+  [AuthFunctionsKeys.AccountBookAdminMatch]: (params: {
+    accountBookId: number;
     adminId: number;
   }) => Promise<boolean>;
-  [AuthFunctionsKeys.projectCompanyMatch]: (params: {
+  [AuthFunctionsKeys.projectAccountBookMatch]: (params: {
     projectId: number;
-    companyId: number;
+    accountBookId: number;
   }) => Promise<boolean>;
 }
 

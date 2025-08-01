@@ -30,7 +30,7 @@ export interface ISessionData {
   ipAddress: string;
   userAgent: string;
   userId: number;
-  companyId: number;
+  accountBookId: number;
   roleId: number;
   actionTime: number;
   expires: number;
@@ -47,7 +47,7 @@ export interface ISessionData {
 
 export interface ISessionUpdateData {
   userId?: number;
-  companyId?: number;
+  accountBookId?: number;
   roleId?: number;
   actionTime?: number;
   teams?: {

@@ -1,7 +1,7 @@
 import { type IInvoiceBetaOptional, type IInvoiceEntity } from '@/interfaces/invoice';
 import { IFileBeta, type IFileEntity } from '@/interfaces/file';
 import type { IVoucherEntity } from '@/interfaces/voucher';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import type { IUserEntity } from '@/interfaces/user';
 import {
@@ -61,7 +61,7 @@ export interface ICertificateEntity {
    * Info: (20241024 - Murky)
    * @description company id of company this certificate belongs to
    */
-  companyId: number;
+  accountBookId: number;
 
   /**
    * Info: (20241024 - Murky)
@@ -117,7 +117,7 @@ export interface ICertificateEntity {
    * Info: (20241024 - Murky)
    * @description which company this certificate belongs to
    */
-  company?: ICompanyEntity;
+  company?: IAccountBookWithoutTeamEntity;
 
   /**
    * Info: (20241024 - Murky)

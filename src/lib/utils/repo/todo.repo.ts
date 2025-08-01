@@ -29,9 +29,9 @@ export function splitStartEndTimeInNote(note: string | null): {
 export function convertToTodoAccountBook(
   todo: Prisma.TodoGetPayload<{
     include: {
-      userTodoCompanies: {
+      userTodoAccountBooks: {
         include: {
-          company: {
+          accountBook: {
             include: { imageFile: true };
           };
         };
@@ -39,7 +39,7 @@ export function convertToTodoAccountBook(
     };
   }>
 ): ITodoAccountBook {
-  const company = todo.userTodoCompanies?.[0]?.company ?? null;
+  const company = todo.userTodoAccountBooks?.[0]?.accountBook ?? null;
   const { note } = splitStartEndTimeInNote(todo.note);
 
   return {
@@ -61,9 +61,9 @@ export async function getTodoById(id: number): Promise<ITodoAccountBook | null> 
   const todo = await prisma.todo.findUnique({
     where: { id, OR: [{ deletedAt: 0 }, { deletedAt: null }] },
     include: {
-      userTodoCompanies: {
+      userTodoAccountBooks: {
         include: {
-          company: { include: { imageFile: true } },
+          accountBook: { include: { imageFile: true } },
         },
       },
     },
@@ -102,11 +102,11 @@ export async function createTodo(data: {
   });
 
   if (data.accountBookId) {
-    await prisma.userTodoCompany.create({
+    await prisma.userTodoAccountBook.create({
       data: {
         todoId: createdTodo.id,
         userId: data.userId,
-        companyId: data.accountBookId,
+        accountBookId: data.accountBookId,
         createdAt: now,
         updatedAt: now,
       },
@@ -122,7 +122,7 @@ async function listTodo(userId: number) {
       AND: [
         {
           OR: [
-            { userTodoCompanies: { some: { userId } } },
+            { userTodoAccountBooks: { some: { userId } } },
             { note: { contains: `"userId":${userId}` } },
           ],
         },
@@ -132,9 +132,9 @@ async function listTodo(userId: number) {
       ],
     },
     include: {
-      userTodoCompanies: {
+      userTodoAccountBooks: {
         include: {
-          company: { include: { imageFile: true } },
+          accountBook: { include: { imageFile: true } },
         },
       },
     },
@@ -173,21 +173,21 @@ export async function updateTodo(data: {
   });
 
   if (data.accountBookId) {
-    const existing = await prisma.userTodoCompany.findFirst({
+    const existing = await prisma.userTodoAccountBook.findFirst({
       where: { todoId: data.id, userId: data.userId },
     });
 
     if (existing) {
-      await prisma.userTodoCompany.update({
+      await prisma.userTodoAccountBook.update({
         where: { id: existing.id },
-        data: { companyId: data.accountBookId, updatedAt: now },
+        data: { accountBookId: data.accountBookId, updatedAt: now },
       });
     } else {
-      await prisma.userTodoCompany.create({
+      await prisma.userTodoAccountBook.create({
         data: {
           todoId: data.id,
           userId: data.userId,
-          companyId: data.accountBookId,
+          accountBookId: data.accountBookId,
           createdAt: now,
           updatedAt: now,
         },
@@ -209,9 +209,9 @@ export async function deleteTodo(id: number) {
       deletedAt: now,
     },
     include: {
-      userTodoCompanies: {
+      userTodoAccountBooks: {
         include: {
-          company: { include: { imageFile: true } },
+          accountBook: { include: { imageFile: true } },
         },
       },
     },

@@ -13,7 +13,7 @@ export const SESSION_DEVELOPER: ISessionData = {
   userAgent: DefaultValue.USER_AGENT,
   ipAddress: DefaultValue.IP,
   userId: 10000000,
-  companyId: 10000000, // Info: (20250408 - Liz) 需要將已連結帳本的所屬 team data 加入至 teams (直接修改 id 比較快)，原因是後端會驗證 user 是否有此帳本權限， user 在團隊裡=有帳本權限=可以連結帳本
+  accountBookId: 10000000, // Info: (20250408 - Liz) 需要將已連結帳本的所屬 team data 加入至 teams (直接修改 id 比較快)，原因是後端會驗證 user 是否有此帳本權限， user 在團隊裡=有帳本權限=可以連結帳本
   roleId: 10000000,
   teams: [
     {
@@ -25,11 +25,15 @@ export const SESSION_DEVELOPER: ISessionData = {
       role: TeamRole.ADMIN,
     },
     {
-      id: 2,
+      id: 6,
       role: TeamRole.OWNER,
     },
     {
       id: 10000000, // Info: (20250602 - Liz) 新的 team id 格式
+      role: TeamRole.OWNER,
+    },
+    {
+      id: 83,
       role: TeamRole.OWNER,
     },
   ],

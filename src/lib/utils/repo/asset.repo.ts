@@ -46,7 +46,7 @@ export async function createAssetWithVouchers(
   // Info: (20241204 - Luphia) Create the Asset
   const newAsset = {
     createdUserId: userId,
-    companyId: assetData.accountBookId,
+    accountBookId: assetData.accountBookId,
     name: assetData.name,
     type: assetData.type,
     number: assetNumber,
@@ -71,10 +71,10 @@ export async function createAssetWithVouchers(
   // ToDo: (20241204 - Luphia) Create the future Vouchers and Asset mapping
   // lib/utils/asset.ts
 
-  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  // Info: (20250425 - Shirley) 將 accountBookId 轉換為 accountBookId
   const assetWithAccountBookId = {
     ...asset,
-    accountBookId: asset.companyId,
+    accountBookId: asset.accountBookId,
   };
 
   return assetWithAccountBookId;
@@ -112,7 +112,7 @@ export async function createManyAssets(
   for (let i = 0; i < amount; i += 1) {
     const newAsset = {
       createdUserId: userId,
-      companyId: assetData.accountBookId,
+      accountBookId: assetData.accountBookId,
       name: assetData.name,
       type: assetData.type,
       number: assetNumbers[i],
@@ -139,7 +139,7 @@ export async function createManyAssets(
   const createdAssets = await prisma.asset.findMany({
     where: {
       AND: [
-        { companyId: assetData.accountBookId },
+        { accountBookId: assetData.accountBookId },
         { createdAt: timestampNow },
         // Info: (20241205 - Shirley) 在 Jest extension 自動執行測試，會在同一秒根據多個測試建立資產，因此需要加上這個條件
         { number: { startsWith: assetData.number || '' } },
@@ -152,7 +152,7 @@ export async function createManyAssets(
       id: true,
       name: true,
       number: true,
-      companyId: true,
+      accountBookId: true,
       status: true,
       createdAt: true,
       updatedAt: true,
@@ -164,10 +164,10 @@ export async function createManyAssets(
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  // Info: (20250425 - Shirley) 將 accountBookId 轉換為 accountBookId
   const assetsWithAccountBookId = createdAssets.map((asset) => ({
     ...asset,
-    accountBookId: asset.companyId,
+    accountBookId: asset.accountBookId,
   }));
 
   return assetsWithAccountBookId;
@@ -179,13 +179,13 @@ export async function createManyAssets(
  * 2. 資產的建立時間在最近24小時內
  * @param assetId 資產ID
  */
-export async function getLegitAssetById(assetId: number, companyId: number) {
+export async function getLegitAssetById(assetId: number, accountBookId: number) {
   const oneDayAgo = getTimestampNow() - 60 * 60 * 24;
 
   const asset = await prisma.asset.findFirst({
     where: {
       id: assetId,
-      companyId,
+      accountBookId,
       deletedAt: null,
       OR: [
         { assetVouchers: { some: {} } }, // Info: (20241206 - Shirley) 檢查是否有關聯的 voucher
@@ -257,11 +257,11 @@ export async function deleteManyAssets(assetIds: number[]) {
 
 /**
  * Info: (20241206 - Shirley) 獲取所有具有 voucher 的資產列表
- * @param companyId 公司ID
+ * @param accountBookId 公司ID
  * @returns 資產列表
  */
 export async function listAssetsByCompanyId(
-  companyId: number,
+  accountBookId: number,
   options: {
     sortOption?: { sortBy: SortBy; sortOrder: SortOrder }[];
     filterCondition?: Prisma.AssetWhereInput;
@@ -281,7 +281,7 @@ export async function listAssetsByCompanyId(
   };
 
   const where: Prisma.AssetWhereInput = {
-    companyId,
+    accountBookId,
     deletedAt: null,
     assetVouchers: { some: {} },
     ...cleanedFilterCondition,
@@ -318,7 +318,7 @@ export async function listAssetsByCompanyId(
       depreciationMethod: true,
       note: true,
       deletedAt: true,
-      companyId: true,
+      accountBookId: true,
       createdUserId: true,
       assetVouchers: true,
       _count: {
@@ -329,10 +329,10 @@ export async function listAssetsByCompanyId(
     },
   });
 
-  // Info: (20250425 - Shirley) 將 companyId 轉換為 accountBookId
+  // Info: (20250425 - Shirley) 將 accountBookId 轉換為 accountBookId
   const assetsWithAccountBookId = assets.map((asset) => ({
     ...asset,
-    accountBookId: asset.companyId,
+    accountBookId: asset.accountBookId,
   }));
 
   return assetsWithAccountBookId;
@@ -340,13 +340,13 @@ export async function listAssetsByCompanyId(
 
 /**
  * Info: (20241210 - Shirley) 更新資產
- * @param companyId 公司ID
+ * @param accountBookId 公司ID
  * @param assetId 資產ID
  * @param assetData 可以更新的資產欄位
  * @returns 更新後的資產
  */
 export async function updateAsset(
-  companyId: number,
+  accountBookId: number,
   assetId: number,
   assetData: IAssetPutRepoInput
 ) {
@@ -365,7 +365,7 @@ export async function updateAsset(
   };
 
   const updatedAsset = await prisma.asset.update({
-    where: { id: assetId, companyId, deletedAt: null },
+    where: { id: assetId, accountBookId, deletedAt: null },
     data: dataForUpdate,
   });
   return updatedAsset;

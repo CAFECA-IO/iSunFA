@@ -135,7 +135,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   try {
     const typeFilter = getTypeFilter(type);
     const paginationVouchers = await getUtils.getVoucherListFromPrisma({
-      companyId: accountBookId,
+      accountBookId,
       page,
       pageSize,
       startDate,
@@ -297,7 +297,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
     const voucher = initVoucherEntity({
       issuerId: issuer.id,
       counterPartyId: counterPartyEntity?.id || null,
-      companyId: company.id,
+      accountBookId: company.id,
       type: voucherInfo.type,
       status: JOURNAL_EVENT.UPLOADED,
       editable: true,

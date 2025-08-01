@@ -76,7 +76,7 @@ export enum RepresentativeIDType {
   ID_CARD = 'ID_CARD',
   DRIVER_LICENSE = 'DRIVER_LICENSE',
 }
-
+// LEGAL_COMPANY_NAME
 export enum BasicInfoKeys {
   LEGAL_COMPANY_NAME = 'legalName',
   COUNTRY = 'country',

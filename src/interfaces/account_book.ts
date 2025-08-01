@@ -187,6 +187,11 @@ export interface IUpdateAccountBookReqBody {
   accountingCurrency?: string;
 }
 
+export interface IAccountBookTaxIdAndName {
+  taxId: string;
+  name: string;
+}
+
 export interface ICompanyTaxIdAndName {
   taxId: string;
   name: string;
@@ -194,11 +199,11 @@ export interface ICompanyTaxIdAndName {
 
 /**
  * Info: (20241023 - Murky)
- * @description Company entity interface specific for backend
- * @note use parsePrismaCompanyToCompanyEntity to convert Prisma.Company to ICompanyEntity
- * @note use initCompanyEntity to create a new ICompanyEntity from scratch
+ * @description AccountBook entity interface specific for backend
+ * @note use parsePrismaAccountBookToAccountBookEntity to convert prisma.accountBook to IAccountBookEntity
+ * @note use initAccountBookEntity to create a new IAccountBookEntity from scratch
  */
-export interface ICompanyEntity {
+export interface IAccountBookWithoutTeamEntity {
   /**
    * Info: (20241023 - Murky)
    * @description id in database, 0 if not yet saved in database
@@ -207,7 +212,7 @@ export interface ICompanyEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description the name of company
+   * @description the name of account book
    */
   name: string;
 
@@ -222,7 +227,7 @@ export interface ICompanyEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description when this company is formed in real life
+   * @description when this account book is formed in real life
    * @note need to be in seconds
    */
   startDate: number;
