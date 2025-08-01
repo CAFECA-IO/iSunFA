@@ -49,7 +49,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   const {
-    accountBookId: companyId,
+    accountBookId,
     includeDefaultAccount,
     liquidity,
     type,
@@ -65,14 +65,14 @@ const handleGetRequest = async (req: NextApiRequest) => {
   } = query;
 
   loggerBack.info(
-    `User: ${userId} Getting account list for companyId: ${companyId} with query: ${JSON.stringify(query)}`
+    `User: ${userId} Getting account list for companyId: ${accountBookId} with query: ${JSON.stringify(query)}`
   );
 
   // Info: (20250505 - Shirley) 權限檢查：獲取用戶在帳本所屬團隊中的角色並檢查權限
   // const { teams } = session;
 
   // Info: (20250505 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const company = await getCompanyById(companyId);
+  const company = await getCompanyById(accountBookId);
   if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -84,7 +84,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   await assertUserCanByAccountBook({
     userId,
-    accountBookId: companyId,
+    accountBookId,
     action: TeamPermissionAction.ACCOUNTING_SETTING_GET,
   });
   /** Info: (20250715 - Tzuhan) 這裡的 assertUserCanByAccountBook 會檢查 userId 是否有權限訪問該帳本
@@ -105,7 +105,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
   // Info: (20250505 - Shirley) 獲取帳號列表
   const accountRetriever = AccountRetrieverFactory.createRetriever({
-    companyId,
+    accountBookId,
     includeDefaultAccount,
     liquidity,
     type,
