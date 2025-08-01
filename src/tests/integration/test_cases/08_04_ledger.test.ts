@@ -89,9 +89,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         })
         .set('Cookie', cookies.join('; '));
 
-      // eslint-disable-next-line no-console
-      console.log('LedgerTestResponseBody', response.body);
-
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.payload).toBeDefined();

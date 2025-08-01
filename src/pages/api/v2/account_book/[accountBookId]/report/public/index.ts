@@ -18,8 +18,7 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
   const { userId } = session;
 
   const { accountBookId } = query;
-  // eslint-disable-next-line no-console
-  console.log('sessionInAccountBookReportPublic:', session, 'accountBookId:', accountBookId);
+
   const { projectId, type, reportLanguage, from, to, reportType } = body;
   const { startDateInSecond, endDateInSecond } = postUtils.formatStartAndEndDateFromQuery({
     reportSheetType: type,
@@ -42,9 +41,6 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
     });
     payload = thisPeriodReportId;
     statusMessage = STATUS_MESSAGE.CREATED;
-
-    // eslint-disable-next-line no-console
-    console.log('thisPeriodReportId:', thisPeriodReportId);
   } catch (error) {
     const errorInfo = {
       userId,

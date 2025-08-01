@@ -180,9 +180,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
-      // eslint-disable-next-line no-console
-      console.log('cookiesInIncomeStatement:', cookies);
-
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const startDate = currentTimestamp - 86400 * 365; // Info: (20250721 - Shirley) 1 year ago
       const endDate = currentTimestamp + 86400 * 30; // Info: (20250721 - Shirley) 30 days from now
@@ -201,9 +198,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(response.body.success).toBe(true);
 
       const incomeStatementData = response.body.payload;
-
-      // eslint-disable-next-line no-console
-      console.log('incomeStatementData:', incomeStatementData);
 
       // Info: (20250718 - Shirley) Detailed income statement validation
       expect(incomeStatementData.reportType).toBe(ReportSheetType.INCOME_STATEMENT);

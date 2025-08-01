@@ -112,9 +112,6 @@ export const publicGenerateReportUtils = {
       ReportStatusType.GENERATED
     );
 
-    // eslint-disable-next-line no-console
-    console.log('content:', content, 'name:', name, 'reportCreated:', reportCreated);
-
     return reportCreated?.id || null;
   },
 };

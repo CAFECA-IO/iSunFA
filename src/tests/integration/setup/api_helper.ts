@@ -132,8 +132,6 @@ export class APITestHelper {
     if (currentSession.length > 0) {
       request = request.set('Cookie', currentSession.join('; '));
     }
-    // eslint-disable-next-line no-console
-    console.log('getStatusInfoInAPIHelper:', request);
     return request.expect(200) as Promise<TestResponse>;
   }
 
