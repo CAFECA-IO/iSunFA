@@ -65,11 +65,17 @@ export function uint8ArrayToBuffer(uint8Array: Uint8Array): Buffer {
   它足夠大，可以抵抗某些攻擊，同時又足夠小，在加密和解密過程中計算效率高。
 */
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
+  const publicExponentArray = new Uint8Array(FERMAT_PRIME_NUMBER_IN_HEX);
+  const safePublicExponent =
+    publicExponentArray.buffer instanceof SharedArrayBuffer
+      ? new Uint8Array(publicExponentArray)
+      : publicExponentArray;
+
   return crypto.subtle.generateKey(
     {
       name: ASYMMETRIC_CRYPTO_ALGORITHM,
       modulusLength: ASYMMETRIC_KEY_LENGTH,
-      publicExponent: new Uint8Array(FERMAT_PRIME_NUMBER_IN_HEX),
+      publicExponent: safePublicExponent,
       hash: HASH_ALGORITHM,
     },
     true,
@@ -113,15 +119,20 @@ export async function importPrivateKey(keyData: JsonWebKey): Promise<CryptoKey> 
 
 export async function encryptData(data: string, publicKey: CryptoKey): Promise<Uint8Array> {
   const encoder = new TextEncoder();
-  return new Uint8Array(
-    await crypto.subtle.encrypt(
-      {
-        name: ASYMMETRIC_CRYPTO_ALGORITHM,
-      },
-      publicKey,
-      encoder.encode(data)
-    )
+  const encryptedBuffer = await crypto.subtle.encrypt(
+    {
+      name: ASYMMETRIC_CRYPTO_ALGORITHM,
+    },
+    publicKey,
+    encoder.encode(data)
   );
+
+  const safeBuffer =
+    encryptedBuffer instanceof SharedArrayBuffer
+      ? (encryptedBuffer.slice(0) as ArrayBuffer)
+      : encryptedBuffer;
+
+  return new Uint8Array(safeBuffer);
 }
 
 export async function decryptData(
@@ -155,8 +166,10 @@ export async function encrypt(data: string, publicKey: CryptoKey): Promise<strin
 }
 
 export async function decrypt(encryptedData: string, privateKey: CryptoKey): Promise<string> {
-  const data = new Uint8Array(JSON.parse(encryptedData));
-  return decryptData(data, privateKey);
+  const dataArray = JSON.parse(encryptedData);
+  const data = new Uint8Array(dataArray);
+  const safeData = data.buffer instanceof SharedArrayBuffer ? new Uint8Array(data) : data;
+  return decryptData(safeData, privateKey);
 }
 
 // Info: 加密文件 (20240822 - Shirley)
@@ -180,8 +193,12 @@ export const encryptFile = async (
   );
 
   const exportedSymmetricKey = await crypto.subtle.exportKey(SYMMETRIC_KEY_FORMAT, symmetricKey);
+  const safeExportedKey =
+    exportedSymmetricKey instanceof SharedArrayBuffer
+      ? (exportedSymmetricKey.slice(0) as ArrayBuffer)
+      : exportedSymmetricKey;
   const encryptedSymmetricKey = await encrypt(
-    JSON.stringify(Array.from(new Uint8Array(exportedSymmetricKey))),
+    JSON.stringify(Array.from(new Uint8Array(safeExportedKey))),
     publicKey
   );
 
@@ -394,8 +411,14 @@ export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
 
 export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
   const arrayBuffer = await file.arrayBuffer();
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
+  const ivArray = new Uint8Array(IV_LENGTH);
+  const iv = crypto.getRandomValues(ivArray);
+  const safeIv = iv.buffer instanceof SharedArrayBuffer ? new Uint8Array(iv) : iv;
+  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+    arrayBuffer,
+    publicKey,
+    safeIv
+  );
   const encryptedFile = new File([encryptedContent], file.name, {
     type: file.type,
   });
@@ -409,8 +432,14 @@ export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey)
 
 export const encryptBlobWithPublicKey = async (file: Blob, publicKey: CryptoKey) => {
   const arrayBuffer = await file.arrayBuffer();
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
-  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
+  const ivArray = new Uint8Array(IV_LENGTH);
+  const iv = crypto.getRandomValues(ivArray);
+  const safeIv = iv.buffer instanceof SharedArrayBuffer ? new Uint8Array(iv) : iv;
+  const { encryptedContent, encryptedSymmetricKey } = await encryptFile(
+    arrayBuffer,
+    publicKey,
+    safeIv
+  );
 
   return {
     encryptedFile: new Blob([encryptedContent]), // Info: (20250703 - Tzuhan) 回傳也是 Blob（或 Buffer）
