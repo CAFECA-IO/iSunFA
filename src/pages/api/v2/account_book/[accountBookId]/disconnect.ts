@@ -75,7 +75,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       return { statusMessage, payload, session };
     }
 
-    await setSession(session, { companyId: undefined });
+    await setSession(session, { accountBookId: undefined });
 
     // Info: (20250418 - Shirley) 驗證斷開連接是否成功
     const newSession = await getSession(req);

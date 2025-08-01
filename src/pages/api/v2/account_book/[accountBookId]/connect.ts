@@ -79,7 +79,7 @@ const handleGetRequest: IHandleRequest<
     tag: company.tag as WORK_TAG,
   };
 
-  await setSession(session, { companyId: accountBookId });
+  await setSession(session, { accountBookId });
 
   return { statusMessage: STATUS_MESSAGE.SUCCESS_GET, payload: result };
 };

@@ -17,7 +17,7 @@ import { bufferToBlob } from '@/lib/utils/parse_image_form';
 
 // ToDo: (20241128 - Luphia) Check this API carefully
 const handleCertificateRequest = async (
-  companyId: number,
+  accountBookId: number,
   key: AI_TYPE,
   targetIdList: number[]
 ) => {
@@ -34,7 +34,7 @@ const handleCertificateRequest = async (
       const decryptFileBuffer = await decryptImageFile({
         imageBuffer: fileBuffer,
         file,
-        companyId,
+        companyId: accountBookId,
       });
       const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
       return decryptFileBlob;
@@ -63,7 +63,11 @@ const handleCertificateRequest = async (
   return { statusMessage, payload };
 };
 
-const handleVoucherRequest = async (companyId: number, key: AI_TYPE, targetIdList: number[]) => {
+const handleVoucherRequest = async (
+  accountBookId: number,
+  key: AI_TYPE,
+  targetIdList: number[]
+) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IAskResult | null = null;
 
@@ -77,7 +81,7 @@ const handleVoucherRequest = async (companyId: number, key: AI_TYPE, targetIdLis
       const decryptFileBuffer = await decryptImageFile({
         imageBuffer: fileBuffer,
         file,
-        companyId,
+        companyId: accountBookId,
       });
       const decryptFileBlob = bufferToBlob(decryptFileBuffer, file.mimeType);
       return decryptFileBlob;
@@ -127,10 +131,10 @@ export const handlePostRequest: IHandleRequest<APIName.ASK_AI_V2, IAskResult | n
 
   const { reason } = query;
   const { targetIdList } = body;
-  const { accountBookId: companyId } = session;
+  const { accountBookId } = session;
 
   const postHandler = postHandlers[reason];
-  ({ statusMessage, payload } = await postHandler(companyId, reason, targetIdList));
+  ({ statusMessage, payload } = await postHandler(accountBookId, reason, targetIdList));
 
   return { statusMessage, payload };
 };
