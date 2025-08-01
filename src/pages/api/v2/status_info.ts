@@ -37,7 +37,8 @@ const handleGetRequest: IHandleRequest<
   };
 
   const { userId, accountBookId, roleId, teams } = session; // TODO: (20250324 - Shirley) 改用 teams 來判斷用戶在團隊裡面的權限。
-
+  // eslint-disable-next-line no-console
+  console.log('sessionInStatusInfo:', session);
   if (userId > 0) {
     const userFromDB = await getUserById(userId);
     if (userFromDB) {

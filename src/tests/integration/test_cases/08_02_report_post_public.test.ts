@@ -159,8 +159,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
-    console.log('balanceSheetPublicResponse:', response.body);
-    // expect(typeof response.body.payload).toBe('number');
+    expect(typeof response.body.payload).toBe('number');
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,

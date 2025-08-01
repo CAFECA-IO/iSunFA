@@ -11,11 +11,15 @@ import { publicGenerateReportUtils as postUtils } from '@/pages/api/v2/account_b
 type PostApiResponse = number | null;
 
 const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse> = async ({
+  query,
   body,
   session,
 }) => {
-  // FIXME: 在 test case 裡的 session 改用 accountBookId
-  const { companyId: accountBookId, userId } = session;
+  const { userId } = session;
+
+  const { accountBookId } = query;
+  // eslint-disable-next-line no-console
+  console.log('sessionInAccountBookReportPublic:', session, 'accountBookId:', accountBookId);
   const { projectId, type, reportLanguage, from, to, reportType } = body;
   const { startDateInSecond, endDateInSecond } = postUtils.formatStartAndEndDateFromQuery({
     reportSheetType: type,
