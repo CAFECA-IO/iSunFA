@@ -53,7 +53,7 @@ describe('角色選擇功能測試', () => {
       ipAddress: '127.0.0.1',
       userAgent: 'Test Agent',
       userId: 1,
-      companyId: 0,
+      accountBookId: 0,
       roleId: 0,
       actionTime: 1640995200,
       expires: 1640995200 + 3600,

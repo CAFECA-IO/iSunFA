@@ -69,7 +69,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     helper = sharedContext.helper;
     userId = sharedContext.userId;
-    teamId = sharedContext.teamId;
+    teamId = sharedContext.teamId!;
     cookies = sharedContext.cookies;
 
     // Info: (20250725 - Shirley) Create account book for report testing
@@ -194,7 +194,6 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
-    console.log('incomeStatementPublicResponse:', response.body);
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,
@@ -229,7 +228,6 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.payload).toBeDefined();
-    console.log('cashFlowStatementPublicResponse:', response.body);
 
     const { isOutputDataValid, outputData } = validateOutputData(
       APIName.REPORT_GENERATE,

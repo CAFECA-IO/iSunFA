@@ -146,7 +146,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     const incompleteSummary = summarizeIncompleteCertificates(certificates);
 
     const totalInvoicePrice = await getListUtils.getSumOfTotalInvoicePrice({
-      companyId: accountBookId,
+      accountBookId,
       startDate,
       endDate,
       searchQuery,

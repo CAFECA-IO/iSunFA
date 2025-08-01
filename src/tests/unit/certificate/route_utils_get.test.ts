@@ -560,7 +560,7 @@ describe('Certificate API Get List Utils 測試', () => {
     it('應該正確處理沒有縮圖的檔案', () => {
       const mockCertificateEntityWithoutThumbnail = {
         id: 1,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         aiResultId: 'test-ai-result',
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
@@ -591,7 +591,7 @@ describe('Certificate API Get List Utils 測試', () => {
           deletedAt: null,
           counterParty: {
             id: 1,
-            companyId: mockCompanyId,
+            accountBookId: mockCompanyId,
             name: 'Test Counter Party',
             taxId: '12345678',
             type: 'COMPANY',

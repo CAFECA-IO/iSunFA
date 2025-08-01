@@ -21,8 +21,6 @@ import { parseSortOption } from '@/lib/utils/sort';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { SortOrder } from '@/constants/sort';
 import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import {
   checkSessionUser,

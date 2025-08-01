@@ -45,6 +45,7 @@ describe('account_book/[accountBookId]/v2/report/route_utils unit test', () => {
 
   describe('getMappingByReportType unit test', () => {
     const mockAccount: IAccountReadyForFrontend = {
+      accountId: 1,
       code: '4000',
       name: '營業收入合計',
       curPeriodAmount: 1000,
@@ -71,6 +72,7 @@ describe('account_book/[accountBookId]/v2/report/route_utils unit test', () => {
   describe('transformAccountMapToFilterSequence', () => {
     const mockAccounts: IAccountReadyForFrontend[] = [
       {
+        accountId: 1,
         code: '4000',
         name: '營業收入合計',
         curPeriodAmount: 1000,
@@ -85,6 +87,7 @@ describe('account_book/[accountBookId]/v2/report/route_utils unit test', () => {
         children: [],
       },
       {
+        accountId: 2,
         code: '2128',
         name: '按攤銷後成本衡量之金融負債－流動',
         curPeriodAmount: 1000,

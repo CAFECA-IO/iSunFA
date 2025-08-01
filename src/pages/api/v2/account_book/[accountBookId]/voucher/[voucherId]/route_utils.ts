@@ -705,7 +705,7 @@ export const voucherAPIDeleteUtils = {
     const voucher = initVoucherEntity({
       issuerId: voucherBeenDeleted.issuerId,
       counterPartyId: voucherBeenDeleted.counterPartyId,
-      companyId: voucherBeenDeleted.companyId,
+      accountBookId: voucherBeenDeleted.accountBookId,
       status: JOURNAL_EVENT.UPLOADED,
       editable: false,
       no: voucherBeenDeleted.no,
