@@ -170,8 +170,11 @@ export const encryptFile = async (
     true,
     [CryptoOperationMode.ENCRYPT, CryptoOperationMode.DECRYPT]
   );
+
+  const safeIv = iv.buffer instanceof SharedArrayBuffer ? new Uint8Array(iv) : iv;
+
   const encryptedContent = await crypto.subtle.encrypt(
-    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv: safeIv },
     symmetricKey,
     fileArrayBuffer
   );
@@ -202,7 +205,11 @@ export const decryptFile = async (
     console.error(error);
     throw new Error('Failed to decrypt symmetric key');
   }
-  const decryptedSymmetricKey = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON)).buffer;
+  const decryptedSymmetricKeyArray = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON));
+  const decryptedSymmetricKey =
+    decryptedSymmetricKeyArray.buffer instanceof SharedArrayBuffer
+      ? decryptedSymmetricKeyArray.slice().buffer
+      : decryptedSymmetricKeyArray.buffer;
 
   let importedSymmetricKey: CryptoKey;
 
@@ -221,10 +228,12 @@ export const decryptFile = async (
     throw new Error('Failed to import symmetric key');
   }
 
+  const safeIv = iv.buffer instanceof SharedArrayBuffer ? new Uint8Array(iv) : iv;
+
   let decryptedContent: ArrayBuffer;
   try {
     decryptedContent = await crypto.subtle.decrypt(
-      { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
+      { name: SYMMETRIC_CRYPTO_ALGORITHM, iv: safeIv },
       importedSymmetricKey,
       encryptedContent
     );
