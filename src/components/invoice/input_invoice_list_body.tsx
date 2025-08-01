@@ -437,12 +437,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           ? updateCertificateAPI({
               params: {
                 accountBookId,
-                certificateId: certificate.id,
+                invoiceId: certificate.id,
               },
               body: certificate,
             })
           : createCertificateAPI({
-              params: { accountBookId, certificateId: certificate.id },
+              params: { accountBookId, invoiceId: certificate.id },
               body: certificate,
             });
 
