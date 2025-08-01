@@ -86,7 +86,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   const baseSalaryPerHour = baseSalary / (daysInMonth * 8);
 
   // Info: (20250727 - Luphia) 計算在職小時數
-  const workedHours = workedDays * 8;
+  const workedHours = workedDays > daysInMonth ? daysInMonth * 8 : workedDays * 8;
 
   // Info: (20250727 - Luphia) 總請假時數
   const totalLeaveHours = sickLeaveHours * 0.5 + personalLeaveHours;
@@ -94,20 +94,20 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算加班費，無條件進入整數位
   const overTimePayTaxable = Math.ceil(
     (overTimeHoursTaxable100 +
-      overTimeHoursTaxable133 * 1.33 +
-      overTimeHoursTaxable166 * 1.66 +
+      overTimeHoursTaxable133 * 1.34 +
+      overTimeHoursTaxable166 * 1.67 +
       overTimeHoursTaxable200 * 2 +
-      overTimeHoursTaxable233 * 2.33 +
-      overTimeHoursTaxable266 * 2.66) *
+      overTimeHoursTaxable233 * 2.34 +
+      overTimeHoursTaxable266 * 2.67) *
       baseSalaryPerHour
   );
   const overTimePayTaxFree = Math.ceil(
     (overTimeHoursTaxFree100 +
-      overTimeHoursTaxFree133 * 1.33 +
-      overTimeHoursTaxFree166 * 1.66 +
+      overTimeHoursTaxFree133 * 1.34 +
+      overTimeHoursTaxFree166 * 1.67 +
       overTimeHoursTaxFree200 * 2 +
-      overTimeHoursTaxFree233 * 2.33 +
-      overTimeHoursTaxFree266 * 2.66) *
+      overTimeHoursTaxFree233 * 2.34 +
+      overTimeHoursTaxFree266 * 2.67) *
       baseSalaryPerHour
   );
 
