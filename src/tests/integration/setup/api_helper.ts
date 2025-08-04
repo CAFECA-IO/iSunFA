@@ -784,7 +784,7 @@ export class APITestHelper {
     const pubKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
     const filePath = path.resolve(process.cwd(), this.TEST_FILES_DIR, `${filename}.png`);
     const fileBuffer = fs.readFileSync(filePath);
-    // Convert Buffer to Uint8Array for type compatibility
+    // Info: (20250804 - Shirley) Convert Buffer to Uint8Array for type compatibility
     const uint8Array = new Uint8Array(fileBuffer);
     const file = new File([uint8Array], 'mock_invoice.png', { type: 'image/png' });
 
