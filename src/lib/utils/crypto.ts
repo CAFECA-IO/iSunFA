@@ -137,7 +137,6 @@ export async function decryptData(
     privateKey,
     encryptedData
   );
-
   return decoder.decode(decryptedData);
 }
 
