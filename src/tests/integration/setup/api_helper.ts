@@ -784,7 +784,7 @@ export class APITestHelper {
     const pubKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
     const filePath = path.resolve(process.cwd(), this.TEST_FILES_DIR, `${filename}.png`);
     const fileBuffer = fs.readFileSync(filePath);
-    const file = new File([fileBuffer], 'mock_invoice.png', { type: 'image/png' });
+    const file = new File([fileBuffer as BlobPart], 'mock_invoice.png', { type: 'image/png' });
 
     const enc = await cryptoUtils.encryptFileWithPublicKey(file, pubKey!);
     const tempPath = path.resolve(

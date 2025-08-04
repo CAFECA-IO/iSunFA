@@ -76,7 +76,7 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
 }
 
 export function bufferToBlob(buffer: Buffer, type?: string): Blob {
-  return new Blob([buffer], { type });
+  return new Blob([buffer as BlobPart], { type });
 }
 
 /**

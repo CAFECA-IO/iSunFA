@@ -186,7 +186,7 @@ export const encryptFile = async (
   );
 
   const encryptedContent = await crypto.subtle.encrypt(
-    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
+    { name: SYMMETRIC_CRYPTO_ALGORITHM, iv: iv as BufferSource },
     symmetricKey,
     fileArrayBuffer
   );
@@ -238,7 +238,7 @@ export const decryptFile = async (
   // 3. 解密檔案內容
   try {
     return await crypto.subtle.decrypt(
-      { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
+      { name: SYMMETRIC_CRYPTO_ALGORITHM, iv: iv as BufferSource },
       importedSymmetricKey,
       encryptedContent
     );
