@@ -28,6 +28,7 @@ const SYMMETRIC_KEY_LENGTH = 256;
 const FERMAT_PRIME_NUMBER_IN_HEX = [0x01, 0x00, 0x01];
 const ASYMMETRIC_KEY_FORMAT = 'jwk';
 const SYMMETRIC_KEY_FORMAT = 'raw';
+
 enum CryptoOperationMode {
   ENCRYPT = 'encrypt',
   DECRYPT = 'decrypt',
@@ -52,18 +53,31 @@ export function bufferToUint8Array(buffer: Buffer): Uint8Array {
  * @returns Buffer - The Buffer converted from Uint8Array
  */
 export function uint8ArrayToBuffer(uint8Array: Uint8Array): Buffer {
-  const buffer = Buffer.from(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
+  return Buffer.from(uint8Array.buffer, uint8Array.byteOffset, uint8Array.byteLength);
+}
 
+export function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
+  const arrayBuffer = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    view[i] = buffer[i];
+  }
+  return arrayBuffer;
+}
+
+export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
+  const buffer = Buffer.alloc(arrayBuffer.byteLength);
+  const view = new Uint8Array(arrayBuffer);
+  for (let i = 0; i < buffer.length; i += 1) {
+    buffer[i] = view[i];
+  }
   return buffer;
 }
 
-/*
-  Info: [0x01, 0x00, 0x01]，對應到十進制的 65537 (20240822 - Shirley)
-  使用 65537 作為 publicExponent 是一種常見且安全的做法，因為：
-  它是一個費馬素數（Fermat prime），形式為 2^(2^n) + 1，在這個例子中，n = 4，2^16+1=65537。
-  它是一個奇數，可以確保在模乘運算中不會有因數 2。
-  它足夠大，可以抵抗某些攻擊，同時又足夠小，在加密和解密過程中計算效率高。
-*/
+/* -------------------------------------------------------------------------- */
+/*                                Key Helpers                                 */
+/* -------------------------------------------------------------------------- */
+
 export async function generateKeyPair(): Promise<CryptoKeyPair> {
   return crypto.subtle.generateKey(
     {
@@ -111,29 +125,35 @@ export async function importPrivateKey(keyData: JsonWebKey): Promise<CryptoKey> 
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*                          Primitive (string) helpers                         */
+/* -------------------------------------------------------------------------- */
+
 export async function encryptData(data: string, publicKey: CryptoKey): Promise<Uint8Array> {
   const encoder = new TextEncoder();
   return new Uint8Array(
     await crypto.subtle.encrypt(
-      {
-        name: ASYMMETRIC_CRYPTO_ALGORITHM,
-      },
+      { name: ASYMMETRIC_CRYPTO_ALGORITHM },
       publicKey,
       encoder.encode(data)
     )
   );
 }
 
+/**
+ * Decrypt RSA‑OAEP encrypted Uint8Array / ArrayBufferLike.
+ *
+ * Note: The parameter was widened from `Uint8Array` to `BufferSource` to
+ *        accommodate the new @types/webcrypto definition where
+ *        `Uint8Array` is now `Uint8Array<ArrayBufferLike>`.
+ */
 export async function decryptData(
-  encryptedData: Uint8Array,
+  encryptedData: BufferSource,
   privateKey: CryptoKey
 ): Promise<string> {
   const decoder = new TextDecoder();
-
   const decryptedData = await crypto.subtle.decrypt(
-    {
-      name: ASYMMETRIC_CRYPTO_ALGORITHM,
-    },
+    { name: ASYMMETRIC_CRYPTO_ALGORITHM },
     privateKey,
     encryptedData
   );
@@ -150,7 +170,10 @@ export async function decrypt(encryptedData: string, privateKey: CryptoKey): Pro
   return decryptData(data, privateKey);
 }
 
-// Info: 加密文件 (20240822 - Shirley)
+/* -------------------------------------------------------------------------- */
+/*                            Hybrid file helpers                              */
+/* -------------------------------------------------------------------------- */
+
 export const encryptFile = async (
   fileArrayBuffer: ArrayBuffer,
   publicKey: CryptoKey,
@@ -161,6 +184,7 @@ export const encryptFile = async (
     true,
     [CryptoOperationMode.ENCRYPT, CryptoOperationMode.DECRYPT]
   );
+
   const encryptedContent = await crypto.subtle.encrypt(
     { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
     symmetricKey,
@@ -176,27 +200,27 @@ export const encryptFile = async (
   return { encryptedContent, encryptedSymmetricKey };
 };
 
-// Info: 解密文件 (20240822 - Shirley)
 export const decryptFile = async (
   encryptedContent: ArrayBuffer,
   encryptedSymmetricKey: string,
   privateKey: CryptoKey,
   iv: Uint8Array
 ): Promise<ArrayBuffer> => {
+  // 1. 解密對稱密鑰
   let decryptedSymmetricKeyJSON: string;
-
   try {
     decryptedSymmetricKeyJSON = await decrypt(encryptedSymmetricKey, privateKey);
   } catch (error) {
-    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
+    // 前端也需要使用，故不能用 logger；僅 console.error
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error('Failed to decrypt symmetric key');
   }
+
   const decryptedSymmetricKey = new Uint8Array(JSON.parse(decryptedSymmetricKeyJSON)).buffer;
 
+  // 2. 匯入對稱密鑰
   let importedSymmetricKey: CryptoKey;
-
   try {
     importedSymmetricKey = await crypto.subtle.importKey(
       SYMMETRIC_KEY_FORMAT,
@@ -206,39 +230,37 @@ export const decryptFile = async (
       [CryptoOperationMode.DECRYPT]
     );
   } catch (error) {
-    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error('Failed to import symmetric key');
   }
 
-  let decryptedContent: ArrayBuffer;
+  // 3. 解密檔案內容
   try {
-    decryptedContent = await crypto.subtle.decrypt(
+    return await crypto.subtle.decrypt(
       { name: SYMMETRIC_CRYPTO_ALGORITHM, iv },
       importedSymmetricKey,
       encryptedContent
     );
   } catch (error) {
-    // Deprecated: (20241225 - Murky) crypto.ts 前端也要用，所以不能用logger
     // eslint-disable-next-line no-console
     console.error(error);
     throw new Error('Failed to decrypt content');
   }
-
-  return decryptedContent;
 };
+
+/* -------------------------------------------------------------------------- */
+/*                       Split / Assemble private key helpers                 */
+/* -------------------------------------------------------------------------- */
 
 export function separatePrivateKey(privateKey: JsonWebKey) {
   const { d, p, q, dp, dq, qi, ...metadata } = privateKey;
 
   const separateField = (field: string | undefined) => {
-    const newField = field
+    return field
       ? sssSecret.base64Share(field, CRYPTO_KEY_TOTAL_AMOUNT, CRYPTO_KEY_PASS_THRESHOLD)
       : Array(CRYPTO_KEY_TOTAL_AMOUNT).fill(null);
-    return newField;
   };
-
   const dSeparated = separateField(d);
   const pSeparated = separateField(p);
   const qSeparated = separateField(q);
@@ -286,16 +308,12 @@ export function assemblePrivateKey(
   const dq = combineField(separatedPrivateKey.map((item) => item.dq));
   const qi = combineField(separatedPrivateKey.map((item) => item.qi));
 
-  return {
-    ...metadata,
-    d,
-    p,
-    q,
-    dp,
-    dq,
-    qi,
-  };
+  return { ...metadata, d, p, q, dp, dq, qi };
 }
+
+/* -------------------------------------------------------------------------- */
+/*                          Persist key by company helpers                     */
+/* -------------------------------------------------------------------------- */
 
 export async function storeKeyByCompany(companyId: number, keyPair: CryptoKeyPair) {
   const publicKey = await exportPublicKey(keyPair.publicKey);
@@ -303,90 +321,52 @@ export async function storeKeyByCompany(companyId: number, keyPair: CryptoKeyPai
 
   const { metadata, separatedPrivateKeys } = separatePrivateKey(privateKey);
 
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
+
+  // 使用非同步寫檔，但不 await，加快速度；失敗留給監控
   fs.writeFile(publicKeyPath, JSON.stringify(publicKey));
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   fs.writeFile(privateMetaPath, JSON.stringify(metadata));
 
   separatedPrivateKeys.forEach((separatedPrivateKey, index) => {
     const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${index + 1}`, `${companyId}.json`);
-    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
     fs.writeFile(privatePath, JSON.stringify(separatedPrivateKey));
   });
 }
 
 export async function getPublicKeyByCompany(companyId: number): Promise<CryptoKey | null> {
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const publicKeyPath = path.join(CRYPTO_PUBLIC_FOLDER_PATH, `${companyId}.json`);
-
-  let publicKey: CryptoKey | null = null;
-
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   const publicKeyJSON = await fs.readFile(publicKeyPath, 'utf-8');
-  publicKey = await importPublicKey(JSON.parse(publicKeyJSON));
-
-  return publicKey;
+  return importPublicKey(JSON.parse(publicKeyJSON));
 }
 
 export async function getPrivateKeyByCompany(companyId: number): Promise<CryptoKey | null> {
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
   const privateMetaPath = path.join(CRYPTO_PRIVATE_METADATA_FOLDER_PATH, `${companyId}.json`);
-  // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
   const metadata = JSON.parse(await fs.readFile(privateMetaPath, 'utf-8'));
 
   const separatedPrivateKeyJSONs = await Promise.all(
     Array.from({ length: CRYPTO_KEY_TOTAL_AMOUNT }, (_, i) => {
-      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰路徑)
       const privatePath = path.join(CRYPTO_PRIVATE_FOLDER_PATH, `${i + 1}`, `${companyId}.json`);
-      // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: 金鑰管理)
       return fs.readFile(privatePath, 'utf-8');
     })
   );
 
   const separatedPrivateKeys = separatedPrivateKeyJSONs.map((json) => JSON.parse(json));
   const privateKeyAssembled = assemblePrivateKey(separatedPrivateKeys, metadata);
-
-  let privateKey: CryptoKey | null = null;
-  privateKey = await importPrivateKey(privateKeyAssembled);
-
-  return privateKey;
+  return importPrivateKey(privateKeyAssembled);
 }
 
-export function bufferToArrayBuffer(buffer: Buffer): ArrayBuffer {
-  const arrayBuffer = new ArrayBuffer(buffer.length);
-  const view = new Uint8Array(arrayBuffer);
-  for (let i = 0; i < buffer.length; i += 1) {
-    view[i] = buffer[i];
-  }
-  return arrayBuffer;
-}
-
-export function arrayBufferToBuffer(arrayBuffer: ArrayBuffer): Buffer {
-  const buffer = Buffer.alloc(arrayBuffer.byteLength);
-  const view = new Uint8Array(arrayBuffer);
-  for (let i = 0; i < buffer.length; i += 1) {
-    buffer[i] = view[i];
-  }
-  return buffer;
-}
+/* -------------------------------------------------------------------------- */
+/*                     Browser friendly helper wrappers                        */
+/* -------------------------------------------------------------------------- */
 
 export const encryptFileWithPublicKey = async (file: File, publicKey: CryptoKey) => {
   const arrayBuffer = await file.arrayBuffer();
   const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
   const { encryptedContent, encryptedSymmetricKey } = await encryptFile(arrayBuffer, publicKey, iv);
-  const encryptedFile = new File([encryptedContent], file.name, {
-    type: file.type,
-  });
+  const encryptedFile = new File([encryptedContent], file.name, { type: file.type });
 
-  return {
-    encryptedFile,
-    iv,
-    encryptedSymmetricKey,
-  };
+  return { encryptedFile, iv, encryptedSymmetricKey };
 };
 
 export const encryptBlobWithPublicKey = async (file: Blob, publicKey: CryptoKey) => {
