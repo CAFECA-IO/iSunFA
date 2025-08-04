@@ -635,7 +635,8 @@ describe('Integration Test - Team Management Authentication', () => {
       if (inviteResponse.status === 403) {
         // Info: (20250709 - Shirley) Verify this is the expected team member limit error
         expect(inviteResponse.body.success).toBe(false);
-        expect(inviteResponse.body.code).toBe('403ISF0025'); // LIMIT_EXCEEDED_TEAM_MEMBER
+        // Info: (20250709 - Shirley) LIMIT_EXCEEDED_TEAM_MEMBER
+        expect(inviteResponse.body.code).toBe('403ISF0025');
         expect(inviteResponse.body.message).toContain('Limit exceeded team member');
 
         return; // Info: (20250709 - Shirley) End test early since we cannot proceed with member invitation
