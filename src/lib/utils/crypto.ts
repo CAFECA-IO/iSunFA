@@ -130,13 +130,13 @@ export async function decryptData(
 ): Promise<string> {
   const decoder = new TextDecoder();
 
-  const decryptedData = await crypto.subtle.decrypt(
+  const decryptedData = (await crypto.subtle.decrypt(
     {
       name: ASYMMETRIC_CRYPTO_ALGORITHM,
     },
     privateKey,
-    encryptedData
-  );
+    encryptedData as BufferSource
+  )) as ArrayBuffer;
   return decoder.decode(decryptedData);
 }
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useModalContext } from '@/contexts/modal_context';
-import { IoCloseOutline, IoArrowBackOutline, IoArrowForward } from 'react-icons/io5';
+import { IoCloseOutline /* IoArrowBackOutline, IoArrowForward */ } from 'react-icons/io5';
 import { LuTrash2 } from 'react-icons/lu';
 import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, {
@@ -53,9 +53,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   certificate,
   onSave,
   onDelete,
-  certificates,
+  // certificates,
   editingId,
-  setEditingId,
+  // setEditingId,
 }) => {
   const selectableInvoiceType: InvoiceType[] = [
     InvoiceType.OUTPUT_30,
@@ -345,9 +345,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
   ];
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
-  const currentIndex = certificates.findIndex((c) => c.id === editingId);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < certificates.length - 1;
+  // const currentIndex = certificates.findIndex((c) => c.id === editingId);
+  // const hasPrev = currentIndex > 0;
+  // const hasNext = currentIndex < certificates.length - 1;
 
   // Info: (20250414 - Anna) 初始化 formStateRef，避免剛打開 modal 時 formStateRef.current 是 undefined，導致比對失效，無法觸發 handleSave()
   useEffect(() => {
@@ -527,9 +527,21 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
               {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
               <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
                 <div className="flex flex-col">
+                  {/* Info: (20250801 - Julian) 儲存紐 */}
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => {
+                      handleSave();
+                      toggleModel();
+                    }}
+                  >
+                    <p>{t('common:COMMON.SAVE')}</p>
+                  </Button>
+                  {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
                   <div className="flex gap-4">
                     {/* Info: (20250415 - Anna) 上一筆 */}
-                    <Button
+                    {/* <Button
                       type="button"
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
@@ -538,9 +550,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
-                    </Button>
+                    </Button> */}
                     {/* Info: (20250415 - Anna) 下一筆 */}
-                    <Button
+                    {/* <Button
                       onClick={() => setEditingId(certificates[currentIndex + 1].id)}
                       type="button"
                       disabled={!hasNext}
@@ -549,7 +561,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
-                    </Button>
+                    </Button> */}
                   </div>
 
                   {!certificate?.voucherNo && (
@@ -1132,8 +1144,19 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 </Button>
               )}
               <div className="ml-auto flex items-center gap-4">
-                {/* Info: (20250415 - Anna) 上一筆 */}
+                {/* Info: (20250801 - Julian) 儲存紐 */}
                 <Button
+                  type="button"
+                  onClick={() => {
+                    handleSave();
+                    toggleModel();
+                  }}
+                >
+                  <p>{t('common:COMMON.SAVE')}</p>
+                </Button>
+                {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
+                {/* Info: (20250415 - Anna) 上一筆 */}
+                {/* <Button
                   type="button"
                   disabled={!hasPrev}
                   onClick={() => setEditingId(certificates[currentIndex - 1].id)}
@@ -1142,9 +1165,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 >
                   <IoArrowBackOutline size={20} />
                   <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
-                </Button>
+                </Button> */}
                 {/* Info: (20250415 - Anna) 下一筆 */}
-                <Button
+                {/* <Button
                   onClick={() => setEditingId(certificates[currentIndex + 1].id)}
                   type="button"
                   disabled={!hasNext}
@@ -1153,7 +1176,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                 >
                   <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                   <IoArrowForward size={20} />
-                </Button>
+                </Button> */}
               </div>
             </div>
           </form>
