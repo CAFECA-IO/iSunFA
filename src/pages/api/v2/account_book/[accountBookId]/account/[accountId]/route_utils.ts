@@ -93,6 +93,7 @@ export const lineItemGetByAccountAPIUtils = {
    * Info: (20241113 - Murky)
    * @description get line items by account id from prisma, and return paginated data
    */
+  // Deprecated: (20250804 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getLineItemsByAccountIdFromPrisma: async (options: {
     accountId: number;
