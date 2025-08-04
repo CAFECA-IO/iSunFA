@@ -10,8 +10,6 @@ import trialBalanceExportHandler from '@/pages/api/v2/account_book/[accountBookI
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName, APIPath } from '@/constants/api_connection';
 
-import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-
 /**
  * Info: (20250721 - Shirley) Integration Test - Trial Balance Integration (Test Case 8.3)
  *
@@ -46,20 +44,9 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     startDate = currentTimestamp - 86400 * 365; // 1 year ago
     endDate = currentTimestamp + 86400 * 30; // 30 days from now
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
-  afterAll(async () => {
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
-  });
+  afterAll(async () => {});
 
   /**
    * Info: (20250721 - Shirley) Test Step 3: Generate Trial Balance Report
@@ -96,15 +83,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Trial balance report generated successfully');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
-      }
     });
 
     test('should validate trial balance data structure and calculations', async () => {
@@ -202,16 +180,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(midtermDebitAmount).toEqual(midtermCreditAmount);
       expect(endingDebitAmount).toEqual(endingCreditAmount);
 
-      // Deprecated: (20250810 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('finalTrialBalanceData.data.length:', finalTrialBalanceData.data.length);
-      // Deprecated: (20250810 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'expectedTrialBalanceData.data.length:',
-        TestDataFactory.expectedTrialBalanceData().payload.data.length
-      );
-
       // Info: (20250729 - Shirley) 驗證試算表基本結構而非固定數據
       expect(finalTrialBalanceData.totalCount).toBeGreaterThanOrEqual(0);
       expect(finalTrialBalanceData.data.length).toBeGreaterThanOrEqual(0);
@@ -235,21 +203,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(finalTrialBalanceData.totalPages).toBeDefined();
       expect(finalTrialBalanceData.hasNextPage).toBeDefined();
       expect(finalTrialBalanceData.hasPreviousPage).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Trial Balance Items: ${finalTrialBalanceData.data.length}`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalTrialBalanceData.totalCount}`);
-      }
     });
   });
 
@@ -340,22 +293,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         expect(typeof firstCsvItem.endingDebitAmount).toBe('number');
         expect(typeof firstCsvItem.endingCreditAmount).toBe('number');
       }
-
-      // Deprecated: (20250730 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('csvData.length:', csvData.length);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Trial balance CSV export successful');
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Lines Count: ${lines.length}`);
-      }
     });
 
     test('should handle invalid file type for export', async () => {
@@ -383,12 +320,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Invalid file type properly rejected');
-      }
     });
 
     test('should handle missing date parameters for export', async () => {
@@ -415,12 +346,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Missing date parameters properly rejected');
-      }
     });
 
     test('should handle export without authentication', async () => {
@@ -446,12 +371,6 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250730 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Unauthenticated export request properly rejected');
-      }
     });
   });
 });

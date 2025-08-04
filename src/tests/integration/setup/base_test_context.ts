@@ -329,9 +329,6 @@ export class BaseTestContext {
     // Info: (20250728 - Shirley) Clear the created account books set
     this.createdAccountBooks.clear();
 
-    // Deprecated: (20250717 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('BaseTestContext.cleanup() - All test data purged successfully.');
     await prisma.$disconnect();
   }
 

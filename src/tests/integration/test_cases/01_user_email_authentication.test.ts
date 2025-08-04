@@ -387,14 +387,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         expect(payload.user).toBeDefined();
         expect(payload.user.email).toBe(authenticatedHelper.getCurrentUser());
       }
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          '✅ Complete user registration flow completed successfully using default values'
-        );
-      }
     });
 
     it('should list user roles after role creation', async () => {
@@ -410,12 +402,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(response.body.code).toBe('200ISF0000');
       expect(response.body.payload).toBeDefined();
       expect(Array.isArray(response.body.payload)).toBe(true);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ User roles retrieved successfully');
-      }
     });
 
     it('should reject unauthenticated terms agreement requests', async () => {
@@ -531,14 +517,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20250707 - Shirley) Verify successful registrations
       const successfulRegistrations = results.filter((r) => r.success);
       expect(successfulRegistrations.length).toBe(TestDataFactory.DEFAULT_TEST_EMAILS.length);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(
-          `✅ All ${TestDataFactory.DEFAULT_TEST_EMAILS.length} default test users processed successfully`
-        );
-      }
     });
 
     it('should process individual test user through complete registration flow', async () => {
@@ -572,12 +550,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         expect([200, 201]).toContain(result.roleResponse.status);
         expect(result.roleResponse.body.success).toBe(true);
       }
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`✅ Test user ${testEmail} processed successfully`);
-      }
     });
 
     it('should handle user agreement logic correctly', async () => {
@@ -597,12 +569,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       // Info: (20250707 - Shirley) If user hadn't agreed before, should have agreement response
       if (!hasAgreed && result.agreementResponse) {
         expect([200, 201, 405, 500]).toContain(result.agreementResponse.status);
-      }
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`✅ User agreement logic handled correctly for ${testEmail}`);
       }
     });
 
@@ -628,10 +594,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     //   await Promise.all(emailPromises);
 
-    //   if (process.env.DEBUG_TESTS === 'true') {
-    //     // eslint-disable-next-line no-console
-    //     console.log('✅ All default test emails validated and processed');
-    //   }
     // });
 
     it('should reject processing of non-default test emails', async () => {
@@ -658,12 +620,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
       if (rolesResponse.status === 200) {
         expect(rolesResponse.body.success).toBe(true);
-      }
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250708 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`✅ Roles API tested for ${testEmail} with status: ${rolesResponse.status}`);
       }
     });
   });

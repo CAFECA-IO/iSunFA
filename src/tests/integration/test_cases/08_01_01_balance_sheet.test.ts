@@ -129,7 +129,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
     if (process.env.DEBUG_TESTS === 'true') {
       // Deprecated: (20250717 - Julian) remove eslint-disable
       // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
     }
     */
 
@@ -140,12 +139,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
   afterAll(async () => {
     // Info: (20250717 - Julian) 清理測試資料
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250717 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
@@ -178,11 +171,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       // Info: (20250721 - Julian) 有了 accountBookId 後就初始化相關的 client
       initializeAccountBookDependentClients();
 
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book created successfully with ID:', accountBookId);
-      }
     });
 
     test('should verify account book connection', async () => {
@@ -196,11 +184,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       expect(response.body.payload.id).toBe(accountBookId);
       expect(response.body.payload.name).toBe(testCompanyData.name);
 
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account book connection verified');
-      }
     });
   });
    */
@@ -251,28 +234,20 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
 
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log(`=== VOUCHER ${i + 1} FOR INCOME STATEMENT POST RESULT ===`);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Status:', response.status);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Success:', response.body.success);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Type:', voucherData.type);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Note:', voucherData.note);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Line Items:', voucherData.lineItems.length);
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('Full Response:', JSON.stringify(response.body, null, 2));
         // Deprecated: (20250721 - Julian) remove eslint-disable
         // eslint-disable-next-line no-console
-        console.log('=== END VOUCHER RESULT ===');
 
         if (response.status === 201) {
           createdVouchers.push({
@@ -282,22 +257,15 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           });
           // Deprecated: (20250721 - Julian) remove eslint-disable
           // eslint-disable-next-line no-console
-          console.log('✅ Voucher created successfully with ID:', response.body.payload.id);
         } else {
           // Deprecated: (20250721 - Julian) remove eslint-disable
           // eslint-disable-next-line no-console
-          console.log('❌ Voucher creation failed:', response.body.message);
         }
       }
 
       // Info: (20250721 - Julian) 檢查是否成功建立所有 vouchers
       expect(createdVouchers.length).toBe(sampleVouchersData.length);
 
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully created ${createdVouchers.length} vouchers for balance sheet test.`
-      );
     });
   });
   */
@@ -320,46 +288,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         })
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== BALANCE SHEET REPORT RESULT ===');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Report Type:', response.body.payload?.reportType);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Company:', response.body.payload?.company);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Current Period:', response.body.payload?.curDate);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Previous Period:', response.body.payload?.preDate);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('General Items Count:', response.body.payload?.general?.length);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Detail Items Count:', response.body.payload?.details?.length);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Other Info:', response.body.payload?.otherInfo);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END BALANCE SHEET REPORT RESULT ===');
-
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(response.body.payload).toBeDefined();
@@ -381,15 +309,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       expect(outputData?.details).toBeDefined();
       expect(Array.isArray(outputData?.general)).toBe(true);
       expect(Array.isArray(outputData?.details)).toBe(true);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Balance sheet report generated successfully');
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Report Type: ${outputData?.reportType}`);
-      }
     });
 
     it('should validate balance sheet report structure and calculations', async () => {
@@ -446,83 +365,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       expect(totalAssets).toBeDefined();
       expect(totalLiabilitiesAndEquity).toBeDefined();
       expect(totalAssets === totalLiabilitiesAndEquity).toBe(true);
-
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n=== BALANCE SHEET DETAILS VALIDATION ===');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('📊 Report Summary:');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `   Company: ${balanceSheetData.company.name} (${balanceSheetData.company.code})`
-      );
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `   Period: ${new Date(startDate * 1000).toLocaleDateString()} to ${new Date(endDate * 1000).toLocaleDateString()}`
-      );
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`   General Items: ${balanceSheetData.general.length}`);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(`   Detail Items: ${balanceSheetData.details.length}`);
-
-      if (balanceSheetData.general.length > 0) {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('\n💰 General Balance Sheet Items:');
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        balanceSheetData.general.forEach((item: any, index: number) => {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`${index + 1}. ${item.no} - ${item.accountingTitle}`);
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`   Current: ${item.curPeriodAmount?.toLocaleString() || 0}`);
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`   Previous: ${item.prePeriodAmount?.toLocaleString() || 0}`);
-        });
-      }
-
-      if (balanceSheetData.details.length > 0) {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('\n💰 Detailed Balance Sheet Items:');
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        balanceSheetData.general.forEach((item: any, index: number) => {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`${index + 1}. ${item.no} - ${item.accountingTitle}`);
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`   Current: ${item.curPeriodAmount?.toLocaleString() || 0}`);
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(`   Previous: ${item.prePeriodAmount?.toLocaleString() || 0}`);
-        });
-      }
-
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('\n📈 Other Information:');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Other Info:', JSON.stringify(balanceSheetData.otherInfo, null, 2));
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END BALANCE SHEET DETAILS VALIDATION ===');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Balance sheet data structure validated successfully');
-      }
     });
   });
 
@@ -543,25 +385,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           language: LocaleKey.en,
         })
         .set('Cookie', cookies.join('; '));
-
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== INVALID REPORT TYPE ERROR HANDLING ===');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Status:', response.status);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Success:', response.body.success);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Code:', response.body.code);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Message:', response.body.message);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END ERROR HANDLING ===');
 
       expect(response.status).toBe(422);
       expect(response.body.success).toBe(false);
@@ -610,28 +433,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         })
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== FINAL BALANCE SHEET VALIDATION ===');
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Balance Sheet Status:', finalBalanceSheetResponse.status);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Balance Sheet Success:', finalBalanceSheetResponse.body.success);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Balance Sheet Code:', finalBalanceSheetResponse.body.code);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Balance Sheet Message:', finalBalanceSheetResponse.body.message);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('Final Balance Sheet Payload:', finalBalanceSheetResponse.body.payload);
-      // Deprecated: (20250721 - Julian) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('=== END FINAL BALANCE SHEET VALIDATION ===');
-
       expect(finalBalanceSheetResponse.status).toBe(200);
       expect(finalBalanceSheetResponse.body.success).toBe(true);
       expect(finalBalanceSheetResponse.body.payload.reportType).toBe(ReportSheetType.BALANCE_SHEET);
@@ -644,27 +445,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
       expect(finalBalanceSheetData.preDate).toBeDefined();
       expect(finalBalanceSheetData.general).toBeDefined();
       expect(finalBalanceSheetData.details).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete balance sheet workflow validated successfully');
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Company Name: ${finalBalanceSheetData.company.name}`);
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Report Type: ${finalBalanceSheetData.reportType}`);
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - General Items: ${finalBalanceSheetData.general.length}`);
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Detail Items: ${finalBalanceSheetData.details.length}`);
-      }
     });
   });
 
@@ -702,12 +482,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('401ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Unauthenticated request properly rejected with 401');
-        }
       });
 
       it('should reject requests with invalid session cookies', async () => {
@@ -727,12 +501,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('401ISF0000');
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid session cookie properly rejected with 401');
-        }
       });
     });
 
@@ -762,23 +530,11 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           })
           .set('Cookie', cookies.join('; '));
 
-        // Deprecated: (20250721 - Julian) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('responseIn6.2', response.body);
-
         expect(response.status).toBe(403);
         // Info: (20250721 - Julian) 驗證錯誤回應結構和內容
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('403ISF0000'); // Info: (20250721 - Julian) Forbidden
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(
-            '✅ Unauthorized access to non-existent account book properly rejected with 403'
-          );
-        }
       });
     });
 
@@ -807,12 +563,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000'); // Info: (20250721 - Julian) Invalid input parameter
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid reportType properly rejected with 422');
-        }
       });
 
       // Info: (20250721 - Julian) 測試無效的日期範圍
@@ -837,12 +587,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000'); // Info: (20250721 - Julian) Invalid input parameter
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid date range (endDate < startDate) properly rejected with 422');
-        }
       });
 
       // Info: (20250721 - Julian) 測試缺少必要的參數
@@ -863,12 +607,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000'); // Info: (20250721 - Julian) Invalid input parameter
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Missing required parameters properly rejected with 422');
-        }
       });
 
       // Info: (20250721 - Julian) 測試無效的語言參數
@@ -892,12 +630,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000'); // Info: (20250721 - Julian) Invalid input parameter
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Invalid language code properly rejected with 422');
-        }
       });
 
       // Info: (20250721 - Julian) 測試日期格式為非數字
@@ -921,12 +653,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('422ISF0000'); // Info: (20250721 - Julian) Invalid input parameter
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Non-numeric date values properly rejected with 422');
-        }
       });
     });
 
@@ -1016,12 +742,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         // Info: (20250721 - Julian) 驗證極端日期範圍的回應（應該成功）
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Extremely large date range handled successfully');
-        }
       });
 
       // Info: (20250721 - Julian) 測試起始和結束日期相同的情況
@@ -1045,12 +765,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
         // Info: (20250721 - Julian) 驗證相同起始和結束日期的回應（應該成功）
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Julian) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Same start and end date handled successfully');
-        }
       });
 
       // Info: (20250721 - Julian) 測試所有可支援的語言代碼
@@ -1079,12 +793,6 @@ describe('Integration Test - Balance Sheet (Test Case 8.1.1)', () => {
           expect(response.status).toBe(200);
           expect(response.body.success).toBe(true);
           expect(response.body.payload.reportType).toBe(ReportSheetType.BALANCE_SHEET);
-
-          if (process.env.DEBUG_TESTS === 'true') {
-            // Deprecated: (20250721 - Julian) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.log(`✅ Language ${language} handled successfully`);
-          }
         }
       });
     });
