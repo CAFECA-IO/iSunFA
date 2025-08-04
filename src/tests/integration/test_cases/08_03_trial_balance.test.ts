@@ -319,7 +319,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to validation error
+      // Info: (20250804 - Shirley) BAD_REQUEST due to validation error
+      expect(response.body.code).toBe('400ISF0000');
     });
 
     test('should handle missing date parameters for export', async () => {
@@ -333,7 +334,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       const exportRequestData = {
         fileType: 'csv',
         filters: {
-          // Missing startDate and endDate
+          // Info: (20250804 - Shirley) Missing startDate and endDate
         },
         options: {},
       };
@@ -345,7 +346,8 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing parameters
+      // Info: (20250804 - Shirley) BAD_REQUEST due to missing parameters
+      expect(response.body.code).toBe('400ISF0000');
     });
 
     test('should handle export without authentication', async () => {
@@ -366,11 +368,12 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       const response = await trialBalanceExportClient
         .post(`/api/v2/account_book/${accountBookId}/trial_balance/export`)
         .send(exportRequestData);
-      // No authentication cookies
+      // Info: (20250804 - Shirley) No authentication cookies
 
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
-      expect(response.body.code).toBe('400ISF0000'); // BAD_REQUEST due to missing authentication
+      // Info: (20250804 - Shirley) BAD_REQUEST due to missing authentication
+      expect(response.body.code).toBe('400ISF0000');
     });
   });
 });
