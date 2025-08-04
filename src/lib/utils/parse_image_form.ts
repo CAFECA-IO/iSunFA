@@ -76,7 +76,7 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
 }
 
 export function bufferToBlob(buffer: Buffer, type?: string): Blob {
-  // Convert Buffer to Uint8Array for type compatibility
+  // Info: (20250804 - Shirley) Convert Buffer to Uint8Array for type compatibility
   const uint8Array = new Uint8Array(buffer);
   return new Blob([uint8Array], { type });
 }
