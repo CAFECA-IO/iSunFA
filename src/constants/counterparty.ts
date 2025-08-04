@@ -55,7 +55,7 @@ export const counterPartyEntityValidator = z.object({
 export const partialCounterPartyEntityValidator = z
   .object({
     id: z.number().optional(),
-    companyId: z.number().optional(),
+    accountBookId: z.number().optional(),
     name: z.string().optional(),
     taxId: z.string().optional(),
     type: z.nativeEnum(CounterpartyType).optional(),

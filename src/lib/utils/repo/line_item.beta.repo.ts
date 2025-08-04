@@ -19,7 +19,7 @@ import { DefaultValue } from '@/constants/default_value';
 
 /**
  * list invoices, return paginated data
- * @param {number} companyId company id to find invoices (type: number)
+ * @param {number} accountBookId company id to find invoices (type: number)
  * @param {AccountType} type of account that line item belongs to (type: AccountType)
  * @param {number} startDate start date in second, will be use to search invoices (type: number)
  * @param {number} endDate  end date in second, will be use to search invoices (type: number)
@@ -32,7 +32,7 @@ import { DefaultValue } from '@/constants/default_value';
  * @returns { Promise<IPaginatedData<ILineItemIncludeAccount[]>>} return paginated data of line items
  */
 export async function listLineItems({
-  companyId,
+  accountBookId,
   type,
   startDate,
   endDate,
@@ -43,7 +43,7 @@ export async function listLineItems({
   searchQuery = undefined,
   isDeleted = undefined,
 }: {
-  companyId: number;
+  accountBookId: number;
   type: AccountType;
   startDate: number;
   endDate: number;
@@ -80,7 +80,7 @@ export async function listLineItems({
       type,
     },
     voucher: {
-      companyId,
+      accountBookId,
       date: {
         gte: startDateInSecond,
         lte: endDateInSecond,
@@ -317,7 +317,7 @@ export async function deleteLineItem(lineItemId: number): Promise<ILineItemInclu
 
 export async function listLineItemsByAccount({
   accountId,
-  companyId,
+  accountBookId,
   startDate,
   endDate,
   page = DEFAULT_PAGE_NUMBER,
@@ -327,7 +327,7 @@ export async function listLineItemsByAccount({
   isDeleted = undefined,
 }: {
   accountId: number;
-  companyId: number;
+  accountBookId: number;
   startDate: number;
   endDate: number;
   page?: number;
@@ -363,7 +363,7 @@ export async function listLineItemsByAccount({
       id: accountId,
     },
     voucher: {
-      companyId,
+      accountBookId,
       date: {
         gte: startDateInSecond,
         lte: endDateInSecond,

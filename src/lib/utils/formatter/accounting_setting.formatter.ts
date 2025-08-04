@@ -33,7 +33,7 @@ export function formatAccountingSetting(
 
   return {
     id: accountingSetting.id,
-    companyId: accountingSetting.companyId,
+    accountBookId: accountingSetting.accountBookId,
     currency: accountingSetting.currency as CurrencyType,
     taxSettings,
     shortcutList,

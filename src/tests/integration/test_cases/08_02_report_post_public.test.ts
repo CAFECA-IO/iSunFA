@@ -69,7 +69,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     const sharedContext = await BaseTestContext.getSharedContext();
     helper = sharedContext.helper;
     userId = sharedContext.userId;
-    teamId = sharedContext.teamId;
+    teamId = sharedContext.teamId!;
     cookies = sharedContext.cookies;
 
     // Info: (20250725 - Shirley) Create account book for report testing
@@ -145,6 +145,7 @@ describe('Report Post Public API – 完整報表生成測試', () => {
     const endDate = currentTimestamp;
 
     const reportPayload = {
+      type: ReportSheetType.BALANCE_SHEET,
       startDate,
       endDate,
       reportType: 'financial',

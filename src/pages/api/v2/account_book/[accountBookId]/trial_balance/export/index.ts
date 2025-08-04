@@ -27,7 +27,7 @@ import { SortOrder } from '@/constants/sort';
 import { ILineItemInTrialBalanceItem } from '@/interfaces/trial_balance';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { parseSortOption } from '@/lib/utils/sort';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -41,7 +41,7 @@ import { TeamPermissionAction } from '@/interfaces/permissions';
  * 4. Converts the data to CSV format
  * 5. Sets appropriate headers and returns the CSV data
  */
-async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, companyId: string) {
+async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, accountBookId: string) {
   const apiName = APIName.TRIAL_BALANCE_EXPORT;
   let statusMessage: string = STATUS_MESSAGE.SUCCESS;
 
@@ -62,19 +62,19 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, comp
     }
 
     loggerBack.info(
-      `Processing trial balance export for company ${companyId}, period: ${startDate} to ${endDate}`
+      `Processing trial balance export for company ${accountBookId}, period: ${startDate} to ${endDate}`
     );
 
     // Info: (20250425 - Shirley) Process the data
     const parsedSortOption = parseSortOption(DEFAULT_SORT_OPTIONS, sortOption as string);
 
     // Info: (20250425 - Shirley) Retrieve line items
-    const lineItems = await getAllLineItemsInPrisma(+companyId, 0, +endDate);
+    const lineItems = await getAllLineItemsInPrisma(+accountBookId, 0, +endDate);
     loggerBack.info(`Retrieved ${lineItems.length} line items for trial balance export`);
 
     // Info: (20250425 - Shirley) Retrieve accounts
     const accounts = await findManyAccountsInPrisma({
-      companyId: +companyId,
+      accountBookId: +accountBookId,
       includeDefaultAccount: true,
       page: 1,
       limit: 9999999,

@@ -5,7 +5,7 @@ import { setTimestampToDayEnd, setTimestampToDayStart } from '@/lib/utils/common
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 
 export async function getLineItemsInPrisma(
-  companyId: number,
+  accountBookId: number,
   type: AccountType,
   startDate: number,
   endDate: number,
@@ -20,7 +20,7 @@ export async function getLineItemsInPrisma(
       type,
     },
     voucher: {
-      companyId,
+      accountBookId,
       date: {
         gte: startDateInSecond,
         lte: endDateInSecond,
@@ -49,7 +49,7 @@ export async function getOneLineItemWithoutInclude(lineItemId: number) {
 }
 
 export async function getAllLineItemsInPrisma(
-  companyId: number,
+  accountBookId: number,
   startDate: number,
   endDate: number,
   isDeleted?: boolean
@@ -60,7 +60,7 @@ export async function getAllLineItemsInPrisma(
   const lineItems = await prisma.lineItem.findMany({
     where: {
       voucher: {
-        companyId,
+        accountBookId,
         date: {
           gte: startDateInSecond,
           lte: endDateInSecond,

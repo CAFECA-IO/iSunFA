@@ -5,7 +5,7 @@ import { AbstractAccountRetriever } from '@/lib/utils/account/abstract_account_r
 
 export class AssetAccountRetriever extends AbstractAccountRetriever {
   constructor(
-    companyId: number,
+    accountBookId: number,
     includeDefaultAccount?: boolean,
     liquidity?: boolean,
     type?: AccountType,
@@ -20,7 +20,7 @@ export class AssetAccountRetriever extends AbstractAccountRetriever {
     isDeleted?: boolean
   ) {
     super({
-      companyId,
+      accountBookId,
       includeDefaultAccount,
       liquidity,
       type: AccountType.ASSET,

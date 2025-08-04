@@ -5,13 +5,13 @@ import { getTimestampNow } from '@/lib/utils/common';
 import { DEFAULT_ACCOUNTING_SETTING } from '@/constants/setting';
 import { DefaultValue } from '@/constants/default_value';
 
-export async function createAccountingSetting(companyId: number) {
+export async function createAccountingSetting(accountBookId: number) {
   let accountingSetting = null;
 
   try {
     accountingSetting = await prisma.accountingSetting.create({
       data: {
-        companyId,
+        accountBookId,
         salesTaxTaxable: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_TAXABLE,
         salesTaxRate: DEFAULT_ACCOUNTING_SETTING.SALES_TAX_RATE,
         purchaseTaxTaxable: DEFAULT_ACCOUNTING_SETTING.PURCHASE_TAX_TAXABLE,
@@ -32,12 +32,12 @@ export async function createAccountingSetting(companyId: number) {
   return accountingSetting;
 }
 
-export async function getAccountingSettingByCompanyId(companyId: number) {
+export async function getAccountingSettingByCompanyId(accountBookId: number) {
   let accountingSetting = null;
 
   try {
     accountingSetting = await prisma.accountingSetting.findFirst({
-      where: { companyId },
+      where: { accountBookId },
       include: { shortcuts: true },
     });
   } catch (error) {
@@ -52,25 +52,26 @@ export async function getAccountingSettingByCompanyId(companyId: number) {
 }
 
 export async function updateAccountingSettingById(
-  companyId: number | string,
+  accountBookId: number | string,
   data: IAccountingSetting
 ) {
   const { taxSettings, currency, shortcutList } = data;
   let accountingSetting = null;
   const nowInSecond = getTimestampNow();
 
-  const numericCompanyId = typeof companyId === 'string' ? parseInt(companyId, 10) : companyId;
+  const numericAccountBookId =
+    typeof accountBookId === 'string' ? parseInt(accountBookId, 10) : accountBookId;
 
   try {
     const existingAccountingSetting = await prisma.accountingSetting.findFirst({
       where: {
-        companyId: numericCompanyId,
+        accountBookId: numericAccountBookId,
         deletedAt: null,
       },
     });
 
     if (!existingAccountingSetting) {
-      throw new Error(`Accounting setting not found for company ${companyId}`);
+      throw new Error(`Accounting setting not found for company ${accountBookId}`);
     }
 
     await prisma.accountingSetting.update({
@@ -103,12 +104,12 @@ export async function updateAccountingSettingById(
       });
     }
 
-    accountingSetting = await getAccountingSettingByCompanyId(numericCompanyId);
+    accountingSetting = await getAccountingSettingByCompanyId(numericAccountBookId);
   } catch (error) {
     loggerError({
       userId: DefaultValue.USER_ID.SYSTEM,
       errorType: 'update accounting setting in updateAccountingSetting failed',
-      errorMessage: `${(error as Error).message} (companyId: ${companyId}, dataId: ${data.id})`,
+      errorMessage: `${(error as Error).message} (accountBookId: ${accountBookId}, dataId: ${data.id})`,
     });
   }
 
@@ -133,13 +134,13 @@ export async function deleteAccountingSettingByIdForTesting(id: number) {
   return accountingSetting;
 }
 
-export async function updateAccountingCurrency(companyId: number, currency: string) {
+export async function updateAccountingCurrency(accountBookId: number, currency: string) {
   let result = null;
   const nowInSecond = getTimestampNow();
 
   try {
     result = await prisma.accountingSetting.updateMany({
-      where: { companyId },
+      where: { accountBookId },
       data: {
         currency,
         updatedAt: nowInSecond,
@@ -156,12 +157,12 @@ export async function updateAccountingCurrency(companyId: number, currency: stri
   return result;
 }
 
-export async function getAccountingCurrencyByCompanyId(companyId: number) {
+export async function getAccountingCurrencyByCompanyId(accountBookId: number) {
   let currency = '';
 
   try {
     const accountingSetting = await prisma.accountingSetting.findFirst({
-      where: { companyId },
+      where: { accountBookId },
       select: { currency: true },
     });
     currency = accountingSetting?.currency || '';

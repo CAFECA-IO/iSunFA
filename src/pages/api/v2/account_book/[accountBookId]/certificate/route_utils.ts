@@ -77,7 +77,7 @@ export const certificateAPIPostUtils = {
 
   createCertificateInPrisma: async (options: {
     nowInSecond: number;
-    companyId: number;
+    accountBookId: number;
     uploaderId: number;
     fileId: number;
     aiResultId?: string;
@@ -183,7 +183,10 @@ export const certificateAPIPostUtils = {
       const invoiceDto = invoices[0];
       // TODO: (20250113 - Shirley) 在 invoice db schema 更改之後，counterParty 的 fkey 被拿掉，invoice跟counter party的資料需要修改
       // const counterPartyDto = invoiceDto.counterParty;
-      const counterPartyDto = PUBLIC_COUNTER_PARTY;
+      const counterPartyDto = {
+        ...PUBLIC_COUNTER_PARTY,
+        accountBookId: PUBLIC_COUNTER_PARTY.companyId,
+      };
       const invoice = parsePrismaInvoiceToInvoiceEntity(invoiceDto);
       const counterParty = parsePrismaCounterPartyToCounterPartyEntity(counterPartyDto);
 
@@ -253,7 +256,7 @@ export const certificateAPIPostUtils = {
     const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
-      companyId: certificateEntity.companyId,
+      companyId: certificateEntity.accountBookId,
       incomplete: false,
       file,
       invoice,
@@ -366,7 +369,7 @@ export const certificateAPIGetListUtils = {
   },
 
   getPaginatedCertificateList: (options: {
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     page: number;
@@ -385,7 +388,8 @@ export const certificateAPIGetListUtils = {
       where: Prisma.CertificateWhereInput;
     }
   > => {
-    return getCertificatesV2(options);
+    const { accountBookId, ...restOptions } = options;
+    return getCertificatesV2({ ...restOptions, accountBookId });
   },
 
   getCurrencyFromSetting: async (companyId: number) => {
@@ -397,7 +401,7 @@ export const certificateAPIGetListUtils = {
   },
 
   getSumOfTotalInvoicePrice: async (options: {
-    companyId: number;
+    accountBookId: number;
     startDate?: number;
     endDate?: number;
     searchQuery?: string;
@@ -405,7 +409,8 @@ export const certificateAPIGetListUtils = {
     tab?: InvoiceTabs;
     isDeleted?: boolean;
   }): Promise<number> => {
-    const result = await getAllFilteredInvoice(options);
+    const { accountBookId, ...restOptions } = options;
+    const result = await getAllFilteredInvoice({ ...restOptions, accountBookId });
     const totalPrice = result.reduce((acc, certificate) => {
       const invoiceTotalPrice = certificate.invoices[0]?.totalPrice || 0;
       return acc + invoiceTotalPrice;
@@ -485,7 +490,7 @@ export const certificateAPIGetListUtils = {
     const certificate: ICertificate = {
       id: certificateEntity.id,
       name: certificateEntity.file.name,
-      companyId: certificateEntity.companyId,
+      companyId: certificateEntity.accountBookId,
       incomplete: false,
       file,
       invoice,

@@ -2,7 +2,7 @@ import { Certificate as PrismaCertificate } from '@prisma/client';
 import { ICertificateEntity } from '@/interfaces/certificate';
 import { IFileEntity } from '@/interfaces/file';
 import { IInvoiceEntity } from '@/interfaces/invoice';
-import { ICompanyEntity } from '@/interfaces/account_book';
+import { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { getTimestampNow } from '@/lib/utils/common';
 
@@ -18,7 +18,7 @@ export function initCertificateEntity(
     aiStatus?: string;
     file?: IFileEntity;
     invoice?: IInvoiceEntity;
-    company?: ICompanyEntity;
+    company?: IAccountBookWithoutTeamEntity;
     vouchers?: IVoucherEntity[];
   }
 ): ICertificateEntity {
@@ -26,7 +26,7 @@ export function initCertificateEntity(
 
   const certificateEntity: ICertificateEntity = {
     id: dto.id ?? 0,
-    companyId: dto.companyId,
+    accountBookId: dto.companyId,
     // voucherNo: dto.voucherNo,
     aiResultId: dto.aiResultId,
     aiStatus: dto.aiStatus,

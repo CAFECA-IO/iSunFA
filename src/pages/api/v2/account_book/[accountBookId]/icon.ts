@@ -2,12 +2,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
-import { getCompanyById, putCompanyIcon } from '@/lib/utils/repo/company.repo';
+import { getCompanyById, putCompanyIcon } from '@/lib/utils/repo/account_book.repo';
 import { IHandleRequest } from '@/interfaces/handleRequest';
 import { APIName } from '@/constants/api_connection';
 import { withRequestValidation } from '@/lib/utils/middleware';
 import { loggerError } from '@/lib/utils/logger_back';
-import { Company, File } from '@prisma/client';
+import { AccountBook, File } from '@prisma/client';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import { TeamRole } from '@/interfaces/team';
@@ -19,10 +19,10 @@ import { IAccountBookEntity } from '@/lib/utils/zod_schema/account_book';
  */
 const handlePutRequest: IHandleRequest<
   APIName.ACCOUNT_BOOK_PUT_ICON,
-  Company & { imageFile: File }
+  AccountBook & { imageFile: File }
 > = async ({ query, body, session }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: (Company & { imageFile: File }) | null = null;
+  let payload: (AccountBook & { imageFile: File }) | null = null;
 
   const { accountBookId } = query;
   const { fileId } = body;
@@ -78,7 +78,7 @@ const handlePutRequest: IHandleRequest<
     }
 
     // Info: (20250423 - Shirley) Update account book icon
-    const updatedAccountBook = await putCompanyIcon({ companyId: +accountBookId, fileId });
+    const updatedAccountBook = await putCompanyIcon({ accountBookId: +accountBookId, fileId });
 
     const formattedPayload = {
       ...updatedAccountBook,
@@ -86,7 +86,7 @@ const handlePutRequest: IHandleRequest<
     };
 
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
-    payload = formattedPayload as Company & { imageFile: File };
+    payload = formattedPayload as AccountBook & { imageFile: File };
 
     loggerError({
       userId,

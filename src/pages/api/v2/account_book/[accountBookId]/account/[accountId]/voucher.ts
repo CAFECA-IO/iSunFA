@@ -38,14 +38,14 @@ const handleGetRequest: IHandleRequest<
   GetVoucherByAccountResponse
 > = async ({ query, session }) => {
   const { pageSize, startDate, endDate, page, accountId, sortOption, searchQuery } = query;
-  const { companyId } = session;
+  const { accountBookId } = session;
   // const { pageSize, page, sortOption } = query;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: GetVoucherByAccountResponse | null = null;
 
   const accountFromPrisma = await getUtils.getAccountFromPrisma({
-    companyId,
+    accountBookId,
     accountId,
   });
 
@@ -60,7 +60,7 @@ const handleGetRequest: IHandleRequest<
   const isAccountARorAP = getUtils.isAccountARorAP(accountEntityForSearch);
 
   const paginationVouchersFromPrisma = await getUtils.getVouchersFromPrisma({
-    companyId,
+    accountBookId,
     accountId,
     startDate,
     endDate,

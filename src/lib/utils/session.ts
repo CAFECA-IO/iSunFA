@@ -245,7 +245,7 @@ export const setSession = async (
   sessoin: ISessionData,
   data: {
     userId?: number;
-    companyId?: number;
+    accountBookId?: number;
     challenge?: string;
     roleId?: number;
     external?: { provider: string; uid: string };

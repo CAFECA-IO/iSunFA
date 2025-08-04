@@ -4,7 +4,7 @@ import files from '@/seed_json/file.json';
 import users from '@/seed_json/user.json';
 import teams from '@/seed_json/team.json';
 import accounts from '@/seed_json/account.json';
-import companies from '@/seed_json/company.json';
+import accountBooks from '@/seed_json/account_book.json';
 import country from '@/seed_json/country.json';
 import teamPlans from '@/seed_json/team_plan.json';
 
@@ -32,11 +32,11 @@ async function createTeam() {
   });
 }
 
-async function createCompany() {
-  await prisma.company.createMany({
-    data: companies.map((company) => ({
-      ...company,
-      tag: company.tag as Tag,
+async function createAccountBook() {
+  await prisma.accountBook.createMany({
+    data: accountBooks.map((book) => ({
+      ...book,
+      tag: book.tag as Tag,
     })),
   });
 }
@@ -109,7 +109,7 @@ async function main() {
     await createFile();
     await createUser();
     await createTeam();
-    await createCompany();
+    await createAccountBook();
     await createAccount();
   } finally {
     await prisma.$disconnect();

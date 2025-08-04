@@ -21,7 +21,7 @@ import {
   AssociateLineItem as PrismaAssociateLineItem,
 } from '@prisma/client';
 import type { IEventEntity } from '@/interfaces/event';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interfaces/counterparty';
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
@@ -370,7 +370,7 @@ export interface IVoucherEntity {
    * Info: (20241022 - Murky)
    * @description  Which company this voucher be created
    */
-  companyId: number;
+  accountBookId: number;
 
   /**
    * Info: (20241022 - Murky)
@@ -454,7 +454,7 @@ export interface IVoucherEntity {
    * Info: (20241023 - Murky)
    * @description which company create this voucher
    */
-  company?: ICompanyEntity;
+  company?: IAccountBookWithoutTeamEntity;
 
   /**
    * Info: (20241023 - Murky)

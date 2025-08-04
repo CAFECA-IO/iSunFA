@@ -18,7 +18,7 @@ export function initVoucherEntity(
   dto: Partial<PrismaVoucher> & {
     issuerId: number;
     counterPartyId: number | null;
-    companyId: number;
+    accountBookId: number;
     status: JOURNAL_EVENT;
     editable: boolean;
     no: string;
@@ -39,7 +39,7 @@ export function initVoucherEntity(
     id: dto.id || 0,
     issuerId: dto.issuerId,
     counterPartyId: dto.counterPartyId,
-    companyId: dto.companyId,
+    accountBookId: dto.accountBookId,
     status: dto.status,
     editable: dto.editable,
     no: dto.no,

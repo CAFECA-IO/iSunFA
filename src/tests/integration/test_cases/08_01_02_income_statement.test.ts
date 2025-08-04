@@ -72,30 +72,18 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
     accountBookId = accountBook.id;
 
     initializeAccountBookDependentClients();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250721 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
   afterAll(async () => {
     // Info: (20250718 - Shirley) Cleanup test data
     await authenticatedHelper.clearSession();
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250721 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
   });
 
   /**
    * Info: (20250718 - Shirley) Test Step 2: Create Sample Vouchers for Income Statement
    */
-  describe('Step 2: Create Sample Vouchers for Income Statement', () => {
-    test('should create income and expense vouchers', async () => {
+  describe('Step 2: Test Connect Account Book', () => {
+    test('should connect account book successfully', async () => {
       await authenticatedHelper.ensureAuthenticated();
       const cookies = authenticatedHelper.getCurrentSession();
 
@@ -107,16 +95,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
 
       expect(responseForConnect.body.success).toBe(true);
       expect(responseForConnect.body.payload).toBeDefined();
-
-      // Info: (20250728 - Shirley) BaseTestContext has already created the vouchers
-      // Just verify they exist by checking the expected voucher count
-      const sampleVouchersData = TestDataFactory.sampleVoucherData();
-
-      // Deprecated: (20250721 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        `\n🎉 Successfully verified ${sampleVouchersData.length} vouchers exist for income statement test (created by BaseTestContext)`
-      );
     });
   });
 
@@ -165,15 +143,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
       expect(outputData?.details).toBeDefined();
       expect(Array.isArray(outputData?.general)).toBe(true);
       expect(Array.isArray(outputData?.details)).toBe(true);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Income statement report generated successfully');
-        // Deprecated: (20250721 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Report Type: ${outputData?.reportType}`);
-      }
     });
 
     test('should validate income statement data structure and calculations', async () => {
@@ -255,12 +224,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         const validatedError = validateAndFormatData(errorResponseSchema, response.body);
         expect(validatedError.success).toBe(false);
         expect(validatedError.code).toBe('401ISF0000'); // Info: (20250721 - Shirley) Unauthorized access
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Unauthenticated request properly rejected with 401');
-        }
       });
 
       test('should reject requests with invalid session cookies', async () => {
@@ -457,12 +420,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         // Info: (20250718 - Shirley) Should handle large date ranges gracefully
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Large date range handled gracefully');
-        }
       });
 
       test('should handle same start and end date', async () => {
@@ -485,12 +442,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
         // Info: (20250718 - Shirley) Should handle same start/end date
         expect(response.status).toBe(200);
         expect(response.body.success).toBe(true);
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250721 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Same start and end date handled gracefully');
-        }
       });
 
       test('should handle all supported language codes', async () => {
@@ -521,12 +472,6 @@ describe('Integration Test - Income Statement Report Integration (Test Case 8.1.
           expect(response.status).toBe(200);
           expect(response.body.success).toBe(true);
           expect(response.body.payload.reportType).toBe(ReportSheetType.INCOME_STATEMENT);
-
-          if (process.env.DEBUG_TESTS === 'true') {
-            // Deprecated: (20250721 - Luphia) remove eslint-disable
-            // eslint-disable-next-line no-console
-            console.log(`✅ Language '${language}' handled successfully`);
-          }
         }
       });
     });

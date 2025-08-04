@@ -111,7 +111,7 @@ export async function decryptImageFile({
         encryptedArrayBuffer,
         encryptedSymmetricKey,
         privateKey,
-        ivUint8Array
+        ivUint8Array as BufferSource
       );
     } catch (error) {
       loggerBack.error(error, `Error in decryptImageFile in file.ts`);

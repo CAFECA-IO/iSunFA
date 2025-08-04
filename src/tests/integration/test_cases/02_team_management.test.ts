@@ -87,12 +87,6 @@ describe('Integration Test - Team Management Authentication', () => {
       const validatedError = validateAndFormatData(errorSchema, response.body);
       expect(validatedError.success).toBe(false);
       expect(validatedError.code).toBe('401ISF0000');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250704 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Error response validated with Zod successfully');
-      }
     });
 
     it('should reject unauthenticated team creation requests with Zod validation', async () => {
@@ -113,12 +107,6 @@ describe('Integration Test - Team Management Authentication', () => {
       const validatedError = validateAndFormatData(errorSchema, response.body);
       expect(validatedError.success).toBe(false);
       expect(validatedError.code).toBe('401ISF0000');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250704 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Team creation error response validated with Zod successfully');
-      }
     });
 
     it('should successfully list teams with proper parameters', async () => {
@@ -166,11 +154,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(outputData).toHaveProperty('hasNextPage');
       expect(outputData).toHaveProperty('hasPreviousPage');
 
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250704 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Team list validated with production validator successfully');
-      }
       expect(response.body.payload).toHaveProperty('pageSize');
       expect(response.body.payload).toHaveProperty('hasNextPage');
       expect(response.body.payload).toHaveProperty('hasPreviousPage');
@@ -612,12 +595,6 @@ describe('Integration Test - Team Management Authentication', () => {
         expect(isOutputDataValid).toBe(true);
         expect(outputData).toBeDefined();
 
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250709 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ Member role update validated with production validator successfully');
-        }
-
         // Info: (20250709 - Shirley) Verify role was actually updated in database
         const updatedMember = await prisma.teamMember.findFirst({
           where: {
@@ -628,12 +605,6 @@ describe('Integration Test - Team Management Authentication', () => {
         });
 
         expect(updatedMember?.role).toBe(TeamRole.ADMIN);
-      }
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250709 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Member role update endpoint accessible with proper authentication');
       }
     });
 
@@ -664,16 +635,10 @@ describe('Integration Test - Team Management Authentication', () => {
       if (inviteResponse.status === 403) {
         // Info: (20250709 - Shirley) Verify this is the expected team member limit error
         expect(inviteResponse.body.success).toBe(false);
-        expect(inviteResponse.body.code).toBe('403ISF0025'); // LIMIT_EXCEEDED_TEAM_MEMBER
+        // Info: (20250709 - Shirley) LIMIT_EXCEEDED_TEAM_MEMBER
+        expect(inviteResponse.body.code).toBe('403ISF0025');
         expect(inviteResponse.body.message).toContain('Limit exceeded team member');
 
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250709 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(
-            '✅ Team member limit properly enforced (team_subscription max_members limit)'
-          );
-        }
         return; // Info: (20250709 - Shirley) End test early since we cannot proceed with member invitation
       }
 
@@ -785,12 +750,6 @@ describe('Integration Test - Team Management Authentication', () => {
         });
 
         expect(updatedMember?.role).toBe(TeamRole.VIEWER);
-
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250709 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log('✅ ADMIN role update capabilities validated successfully');
-        }
       }
 
       // Info: (20250709 - Shirley) Cleanup admin helper
@@ -947,12 +906,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(teamMember?.id).toBeDefined();
       expect(typeof teamMember?.id).toBe('number');
 
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250709 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Member successfully set up for deletion operation');
-      }
-
       // Info: (20250709 - Shirley) Test deletion API endpoint accessibility
       if (!teamMember) return;
       const memberId = teamMember.id;
@@ -966,20 +919,10 @@ describe('Integration Test - Team Management Authentication', () => {
         .delete(`/api/v2/team/${createdTeamId}/member/${memberId}`)
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250709 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('responseInSetUpMemberForDeletion', response.body);
-
       // Info: (20250709 - Shirley) Note: Current API implementation may have issues, but authentication works
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250709 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ DELETE member endpoint accessible with proper authentication');
-      }
     });
 
     it('should successfully set up ADMIN role for member management', async () => {
@@ -1013,13 +956,6 @@ describe('Integration Test - Team Management Authentication', () => {
         expect(inviteResponse.body.code).toBe('403ISF0025'); // Info: (20250709 - Shirley) LIMIT_EXCEEDED_TEAM_MEMBER
         expect(inviteResponse.body.message).toContain('Limit exceeded team member');
 
-        if (process.env.DEBUG_TESTS === 'true') {
-          // Deprecated: (20250709 - Luphia) remove eslint-disable
-          // eslint-disable-next-line no-console
-          console.log(
-            '✅ Team member limit properly enforced (team_subscription max_members limit)'
-          );
-        }
         return; // Info: (20250709 - Shirley) End test early since we cannot proceed with member invitation
       }
 
@@ -1117,12 +1053,6 @@ describe('Integration Test - Team Management Authentication', () => {
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(600); // Info: (20250709 - Shirley) Valid HTTP status code received
       expect(response.body).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250709 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ ADMIN role successfully set up for member management');
-      }
 
       // Info: (20250709 - Shirley) Cleanup admin helper
       adminHelper2.clearAllUserSessions();

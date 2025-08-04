@@ -86,7 +86,7 @@ export async function checkAccountBookLimit(teamId: number) {
     features.OWNED_TEAM_LEDGER_LIMIT === undefined
       ? Infinity
       : 1;
-  const companyCount = await prisma.company.count({ where: { teamId, deletedAt: null } });
+  const companyCount = await prisma.accountBook.count({ where: { teamId, deletedAt: null } });
 
   if (companyCount >= maxCount) {
     const error = new Error(STATUS_MESSAGE.ACCOUNT_BOOK_LIMIT_REACHED);

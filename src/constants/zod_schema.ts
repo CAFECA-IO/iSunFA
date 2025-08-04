@@ -18,7 +18,6 @@ import {
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
-import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators, kycBookkeeperUploadSchema } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
@@ -126,6 +125,8 @@ import {
   deleteAccountBookSchema,
   disconnectAccountBookSchema,
   accountBookListSimpleSchema,
+  accountBookPutIconSchema,
+  accountBookSearchSchema,
 } from '@/lib/utils/zod_schema/account_book';
 import {
   createInvoiceRC2Input,

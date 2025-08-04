@@ -16,7 +16,7 @@ import { IInvoiceEntity } from '@/interfaces/invoice';
 import { IUserEntity } from '@/interfaces/user';
 import { IVoucherEntity } from '@/interfaces/voucher';
 import { Invoice as PrismaInvoice } from '@prisma/client';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -78,10 +78,10 @@ const handlePutRequest = async (req: NextApiRequest) => {
     // Info: (20250417 - Shirley) 獲取 certificate ，從中獲取公司ID
     const certificateData =
       await certificateGetOneAPIUtils.getCertificateByIdFromPrisma(certificateId);
-    const { companyId } = certificateData;
+    const { accountBookId } = certificateData;
 
     // Info: (20250417 - Shirley) 獲取公司以檢查團隊權限
-    const company = await getCompanyById(companyId);
+    const company = await getCompanyById(accountBookId);
     if (!company) {
       throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
     }
@@ -112,7 +112,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
     });
 
     const certificateFromPrisma = await putUtils.putInvoiceInPrisma({
-      companyId,
+      accountBookId,
       nowInSecond,
       invoiceId,
       certificateId,

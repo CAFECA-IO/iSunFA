@@ -24,7 +24,7 @@ import { getLatestVoucherNoInPrisma } from '@/lib/utils/repo/voucher.repo';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function listInvoiceVoucherJournal(
-  companyId: number,
+  accountBookId: number,
   journalEvent?: JOURNAL_EVENT,
   eventType: string | undefined = undefined,
   page: number = 1,
@@ -38,7 +38,7 @@ export async function listInvoiceVoucherJournal(
   try {
     const where: Prisma.InvoiceVoucherJournalWhereInput = {
       voucher: {
-        companyId,
+        accountBookId,
         type: eventType,
         status: journalEvent,
         date: {
@@ -124,7 +124,7 @@ export async function listInvoiceVoucherJournal(
 }
 
 export async function getInvoiceVoucherJournalByInvoiceId(
-  companyId: number,
+  accountBookId: number,
   invoiceId: number
 ): Promise<
   InvoiceVoucherJournal & {
@@ -136,7 +136,7 @@ export async function getInvoiceVoucherJournalByInvoiceId(
   const where: Prisma.InvoiceVoucherJournalWhereInput = {
     invoiceId,
     voucher: {
-      companyId,
+      accountBookId,
     },
   };
   const include = {
@@ -176,7 +176,7 @@ export async function getInvoiceVoucherJournalByJournalId(journalId: number): Pr
 
 export async function createInvoice(
   formattedInvoice: IInvoice,
-  companyId: number,
+  accountBookId: number,
   imageFileId: number = 555
 ) {
   const now = Date.now();
@@ -196,7 +196,7 @@ export async function createInvoice(
     certificate = await prisma.certificate.create({
       data: {
         uploaderId: 555,
-        companyId,
+        accountBookId,
         fileId: imageFileId,
         createdAt: nowTimestamp,
         updatedAt: nowTimestamp,
@@ -248,16 +248,16 @@ export async function createInvoice(
 
 export async function createVoucher(
   voucherNo: string,
-  companyId: number,
+  accountBookId: number,
   date: number,
   type: EventType
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const data: Prisma.VoucherCreateInput = {
-    company: {
+    accountBook: {
       connect: {
-        id: companyId,
+        id: accountBookId,
       },
     },
     date,
@@ -349,14 +349,14 @@ export async function createInvoiceVoucherJournal(
   return invoiceVoucherJournal;
 }
 
-export async function deleteInvoiceVoucherJournal(journalId: number, companyId: number) {
+export async function deleteInvoiceVoucherJournal(journalId: number, accountBookId: number) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const journal = await prisma.invoiceVoucherJournal.findFirst({
     where: {
       journalId,
       voucher: {
-        companyId,
+        accountBookId,
       },
     },
   });
@@ -583,15 +583,15 @@ export async function createJournalInPrisma(
   projectId: number | null,
   aichResultId: string,
   contractId: number | null,
-  companyId: number,
+  accountBookId: number,
   event: JOURNAL_EVENT = JOURNAL_EVENT.UPLOADED
 ) {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
   const data: Prisma.JournalCreateInput = {
-    company: {
+    accountBook: {
       connect: {
-        id: companyId,
+        id: accountBookId,
       },
     },
     aichResultId,
@@ -642,7 +642,7 @@ export async function createJournalInPrisma(
 export async function handlePrismaSavingLogic(
   formattedInvoice: IInvoice,
   aichResultId: string,
-  companyId: number,
+  accountBookId: number,
   ocrId: number | undefined
 ) {
   try {
@@ -658,20 +658,20 @@ export async function handlePrismaSavingLogic(
         projectId,
         aichResultId,
         contractId,
-        companyId
+        accountBookId
       );
 
       const createdInvoice = await createInvoice(
         formattedInvoice,
-        companyId,
+        accountBookId,
         ocrIdInDB?.imageFileId
       );
 
-      const newVoucherNo = await getLatestVoucherNoInPrisma(companyId);
+      const newVoucherNo = await getLatestVoucherNoInPrisma(accountBookId);
 
       const createdVoucher = await createVoucher(
         newVoucherNo,
-        companyId,
+        accountBookId,
         formattedInvoice.date,
         eventType
       );
@@ -728,13 +728,13 @@ export async function handlePrismaSavingLogic(
 }
 
 export async function listInvoiceVoucherJournalFor401(
-  companyId: number,
+  accountBookId: number,
   startDateInSecond: number,
   endDateInSecond: number
 ) {
   const where: Prisma.InvoiceVoucherJournalWhereInput = {
     voucher: {
-      companyId,
+      accountBookId,
       status: JOURNAL_EVENT.UPLOADED,
       date: {
         gte: startDateInSecond,
