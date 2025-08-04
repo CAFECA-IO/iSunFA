@@ -151,12 +151,12 @@ export async function findManyReports(
   let reports: IReportIncludeCompanyProject[] = [];
   const where: Prisma.ReportWhereInput = {
     id: {
-      gte: 10000000, // Info
+      gte: 10000000,
     },
     accountBookId,
     status,
     AND: [
-      // { from: { gte: startDateInSecond } }, // Info: (20240719 - Jacky)
+      // { from: { gte: startDateInSecond } },
       { to: { lte: endDateInSecond } },
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       {
