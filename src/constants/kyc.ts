@@ -76,7 +76,7 @@ export enum RepresentativeIDType {
   ID_CARD = 'ID_CARD',
   DRIVER_LICENSE = 'DRIVER_LICENSE',
 }
-// LEGAL_COMPANY_NAME
+
 export enum BasicInfoKeys {
   LEGAL_COMPANY_NAME = 'legalName',
   COUNTRY = 'country',
@@ -119,7 +119,7 @@ export enum KYCStatus {
 
 export const MAX_FILE_SIZE_IN_MB = 50;
 
-export const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // 50MB in bytes
+export const MAX_SIZE_IN_BYTES = 50 * 1024 * 1024; // Info: (20250804 - Shirley) 50MB in bytes
 
 export const sizeFormatter = (size: number): string => {
   if (size >= 1024 * 1024) {
