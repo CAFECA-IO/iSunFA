@@ -135,8 +135,8 @@ export async function decryptData(
       name: ASYMMETRIC_CRYPTO_ALGORITHM,
     },
     privateKey,
-    encryptedData
-  );
+    encryptedData as BufferSource
+  )) as ArrayBuffer;
   return decoder.decode(decryptedData);
 }
 
