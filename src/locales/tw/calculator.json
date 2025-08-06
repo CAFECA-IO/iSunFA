@@ -23,7 +23,13 @@
     "EMPLOYEE_NUMBER_PLACEHOLDER": "請輸入員工編號",
     "YEAR": "年度",
     "MONTH": "月份",
-    "DAYS_WORKED": "在職天數"
+    "PAYROLL_DAYS_BASE": "基準天數",
+    "PAYROLL_DAYS_BASE_HINT": "如果未指定，則預設為 30 天計算。",
+    "PAYROLL_OPTION_FIXED": "固定 30 天",
+    "PAYROLL_OPTION_ACTUAL": "實際日曆天數",
+    "JOINED_THIS_MONTH_1": "到職日",
+    "JOINED_THIS_MONTH_2": "",
+    "LEFT_THIS_MONTH": "離職日"
   },
   "BASE_PAY_FORM": {
     "BASE_SALARY": "本薪（應稅）",
@@ -35,15 +41,20 @@
   "WORK_HOURS_FORM": {
     "OVERTIME_HOUR_WITHOUT_TAX": "加班時數（免稅）",
     "OVERTIME_HOUR_WITH_TAX": "加班時數（應稅）",
-    "LEAVE_HOUR": "請假時數",
+    "LEAVE_HOUR": "請假 / 補休時數",
     "SICK_MENSTRUAL_LEAVE": "病假/生理假",
     "PERSONAL_LEAVE": "事假",
+    "LEAVE_PAYOUT_HOURS": "休假折抵薪資時數",
     "TOTAL_LEAVE_HOUR": "總請假時數",
     "TOTAL_OVERTIME_HOUR": "總加班時數"
   },
   "OTHERS_FORM": {
+    "LABOR_COVERAGE_STATUS": "勞保投保狀態",
+    "OPTION_LABOR_INSURANCE": "勞保",
+    "OPTION_NHI": "健保",
+    "OPTION_LABOR_PENSION": "勞退",
+    "NUMBER_OF_DEPENDENTS": "扶養人數",
     "NHI_BACK_PREMIUM": "健保加保費用",
-    "INCOME_TAX_SECOND_GEN_NHI_TAX": "代扣所得稅／二代健保費",
     "OTHER_ADJUSTMENTS": "其他溢扣／補收",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
   },
@@ -76,6 +87,7 @@
     "TOTAL_MONTHLY_SALARY": "月薪資合計",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "自行負擔勞保費",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "自行負擔健保費",
+    "HEALTH_INSURANCE_ADDITIONAL_PREMIUM": "健保加保費",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退",
     "WITHHELD_INCOME_TAX": "代扣所得稅款",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "代扣二代健保",
@@ -92,7 +104,9 @@
     "EMPLOYER_PAID_LABOR_INSURANCE": "公司負擔勞保費",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
-    "TOTAL_EMPLOYER_COST": "雇主總負擔"
+    "TOTAL_EMPLOYER_COST": "公司總負擔",
+    "REPORTED": "已申報",
+    "PAID": "已支付"
   },
   "LOGIN_MODAL": {
     "TITLE": "請先登入",

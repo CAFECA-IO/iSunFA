@@ -12,7 +12,8 @@ import html2canvas from 'html2canvas';
 
 const SalaryResultSection: React.FC = () => {
   const { t } = useTranslation('calculator');
-  const { employeeName, selectedYear, selectedMonth, salaryCalculatorResult } = useCalculatorCtx();
+  const { employeeName, employeeNumber, selectedYear, selectedMonth, salaryCalculatorResult } =
+    useCalculatorCtx();
 
   const downloadRef = useRef<HTMLDivElement>(null);
   const [isShowLoginModal, setIsShowLoginModal] = useState<boolean>(false);
@@ -76,6 +77,7 @@ const SalaryResultSection: React.FC = () => {
         >
           <PaySlip
             employeeName={showingName}
+            employeeNumber={employeeNumber}
             selectedMonth={formattedMonth}
             selectedYear={selectedYear}
             resultData={salaryCalculatorResult}
