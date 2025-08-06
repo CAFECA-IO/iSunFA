@@ -11,11 +11,10 @@ import {
   checkRequestData,
   logUserAction,
 } from '@/lib/utils/middleware';
-import { validateOutputData } from '@/lib/utils/validator';
 import { File } from '@prisma/client';
 import { findFileById, findFileInDBByName } from '@/lib/utils/repo/file.repo';
-import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder, readFile } from '@/lib/utils/file';
-import { IResponseData } from '@/interfaces/response_data';
+import { decryptImageFile, parseFilePathWithBaseUrlPlaceholder } from '@/lib/utils/file';
+import { readFile } from '@/lib/utils/parse_image_form';
 
 function formatImageId(raw: unknown): string {
   return String(raw ?? '');
@@ -62,6 +61,9 @@ const handleGetRequest = async (req: NextApiRequest) => {
       file,
       companyId: accountBookId,
     });
+
+    // const base64 = decrypted.toString('base64');
+    // payload = `data:image/jpeg;base64,${base64}`;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;
@@ -72,24 +74,11 @@ const handleGetRequest = async (req: NextApiRequest) => {
       errorMessage: error.message,
     });
   }
-
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.GET_IMAGE, payload);
-
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-    payload = null;
-  } else {
-    payload = outputData;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
+  const response = formatApiResponse<Buffer | null>(statusMessage, payload);
   return { response, statusMessage };
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<IResponseData<Buffer | null>>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse<Buffer | null>) {
   const method = req.method || HttpMethod.GET;
   let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let result;
@@ -118,5 +107,6 @@ export default async function handler(
   }
 
   await logUserAction(session, apiName, req, statusMessage);
-  res.status(httpCode).json(result);
+  res.setHeader('Content-Type', 'image/jpeg');
+  res.status(httpCode).send(result.payload as Buffer | null);
 }

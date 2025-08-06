@@ -23,7 +23,7 @@ import type { AccountingSetting as PrismaAccountingSetting } from '@prisma/clien
 import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_setting.repo';
 import { IPaginatedData } from '@/interfaces/pagination';
 
-export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
+export function getImageUrlFromFileIdV2(fileId: number, accountBookId: number): string {
   return `/api/v2/account_book/${accountBookId}/image/${fileId}`;
 }
 
@@ -104,13 +104,13 @@ export function transformInput(
 ): z.infer<typeof InvoiceRC2InputSchema> {
   const fileWithThumbnail = {
     ...cert.file,
-    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    url: getImageUrlFromFileIdV2(cert.file.id, cert.accountBookId),
     ...(cert.file.thumbnail && {
       thumbnail: {
         id: cert.file.thumbnail.id,
         name: cert.file.thumbnail.name,
         size: cert.file.thumbnail.size,
-        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+        url: getImageUrlFromFileIdV2(cert.file.thumbnail.id, cert.accountBookId),
       },
     }),
   };
@@ -143,13 +143,13 @@ export function transformOutput(
 ): z.infer<typeof InvoiceRC2OutputSchema> {
   const fileWithThumbnail = {
     ...cert.file,
-    url: getImageUrlFromFileIdV1(cert.file.id, cert.accountBookId),
+    url: getImageUrlFromFileIdV2(cert.file.id, cert.accountBookId),
     ...(cert.file.thumbnail && {
       thumbnail: {
         id: cert.file.thumbnail.id,
         name: cert.file.thumbnail.name,
         size: cert.file.thumbnail.size,
-        url: getImageUrlFromFileIdV1(cert.file.thumbnail.id, cert.accountBookId),
+        url: getImageUrlFromFileIdV2(cert.file.thumbnail.id, cert.accountBookId),
       },
     }),
   };

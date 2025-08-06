@@ -17,6 +17,6 @@ export const imageGetSchema = {
     querySchema: z.object({ accountBookId: zodStringToNumber, imageId: zodStringToNumber }),
     bodySchema: nullSchema,
   },
-  outputSchema: imageOutputSchema.nullable(),
+  outputSchema: z.string().nullable(),
   frontend: nullSchema,
 };

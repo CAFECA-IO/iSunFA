@@ -208,15 +208,3 @@ export async function writeBufferToFile({
   }
   return filePath;
 }
-
-export async function readFile(baseFolder: string, fileName?: string): Promise<Buffer | null> {
-  const filePath = fileName ? path.join(baseFolder, fileName) : baseFolder;
-  let fileBuffer: Buffer | null = null;
-  try {
-    // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取)
-    fileBuffer = await fs.readFile(filePath);
-  } catch (error) {
-    loggerBack.error(error, `Error in readFile: ${filePath}`);
-  }
-  return fileBuffer;
-}
