@@ -178,4 +178,5 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_BAIFA_VOUCHER]: [AuthFunctionsKeysNew.internal],
 
   [APIName.GET_VACANCY_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_IMAGE]: [AuthFunctionsKeysNew.user],
 };

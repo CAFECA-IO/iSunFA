@@ -24,7 +24,7 @@ import { getAccountingSettingByCompanyId } from '@/lib/utils/repo/accounting_set
 import { IPaginatedData } from '@/interfaces/pagination';
 
 export function getImageUrlFromFileIdV1(fileId: number, accountBookId: number): string {
-  return `/api/v1/company/${accountBookId}/image/${fileId}`;
+  return `/api/v2/account_book/${accountBookId}/image/${fileId}`;
 }
 
 export const createOrderByList = (
