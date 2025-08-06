@@ -37,6 +37,8 @@ const BasicInfoForm: React.FC = () => {
     changeJoinedDay,
     isLeft,
     toggleLeft,
+    dayOfLeaving,
+    changeLeavingDay,
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
 
@@ -59,9 +61,15 @@ const BasicInfoForm: React.FC = () => {
   } = useOuterClick<HTMLDivElement>(false);
 
   const {
-    targetRef: dayRef,
-    componentVisible: isDayOpen,
-    setComponentVisible: setIsDayOpen,
+    targetRef: joiningDayRef,
+    componentVisible: isJoiningDayOpen,
+    setComponentVisible: setIsJoiningDayOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: leavingDayRef,
+    componentVisible: isLeavingDayOpen,
+    setComponentVisible: setIsLeavingDayOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250806 - Julian) 生成日期字串
@@ -81,7 +89,8 @@ const BasicInfoForm: React.FC = () => {
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
   const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
   const togglePayrollDropdown = () => setIsPayrollOpen((prev) => !prev);
-  const toggleDayDropdown = () => setIsDayOpen((prev) => !prev);
+  const toggleJoiningDayDropdown = () => setIsJoiningDayOpen((prev) => !prev);
+  const toggleLeavingDayDropdown = () => setIsLeavingDayOpen((prev) => !prev);
 
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,8 +142,22 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
-  const dayDropdown = dayOptions.map((day) => {
+  const joiningDayDropdown = dayOptions.map((day) => {
     const clickHandler = () => changeJoinedDay(day);
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {day}
+      </button>
+    );
+  });
+
+  const leavingDayDropdown = dayOptions.map((day) => {
+    const clickHandler = () => changeLeavingDay(day);
 
     return (
       <button
@@ -286,43 +309,69 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 到職日 */}
-        <div className="col-span-2 flex items-center justify-between gap-40px">
+        <div className="col-span-2 flex h-44px items-center justify-between gap-40px">
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
             title={t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_1')}
           />
-          <div className="flex items-center gap-8px">
-            <p className="text-base font-medium">
-              {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
-            </p>
-            <div
-              ref={dayRef}
-              onClick={toggleDayDropdown}
-              className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
-            >
-              <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
-                {dayOfJoining}
-              </div>
-              <div className="px-12px py-10px">
-                <FaChevronDown size={16} />
-              </div>
-              {isDayOpen && (
-                <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
-                  {dayDropdown}
+          {isJoined && (
+            <div className="flex items-center gap-8px">
+              <p className="text-base font-medium">
+                {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
+              </p>
+              <div
+                ref={joiningDayRef}
+                onClick={toggleJoiningDayDropdown}
+                className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+              >
+                <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+                  {dayOfJoining}
                 </div>
-              )}
+                <div className="px-12px py-10px">
+                  <FaChevronDown size={16} />
+                </div>
+                {isJoiningDayOpen && (
+                  <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                    {joiningDayDropdown}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Info: (20250806 - Julian) 離職日 */}
-        <div className="col-span-2">
+        <div className="col-span-2 flex h-44px items-center justify-between gap-40px">
           <ToggleSwitch
             isOn={isLeft}
             handleToggle={toggleLeft}
             title={t('calculator:BASIC_INFO_FORM.LEFT_THIS_MONTH')}
           />
+          {isLeft && (
+            <div className="flex items-center gap-8px">
+              <p className="text-base font-medium">
+                {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
+              </p>
+              <div
+                ref={leavingDayRef}
+                onClick={toggleLeavingDayDropdown}
+                className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+              >
+                <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+                  {dayOfLeaving}
+                </div>
+                <div className="px-12px py-10px">
+                  <FaChevronDown size={16} />
+                </div>
+                {isLeavingDayOpen && (
+                  <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                    {leavingDayDropdown}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </form>
 

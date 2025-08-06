@@ -50,6 +50,8 @@ interface ICalculatorContext {
   changeJoinedDay: (day: string) => void;
   isLeft: boolean;
   toggleLeft: () => void;
+  dayOfLeaving: string;
+  changeLeavingDay: (day: string) => void;
 
   // Info: (20250709 - Julian) 是否有姓名錯誤
   isNameError: boolean;
@@ -155,6 +157,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [isJoined, setIsJoined] = useState<boolean>(false);
   const [dayOfJoining, setDayOfJoining] = useState<string>('01'); // Info: (20250709 - Julian) 入職日期
   const [isLeft, setIsLeft] = useState<boolean>(false);
+  const [dayOfLeaving, setDayOfLeaving] = useState<string>('01'); // Info: (20250709 - Julian) 離職日期
 
   // Info: (20250711 - Julian) 是否有姓名錯誤
   const [isNameError, setIsNameError] = useState<boolean>(false);
@@ -372,6 +375,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setIsJoined(false);
     setIsLeft(false);
     setDayOfJoining('01');
+    setDayOfLeaving('01');
     setBaseSalary(0);
     setMealAllowance(0);
     setOtherAllowanceWithTax(0);
@@ -430,6 +434,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const changeJoinedDay = (day: string) => {
     setDayOfJoining(day);
   };
+  const changeLeavingDay = (day: string) => {
+    setDayOfLeaving(day);
+  };
   const toggleJoined = () => setIsJoined((prev) => !prev);
   const toggleLeft = () => setIsLeft((prev) => !prev);
 
@@ -471,6 +478,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeJoinedDay,
       isLeft,
       toggleLeft,
+      dayOfLeaving,
+      changeLeavingDay,
       baseSalary,
       setBaseSalary,
       mealAllowance,
@@ -543,6 +552,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       isJoined,
       dayOfJoining,
       isLeft,
+      dayOfLeaving,
       baseSalary,
       mealAllowance,
       otherAllowanceWithTax,
