@@ -14,8 +14,6 @@ const BasicInfoForm: React.FC = () => {
 
   const [isShowEmployeeListModal, setIsShowEmployeeListModal] = useState<boolean>(false);
 
-  const [isOn, setIsOn] = useState<boolean>(false);
-
   const {
     yearOptions,
     monthOptions,
@@ -30,11 +28,17 @@ const BasicInfoForm: React.FC = () => {
     // workedDays,
     // setWorkedDays,
     isNameError,
+    payrollDaysBaseOptions,
+    payrollDaysBase,
+    changePayrollDaysBase,
+    isJoined,
+    toggleJoined,
+    dayOfJoining,
+    changeJoinedDay,
+    isLeft,
+    toggleLeft,
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
-
-  // Info: (20250806 - Julian) 當月的最大天數
-  const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
 
   const {
     targetRef: yearDropdownRef,
@@ -59,6 +63,17 @@ const BasicInfoForm: React.FC = () => {
     componentVisible: isDayOpen,
     setComponentVisible: setIsDayOpen,
   } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250806 - Julian) 生成日期字串
+  const selectedMonthNum = monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1; // 月份從 1 開始計算
+  const dateStr = `${selectedYear}/${selectedMonthNum < 10 ? `0${selectedMonthNum}` : selectedMonthNum}/`;
+
+  // Info: (20250806 - Julian) 當月的最大天數
+  const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
+  // Info: (20250806 - Julian) 生成當月的天數選項
+  const dayOptions = Array.from({ length: maxDaysInMonth }, (_, i) =>
+    (i + 1).toString().padStart(2, '0')
+  );
 
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
@@ -104,11 +119,8 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
-  const payrollDropdown = [
-    t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_FIXED'),
-    t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_ACTUAL'),
-  ].map((option) => {
-    const clickHandler = () => {}; // ToDo
+  const payrollDropdown = payrollDaysBaseOptions.map((option) => {
+    const clickHandler = () => changePayrollDaysBase(option);
 
     return (
       <button
@@ -116,14 +128,13 @@ const BasicInfoForm: React.FC = () => {
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
-        {option}
+        {t(`calculator:BASIC_INFO_FORM.PAYROLL_OPTION_${option}`)}
       </button>
     );
   });
 
-  const dayDropdown = Array.from({ length: maxDaysInMonth }, (_, index) => {
-    const day = index + 1;
-    const clickHandler = () => {}; // ToDo
+  const dayDropdown = dayOptions.map((day) => {
+    const clickHandler = () => changeJoinedDay(day);
 
     return (
       <button
@@ -246,7 +257,7 @@ const BasicInfoForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Info: (20250806 - Julian) 基礎天數 */}
+        {/* Info: (20250806 - Julian) 基準天數 */}
         <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.PAYROLL_DAYS_BASE')}{' '}
@@ -258,7 +269,7 @@ const BasicInfoForm: React.FC = () => {
             className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
           >
             <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
-              {t('wd')}
+              {t(`calculator:BASIC_INFO_FORM.PAYROLL_OPTION_${payrollDaysBase}`)}
             </div>
             <div className="px-12px py-10px">
               <FaChevronDown size={16} />
@@ -277,13 +288,13 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250806 - Julian) 到職日 */}
         <div className="col-span-2 flex items-center justify-between gap-40px">
           <ToggleSwitch
-            isOn={isOn}
-            handleToggle={() => setIsOn(!isOn)}
+            isOn={isJoined}
+            handleToggle={toggleJoined}
             title={t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_1')}
           />
           <div className="flex items-center gap-8px">
             <p className="text-base font-medium">
-              {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} 2025/01/
+              {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
             </p>
             <div
               ref={dayRef}
@@ -291,7 +302,7 @@ const BasicInfoForm: React.FC = () => {
               className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
             >
               <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
-                {t(`date_picker:DATE_PICKER.${selectedMonth.name.slice(0, 3).toUpperCase()}`)}
+                {dayOfJoining}
               </div>
               <div className="px-12px py-10px">
                 <FaChevronDown size={16} />
@@ -308,8 +319,8 @@ const BasicInfoForm: React.FC = () => {
         {/* Info: (20250806 - Julian) 離職日 */}
         <div className="col-span-2">
           <ToggleSwitch
-            isOn={isOn}
-            handleToggle={() => setIsOn(!isOn)}
+            isOn={isLeft}
+            handleToggle={toggleLeft}
             title={t('calculator:BASIC_INFO_FORM.LEFT_THIS_MONTH')}
           />
         </div>

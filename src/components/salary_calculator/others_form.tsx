@@ -10,6 +10,14 @@ const OthersForm: React.FC = () => {
   const { t } = useTranslation('calculator');
 
   const {
+    isLaborInsurance,
+    toggleLaborInsurance,
+    isNHI,
+    toggleNHI,
+    isLaborPension,
+    toggleLaborPension,
+    numberOfDependents,
+    setNumberOfDependents,
     nhiBackPremium,
     setNhiBackPremium,
     otherAdjustments,
@@ -47,19 +55,22 @@ const OthersForm: React.FC = () => {
           {t('calculator:OTHERS_FORM.LABOR_COVERAGE_STATUS')}
         </p>
         <div className="flex flex-col items-start gap-18px">
+          {/* Info: (20250806 - Julian) 勞保是否勾選 */}
           <ToggleSwitch
-            isOn
-            handleToggle={() => {}}
+            isOn={isLaborInsurance}
+            handleToggle={toggleLaborInsurance}
             title={t('calculator:OTHERS_FORM.OPTION_LABOR_INSURANCE')}
           />
+          {/* Info: (20250806 - Julian) 健保是否勾選 */}
           <ToggleSwitch
-            isOn
-            handleToggle={() => {}}
+            isOn={isNHI}
+            handleToggle={toggleNHI}
             title={t('calculator:OTHERS_FORM.OPTION_NHI')}
           />
+          {/* Info: (20250806 - Julian) 勞退是否勾選 */}
           <ToggleSwitch
-            isOn
-            handleToggle={() => {}}
+            isOn={isLaborPension}
+            handleToggle={toggleLaborPension}
             title={t('calculator:OTHERS_FORM.OPTION_LABOR_PENSION')}
           />
         </div>
@@ -68,8 +79,8 @@ const OthersForm: React.FC = () => {
       <div className="flex w-fit flex-col gap-12px">
         <HourCounter
           title={t('calculator:OTHERS_FORM.NUMBER_OF_DEPENDENTS')}
-          value={0}
-          setValue={() => {}} // ToDo
+          value={numberOfDependents}
+          setValue={setNumberOfDependents}
         />
       </div>
       {/* Info: (20250709 - Julian) 健保加保費用 */}
