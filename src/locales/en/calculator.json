@@ -87,6 +87,7 @@
     "TOTAL_MONTHLY_SALARY": "Total Monthly Salary",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "Employee Paid Labor Insurance",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "Employee Paid Health Insurance",
+    "HEALTH_INSURANCE_ADDITIONAL_PREMIUM": "Health Insurance Additional Premium",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution",
     "WITHHELD_INCOME_TAX": "Withheld Income Tax",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "Withheld 2nd Gen NHI Premium",
@@ -103,7 +104,9 @@
     "EMPLOYER_PAID_LABOR_INSURANCE": "Employer Paid Labor Insurance",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "Employer Paid Health Insurance",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
-    "TOTAL_EMPLOYER_COST": "Total Employer Cost"
+    "TOTAL_EMPLOYER_COST": "Total Employer Cost",
+    "REPORTED": "Reported",
+    "PAID": "Paid"
   },
   "LOGIN_MODAL": {
     "TITLE": "Please Login in",

@@ -87,6 +87,7 @@
     "TOTAL_MONTHLY_SALARY": "月薪資合計",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "自行負擔勞保費",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "自行負擔健保費",
+    "HEALTH_INSURANCE_ADDITIONAL_PREMIUM": "健保加保費",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退",
     "WITHHELD_INCOME_TAX": "代扣所得稅款",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "代扣二代健保",
@@ -103,7 +104,9 @@
     "EMPLOYER_PAID_LABOR_INSURANCE": "公司負擔勞保費",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
-    "TOTAL_EMPLOYER_COST": "雇主總負擔"
+    "TOTAL_EMPLOYER_COST": "公司總負擔",
+    "REPORTED": "已申報",
+    "PAID": "已支付"
   },
   "LOGIN_MODAL": {
     "TITLE": "請先登入",

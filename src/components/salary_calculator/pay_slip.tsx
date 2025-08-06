@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 import ResultBlock from '@/components/salary_calculator/result_block';
 import { numberWithCommas } from '@/lib/utils/common';
@@ -7,6 +7,7 @@ import { ISalaryCalculator, RowItem } from '@/interfaces/calculator';
 
 interface IPaySlipProps {
   employeeName: string;
+  employeeNumber: string;
   selectedMonth: string;
   selectedYear: string;
   resultData: ISalaryCalculator;
@@ -15,6 +16,7 @@ interface IPaySlipProps {
 
 const PaySlip: React.FC<IPaySlipProps> = ({
   employeeName,
+  employeeNumber,
   selectedMonth,
   selectedYear,
   resultData,
@@ -23,6 +25,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   const { t } = useTranslation('calculator');
 
   const showingName = employeeName !== '' ? employeeName : '-';
+  const showingNumber = employeeNumber !== '' ? employeeNumber : '-';
   // Info: (20250709 - Julian) 格式化日期
   const formattedMonth = selectedMonth.length > 3 ? `${selectedMonth.slice(0, 3)}.` : selectedMonth;
   const formattedDate = `${formattedMonth} ${selectedYear}`;
@@ -42,6 +45,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     employeeContribution: {
       employeePaidLaborInsurance, // Info: (20250710 - Julian) 自行負擔勞保費
       employeePaidHealthInsurance, // Info: (20250710 - Julian) 自行負擔健保費
+      healthInsuranceAdditionalPremium, // Info: (20250806 - Julian) 健保加保費
       voluntaryPensionContribution, // Info: (20250710 - Julian) 自提勞退
       withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
       withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
@@ -113,6 +117,10 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     {
       label: t('calculator:RESULT.EMPLOYEE_PAID_HEALTH_INSURANCE'),
       value: employeePaidHealthInsurance,
+    },
+    {
+      label: t('calculator:RESULT.HEALTH_INSURANCE_ADDITIONAL_PREMIUM'),
+      value: healthInsuranceAdditionalPremium,
     },
     {
       label: t('calculator:RESULT.VOLUNTARY_PENSION_CONTRIBUTION'),
@@ -203,11 +211,32 @@ const PaySlip: React.FC<IPaySlipProps> = ({
         <div className="flex flex-col items-start gap-8px">
           <p className="text-base font-semibold text-text-brand-primary-lv1">{formattedDate}</p>
           <p className="text-28px font-bold text-text-neutral-primary">{showingName}</p>
+          <p className="text-xs font-medium text-text-neutral-primary">{showingNumber}</p>
         </div>
         {/* Info: (20250708 - Julian) 薪資合計 */}
-        <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
+        {/* <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
           <Image src="/icons/money_bag.svg" alt="salary_icon" width={32} height={32} />
           <p>NT ${numberWithCommas(totalSalary)}</p>
+        </div> */}
+        <div className="flex flex-col gap-8px">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-black">
+              {t('calculator:RESULT.REPORTED')}
+            </p>
+            <div className="text-2xl font-bold text-text-brand-primary-lv2">
+              {numberWithCommas(totalSalary)}{' '}
+              <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase text-black">
+              {t('calculator:RESULT.PAID')}
+            </p>
+            <div className="text-2xl font-bold text-text-brand-primary-lv2">
+              {numberWithCommas(totalSalary)}{' '}
+              <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
+            </div>
+          </div>
         </div>
       </div>
       {/* Info: (20250708 - Julian) Result Field */}

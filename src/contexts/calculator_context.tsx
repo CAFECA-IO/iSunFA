@@ -295,6 +295,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       employeeContribution: {
         employeePaidLaborInsurance: result.employeeBurdenLaborInsurance,
         employeePaidHealthInsurance: result.employeeBurdenHealthInsurance,
+        healthInsuranceAdditionalPremium: 0, // ToDo: (20250806 - Julian) 新增欄位：健保加保費用
         voluntaryPensionContribution: result.employeeBurdenPensionInsurance,
         withheldIncomeTax: result.employeeBurdenIncomeTax,
         withheldSecondGenerationNHIPremium:
