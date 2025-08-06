@@ -11,10 +11,15 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { getTimestampNow, getTimestampOfLastSecondOfDate } from '@/lib/utils/common';
 
 const reportGetQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
   startDate: zodTimestampInSecondsNoDefault(),
   endDate: zodTimestampInSecondsNoDefault(),
   language: z.string(),
   reportType: z.nativeEnum(FinancialReportTypesKey),
+});
+
+const reportPostQueryValidatorV2 = z.object({
+  accountBookId: zodStringToNumber,
 });
 
 const reportGetBodyValidatorV2 = z.object({});
@@ -95,7 +100,7 @@ const generatePublicReportBodySchemaV2 = z.object({
 
 export const generatePublicReportSchemaV2 = {
   input: {
-    querySchema: nullSchema,
+    querySchema: reportPostQueryValidatorV2,
     bodySchema: generatePublicReportBodySchemaV2,
   },
   outputSchema: z.number().nullable(),

@@ -1,3 +1,4 @@
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
@@ -13,6 +14,7 @@ import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book'
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 
+/**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250711 - Shirley) Mock pusher and crypto for account book testing
 jest.mock('pusher', () => ({
   // Info: (20250711 - Shirley) 建構子 → 回傳只有 trigger 的假物件
@@ -42,6 +44,7 @@ jest.mock('@/lib/utils/crypto', () => {
     storeKeyByCompany: jest.fn(), // Info: (20250711 - Shirley) 若有呼叫也不做事
   };
 });
+*/
 
 /**
  * Info: (20250710 - Shirley) Integration Test - Account Book Setup (Test Case 3)
@@ -72,7 +75,7 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
 
   // Info: (20250710 - Shirley) Test data for account book creation
   const validAccountBookData = {
-    name: 'Test Company 測試公司',
+    name: 'Final Updated Company Name',
     taxId: randomNumber.toString(),
     tag: WORK_TAG.ALL,
     teamId: 0, // Info: (20250711 - Shirley) Will be set after team creation
@@ -88,13 +91,13 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
   };
 
   beforeAll(async () => {
+    const ctx = await BaseTestContext.getSharedContext();
     // Info: (20250710 - Shirley) Setup authenticated helper and complete user registration
-    authenticatedHelper = await APITestHelper.createHelper({ autoAuth: true });
-
+    authenticatedHelper = ctx.helper;
+    /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
     const statusResponse = await authenticatedHelper.getStatusInfo();
     const userData = statusResponse.body.payload?.user as { id?: number };
     currentUserId = userData?.id?.toString() || '1';
-
     // Info: (20250710 - Shirley) Complete user registration flow
     await authenticatedHelper.agreeToTerms();
     await authenticatedHelper.createUserRole();
@@ -106,8 +109,10 @@ describe('Integration Test - Account Book Setup (Test Case 3)', () => {
     teamId = teamData?.id || 0;
 
     // Info: (20250710 - Shirley) Update test data with actual team ID
+    */
+    currentUserId = ctx.userId.toString();
+    teamId = ctx.teamId || (await BaseTestContext.createTeam(Number(currentUserId))).id;
     validAccountBookData.teamId = teamId;
-
     // Info: (20250710 - Shirley) Create test clients for account book APIs
     createAccountBookClient = createTestClient({
       handler: createAccountBookHandler,

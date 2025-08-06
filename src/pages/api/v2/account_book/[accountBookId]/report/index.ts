@@ -13,10 +13,10 @@ import {
   getReportFilterByReportType,
   transformAccountsMapToFilterSequence,
   transformAccountsToMap,
-} from '@/pages/api/v2/company/[companyId]/report/route_utils';
+} from '@/pages/api/v2/account_book/[accountBookId]/report/route_utils';
 import { ReportSheetType } from '@/constants/report';
 import BalanceSheetGenerator from '@/lib/utils/report/balance_sheet_generator';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { FinancialReport } from '@/interfaces/report';
 import IncomeStatementGenerator from '@/lib/utils/report/income_statement_generator';
 import CashFlowStatementGenerator from '@/lib/utils/report/cash_flow_statement_generator';
@@ -379,7 +379,6 @@ const reportHandlers: ReportHandlers = {
  */
 const handleGetRequest = async (req: NextApiRequest) => {
   const session = await getSession(req);
-  const { companyId } = session;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: APIResponse = null;
 
@@ -393,7 +392,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // Info: (20250502 - Shirley) 獲取報表參數
-  const { startDate, endDate, language, reportType } = query;
+  const { accountBookId: companyId, startDate, endDate, language, reportType } = query;
 
   // Info: (20250502 - Shirley) 根據報表類型生成報表
   const reportHandler = reportHandlers[reportType as FinancialReportTypesKey];

@@ -51,7 +51,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   // Info: (20250418 - Shirley) 處理中斷帳本連接
   const { userId } = session;
   const { accountBookId } = query as IGetAccountBookQueryParams;
-  const currentCompanyId = session?.companyId;
+  const currentCompanyId = session?.accountBookId;
 
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: { success: boolean } | null = null;
@@ -75,7 +75,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       return { statusMessage, payload, session };
     }
 
-    await setSession(session, { companyId: undefined });
+    await setSession(session, { accountBookId: undefined });
 
     // Info: (20250418 - Shirley) 驗證斷開連接是否成功
     const newSession = await getSession(req);
@@ -84,7 +84,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     );
 
     // Info: (20250418 - Shirley) 檢查 companyId 是否已被移除
-    if (newSession?.companyId === undefined) {
+    if (newSession?.accountBookId === undefined) {
       loggerBack.info(`用戶 ${userId} 已成功斷開與帳本 ${currentCompanyId} 的連接`);
       statusMessage = STATUS_MESSAGE.SUCCESS;
       payload = { success: true };

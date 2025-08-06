@@ -20,9 +20,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { parseSortOption } from '@/lib/utils/sort';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { SortOrder } from '@/constants/sort';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
-import { convertTeamRoleCanDo } from '@/lib/shared/permission';
-import { TeamRole } from '@/interfaces/team';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import {
   checkSessionUser,
@@ -34,6 +32,7 @@ import { getSession } from '@/lib/utils/session';
 import { validateOutputData } from '@/lib/utils/validator';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
+import { assertUserCanByAccountBook } from '@/lib/utils/permission/assert_user_team_permission';
 
 /**
  * Info: (20250424 - Shirley) Handle GET request for trial balance data
@@ -54,7 +53,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
   // Info: (20250424 - Shirley) Get user session
   const session = await getSession(req);
-  const { userId, teams } = session;
+  const { userId } = session;
 
   // Info: (20250424 - Shirley) Check if user is logged in
   await checkSessionUser(session, apiName, req);
@@ -83,14 +82,10 @@ async function handleGetRequest(req: NextApiRequest) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const userTeam = teams?.find((team) => team.id === accountBookTeamId);
-  if (!userTeam) {
-    throw new Error(STATUS_MESSAGE.FORBIDDEN);
-  }
-
-  const assertResult = convertTeamRoleCanDo({
-    teamRole: userTeam.role as TeamRole,
-    canDo: TeamPermissionAction.VIEW_TRIAL_BALANCE,
+  const assertResult = await assertUserCanByAccountBook({
+    userId,
+    accountBookId,
+    action: TeamPermissionAction.VIEW_TRIAL_BALANCE,
   });
 
   if (!assertResult.can) {
@@ -159,7 +154,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Step 3 撈出所有會計科目
     const accounts = await findManyAccountsInPrisma({
-      companyId: accountBookId,
+      accountBookId: +accountBookId,
       includeDefaultAccount: true,
       page: 1,
       limit: 9999999,

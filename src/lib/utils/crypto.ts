@@ -125,18 +125,18 @@ export async function encryptData(data: string, publicKey: CryptoKey): Promise<U
 }
 
 export async function decryptData(
-  encryptedData: Uint8Array,
+  encryptedData: BufferSource,
   privateKey: CryptoKey
 ): Promise<string> {
   const decoder = new TextDecoder();
 
-  const decryptedData = await crypto.subtle.decrypt(
+  const decryptedData = (await crypto.subtle.decrypt(
     {
       name: ASYMMETRIC_CRYPTO_ALGORITHM,
     },
     privateKey,
-    encryptedData
-  );
+    encryptedData as BufferSource
+  )) as ArrayBuffer;
   return decoder.decode(decryptedData);
 }
 
@@ -152,9 +152,9 @@ export async function decrypt(encryptedData: string, privateKey: CryptoKey): Pro
 
 // Info: 加密文件 (20240822 - Shirley)
 export const encryptFile = async (
-  fileArrayBuffer: ArrayBuffer,
+  fileArrayBuffer: BufferSource,
   publicKey: CryptoKey,
-  iv: Uint8Array
+  iv: BufferSource
 ): Promise<{ encryptedContent: ArrayBuffer; encryptedSymmetricKey: string }> => {
   const symmetricKey = await crypto.subtle.generateKey(
     { name: SYMMETRIC_CRYPTO_ALGORITHM, length: SYMMETRIC_KEY_LENGTH },
@@ -181,7 +181,7 @@ export const decryptFile = async (
   encryptedContent: ArrayBuffer,
   encryptedSymmetricKey: string,
   privateKey: CryptoKey,
-  iv: Uint8Array
+  iv: BufferSource
 ): Promise<ArrayBuffer> => {
   let decryptedSymmetricKeyJSON: string;
 

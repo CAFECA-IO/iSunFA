@@ -36,7 +36,7 @@ const accountingSettingPutQuerySchema = z.object({
 });
 const accountingSettingPutBodySchema = z.object({
   id: z.number(),
-  companyId: z.number().int(),
+  accountBookId: z.number().int(),
   taxSettings: z.object({
     salesTax: z.object({
       taxable: z.boolean(),
@@ -71,7 +71,7 @@ const accountingSettingPutBodySchema = z.object({
 export const accountingSettingOutputSchema = z
   .object({
     id: z.number(),
-    companyId: z.number(),
+    accountBookId: z.number(),
     taxSettings: z.object({
       salesTax: z.object({
         taxable: z.boolean(),
@@ -103,7 +103,7 @@ export const accountingSettingOutputSchema = z
   })
   .transform((accountingSetting) => ({
     id: accountingSetting.id,
-    companyId: accountingSetting.companyId,
+    accountBookId: accountingSetting.accountBookId,
     taxSettings: accountingSetting.taxSettings,
     currency: accountingSetting.currency,
     shortcutList: accountingSetting.shortcutList,
@@ -112,7 +112,7 @@ export const accountingSettingOutputSchema = z
 // Info: (20241015 - Jacky) Accounting setting validate schema
 const accountingSettingValidateSchema = z.object({
   id: z.number(),
-  companyId: z.number(),
+  accountBookId: z.number(),
   taxSettings: z.object({
     salesTax: z.object({
       taxable: z.boolean(),
@@ -163,7 +163,7 @@ export const accountingSettingPutSchema = {
 
 // Info: (20250425 - Shirley) Update entity validator to normalize and enforce valid return periodicity values
 export const accountingSettingEntityValidator = z.object({
-  companyId: z.number(),
+  accountBookId: z.number(),
   currency: z.nativeEnum(CurrencyType),
   salesTaxRate: z.number(),
   salesTaxTaxable: z.boolean(),

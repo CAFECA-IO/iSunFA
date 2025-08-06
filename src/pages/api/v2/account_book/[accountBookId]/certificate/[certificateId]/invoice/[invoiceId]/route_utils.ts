@@ -110,7 +110,7 @@ export const invoicePutApiUtils = {
     return invoice!;
   },
   putInvoiceInPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     nowInSecond: number;
     invoiceId: number;
     certificateId?: number;

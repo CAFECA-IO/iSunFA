@@ -1,6 +1,6 @@
 import { IFinancialReportRequest } from '@/interfaces/report';
 import { IVoucher } from '@/interfaces/voucher';
-import { ICompanyKYCForm } from '@/interfaces/company_kyc';
+import { IAccountBookKYCForm } from '@/interfaces/account_book_kyc';
 import { ICertificate } from '@/interfaces/certificate';
 
 export type IAPIName =
@@ -149,7 +149,8 @@ export type IAPIName =
   | 'DECLINE_TEAM_INVITATION'
   | 'LIST_BAIFA_ACCOUNT_BOOK'
   | 'LIST_BAIFA_VOUCHER'
-  | 'GET_VACANCY_BY_ID';
+  | 'GET_VACANCY_BY_ID'
+  | 'GET_IMAGE';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
@@ -160,7 +161,7 @@ export type IAPIInput = {
     | FormData
     | IVoucher
     | IFinancialReportRequest
-    | ICompanyKYCForm
+    | IAccountBookKYCForm
     | ICertificate
     | string;
   params?: { [key: string]: unknown };

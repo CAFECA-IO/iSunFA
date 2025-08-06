@@ -1,6 +1,6 @@
 {
   "name": "iSunFA",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "versionName": "RC1",
   "private": false,
   "type": "commonjs",
@@ -12,6 +12,7 @@
     "lint": "next lint && eslint --fix --ext .js,.jsx,.ts,.tsx .",
     "test": "npm run test:unit && npm run test:integration",
     "test:integration": "TEST_TYPE=integration jest --config=jest.supertest.config.ts",
+    "test:integration:sequential": "npm run test:integration -- --testPathPattern=\"00_api_health_check\" && npm run test:integration -- --testPathPattern=\"01_user_email_authentication\" && npm run test:integration -- --testPathPattern=\"02_team_management\" && npm run test:integration -- --testPathPattern=\"03_upload\" && npm run test:integration -- --testPathPattern=\"05_account_book_setup\" && npm run test:integration -- --testPathPattern=\"06_accounting_setting\" && npm run test:integration -- --testPathPattern=\"07_invoice_rc2\" && npm run test:integration -- --testPathPattern=\"08_01_01_balance_sheet\" && npm run test:integration -- --testPathPattern=\"08_01_02_income_statement\" && npm run test:integration -- --testPathPattern=\"08_02_report_post_public\" && npm run test:integration -- --testPathPattern=\"08_03_trial_balance\" && npm run test:integration -- --testPathPattern=\"08_04_ledger\" && npm run test:integration -- --testPathPattern=\"08_05_cash_flow\" && npm run test:integration -- --testPathPattern=\"09_voucher_crud\"",
     "test:unit": "jest --testPathPatterns=src/tests/unit",
     "test:debug": "DEBUG_TESTS=true jest --verbose --silent=false",
     "test:integration:debug": "TEST_TYPE=integration DEBUG_TESTS=true jest --config=jest.supertest.config.ts --verbose --silent=false",
@@ -25,12 +26,13 @@
     "analyze-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/analyze_certificate.ts",
     "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
     "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts",
-    "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/generate_signature.ts"
+    "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/generate_signature.ts",
+    "clear_jest": "jest --clearCache"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
     "@next/third-parties": "^14.2.5",
-    "@prisma/client": "^5.14.0",
+    "@prisma/client": "^5.21.1",
     "@types/formidable": "^3.4.5",
     "apexcharts": "^4.0.0",
     "bignumber.js": "^9.1.2",
@@ -136,7 +138,7 @@
     "ts-jest": "^29.1.4",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.2"
   },
   "husky": {
     "hooks": {

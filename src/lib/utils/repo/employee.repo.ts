@@ -9,14 +9,14 @@ import { getInsuranceInfo } from '@/lib/utils/insurance';
 import { SortOrder } from '@/constants/sort';
 
 export async function listEmployees(
-  companyId: number,
+  accountBookId: number,
   searchQuery?: string,
   pageSize: number = DEFAULT_PAGE_LIMIT,
   targetPage: number = DEFAULT_PAGE_NUMBER
 ): Promise<IEasyEmployeeWithPagination | null> {
   try {
     const where: Prisma.EmployeeWhereInput = {
-      companyId,
+      accountBookId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
       ...(searchQuery
         ? [
@@ -80,7 +80,7 @@ export async function listEmployees(
 }
 
 export async function createEmployee(
-  companyId: number,
+  accountBookId: number,
   name: string,
   department: string,
   salaryPayMode: string,
@@ -94,7 +94,7 @@ export async function createEmployee(
     const insuranceInfo = getInsuranceInfo(salary);
     const insurancePayment = insuranceInfo.employerTotalContribution;
     const departmentData = await prisma.department.findFirst({
-      where: { name: department, companyId },
+      where: { name: department, accountBookId },
     });
     if (!departmentData) {
       throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
@@ -104,7 +104,7 @@ export async function createEmployee(
       data: {
         name,
         departmentId: departmentData.id,
-        companyId,
+        accountBookId,
         salaryPayMode,
         payFrequency,
         salary,
@@ -120,7 +120,7 @@ export async function createEmployee(
       imageId: undefined,
       name: employeeData.name,
       departmentId: employeeData.departmentId,
-      companyId: employeeData.companyId,
+      companyId: employeeData.accountBookId,
       salary: employeeData.salary,
       insurancePayment: employeeData.insurancePayment,
       bonus: employeeData.bonus,

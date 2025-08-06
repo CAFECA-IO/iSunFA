@@ -19,13 +19,12 @@ import {
 } from '@/lib/utils/common';
 import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
-import { parsePrismaCompanyToCompanyEntity } from '@/lib/utils/formatter/company.formatter';
+import { parsePrismaAccountBookToAccountBookEntity } from '@/lib/utils/formatter/account_book.formatter';
 import { parsePrismaUserToUserEntity } from '@/lib/utils/formatter/user.formatter';
 import { IUserEntity } from '@/interfaces/user';
-import { ICompanyEntity } from '@/interfaces/account_book';
 import { calculateAssetDepreciationSerial } from '@/lib/utils/asset';
 import { IAssetEntity } from '@/interfaces/asset';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { getUserById } from '@/lib/utils/repo/user.repo';
@@ -49,6 +48,7 @@ import { ICounterPartyEntityPartial } from '@/interfaces/counterparty';
 import { IAccountEntity } from '@/interfaces/accounting_account';
 import { AccountCodesOfAR, AccountCodesOfAP } from '@/constants/asset';
 import { IFileEntity } from '@/interfaces/file';
+import { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 
 /**
  * Info: (20241121 - Murky)
@@ -104,7 +104,7 @@ export const voucherAPIGetUtils = {
     throw new Error(statusMessage);
   },
   getVoucherListFromPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     page: number;
@@ -537,7 +537,7 @@ export const voucherAPIPostUtils = {
 
   /**
    * Info: (20241029 - Murky)
-   * @description get company From Prisma and transform to ICompanyEntity
+   * @description get company From Prisma and transform to IAccountBookWithoutTeamEntity
    */
   initCompanyFromPrisma: async (companyId: number) => {
     const companyDto = await getCompanyById(companyId);
@@ -549,7 +549,9 @@ export const voucherAPIPostUtils = {
       });
     }
 
-    const company: ICompanyEntity = parsePrismaCompanyToCompanyEntity(companyDto!);
+    const company: IAccountBookWithoutTeamEntity = parsePrismaAccountBookToAccountBookEntity(
+      companyDto!
+    );
     return company;
   },
 
@@ -621,7 +623,7 @@ export const voucherAPIPostUtils = {
           return initVoucherEntity({
             issuerId: originalVoucher.issuerId,
             counterPartyId: originalVoucher.counterPartyId,
-            companyId: originalVoucher.companyId,
+            accountBookId: originalVoucher.accountBookId,
             type: originalVoucher.type,
             status: JOURNAL_EVENT.UPCOMING,
             editable: true,
@@ -658,7 +660,7 @@ export const voucherAPIPostUtils = {
           return initVoucherEntity({
             issuerId: originalVoucher.issuerId,
             counterPartyId: originalVoucher.counterPartyId,
-            companyId: originalVoucher.companyId,
+            accountBookId: originalVoucher.accountBookId,
             type: originalVoucher.type,
             status: JOURNAL_EVENT.UPCOMING,
             editable: true,
@@ -929,7 +931,7 @@ export const voucherAPIPostUtils = {
         const originalVoucherCopy = initVoucherEntity({
           issuerId: originalVoucher.issuerId,
           counterPartyId: originalVoucher.counterPartyId,
-          companyId: originalVoucher.companyId,
+          accountBookId: originalVoucher.accountBookId,
           type: originalVoucher.type,
           status: originalVoucher.status,
           editable: originalVoucher.editable,
@@ -961,7 +963,7 @@ export const voucherAPIPostUtils = {
 
   initDepreciationVoucher: (expenseInfo: {
     issuer: IUserEntity;
-    company: ICompanyEntity;
+    company: IAccountBookWithoutTeamEntity;
     currentPeriodYear: number;
     currentPeriodMonth: number;
   }) => {
@@ -981,7 +983,7 @@ export const voucherAPIPostUtils = {
     const depreciateExpenseVoucher = initVoucherEntity({
       issuerId: userId,
       counterPartyId: null,
-      companyId,
+      accountBookId: companyId,
       type: EventType.TRANSFER,
       status: JOURNAL_EVENT.UPCOMING,
       editable: true,
@@ -1001,7 +1003,7 @@ export const voucherAPIPostUtils = {
     }: {
       nowInSecond: number;
       issuer: IUserEntity;
-      company: ICompanyEntity;
+      company: IAccountBookWithoutTeamEntity;
     }
   ) => {
     // Info: (20241029 - Murky) 每個asset都有一整串的折舊
@@ -1066,7 +1068,7 @@ export const voucherAPIPostUtils = {
 
   saveVoucherToPrisma: async (options: {
     nowInSecond: number;
-    company: ICompanyEntity;
+    company: IAccountBookWithoutTeamEntity;
     originalVoucher: IVoucherEntity;
     issuer: IUserEntity;
     eventControlPanel: {

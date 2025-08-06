@@ -260,7 +260,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
       await deleteVoucherByCreateReverseVoucher({
         nowInSecond,
-        companyId: accountBookId,
+        accountBookId,
         issuerId: issuer.id,
         voucherDeleteOtherEntity: deleteVoucher,
         deleteVersionOriginVoucher: parsePrismaVoucherToVoucherEntity(origin),
@@ -410,7 +410,7 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
     const result = await deleteVoucherByCreateReverseVoucher({
       nowInSecond,
-      companyId: accountBookId,
+      accountBookId,
       issuerId: userId,
       voucherDeleteOtherEntity: deleteEntity,
       deleteVersionOriginVoucher: origin,

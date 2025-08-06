@@ -83,7 +83,7 @@ export const invoicePostApiUtils = {
     return currency;
   },
   postInvoiceInPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     nowInSecond: number;
     certificateId: number;
     inputOrOutput: InvoiceTransactionDirection;

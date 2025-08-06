@@ -55,10 +55,10 @@ export function summarizeIncompleteCertificates(certificates: ICertificate[]): {
   );
 }
 
-export async function countMissingCertificate(companyId: number) {
+export async function countMissingCertificate(accountBookId: number) {
   const missingCertificatesCount = await prisma.voucher.count({
     where: {
-      companyId,
+      accountBookId,
       NOT: {
         voucherCertificates: {
           some: {},
@@ -82,21 +82,21 @@ export async function getOneCertificateByIdWithoutInclude(certificateId: number)
 
 export async function createCertificateWithEmptyInvoice(options: {
   nowInSecond: number;
-  companyId: number;
+  accountBookId: number;
   uploaderId: number;
   fileId: number;
   aiResultId?: string;
 }) {
-  const { nowInSecond, companyId, uploaderId, fileId, aiResultId } = options;
+  const { nowInSecond, accountBookId, uploaderId, fileId, aiResultId } = options;
 
   let certificate: PostCertificateResponse | null = null;
 
   try {
     certificate = await prisma.certificate.create({
       data: {
-        company: {
+        accountBook: {
           connect: {
-            id: companyId,
+            id: accountBookId,
           },
         },
         uploader: {
@@ -215,7 +215,7 @@ export async function getOneCertificateById(
 }
 
 export async function getCertificatesV2(options: {
-  companyId: number;
+  accountBookId: number;
   page: number;
   pageSize: number;
   sortOption: {
@@ -236,7 +236,7 @@ export async function getCertificatesV2(options: {
 > {
   const {
     tab,
-    companyId,
+    accountBookId,
     startDate,
     endDate,
     page,
@@ -294,7 +294,7 @@ export async function getCertificatesV2(options: {
       gte: startDate,
       lte: endDate,
     },
-    companyId,
+    accountBookId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     AND: [
       {
@@ -468,7 +468,7 @@ export async function listCertificateWithoutInvoice() {
     },
     select: {
       id: true,
-      companyId: true,
+      accountBookId: true,
       fileId: true,
     },
   });
@@ -485,7 +485,7 @@ export async function listCertificateWithResultId() {
     },
     select: {
       id: true,
-      companyId: true,
+      accountBookId: true,
       aiResultId: true,
     },
   });
@@ -558,7 +558,7 @@ export async function deleteMultipleCertificates(options: {
 }
 
 export async function getAllFilteredInvoice(options: {
-  companyId: number;
+  accountBookId: number;
   startDate?: number;
   endDate?: number;
   searchQuery?: string;
@@ -566,7 +566,7 @@ export async function getAllFilteredInvoice(options: {
   tab?: InvoiceTabs;
   isDeleted?: boolean;
 }) {
-  const { companyId, startDate, endDate, searchQuery, type, tab, isDeleted } = options;
+  const { accountBookId, startDate, endDate, searchQuery, type, tab, isDeleted } = options;
 
   function getVoucherCertificateRelation(invoiceTab: InvoiceTabs | undefined) {
     if (!invoiceTab) {
@@ -612,7 +612,7 @@ export async function getAllFilteredInvoice(options: {
       gte: startDate,
       lte: endDate,
     },
-    companyId,
+    accountBookId,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     AND: [
       {

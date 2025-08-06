@@ -16,6 +16,8 @@
  * const helper = await APITestHelper.createWithMultipleUsers(['user1@isunfa.com', 'user2@isunfa.com']);
  * helper.switchToUser('user2@isunfa.com');
  */
+import fs from 'fs';
+import path from 'path';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
@@ -28,6 +30,12 @@ import { TPlanType } from '@/interfaces/subscription';
 import { WORK_TAG } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
+import { UPLOAD_TYPE_TO_FOLDER_MAP, UploadType } from '@/constants/file';
+import { createFile } from '@/lib/utils/repo/file.repo';
+import * as cryptoUtils from '@/lib/utils/crypto';
+import { CurrencyCode, InvoiceDirection } from '@/constants/invoice_rc2';
+import { IInvoiceRC2Base } from '@/interfaces/invoice_rc2';
+import { ITeam } from '@/interfaces/team';
 
 interface TestResponse {
   status: number;
@@ -60,6 +68,8 @@ export class APITestHelper {
   private userSessions: Map<string, string[]> = new Map();
 
   private currentUser: string | null = null;
+
+  private TEST_FILES_DIR = 'src/tests/integration/test_cases/07_invoice_rc2/test_files';
 
   constructor() {
     // Info: (20250701 - Shirley) Create test clients for different API endpoints
@@ -501,23 +511,39 @@ export class APITestHelper {
   }
 
   // Info: (20250710 - Shirley) Create team method for account book testing
-  async createTeam(teamName?: string): Promise<TestResponse> {
+  async createTeam(userId: number, teamName?: string): Promise<ITeam> {
     await this.ensureAuthenticated();
     const cookies = this.getCurrentSession();
+
+    const { default: teamListHandler } = await import('@/pages/api/v2/team');
+    if (!teamName) {
+      const teamListClient = createTestClient(teamListHandler);
+      const teamListResponse = await teamListClient
+        .get(`${APIPath.LIST_TEAM}`)
+        .set('Cookie', cookies.join('; '));
+      const existingTeams = teamListResponse.body.payload?.data || [];
+      if (existingTeams.length > 0) {
+        const existingTeam = existingTeams.find(
+          (team: { userId: number }) => team.userId === userId
+        );
+        return existingTeam;
+      }
+    }
 
     const { default: teamCreateHandler } = await import('@/pages/api/v2/team');
     const teamCreateClient = createTestClient(teamCreateHandler);
 
     const teamData = {
-      name: teamName || `Test Team ${Date.now()}`,
-      about: 'Test team for integration testing',
+      name: teamName || `IT Shared Team`,
+      about: 'This is a test team for integration testing',
       planType: TPlanType.TRIAL,
     };
 
-    return teamCreateClient
+    const teamCreateResponse = await teamCreateClient
       .post(APIPath.CREATE_TEAM)
       .send(teamData)
       .set('Cookie', cookies.join('; '));
+    return teamCreateResponse.body.payload;
   }
 
   // Info: (20250707 - Shirley) Complete registration flow for all test users from default_value.ts
@@ -660,7 +686,7 @@ export class APITestHelper {
     }
   }
 
-  async createAccountBook(userId: number, teamId: number) {
+  async createAccountBook(userId: number, teamId: number, name?: string) {
     await this.ensureAuthenticated();
     const cookies = this.getCurrentSession();
 
@@ -671,9 +697,25 @@ export class APITestHelper {
       handler: accountBookCreateHandler,
       routeParams: { userId: userId.toString() },
     });
+    if (!name) {
+      const { default: accountBookListHandler } = await import(
+        '@/pages/api/v2/user/[userId]/account_book'
+      );
+      const accountBookListClient = createTestClient({
+        handler: accountBookListHandler,
+        routeParams: { userId: userId.toString() },
+      });
+      const listResponse = await accountBookListClient
+        .get(APIPath.LIST_ACCOUNT_BOOK_BY_USER_ID.replace(':userId', userId.toString()))
+        .set('Cookie', cookies.join('; '))
+        .expect(200);
+      if (listResponse.body.payload.data.length > 0) {
+        return listResponse.body.payload.data[0];
+      }
+    }
     const randomTaxId = `${Math.floor(Math.random() * 90000000) + 10000000}`;
     const accountBook = {
-      name: `IT Shared Test Account Book`,
+      name: name ?? `IT Shared Test Account Book`,
       taxId: randomTaxId,
       tag: WORK_TAG.ALL,
       teamId,
@@ -707,8 +749,8 @@ export class APITestHelper {
     const userId = userData?.id?.toString() || '1';
 
     // Info: (20250711 - Shirley) Create a team first
-    const teamResponse = await this.createTeam(`Accounting Test Team ${Date.now()}`);
-    const teamData = teamResponse.body.payload?.team as { id?: number };
+    const team = await this.createTeam(Number(userId), `Accounting Test Team ${Date.now()}`);
+    const teamData = team as { id?: number };
     const teamId = teamData?.id || 0;
 
     // Info: (20250711 - Shirley) Create account book
@@ -736,5 +778,173 @@ export class APITestHelper {
       .set('Cookie', cookies.join('; '));
 
     return accountBookResponse.body.payload.id;
+  }
+
+  async uploadEncryptedFile(filename: string, accountBookId: number): Promise<number> {
+    const pubKey = await cryptoUtils.getPublicKeyByCompany(accountBookId);
+    const filePath = path.resolve(process.cwd(), this.TEST_FILES_DIR, `${filename}.png`);
+    const fileBuffer = fs.readFileSync(filePath);
+    // Info: (20250804 - Shirley) Convert Buffer to Uint8Array for type compatibility
+    const uint8Array = new Uint8Array(fileBuffer);
+    const file = new File([uint8Array], 'mock_invoice.png', { type: 'image/png' });
+
+    const enc = await cryptoUtils.encryptFileWithPublicKey(file, pubKey!);
+    const tempPath = path.resolve(
+      process.cwd(),
+      this.TEST_FILES_DIR,
+      `temp_encrypted_${filename}.png`
+    );
+
+    const fileDB = await createFile({
+      name: enc.encryptedFile.name,
+      size: enc.encryptedFile.size,
+      mimeType: 'image/png',
+      type: UPLOAD_TYPE_TO_FOLDER_MAP[UploadType.INVOICE],
+      url: tempPath,
+      isEncrypted: true,
+      encryptedSymmetricKey: enc.encryptedSymmetricKey,
+      iv: Buffer.from(enc.iv as Uint8Array),
+    });
+
+    if (!fileDB?.id) throw new Error('createFile failed');
+    return fileDB.id;
+  }
+
+  async createInvoice<T extends IInvoiceRC2Base>(
+    accountBookId: number,
+    fileId: number,
+    direction: InvoiceDirection
+  ): Promise<T> {
+    const { default: invoiceInputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/input'
+    );
+    const { default: invoiceOutputCreateHandler } = await import(
+      '@/pages/api/rc2/account_book/[accountBookId]/invoice/output'
+    );
+    const handler =
+      direction === InvoiceDirection.INPUT ? invoiceInputCreateHandler : invoiceOutputCreateHandler;
+
+    const client = createTestClient({
+      handler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    const res = await client
+      .post(
+        (direction === InvoiceDirection.INPUT
+          ? APIPath.CREATE_INVOICE_RC2_INPUT
+          : APIPath.CREATE_INVOICE_RC2_OUTPUT
+        ).replace(':accountBookId', accountBookId.toString())
+      )
+      .send({
+        fileId,
+        direction,
+        isGenerated: false,
+        currencyCode: CurrencyCode.TWD,
+      })
+      .set('Cookie', this.getCurrentSession().join('; '));
+
+    if (!res.body.success) throw new Error('invoice creation failed');
+
+    return res.body.payload as T;
+  }
+
+  async getAccountBookClients(accountBookId: number, userId?: number) {
+    const { default: createAccountBookHandler } = await import(
+      '@/pages/api/v2/user/[userId]/account_book'
+    );
+    const { default: accountBookIndexHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]'
+    );
+    const { default: connectAccountBookHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/connect'
+    );
+
+    // Info: (20250710 - Shirley) Setup clients for subsequent API tests
+    const createAccountBookClient = createTestClient({
+      handler: createAccountBookHandler,
+      routeParams: { userId: userId?.toString() || this.currentUser?.toString() || '1' },
+    });
+    const getAccountBookClient = createTestClient({
+      handler: accountBookIndexHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const connectAccountBookClient = createTestClient({
+      handler: connectAccountBookHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const updateAccountBookClient = createTestClient({
+      handler: accountBookIndexHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const { default: reportHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/report'
+    );
+    const { default: voucherPostHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/voucher'
+    );
+    const reportClient = createTestClient({
+      handler: reportHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    const voucherPostClient = createTestClient({
+      handler: voucherPostHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+    return {
+      createAccountBookClient,
+      getAccountBookClient,
+      connectAccountBookClient,
+      updateAccountBookClient,
+      reportClient,
+      voucherPostClient,
+    };
+  }
+
+  async createTestVouchers(accountBookId: number, baseTs: number) {
+    // eslint-disable-next-line no-console
+    console.log(
+      `Creating test vouchers for account book ID: ${accountBookId} at base timestamp: ${baseTs}`
+    );
+    const samples = TestDataFactory.sampleVoucherData(baseTs);
+    const cookies = this.getCurrentSession();
+
+    const { default: voucherHandler } = await import(
+      '@/pages/api/v2/account_book/[accountBookId]/voucher'
+    );
+
+    const client = createTestClient({
+      handler: voucherHandler,
+      routeParams: { accountBookId: accountBookId.toString() },
+    });
+
+    const created = await Promise.all(
+      samples.map(async (v, idx) => {
+        const payload = {
+          actions: [],
+          certificateIds: [],
+          invoiceRC2Ids: [],
+          voucherDate: v.date,
+          type: v.type,
+          note: v.note,
+          lineItems: v.lineItems,
+          assetIds: [],
+          counterPartyId: null,
+        };
+
+        const res = await client
+          .post(`/api/v2/account_book/${accountBookId}/voucher`)
+          .send(payload)
+          .set('Cookie', cookies.join('; '));
+
+        if (res.status !== 201) {
+          throw new Error(`Voucher #${idx + 1} failed: ${res.status} – ${res.text}`);
+        }
+
+        return res.body.payload;
+      })
+    );
+
+    return created;
   }
 }

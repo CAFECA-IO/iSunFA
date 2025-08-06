@@ -1,8 +1,4 @@
-import {
-  clearInvoiceTestContext,
-  getInvoiceTestContext,
-  InvoiceTestContext,
-} from '@/tests/integration/test_cases/07_invoice_rc2/00_test_context';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { APIName, APIPath } from '@/constants/api_connection';
 import invoiceOutputCreateHandler from '@/pages/api/rc2/account_book/[accountBookId]/invoice/output';
@@ -17,29 +13,38 @@ import {
 } from '@/constants/invoice_rc2';
 
 describe('Invoice RC2 - Output Invoice CRUD', () => {
-  let ctx: InvoiceTestContext;
+  let cookies: string[];
+  let accountBookId: number;
+  let fileIdForOutput: number;
   let invoiceId: number;
 
   beforeAll(async () => {
-    ctx = await getInvoiceTestContext();
+    const ctx = await BaseTestContext.getSharedContext();
+    cookies = ctx.cookies;
+    const teamId = ctx.teamId || (await ctx.helper.createTeam(ctx.userId)).id;
+    accountBookId =
+      ctx.accountBookId || (await ctx.helper.createAccountBook(ctx.userId, teamId)).id;
+    fileIdForOutput =
+      ctx.uploadedFileIdForOutput ||
+      (await ctx.helper.uploadEncryptedFile('invoice_output', accountBookId));
   });
   it('should create invoice RC2 output', async () => {
     const invoiceOutputCreateClient = createTestClient({
       handler: invoiceOutputCreateHandler,
-      routeParams: { accountBookId: ctx.accountBookId.toString() },
+      routeParams: { accountBookId: accountBookId.toString() },
     });
 
     const invoiceOutputCreateResponse = await invoiceOutputCreateClient
       .post(
-        `${APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())}`
+        `${APIPath.CREATE_INVOICE_RC2_OUTPUT.replace(':accountBookId', accountBookId.toString())}`
       )
       .send({
-        fileId: ctx.fileIdForOutput,
+        fileId: fileIdForOutput,
         direction: InvoiceDirection.OUTPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(200);
 
     expect(invoiceOutputCreateResponse.body.success).toBe(true);
@@ -64,7 +69,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     const invoiceOutputModifyClient = createTestClient({
       handler: invoiceOutputModifyHandler,
       routeParams: {
-        accountBookId: ctx.accountBookId.toString(),
+        accountBookId: accountBookId.toString(),
         invoiceId: invoiceId.toString(),
       },
     });
@@ -73,7 +78,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
       .put(
         APIPath.UPDATE_INVOICE_RC2_OUTPUT.replace(
           ':accountBookId',
-          ctx.accountBookId.toString()
+          accountBookId.toString()
         ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
@@ -90,7 +95,7 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
         deductionType: DeductionType.DEDUCTIBLE_FIXED_ASSETS,
         isSharedAmount: false,
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(200);
 
     expect(response.body.success).toBe(true);
@@ -112,18 +117,16 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     const invoiceOutputDeleteClient = createTestClient({
       handler: invoiceOutputCreateHandler,
       routeParams: {
-        accountBookId: ctx.accountBookId.toString(),
+        accountBookId: accountBookId.toString(),
       },
     });
 
     const invoiceOutputResponse = await invoiceOutputDeleteClient
-      .delete(
-        APIPath.DELETE_INVOICE_RC2_OUTPUT.replace(':accountBookId', ctx.accountBookId.toString())
-      )
+      .delete(APIPath.DELETE_INVOICE_RC2_OUTPUT.replace(':accountBookId', accountBookId.toString()))
       .send({
         invoiceIds: [invoiceId],
       })
-      .set('Cookie', ctx.cookies.join('; '))
+      .set('Cookie', cookies.join('; '))
       .expect(200);
 
     expect(invoiceOutputResponse.body.success).toBe(true);
@@ -134,9 +137,5 @@ describe('Invoice RC2 - Output Invoice CRUD', () => {
     );
     expect(isOutputDataValid).toBe(true);
     expect(outputData?.deletedIds.length).toBe(1);
-  });
-
-  afterAll(async () => {
-    await clearInvoiceTestContext();
   });
 });

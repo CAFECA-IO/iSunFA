@@ -22,7 +22,7 @@ export function formatIReport(report: IReportIncludeCompanyProject): IReport {
 
   const formattedReport: IReport = {
     id: report.id,
-    companyId: report.companyId,
+    accountBookId: report.accountBookId,
     tokenContract: report.tokenContract || '',
     tokenId: report.tokenId || '',
     name: report.name,

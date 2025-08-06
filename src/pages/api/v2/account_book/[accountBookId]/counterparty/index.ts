@@ -3,13 +3,9 @@ import { ICounterparty, ICounterPartyEntity } from '@/interfaces/counterparty';
 import { IResponseData } from '@/interfaces/response_data';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatApiResponse } from '@/lib/utils/common';
-import {
-  checkRequestData,
-  checkSessionUser,
-  checkUserAuthorization,
-  logUserAction,
-} from '@/lib/utils/middleware';
-import { APIName, HttpMethod } from '@/constants/api_connection';
+import { withRequestValidation } from '@/lib/utils/middleware';
+import { APIName } from '@/constants/api_connection';
+import { IHandleRequest } from '@/interfaces/handleRequest';
 import { IPaginatedData } from '@/interfaces/pagination';
 import {
   createCounterparty,
@@ -19,50 +15,30 @@ import {
 } from '@/lib/utils/repo/counterparty.repo';
 import { parsePrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { getSession } from '@/lib/utils/session';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { HTTP_STATUS } from '@/constants/http';
-import { validateOutputData } from '@/lib/utils/validator';
 
-/**
- * Info: (20250502 - Shirley) Handle GET request for counterparty list
- * This function follows the flat coding style pattern:
- * 1. Get user session and validate authentication
- * 2. Check user authorization
- * 3. Validate request data
- * 4. Perform team permission check
- * 5. Fetch data from repository
- * 6. Validate output data
- * 7. Return formatted response
- */
-const handleGetRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
+const handleGetRequest: IHandleRequest<
+  APIName.COUNTERPARTY_LIST,
+  IPaginatedData<ICounterparty[]>
+> = async ({ query, req }) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IPaginatedData<ICounterparty[]> | null = null;
 
-  await checkSessionUser(session, APIName.COUNTERPARTY_LIST, req);
-  await checkUserAuthorization(APIName.COUNTERPARTY_LIST, req, session);
+  const { accountBookId: companyId, page, pageSize, type, searchQuery } = query;
 
-  // Info: (20250502 - Shirley) 驗證請求資料
-  const { query } = checkRequestData(APIName.COUNTERPARTY_LIST, req, session);
-  if (query === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
+  // Info: (20250416 - Shirley) 添加團隊權限檢查
+  const { teams } = await getSession(req);
 
-  const { accountBookId, page, pageSize, type, searchQuery } = query;
-
-  // Info: (20250502 - Shirley) 添加團隊權限檢查
-  const { teams } = session;
-
-  // Info: (20250502 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const accountBook = await getCompanyById(accountBookId);
-  if (!accountBook) {
+  // Info: (20250416 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(companyId);
+  if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const { teamId: companyTeamId } = accountBook;
+  const { teamId: companyTeamId } = company;
   if (!companyTeamId) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -81,72 +57,40 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250502 - Shirley) 取得交易對手列表
   const counterpartyList: IPaginatedData<ICounterPartyEntity[]> = await listCounterparty(
-    accountBookId,
+    companyId,
     page,
     pageSize,
     type,
     searchQuery
   );
-
   statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
+  payload = counterpartyList;
 
-  // Info: (20250502 - Shirley) 驗證輸出資料
-  const { isOutputDataValid, outputData } = validateOutputData(
-    APIName.COUNTERPARTY_LIST,
-    counterpartyList
-  );
-
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  } else {
-    payload = outputData;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
-  return { response, statusMessage };
+  return { statusMessage, payload };
 };
 
-/**
- * Info: (20250502 - Shirley) Handle POST request for creating a new counterparty
- * This function follows the flat coding style pattern:
- * 1. Get user session and validate authentication
- * 2. Check user authorization
- * 3. Validate request data
- * 4. Perform team permission check
- * 5. Check for duplicate counterparty
- * 6. Create new counterparty if no duplicates
- * 7. Validate output data
- * 8. Return formatted response
- */
-const handlePostRequest = async (req: NextApiRequest) => {
-  const session = await getSession(req);
+const handlePostRequest: IHandleRequest<APIName.COUNTERPARTY_ADD, ICounterparty> = async ({
+  query,
+  body,
+  req,
+}) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: ICounterPartyEntity | null = null;
-
-  await checkSessionUser(session, APIName.COUNTERPARTY_ADD, req);
-  await checkUserAuthorization(APIName.COUNTERPARTY_ADD, req, session);
-
-  // Info: (20250502 - Shirley) 驗證請求資料
-  const { query, body } = checkRequestData(APIName.COUNTERPARTY_ADD, req, session);
-  if (query === null || body === null) {
-    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
-  }
 
   const { accountBookId } = query;
   const { name, taxId, type, note } = body;
 
-  // Info: (20250502 - Shirley) 添加團隊權限檢查
-  const { teams } = session;
+  // Info: (20250416 - Shirley) 添加團隊權限檢查
+  const { teams } = await getSession(req);
 
-  // Info: (20250502 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
-  const accountBook = await getCompanyById(accountBookId);
-  if (!accountBook) {
+  // Info: (20250416 - Shirley) 要找到 company 對應的 team，然後跟 session 中的 teams 比對，再用 session 的 role 來檢查權限
+  const company = await getCompanyById(accountBookId);
+  if (!company) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
 
-  const { teamId: companyTeamId } = accountBook;
+  const { teamId: companyTeamId } = company;
   if (!companyTeamId) {
     throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
   }
@@ -165,9 +109,8 @@ const handlePostRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.FORBIDDEN);
   }
 
-  // Info: (20250502 - Shirley) 檢查是否有重複的交易對手
-  const originClientByName = await getCounterpartyByName({ name, companyId: accountBookId });
-  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, companyId: accountBookId });
+  const originClientByName = await getCounterpartyByName({ name, accountBookId });
+  const originClientByTaxId = await getCounterpartyByTaxId({ taxId, accountBookId });
 
   if (originClientByName) {
     statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_NAME;
@@ -176,7 +119,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
     statusMessage = STATUS_MESSAGE.DUPLICATE_COUNTERPARTY_TAX_ID;
     payload = parsePrismaCounterPartyToCounterPartyEntity(originClientByTaxId);
   } else {
-    // Info: (20250502 - Shirley) 創建新的交易對手
     const newClient = await createCounterparty(accountBookId, name, taxId, type, note);
     if (newClient) {
       statusMessage = STATUS_MESSAGE.CREATED;
@@ -184,61 +126,44 @@ const handlePostRequest = async (req: NextApiRequest) => {
     }
   }
 
-  // Info: (20250502 - Shirley) 驗證輸出資料
-  const { isOutputDataValid, outputData } = validateOutputData(APIName.COUNTERPARTY_ADD, payload);
-
-  if (!isOutputDataValid) {
-    statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
-  } else {
-    payload = outputData as ICounterPartyEntity;
-  }
-
-  const response = formatApiResponse(statusMessage, payload);
-  return { response, statusMessage };
+  return { statusMessage, payload };
 };
 
-/**
- * Info: (20250502 - Shirley) Export default handler function
- * This follows the flat coding style API pattern:
- * 1. Define a switch-case for different HTTP methods
- * 2. Call the appropriate handler based on method
- * 3. Handle errors and return consistent response format
- * 4. Log user action
- */
+const methodHandlers: {
+  [key: string]: (
+    req: NextApiRequest,
+    res: NextApiResponse
+  ) => Promise<{
+    statusMessage: string;
+    payload: ICounterparty | IPaginatedData<ICounterparty[]> | null;
+  }>;
+} = {
+  GET: (req) => withRequestValidation(APIName.COUNTERPARTY_LIST, req, handleGetRequest),
+  POST: (req) => withRequestValidation(APIName.COUNTERPARTY_ADD, req, handlePostRequest),
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseData<ICounterparty | IPaginatedData<ICounterparty[]> | null>>
 ) {
-  const method = req.method || HttpMethod.GET;
-  let httpCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
-  let result;
-  let response;
-  let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
-  let apiName: APIName = APIName.COUNTERPARTY_LIST;
-  const session = await getSession(req);
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload: ICounterparty | IPaginatedData<ICounterparty[]> | null = null;
 
   try {
-    switch (method) {
-      case HttpMethod.GET:
-        apiName = APIName.COUNTERPARTY_LIST;
-        ({ response, statusMessage } = await handleGetRequest(req));
-        ({ httpCode, result } = response);
-        break;
-      case HttpMethod.POST:
-        apiName = APIName.COUNTERPARTY_ADD;
-        ({ response, statusMessage } = await handlePostRequest(req));
-        ({ httpCode, result } = response);
-        break;
-      default:
-        statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
-        ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
-        break;
+    const handleRequest = methodHandlers[req.method || ''];
+    if (handleRequest) {
+      ({ statusMessage, payload } = await handleRequest(req, res));
+    } else {
+      statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
-  } catch (error) {
-    const err = error as Error;
-    statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
-    ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
+  } catch (_error) {
+    const error = _error as Error;
+    statusMessage = error.message;
+    payload = null;
+  } finally {
+    const { httpCode, result } = formatApiResponse<
+      ICounterparty | IPaginatedData<ICounterparty[]> | null
+    >(statusMessage, payload);
+    res.status(httpCode).json(result);
   }
-  await logUserAction(session, apiName, req, statusMessage);
-  res.status(httpCode).json(result);
 }
