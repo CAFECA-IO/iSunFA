@@ -41,9 +41,10 @@
   "WORK_HOURS_FORM": {
     "OVERTIME_HOUR_WITHOUT_TAX": "加班時數（免稅）",
     "OVERTIME_HOUR_WITH_TAX": "加班時數（應稅）",
-    "LEAVE_HOUR": "請假時數",
+    "LEAVE_HOUR": "請假 / 補休時數",
     "SICK_MENSTRUAL_LEAVE": "病假/生理假",
     "PERSONAL_LEAVE": "事假",
+    "LEAVE_PAYOUT_HOURS": "休假折抵薪資時數",
     "TOTAL_LEAVE_HOUR": "總請假時數",
     "TOTAL_OVERTIME_HOUR": "總加班時數"
   },

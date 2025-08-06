@@ -87,7 +87,8 @@ interface ICalculatorContext {
   setSickLeaveHours: React.Dispatch<React.SetStateAction<number>>;
   personalLeaveHours: number;
   setPersonalLeaveHours: React.Dispatch<React.SetStateAction<number>>;
-  totalLeaveHours: number;
+  leavePayoutHours: number;
+  setLeavePayoutHours: React.Dispatch<React.SetStateAction<number>>;
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
   // 除了 VPC 皆使用 Dispatch 來更新 state
@@ -159,7 +160,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
-  const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
+  const [leavePayoutHours, setLeavePayoutHours] = useState<number>(0);
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state
   const [nhiBackPremium, setNhiBackPremium] = useState<number>(0);
@@ -200,12 +201,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     twoAndOneThirdsHoursForTaxable,
     twoAndTwoThirdsHoursForTaxable,
   ]);
-
-  useEffect(() => {
-    // Info: (20250710 - Julian) 計算總休假時數
-    const totalLeave = sickLeaveHours + personalLeaveHours;
-    setTotalLeaveHours(totalLeave);
-  }, [sickLeaveHours, personalLeaveHours]);
 
   // Info: (20250728 - Julian) 計算結果
   // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
@@ -368,6 +363,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
+    setLeavePayoutHours(0);
     setNhiBackPremium(0);
     setSecondGenNhiTax(0);
     setOtherAdjustments(0);
@@ -462,7 +458,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setSickLeaveHours,
       personalLeaveHours,
       setPersonalLeaveHours,
-      totalLeaveHours,
+      leavePayoutHours,
+      setLeavePayoutHours,
       nhiBackPremium,
       setNhiBackPremium,
       secondGenNhiTax,
@@ -503,7 +500,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       totalTaxableHours,
       sickLeaveHours,
       personalLeaveHours,
-      totalLeaveHours,
+      leavePayoutHours,
       nhiBackPremium,
       secondGenNhiTax,
       otherAdjustments,

@@ -33,6 +33,9 @@ const BasicInfoForm: React.FC = () => {
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
 
+  // Info: (20250806 - Julian) 當月的最大天數
+  const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
+
   const {
     targetRef: yearDropdownRef,
     componentVisible: isYearOpen,
@@ -51,12 +54,19 @@ const BasicInfoForm: React.FC = () => {
     setComponentVisible: setIsPayrollOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
+  const {
+    targetRef: dayRef,
+    componentVisible: isDayOpen,
+    setComponentVisible: setIsDayOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
   // Info: (20250709 - Julian) 下拉選單開關
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
   const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
   const togglePayrollDropdown = () => setIsPayrollOpen((prev) => !prev);
+  const toggleDayDropdown = () => setIsDayOpen((prev) => !prev);
 
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +108,7 @@ const BasicInfoForm: React.FC = () => {
     t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_FIXED'),
     t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_ACTUAL'),
   ].map((option) => {
-    const clickHandler = () => {};
+    const clickHandler = () => {}; // ToDo
 
     return (
       <button
@@ -107,6 +117,21 @@ const BasicInfoForm: React.FC = () => {
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
         {option}
+      </button>
+    );
+  });
+
+  const dayDropdown = Array.from({ length: maxDaysInMonth }, (_, index) => {
+    const day = index + 1;
+    const clickHandler = () => {}; // ToDo
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {day}
       </button>
     );
   });
@@ -251,11 +276,43 @@ const BasicInfoForm: React.FC = () => {
 
         {/* Info: (20250806 - Julian) 到職日 */}
         <div className="col-span-2 flex items-center justify-between gap-40px">
-          <ToggleSwitch isOn={isOn} handleToggle={() => setIsOn(!isOn)} />
+          <ToggleSwitch
+            isOn={isOn}
+            handleToggle={() => setIsOn(!isOn)}
+            title={t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_1')}
+          />
+          <div className="flex items-center gap-8px">
+            <p className="text-base font-medium">
+              {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} 2025/01/
+            </p>
+            <div
+              ref={dayRef}
+              onClick={toggleDayDropdown}
+              className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+            >
+              <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+                {t(`date_picker:DATE_PICKER.${selectedMonth.name.slice(0, 3).toUpperCase()}`)}
+              </div>
+              <div className="px-12px py-10px">
+                <FaChevronDown size={16} />
+              </div>
+              {isDayOpen && (
+                <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                  {dayDropdown}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Info: (20250806 - Julian) 離職日 */}
-        <div className="col-span-2 flex items-center"></div>
+        <div className="col-span-2">
+          <ToggleSwitch
+            isOn={isOn}
+            handleToggle={() => setIsOn(!isOn)}
+            title={t('calculator:BASIC_INFO_FORM.LEFT_THIS_MONTH')}
+          />
+        </div>
       </form>
 
       {/* Info: (20250711 - Julian) 員工列表 Modal */}

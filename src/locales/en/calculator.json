@@ -41,9 +41,10 @@
   "WORK_HOURS_FORM": {
     "OVERTIME_HOUR_WITHOUT_TAX": "Overtime Hour (Non-taxable)",
     "OVERTIME_HOUR_WITH_TAX": "Overtime Hour (Taxable)",
-    "LEAVE_HOUR": "Leave Hour",
+    "LEAVE_HOUR": "Leave & Payout",
     "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
     "PERSONAL_LEAVE": "Personal Leave",
+    "LEAVE_PAYOUT_HOURS": "Leave Payout Hours",
     "TOTAL_LEAVE_HOUR": "Total Leave Hour",
     "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
   },

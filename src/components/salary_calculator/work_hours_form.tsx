@@ -50,20 +50,6 @@ const HourCounter: React.FC<{
   );
 };
 
-const TotalHours: React.FC<{
-  title: string;
-  totalHours: number;
-}> = ({ title, totalHours }) => {
-  return (
-    <div className="flex flex-col gap-8px">
-      <p className="text-sm font-semibold text-input-text-primary">{title}</p>
-      <div className="flex w-full items-center rounded-sm bg-surface-brand-primary-10 px-12px py-10px">
-        {totalHours}
-      </div>
-    </div>
-  );
-};
-
 const WorkHoursForm: React.FC = () => {
   const { t } = useTranslation('calculator');
 
@@ -97,7 +83,8 @@ const WorkHoursForm: React.FC = () => {
     setSickLeaveHours,
     personalLeaveHours,
     setPersonalLeaveHours,
-    totalLeaveHours,
+    leavePayoutHours,
+    setLeavePayoutHours,
   } = useCalculatorCtx();
 
   const totalNonTaxableStyle =
@@ -151,11 +138,6 @@ const WorkHoursForm: React.FC = () => {
             setValue={setTwoAndTwoThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
           />
-          {/* Info: (20250728 - Julian) 總加班時數 */}
-          <TotalHours
-            title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
-            totalHours={totalNonTaxableHours}
-          />
         </div>
       </div>
 
@@ -203,11 +185,6 @@ const WorkHoursForm: React.FC = () => {
             setValue={setTwoAndTwoThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
           />
-          {/* Info: (20250728 - Julian) 總加班時數 */}
-          <TotalHours
-            title={t('calculator:WORK_HOURS_FORM.TOTAL_OVERTIME_HOUR')}
-            totalHours={totalTaxableHours}
-          />
         </div>
       </div>
 
@@ -231,10 +208,12 @@ const WorkHoursForm: React.FC = () => {
             setValue={setPersonalLeaveHours}
             maxValue={MAX_LEAVE_HOURS}
           />
-          {/* Info: (20250709 - Julian) 總休假時數 */}
-          <TotalHours
-            title={t('calculator:WORK_HOURS_FORM.TOTAL_LEAVE_HOUR')}
-            totalHours={totalLeaveHours}
+          {/* Info: (20250709 - Julian) 休假折抵薪資時數 */}
+          <HourCounter
+            title={t('calculator:WORK_HOURS_FORM.LEAVE_PAYOUT_HOURS')}
+            value={leavePayoutHours}
+            setValue={setLeavePayoutHours}
+            maxValue={MAX_LEAVE_HOURS}
           />
         </div>
       </div>
