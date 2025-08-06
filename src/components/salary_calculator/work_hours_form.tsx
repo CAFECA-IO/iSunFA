@@ -1,54 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'next-i18next';
-import { FaPlus, FaMinus } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
-import NumericInput from '@/components/numeric_input/numeric_input';
 import { MIN_WORK_HOURS, MAX_OVERWORK_HOURS, MAX_LEAVE_HOURS } from '@/constants/salary_calculator';
-
-// Info: (20250709 - Julian) 時數計數器
-const HourCounter: React.FC<{
-  title: string;
-  value: number;
-  setValue: React.Dispatch<React.SetStateAction<number>>;
-  maxValue: number;
-}> = ({ title, value, setValue, maxValue }) => {
-  const minusDisabled = value <= MIN_WORK_HOURS;
-  const plusDisabled = value >= maxValue;
-
-  const minusClickHandler = () => setValue((prev) => prev - 1);
-  const plusClickHandler = () => setValue((prev) => prev + 1);
-
-  return (
-    <div className="flex flex-col gap-8px">
-      <p className="text-sm font-semibold text-input-text-primary">{title}</p>
-      <div className="flex w-full items-center divide-x divide-input-stroke-input rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-        <button
-          type="button"
-          disabled={minusDisabled}
-          onClick={minusClickHandler}
-          className="h-full px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
-        >
-          <FaMinus size={16} />
-        </button>
-        <NumericInput
-          value={value}
-          setValue={setValue}
-          min={MIN_WORK_HOURS}
-          max={maxValue}
-          className="w-80px flex-1 bg-transparent px-12px py-10px text-center font-medium text-input-text-input-filled"
-        />
-        <button
-          type="button"
-          disabled={plusDisabled}
-          onClick={plusClickHandler}
-          className="h-full px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
-        >
-          <FaPlus size={16} />
-        </button>
-      </div>
-    </div>
-  );
-};
+import HourCounter from '@/components/salary_calculator/hour_counter';
 
 const WorkHoursForm: React.FC = () => {
   const { t } = useTranslation('calculator');
@@ -109,6 +63,7 @@ const WorkHoursForm: React.FC = () => {
             value={oneAndOneThirdsHoursForNonTax}
             setValue={setOneAndOneThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
           <HourCounter
@@ -116,6 +71,7 @@ const WorkHoursForm: React.FC = () => {
             value={oneAndTwoThirdsHoursForNonTax}
             setValue={setOneAndTwoThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2 小時 */}
           <HourCounter
@@ -123,6 +79,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoHoursForNonTax}
             setValue={setTwoHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.33 小時 */}
           <HourCounter
@@ -130,6 +87,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoAndOneThirdsHoursForNonTax}
             setValue={setTwoAndOneThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.66 小時 */}
           <HourCounter
@@ -137,6 +95,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoAndTwoThirdsHoursForNonTax}
             setValue={setTwoAndTwoThirdsHoursForNonTax}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
         </div>
       </div>
@@ -156,6 +115,7 @@ const WorkHoursForm: React.FC = () => {
             value={oneAndOneThirdHoursForTaxable}
             setValue={setOneAndOneThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 1.66 小時 */}
           <HourCounter
@@ -163,6 +123,7 @@ const WorkHoursForm: React.FC = () => {
             value={oneAndTwoThirdsHoursForTaxable}
             setValue={setOneAndTwoThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2 小時 */}
           <HourCounter
@@ -170,6 +131,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoHoursForTaxable}
             setValue={setTwoHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.33 小時 */}
           <HourCounter
@@ -177,6 +139,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoAndOneThirdsHoursForTaxable}
             setValue={setTwoAndOneThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 2.66 小時 */}
           <HourCounter
@@ -184,6 +147,7 @@ const WorkHoursForm: React.FC = () => {
             value={twoAndTwoThirdsHoursForTaxable}
             setValue={setTwoAndTwoThirdsHoursForTaxable}
             maxValue={MAX_OVERWORK_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
         </div>
       </div>
@@ -200,6 +164,7 @@ const WorkHoursForm: React.FC = () => {
             value={sickLeaveHours}
             setValue={setSickLeaveHours}
             maxValue={MAX_LEAVE_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 事假 */}
           <HourCounter
@@ -207,6 +172,7 @@ const WorkHoursForm: React.FC = () => {
             value={personalLeaveHours}
             setValue={setPersonalLeaveHours}
             maxValue={MAX_LEAVE_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
           {/* Info: (20250709 - Julian) 休假折抵薪資時數 */}
           <HourCounter
@@ -214,6 +180,7 @@ const WorkHoursForm: React.FC = () => {
             value={leavePayoutHours}
             setValue={setLeavePayoutHours}
             maxValue={MAX_LEAVE_HOURS}
+            minValue={MIN_WORK_HOURS}
           />
         </div>
       </div>

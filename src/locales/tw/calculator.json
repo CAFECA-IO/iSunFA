@@ -49,8 +49,12 @@
     "TOTAL_OVERTIME_HOUR": "總加班時數"
   },
   "OTHERS_FORM": {
+    "LABOR_COVERAGE_STATUS": "勞保投保狀態",
+    "OPTION_LABOR_INSURANCE": "勞保",
+    "OPTION_NHI": "健保",
+    "OPTION_LABOR_PENSION": "勞退",
+    "NUMBER_OF_DEPENDENTS": "扶養人數",
     "NHI_BACK_PREMIUM": "健保加保費用",
-    "INCOME_TAX_SECOND_GEN_NHI_TAX": "代扣所得稅／二代健保費",
     "OTHER_ADJUSTMENTS": "其他溢扣／補收",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
   },

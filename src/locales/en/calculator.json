@@ -49,8 +49,12 @@
     "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
   },
   "OTHERS_FORM": {
+    "LABOR_COVERAGE_STATUS": "Labor Coverage Status",
+    "OPTION_LABOR_INSURANCE": "Labor Insurance",
+    "OPTION_NHI": "NHI",
+    "OPTION_LABOR_PENSION": "Labor Pension",
+    "NUMBER_OF_DEPENDENTS": "Number of Dependents",
     "NHI_BACK_PREMIUM": "NHI Back Premium",
-    "INCOME_TAX_SECOND_GEN_NHI_TAX": "Income Tax / 2nd Gen NHI Tax",
     "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
   },
