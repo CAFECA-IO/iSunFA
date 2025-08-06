@@ -23,7 +23,13 @@
     "EMPLOYEE_NUMBER_PLACEHOLDER": "Enter employee number",
     "YEAR": "Year",
     "MONTH": "Month",
-    "DAYS_WORKED": "Days Worked"
+    "PAYROLL_DAYS_BASE": "Payroll Days Base",
+    "PAYROLL_DAYS_BASE_HINT": "Default to 30-day calculation if unspecified.",
+    "PAYROLL_OPTION_FIXED": "Fixed 30 days",
+    "PAYROLL_OPTION_ACTUAL": "Actual calendar days",
+    "JOINED_THIS_MONTH_1": "Joined This Month",
+    "JOINED_THIS_MONTH_2": "On",
+    "LEFT_THIS_MONTH": "Left This Month"
   },
   "BASE_PAY_FORM": {
     "BASE_SALARY": "Base Salary (Taxable)",

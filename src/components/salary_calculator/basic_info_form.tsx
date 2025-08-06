@@ -4,8 +4,8 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import { PiUserFill } from 'react-icons/pi';
-import NumericInput from '@/components/numeric_input/numeric_input';
 import EmployeeListModal from '@/components/salary_calculator/employee_list_modal';
+import ToggleSwitch from '@/components/salary_calculator/toggle_switch';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useUserCtx } from '@/contexts/user_context';
 
@@ -13,6 +13,8 @@ const BasicInfoForm: React.FC = () => {
   const { t } = useTranslation(['calculator', 'date_picker']);
 
   const [isShowEmployeeListModal, setIsShowEmployeeListModal] = useState<boolean>(false);
+
+  const [isOn, setIsOn] = useState<boolean>(false);
 
   const {
     yearOptions,
@@ -25,8 +27,8 @@ const BasicInfoForm: React.FC = () => {
     changeSelectedYear,
     selectedMonth,
     changeSelectedMonth,
-    workedDays,
-    setWorkedDays,
+    // workedDays,
+    // setWorkedDays,
     isNameError,
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
@@ -43,14 +45,18 @@ const BasicInfoForm: React.FC = () => {
     setComponentVisible: setIsMonthOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20250710 - Julian) 當月的最大天數
-  const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
+  const {
+    targetRef: payrollDropdownRef,
+    componentVisible: isPayrollOpen,
+    setComponentVisible: setIsPayrollOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
   // Info: (20250709 - Julian) 下拉選單開關
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
   const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
+  const togglePayrollDropdown = () => setIsPayrollOpen((prev) => !prev);
 
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,12 +94,29 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
+  const payrollDropdown = [
+    t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_FIXED'),
+    t('calculator:BASIC_INFO_FORM.PAYROLL_OPTION_ACTUAL'),
+  ].map((option) => {
+    const clickHandler = () => {};
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {option}
+      </button>
+    );
+  });
+
   return (
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
-      <form className="flex flex-col gap-24px">
+      <form className="grid grid-cols-1 gap-24px tablet:grid-cols-2">
         {/* Info: (20250708 - Julian) 員工姓名 */}
-        <div className="flex flex-col gap-8px">
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME')}
             <span className="text-text-state-error">*</span>
@@ -133,7 +156,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250708 - Julian) 員工編號 */}
-        <div className="flex flex-col gap-8px">
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER')}
           </p>
@@ -198,25 +221,41 @@ const BasicInfoForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Info: (20250708 - Julian) 工作天數 */}
-        <div className="flex flex-col gap-8px">
+        {/* Info: (20250806 - Julian) 基礎天數 */}
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('calculator:BASIC_INFO_FORM.DAYS_WORKED')}{' '}
+            {t('calculator:BASIC_INFO_FORM.PAYROLL_DAYS_BASE')}{' '}
             <span className="text-text-state-error">*</span>
           </p>
-          <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-            <NumericInput
-              id="input-worked-days"
-              name="input-worked-days"
-              value={workedDays}
-              setValue={setWorkedDays}
-              min={0}
-              max={maxDaysInMonth}
-              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-              required
-            />
+          <div
+            ref={payrollDropdownRef}
+            onClick={togglePayrollDropdown}
+            className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+          >
+            <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+              {t('wd')}
+            </div>
+            <div className="px-12px py-10px">
+              <FaChevronDown size={16} />
+            </div>
+            {isPayrollOpen && (
+              <div className="absolute top-50px z-10 flex max-h-200px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                {payrollDropdown}
+              </div>
+            )}
           </div>
+          <p className="text-sm font-medium text-input-text-secondary">
+            {t('calculator:BASIC_INFO_FORM.PAYROLL_DAYS_BASE_HINT')}
+          </p>
         </div>
+
+        {/* Info: (20250806 - Julian) 到職日 */}
+        <div className="col-span-2 flex items-center justify-between gap-40px">
+          <ToggleSwitch isOn={isOn} handleToggle={() => setIsOn(!isOn)} />
+        </div>
+
+        {/* Info: (20250806 - Julian) 離職日 */}
+        <div className="col-span-2 flex items-center"></div>
       </form>
 
       {/* Info: (20250711 - Julian) 員工列表 Modal */}
