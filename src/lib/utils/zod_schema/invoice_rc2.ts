@@ -44,16 +44,16 @@ const InvoiceRC2BaseSchema = z.object({
   currencyCode: z.nativeEnum(CurrencyCode),
   taxType: z.nativeEnum(TaxType).nullable().optional(),
   taxRate: z.number().nullable().optional(),
-  netAmount: z.number().nullable().optional(),
-  taxAmount: z.number().nullable().optional(),
-  totalAmount: z.number().nullable().optional(),
+  netAmount: z.string().nullable().optional(),
+  taxAmount: z.string().nullable().optional(),
+  totalAmount: z.string().nullable().optional(),
 
   isGenerated: z.boolean().optional().default(false),
   incomplete: z.boolean(),
   description: z.string().nullable().optional(),
   note: z.record(z.any()).nullable().optional(),
 
-  totalOfSummarizedInvoices: z.number().nullable().optional(),
+  totalOfSummarizedInvoices: z.string().nullable().optional(),
   carrierSerialNumber: z.string().nullable().optional(),
   otherCertificateNo: z.string().nullable().optional(),
 
