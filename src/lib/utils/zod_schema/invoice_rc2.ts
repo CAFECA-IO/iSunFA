@@ -44,16 +44,32 @@ const InvoiceRC2BaseSchema = z.object({
   currencyCode: z.nativeEnum(CurrencyCode),
   taxType: z.nativeEnum(TaxType).nullable().optional(),
   taxRate: z.number().nullable().optional(),
-  netAmount: z.string().nullable().optional(),
-  taxAmount: z.string().nullable().optional(),
-  totalAmount: z.string().nullable().optional(),
+  netAmount: z
+    .string()
+    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .nullable()
+    .optional(),
+  taxAmount: z
+    .string()
+    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .nullable()
+    .optional(),
+  totalAmount: z
+    .string()
+    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .nullable()
+    .optional(),
 
   isGenerated: z.boolean().optional().default(false),
   incomplete: z.boolean(),
   description: z.string().nullable().optional(),
   note: z.record(z.any()).nullable().optional(),
 
-  totalOfSummarizedInvoices: z.string().nullable().optional(),
+  totalOfSummarizedInvoices: z
+    .string()
+    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .nullable()
+    .optional(),
   carrierSerialNumber: z.string().nullable().optional(),
   otherCertificateNo: z.string().nullable().optional(),
 

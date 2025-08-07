@@ -88,9 +88,9 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
         taxType: TaxType.TAXABLE,
         issuedDate: 1728835200,
         taxRate: 5,
-        netAmount: 5200,
-        taxAmount: 260,
-        totalAmount: 5460,
+        netAmount: '5200',
+        taxAmount: '260',
+        totalAmount: '5460',
         salesName: '統一智能空調工程有限公司',
         salesIdNumber: '00209406',
         deductionType: DeductionType.DEDUCTIBLE_FIXED_ASSETS,
@@ -98,6 +98,10 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
       })
       .set('Cookie', cookies.join('; '))
       .expect(200);
+
+    // Deprecated: (20250807 - Shirley)
+    // eslint-disable-next-line no-console
+    console.log('createInvoiceRC2Input', response.body.payload);
 
     expect(response.body.success).toBe(true);
     expect(response.body.payload?.id).toBeDefined();
