@@ -79,9 +79,12 @@ const BasicInfoForm: React.FC = () => {
   // Info: (20250806 - Julian) 當月的最大天數
   const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
   // Info: (20250806 - Julian) 生成當月的天數選項
-  const dayOptions = Array.from({ length: maxDaysInMonth }, (_, i) =>
-    (i + 1).toString().padStart(2, '0')
-  );
+  const joiningDayOptions = Array.from({ length: maxDaysInMonth }, (_, i) => i + 1);
+  // Info: (20250808 - Julian) 離職日應大於等於到職日，因此篩掉小於到職日的日期
+  const leavingDayOptions = joiningDayOptions.filter((day) => {
+    const joiningDay = parseInt(dayOfJoining, 10);
+    return day >= joiningDay;
+  });
 
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
@@ -142,8 +145,15 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
-  const joiningDayDropdown = dayOptions.map((day) => {
-    const clickHandler = () => changeJoinedDay(day);
+  const joiningDayDropdown = joiningDayOptions.map((day) => {
+    const dayStr = day.toString().padStart(2, '0');
+    const clickHandler = () => {
+      changeJoinedDay(dayStr);
+      // Info: (20250808 - Julian) 如果離職日小於到職日，則自動更新離職日
+      if (!isLeft || parseInt(dayOfLeaving, 10) < day) {
+        changeLeavingDay(dayStr);
+      }
+    };
 
     return (
       <button
@@ -151,13 +161,14 @@ const BasicInfoForm: React.FC = () => {
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
-        {day}
+        {dayStr}
       </button>
     );
   });
 
-  const leavingDayDropdown = dayOptions.map((day) => {
-    const clickHandler = () => changeLeavingDay(day);
+  const leavingDayDropdown = leavingDayOptions.map((day) => {
+    const dayStr = day.toString().padStart(2, '0');
+    const clickHandler = () => changeLeavingDay(dayStr);
 
     return (
       <button
@@ -165,7 +176,7 @@ const BasicInfoForm: React.FC = () => {
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
-        {day}
+        {dayStr}
       </button>
     );
   });
@@ -323,7 +334,7 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={joiningDayRef}
                 onClick={toggleJoiningDayDropdown}
-                className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+                className="relative flex h-44px w-90px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
               >
                 <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
                   {dayOfJoining}
@@ -356,7 +367,7 @@ const BasicInfoForm: React.FC = () => {
               <div
                 ref={leavingDayRef}
                 onClick={toggleLeavingDayDropdown}
-                className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+                className="relative flex h-44px w-90px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
               >
                 <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
                   {dayOfLeaving}

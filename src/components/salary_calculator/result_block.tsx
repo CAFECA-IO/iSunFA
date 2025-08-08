@@ -48,7 +48,7 @@ const ResultBlock: React.FC<IResultBlockProps> = ({ backgroundColor, rowItems })
     });
 
   return (
-    <div className={`flex h-full flex-col rounded-sm p-12px ${backgroundColor}`}>
+    <div className={`flex flex-col rounded-sm p-12px ${backgroundColor}`}>
       {/* Info: (20250708 - Julian) 項目 */}
       <div className="flex flex-1 flex-col gap-12px text-xs font-normal text-text-neutral-secondary">
         {displayRowItems}

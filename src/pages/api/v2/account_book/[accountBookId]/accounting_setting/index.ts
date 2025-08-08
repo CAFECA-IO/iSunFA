@@ -215,11 +215,8 @@ async function handlePutRequest(req: NextApiRequest) {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
     }
   } catch (error) {
-    loggerBack.error(`Failed to update accounting settings for company ${accountBookId}`, {
-      error,
-      errorMessage: (error as Error).message,
-      accountingSettingId: accountingSetting.id,
-    });
+    loggerBack.error(`Failed to update accounting settings for company ${accountBookId}`);
+    loggerBack.error(error);
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
@@ -263,6 +260,7 @@ export default async function handler(
     const error = _error as Error;
     const statusMessage = error.message;
     loggerBack.error(`Error handling accounting settings operation: ${statusMessage}`);
+    loggerBack.error(error);
     ({ httpCode, result } = formatApiResponse(statusMessage, null));
   }
 
