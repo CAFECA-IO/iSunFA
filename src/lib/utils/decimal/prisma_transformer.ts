@@ -19,7 +19,7 @@ export class PrismaDecimalTransformer {
 
     // Info: (20250807 - Shirley) Prisma Decimal 物件轉字串
     try {
-      // 檢查是否有 toString 方法
+      // Info: (20250807 - Shirley) 檢查是否有 toString 方法
       if (
         typeof prismaDecimal === 'object' &&
         prismaDecimal !== null &&
