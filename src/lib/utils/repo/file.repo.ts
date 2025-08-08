@@ -58,7 +58,7 @@ export async function createFile({
       data: fileData,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in createFile in file.repo.ts');
+    loggerBack.error(`Error happened in createFile in file.repo.ts ${error}`);
   }
   return file;
 }
@@ -94,7 +94,7 @@ export async function connectFileById(
       data: connectData,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in connectFileById in file.repo.ts');
+    loggerBack.error(`Error happened in connectFileById in file.repo.ts ${error}`);
   }
   return file;
 }
@@ -109,7 +109,7 @@ export async function findFileById(fileId: number): Promise<File | null> {
       },
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
+    loggerBack.error(`Error happened in findFileById in file.repo.ts ${error}`);
   }
   return file;
 }
@@ -127,7 +127,7 @@ export async function findFileWithThumbnailById(fileId: number): Promise<File | 
       },
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in findFileById in file.repo.ts');
+    loggerBack.error(`Error happened in findFileById in file.repo.ts ${error}`);
   }
   return file;
 }
@@ -152,7 +152,7 @@ export async function putFileById(fileId: number, options: Partial<File>): Promi
       data,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in putFileById in file.repo.ts');
+    loggerBack.error(`Error happened in putFileById in file.repo.ts ${error}`);
   }
 
   return file;
@@ -173,7 +173,7 @@ export async function listFileByIdList(fileIdList: number[]): Promise<File[]> {
       },
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in listFileByIdList in file.repo.ts');
+    loggerBack.error(`Error happened in listFileByIdList in file.repo.ts ${error}`);
   }
   return files;
 }
@@ -191,7 +191,7 @@ export async function findFileInDBByName(name: string): Promise<File | null> {
       },
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in findFileByName in file.repo.ts');
+    loggerBack.error(`Error happened in findFileByName in file.repo.ts ${error}`);
   }
   return file;
 }
@@ -215,7 +215,7 @@ export async function deleteFileById(fileId: number) {
       data,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in deleteFileById in file.repo.ts');
+    loggerBack.error(`Error happened in deleteFileById in file.repo.ts ${error}`);
   }
 
   return file;
@@ -241,7 +241,7 @@ export async function deleteFileByName(name: string) {
       data,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in deleteFileByName in file.repo.ts');
+    loggerBack.error(`Error happened in deleteFileByName in file.repo.ts ${error}`);
   }
 
   return file;
@@ -258,7 +258,7 @@ export async function deleteFileByIdForTesting(fileId: number) {
       where,
     });
   } catch (error) {
-    loggerBack.error(error, 'Error happened in deleteFileByIdForTest in file.repo.ts');
+    loggerBack.error(`Error happened in deleteFileByIdForTest in file.repo.ts ${error}`);
   }
 
   return file;
