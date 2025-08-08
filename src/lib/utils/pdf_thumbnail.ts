@@ -59,7 +59,7 @@ export async function generatePDFThumbnail(
       success: true,
     };
   } catch (error) {
-    loggerBack.error(error, 'Error in generatePDFThumbnail');
+    loggerBack.error(`Error in generatePDFThumbnail ${error}`);
     return {
       filepath: '',
       size: 0,

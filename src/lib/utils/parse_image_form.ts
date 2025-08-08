@@ -70,7 +70,7 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
     // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取)
     fileBuffer = await fs.readFile(filePath);
   } catch (error) {
-    loggerBack.error(error, `Error in readFile: ${filePath}`);
+    loggerBack.error(`Error in readFile: ${filePath} ${error}`);
   }
   return fileBuffer;
 }
