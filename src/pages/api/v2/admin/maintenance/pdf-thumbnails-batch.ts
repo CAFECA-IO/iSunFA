@@ -165,7 +165,8 @@ async function processPdfFile(
           throw new Error('Decrypted file was created but has zero size');
         }
       } catch (decryptionError) {
-        loggerBack.error(`error: ${JSON.stringify(decryptionError)}`);
+        loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error decrypting PDF: ${pdfPath}`);
+        loggerBack.error(decryptionError);
 
         // Info: (20250529 - Shirley) 如果解密失敗，重試
         if (retryCount < maxRetries) {
@@ -297,7 +298,8 @@ async function processPdfFile(
             );
           }
         } catch (encryptionError) {
-          loggerBack.error(`error: ${JSON.stringify(encryptionError)}`);
+          loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error during thumbnail encryption: ${thumbnailFileName}`);
+          loggerBack.error(encryptionError);
 
           // Info: (20250529 - Shirley) 創建未加密的縮略圖記錄作為後備方案
           const thumbnailInDB = await createFile({
