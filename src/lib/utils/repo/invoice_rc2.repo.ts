@@ -1,7 +1,6 @@
 import prisma from '@/client';
 import { InvoiceType as PrismaInvoiceType, Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { PrismaDecimalTransformer } from '@/lib/utils/decimal/prisma_transformer';
 import {
   listInvoiceRC2QuerySchema,
   InvoiceRC2InputSchema,
@@ -134,11 +133,10 @@ export function transformInput(
     voucherId: cert.voucher?.id ?? null,
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
-    // 金額欄位：Decimal 轉字串
-    netAmount: PrismaDecimalTransformer.toApiStringNullable(cert.netAmount),
-    taxAmount: PrismaDecimalTransformer.toApiStringNullable(cert.taxAmount),
-    totalAmount: PrismaDecimalTransformer.toApiStringNullable(cert.totalAmount),
-    totalOfSummarizedInvoices: PrismaDecimalTransformer.toApiStringNullable(cert.totalOfSummarizedInvoices),
+    netAmount: cert.netAmount?.toString() ?? null,
+    taxAmount: cert.taxAmount?.toString() ?? null,
+    totalAmount: cert.totalAmount?.toString() ?? null,
+    totalOfSummarizedInvoices: cert.totalOfSummarizedInvoices?.toString() ?? null,
   });
   invoiceRC2Input.incomplete = !isInvoiceRC2Complete(invoiceRC2Input);
   return invoiceRC2Input;
@@ -177,11 +175,11 @@ export function transformOutput(
     voucherId: cert.voucher?.id ?? null,
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
-    // 金額欄位：Decimal 轉字串
-    netAmount: PrismaDecimalTransformer.toApiStringNullable(cert.netAmount),
-    taxAmount: PrismaDecimalTransformer.toApiStringNullable(cert.taxAmount),
-    totalAmount: PrismaDecimalTransformer.toApiStringNullable(cert.totalAmount),
-    totalOfSummarizedInvoices: PrismaDecimalTransformer.toApiStringNullable(cert.totalOfSummarizedInvoices),
+    // 金額欄位：Decimal 直接轉字串
+    netAmount: cert.netAmount?.toString() ?? null,
+    taxAmount: cert.taxAmount?.toString() ?? null,
+    totalAmount: cert.totalAmount?.toString() ?? null,
+    totalOfSummarizedInvoices: cert.totalOfSummarizedInvoices?.toString() ?? null,
   });
   invoiceRC2Output.incomplete = !isInvoiceRC2Complete(invoiceRC2Output);
   return invoiceRC2Output;
@@ -475,18 +473,18 @@ export async function updateInvoiceRC2Input(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
-      // 金額欄位：字串轉 Decimal (Input)
+      // 金額欄位：Prisma 自動處理字串轉 Decimal
       ...(data.netAmount !== undefined && {
-        netAmount: PrismaDecimalTransformer.fromApiStringNullable(data.netAmount),
+        netAmount: data.netAmount,
       }),
       ...(data.taxAmount !== undefined && {
-        taxAmount: PrismaDecimalTransformer.fromApiStringNullable(data.taxAmount),
+        taxAmount: data.taxAmount,
       }),
       ...(data.totalAmount !== undefined && {
-        totalAmount: PrismaDecimalTransformer.fromApiStringNullable(data.totalAmount),
+        totalAmount: data.totalAmount,
       }),
       ...(data.totalOfSummarizedInvoices !== undefined && {
-        totalOfSummarizedInvoices: PrismaDecimalTransformer.fromApiStringNullable(data.totalOfSummarizedInvoices),
+        totalOfSummarizedInvoices: data.totalOfSummarizedInvoices,
       }),
     },
     include: {
@@ -537,18 +535,18 @@ export async function updateInvoiceRC2Output(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
-      // 金額欄位：字串轉 Decimal (Output)
+      // 金額欄位：Prisma 自動處理字串轉 Decimal
       ...(data.netAmount !== undefined && {
-        netAmount: PrismaDecimalTransformer.fromApiStringNullable(data.netAmount),
+        netAmount: data.netAmount,
       }),
       ...(data.taxAmount !== undefined && {
-        taxAmount: PrismaDecimalTransformer.fromApiStringNullable(data.taxAmount),
+        taxAmount: data.taxAmount,
       }),
       ...(data.totalAmount !== undefined && {
-        totalAmount: PrismaDecimalTransformer.fromApiStringNullable(data.totalAmount),
+        totalAmount: data.totalAmount,
       }),
       ...(data.totalOfSummarizedInvoices !== undefined && {
-        totalOfSummarizedInvoices: PrismaDecimalTransformer.fromApiStringNullable(data.totalOfSummarizedInvoices),
+        totalOfSummarizedInvoices: data.totalOfSummarizedInvoices,
       }),
     },
     include: {
