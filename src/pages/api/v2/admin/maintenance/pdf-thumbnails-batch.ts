@@ -478,7 +478,8 @@ async function processFilesSequentially(
           `[PDF_BATCH_THUMBNAIL] Completed processing for file ID ${id}, name: ${name}, success: ${result.success}`
         );
       } catch (fileError) {
-        loggerBack.error(`error: ${JSON.stringify(fileError)}`);
+        loggerBack.error(`[PDF_BATCH_THUMBNAIL] File does not exist or is not accessible: ${pdfPath}`);
+        loggerBack.error(fileError);
         results.push({
           fileId: id,
           fileName: name,
@@ -636,7 +637,8 @@ export default async function handler(
     const { httpCode, result } = formatApiResponse(STATUS_MESSAGE.SUCCESS, executionResult);
     return res.status(httpCode).json(result);
   } catch (error) {
-    loggerBack.error(`error: ${JSON.stringify(error)}`);
+    loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error during batch PDF thumbnail generation - Execution ID: ${executionId}`);
+    loggerBack.error(error);
     const err = error as Error;
     const statusMessage =
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
