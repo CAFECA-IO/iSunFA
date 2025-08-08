@@ -175,7 +175,7 @@ export function transformOutput(
     voucherId: cert.voucher?.id ?? null,
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
-    // 金額欄位：Decimal 直接轉字串
+    // Info: (20250513 - Tzuhan) 金額欄位：Decimal 直接轉字串
     netAmount: cert.netAmount?.toString() ?? null,
     taxAmount: cert.taxAmount?.toString() ?? null,
     totalAmount: cert.totalAmount?.toString() ?? null,
@@ -473,7 +473,7 @@ export async function updateInvoiceRC2Input(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
-      // 金額欄位：Prisma 自動處理字串轉 Decimal
+      // Info: (20250513 - Tzuhan) 金額欄位：Prisma 自動處理字串轉 Decimal
       ...(data.netAmount !== undefined && {
         netAmount: data.netAmount,
       }),
@@ -535,7 +535,7 @@ export async function updateInvoiceRC2Output(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
-      // 金額欄位：Prisma 自動處理字串轉 Decimal
+      // Info: (20250513 - Tzuhan) 金額欄位：Prisma 自動處理字串轉 Decimal
       ...(data.netAmount !== undefined && {
         netAmount: data.netAmount,
       }),
