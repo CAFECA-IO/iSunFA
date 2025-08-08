@@ -105,8 +105,8 @@
     "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
     "TOTAL_EMPLOYER_COST": "公司總負擔",
-    "REPORTED": "已申報",
-    "PAID": "已支付"
+    "REPORTED": "扣繳憑單金額",
+    "PAID": "實際發放金額"
   },
   "LOGIN_MODAL": {
     "TITLE": "請先登入",
