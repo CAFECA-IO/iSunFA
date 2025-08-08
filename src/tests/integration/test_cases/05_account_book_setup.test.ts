@@ -13,7 +13,8 @@ import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book'
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
 
-const getAccountBookHandler = updateAccountBookHandler = accountBookHandler;
+const getAccountBookHandler = accountBookHandler;
+const updateAccountBookHandler = accountBookHandler;
 
 /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250711 - Shirley) Mock pusher and crypto for account book testing
