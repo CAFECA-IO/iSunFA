@@ -41,7 +41,8 @@ const handleGetRequest: IHandleRequest<APIName.IMAGE_GET_BY_ID, Buffer> = async 
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (_error) {
     const error = _error as Error;
-    loggerBack.error(error, `Error in GET image/[imageId]:`);
+    loggerBack.error(`Error in GET image/[imageId]:`);
+    loggerBack.error(error);
     statusMessage = error.message;
   }
 

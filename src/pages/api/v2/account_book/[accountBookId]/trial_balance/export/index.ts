@@ -9,7 +9,7 @@ import {
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
 import { APIName, HttpMethod } from '@/constants/api_connection';
-import loggerBack, { loggerError } from '@/lib/utils/logger_back';
+import loggerBack from '@/lib/utils/logger_back';
 import { formatApiResponse } from '@/lib/utils/common';
 import {
   processLineItems,
@@ -123,10 +123,8 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, acco
     return { success: true, statusMessage };
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Error generating trial balance CSV export`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Error generating trial balance CSV export`);
+    loggerBack.error(error);
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }
@@ -217,11 +215,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (error) {
     // Info: (20250425 - Shirley) Handle errors
     const err = error as Error;
-    loggerError({
-      userId: session.userId,
-      errorType: `Handler Request Error for ${apiName}`,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Error generating trial balance CSV export`);
+    loggerBack.error(error);
 
     const { httpCode, result } = formatApiResponse<null>(
       statusMessage || STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],

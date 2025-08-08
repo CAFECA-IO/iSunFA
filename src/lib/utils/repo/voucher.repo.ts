@@ -614,10 +614,12 @@ export async function postVoucherV2({
           });
 
           if (!resultLineItem) {
-            loggerBack.error('resultLineItem not found', {
-              originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
-              target: resultVoucher.lineItems[0],
-            });
+            loggerBack.error(
+              `resultLineItem not found ${JSON.stringify({
+                originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
+                target: resultVoucher.lineItems[0],
+              })}`
+            );
             const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
             error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
             throw error;
@@ -756,9 +758,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            `delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed`
           );
+          loggerBack.error(error);
         }
       }
 
@@ -774,9 +776,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -792,9 +794,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -810,9 +812,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -830,10 +832,8 @@ export async function putVoucherWithoutCreateNew(
             },
           });
         } catch (error) {
-          loggerBack.error(
-            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
-            error as Error
-          );
+          loggerBack.error('update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed');
+          loggerBack.error(error);
         }
       }
 
@@ -849,9 +849,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -930,9 +930,9 @@ export async function putVoucherWithoutCreateNew(
     });
   } catch (error) {
     loggerBack.error(
-      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-      { message: (error as Error).message, stack: (error as Error).stack }
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
     );
+    loggerBack.error(error);
   }
   return voucherUpdated;
 }

@@ -5,14 +5,16 @@ import { TestClient } from '@/interfaces/test_client';
 
 // Info: (20250710 - Shirley) Import API handlers for account book testing
 import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
+import accountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
-import updateAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
 
 // Info: (20250710 - Shirley) Import required types and constants
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
 import { LocaleKey } from '@/constants/normal_setting';
 import { CurrencyType } from '@/constants/currency';
+
+const getAccountBookHandler = accountBookHandler;
+const updateAccountBookHandler = accountBookHandler;
 
 /**  Info: (20250723 - Tzuhan) replaced by BaseTestContext
 // Info: (20250711 - Shirley) Mock pusher and crypto for account book testing

@@ -165,7 +165,8 @@ async function processPdfFile(
           throw new Error('Decrypted file was created but has zero size');
         }
       } catch (decryptionError) {
-        loggerBack.error(decryptionError, `[PDF_BATCH_THUMBNAIL] Error decrypting PDF: ${pdfPath}`);
+        loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error decrypting PDF: ${pdfPath}`);
+        loggerBack.error(decryptionError);
 
         // Info: (20250529 - Shirley) 如果解密失敗，重試
         if (retryCount < maxRetries) {
@@ -298,12 +299,9 @@ async function processPdfFile(
           }
         } catch (encryptionError) {
           loggerBack.error(
-            encryptionError,
             `[PDF_BATCH_THUMBNAIL] Error during thumbnail encryption: ${thumbnailFileName}`
           );
-          loggerBack.info(
-            `[PDF_BATCH_THUMBNAIL] Creating unencrypted thumbnail record as fallback due to encryption error`
-          );
+          loggerBack.error(encryptionError);
 
           // Info: (20250529 - Shirley) 創建未加密的縮略圖記錄作為後備方案
           const thumbnailInDB = await createFile({
@@ -355,9 +353,9 @@ async function processPdfFile(
       };
     } catch (thumbnailError) {
       loggerBack.error(
-        thumbnailError,
         `[PDF_BATCH_THUMBNAIL] Error generating or processing thumbnail for file ID ${fileId}`
       );
+      loggerBack.error(thumbnailError);
 
       // Info: (20250529 - Shirley) 如果縮略圖處理失敗，重試
       if (retryCount < maxRetries) {
@@ -485,9 +483,9 @@ async function processFilesSequentially(
         );
       } catch (fileError) {
         loggerBack.error(
-          fileError,
           `[PDF_BATCH_THUMBNAIL] File does not exist or is not accessible: ${pdfPath}`
         );
+        loggerBack.error(fileError);
         results.push({
           fileId: id,
           fileName: name,
@@ -646,9 +644,9 @@ export default async function handler(
     return res.status(httpCode).json(result);
   } catch (error) {
     loggerBack.error(
-      error,
       `[PDF_BATCH_THUMBNAIL] Error during batch PDF thumbnail generation - Execution ID: ${executionId}`
     );
+    loggerBack.error(error);
     const err = error as Error;
     const statusMessage =
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||
