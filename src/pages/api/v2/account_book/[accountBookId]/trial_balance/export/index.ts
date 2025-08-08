@@ -123,10 +123,8 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, acco
     return { success: true, statusMessage };
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Error generating trial balance CSV export`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`error: ${JSON.stringify(error)}`);
+
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }

@@ -51,7 +51,7 @@ export const compileTemplate = <T extends keyof EmailTemplateData>({
   const { html, errors } = mjml2html(renderedMJML);
 
   if (errors.length > 0) {
-    loggerBack.error(`[MJML Error] in template "${templateName}":`, errors);
+    loggerBack.error(`[MJML Error] in template "${templateName}": ${errors}`);
   }
 
   return html;

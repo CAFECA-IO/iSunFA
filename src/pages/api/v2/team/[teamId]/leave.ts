@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(STATUS_MESSAGE.METHOD_NOT_ALLOWED);
     }
   } catch (error) {
-    loggerBack.error(`Error occurred in leave team: ${error}`);
+    loggerBack.error(`error: ${JSON.stringify(error)}`);
     const err = error as Error;
     ({ httpCode, result } = formatApiResponse<null>(
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE],
