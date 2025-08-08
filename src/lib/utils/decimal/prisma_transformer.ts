@@ -115,7 +115,7 @@ export class PrismaDecimalTransformer {
 
     decimalFields.forEach((field) => {
       if (transformed[field] !== null && transformed[field] !== undefined) {
-        // 安全地將 Decimal 欄位轉換為字串
+        // Info: (20250513 - Tzuhan) 安全地將 Decimal 欄位轉換為字串
         const stringValue = this.toApiString(transformed[field]);
         (transformed as Record<string, string | unknown>)[field as string] = stringValue;
       }
