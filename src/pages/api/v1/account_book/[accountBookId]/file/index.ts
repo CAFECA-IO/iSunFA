@@ -206,7 +206,7 @@ async function handlePostRequest(req: NextApiRequest) {
         }
       } catch (_error) {
         const error = _error as Error;
-        loggerBack.error(error, `API POST File: ${error.message}`);
+        loggerBack.error(`error: ${JSON.stringify(error)}`);
         statusMessage = error.message;
       }
     }

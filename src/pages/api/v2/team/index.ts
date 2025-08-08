@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Team creation error: ${err.message}`, err);
+    loggerBack.error(`error: ${JSON.stringify(error)}`);
     statusMessage = STATUS_MESSAGE[err.name as keyof typeof STATUS_MESSAGE] || err.message;
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
