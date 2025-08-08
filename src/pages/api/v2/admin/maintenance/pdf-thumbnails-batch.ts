@@ -350,7 +350,8 @@ async function processPdfFile(
         success: true,
       };
     } catch (thumbnailError) {
-      loggerBack.error(`error: ${JSON.stringify(thumbnailError)}`);
+      loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error generating or processing thumbnail for file ID ${fileId}`);
+      loggerBack.error(thumbnailError);
 
       // Info: (20250529 - Shirley) 如果縮略圖處理失敗，重試
       if (retryCount < maxRetries) {
