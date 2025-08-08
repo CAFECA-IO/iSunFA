@@ -155,7 +155,8 @@ async function handleFileUpload(
         loggerBack.error('Failed to generate PDF thumbnail');
       }
     } catch (error) {
-      loggerBack.error(`error: ${JSON.stringify(error)}`);
+      loggerBack.error('Error generating PDF thumbnail');
+      loggerBack.error(error);
     }
   }
 
@@ -227,7 +228,8 @@ async function handleFileUpload(
         }
       } catch (encryptionError) {
         // Info: (20250513 - Shirley) 記錄縮略圖加密過程中的錯誤
-        loggerBack.error(`error: ${JSON.stringify(encryptionError)}`);
+        loggerBack.error(`Error during thumbnail encryption for ${thumbnailFileName}`);
+        loggerBack.error(encryptionError);
 
         const thumbnailInDB = await createFile({
           name: thumbnailFileName,

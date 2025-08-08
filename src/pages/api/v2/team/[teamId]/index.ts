@@ -194,7 +194,8 @@ const handlePutRequest = async (req: NextApiRequest) => {
     if (err.message === 'TEAM_NOT_FOUND') {
       statusMessage = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
     } else {
-      loggerBack.error(`error: ${JSON.stringify(error)}`);
+      loggerBack.error(`Error updating team ${query.teamId} by user ${userId}:`);
+      loggerBack.error(error);
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

@@ -210,7 +210,8 @@ async function handleGetRequest(req: NextApiRequest) {
   } catch (error) {
     // Info: (20250424 - Shirley) Step 13
     const err = error as Error;
-    loggerBack.error(`error: ${JSON.stringify(error)}`);
+    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`);
+    loggerBack.error(error);
 
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
