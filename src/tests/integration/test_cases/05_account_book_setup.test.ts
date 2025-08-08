@@ -4,10 +4,9 @@ import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 
 // Info: (20250710 - Shirley) Import API handlers for account book testing
-import createAccountBookHandler from '@/pages/api/v2/user/[userId]/account_book';
-import getAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
-import connectAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]/connect';
-import updateAccountBookHandler from '@/pages/api/v2/account_book/[accountBookId]';
+import { createAccountBookHandler } from '@/pages/api/v2/user/[userId]/account_book';
+import { getAccountBookHandler, updateAccountBookHandler } from '@/pages/api/v2/account_book/[accountBookId]';
+import { connectAccountBookHandler } from '@/pages/api/v2/account_book/[accountBookId]/connect';
 
 // Info: (20250710 - Shirley) Import required types and constants
 import { WORK_TAG, ACCOUNT_BOOK_UPDATE_ACTION } from '@/interfaces/account_book';
