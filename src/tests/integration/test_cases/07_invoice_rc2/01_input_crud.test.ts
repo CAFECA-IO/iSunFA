@@ -88,9 +88,57 @@ describe('Invoice RC2 - Input Invoice CRUD', () => {
         taxType: TaxType.TAXABLE,
         issuedDate: 1728835200,
         taxRate: 5,
-        netAmount: 5200,
-        taxAmount: 260,
-        totalAmount: 5460,
+        netAmount: '5200',
+        taxAmount: '260',
+        totalAmount: '5461',
+        salesName: '統一智能空調工程有限公司',
+        salesIdNumber: '00209406',
+        deductionType: DeductionType.DEDUCTIBLE_FIXED_ASSETS,
+        isSharedAmount: false,
+      })
+      .set('Cookie', cookies.join('; '))
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.payload?.id).toBeDefined();
+
+    const { isOutputDataValid: isUpdateValid, outputData: updatedData } = validateOutputData(
+      APIName.UPDATE_INVOICE_RC2_INPUT,
+      response.body.payload
+    );
+    expect(isUpdateValid).toBe(true);
+    expect(updatedData?.no).toBe('AB25000038');
+  });
+
+  it('should update invoice RC2 input by decimal', async () => {
+    if (invoiceId === undefined) {
+      throw new Error('invoiceId is not defined, cannot update invoice input');
+    }
+
+    const invoiceInputModifyClient = createTestClient({
+      handler: invoiceInputModifyHandler,
+      routeParams: {
+        accountBookId: accountBookId.toString(),
+        invoiceId: invoiceId.toString(),
+      },
+    });
+
+    const response = await invoiceInputModifyClient
+      .put(
+        APIPath.UPDATE_INVOICE_RC2_INPUT.replace(
+          ':accountBookId',
+          accountBookId.toString()
+        ).replace(':invoiceId', invoiceId.toString())
+      )
+      .send({
+        no: 'AB25000038',
+        type: InvoiceType.INPUT_21,
+        taxType: TaxType.TAXABLE,
+        issuedDate: 1728835200,
+        taxRate: 5,
+        netAmount: '111.65',
+        taxAmount: '11.35',
+        totalAmount: '100.99',
         salesName: '統一智能空調工程有限公司',
         salesIdNumber: '00209406',
         deductionType: DeductionType.DEDUCTIBLE_FIXED_ASSETS,

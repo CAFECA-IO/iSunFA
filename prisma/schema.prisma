@@ -464,9 +464,9 @@ model InvoiceRC2 {
   currencyCode CurrencyCode @map("currency_code")
   taxType      TaxType?     @map("tax_type")
   taxRate      Int?         @map("tax_rate")
-  netAmount    Int?         @map("net_amount")
-  taxAmount    Int?         @map("tax_amount")
-  totalAmount  Int?         @map("total_amount")
+  netAmount    Decimal?     @map("net_amount") @db.Decimal(26, 8)
+  taxAmount    Decimal?     @map("tax_amount") @db.Decimal(26, 8)
+  totalAmount  Decimal?     @map("total_amount") @db.Decimal(26, 8)
 
   // Info: (20250429 - Tzuhan) 新增: 用來標記是生成還是上傳
   isGenerated Boolean @default(false) @map("is_generated")
@@ -486,7 +486,7 @@ model InvoiceRC2 {
   isReturnOrAllowance Boolean? @default(false) @map("return_or_allowance")
 
   // Info: (20250429 - Tzuhan) 特殊情境（匯總發票/載具）
-  totalOfSummarizedInvoices Int?    @map("total_of_summarized_invoices")
+  totalOfSummarizedInvoices Decimal? @map("total_of_summarized_invoices") @db.Decimal(26, 8)
   carrierSerialNumber       String? @map("carrier_serial_number")
   otherCertificateNo        String? @map("other_certificate_no")
 
