@@ -46,17 +46,17 @@ const InvoiceRC2BaseSchema = z.object({
   taxRate: z.number().nullable().optional(),
   netAmount: z
     .string()
-    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .refine((val) => val === '' || /^\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
     .nullable()
     .optional(),
   taxAmount: z
     .string()
-    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .refine((val) => val === '' || /^\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
     .nullable()
     .optional(),
   totalAmount: z
     .string()
-    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .refine((val) => val === '' || /^\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
     .nullable()
     .optional(),
 
@@ -67,7 +67,7 @@ const InvoiceRC2BaseSchema = z.object({
 
   totalOfSummarizedInvoices: z
     .string()
-    .refine((val) => val === '' || /^-?\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
+    .refine((val) => val === '' || /^\d+(\.\d+)?$/.test(val), 'Invalid decimal format')
     .nullable()
     .optional(),
   carrierSerialNumber: z.string().nullable().optional(),
