@@ -172,7 +172,8 @@ async function handleGetRequest(req: NextApiRequest) {
     );
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`error: ${JSON.stringify(error)}`);
+    loggerBack.error(`Failed to retrieve ledger for company ${accountBookId}`);
+    loggerBack.error(error);
 
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
