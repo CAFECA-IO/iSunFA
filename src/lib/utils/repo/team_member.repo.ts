@@ -152,11 +152,9 @@ export const addMembersToTeam = async (
       });
     });
   } catch (err) {
-    loggerBack.error({
-      msg: '❌ Failed to add member to team inside transaction',
-      err,
-    });
-    throw err; // 保持 rollback 行為
+    loggerBack.error(`❌ Failed to add member to team inside transaction`);
+    loggerBack.error(err);
+    throw err; // Info: (20250421 - tzuhan) 保持 rollback 行為
   }
 
   return {

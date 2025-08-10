@@ -73,7 +73,7 @@ const SalaryResultSection: React.FC = () => {
         {/* Info: (20250708 - Julian) Result */}
         <div
           ref={downloadRef}
-          className="w-650px shrink-0 gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
+          className="w-650px shrink-0 rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
         >
           <PaySlip
             employeeName={showingName}
