@@ -69,7 +69,7 @@ const SalaryResultSection: React.FC = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col gap-24px">
+      <div className="flex w-fit flex-col gap-24px">
         {/* Info: (20250708 - Julian) Result */}
         <div
           ref={downloadRef}
