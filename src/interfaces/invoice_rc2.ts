@@ -39,16 +39,16 @@ export interface IInvoiceRC2Base {
   currencyCode: CurrencyCode;
   taxType: TaxType;
   taxRate?: number;
-  netAmount: number;
-  taxAmount: number;
-  totalAmount: number;
+  netAmount: string;
+  taxAmount: string;
+  totalAmount: string;
 
   isGenerated: boolean;
   incomplete: boolean;
   description?: string;
   note?: JSON;
 
-  totalOfSummarizedInvoices?: number;
+  totalOfSummarizedInvoices?: string;
   carrierSerialNumber?: string;
   otherCertificateNo?: string;
 

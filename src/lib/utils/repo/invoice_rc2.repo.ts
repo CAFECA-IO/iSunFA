@@ -133,6 +133,10 @@ export function transformInput(
     voucherId: cert.voucher?.id ?? null,
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
+    netAmount: cert.netAmount?.toString() ?? null,
+    taxAmount: cert.taxAmount?.toString() ?? null,
+    totalAmount: cert.totalAmount?.toString() ?? null,
+    totalOfSummarizedInvoices: cert.totalOfSummarizedInvoices?.toString() ?? null,
   });
   invoiceRC2Input.incomplete = !isInvoiceRC2Complete(invoiceRC2Input);
   return invoiceRC2Input;
@@ -171,6 +175,11 @@ export function transformOutput(
     voucherId: cert.voucher?.id ?? null,
     voucherNo: cert.voucher?.no ?? null,
     note: typeof cert.note === 'string' ? JSON.parse(cert.note) : (cert.note ?? {}),
+    // Info: (20250513 - Tzuhan) 金額欄位：Decimal 直接轉字串
+    netAmount: cert.netAmount?.toString() ?? null,
+    taxAmount: cert.taxAmount?.toString() ?? null,
+    totalAmount: cert.totalAmount?.toString() ?? null,
+    totalOfSummarizedInvoices: cert.totalOfSummarizedInvoices?.toString() ?? null,
   });
   invoiceRC2Output.incomplete = !isInvoiceRC2Complete(invoiceRC2Output);
   return invoiceRC2Output;
@@ -464,6 +473,19 @@ export async function updateInvoiceRC2Input(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
+      // Info: (20250513 - Tzuhan) 金額欄位：Prisma 自動處理字串轉 Decimal
+      ...(data.netAmount !== undefined && {
+        netAmount: data.netAmount,
+      }),
+      ...(data.taxAmount !== undefined && {
+        taxAmount: data.taxAmount,
+      }),
+      ...(data.totalAmount !== undefined && {
+        totalAmount: data.totalAmount,
+      }),
+      ...(data.totalOfSummarizedInvoices !== undefined && {
+        totalOfSummarizedInvoices: data.totalOfSummarizedInvoices,
+      }),
     },
     include: {
       file: {
@@ -513,6 +535,19 @@ export async function updateInvoiceRC2Output(
       type: data.type as PrismaInvoiceType,
       incomplete,
       updatedAt: now,
+      // Info: (20250513 - Tzuhan) 金額欄位：Prisma 自動處理字串轉 Decimal
+      ...(data.netAmount !== undefined && {
+        netAmount: data.netAmount,
+      }),
+      ...(data.taxAmount !== undefined && {
+        taxAmount: data.taxAmount,
+      }),
+      ...(data.totalAmount !== undefined && {
+        totalAmount: data.totalAmount,
+      }),
+      ...(data.totalOfSummarizedInvoices !== undefined && {
+        totalOfSummarizedInvoices: data.totalOfSummarizedInvoices,
+      }),
     },
     include: {
       file: {

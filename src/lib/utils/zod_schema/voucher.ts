@@ -733,16 +733,16 @@ const voucherGetOneOutputValidatorV2 = z
           currencyCode: invoice.currencyCode,
           taxType: invoice.taxType ?? undefined,
           taxRate: invoice.taxRate ?? undefined,
-          netAmount: invoice.netAmount ?? undefined,
-          taxAmount: invoice.taxAmount ?? undefined,
-          totalAmount: invoice.totalAmount ?? undefined,
+          netAmount: (invoice.netAmount ?? 0).toString(),
+          taxAmount: (invoice.taxAmount ?? 0).toString(),
+          totalAmount: (invoice.totalAmount ?? 0).toString(),
 
           isGenerated: invoice.isGenerated,
           incomplete: invoice.incomplete,
           description: invoice.description ?? undefined,
           note: invoice.note ?? undefined,
 
-          totalOfSummarizedInvoices: invoice.totalOfSummarizedInvoices ?? undefined,
+          totalOfSummarizedInvoices: (invoice.totalOfSummarizedInvoices ?? 0).toString(),
           carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
           otherCertificateNo: invoice.otherCertificateNo ?? undefined,
 
