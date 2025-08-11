@@ -101,7 +101,6 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, comp
     const err = error as Error;
     loggerBack.error(`Error generating ledger CSV export`);
     loggerBack.error(error);
-
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }

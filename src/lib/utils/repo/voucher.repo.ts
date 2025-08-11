@@ -758,8 +758,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            `delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`
+            `delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed`
           );
+          loggerBack.error(error);
         }
       }
 
@@ -775,8 +776,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            `delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -792,8 +794,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            `delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -809,8 +812,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            `create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -828,9 +832,8 @@ export async function putVoucherWithoutCreateNew(
             },
           });
         } catch (error) {
-          loggerBack.error(
-            `update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed ${error}`
-          );
+          loggerBack.error('update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed');
+          loggerBack.error(error);
         }
       }
 
@@ -846,8 +849,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            `create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -925,7 +929,10 @@ export async function putVoucherWithoutCreateNew(
       return voucher;
     });
   } catch (error) {
-    loggerBack.error(`update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed ${error}`);
+    loggerBack.error(
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
+    );
+    loggerBack.error(error);
   }
   return voucherUpdated;
 }

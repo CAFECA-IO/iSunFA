@@ -103,10 +103,8 @@ async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, acco
     res.status(200).send(csv);
     return { success: true, statusMessage };
   } catch (error) {
-    const err = error as Error;
     loggerBack.error(`Error generating asset CSV export`);
     loggerBack.error(error);
-
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }

@@ -217,7 +217,6 @@ async function handlePutRequest(req: NextApiRequest) {
   } catch (error) {
     loggerBack.error(`Failed to update accounting settings for company ${accountBookId}`);
     loggerBack.error(error);
-
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
