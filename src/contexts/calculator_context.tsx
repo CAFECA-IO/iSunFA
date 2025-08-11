@@ -138,6 +138,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
   const monthOptions = MONTHS.slice(0, thisMonth);
+  const defaultMonth = monthOptions.reverse()[0];
 
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
   const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
@@ -151,7 +152,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
-  const [selectedMonth, setSelectedMonth] = useState<MonthType>(monthOptions[0]);
+  const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
   const [workedDays, setWorkedDays] = useState<number>(31);
   const [payrollDaysBase, setPayrollDaysBase] = useState<string>(payrollDaysBaseOptions[0]); // Info: (20250710 - Julian) 基準天數選項
   const [isJoined, setIsJoined] = useState<boolean>(false);
@@ -188,7 +189,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250710 - Julian) Step 4: 其他相關 state
   const [isLaborInsurance, setIsLaborInsurance] = useState<boolean>(true);
   const [isNHI, setIsNHI] = useState<boolean>(true);
-  const [isLaborPension, setIsLaborPension] = useState<boolean>(false);
+  const [isLaborPension, setIsLaborPension] = useState<boolean>(true);
   const [numberOfDependents, setNumberOfDependents] = useState<number>(0);
   const [nhiBackPremium, setNhiBackPremium] = useState<number>(0);
   const [secondGenNhiTax, setSecondGenNhiTax] = useState<number>(0);
@@ -370,7 +371,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setEmployeeNumber('');
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
-    setSelectedMonth(monthOptions[0]);
+    setSelectedMonth(defaultMonth);
     setWorkedDays(31);
     setPayrollDaysBase(payrollDaysBaseOptions[0]);
     setIsJoined(false);
@@ -397,6 +398,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
     setLeavePayoutHours(0);
+    setIsLaborInsurance(true);
+    setIsNHI(true);
+    setIsLaborPension(true);
     setNhiBackPremium(0);
     setSecondGenNhiTax(0);
     setOtherAdjustments(0);
