@@ -175,10 +175,9 @@ export class DecimalOperations {
     if (values.length === 0) return '0';
 
     let result = new Decimal(0);
-    // eslint-disable-next-line no-restricted-syntax
-    for (const value of values) {
+    values.forEach((value) => {
       result = result.plus(new Decimal(String(value).trim()));
-    }
+    });
     return result.toFixed();
   }
 
@@ -264,9 +263,8 @@ export class DecimalOperations {
    */
   static isValidDecimal(value: string): boolean {
     try {
-      // eslint-disable-next-line no-new
-      new Decimal(value);
-      return true;
+      const decimal = new Decimal(value);
+      return decimal !== undefined;
     } catch {
       return false;
     }

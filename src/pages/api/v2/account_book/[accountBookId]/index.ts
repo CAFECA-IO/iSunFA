@@ -24,6 +24,7 @@ import {
   deleteAccountBook,
   updateAccountBook,
   getAccountBookTeamId,
+  getCompanyById,
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -34,7 +35,6 @@ import {
   IUpdateAccountBookInfoBody,
   IAccountBookEntity,
 } from '@/lib/utils/zod_schema/account_book';
-import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import {
   getCompanySettingByCompanyId,
   createCompanySetting,

@@ -364,10 +364,9 @@ describe('DecimalOperations', () => {
       let total = '0';
       const values = ['0.1', '0.1', '0.1', '0.1', '0.1', '0.1', '0.1', '0.1', '0.1', '0.1'];
 
-      // eslint-disable-next-line no-restricted-syntax
-      for (const value of values) {
+      values.forEach((value) => {
         total = DecimalOperations.add(total, value);
-      }
+      });
 
       expect(DecimalOperations.isEqual(total, '1')).toBe(true);
     });

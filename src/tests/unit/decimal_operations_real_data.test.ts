@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import {
   loadRealAccountingTestData,
@@ -33,14 +31,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
       expect(testData.accountBook.name).toBe('AnnaCryCryCry');
       expect(testData.vouchers.length).toBeGreaterThan(0);
       expect(testData.accounts.length).toBeGreaterThan(0);
-
-      console.log(
-        'inRealDataTesting',
-        testData.accountBook.name,
-        testData.accountBook.id,
-        testData.vouchers.length,
-        testData.accounts.length
-      );
     });
 
     it('should have valid test data statistics', () => {
@@ -57,7 +47,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
       const vouchersWithItems = testData.vouchers.filter((v) => v.lineItems.length > 0);
       expect(vouchersWithItems.length).toBe(testData.vouchers.length);
 
-      // Each voucher should have at least 2 line items (debit and credit)
       testData.vouchers.forEach((voucher) => {
         expect(voucher.lineItems.length).toBeGreaterThanOrEqual(2);
       });
@@ -75,7 +64,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
         expect(isBalanced).toBe(true);
         expect(voucher.isBalanced).toBe(true);
 
-        // Double check with manual calculation
         const totalDebits = DecimalOperations.sum(debits);
         const totalCredits = DecimalOperations.sum(credits);
         expect(DecimalOperations.isEqual(totalDebits, totalCredits)).toBe(true);
@@ -96,7 +84,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
     });
 
     it('should validate specific voucher balance calculations', () => {
-      // Test first few vouchers in detail
       sampleVoucherIds.slice(0, 3).forEach((voucherId) => {
         const debits = getVoucherDebits(voucherId);
         const credits = getVoucherCredits(voucherId);
@@ -104,13 +91,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
         const totalDebits = DecimalOperations.sum(debits);
         const totalCredits = DecimalOperations.sum(credits);
 
-        /* eslint-disable no-console */
-        console.log(`Voucher ${voucherId}:`);
-        console.log(`  Debits: [${debits.join(', ')}] = ${totalDebits}`);
-        console.log(`  Credits: [${credits.join(', ')}] = ${totalCredits}`);
-        console.log(`  Balanced: ${DecimalOperations.isEqual(totalDebits, totalCredits)}`);
-
-        // All vouchers in our test data should be balanced
         expect(DecimalOperations.isEqual(totalDebits, totalCredits)).toBe(true);
       });
     });
@@ -144,7 +124,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
         expect(Number(average)).toBeGreaterThan(0);
         expect(Number(min)).toBeLessThanOrEqual(Number(max));
 
-        // Verify average calculation
         const expectedAverage = DecimalOperations.divide(sum, smallAmounts.length);
         expect(DecimalOperations.isEqual(average, expectedAverage)).toBe(true);
       }
@@ -171,13 +150,11 @@ describe('DecimalOperations with Real Accounting Data', () => {
         if (testCase.amounts.length > 0) {
           const calculatedSum = DecimalOperations.sum(testCase.amounts);
 
-          // Allow for minor rounding differences in expected sum calculation
           const { expectedSum } = testCase;
           const difference = DecimalOperations.abs(
             DecimalOperations.subtract(calculatedSum, expectedSum)
           );
 
-          // Should be exactly equal for integer amounts
           const isExactMatch = DecimalOperations.isEqual(calculatedSum, expectedSum);
           const isWithinTolerance = DecimalOperations.isLessThan(difference, '0.01');
 
@@ -199,7 +176,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
         const isGreater = DecimalOperations.isGreaterThan(current, next);
         const isLess = DecimalOperations.isLessThan(current, next);
 
-        // Exactly one of these should be true
         const truthCount = [isEqual, isGreater, isLess].filter(Boolean).length;
         expect(truthCount).toBe(1);
       }
@@ -211,12 +187,10 @@ describe('DecimalOperations with Real Accounting Data', () => {
       const positiveAmounts = allAmounts.filter((amount) => DecimalOperations.isPositive(amount));
       const negativeAmounts = allAmounts.filter((amount) => DecimalOperations.isNegative(amount));
 
-      // All amounts should be categorized
       expect(zeroAmounts.length + positiveAmounts.length + negativeAmounts.length).toBe(
         allAmounts.length
       );
 
-      // In accounting data, we shouldn't have zero amounts typically
       expect(positiveAmounts.length).toBeGreaterThan(0);
     });
   });
@@ -234,7 +208,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
           expect(formatted).toContain(',');
         }
 
-        // Should be able to parse back to the same number
         const unformatted = formatted.replace(/,/g, '');
         expect(DecimalOperations.isEqual(amount, unformatted)).toBe(true);
       });
@@ -247,11 +220,9 @@ describe('DecimalOperations with Real Accounting Data', () => {
         const rounded2 = DecimalOperations.round(amount, 2);
         const rounded0 = DecimalOperations.round(amount, 0);
 
-        // Rounded amount should be valid decimal
         expect(DecimalOperations.isValidDecimal(rounded2)).toBe(true);
         expect(DecimalOperations.isValidDecimal(rounded0)).toBe(true);
 
-        // Rounded amount should be less than or equal to original + 0.5
         const diff2 = DecimalOperations.abs(DecimalOperations.subtract(amount, rounded2));
         const diff0 = DecimalOperations.abs(DecimalOperations.subtract(amount, rounded0));
 
@@ -289,7 +260,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
 
         expect(DecimalOperations.isEqual(amount, doubled)).toBe(true);
 
-        // Division by zero should throw
         expect(() => DecimalOperations.divide(amount, '0')).toThrow(
           'Division by zero is not allowed'
         );
@@ -297,7 +267,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
     });
 
     it('should maintain precision in complex calculations', () => {
-      // Take first voucher and perform complex operations
       const firstVoucher = testData.vouchers[0];
       const amounts = firstVoucher.lineItems.map((li) => li.amount);
 
@@ -305,14 +274,12 @@ describe('DecimalOperations with Real Accounting Data', () => {
         const a = amounts[0];
         const b = amounts[1];
 
-        // (a + b) * 2 / 2 should equal a + b
         const sum = DecimalOperations.add(a, b);
         const doubled = DecimalOperations.multiply(sum, '2');
         const halved = DecimalOperations.divide(doubled, '2');
 
         expect(DecimalOperations.isEqual(sum, halved)).toBe(true);
 
-        // a * (b + 1) - a should equal a * b
         const bPlusOne = DecimalOperations.add(b, '1');
         const product1 = DecimalOperations.multiply(a, bPlusOne);
         const result1 = DecimalOperations.subtract(product1, a);
@@ -328,7 +295,6 @@ describe('DecimalOperations with Real Accounting Data', () => {
       const totalDebits: string[] = [];
       const totalCredits: string[] = [];
 
-      // Collect all debit and credit amounts from all vouchers
       testData.vouchers.forEach((voucher) => {
         voucher.lineItems.forEach((lineItem) => {
           if (lineItem.debit) {
@@ -339,37 +305,19 @@ describe('DecimalOperations with Real Accounting Data', () => {
         });
       });
 
-      // Calculate total sums
       const totalDebitSum = DecimalOperations.sum(totalDebits);
       const totalCreditSum = DecimalOperations.sum(totalCredits);
 
-      // Calculate grand total of all amounts
       const allAmounts = [...totalDebits, ...totalCredits];
       const grandTotal = DecimalOperations.sum(allAmounts);
 
-      // Print results
-      console.log('\n=== TOTAL BALANCE VALIDATION ===');
-      console.log(`Total Debit Entries: ${totalDebits.length}`);
-      console.log(`Total Credit Entries: ${totalCredits.length}`);
-      console.log(`Total Debit Amount: ${DecimalOperations.format(totalDebitSum)}`);
-      console.log(`Total Credit Amount: ${DecimalOperations.format(totalCreditSum)}`);
-      console.log(`Grand Total (All Amounts): ${DecimalOperations.format(grandTotal)}`);
-      console.log(
-        `Difference: ${DecimalOperations.format(DecimalOperations.subtract(totalDebitSum, totalCreditSum))}`
-      );
-      console.log(`Is Balanced: ${DecimalOperations.isEqual(totalDebitSum, totalCreditSum)}`);
-      console.log('=================================\n');
-
-      // Validation: Total debits should equal total credits in double-entry bookkeeping
       expect(DecimalOperations.isEqual(totalDebitSum, totalCreditSum)).toBe(true);
 
-      // Additional validations
       expect(totalDebits.length).toBeGreaterThan(0);
       expect(totalCredits.length).toBeGreaterThan(0);
       expect(DecimalOperations.isPositive(totalDebitSum)).toBe(true);
       expect(DecimalOperations.isPositive(totalCreditSum)).toBe(true);
 
-      // Grand total should be exactly double the debit or credit sum
       const expectedGrandTotal = DecimalOperations.multiply(totalDebitSum, '2');
       expect(DecimalOperations.isEqual(grandTotal, expectedGrandTotal)).toBe(true);
     });
@@ -403,28 +351,9 @@ describe('DecimalOperations with Real Accounting Data', () => {
         });
       });
 
-      // Count balanced vs unbalanced vouchers
       const balancedCount = voucherDetails.filter((v) => v.isBalanced).length;
       const unbalancedCount = voucherDetails.filter((v) => !v.isBalanced).length;
 
-      console.log('\n=== VOUCHER BALANCE BREAKDOWN ===');
-      console.log(`Total Vouchers: ${voucherDetails.length}`);
-      console.log(`Balanced Vouchers: ${balancedCount}`);
-      console.log(`Unbalanced Vouchers: ${unbalancedCount}`);
-
-      if (unbalancedCount > 0) {
-        console.log('\nUnbalanced Vouchers:');
-        voucherDetails
-          .filter((v) => !v.isBalanced)
-          .forEach((voucher) => {
-            console.log(
-              `  Voucher ${voucher.id}: Debit=${DecimalOperations.format(voucher.debitSum)}, Credit=${DecimalOperations.format(voucher.creditSum)}, Diff=${DecimalOperations.format(voucher.difference)}`
-            );
-          });
-      }
-      console.log('==================================\n');
-
-      // All vouchers should be balanced for proper double-entry bookkeeping
       expect(unbalancedCount).toBe(0);
       expect(balancedCount).toBe(testData.vouchers.length);
     });
@@ -436,32 +365,27 @@ describe('DecimalOperations with Real Accounting Data', () => {
 
       const startTime = process.hrtime.bigint();
 
-      // Perform bulk operations
       const sum = DecimalOperations.sum(allAmounts);
       const count = allAmounts.length;
       const average = DecimalOperations.divide(sum, count.toString());
 
       const endTime = process.hrtime.bigint();
-      const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+      const duration = Number(endTime - startTime) / 1000000;
 
       expect(DecimalOperations.isValidDecimal(sum)).toBe(true);
       expect(DecimalOperations.isValidDecimal(average)).toBe(true);
-      expect(duration).toBeLessThan(1000); // Should complete within 1 second
-
-      console.log(`Processed ${count} amounts in ${duration.toFixed(2)}ms`);
+      expect(duration).toBeLessThan(1000);
     });
 
     it('should handle repeated operations consistently', () => {
       const testAmount = testData.vouchers[0].lineItems[0].amount;
 
-      // Perform same operation multiple times
       const results = Array(10)
         .fill(null)
         .map(() => {
           return DecimalOperations.multiply(testAmount, '1.5');
         });
 
-      // All results should be identical
       const firstResult = results[0];
       results.forEach((result) => {
         expect(DecimalOperations.isEqual(result, firstResult)).toBe(true);
