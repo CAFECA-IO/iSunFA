@@ -1,0 +1,728 @@
+{
+  "metadata": {
+    "extractedAt": "2025-08-12T07:34:27.295Z",
+    "description": "Real accounting test data from AccountBook 10000007 (AnnaCryCryCry)",
+    "purpose": "Testing DecimalOperations with actual accounting data"
+  },
+  "accountBook": {
+    "id": 10000007,
+    "name": "AnnaCryCryCry",
+    "teamId": 9,
+    "userId": 10000006,
+    "createdAt": 1725439105
+  },
+  "accounts": [
+    {
+      "id": 1369,
+      "code": "6213",
+      "name": "管理費用 - 旅費",
+      "type": "expense"
+    },
+    {
+      "id": 1568,
+      "code": "3110",
+      "name": "普通股股本",
+      "type": "equity"
+    },
+    {
+      "id": 1602,
+      "code": "1102",
+      "name": "零用金／週轉金",
+      "type": "asset"
+    },
+    {
+      "id": 1603,
+      "code": "1103",
+      "name": "銀行存款",
+      "type": "asset"
+    },
+    {
+      "id": 1604,
+      "code": "1105",
+      "name": "在途現金",
+      "type": "asset"
+    },
+    {
+      "id": 1605,
+      "code": "1107",
+      "name": "約當現金",
+      "type": "asset"
+    },
+    {
+      "id": 1606,
+      "code": "1111",
+      "name": "指定透過損益按公允價值衡量之金融資產－流動",
+      "type": "asset"
+    },
+    {
+      "id": 1607,
+      "code": "1112",
+      "name": "指定透過損益按公允價值衡量之金融資產評價調整－流動",
+      "type": "asset"
+    },
+    {
+      "id": 1608,
+      "code": "1113",
+      "name": "強制透過損益按公允價值衡量之金融資產－流動",
+      "type": "asset"
+    },
+    {
+      "id": 1609,
+      "code": "1114",
+      "name": "強制透過損益按公允價值衡量之金融資產評價調整－流動",
+      "type": "asset"
+    },
+    {
+      "id": 1618,
+      "code": "1151",
+      "name": "應收票據",
+      "type": "asset"
+    },
+    {
+      "id": 1629,
+      "code": "1174",
+      "name": "未實現利息收入－應收分期帳款",
+      "type": "asset"
+    },
+    {
+      "id": 1645,
+      "code": "119D",
+      "name": "融資租賃之未賺得融資收益",
+      "type": "asset"
+    },
+    {
+      "id": 1668,
+      "code": "1340",
+      "name": "農業產品",
+      "type": "asset"
+    },
+    {
+      "id": 1969,
+      "code": "2121",
+      "name": "持有供交易金融負債－流動",
+      "type": "liability"
+    },
+    {
+      "id": 2032,
+      "code": "2552",
+      "name": "保固之長期負債準備",
+      "type": "liability"
+    },
+    {
+      "id": 2103,
+      "code": "1311",
+      "name": "製成品",
+      "type": "asset"
+    },
+    {
+      "id": 2108,
+      "code": "1316",
+      "name": "物料",
+      "type": "asset"
+    },
+    {
+      "id": 2109,
+      "code": "1318",
+      "name": "在途原物料",
+      "type": "asset"
+    },
+    {
+      "id": 2117,
+      "code": "1328",
+      "name": "在途材料",
+      "type": "asset"
+    },
+    {
+      "id": 2119,
+      "code": "1331",
+      "name": "油料",
+      "type": "asset"
+    },
+    {
+      "id": 2121,
+      "code": "1333",
+      "name": "餐飲用品（餐飲業）",
+      "type": "asset"
+    },
+    {
+      "id": 2124,
+      "code": "1351",
+      "name": "在建材料",
+      "type": "asset"
+    },
+    {
+      "id": 2125,
+      "code": "1352",
+      "name": "在建工料",
+      "type": "asset"
+    },
+    {
+      "id": 2126,
+      "code": "1353",
+      "name": "在建人工",
+      "type": "asset"
+    },
+    {
+      "id": 2127,
+      "code": "1354",
+      "name": "在建費用",
+      "type": "asset"
+    },
+    {
+      "id": 2128,
+      "code": "1355",
+      "name": "待分攤在建費用",
+      "type": "asset"
+    },
+    {
+      "id": 10001469,
+      "code": "1101-3",
+      "name": "庫存現金-銀行存款_玉山",
+      "type": "asset"
+    },
+    {
+      "id": 1601,
+      "code": "1101",
+      "name": "庫存現金",
+      "type": "asset"
+    }
+  ],
+  "vouchers": [
+    {
+      "id": 10001400,
+      "no": "20241219002",
+      "date": 1734537600,
+      "createdAt": 1734608661,
+      "lineItems": [
+        {
+          "id": 10004112,
+          "accountId": 1606,
+          "amount": "1230",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10004113,
+          "accountId": 1604,
+          "amount": "1230",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "1230",
+      "totalCredits": "1230",
+      "isBalanced": true
+    },
+    {
+      "id": 10001399,
+      "no": "20241219001",
+      "date": 1734537600,
+      "createdAt": 1734608509,
+      "lineItems": [
+        {
+          "id": 10004110,
+          "accountId": 2108,
+          "amount": "123",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10004111,
+          "accountId": 1601,
+          "amount": "123",
+          "debit": true,
+          "description": "123"
+        }
+      ],
+      "totalDebits": "123",
+      "totalCredits": "123",
+      "isBalanced": true
+    },
+    {
+      "id": 10001122,
+      "no": "20241208001",
+      "date": 1733587200,
+      "createdAt": 1733900543,
+      "lineItems": [
+        {
+          "id": 10003291,
+          "accountId": 1603,
+          "amount": "100",
+          "debit": false,
+          "description": "測試1"
+        },
+        {
+          "id": 10003292,
+          "accountId": 1601,
+          "amount": "100",
+          "debit": true,
+          "description": "測試1"
+        }
+      ],
+      "totalDebits": "100",
+      "totalCredits": "100",
+      "isBalanced": true
+    },
+    {
+      "id": 10000949,
+      "no": "20241206005",
+      "date": 1733414400,
+      "createdAt": 1733469433,
+      "lineItems": [
+        {
+          "id": 10002786,
+          "accountId": 2126,
+          "amount": "1000000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10002787,
+          "accountId": 10001469,
+          "amount": "1000000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "1000000",
+      "totalCredits": "1000000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000948,
+      "no": "20241206004",
+      "date": 1733414400,
+      "createdAt": 1733469380,
+      "lineItems": [
+        {
+          "id": 10002784,
+          "accountId": 1668,
+          "amount": "100",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002785,
+          "accountId": 10001469,
+          "amount": "100",
+          "debit": false,
+          "description": "010"
+        }
+      ],
+      "totalDebits": "100",
+      "totalCredits": "100",
+      "isBalanced": true
+    },
+    {
+      "id": 10000947,
+      "no": "20241206003",
+      "date": 1733414400,
+      "createdAt": 1733468990,
+      "lineItems": [
+        {
+          "id": 10002772,
+          "accountId": 2108,
+          "amount": "100",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002773,
+          "accountId": 2127,
+          "amount": "100",
+          "debit": true,
+          "description": "120611111"
+        },
+        {
+          "id": 10002774,
+          "accountId": 2126,
+          "amount": "100",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002775,
+          "accountId": 2109,
+          "amount": "100",
+          "debit": true,
+          "description": "120611111"
+        },
+        {
+          "id": 10002776,
+          "accountId": 1629,
+          "amount": "100",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002777,
+          "accountId": 1602,
+          "amount": "100",
+          "debit": true,
+          "description": "120611111"
+        },
+        {
+          "id": 10002778,
+          "accountId": 1609,
+          "amount": "100",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002779,
+          "accountId": 10001469,
+          "amount": "100",
+          "debit": true,
+          "description": "120611111"
+        },
+        {
+          "id": 10002780,
+          "accountId": 10001469,
+          "amount": "10",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002781,
+          "accountId": 10001469,
+          "amount": "10",
+          "debit": true,
+          "description": "120611111"
+        },
+        {
+          "id": 10002782,
+          "accountId": 2126,
+          "amount": "100",
+          "debit": false,
+          "description": "120611111"
+        },
+        {
+          "id": 10002783,
+          "accountId": 1605,
+          "amount": "100",
+          "debit": true,
+          "description": "120611111"
+        }
+      ],
+      "totalDebits": "510",
+      "totalCredits": "510",
+      "isBalanced": true
+    },
+    {
+      "id": 10000945,
+      "no": "20241206002",
+      "date": 1733414400,
+      "createdAt": 1733467693,
+      "lineItems": [
+        {
+          "id": 10002768,
+          "accountId": 1645,
+          "amount": "100000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10002769,
+          "accountId": 1668,
+          "amount": "100000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "100000",
+      "totalCredits": "100000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000944,
+      "no": "20241205002",
+      "date": 1733328000,
+      "createdAt": 1733467664,
+      "lineItems": [
+        {
+          "id": 10002766,
+          "accountId": 2124,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002767,
+          "accountId": 2124,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000943,
+      "no": "20241205001",
+      "date": 1733328000,
+      "createdAt": 1733467636,
+      "lineItems": [
+        {
+          "id": 10002764,
+          "accountId": 2117,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002765,
+          "accountId": 2121,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000942,
+      "no": "20241203001",
+      "date": 1733155200,
+      "createdAt": 1733467617,
+      "lineItems": [
+        {
+          "id": 10002762,
+          "accountId": 1601,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002763,
+          "accountId": 2128,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000941,
+      "no": "20241206001",
+      "date": 1733414400,
+      "createdAt": 1733467550,
+      "lineItems": [
+        {
+          "id": 10002760,
+          "accountId": 2119,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002761,
+          "accountId": 2125,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000940,
+      "no": "20241204002",
+      "date": 1733241600,
+      "createdAt": 1733467495,
+      "lineItems": [
+        {
+          "id": 10002758,
+          "accountId": 2103,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002759,
+          "accountId": 1603,
+          "amount": "10000",
+          "debit": false,
+          "description": "1203"
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000935,
+      "no": "20241201001",
+      "date": 1732982400,
+      "createdAt": 1733462850,
+      "lineItems": [
+        {
+          "id": 10002745,
+          "accountId": 1607,
+          "amount": "120000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10002746,
+          "accountId": 1618,
+          "amount": "120000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "120000",
+      "totalCredits": "120000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000850,
+      "no": "20241204001",
+      "date": 1733241600,
+      "createdAt": 1733296246,
+      "lineItems": [
+        {
+          "id": 10002497,
+          "accountId": 1601,
+          "amount": "1233",
+          "debit": true,
+          "description": ""
+        },
+        {
+          "id": 10002498,
+          "accountId": 1606,
+          "amount": "1233",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "1233",
+      "totalCredits": "1233",
+      "isBalanced": true
+    },
+    {
+      "id": 10000099,
+      "no": "20241022002",
+      "date": 1727712000,
+      "createdAt": 1729569365,
+      "lineItems": [
+        {
+          "id": 10000343,
+          "accountId": 1568,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10000344,
+          "accountId": 1969,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000097,
+      "no": "20241022001",
+      "date": 1727712000,
+      "createdAt": 1729566767,
+      "lineItems": [
+        {
+          "id": 10000338,
+          "accountId": 1603,
+          "amount": "10000",
+          "debit": true,
+          "description": "222"
+        },
+        {
+          "id": 10000339,
+          "accountId": 2032,
+          "amount": "5000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10000340,
+          "accountId": 1568,
+          "amount": "5000",
+          "debit": false,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000090,
+      "no": "20241021002",
+      "date": 1727712000,
+      "createdAt": 1729494072,
+      "lineItems": [
+        {
+          "id": 10000315,
+          "accountId": 1369,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10000316,
+          "accountId": 1603,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    },
+    {
+      "id": 10000089,
+      "no": "20241021001",
+      "date": 1727712000,
+      "createdAt": 1729493328,
+      "lineItems": [
+        {
+          "id": 10000313,
+          "accountId": 1601,
+          "amount": "10000",
+          "debit": false,
+          "description": ""
+        },
+        {
+          "id": 10000314,
+          "accountId": 1608,
+          "amount": "10000",
+          "debit": true,
+          "description": ""
+        }
+      ],
+      "totalDebits": "10000",
+      "totalCredits": "10000",
+      "isBalanced": true
+    }
+  ],
+  "statistics": {
+    "totalVouchers": 18,
+    "totalLineItems": 47,
+    "balancedVouchers": 18,
+    "totalAmountRange": {
+      "min": 10,
+      "max": 1000000
+    }
+  }
+}

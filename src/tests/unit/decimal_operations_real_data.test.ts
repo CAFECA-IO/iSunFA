@@ -1,0 +1,471 @@
+/* eslint-disable no-console */
+
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
+import {
+  loadRealAccountingTestData,
+  getBalancedVouchers,
+  getUnbalancedVouchers,
+  getAllAmounts,
+  getVoucherDebits,
+  getVoucherCredits,
+  generateDecimalPrecisionTestCases,
+  getSampleVoucherIds,
+  getAmountsByRange,
+  type RealAccountingTestData,
+  type TestVoucher,
+} from '@/tests/fixtures/test_data_loader';
+
+describe('DecimalOperations with Real Accounting Data', () => {
+  let testData: RealAccountingTestData;
+  let balancedVouchers: TestVoucher[];
+  let sampleVoucherIds: number[];
+
+  beforeAll(() => {
+    testData = loadRealAccountingTestData();
+    balancedVouchers = getBalancedVouchers();
+    sampleVoucherIds = getSampleVoucherIds();
+  });
+
+  describe('Test Data Validation', () => {
+    it('should load real test data successfully', () => {
+      expect(testData).toBeDefined();
+      expect(testData.accountBook.id).toBe(10000007);
+      expect(testData.accountBook.name).toBe('AnnaCryCryCry');
+      expect(testData.vouchers.length).toBeGreaterThan(0);
+      expect(testData.accounts.length).toBeGreaterThan(0);
+
+      console.log(
+        'inRealDataTesting',
+        testData.accountBook.name,
+        testData.accountBook.id,
+        testData.vouchers.length,
+        testData.accounts.length
+      );
+    });
+
+    it('should have valid test data statistics', () => {
+      expect(testData.statistics.totalVouchers).toBeGreaterThan(0);
+      expect(testData.statistics.totalLineItems).toBeGreaterThan(0);
+      expect(testData.statistics.balancedVouchers).toBeGreaterThan(0);
+      expect(testData.statistics.totalAmountRange.min).toBeGreaterThan(0);
+      expect(testData.statistics.totalAmountRange.max).toBeGreaterThanOrEqual(
+        testData.statistics.totalAmountRange.min
+      );
+    });
+
+    it('should have vouchers with line items', () => {
+      const vouchersWithItems = testData.vouchers.filter((v) => v.lineItems.length > 0);
+      expect(vouchersWithItems.length).toBe(testData.vouchers.length);
+
+      // Each voucher should have at least 2 line items (debit and credit)
+      testData.vouchers.forEach((voucher) => {
+        expect(voucher.lineItems.length).toBeGreaterThanOrEqual(2);
+      });
+    });
+  });
+
+  describe('Balance Validation with Real Data', () => {
+    it('should validate all balanced vouchers correctly', () => {
+      balancedVouchers.forEach((voucher) => {
+        const debits = voucher.lineItems.filter((li) => li.debit).map((li) => li.amount);
+        const credits = voucher.lineItems.filter((li) => !li.debit).map((li) => li.amount);
+
+        const isBalanced = DecimalOperations.isBalanced(debits, credits);
+
+        expect(isBalanced).toBe(true);
+        expect(voucher.isBalanced).toBe(true);
+
+        // Double check with manual calculation
+        const totalDebits = DecimalOperations.sum(debits);
+        const totalCredits = DecimalOperations.sum(credits);
+        expect(DecimalOperations.isEqual(totalDebits, totalCredits)).toBe(true);
+      });
+    });
+
+    it('should detect unbalanced vouchers if they exist', () => {
+      const unbalancedVouchers = getUnbalancedVouchers();
+
+      unbalancedVouchers.forEach((voucher) => {
+        const debits = getVoucherDebits(voucher.id);
+        const credits = getVoucherCredits(voucher.id);
+
+        const isBalanced = DecimalOperations.isBalanced(debits, credits);
+        expect(isBalanced).toBe(false);
+        expect(voucher.isBalanced).toBe(false);
+      });
+    });
+
+    it('should validate specific voucher balance calculations', () => {
+      // Test first few vouchers in detail
+      sampleVoucherIds.slice(0, 3).forEach((voucherId) => {
+        const debits = getVoucherDebits(voucherId);
+        const credits = getVoucherCredits(voucherId);
+
+        const totalDebits = DecimalOperations.sum(debits);
+        const totalCredits = DecimalOperations.sum(credits);
+
+        /* eslint-disable no-console */
+        console.log(`Voucher ${voucherId}:`);
+        console.log(`  Debits: [${debits.join(', ')}] = ${totalDebits}`);
+        console.log(`  Credits: [${credits.join(', ')}] = ${totalCredits}`);
+        console.log(`  Balanced: ${DecimalOperations.isEqual(totalDebits, totalCredits)}`);
+
+        // All vouchers in our test data should be balanced
+        expect(DecimalOperations.isEqual(totalDebits, totalCredits)).toBe(true);
+      });
+    });
+  });
+
+  describe('Arithmetic Operations with Real Amounts', () => {
+    it('should sum all amounts correctly', () => {
+      const allAmounts = getAllAmounts();
+
+      expect(allAmounts.length).toBeGreaterThan(0);
+
+      const total = DecimalOperations.sum(allAmounts);
+      const manualSum = allAmounts.reduce((sum, amount) => {
+        return DecimalOperations.add(sum, amount);
+      }, '0');
+
+      expect(DecimalOperations.isEqual(total, manualSum)).toBe(true);
+      expect(DecimalOperations.isValidDecimal(total)).toBe(true);
+    });
+
+    it('should handle small amounts precisely', () => {
+      const smallAmounts = getAmountsByRange(1, 1000);
+
+      if (smallAmounts.length > 0) {
+        const sum = DecimalOperations.sum(smallAmounts);
+        const average = DecimalOperations.average(smallAmounts);
+        const min = DecimalOperations.min(smallAmounts);
+        const max = DecimalOperations.max(smallAmounts);
+
+        expect(Number(sum)).toBeGreaterThan(0);
+        expect(Number(average)).toBeGreaterThan(0);
+        expect(Number(min)).toBeLessThanOrEqual(Number(max));
+
+        // Verify average calculation
+        const expectedAverage = DecimalOperations.divide(sum, smallAmounts.length);
+        expect(DecimalOperations.isEqual(average, expectedAverage)).toBe(true);
+      }
+    });
+
+    it('should handle large amounts precisely', () => {
+      const largeAmounts = getAmountsByRange(10000, 1000000);
+
+      if (largeAmounts.length > 0) {
+        const sum = DecimalOperations.sum(largeAmounts);
+        const product = largeAmounts.reduce((result, amount) => {
+          return DecimalOperations.multiply(result, DecimalOperations.divide(amount, amount));
+        }, largeAmounts[0]);
+
+        expect(DecimalOperations.isValidDecimal(sum)).toBe(true);
+        expect(DecimalOperations.isEqual(product, largeAmounts[0])).toBe(true);
+      }
+    });
+
+    it('should maintain precision across multiple operations', () => {
+      const testCases = generateDecimalPrecisionTestCases();
+
+      testCases.forEach((testCase) => {
+        if (testCase.amounts.length > 0) {
+          const calculatedSum = DecimalOperations.sum(testCase.amounts);
+
+          // Allow for minor rounding differences in expected sum calculation
+          const { expectedSum } = testCase;
+          const difference = DecimalOperations.abs(
+            DecimalOperations.subtract(calculatedSum, expectedSum)
+          );
+
+          // Should be exactly equal for integer amounts
+          const isExactMatch = DecimalOperations.isEqual(calculatedSum, expectedSum);
+          const isWithinTolerance = DecimalOperations.isLessThan(difference, '0.01');
+
+          expect(isExactMatch || isWithinTolerance).toBe(true);
+        }
+      });
+    });
+  });
+
+  describe('Comparison Operations with Real Data', () => {
+    it('should compare real amounts correctly', () => {
+      const amounts = getAllAmounts().slice(0, 10);
+
+      for (let i = 0; i < amounts.length - 1; i += 1) {
+        const current = amounts[i];
+        const next = amounts[i + 1];
+
+        const isEqual = DecimalOperations.isEqual(current, next);
+        const isGreater = DecimalOperations.isGreaterThan(current, next);
+        const isLess = DecimalOperations.isLessThan(current, next);
+
+        // Exactly one of these should be true
+        const truthCount = [isEqual, isGreater, isLess].filter(Boolean).length;
+        expect(truthCount).toBe(1);
+      }
+    });
+
+    it('should identify zero amounts correctly', () => {
+      const allAmounts = getAllAmounts();
+      const zeroAmounts = allAmounts.filter((amount) => DecimalOperations.isZero(amount));
+      const positiveAmounts = allAmounts.filter((amount) => DecimalOperations.isPositive(amount));
+      const negativeAmounts = allAmounts.filter((amount) => DecimalOperations.isNegative(amount));
+
+      // All amounts should be categorized
+      expect(zeroAmounts.length + positiveAmounts.length + negativeAmounts.length).toBe(
+        allAmounts.length
+      );
+
+      // In accounting data, we shouldn't have zero amounts typically
+      expect(positiveAmounts.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Formatting with Real Data', () => {
+    it('should format real amounts with thousand separators', () => {
+      const largeAmounts = getAmountsByRange(1000, 1000000);
+
+      largeAmounts.slice(0, 5).forEach((amount) => {
+        const formatted = DecimalOperations.format(amount);
+
+        expect(formatted).toMatch(/^[\d,]+(\.\d+)?$/);
+
+        if (Number(amount) >= 1000) {
+          expect(formatted).toContain(',');
+        }
+
+        // Should be able to parse back to the same number
+        const unformatted = formatted.replace(/,/g, '');
+        expect(DecimalOperations.isEqual(amount, unformatted)).toBe(true);
+      });
+    });
+
+    it('should round real amounts correctly', () => {
+      const amounts = getAllAmounts().slice(0, 5);
+
+      amounts.forEach((amount) => {
+        const rounded2 = DecimalOperations.round(amount, 2);
+        const rounded0 = DecimalOperations.round(amount, 0);
+
+        // Rounded amount should be valid decimal
+        expect(DecimalOperations.isValidDecimal(rounded2)).toBe(true);
+        expect(DecimalOperations.isValidDecimal(rounded0)).toBe(true);
+
+        // Rounded amount should be less than or equal to original + 0.5
+        const diff2 = DecimalOperations.abs(DecimalOperations.subtract(amount, rounded2));
+        const diff0 = DecimalOperations.abs(DecimalOperations.subtract(amount, rounded0));
+
+        expect(DecimalOperations.isLessThanOrEqual(diff2, '0.005')).toBe(true);
+        expect(DecimalOperations.isLessThanOrEqual(diff0, '0.5')).toBe(true);
+      });
+    });
+  });
+
+  describe('Edge Cases with Real Data', () => {
+    it('should handle minimum and maximum amounts', () => {
+      const { min, max } = testData.statistics.totalAmountRange;
+      const minStr = min.toString();
+      const maxStr = max.toString();
+
+      expect(
+        DecimalOperations.isLessThan(minStr, maxStr) || DecimalOperations.isEqual(minStr, maxStr)
+      ).toBe(true);
+
+      const sum = DecimalOperations.add(minStr, maxStr);
+      const product = DecimalOperations.multiply(minStr, '2');
+
+      expect(DecimalOperations.isGreaterThan(sum, maxStr)).toBe(true);
+      expect(DecimalOperations.isGreaterThanOrEqual(product, minStr)).toBe(true);
+    });
+
+    it('should handle division with real amounts safely', () => {
+      const amounts = getAllAmounts()
+        .filter((amount) => !DecimalOperations.isZero(amount))
+        .slice(0, 5);
+
+      amounts.forEach((amount) => {
+        const half = DecimalOperations.divide(amount, '2');
+        const doubled = DecimalOperations.multiply(half, '2');
+
+        expect(DecimalOperations.isEqual(amount, doubled)).toBe(true);
+
+        // Division by zero should throw
+        expect(() => DecimalOperations.divide(amount, '0')).toThrow(
+          'Division by zero is not allowed'
+        );
+      });
+    });
+
+    it('should maintain precision in complex calculations', () => {
+      // Take first voucher and perform complex operations
+      const firstVoucher = testData.vouchers[0];
+      const amounts = firstVoucher.lineItems.map((li) => li.amount);
+
+      if (amounts.length >= 2) {
+        const a = amounts[0];
+        const b = amounts[1];
+
+        // (a + b) * 2 / 2 should equal a + b
+        const sum = DecimalOperations.add(a, b);
+        const doubled = DecimalOperations.multiply(sum, '2');
+        const halved = DecimalOperations.divide(doubled, '2');
+
+        expect(DecimalOperations.isEqual(sum, halved)).toBe(true);
+
+        // a * (b + 1) - a should equal a * b
+        const bPlusOne = DecimalOperations.add(b, '1');
+        const product1 = DecimalOperations.multiply(a, bPlusOne);
+        const result1 = DecimalOperations.subtract(product1, a);
+        const product2 = DecimalOperations.multiply(a, b);
+
+        expect(DecimalOperations.isEqual(result1, product2)).toBe(true);
+      }
+    });
+  });
+
+  describe('Total Balance Validation Across All Test Data', () => {
+    it('should calculate and validate total debit/credit balance across all vouchers', () => {
+      const totalDebits: string[] = [];
+      const totalCredits: string[] = [];
+
+      // Collect all debit and credit amounts from all vouchers
+      testData.vouchers.forEach((voucher) => {
+        voucher.lineItems.forEach((lineItem) => {
+          if (lineItem.debit) {
+            totalDebits.push(lineItem.amount.toString());
+          } else {
+            totalCredits.push(lineItem.amount.toString());
+          }
+        });
+      });
+
+      // Calculate total sums
+      const totalDebitSum = DecimalOperations.sum(totalDebits);
+      const totalCreditSum = DecimalOperations.sum(totalCredits);
+
+      // Calculate grand total of all amounts
+      const allAmounts = [...totalDebits, ...totalCredits];
+      const grandTotal = DecimalOperations.sum(allAmounts);
+
+      // Print results
+      console.log('\n=== TOTAL BALANCE VALIDATION ===');
+      console.log(`Total Debit Entries: ${totalDebits.length}`);
+      console.log(`Total Credit Entries: ${totalCredits.length}`);
+      console.log(`Total Debit Amount: ${DecimalOperations.format(totalDebitSum)}`);
+      console.log(`Total Credit Amount: ${DecimalOperations.format(totalCreditSum)}`);
+      console.log(`Grand Total (All Amounts): ${DecimalOperations.format(grandTotal)}`);
+      console.log(
+        `Difference: ${DecimalOperations.format(DecimalOperations.subtract(totalDebitSum, totalCreditSum))}`
+      );
+      console.log(`Is Balanced: ${DecimalOperations.isEqual(totalDebitSum, totalCreditSum)}`);
+      console.log('=================================\n');
+
+      // Validation: Total debits should equal total credits in double-entry bookkeeping
+      expect(DecimalOperations.isEqual(totalDebitSum, totalCreditSum)).toBe(true);
+
+      // Additional validations
+      expect(totalDebits.length).toBeGreaterThan(0);
+      expect(totalCredits.length).toBeGreaterThan(0);
+      expect(DecimalOperations.isPositive(totalDebitSum)).toBe(true);
+      expect(DecimalOperations.isPositive(totalCreditSum)).toBe(true);
+
+      // Grand total should be exactly double the debit or credit sum
+      const expectedGrandTotal = DecimalOperations.multiply(totalDebitSum, '2');
+      expect(DecimalOperations.isEqual(grandTotal, expectedGrandTotal)).toBe(true);
+    });
+
+    it('should validate individual voucher contributions to total balance', () => {
+      const voucherDetails: Array<{
+        id: number;
+        debitSum: string;
+        creditSum: string;
+        isBalanced: boolean;
+        difference: string;
+      }> = [];
+
+      testData.vouchers.forEach((voucher) => {
+        const debits = voucher.lineItems.filter((li) => li.debit).map((li) => li.amount.toString());
+        const credits = voucher.lineItems
+          .filter((li) => !li.debit)
+          .map((li) => li.amount.toString());
+
+        const debitSum = DecimalOperations.sum(debits);
+        const creditSum = DecimalOperations.sum(credits);
+        const isBalanced = DecimalOperations.isEqual(debitSum, creditSum);
+        const difference = DecimalOperations.subtract(debitSum, creditSum);
+
+        voucherDetails.push({
+          id: voucher.id,
+          debitSum,
+          creditSum,
+          isBalanced,
+          difference,
+        });
+      });
+
+      // Count balanced vs unbalanced vouchers
+      const balancedCount = voucherDetails.filter((v) => v.isBalanced).length;
+      const unbalancedCount = voucherDetails.filter((v) => !v.isBalanced).length;
+
+      console.log('\n=== VOUCHER BALANCE BREAKDOWN ===');
+      console.log(`Total Vouchers: ${voucherDetails.length}`);
+      console.log(`Balanced Vouchers: ${balancedCount}`);
+      console.log(`Unbalanced Vouchers: ${unbalancedCount}`);
+
+      if (unbalancedCount > 0) {
+        console.log('\nUnbalanced Vouchers:');
+        voucherDetails
+          .filter((v) => !v.isBalanced)
+          .forEach((voucher) => {
+            console.log(
+              `  Voucher ${voucher.id}: Debit=${DecimalOperations.format(voucher.debitSum)}, Credit=${DecimalOperations.format(voucher.creditSum)}, Diff=${DecimalOperations.format(voucher.difference)}`
+            );
+          });
+      }
+      console.log('==================================\n');
+
+      // All vouchers should be balanced for proper double-entry bookkeeping
+      expect(unbalancedCount).toBe(0);
+      expect(balancedCount).toBe(testData.vouchers.length);
+    });
+  });
+
+  describe('Performance with Real Data', () => {
+    it('should handle large datasets efficiently', () => {
+      const allAmounts = getAllAmounts();
+
+      const startTime = process.hrtime.bigint();
+
+      // Perform bulk operations
+      const sum = DecimalOperations.sum(allAmounts);
+      const count = allAmounts.length;
+      const average = DecimalOperations.divide(sum, count.toString());
+
+      const endTime = process.hrtime.bigint();
+      const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
+
+      expect(DecimalOperations.isValidDecimal(sum)).toBe(true);
+      expect(DecimalOperations.isValidDecimal(average)).toBe(true);
+      expect(duration).toBeLessThan(1000); // Should complete within 1 second
+
+      console.log(`Processed ${count} amounts in ${duration.toFixed(2)}ms`);
+    });
+
+    it('should handle repeated operations consistently', () => {
+      const testAmount = testData.vouchers[0].lineItems[0].amount;
+
+      // Perform same operation multiple times
+      const results = Array(10)
+        .fill(null)
+        .map(() => {
+          return DecimalOperations.multiply(testAmount, '1.5');
+        });
+
+      // All results should be identical
+      const firstResult = results[0];
+      results.forEach((result) => {
+        expect(DecimalOperations.isEqual(result, firstResult)).toBe(true);
+      });
+    });
+  });
+});
