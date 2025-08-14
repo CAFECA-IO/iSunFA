@@ -136,7 +136,10 @@ export const lineItemGetByAccountAPIUtils = {
     let adjustedAmount = originalAmount;
     reverseLineItems.forEach((reverseLineItem) => {
       if (reverseLineItem.debit !== originDebit) {
-        adjustedAmount -= reverseLineItem.amount;
+        adjustedAmount -=
+          typeof reverseLineItem.amount === 'string'
+            ? parseFloat(reverseLineItem.amount)
+            : reverseLineItem.amount.toNumber();
       }
     });
     return adjustedAmount;
@@ -160,7 +163,10 @@ export const lineItemGetByAccountAPIUtils = {
     const adjustedAmount = lineItemGetByAccountAPIUtils.calculateLineItemAdjustedAmount({
       originDebit,
       reverseLineItems: reverseItems,
-      originalAmount: amountThatWillBeReversed,
+      originalAmount:
+        typeof amountThatWillBeReversed === 'string'
+          ? parseFloat(amountThatWillBeReversed)
+          : amountThatWillBeReversed.toNumber(),
     });
     return adjustedAmount > 0;
   },
