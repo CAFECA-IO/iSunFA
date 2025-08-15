@@ -126,7 +126,7 @@ describe('Certificate API Get List Utils 測試', () => {
 
   const mockAccountingSetting = {
     id: 1,
-    companyId: mockCompanyId,
+    accountBookId: mockCompanyId,
     currency: CurrencyType.TWD,
     returnPeriodicity: 'Monthly',
     salesTaxRate: 5,
@@ -244,7 +244,7 @@ describe('Certificate API Get List Utils 測試', () => {
       mockGetCertificatesV2.mockResolvedValue(mockPaginatedResult);
 
       const options = {
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         startDate: mockStartDate,
         endDate: mockEndDate,
         page: 1,
@@ -311,7 +311,7 @@ describe('Certificate API Get List Utils 測試', () => {
       mockGetAllFilteredInvoice.mockResolvedValue(mockFilteredInvoices);
 
       const options = {
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         startDate: mockStartDate,
         endDate: mockEndDate,
         searchQuery: 'test',
@@ -339,7 +339,7 @@ describe('Certificate API Get List Utils 測試', () => {
       mockGetAllFilteredInvoice.mockResolvedValue(mockFilteredInvoices);
 
       const options = {
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         startDate: mockStartDate,
         endDate: mockEndDate,
       };
@@ -362,7 +362,7 @@ describe('Certificate API Get List Utils 測試', () => {
       mockGetAllFilteredInvoice.mockResolvedValue(mockFilteredInvoices);
 
       const options = {
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
       };
 
       const result = await getListUtils.getSumOfTotalInvoicePrice(options);
@@ -375,7 +375,7 @@ describe('Certificate API Get List Utils 測試', () => {
     it('應該正確轉換憑證實體為回應格式', () => {
       const mockCertificateEntity = {
         id: 1,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         aiResultId: 'test-ai-result',
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
@@ -417,7 +417,7 @@ describe('Certificate API Get List Utils 測試', () => {
           deletedAt: null,
           counterParty: {
             id: 1,
-            companyId: mockCompanyId,
+            accountBookId: mockCompanyId,
             name: 'Test Counter Party',
             taxId: '12345678',
             type: 'COMPANY',
@@ -449,7 +449,7 @@ describe('Certificate API Get List Utils 測試', () => {
         vouchers: [
           {
             id: 1,
-            companyId: mockCompanyId,
+            accountBookId: mockCompanyId,
             no: 'V-001',
             lineItems: [],
             createdAt: mockTimestamp,
@@ -465,14 +465,12 @@ describe('Certificate API Get List Utils 測試', () => {
         expect.objectContaining({
           id: 1,
           name: 'test.jpg',
-          companyId: mockCompanyId,
           incomplete: false,
           aiResultId: 'test-ai-result',
           createdAt: mockTimestamp,
           updatedAt: mockTimestamp,
           uploader: 'Test User',
           uploaderUrl: 'https://example.com/user-avatar.jpg',
-          voucherNo: 'V-001',
           voucherId: 1,
         })
       );
@@ -509,7 +507,7 @@ describe('Certificate API Get List Utils 測試', () => {
     it('應該正確處理沒有發票的憑證', () => {
       const mockCertificateEntityWithoutInvoice = {
         id: 1,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         aiResultId: 'test-ai-result',
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
@@ -562,7 +560,7 @@ describe('Certificate API Get List Utils 測試', () => {
     it('應該正確處理沒有縮圖的檔案', () => {
       const mockCertificateEntityWithoutThumbnail = {
         id: 1,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         aiResultId: 'test-ai-result',
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
@@ -593,7 +591,7 @@ describe('Certificate API Get List Utils 測試', () => {
           deletedAt: null,
           counterParty: {
             id: 1,
-            companyId: mockCompanyId,
+            accountBookId: mockCompanyId,
             name: 'Test Counter Party',
             taxId: '12345678',
             type: 'COMPANY',

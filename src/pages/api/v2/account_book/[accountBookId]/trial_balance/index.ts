@@ -20,7 +20,7 @@ import { DEFAULT_PAGE_NUMBER } from '@/constants/display';
 import { parseSortOption } from '@/lib/utils/sort';
 import { findManyAccountsInPrisma } from '@/lib/utils/repo/account.repo';
 import { SortOrder } from '@/constants/sort';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { TeamPermissionAction } from '@/interfaces/permissions';
 import {
   checkSessionUser,
@@ -154,7 +154,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Step 3 撈出所有會計科目
     const accounts = await findManyAccountsInPrisma({
-      companyId: accountBookId,
+      accountBookId: +accountBookId,
       includeDefaultAccount: true,
       page: 1,
       limit: 9999999,
@@ -210,10 +210,8 @@ async function handleGetRequest(req: NextApiRequest) {
   } catch (error) {
     // Info: (20250424 - Shirley) Step 13
     const err = error as Error;
-    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`);
+    loggerBack.error(error);
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 

@@ -231,7 +231,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
     (resData: IPaginatedData<IInvoiceRC2Input[]>) => {
       try {
         const note = JSON.parse(resData.note || '{}') as {
-          totalPrice: { _sum: { totalAmount: number } };
+          totalPrice: { _sum: { totalAmount: string } };
           count: {
             withVoucher: number;
             withoutVoucher: number;
@@ -240,7 +240,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
         };
         // Info: (20250616 - Anna) 因為後端回傳的欄位名稱為 "_sum"，需暫時忽略 ESLint 的 no-underscore-dangle 規則
         // eslint-disable-next-line no-underscore-dangle
-        setTotalCertificatePrice(note.totalPrice?._sum?.totalAmount ?? 0);
+        setTotalCertificatePrice(parseFloat(note.totalPrice?._sum?.totalAmount || '0') || 0);
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
@@ -437,12 +437,12 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           ? updateCertificateAPI({
               params: {
                 accountBookId,
-                certificateId: certificate.id,
+                invoiceId: certificate.id,
               },
               body: certificate,
             })
           : createCertificateAPI({
-              params: { accountBookId, certificateId: certificate.id },
+              params: { accountBookId, invoiceId: certificate.id },
               body: certificate,
             });
 

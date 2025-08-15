@@ -37,6 +37,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
 
   const { username } = useUserCtx();
   const employeeName = username ?? '-';
+  const employeeNumber = '123456'; // ToDo: (20250806 - Julian) 取得員工編號
 
   const formattedMonth = monthStr.length > 3 ? `${monthStr.slice(0, 3)}.` : monthStr;
   const monthWithI18n = t(`date_picker:DATE_PICKER.${monthStr.toUpperCase().slice(0, 3)}`);
@@ -95,6 +96,7 @@ const ViewPaySlipModal: React.FC<IViewPaySlipModal> = ({
         >
           <PaySlip
             employeeName={employeeName}
+            employeeNumber={employeeNumber}
             selectedMonth={monthStr}
             selectedYear={yearStr}
             resultData={paySlipData}

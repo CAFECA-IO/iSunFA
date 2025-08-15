@@ -17,7 +17,7 @@ import { APIName, HttpMethod } from '@/constants/api_connection';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
 import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { TeamPermissionAction } from '@/interfaces/permissions';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 
@@ -104,10 +104,8 @@ async function handleAssetExport(req: NextApiRequest, res: NextApiResponse, acco
     return { success: true, statusMessage };
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Error generating asset CSV export`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Error generating asset CSV export`);
+    loggerBack.error(error);
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }

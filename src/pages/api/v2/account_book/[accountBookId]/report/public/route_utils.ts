@@ -9,7 +9,7 @@ import { BalanceSheetOtherInfo, IReportContent } from '@/interfaces/report';
 import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { timestampToString } from '@/lib/utils/common';
 import { loggerError } from '@/lib/utils/logger_back';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { createReport } from '@/lib/utils/repo/report.repo';
 import ReportGeneratorFactory from '@/lib/utils/report/report_generator_factory';
 
@@ -25,12 +25,12 @@ export const publicGenerateReportUtils = {
     return { startDateInSecond, endDateInSecond };
   },
   generateReport: async (options: {
-    companyId: number;
+    accountBookId: number;
     startDateInSecond: number;
     endDateInSecond: number;
     reportSheetType: ReportSheetType;
   }): Promise<IReportContent> => {
-    const { companyId, startDateInSecond, endDateInSecond, reportSheetType } = options;
+    const { accountBookId, startDateInSecond, endDateInSecond, reportSheetType } = options;
     let reportContent: IReportContent = {
       content: {
         content: [],
@@ -39,7 +39,7 @@ export const publicGenerateReportUtils = {
     };
     try {
       const financialReportGenerator = await ReportGeneratorFactory.createGenerator(
-        companyId,
+        accountBookId,
         startDateInSecond,
         endDateInSecond,
         reportSheetType
@@ -57,20 +57,20 @@ export const publicGenerateReportUtils = {
     return reportContent;
   },
   generateReportName: async (options: {
-    companyId: number;
+    accountBookId: number;
     reportSheetType: ReportSheetType;
     reportLanguage: string;
     endDateInSecond: number;
   }) => {
-    const { companyId, reportSheetType, reportLanguage, endDateInSecond } = options;
-    const company = await getCompanyById(companyId);
+    const { accountBookId, reportSheetType, reportLanguage, endDateInSecond } = options;
+    const company = await getCompanyById(accountBookId);
     const reportSheetForDisplay = ReportSheetTypeDisplayMap[reportSheetType];
     const dateString = timestampToString(endDateInSecond).date.replace(/-/g, '');
     const reportName = `${company?.taxId}_${reportSheetForDisplay}_${reportLanguage}_${dateString}`;
     return reportName;
   },
   generateAndSaveReport: async (options: {
-    companyId: number;
+    accountBookId: number;
     projectId: number | null;
     startDateInSecond: number;
     endDateInSecond: number;
@@ -79,7 +79,7 @@ export const publicGenerateReportUtils = {
     reportLanguageString: ReportLanguagesKey;
   }) => {
     const {
-      companyId,
+      accountBookId,
       projectId,
       startDateInSecond,
       endDateInSecond,
@@ -88,20 +88,20 @@ export const publicGenerateReportUtils = {
       reportLanguageString,
     } = options;
     const { content } = await publicGenerateReportUtils.generateReport({
-      companyId,
+      accountBookId,
       startDateInSecond,
       endDateInSecond,
       reportSheetType,
     });
     const name = await publicGenerateReportUtils.generateReportName({
-      companyId,
+      accountBookId,
       reportSheetType,
       reportLanguage: reportLanguageString,
       endDateInSecond,
     });
 
     const reportCreated = await createReport(
-      companyId,
+      accountBookId,
       projectId,
       name,
       startDateInSecond,

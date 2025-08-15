@@ -22,7 +22,7 @@ import { DEFAULT_TIMEZONE } from '@/constants/common';
 import { ledgerAvailableFields, LedgerFieldsMap } from '@/constants/export_ledger';
 import { findVouchersByVoucherIds } from '@/lib/utils/repo/voucher.repo';
 import { LabelType } from '@/constants/ledger';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -99,10 +99,8 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, comp
     return { success: true, statusMessage };
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Error generating ledger CSV export`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Error generating ledger CSV export`);
+    loggerBack.error(error);
     return { success: false, statusMessage: err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR };
   }
 }

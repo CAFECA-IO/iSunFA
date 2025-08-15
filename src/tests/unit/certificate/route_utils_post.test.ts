@@ -72,7 +72,7 @@ describe('Certificate API Post Utils 測試', () => {
   // Info: (20250609 - Shirley) 正確的 PostCertificateResponse 類型模擬資料
   const mockCertificateFromPrisma: PostCertificateResponse = {
     id: mockCertificateId,
-    companyId: mockCompanyId,
+    accountBookId: mockCompanyId,
     uploaderId: mockUploaderId,
     fileId: mockFileId,
     aiResultId: mockAiResultId,
@@ -109,7 +109,7 @@ describe('Certificate API Post Utils 測試', () => {
           updatedAt: mockTimestamp,
           deletedAt: null,
           aiResultId: 'voucher-ai-result',
-          companyId: mockCompanyId,
+          accountBookId: mockCompanyId,
           issuerId: mockUploaderId,
           counterPartyId: null,
           status: JOURNAL_EVENT.UPLOADED,
@@ -196,7 +196,7 @@ describe('Certificate API Post Utils 測試', () => {
 
   const mockCertificateEntity = {
     id: mockCertificateId,
-    companyId: mockCompanyId,
+    accountBookId: mockCompanyId,
     aiResultId: mockAiResultId,
     createdAt: mockTimestamp,
     updatedAt: mockTimestamp,
@@ -274,7 +274,7 @@ describe('Certificate API Post Utils 測試', () => {
 
       const options = {
         nowInSecond: mockTimestamp,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         uploaderId: mockUploaderId,
         fileId: mockFileId,
         aiResultId: mockAiResultId,
@@ -291,7 +291,7 @@ describe('Certificate API Post Utils 測試', () => {
 
       const options = {
         nowInSecond: mockTimestamp,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         uploaderId: mockUploaderId,
         fileId: mockFileId,
       };
@@ -306,7 +306,7 @@ describe('Certificate API Post Utils 測試', () => {
 
       const options = {
         nowInSecond: mockTimestamp,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         uploaderId: mockUploaderId,
         fileId: mockFileId,
       };
@@ -406,7 +406,7 @@ describe('Certificate API Post Utils 測試', () => {
 
       const mockVoucherEntity = {
         id: 1,
-        companyId: mockCompanyId,
+        accountBookId: mockCompanyId,
         no: 'V-001',
         issuerId: mockUploaderId,
         counterPartyId: 1,
@@ -439,14 +439,12 @@ describe('Certificate API Post Utils 測試', () => {
         expect.objectContaining({
           id: mockCertificateEntity.id,
           name: mockFileEntity.name,
-          companyId: mockCompanyId,
           incomplete: false,
           aiResultId: mockAiResultId,
           createdAt: mockTimestamp,
           updatedAt: mockTimestamp,
           uploader: 'Test User',
           uploaderUrl: mockFileEntity.url,
-          voucherNo: 'V-001',
           voucherId: 1,
         })
       );

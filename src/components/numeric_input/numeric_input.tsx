@@ -4,11 +4,17 @@ import BigNumber from 'bignumber.js';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  value: number;
-  setValue?: React.Dispatch<React.SetStateAction<number>>;
+  value: number | string;
+  setValue?:
+    | React.Dispatch<React.SetStateAction<number>>
+    | React.Dispatch<React.SetStateAction<string>>;
   isDecimal?: boolean;
   hasComma?: boolean; // Info: (20240722 - Liz) 新增逗號顯示
-  triggerWhenChanged?: (value: number, e: React.ChangeEvent<HTMLInputElement>) => void;
+  triggerWhenChanged?:
+    | ((value: number, e: React.ChangeEvent<HTMLInputElement>) => void)
+    | ((value: string, e: React.ChangeEvent<HTMLInputElement>) => void);
+  // Info: (20250811 - Shirley) 新增參數決定使用字串或數字模式
+  useStringValue?: boolean;
 }
 
 const formatDisplayValue = (
@@ -38,6 +44,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
   isDecimal,
   hasComma,
   triggerWhenChanged,
+  useStringValue = false,
   ...props
 }) => {
   // Info: (20250319 - Anna) displayValue 是顯示在 input 上的顯示值
@@ -46,15 +53,31 @@ const NumericInput: React.FC<INumericInputProps> = ({
   );
 
   // Info: (20240723 - Liz) dbValue 是存入 DB 的儲存值
-  const [dbValue, setDbValue] = useState<number>(value);
+  const [dbValue, setDbValue] = useState<number | string>(
+    useStringValue
+      ? typeof value === 'string'
+        ? value
+        : value.toString()
+      : typeof value === 'number'
+        ? value
+        : parseFloat(value.toString()) || 0
+  );
 
   useEffect(() => {
     setDisplayValue(formatDisplayValue(value, isDecimal, hasComma));
   }, [value, hasComma, isDecimal]);
 
   useEffect(() => {
-    if (setValue) setValue(dbValue);
-  }, [dbValue, setValue]);
+    if (setValue) {
+      if (useStringValue) {
+        (setValue as React.Dispatch<React.SetStateAction<string>>)(dbValue.toString());
+      } else {
+        (setValue as React.Dispatch<React.SetStateAction<number>>)(
+          typeof dbValue === 'number' ? dbValue : parseFloat(dbValue.toString()) || 0
+        );
+      }
+    }
+  }, [dbValue, setValue, useStringValue]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -103,15 +126,29 @@ const NumericInput: React.FC<INumericInputProps> = ({
     const formattedDisplayValue = formatDisplayValue(sanitizedValue, isDecimal, hasComma);
 
     // Info: (20240723 - Liz) 更新儲存值
-    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
-    setDbValue(validNumericValue.toNumber());
+    if (useStringValue) {
+      setDbValue(validNumericValue.toString());
+    } else {
+      // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
+      setDbValue(validNumericValue.toNumber());
+    }
 
     // Info: (20240723 - Liz) 更新顯示值
     setDisplayValue(formattedDisplayValue);
 
     if (triggerWhenChanged) {
-      // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
-      triggerWhenChanged(validNumericValue.toNumber(), event);
+      if (useStringValue) {
+        (triggerWhenChanged as (value: string, e: React.ChangeEvent<HTMLInputElement>) => void)(
+          validNumericValue.toString(),
+          event
+        );
+      } else {
+        // Info: (20250319 - Anna) BigNumber ➝ number：callback 傳原生數字
+        (triggerWhenChanged as (value: number, e: React.ChangeEvent<HTMLInputElement>) => void)(
+          validNumericValue.toNumber(),
+          event
+        );
+      }
     }
   };
 
@@ -188,7 +225,7 @@ const NumericInput: React.FC<INumericInputProps> = ({
   const handleBlur = () => {
     if (!displayValue) {
       setDisplayValue('0');
-      setDbValue(0);
+      setDbValue(useStringValue ? '0' : 0);
     }
   };
 

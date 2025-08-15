@@ -103,7 +103,7 @@ function canExecute(force = false): { canExecute: boolean; reason?: string } {
  * Info: (20250529 - Shirley) Process a single PDF file to generate and associate a thumbnail
  * @param pdfPath The path to the PDF file
  * @param fileId The database ID of the file
- * @param companyId The company ID associated with the file
+ * @param accountBookId The account book ID associated with the file
  * @param isEncrypted Whether the file is encrypted
  * @param encryptedSymmetricKey The encrypted symmetric key for decryption
  * @param iv The initialization vector for decryption
@@ -114,7 +114,7 @@ function canExecute(force = false): { canExecute: boolean; reason?: string } {
 async function processPdfFile(
   pdfPath: string,
   fileId: number,
-  companyId: number,
+  accountBookId: number,
   isEncrypted: boolean,
   encryptedSymmetricKey: string,
   iv: Buffer,
@@ -135,7 +135,7 @@ async function processPdfFile(
         // ToDo: (20250710 - Luphia) Use IPFS to store files (S2: Admin 批次)
         const encryptedFileBuffer = await fs.readFile(pdfPath);
         const arrayBuffer = new Uint8Array(encryptedFileBuffer).buffer;
-        const privateKey = await getPrivateKeyByCompany(companyId);
+        const privateKey = await getPrivateKeyByCompany(accountBookId);
 
         if (!privateKey) {
           throw new Error('Private key not found for decryption');
@@ -165,7 +165,8 @@ async function processPdfFile(
           throw new Error('Decrypted file was created but has zero size');
         }
       } catch (decryptionError) {
-        loggerBack.error(decryptionError, `[PDF_BATCH_THUMBNAIL] Error decrypting PDF: ${pdfPath}`);
+        loggerBack.error(`[PDF_BATCH_THUMBNAIL] Error decrypting PDF: ${pdfPath}`);
+        loggerBack.error(decryptionError);
 
         // Info: (20250529 - Shirley) 如果解密失敗，重試
         if (retryCount < maxRetries) {
@@ -175,7 +176,7 @@ async function processPdfFile(
           return processPdfFile(
             pdfPath,
             fileId,
-            companyId,
+            accountBookId,
             isEncrypted,
             encryptedSymmetricKey,
             iv,
@@ -230,7 +231,7 @@ async function processPdfFile(
             `[PDF_BATCH_THUMBNAIL] Read thumbnail file into buffer, size: ${thumbnailBuffer.length} bytes`
           );
 
-          const publicKey = await getPublicKeyByCompany(companyId);
+          const publicKey = await getPublicKeyByCompany(accountBookId);
 
           if (!publicKey) {
             throw new Error('Public key not found for encryption');
@@ -298,12 +299,9 @@ async function processPdfFile(
           }
         } catch (encryptionError) {
           loggerBack.error(
-            encryptionError,
             `[PDF_BATCH_THUMBNAIL] Error during thumbnail encryption: ${thumbnailFileName}`
           );
-          loggerBack.info(
-            `[PDF_BATCH_THUMBNAIL] Creating unencrypted thumbnail record as fallback due to encryption error`
-          );
+          loggerBack.error(encryptionError);
 
           // Info: (20250529 - Shirley) 創建未加密的縮略圖記錄作為後備方案
           const thumbnailInDB = await createFile({
@@ -355,9 +353,9 @@ async function processPdfFile(
       };
     } catch (thumbnailError) {
       loggerBack.error(
-        thumbnailError,
         `[PDF_BATCH_THUMBNAIL] Error generating or processing thumbnail for file ID ${fileId}`
       );
+      loggerBack.error(thumbnailError);
 
       // Info: (20250529 - Shirley) 如果縮略圖處理失敗，重試
       if (retryCount < maxRetries) {
@@ -367,7 +365,7 @@ async function processPdfFile(
         return processPdfFile(
           pdfPath,
           fileId,
-          companyId,
+          accountBookId,
           isEncrypted,
           encryptedSymmetricKey,
           iv,
@@ -417,8 +415,8 @@ async function processFilesSequentially(
     encryptedSymmetricKey: string;
     iv: Buffer;
     certificate: {
-      companyId: number;
-      company: {
+      accountBookId: number;
+      accountBook: {
         id: number;
         name: string;
       };
@@ -430,25 +428,25 @@ async function processFilesSequentially(
       const results = await previousPromise;
       const { id, name, url, isEncrypted, encryptedSymmetricKey, iv, certificate } = fileData;
 
-      // Info: (20250529 - Shirley) 獲取公司ID
-      const companyId = certificate?.companyId;
-      const companyName = certificate?.company?.name;
+      // Info: (20250529 - Shirley) 獲取賬本 ID
+      const accountBookId = certificate?.accountBookId;
+      const accountBookName = certificate?.accountBook?.name;
 
-      if (!companyId) {
+      if (!accountBookId) {
         loggerBack.warn(
-          `[PDF_BATCH_THUMBNAIL] Skipping file ID ${id}, name: ${name} - No company ID associated`
+          `[PDF_BATCH_THUMBNAIL] Skipping file ID ${id}, name: ${name} - No account book ID associated`
         );
         results.push({
           fileId: id,
           fileName: name,
           success: false,
-          error: 'No company ID associated',
+          error: 'No account book ID associated',
         });
         return results;
       }
 
       loggerBack.info(
-        `[PDF_BATCH_THUMBNAIL] Starting processing for file ID ${id}, name: ${name}, company: ${companyName} (ID: ${companyId})`
+        `[PDF_BATCH_THUMBNAIL] Starting processing for file ID ${id}, name: ${name}, account book: ${accountBookName} (ID: ${accountBookId})`
       );
 
       // Info: (20250529 - Shirley) 獲取實際文件路徑
@@ -469,7 +467,7 @@ async function processFilesSequentially(
         const result = await processPdfFile(
           pdfPath,
           id,
-          companyId,
+          accountBookId,
           isEncrypted,
           encryptedSymmetricKey,
           iv
@@ -485,9 +483,9 @@ async function processFilesSequentially(
         );
       } catch (fileError) {
         loggerBack.error(
-          fileError,
           `[PDF_BATCH_THUMBNAIL] File does not exist or is not accessible: ${pdfPath}`
         );
+        loggerBack.error(fileError);
         results.push({
           fileId: id,
           fileName: name,
@@ -590,8 +588,8 @@ export default async function handler(
         iv: true,
         certificate: {
           select: {
-            companyId: true,
-            company: {
+            accountBookId: true,
+            accountBook: {
               select: {
                 id: true,
                 name: true,
@@ -646,9 +644,9 @@ export default async function handler(
     return res.status(httpCode).json(result);
   } catch (error) {
     loggerBack.error(
-      error,
       `[PDF_BATCH_THUMBNAIL] Error during batch PDF thumbnail generation - Execution ID: ${executionId}`
     );
+    loggerBack.error(error);
     const err = error as Error;
     const statusMessage =
       STATUS_MESSAGE[err.message as keyof typeof STATUS_MESSAGE] ||

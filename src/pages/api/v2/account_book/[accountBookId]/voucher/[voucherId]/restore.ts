@@ -49,7 +49,7 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
     }
     const restoredVoucher = await restoreUtils.restoreVoucherAndRelations({
       voucherId,
-      companyId: accountBookId,
+      accountBookId,
       now,
       userId,
     });

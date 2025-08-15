@@ -24,6 +24,7 @@ import {
   deleteAccountBook,
   updateAccountBook,
   getAccountBookTeamId,
+  getCompanyById,
 } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -34,12 +35,11 @@ import {
   IUpdateAccountBookInfoBody,
   IAccountBookEntity,
 } from '@/lib/utils/zod_schema/account_book';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
 import {
   getCompanySettingByCompanyId,
   createCompanySetting,
   updateCompanySettingByCompanyId,
-} from '@/lib/utils/repo/company_setting.repo';
+} from '@/lib/utils/repo/account_book_setting.repo';
 import { getCountryByLocaleKey, getCountryByCode } from '@/lib/utils/repo/country.repo';
 import { DefaultValue } from '@/constants/default_value';
 import {
@@ -333,7 +333,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
       // Info: (20250731 - Shirley) 更新公司設定，只更新請求中包含的欄位
       const updatedSetting = await updateCompanySettingByCompanyId({
-        companyId: accountBookId,
+        accountBookId,
         data: updateSettingData,
       });
 
@@ -361,7 +361,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
 
       // Info: (20250515 - Shirley) 記錄更新後的狀態
       loggerBack.info(
-        `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.company.startDate}`
+        `Updated account book ${accountBookId}: New values - country: ${updatedSetting.country}, countryCode: ${updatedSetting.countryCode}, startDate: ${updatedSetting.accountBook.startDate}`
       );
 
       // Info: (20250515 - Shirley) 獲取更新後的帳本信息
@@ -632,7 +632,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       return { response: formatApiResponse(statusMessage, null), statusMessage };
     }
 
-    let companySetting = await getCompanySettingByCompanyId(+accountBookId);
+    let companySetting = await getCompanySettingByCompanyId(accountBookId);
 
     // Info: (20250326 - Shirley) 如果沒有公司設定記錄，創建一個空白記錄
     if (!companySetting) {

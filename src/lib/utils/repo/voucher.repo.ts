@@ -27,7 +27,7 @@ import {
 } from '@/interfaces/voucher';
 import { SortBy, SortOrder } from '@/constants/sort';
 import loggerBack, { loggerError } from '@/lib/utils/logger_back';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 import type { IEventEntity } from '@/interfaces/event';
 import { IUserEntity } from '@/interfaces/user';
 import { assert } from 'console';
@@ -105,19 +105,19 @@ export async function findFirstAccountByNameInPrisma(accountName: string) {
   }
 }
 
-export async function findFirstAccountBelongsToCompanyInPrisma(id: string, companyId: number) {
+export async function findFirstAccountBelongsToCompanyInPrisma(id: string, accountBookId: number) {
   try {
     const result = await prisma.account.findFirst({
       where: {
         id: Number(id),
         OR: [
           {
-            company: {
-              id: companyId,
+            accountBook: {
+              id: accountBookId,
             },
           },
           {
-            company: {
+            accountBook: {
               id: PUBLIC_ACCOUNT_BOOK_ID,
             },
           },
@@ -171,7 +171,7 @@ export async function findUniqueVoucherInPrisma(voucherId: number) {
 export async function createLineItemInPrisma(
   lineItem: ILineItem,
   voucherId: number,
-  companyId: number
+  accountBookId: number
 ) {
   try {
     if (!lineItem.accountId) {
@@ -183,7 +183,7 @@ export async function createLineItemInPrisma(
 
     const accountBelongsToCompany = await findFirstAccountBelongsToCompanyInPrisma(
       String(lineItem.accountId),
-      companyId
+      accountBookId
     );
 
     if (!accountBelongsToCompany) {
@@ -230,7 +230,7 @@ export async function createLineItemInPrisma(
 }
 
 export async function getLatestVoucherNoInPrisma(
-  companyId: number,
+  accountBookId: number,
   {
     voucherDate,
   }: {
@@ -247,7 +247,7 @@ export async function getLatestVoucherNoInPrisma(
 
     result = await prisma.voucher.findFirst({
       where: {
-        companyId,
+        accountBookId,
         date: {
           gte: timestampInSeconds(startOfDay.getTime()),
           lte: timestampInSeconds(endOfDay.getTime()),
@@ -319,14 +319,14 @@ export async function getLatestVoucherNoInPrisma(
 
 // Info: (20240710 - Murky) Unefficient need to be refactor
 export async function findManyVoucherWithCashInPrisma(
-  companyId: number,
+  accountBookId: number,
   startDateInSecond: number,
   endDateInSecond: number
 ) {
   try {
     const vouchers = await prisma.voucher.findMany({
       where: {
-        companyId,
+        accountBookId,
         date: {
           gte: startDateInSecond,
           lte: endDateInSecond,
@@ -366,7 +366,7 @@ export async function findManyVoucherWithCashInPrisma(
 // ToDo: (20241011 - Jacky) Temporarily commnet the following code for the beta transition
 export async function updateVoucherByJournalIdInPrisma(
   journalId: number,
-  companyId: number,
+  accountBookId: number,
   voucherToUpdate: IVoucherDataForSavingToDB
 ) {
   const nowInSecond = getTimestampNow();
@@ -393,7 +393,7 @@ export async function updateVoucherByJournalIdInPrisma(
     const journalExists = await prismaClient.journal.findUnique({
       where: {
         id: journalId,
-        companyId,
+        accountBookId,
       },
       include: {
         invoiceVoucherJournals: {
@@ -466,10 +466,10 @@ export async function updateVoucherByJournalIdInPrisma(
   return newVoucher;
 }
 
-export async function countUnpostedVoucher(companyId: number) {
+export async function countUnpostedVoucher(accountBookId: number) {
   const unpostedVoucherCount = await prisma.certificate.count({
     where: {
-      companyId,
+      accountBookId,
       NOT: {
         voucherCertificates: {
           some: {},
@@ -491,7 +491,7 @@ export async function postVoucherV2({
   invoiceRC2Ids,
 }: {
   nowInSecond: number;
-  company: ICompanyEntity;
+  company: IAccountBookWithoutTeamEntity;
   originalVoucher: IVoucherEntity;
   issuer: IUserEntity;
   eventControlPanel: {
@@ -535,7 +535,7 @@ export async function postVoucherV2({
       editable: originalVoucher.editable,
       createdAt: nowInSecond,
       updatedAt: nowInSecond,
-      company: {
+      accountBook: {
         connect: { id: company.id },
       },
       issuer: {
@@ -614,10 +614,12 @@ export async function postVoucherV2({
           });
 
           if (!resultLineItem) {
-            loggerBack.error('resultLineItem not found', {
-              originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
-              target: resultVoucher.lineItems[0],
-            });
+            loggerBack.error(
+              `resultLineItem not found ${JSON.stringify({
+                originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
+                target: resultVoucher.lineItems[0],
+              })}`
+            );
             const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
             error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
             throw error;
@@ -756,9 +758,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            `delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed`
           );
+          loggerBack.error(error);
         }
       }
 
@@ -774,9 +776,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -792,9 +794,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -810,9 +812,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -830,10 +832,8 @@ export async function putVoucherWithoutCreateNew(
             },
           });
         } catch (error) {
-          loggerBack.error(
-            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
-            error as Error
-          );
+          loggerBack.error('update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed');
+          loggerBack.error(error);
         }
       }
 
@@ -849,9 +849,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -930,9 +930,9 @@ export async function putVoucherWithoutCreateNew(
     });
   } catch (error) {
     loggerBack.error(
-      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-      { message: (error as Error).message, stack: (error as Error).stack }
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
     );
+    loggerBack.error(error);
   }
   return voucherUpdated;
 }
@@ -1081,15 +1081,15 @@ export async function getOneVoucherV2(voucherId: number): Promise<IGetOneVoucher
 
 export async function getOneVoucherByVoucherNoV2(options: {
   voucherNo: string;
-  companyId: number;
+  accountBookId: number;
 }): Promise<IGetOneVoucherResponse | null> {
   let voucher: IGetOneVoucherResponse | null = null;
-  const { voucherNo, companyId } = options;
+  const { voucherNo, accountBookId } = options;
   try {
     voucher = await prisma.voucher.findFirst({
       where: {
         no: voucherNo,
-        companyId,
+        accountBookId,
       },
       include: {
         issuer: true,
@@ -1251,7 +1251,7 @@ function createOrderByList(sortOptions: { sortBy: SortBy; sortOrder: SortOrder }
 }
 
 export async function getManyVoucherV2(options: {
-  companyId: number;
+  accountBookId: number;
   startDate: number;
   endDate: number;
   page: number;
@@ -1271,7 +1271,7 @@ export async function getManyVoucherV2(options: {
   }
 > {
   const {
-    companyId,
+    accountBookId,
     startDate,
     endDate,
     page,
@@ -1316,7 +1316,7 @@ export async function getManyVoucherV2(options: {
       gte: startDate,
       lte: endDate,
     },
-    companyId,
+    accountBookId,
     status: getStatusFilter(tab),
     type: type || undefined,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
@@ -1620,7 +1620,7 @@ export async function getManyVoucherV2(options: {
 }
 
 export async function getManyVoucherByAccountV2(options: {
-  companyId: number;
+  accountBookId: number;
   accountId: number;
   startDate: number;
   endDate: number;
@@ -1634,7 +1634,7 @@ export async function getManyVoucherByAccountV2(options: {
   isDeleted?: boolean | undefined;
 }): Promise<IPaginatedData<IGetManyVoucherResponseButOne[]>> {
   const {
-    companyId,
+    accountBookId,
     accountId,
     startDate,
     endDate,
@@ -1653,7 +1653,7 @@ export async function getManyVoucherByAccountV2(options: {
       gte: startDate,
       lte: endDate,
     },
-    companyId,
+    accountBookId,
     status: JOURNAL_EVENT.UPLOADED,
     deletedAt: isDeleted ? { not: null } : isDeleted === false ? null : undefined,
     lineItems: {
@@ -1908,7 +1908,7 @@ export async function getOneVoucherWithLineItemAndAccountV2(voucherId: number) {
  */
 export async function deleteVoucherByCreateReverseVoucher(options: {
   nowInSecond: number;
-  companyId: number;
+  accountBookId: number;
   issuerId: number;
   voucherDeleteOtherEntity: IVoucherEntity;
   deleteVersionOriginVoucher: IVoucherEntity;
@@ -1940,7 +1940,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
 }) {
   const {
     nowInSecond,
-    companyId,
+    accountBookId,
     issuerId,
     voucherDeleteOtherEntity,
     deleteVersionOriginVoucher,
@@ -1986,7 +1986,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
       });
     }
 
-    const newVoucherNo = await getLatestVoucherNoInPrisma(companyId, {
+    const newVoucherNo = await getLatestVoucherNoInPrisma(accountBookId, {
       voucherDate: voucherDeleteOtherEntity.date,
     });
 
@@ -2020,9 +2020,9 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
         createdAt: nowInSecond,
         updatedAt: nowInSecond,
         deletedAt: null,
-        company: {
+        accountBook: {
           connect: {
-            id: companyId,
+            id: accountBookId,
           },
         },
         issuer: {

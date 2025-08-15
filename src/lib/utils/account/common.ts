@@ -12,7 +12,7 @@ import { getTimestampNow } from '@/lib/utils/common';
 
 export function initAccountEntity(
   dto: Partial<PrismaAccount> & {
-    companyId: number;
+    accountBookId: number;
     system: string;
     type: AccountType;
     debit: boolean;
@@ -32,7 +32,7 @@ export function initAccountEntity(
   const nowInSecond = getTimestampNow();
   const accountEntity: IAccountEntity = {
     id: dto.id || 0,
-    companyId: dto.companyId,
+    accountBookId: dto.accountBookId,
     system: dto.system,
     type: dto.type,
     debit: dto.debit,
@@ -165,7 +165,7 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
   const updatedAccount: IAccountNode = {
     id: account.id,
     amount: newAmount,
-    companyId: account.companyId,
+    accountBookId: account.accountBookId,
     system: account.system,
     type: account.type,
     debit: account.debit,
@@ -192,7 +192,7 @@ function updateAccountAmountsByDFS(account: IAccountNode, lineItemsMap: Map<numb
 
   // Info: (20240702 - Murky)刪除children中公司自行建立的account
   updatedAccount.children = updatedAccount.children.filter(
-    (child) => child.companyId === PUBLIC_ACCOUNT_BOOK_ID
+    (child) => child.accountBookId === PUBLIC_ACCOUNT_BOOK_ID
   );
 
   return updatedAccount;
@@ -223,7 +223,7 @@ function updateAccountAmountByDFSForTrialBalance(
     id: account.id,
     debitAmount: newAmount.debitAmount,
     creditAmount: newAmount.creditAmount,
-    companyId: account.companyId,
+    accountBookId: account.accountBookId,
     system: account.system,
     type: account.type,
     debit: account.debit,

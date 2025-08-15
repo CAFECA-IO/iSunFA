@@ -3,10 +3,10 @@ import { IFolder, IFolderContent } from '@/interfaces/folder';
 import { timestampInSeconds } from '@/lib/utils/common';
 import { assertIsJournalEvent } from '@/lib/utils/type_guard/journal';
 
-export async function getFolderList(companyId: number): Promise<IFolder[]> {
+export async function getFolderList(accountBookId: number): Promise<IFolder[]> {
   const folderList = await prisma.voucherSalaryRecordFolder.findMany({
     where: {
-      companyId,
+      accountBookId,
       OR: [{ deletedAt: 0 }, { deletedAt: null }],
     },
   });
@@ -21,7 +21,7 @@ export async function getFolderList(companyId: number): Promise<IFolder[]> {
 }
 
 export async function updateFolderName(
-  companyId: number,
+  accountBookId: number,
   folderId: number,
   name: string
 ): Promise<IFolder | null> {
@@ -30,7 +30,7 @@ export async function updateFolderName(
   const updatedFolder = await prisma.voucherSalaryRecordFolder.update({
     where: {
       id: folderId,
-      companyId,
+      accountBookId,
     },
     data: {
       name,
@@ -48,14 +48,14 @@ export async function updateFolderName(
 }
 
 export async function getFolderContent(
-  companyId: number,
+  accountBookId: number,
   folderId: number
 ): Promise<IFolderContent | null> {
   const salaryRecordList = await prisma.voucherSalaryRecord.findMany({
     where: {
       voucherSalaryRecordFolderId: folderId,
       voucherSalaryRecordFolder: {
-        companyId,
+        accountBookId,
       },
     },
     select: {
@@ -78,7 +78,7 @@ export async function getFolderContent(
                   name: true,
                 },
               },
-              company: {
+              accountBook: {
                 select: {
                   name: true,
                 },

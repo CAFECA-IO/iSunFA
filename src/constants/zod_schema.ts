@@ -18,7 +18,6 @@ import {
   invoicePostV2Schema,
   certificateMultiDeleteSchema,
 } from '@/lib/utils/zod_schema/certificate';
-import { accountBookPutIconSchema, accountBookSearchSchema } from '@/lib/utils/zod_schema/company';
 import { journalRequestValidators } from '@/lib/utils/zod_schema/journal';
 import { kycRequestValidators, kycBookkeeperUploadSchema } from '@/lib/utils/zod_schema/kyc';
 import { newsGetByIdSchema, newsListSchema, newsPostSchema } from '@/lib/utils/zod_schema/news';
@@ -92,7 +91,7 @@ import {
   filePostSchema,
   filePutSchema,
 } from '@/lib/utils/zod_schema/file';
-import { imageGetSchema } from '@/lib/utils/zod_schema/image';
+import { imageGetByIdSchema, imageGetSchema } from '@/lib/utils/zod_schema/image';
 import { userGetSchema, userListSchema, userPutSchema } from '@/lib/utils/zod_schema/user';
 import { statusInfoGetSchema } from '@/lib/utils/zod_schema/status_info';
 import { UserAgreementPostSchema } from '@/lib/utils/zod_schema/user_agreement';
@@ -126,6 +125,8 @@ import {
   deleteAccountBookSchema,
   disconnectAccountBookSchema,
   accountBookListSimpleSchema,
+  accountBookPutIconSchema,
+  accountBookSearchSchema,
 } from '@/lib/utils/zod_schema/account_book';
 import {
   createInvoiceRC2Input,
@@ -251,7 +252,8 @@ export const ZOD_SCHEMA_API = {
   [APIName.INVOICE_POST_V2]: invoicePostV2Schema,
   [APIName.INVOICE_PUT_V2]: invoicePutV2Schema,
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
-  [APIName.IMAGE_GET_BY_ID]: imageGetSchema,
+  [APIName.IMAGE_GET_BY_ID]: imageGetByIdSchema,
+  [APIName.GET_IMAGE]: imageGetSchema,
   [APIName.ASK_AI_STATUS]: askAIStatusSchema,
   [APIName.ASK_AI_V2]: askAiPostSchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,

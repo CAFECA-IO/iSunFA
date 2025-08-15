@@ -15,7 +15,7 @@ import {
   sortAndCalculateBalances,
 } from '@/lib/utils/ledger';
 import { CurrencyType } from '@/constants/currency';
-import { getCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { convertTeamRoleCanDo } from '@/lib/shared/permission';
 import { TeamRole } from '@/interfaces/team';
 import { TeamPermissionAction } from '@/interfaces/permissions';
@@ -172,10 +172,8 @@ async function handleGetRequest(req: NextApiRequest) {
     );
   } catch (error) {
     const err = error as Error;
-    loggerBack.error(`Failed to retrieve ledger for company ${accountBookId}`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Failed to retrieve ledger for company ${accountBookId}`);
+    loggerBack.error(error);
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 

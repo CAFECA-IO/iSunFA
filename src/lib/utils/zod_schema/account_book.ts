@@ -332,6 +332,57 @@ export const disconnectAccountBookSchema = {
   frontend: nullSchema,
 };
 
+const accountBookPutIconQuerySchema = z.object({
+  accountBookId: zodStringToNumber,
+});
+
+const accountBookPutIconBodySchema = z.object({
+  fileId: z.number().int(),
+});
+
+export const accountBookPutIconSchema = {
+  input: {
+    querySchema: accountBookPutIconQuerySchema,
+    bodySchema: accountBookPutIconBodySchema,
+  },
+  outputSchema: accountBookSchema.nullable(),
+  frontend: accountBookSchema.nullable(),
+};
+
+const accountBookSearchQuerySchema = z.object({
+  taxId: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const accountBookSearchSchema = {
+  input: {
+    querySchema: accountBookSearchQuerySchema,
+    bodySchema: nullSchema,
+  },
+  outputSchema: z
+    .object({
+      taxId: z.string(),
+      name: z.string(),
+    })
+    .strip(),
+  frontend: z.object({
+    taxId: z.string(),
+    name: z.string(),
+  }),
+};
+
+export const accountBookWithoutTeamEntityValidator = z.object({
+  id: z.number(),
+  userId: z.number().default(555),
+  name: z.string(),
+  taxId: z.string(),
+  // tag: z.nativeEnum(WORK_TAG),
+  startDate: z.number(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+});
+
 export type IAccountBookEntity = z.infer<typeof accountBookSchema>;
 export type IAccountBookWithTeamEntity = z.infer<typeof accountBookWithTeamSchema>;
 export type IAccountBookInfoWithTeamEntity = z.infer<typeof accountBookInfoWithTeamSchema>;

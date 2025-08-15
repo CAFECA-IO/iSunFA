@@ -13,9 +13,9 @@ const handlePostRequest: IHandleRequest<APIName.ROOM_ADD, IRoom> = async ({ sess
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload: IRoom | null = null;
 
-  const { companyId } = session;
+  const { accountBookId } = session;
 
-  const newRoom = roomManager.addRoom(companyId);
+  const newRoom = roomManager.addRoom(accountBookId);
   loggerBack.info(`Room List: ${JSON.stringify(roomManager.getRoomList(), null, 2)}`);
   statusMessage = STATUS_MESSAGE.CREATED;
   payload = newRoom;

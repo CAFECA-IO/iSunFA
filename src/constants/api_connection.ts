@@ -178,6 +178,7 @@ export enum APIName {
   LIST_BAIFA_VOUCHER = 'LIST_BAIFA_VOUCHER',
   // Info: (20250704 - Julian) 新增 Vacancy API
   GET_VACANCY_BY_ID = 'GET_VACANCY_BY_ID',
+  GET_IMAGE = 'GET_IMAGE',
 }
 
 export enum APIPath {
@@ -332,6 +333,7 @@ export enum APIPath {
   LIST_BAIFA_ACCOUNT_BOOK = `${apiPrefixV2}/baifa/account_book`,
   LIST_BAIFA_VOUCHER = `${apiPrefixV2}/baifa/voucher`,
   GET_VACANCY_BY_ID = `${apiPrefixV2}/vacancy/:vacancyId`,
+  GET_IMAGE = `${apiPrefixV2}/account_book/:accountBookId/image/:imageId`,
 }
 
 const createConfig = ({
@@ -1094,5 +1096,10 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_VACANCY_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_VACANCY_BY_ID,
+  }),
+  [APIName.GET_IMAGE]: createConfig({
+    name: APIName.GET_IMAGE,
+    method: HttpMethod.GET,
+    path: APIPath.GET_IMAGE,
   }),
 };

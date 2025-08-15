@@ -29,7 +29,7 @@ interface IShortcut {
 
 export interface IAccountingSetting {
   id: number;
-  companyId: number;
+  accountBookId: number;
   taxSettings: ITaxSetting;
   currency: CurrencyType; // ToDo: (20241210 - tzuhan) @Murky 這裡的 currency 是不是應該是 CurrencyType？
   shortcutList: IShortcut[];

@@ -8,8 +8,6 @@ import exportLedgerHandler from '@/pages/api/v2/account_book/[accountBookId]/led
 import { validateOutputData } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 
-import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
-
 /**
  * Info: (20250721 - Shirley) Integration Test - Ledger Integration (Test Case 8.4)
  *
@@ -43,21 +41,9 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
     // Info: (20250729 - Shirley) 使用動態時間戳代替固定時間
     const currentTimestamp = Math.floor(Date.now() / 1000);
     endDate = currentTimestamp + 86400 * 30; // 30 days from now
-
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test setup completed: User and team created with ID:', teamId);
-    }
   });
 
-  afterAll(async () => {
-    if (process.env.DEBUG_TESTS === 'true') {
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('✅ Test cleanup completed');
-    }
-  });
+  afterAll(async () => {});
 
   /**
    * Info: (20250721 - Shirley) Test Step 2: Create Sample Vouchers for Ledger
@@ -102,15 +88,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       );
       expect(isOutputDataValid).toBe(true);
       expect(outputData).toBeDefined();
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger report generated successfully');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Items: ${response.body.payload.totalCount}`);
-      }
     });
 
     test('should validate ledger data structure and calculations', async () => {
@@ -233,31 +210,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         expect(finalNoteData.currencyAlias).toBeDefined();
         expect(finalNoteData.total.totalDebitAmount).toBe(finalNoteData.total.totalCreditAmount);
       }
-
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log('finalLedgerData.data.length:', finalLedgerData.data.length);
-      // Deprecated: (20250722 - Shirley) Remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'expectedLedgerData.totalCount:',
-        TestDataFactory.expectedLedgerData().payload.data.length
-      );
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Complete workflow validated successfully');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Account Book ID: ${accountBookId}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Ledger Items: ${finalLedgerData.data.length}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - Total Count: ${finalLedgerData.totalCount}`);
-      }
     });
   });
 
@@ -370,21 +322,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       const totalDebitAmount = csvData.reduce((sum, item) => sum + item.debitAmount, 0);
       const totalCreditAmount = csvData.reduce((sum, item) => sum + item.creditAmount, 0);
       expect(totalDebitAmount).toBe(totalCreditAmount);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Ledger CSV export successful');
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Content Length: ${csvContent.length} characters`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log(`   - CSV Lines Count: ${lines.length}`);
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('🔍 CSV Content (first 3 lines):', lines.slice(0, 3).join('\n'));
-      }
     });
 
     test('should handle invalid file type for export', async () => {
@@ -413,12 +350,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to validation error
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Invalid file type properly rejected');
-      }
     });
 
     test('should handle missing date parameters for export', async () => {
@@ -445,12 +376,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing parameters
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Missing date parameters properly rejected');
-      }
     });
 
     test('should handle export without authentication', async () => {
@@ -475,12 +400,6 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.code).toBe('400ISF0000'); // Info: (20250722 - Shirley) BAD_REQUEST due to missing authentication
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250722 - Shirley) Remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Unauthenticated export request properly rejected');
-      }
     });
   });
 });

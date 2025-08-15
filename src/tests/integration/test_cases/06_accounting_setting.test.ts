@@ -151,7 +151,7 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const accountingSetting = outputData as IAccountingSetting;
       expect(accountingSetting.id).toBeDefined();
       expect(typeof accountingSetting.id).toBe('number');
-      expect(accountingSetting.companyId).toBe(testAccountBookId);
+      expect(accountingSetting.accountBookId).toBe(testAccountBookId);
       expect(accountingSetting.taxSettings).toBeDefined();
       expect(accountingSetting.currency).toBeDefined();
       expect(Array.isArray(accountingSetting.shortcutList)).toBe(true);
@@ -447,12 +447,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof accountList.hasNextPage).toBe('boolean');
       expect(accountList.hasPreviousPage).toBeDefined();
       expect(typeof accountList.hasPreviousPage).toBe('boolean');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account list GET validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated requests', async () => {
@@ -471,12 +465,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       const validatedError = validateAndFormatData(errorSchema, response.body);
       expect(validatedError.success).toBe(false);
       expect(validatedError.code).toBe('401ISF0000');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account list GET error response validated with Zod successfully');
-      }
     });
 
     it('should reject access to non-existent account book', async () => {
@@ -574,12 +562,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
 
       // Info: (20250715 - Shirley) Store account ID for cleanup and further tests
       createdAccountId = createdAccount.id;
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account creation POST validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated creation requests', async () => {
@@ -746,12 +728,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(typeof account.name).toBe('string');
       expect(account.code).toBeDefined();
       expect(typeof account.code).toBe('string');
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account GET by ID validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated requests', async () => {
@@ -883,13 +859,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .send(newAccountData)
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250715 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'createResponse in PUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        createResponse.body
-      );
-
       expect(createResponse.status).toBe(201);
       testAccountId = createResponse.body.payload.id;
       originalAccountData = createResponse.body.payload;
@@ -917,13 +886,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
         .send(updateData)
         .set('Cookie', cookies.join('; '));
 
-      // Deprecated: (20250715 - Luphia) remove eslint-disable
-      // eslint-disable-next-line no-console
-      console.log(
-        'responseInPUT /api/v2/account_book/{accountBookId}/account/{accountId}',
-        response.body
-      );
-
       expect(response.status).toBe(200);
 
       // Info: (20250715 - Shirley) Validate basic response structure
@@ -945,12 +907,6 @@ describe('Integration Test - Accounting Setting Configuration', () => {
       expect(updatedAccount.id).toBe(testAccountId);
       expect(updatedAccount.name).toBe(updateData.name);
       expect(updatedAccount.note).toBe(updateData.note);
-
-      if (process.env.DEBUG_TESTS === 'true') {
-        // Deprecated: (20250715 - Luphia) remove eslint-disable
-        // eslint-disable-next-line no-console
-        console.log('✅ Account PUT validated with production validator successfully');
-      }
     });
 
     it('should reject unauthenticated update requests', async () => {

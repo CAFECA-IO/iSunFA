@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import dayjs from 'dayjs';
 import { useUserCtx } from '@/contexts/user_context';
 import { InvoiceType } from '@prisma/client';
+import { numberWithCommas } from '@/lib/utils/common';
 
 interface EInvoicePreviewProps {
   className?: string;
@@ -10,9 +11,9 @@ interface EInvoicePreviewProps {
   issuedDate: string;
   invoiceNo: string;
   taxId?: string;
-  netAmount: number;
-  taxAmount: number;
-  totalAmount: number;
+  netAmount: string;
+  taxAmount: string;
+  totalAmount: string;
 }
 
 const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
@@ -93,7 +94,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
               <div className="flex gap-1 text-lg font-semibold">
                 <span className="text-neutral-600">
                   {/* Info: (20250430 - Anna) 加千分位 */}
-                  {netAmount.toLocaleString()}
+                  {numberWithCommas(netAmount)}
                 </span>
                 <span className="text-neutral-300">TWD</span>
               </div>
@@ -105,7 +106,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
               <div className="flex gap-1 text-lg font-semibold">
                 <span className="text-neutral-600">
                   {/* Info: (20250430 - Anna) 加千分位 */}
-                  {taxAmount.toLocaleString()}
+                  {numberWithCommas(taxAmount)}
                 </span>
                 <span className="text-neutral-300">TWD</span>
               </div>
@@ -121,7 +122,7 @@ const EInvoicePreview = React.forwardRef<HTMLDivElement, EInvoicePreviewProps>(
             <p className="text-xl font-medium leading-8"> {t('certificate:EDIT.LUMP_SUM')}：</p>
             <p className="text-32px font-bold leading-10">
               {/* Info: (20250430 - Anna) 加千分位 */}
-              {totalAmount.toLocaleString()}
+              {numberWithCommas(totalAmount)}
             </p>
             <p className="text-xl font-medium leading-8">TWD</p>
           </div>

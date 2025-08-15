@@ -63,7 +63,7 @@ type ILineItemEntityWithAssociate = ILineItemEntity & {
 
 /**
  * Info: (20241113 - Murky)
- * @description for src/pages/api/v2/company/[companyId]/account/[accountId]/lineitem.ts
+ * @description for src/pages/api/v2/account_book/[accountBookId]/account/[accountId]/lineitem.ts
  */
 export const lineItemGetByAccountAPIUtils = {
   reversibleAccountSetRegex: new RegExp(`^(${AccountCodesOfAPandAR.join('|')})`),
@@ -93,10 +93,11 @@ export const lineItemGetByAccountAPIUtils = {
    * Info: (20241113 - Murky)
    * @description get line items by account id from prisma, and return paginated data
    */
+  // Deprecated: (20250804 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getLineItemsByAccountIdFromPrisma: async (options: {
     accountId: number;
-    companyId: number;
+    accountBookId: number;
     startDate: number;
     endDate: number;
     sortOption: { sortBy: BetaSortBy; sortOrder: SortOrder }[];
@@ -201,13 +202,13 @@ export const voucherGetByAccountAPIUtils = {
     logger.error(errorMessage);
     throw new Error(statusMessage);
   },
-  getAccountFromPrisma: async (options: { accountId: number; companyId: number }) => {
-    const { accountId, companyId } = options;
-    return findFirstAccountInPrisma(accountId, companyId);
+  getAccountFromPrisma: async (options: { accountId: number; accountBookId: number }) => {
+    const { accountId, accountBookId } = options;
+    return findFirstAccountInPrisma(accountId, accountBookId);
   },
 
   getVouchersFromPrisma: async (options: {
-    companyId: number;
+    accountBookId: number;
     accountId: number;
     startDate: number;
     endDate: number;

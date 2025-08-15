@@ -70,13 +70,16 @@ export async function readFile(baseFolder: string, fileName?: string): Promise<B
     // ToDo: (20250710 - Luphia) Use IPFS to store files (S1: API 讀取)
     fileBuffer = await fs.readFile(filePath);
   } catch (error) {
-    loggerBack.error(error, `Error in readFile: ${filePath}`);
+    loggerBack.error(`Error in readFile: ${filePath}`);
+    loggerBack.error(error);
   }
   return fileBuffer;
 }
 
 export function bufferToBlob(buffer: Buffer, type?: string): Blob {
-  return new Blob([buffer], { type });
+  // Info: (20250804 - Shirley) Convert Buffer to Uint8Array for type compatibility
+  const uint8Array = new Uint8Array(buffer);
+  return new Blob([uint8Array], { type });
 }
 
 /**

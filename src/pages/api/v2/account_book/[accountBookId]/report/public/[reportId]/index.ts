@@ -12,7 +12,7 @@ import {
   logUserAction,
 } from '@/lib/utils/middleware';
 import { getSession } from '@/lib/utils/session';
-import { getPublicReportUtils as getUtils } from '@/pages/api/v2/company/[companyId]/report/public/[reportId]/route_utils';
+import { getPublicReportUtils as getUtils } from '@/pages/api/v2/account_book/[accountBookId]/report/public/[reportId]/route_utils';
 import { ReportSheetType } from '@/constants/report';
 import { HTTP_STATUS } from '@/constants/http';
 import { validateOutputData } from '@/lib/utils/validator';
@@ -60,7 +60,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     const { curPeriodReport, company } = await getUtils.getPeriodReport(reportId);
 
     const accountingSetting = await getAccountingSettingByCompanyId(
-      curPeriodReport?.companyId || -1
+      curPeriodReport?.accountBookId || -1
     );
     let payloadAccountingSetting: IAccountingSetting | null = null;
     if (accountingSetting) {
@@ -68,7 +68,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     } else {
       const createdAccountingSetting = await createAccountingSetting(
-        curPeriodReport?.companyId || -1
+        curPeriodReport?.accountBookId || -1
       );
       if (createdAccountingSetting) {
         payloadAccountingSetting = formatAccountingSetting(createdAccountingSetting);

@@ -12,7 +12,7 @@ import { loggerError } from '@/lib/utils/logger_back';
 import { DefaultValue } from '@/constants/default_value';
 
 export async function findFirstReportByFromTo(
-  companyId: number,
+  accountBookId: number,
   fromInSecond: number,
   toInSecond: number,
   reportSheetType: ReportSheetType
@@ -22,7 +22,7 @@ export async function findFirstReportByFromTo(
   try {
     report = await prisma.report.findFirst({
       where: {
-        companyId,
+        accountBookId,
         from: fromInSecond,
         to: toInSecond,
         reportType: reportSheetType,
@@ -49,7 +49,7 @@ export async function findUniqueReportById(reportId: number) {
         OR: [{ deletedAt: 0 }, { deletedAt: null }],
       },
       include: {
-        company: true,
+        accountBook: true,
         project: true,
       },
     });
@@ -66,7 +66,7 @@ export async function findUniqueReportById(reportId: number) {
 }
 
 export async function getReportIdByFromTo(
-  companyId: number,
+  accountBookId: number,
   fromInSecond: number,
   toInSecond: number,
   reportSheetType: ReportSheetType
@@ -76,7 +76,7 @@ export async function getReportIdByFromTo(
   try {
     report = await prisma.report.findFirst({
       where: {
-        companyId,
+        accountBookId,
         from: fromInSecond,
         to: toInSecond,
         reportType: reportSheetType,
@@ -97,7 +97,7 @@ export async function getReportIdByFromTo(
 }
 
 export async function createReport(
-  companyId: number,
+  accountBookId: number,
   projectId: number | null,
   name: string,
   fromInSecond: number,
@@ -113,7 +113,7 @@ export async function createReport(
   try {
     report = await prisma.report.create({
       data: {
-        companyId,
+        accountBookId,
         projectId,
         name,
         from: fromInSecond,
@@ -138,7 +138,7 @@ export async function createReport(
 }
 
 export async function findManyReports(
-  companyId: number,
+  accountBookId: number,
   status: ReportStatusType = ReportStatusType.PENDING,
   targetPage: number = DEFAULT_PAGE_NUMBER,
   pageSize: number = DEFAULT_PAGE_LIMIT,
@@ -151,12 +151,12 @@ export async function findManyReports(
   let reports: IReportIncludeCompanyProject[] = [];
   const where: Prisma.ReportWhereInput = {
     id: {
-      gte: 10000000, // Info
+      gte: 10000000,
     },
-    companyId,
+    accountBookId,
     status,
     AND: [
-      // { from: { gte: startDateInSecond } }, // Info: (20240719 - Jacky)
+      // { from: { gte: startDateInSecond } },
       { to: { lte: endDateInSecond } },
       { OR: [{ deletedAt: 0 }, { deletedAt: null }] },
       {
@@ -246,7 +246,7 @@ export const getReportByUserId = async (
     const teamIds = teams.map((team) => team.teamId);
 
     // Info: (20250703 - Julian) Step 2: 再從 team 取得 accountBook
-    const accountBooks = await tx.company.findMany({
+    const accountBooks = await tx.accountBook.findMany({
       where: {
         teamId: {
           in: teamIds,
@@ -263,14 +263,14 @@ export const getReportByUserId = async (
     // Info: (20250704 - Julian) Step 3: 最後從 accountBook 取得 report id
     const reports = await tx.report.findMany({
       where: {
-        companyId: {
+        accountBookId: {
           in: accountBookIds,
         },
       },
       select: {
         id: true,
         reportType: true,
-        companyId: true,
+        accountBookId: true,
       },
     });
 
@@ -279,16 +279,17 @@ export const getReportByUserId = async (
       .map((accountBook) => {
         const balanceReport = reports.find(
           (report) =>
-            report.companyId === accountBook && report.reportType === ReportSheetType.BALANCE_SHEET
+            report.accountBookId === accountBook &&
+            report.reportType === ReportSheetType.BALANCE_SHEET
         );
         const cashFlowReport = reports.find(
           (report) =>
-            report.companyId === accountBook &&
+            report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.CASH_FLOW_STATEMENT
         );
         const comprehensiveIncomeReport = reports.find(
           (report) =>
-            report.companyId === accountBook &&
+            report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.INCOME_STATEMENT
         );
 

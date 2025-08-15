@@ -89,10 +89,10 @@ describe('Invoice RC2 - Validation', () => {
         direction: InvoiceDirection.INPUT,
         isGenerated: false,
         currencyCode: CurrencyCode.TWD,
-        netAmount: 1000,
+        netAmount: '1000',
         taxRate: 5,
-        taxAmount: 999, // Info: (20250711 - Tzuhan) 錯誤
-        totalAmount: 1999,
+        taxAmount: '999', // Info: (20250807 - Shirley) 錯誤的稅額計算
+        totalAmount: '1999',
       })
       .set('Cookie', cookies.join('; '))
       .expect(422) // Info: (20250711 - Tzuhan) ← 後端實作好之後改回來
@@ -202,7 +202,7 @@ describe('Invoice RC2 - Validation', () => {
         ).replace(':invoiceId', invoiceId.toString())
       )
       .send({
-        taxAmount: 'ABC', // Info: (20250711 - Tzuhan) ❌ 應為 number
+        taxAmount: 'ABC', // Info: (20250807 - Shirley) ❌ 應為有效的數字字串
       })
       .set('Cookie', cookies.join('; '))
       .expect(422)

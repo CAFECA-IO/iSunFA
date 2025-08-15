@@ -8,7 +8,7 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { useModalContext } from '@/contexts/modal_context';
-import { IoCloseOutline, IoArrowBackOutline, IoArrowForward } from 'react-icons/io5';
+import { IoCloseOutline /* IoArrowBackOutline, IoArrowForward */ } from 'react-icons/io5';
 import { LuTrash2 } from 'react-icons/lu';
 import { CurrencyType } from '@/constants/currency';
 import CounterpartyInput, {
@@ -53,9 +53,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   certificate,
   onSave,
   onDelete,
-  certificates,
+  // certificates,
   editingId,
-  setEditingId,
+  // setEditingId,
 }) => {
   const selectableInvoiceType: InvoiceType[] = [
     InvoiceType.INPUT_20,
@@ -145,20 +145,22 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
 
     // Info: (20250514 - Anna) 檢查金額的淨額
-    if (!netAmount || netAmount <= 0) {
+    const netAmountNum = parseFloat(netAmount?.toString() || '0') || 0;
+    if (!netAmount || netAmountNum <= 0) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
 
     // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20、INPUT_22 、INPUT_24、INPUT_27 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
+    const taxAmountNum = parseFloat(taxAmount?.toString() || '0') || 0;
     if (
       (type !== InvoiceType.INPUT_20 &&
         type !== InvoiceType.INPUT_22 &&
         type !== InvoiceType.INPUT_24 &&
         type !== InvoiceType.INPUT_27 &&
         formStateRef.current.taxRate !== undefined &&
-        (!taxAmount || taxAmount <= 0)) ||
+        (!taxAmount || taxAmountNum <= 0)) ||
       taxAmount == null
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
@@ -179,9 +181,11 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
 
     // Info: (20250514 - Anna) 格式 26 和 27 要填 totalOfSummarizedInvoices
+    const totalOfSummarizedInvoicesNum =
+      parseFloat(totalOfSummarizedInvoices?.toString() || '0') || 0;
     if (
       (type === InvoiceType.INPUT_26 || type === InvoiceType.INPUT_27) &&
-      (!totalOfSummarizedInvoices || totalOfSummarizedInvoices <= 0)
+      (!totalOfSummarizedInvoices || totalOfSummarizedInvoicesNum <= 0)
     ) {
       newErrors.totalOfSummarizedInvoices = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
@@ -325,17 +329,18 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     handleInputChange('type', id);
   };
 
-  const netAmountChangeHandler = (value: number) => {
+  const netAmountChangeHandler = (value: string) => {
     handleInputChange('netAmount', value);
+    const numericValue = parseFloat(value) || 0;
     const updateTaxPrice =
       // Info: (20250415  - Anna) 格式22、格式24 、格式20 稅額為 0
       formState.type === InvoiceType.INPUT_22 ||
       formState.type === InvoiceType.INPUT_24 ||
       formState.type === InvoiceType.INPUT_20
         ? 0
-        : Math.round((value * (formState.taxRate ?? 0)) / 100);
-    handleInputChange('taxAmount', updateTaxPrice);
-    handleInputChange('totalAmount', value + updateTaxPrice);
+        : Math.round((numericValue * (formState.taxRate ?? 0)) / 100);
+    handleInputChange('taxAmount', updateTaxPrice.toString());
+    handleInputChange('totalAmount', (numericValue + updateTaxPrice).toString());
   };
 
   const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
@@ -344,19 +349,20 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
     setFormState((prev) => {
-      const netAmount = prev.netAmount ?? 0;
+      const netAmount = parseFloat(prev.netAmount?.toString() || '0') || 0;
       const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
       const updated = {
         ...prev,
         taxRate: normalizedTaxRate,
         taxType,
-        taxAmount: newTaxAmount,
-        totalAmount: netAmount + newTaxAmount,
+        taxAmount: newTaxAmount.toString(),
+        totalAmount: (netAmount + newTaxAmount).toString(),
       };
       formStateRef.current = updated;
 
       // Info: (20250514 - Anna) 如果稅額變了就立即儲存
-      if (prev.taxAmount !== newTaxAmount) {
+      const prevTaxAmount = parseFloat(prev.taxAmount?.toString() || '0') || 0;
+      if (prevTaxAmount !== newTaxAmount) {
         setTimeout(() => {
           handleSave();
         }, 0);
@@ -370,22 +376,23 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     handleInputChange('deductionType', value);
   };
 
-  const totalAmountChangeHandler = (value: number) => {
+  const totalAmountChangeHandler = (value: string) => {
     handleInputChange('totalAmount', value);
+    const numericValue = parseFloat(value) || 0;
     const ratio = (100 + (formState.taxRate ?? 0)) / 100;
-    const updatePriceBeforeTax = Math.round(value / ratio);
-    handleInputChange('netAmount', updatePriceBeforeTax);
-    const updateTaxPrice = value - updatePriceBeforeTax;
-    handleInputChange('taxAmount', updateTaxPrice);
+    const updatePriceBeforeTax = Math.round(numericValue / ratio);
+    handleInputChange('netAmount', updatePriceBeforeTax.toString());
+    const updateTaxPrice = numericValue - updatePriceBeforeTax;
+    handleInputChange('taxAmount', updateTaxPrice.toString());
   };
 
   // Info: (20241206 - Julian) currency alias setting
   const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
   // Info: (20250415 - Anna) 在 modal 裡找出正在編輯的 index 並判斷能否切換
-  const currentIndex = certificates.findIndex((c) => c.id === editingId);
-  const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < certificates.length - 1;
+  // const currentIndex = certificates.findIndex((c) => c.id === editingId);
+  // const hasPrev = currentIndex > 0;
+  // const hasNext = currentIndex < certificates.length - 1;
 
   // Info: (20250414 - Anna) 初始化 formStateRef，避免剛打開 modal 時 formStateRef.current 是 undefined，導致比對失效，無法觸發 handleSave()
   useEffect(() => {
@@ -455,9 +462,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       newFormState.taxRate != null &&
       newFormState.netAmount != null
     ) {
-      const computedTax = Math.round((newFormState.netAmount * newFormState.taxRate) / 100);
-      newFormState.taxAmount = computedTax;
-      newFormState.totalAmount = newFormState.netAmount + computedTax;
+      const netAmountNum = parseFloat(newFormState.netAmount?.toString() || '0') || 0;
+      const computedTax = Math.round((netAmountNum * newFormState.taxRate) / 100);
+      newFormState.taxAmount = computedTax.toString();
+      newFormState.totalAmount = (netAmountNum + computedTax).toString();
     }
 
     setFormState(newFormState);
@@ -539,9 +547,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       .format('YYYY-MM-DD')}
                     invoiceNo={formState.no ?? certificate?.no ?? ''}
                     taxId={formState.salesIdNumber ?? certificate?.salesIdNumber ?? undefined}
-                    netAmount={formState.netAmount ?? certificate?.netAmount ?? 0}
-                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? 0}
-                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? 0}
+                    netAmount={formState.netAmount ?? certificate?.netAmount ?? '0'}
+                    taxAmount={formState.taxAmount ?? certificate?.taxAmount ?? '0'}
+                    totalAmount={formState.totalAmount ?? certificate?.totalAmount ?? '0'}
                   />
                 </div>
               )}
@@ -562,9 +570,21 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
               <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
                 <div>
+                  {/* Info: (20250801 - Julian) 儲存紐 */}
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => {
+                      handleSave();
+                      toggleModel();
+                    }}
+                  >
+                    <p>{t('common:COMMON.SAVE')}</p>
+                  </Button>
+                  {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
                   <div className="ml-auto flex items-center gap-4">
                     {/* Info: (20250415 - Anna) 上一筆 */}
-                    <Button
+                    {/* <Button
                       type="button"
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
@@ -573,9 +593,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     >
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
-                    </Button>
+                    </Button> */}
                     {/* Info: (20250415 - Anna) 下一筆 */}
-                    <Button
+                    {/* <Button
                       onClick={() => setEditingId(certificates[currentIndex + 1].id)}
                       type="button"
                       disabled={!hasNext}
@@ -584,7 +604,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                     >
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
-                    </Button>
+                    </Button> */}
                   </div>
                   {!certificate?.voucherNo && (
                     <Button
@@ -706,16 +726,15 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         }}
                         // Info: (20250428 - Anna) 只在值是 0 或 undefined 時全部選取
                         onFocus={() => {
-                          if (
-                            formState.totalOfSummarizedInvoices === undefined ||
-                            formState.totalOfSummarizedInvoices === 0
-                          ) {
+                          const value =
+                            parseFloat(formState.totalOfSummarizedInvoices?.toString() || '0') || 0;
+                          if (formState.totalOfSummarizedInvoices === undefined || value === 0) {
                             summarizedInvoiceInputRef.current?.select();
                           }
                         }}
                         className={`h-44px w-16 flex-1 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-right uppercase outline-none ${
-                          formState.totalOfSummarizedInvoices === 0 ||
-                          formState.totalOfSummarizedInvoices === undefined
+                          (parseFloat(formState.totalOfSummarizedInvoices?.toString() || '0') ||
+                            0) === 0 || formState.totalOfSummarizedInvoices === undefined
                             ? 'text-neutral-300'
                             : 'text-neutral-600'
                         }`}
@@ -1146,7 +1165,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <NumericInput
                         id="input-price-before-tax"
                         name="input-price-before-tax"
-                        value={formState.netAmount ?? 0}
+                        value={formState.netAmount ?? '0'}
+                        useStringValue
                         isDecimal
                         required
                         hasComma
@@ -1188,22 +1208,28 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         <NumericInput
                           id="input-tax"
                           name="input-tax"
-                          value={formState.taxAmount ?? 0}
+                          value={formState.taxAmount ?? '0'}
+                          useStringValue
                           isDecimal
                           required
                           hasComma
                           className={`h-46px w-full flex-1 rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right text-input-text-primary outline-none`}
                           // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
                           // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
-                          triggerWhenChanged={(value: number) => {
-                            if (value === (formStateRef.current.taxAmount ?? 0)) return;
+                          triggerWhenChanged={(value: string) => {
+                            const currentTaxAmount =
+                              parseFloat(formStateRef.current.taxAmount?.toString() || '0') || 0;
+                            const newTaxAmount = parseFloat(value) || 0;
+                            if (newTaxAmount === currentTaxAmount) return;
 
                             // Info: (20250516 - Anna) 更新 taxAmount 欄位
                             handleInputChange('taxAmount', value);
 
                             // Info: (20250516 - Anna) 最新的稅額 + 原本的淨額，算出總金額，更新 totalAmount 欄位。
-                            const updatedTotal = (formStateRef.current.netAmount ?? 0) + value;
-                            handleInputChange('totalAmount', updatedTotal);
+                            const netAmount =
+                              parseFloat(formStateRef.current.netAmount?.toString() || '0') || 0;
+                            const updatedTotal = netAmount + newTaxAmount;
+                            handleInputChange('totalAmount', updatedTotal.toString());
 
                             // Info: (20250516 - Anna) 如果前一次的 debounce timer 還沒觸發，就清掉，避免多次呼叫 handleSave()
                             if (debounceTimer.current) clearTimeout(debounceTimer.current);
@@ -1259,7 +1285,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <NumericInput
                         id="input-total-price"
                         name="input-total-price"
-                        value={formState.totalAmount ?? 0}
+                        value={formState.totalAmount ?? '0'}
+                        useStringValue
                         isDecimal
                         required
                         hasComma
@@ -1339,8 +1366,19 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 </Button>
               )}
               <div className="ml-auto flex items-center gap-4">
-                {/* Info: (20250415 - Anna) 上一筆 */}
+                {/* Info: (20250801 - Julian) 儲存紐 */}
                 <Button
+                  type="button"
+                  onClick={() => {
+                    handleSave();
+                    toggleModel();
+                  }}
+                >
+                  <p>{t('common:COMMON.SAVE')}</p>
+                </Button>
+                {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
+                {/* Info: (20250415 - Anna) 上一筆 */}
+                {/* <Button
                   type="button"
                   disabled={!hasPrev}
                   onClick={() => setEditingId(certificates[currentIndex - 1].id)}
@@ -1349,9 +1387,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 >
                   <IoArrowBackOutline size={20} />
                   <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
-                </Button>
+                </Button> */}
                 {/* Info: (20250415 - Anna) 下一筆 */}
-                <Button
+                {/* <Button
                   onClick={() => setEditingId(certificates[currentIndex + 1].id)}
                   type="button"
                   disabled={!hasNext}
@@ -1360,7 +1398,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 >
                   <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                   <IoArrowForward size={20} />
-                </Button>
+                </Button> */}
               </div>
             </div>
           </form>

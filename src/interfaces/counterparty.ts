@@ -1,5 +1,5 @@
 import { CounterpartyType } from '@/constants/counterparty';
-import type { ICompanyEntity } from '@/interfaces/account_book';
+import type { IAccountBookWithoutTeamEntity } from '@/interfaces/account_book';
 
 export interface ICounterparty {
   id: number;
@@ -150,7 +150,7 @@ export interface ICounterPartyEntity {
    * Info: (20241023 - Murky)
    * @description company means our company
    */
-  company?: ICompanyEntity;
+  company?: IAccountBookWithoutTeamEntity;
 }
 
 export type ICounterPartyEntityPartial = Partial<ICounterPartyEntity> | null;

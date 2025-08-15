@@ -83,13 +83,13 @@ export const voucherAPIGetOneUtils = {
       companyId: number;
     }
   ): Promise<IGetOneVoucherResponse> => {
-    const { isVoucherNo, companyId } = options;
+    const { isVoucherNo, companyId: accountBookId } = options;
     let voucher: IGetOneVoucherResponse | null;
     if (isVoucherNo) {
       const voucherNo: string = voucherId.toString();
       voucher = await getOneVoucherByVoucherNoV2({
         voucherNo,
-        companyId,
+        accountBookId,
       });
     } else {
       voucher = await getOneVoucherV2(voucherId);
@@ -705,7 +705,7 @@ export const voucherAPIDeleteUtils = {
     const voucher = initVoucherEntity({
       issuerId: voucherBeenDeleted.issuerId,
       counterPartyId: voucherBeenDeleted.counterPartyId,
-      companyId: voucherBeenDeleted.companyId,
+      accountBookId: voucherBeenDeleted.accountBookId,
       status: JOURNAL_EVENT.UPLOADED,
       editable: false,
       no: voucherBeenDeleted.no,
@@ -1157,7 +1157,7 @@ export const voucherAPIPutUtils = {
     const newVoucher = initVoucherEntity({
       issuerId: voucherBeenDeleted.issuerId,
       counterPartyId: voucherBeenDeleted.counterPartyId,
-      companyId: voucherBeenDeleted.companyId,
+      accountBookId: voucherBeenDeleted.accountBookId,
       status: JOURNAL_EVENT.UPLOADED,
       editable: false,
       no: '', // Info: (20250612 - tzuhan) 交給 postVoucherV2 產生
@@ -1206,15 +1206,15 @@ export const voucherAPIRestoreUtils = {
    */
   async checkVoucherCanBeRestored(params: {
     voucherId: number;
-    companyId: number;
+    accountBookId: number;
     userId: number;
   }) {
-    const { voucherId, companyId, userId } = params;
+    const { voucherId, accountBookId, userId } = params;
 
     const deletedVoucher = await prisma.voucher.findFirst({
       where: {
         id: voucherId,
-        companyId,
+        accountBookId,
         deletedAt: { not: null },
         originalVouchers: {
           some: {
@@ -1254,16 +1254,16 @@ export const voucherAPIRestoreUtils = {
 
   async restoreVoucherAndRelations(params: {
     voucherId: number;
-    companyId: number;
+    accountBookId: number;
     now: number;
     userId: number;
   }) {
-    const { voucherId, companyId, now, userId } = params;
+    const { voucherId, accountBookId, now, userId } = params;
 
     // Info: (20250218 - Shirley) 1. Check if the voucher exists and meets restoration conditions
     const deletedVoucher = await this.checkVoucherCanBeRestored({
       voucherId,
-      companyId,
+      accountBookId,
       userId,
     });
 
@@ -1353,7 +1353,6 @@ export const voucherAPIRestoreUtils = {
               },
             },
           });
-
           const reverseLineItems = await txPrisma.lineItem.findMany({
             where: {
               voucherId: {

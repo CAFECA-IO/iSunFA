@@ -45,12 +45,12 @@ async function certificateHandler(key: AI_TYPE, resultId: string, session: ISess
   if (resultFromAI.payload && resultFromAI.payload.length > 0) {
     const { payload: aiPayload } = resultFromAI;
     const { status, value } = aiPayload;
-    const { companyId } = session;
+    const { accountBookId } = session;
     const invoiceList: IInvoiceEntity[] = await Promise.all(
       value.map(async (invoice: IAIInvoice) => {
         const counterparty = await fuzzySearchCounterpartyByName(
           invoice.counterpartyName,
-          companyId
+          accountBookId
         );
         const nowTimestamp = getTimestampNow();
         const certificateParsedResult = {
@@ -93,7 +93,7 @@ async function voucherHandler(key: AI_TYPE, resultId: string, session: ISessionD
   let statusMessage: string = DEFAULT_STATUS_MESSAGE;
   let payload: APIResponse = DEFAULT_PAYLOAD;
 
-  const { companyId } = session;
+  const { accountBookId: companyId } = session;
 
   const resultFromAI = await fetchResultFromAICH(key, resultId);
   if (resultFromAI) {

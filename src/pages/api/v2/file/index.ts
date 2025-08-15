@@ -7,7 +7,7 @@ import { IFileBeta } from '@/interfaces/file';
 import { parseForm } from '@/lib/utils/parse_image_form';
 import { convertStringToNumber, formatApiResponse } from '@/lib/utils/common';
 import { uploadFile } from '@/lib/utils/google_image_upload';
-import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/company.repo';
+import { getCompanyById, updateCompanyById } from '@/lib/utils/repo/account_book.repo';
 import { updateUserById } from '@/lib/utils/repo/user.repo';
 import { updateProjectById } from '@/lib/utils/repo/project.repo';
 import { updateTeamIcon } from '@/lib/utils/repo/team.repo';
@@ -155,7 +155,8 @@ async function handleFileUpload(
         loggerBack.error('Failed to generate PDF thumbnail');
       }
     } catch (error) {
-      loggerBack.error(error, 'Error generating PDF thumbnail');
+      loggerBack.error('Error generating PDF thumbnail');
+      loggerBack.error(error);
     }
   }
 
@@ -227,15 +228,8 @@ async function handleFileUpload(
         }
       } catch (encryptionError) {
         // Info: (20250513 - Shirley) 記錄縮略圖加密過程中的錯誤
-        loggerBack.error(
-          encryptionError,
-          `Error during thumbnail encryption for ${thumbnailFileName}`
-        );
-
-        // Info: (20250513 - Shirley) 創建未加密的縮略圖記錄作為後備方案
-        loggerBack.info(
-          `Creating unencrypted thumbnail record as fallback due to encryption error`
-        );
+        loggerBack.error(`Error during thumbnail encryption for ${thumbnailFileName}`);
+        loggerBack.error(encryptionError);
 
         const thumbnailInDB = await createFile({
           name: thumbnailFileName,

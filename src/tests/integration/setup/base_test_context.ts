@@ -217,7 +217,7 @@ export class BaseTestContext {
       })
       .then((users) => users.map((user) => user.id));
 
-    const orphanAccountBookIds = await prisma.company
+    const orphanAccountBookIds = await prisma.accountBook
       .findMany({
         where: { userId: { in: userIds } },
         select: { id: true },
@@ -234,7 +234,7 @@ export class BaseTestContext {
     const voucherIdsToPurge = await prisma.voucher
       // Info: (20250717 - Tzuhan) ① 先拿要清的 voucherId：自己 record 的 + 同一本帳的
       .findMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+        where: { accountBookId: { in: orphanAccountBookIds } },
         select: { id: true },
       })
       .then((vs) => vs.map((v) => v.id));
@@ -249,7 +249,7 @@ export class BaseTestContext {
     // Info: (20250725 - Shirley) Get report IDs that reference the companies to be deleted
     const reportIdsToPurge = await prisma.report
       .findMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+        where: { accountBookId: { in: orphanAccountBookIds } },
         select: { id: true },
       })
       .then((reports) => reports.map((report) => report.id));
@@ -292,23 +292,23 @@ export class BaseTestContext {
         where: { id: { in: invoiceIdsToPurge } },
       }),
       prisma.accountingSetting.deleteMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+        where: { accountBookId: { in: orphanAccountBookIds } },
       }),
-      prisma.companySetting.deleteMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+      prisma.accountBookSetting.deleteMany({
+        where: { accountBookId: { in: orphanAccountBookIds } },
       }),
       prisma.account.deleteMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+        where: { accountBookId: { in: orphanAccountBookIds } },
       }),
       // Info: (20250725 - Shirley) Delete audit reports before reports (foreign key dependency)
       prisma.auditReport.deleteMany({
-        where: { companyId: { in: orphanAccountBookIds } },
+        where: { accountBookId: { in: orphanAccountBookIds } },
       }),
       // Info: (20250725 - Shirley) Delete reports before companies (foreign key constraint)
       prisma.report.deleteMany({
         where: { id: { in: reportIdsToPurge } },
       }),
-      prisma.company.deleteMany({
+      prisma.accountBook.deleteMany({
         where: { id: { in: orphanAccountBookIds } },
       }),
       prisma.inviteTeamMember.deleteMany({ where: { teamId: { in: orphanTeamIds } } }),
@@ -329,9 +329,6 @@ export class BaseTestContext {
     // Info: (20250728 - Shirley) Clear the created account books set
     this.createdAccountBooks.clear();
 
-    // Deprecated: (20250717 - Luphia) remove eslint-disable
-    // eslint-disable-next-line no-console
-    console.log('BaseTestContext.cleanup() - All test data purged successfully.');
     await prisma.$disconnect();
   }
 
