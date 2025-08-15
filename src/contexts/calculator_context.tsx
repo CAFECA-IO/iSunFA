@@ -255,7 +255,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const result = salaryCalculator({
       year: yearInt,
       month: monthIndex,
-      workedDays,
       baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
       baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
       otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
