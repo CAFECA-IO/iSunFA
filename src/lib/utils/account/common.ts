@@ -62,7 +62,8 @@ export function transformLineItemsFromDBToMap(
     const isAccountDebit = lineItem.account.debit;
     const isLineItemDebit = lineItem.debit;
     const { amount } = lineItem;
-    const adjustedAmount = isAccountDebit === isLineItemDebit ? amount : -amount;
+    const amountNumber = typeof amount === 'string' ? parseFloat(amount) : amount.toNumber();
+    const adjustedAmount = isAccountDebit === isLineItemDebit ? amountNumber : -amountNumber;
 
     const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
     lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);

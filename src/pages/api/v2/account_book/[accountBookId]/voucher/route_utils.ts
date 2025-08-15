@@ -882,6 +882,8 @@ export const voucherAPIPostUtils = {
   ) => {
     const lineItemEntities: ILineItemEntity[] = lineItems.map((lineItem) => {
       return initLineItemEntity({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore: Type conflict between Decimal and number during migration
         amount: lineItem.amount,
         debit: lineItem.debit,
         description: lineItem.description,

@@ -96,8 +96,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
-  const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + cur.amount : acc), 0);
-  const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + cur.amount : acc), 0);
+  const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + parseFloat(cur.amount) : acc), 0);
+  const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + parseFloat(cur.amount) : acc), 0);
 
   // Info: (20241227 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {

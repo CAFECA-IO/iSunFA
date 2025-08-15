@@ -719,7 +719,7 @@ model KYCRole {
 
 model LineItem {
   id          Int     @id @default(autoincrement())
-  amount      Float
+  amount      Decimal @db.Decimal(26, 8)
   description String
   debit       Boolean
   accountId   Int     @map("account_id")
@@ -1132,6 +1132,7 @@ enum RoleName {
   INDIVIDUAL
   ACCOUNTING_FIRMS
   ENTERPRISE
+  TEST
 }
 
 // Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號

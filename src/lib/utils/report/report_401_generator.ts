@@ -101,11 +101,15 @@ export default class Report401Generator extends ReportGenerator {
       let taxPrice = 0;
       if (Report401Generator.isVoucherHasOutputTax(journal.voucher)) {
         journal.voucher?.lineItems.forEach((lineItem) => {
+          const lineItemAmount =
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
           if (lineItem.debit) {
-            totalAmount += lineItem.amount;
+            totalAmount += lineItemAmount;
           }
           if (Report401Generator.isOutputTax(lineItem.account.code) && !lineItem.debit) {
-            const tax = lineItem.amount;
+            const tax = lineItemAmount;
             taxPrice += tax;
           }
         });
@@ -126,7 +130,10 @@ export default class Report401Generator extends ReportGenerator {
     if (journal.voucher?.lineItems) {
       journal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          updatedSales.includeFixedAsset += lineItem.amount;
+          updatedSales.includeFixedAsset +=
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
         }
       });
     }
@@ -170,18 +177,22 @@ export default class Report401Generator extends ReportGenerator {
         let inputTax = 0;
         let totalAmount = 0;
         journal.voucher?.lineItems.forEach((lineItem) => {
+          const lineItemAmount =
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
           if (lineItem.debit) {
-            totalAmount += lineItem.amount;
+            totalAmount += lineItemAmount;
           }
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
             // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
-            fixedAssets.amount += lineItem.amount;
-            fixedAssets.tax += lineItem.amount * (journal.invoice?.taxRatio ?? 0.05);
+            fixedAssets.amount += lineItemAmount;
+            fixedAssets.tax += lineItemAmount * (journal.invoice?.taxRatio ?? 0.05);
           }
 
           // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
           if (Report401Generator.isInputTax(lineItem.account.code) && lineItem.debit) {
-            const tax = lineItem.amount;
+            const tax = lineItemAmount;
             inputTax += tax;
           }
         });
@@ -198,7 +209,10 @@ export default class Report401Generator extends ReportGenerator {
       } else {
         journal.voucher?.lineItems.forEach((lineItem) => {
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-            unDeductible.fixedAssets += lineItem.amount;
+            unDeductible.fixedAssets +=
+              typeof lineItem.amount === 'string'
+                ? parseFloat(lineItem.amount)
+                : lineItem.amount.toNumber();
           }
         });
         unDeductible.generalPurchases =

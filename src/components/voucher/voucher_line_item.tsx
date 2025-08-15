@@ -48,8 +48,9 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   } = data;
 
   // Info: (20241121 - Julian) 判斷借貸金額
-  const lineItemDebitAmount = lineItemDebit === true ? lineItemAmount : 0;
-  const lineItemCreditAmount = lineItemDebit === false ? lineItemAmount : 0;
+  const lineItemAmountNum = parseFloat(lineItemAmount) || 0;
+  const lineItemDebitAmount = lineItemDebit === true ? lineItemAmountNum : 0;
+  const lineItemCreditAmount = lineItemDebit === false ? lineItemAmountNum : 0;
 
   // Info: (20241210 - Anna) 判斷是否顯示沖銷項目
   const defaultCondition = (amount: number) => amount > 0; // Info: (20241210 - Anna) 默認條件
@@ -316,7 +317,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       const duplicateList = [...prev];
       const index = duplicateList.findIndex((item) => item.id === data.id);
       if (index !== -1) {
-        duplicateList[index] = { ...duplicateList[index], amount: debitValue, debit: true };
+        duplicateList[index] = { ...duplicateList[index], amount: debitValue.toString(), debit: true };
       }
       return duplicateList;
     });
@@ -336,7 +337,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       const duplicateList = [...prev];
       const index = duplicateList.findIndex((item) => item.id === data.id);
       if (index !== -1) {
-        duplicateList[index] = { ...duplicateList[index], amount: creditValue, debit: false };
+        duplicateList[index] = { ...duplicateList[index], amount: creditValue.toString(), debit: false };
       }
       return duplicateList;
     });

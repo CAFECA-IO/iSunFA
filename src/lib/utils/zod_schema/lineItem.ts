@@ -6,7 +6,7 @@ export const iLineItemValidator = z.object({
   account: z.string(),
   description: z.string(),
   debit: z.boolean(),
-  amount: z.number(),
+  amount: z.string(),
   accountId: z.number(),
 });
 
@@ -21,7 +21,7 @@ export const iLineItemBodyValidatorV2 = z.object({
   id: z.number().optional(),
   description: z.string(),
   debit: z.boolean(),
-  amount: z.number(),
+  amount: z.string(),
   accountId: z.number().int(),
 });
 
@@ -31,7 +31,7 @@ export const iLineItemBodyValidatorV2 = z.object({
  */
 export const ILineItemBetaValidator = z.object({
   id: z.number(),
-  amount: z.number(),
+  amount: z.string(),
   description: z.string(),
   debit: z.boolean().nullable(),
   account: IAccountValidator.nullable(), // 使用 IAccountValidator 來驗證 account，並允許為 null

@@ -14,7 +14,7 @@ export interface ILineItem {
   account: string;
   description: string;
   debit: boolean;
-  amount: number;
+  amount: string;
   accountId: number;
 }
 
@@ -30,7 +30,7 @@ export type ILineItemIncludeAccount = Prisma.LineItemGetPayload<{
 // Info: (20241011 - Julian) for frontend testing
 export interface ILineItemBeta {
   id: number;
-  amount: number;
+  amount: string;
   description: string;
   debit: boolean | null;
   account: IAccount | null;
@@ -47,7 +47,7 @@ export const initialVoucherLine: ILineItemUI = {
   account: null,
   description: '',
   debit: null,
-  amount: 0,
+  amount: '0',
   isReverse: false,
   reverseList: [],
 };
@@ -60,7 +60,7 @@ export const initialVoucherLine: ILineItemUI = {
  */
 export interface IReverseItem {
   voucherId: number;
-  amount: number;
+  amount: string;
   description: string;
   debit: boolean;
   account: IAccount;
@@ -76,7 +76,7 @@ export interface IReverseItem {
 export interface IReverseItemUI extends IReverseItem {
   lineItemIndex: number;
   isSelected: boolean;
-  reverseAmount: number;
+  reverseAmount: string;
 }
 
 /**
@@ -94,9 +94,9 @@ export interface ILineItemEntity {
 
   /**
    * Info: (20241023 - Murky)
-   * @description how much money is this line item
+   * @description how much money is this line item (string for API consistency)
    */
-  amount: number;
+  amount: string;
 
   /**
    * Info: (20241023 - Murky)

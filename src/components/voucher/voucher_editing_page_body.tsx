@@ -240,11 +240,11 @@ const VoucherEditingPageBody: React.FC<{
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
   const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + item.amount : acc),
+    (acc, item) => (item.debit === false ? acc + parseFloat(item.amount) : acc),
     0
   );
   const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + item.amount : acc),
+    (acc, item) => (item.debit === true ? acc + parseFloat(item.amount) : acc),
     0
   );
 

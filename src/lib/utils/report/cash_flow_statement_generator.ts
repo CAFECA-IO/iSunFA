@@ -306,9 +306,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         })
       ) {
         if (lineItem.debit) {
-          debitAmount += lineItem.amount;
+          debitAmount +=
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
         } else {
-          creditAmount += lineItem.amount;
+          creditAmount +=
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
         }
       }
     });
