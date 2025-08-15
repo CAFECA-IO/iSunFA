@@ -7,7 +7,7 @@ import { IAccountValidator } from '@/lib/utils/zod_schema/account';
  */
 export const lineItemEntityValidator = z.object({
   id: z.number(),
-  amount: z.number(),
+  amount: z.string(),
   description: z.string(),
   debit: z.boolean(),
   accountId: z.number(),
@@ -24,7 +24,7 @@ export const lineItemEntityValidator = z.object({
 export const IReverseItemValidator = z.object({
   voucherId: z.number(),
   voucherNo: z.string(),
-  amount: z.number(),
+  amount: z.string(),
   description: z.string(),
   account: IAccountValidator,
   debit: z.boolean(),
@@ -37,5 +37,5 @@ export const lineItemAiSchema = z.object({
   account: z.string(),
   description: z.string(),
   debit: z.boolean(),
-  amount: z.number(),
+  amount: z.string(),
 });

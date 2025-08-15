@@ -61,7 +61,8 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
     const numValue = Number.isNaN(num) ? 0 : num;
 
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
-    const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
+    const amountNum = parseFloat(amount);
+    const valueInRange = numValue < 0 ? 0 : numValue > amountNum ? amountNum : numValue;
 
     // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
     amountChangeHandler(voucherId, lineItemIndex, valueInRange);
@@ -191,12 +192,12 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   // Info: (20241104 - Julian) reverse item 總金額
   const totalReverseAmount = selectedReverseItems.reduce((acc, reverse) => {
-    return acc + reverse.reverseAmount;
+    return acc + parseFloat(reverse.reverseAmount);
   }, 0);
 
   // Info: (20241105 - Julian) 如果沒有選取任何 reverse item 或是有選取但金額為 0，則無法確認
   const confirmDisabled =
-    totalReverseAmount === 0 || selectedReverseItems.some((reverse) => reverse.reverseAmount === 0);
+    totalReverseAmount === 0 || selectedReverseItems.some((reverse) => parseFloat(reverse.reverseAmount) === 0);
 
   // Info: (20241105 - Julian) 全選
   const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +248,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           return {
             ...reverse,
             isSelected: false,
-            reverseAmount: 0,
+            reverseAmount: '0',
           };
         });
       });
@@ -281,7 +282,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               if (item.voucherId === id && item.lineItemIndex === itemIndex) {
                 return {
                   ...item,
-                  reverseAmount: value,
+                  reverseAmount: value.toString(),
                 };
               }
               return item;

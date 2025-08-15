@@ -84,8 +84,8 @@ export function formatIJournal(
           lineItemIndex: lineItem.id.toString(),
           amount:
             typeof lineItem.amount === 'string'
-              ? parseFloat(lineItem.amount)
-              : lineItem.amount.toNumber(),
+              ? lineItem.amount
+              : lineItem.amount.toString(),
           debit: lineItem.debit,
           account: `${lineItem.account.code} - ${lineItem.account.name}`,
           description: lineItem.description,

@@ -74,7 +74,7 @@ export function sumLineItemsAndReturnBiggest(
  */
 export function initLineItemEntity(
   dto: Partial<PrismaLineItem> & {
-    amount: number;
+    amount: string | number;
     debit: boolean;
     accountId: number;
     accountEntity?: IAccountEntity;
@@ -85,7 +85,7 @@ export function initLineItemEntity(
 
   const lineItemEntity: ILineItemEntity = {
     id: dto.id || 0,
-    amount: dto.amount,
+    amount: typeof dto.amount === 'string' ? dto.amount : dto.amount.toString(),
     description: dto.description || '',
     debit: dto.debit,
     accountId: dto.accountId,

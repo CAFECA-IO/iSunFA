@@ -204,11 +204,11 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
   const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + item.amount : acc),
+    (acc, item) => (item.debit === false ? acc + parseFloat(item.amount) : acc),
     0
   );
   const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + item.amount : acc),
+    (acc, item) => (item.debit === true ? acc + parseFloat(item.amount) : acc),
     0
   );
 
@@ -626,7 +626,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       voucherId: number;
       lineItemIdBeReversed: number;
       lineItemIdReverseOther: number;
-      amount: number;
+      amount: string;
     }[] =
       isReverseRequired && reverses.length > 0
         ? reverses.map((reverse) => {

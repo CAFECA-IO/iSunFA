@@ -98,7 +98,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     }, new BigNumber(0));
 
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
+    const zeroLine = lineItems.some((item) => parseFloat(item.amount) === 0 || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = lineItems.some((item) => item.account === null);
 
@@ -139,7 +139,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           flagOfClear={flagOfClear}
           flagOfSubmit={flagOfSubmit}
           accountIsNull={lineItem.account === null}
-          amountIsZero={lineItem.amount === 0}
+          amountIsZero={parseFloat(lineItem.amount) === 0}
           amountNotEqual={totalCredit !== totalDebit}
           isShowReverseHint={isShowReverseHint}
         />
