@@ -617,8 +617,16 @@ const voucherGetOneOutputValidatorV2 = z
         daysOfWeek: [],
         monthsOfYear: [],
       },
-      payableInfo: data.payableInfo,
-      receivingInfo: data.receivingInfo,
+      payableInfo: data.payableInfo ? {
+        total: DecimalOperations.toExactString(data.payableInfo.total),
+        alreadyHappened: DecimalOperations.toExactString(data.payableInfo.alreadyHappened),
+        remain: DecimalOperations.toExactString(data.payableInfo.remain),
+      } : undefined,
+      receivingInfo: data.receivingInfo ? {
+        total: DecimalOperations.toExactString(data.receivingInfo.total),
+        alreadyHappened: DecimalOperations.toExactString(data.receivingInfo.alreadyHappened),
+        remain: DecimalOperations.toExactString(data.receivingInfo.remain),
+      } : undefined,
       reverseVoucherIds,
       deletedReverseVoucherIds,
       assets: data.asset.map((asset) => ({
