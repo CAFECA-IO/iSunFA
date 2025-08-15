@@ -138,7 +138,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
   // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
   const monthOptions = MONTHS.slice(0, thisMonth);
-  const defaultMonth = monthOptions.reverse()[0];
+  const defaultMonth = monthOptions[monthOptions.length - 1]; // Info: (20250815 - Julian) 預設為當前月份
 
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
   const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
