@@ -40,6 +40,7 @@ import {
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
 import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
@@ -291,7 +292,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
           id: lineItem.id,
           description: lineItem.description,
           debit: lineItem.debit,
-          amount: typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString(),
+          amount: DecimalOperations.toExactString(lineItem.amount),
           account: {
             ...lineItem.account,
             note: lineItem.account.note ?? null,
