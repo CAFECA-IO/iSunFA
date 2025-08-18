@@ -781,7 +781,7 @@ const voucherGetOneOutputValidatorV2 = z
         id: lineItem.id,
         description: lineItem.description,
         debit: lineItem.debit,
-        amount: typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString(),
+        amount: DecimalOperations.toExactString(lineItem.amount),
         account: {
           ...lineItem.account,
           note: lineItem.account.note ?? null,
@@ -967,7 +967,7 @@ const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
   const vouchers = data.data.map((voucher) => {
     const lineItems = voucher.lineItems.map((lineItem) => ({
       id: lineItem.id,
-      amount: typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString(),
+      amount: DecimalOperations.toExactString(lineItem.amount),
       description: lineItem.description,
       debit: lineItem.debit,
     }));

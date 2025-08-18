@@ -288,6 +288,17 @@ export class DecimalOperations {
     const totalCredits = DecimalOperations.sum(credits);
     return DecimalOperations.isEqual(totalDebits, totalCredits);
   }
+
+  /**
+   * Info: (20250815 - Claude)
+   * Compare two decimal values for sorting
+   * Returns -1 if a < b, 0 if a === b, 1 if a > b
+   */
+  static compare(a: string | number, b: string | number): number {
+    const decimalA = new Decimal(String(a).trim());
+    const decimalB = new Decimal(String(b).trim());
+    return decimalA.comparedTo(decimalB);
+  }
 }
 
 // Info: (20250813 - Shirley) Export individual functions for convenience
@@ -315,4 +326,5 @@ export const {
   isValidDecimal,
   toExactString,
   isBalanced,
+  compare,
 } = DecimalOperations;

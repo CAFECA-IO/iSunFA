@@ -712,13 +712,13 @@ export async function putVoucherWithoutCreateNew(
           eventId: number;
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
         new: {
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
       }
@@ -924,7 +924,7 @@ export async function putVoucherWithoutCreateNew(
                     },
                   },
                   debit: newRelation.lineItemReverseOther.debit,
-                  amount: newRelation.amount,
+                  amount: parseInt(newRelation.amount, 10),
                   createdAt: nowInSecond,
                   updatedAt: nowInSecond,
                 },

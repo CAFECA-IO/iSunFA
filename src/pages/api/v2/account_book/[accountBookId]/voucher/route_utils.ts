@@ -9,12 +9,12 @@ import { initLineItemEntity } from '@/lib/utils/line_item';
 import { Logger } from 'pino';
 import { parsePrismaLineItemToLineItemEntity } from '@/lib/utils/formatter/line_item.formatter';
 import { initVoucherEntity } from '@/lib/utils/voucher';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { parsePartialPrismaCounterPartyToCounterPartyEntity } from '@/lib/utils/formatter/counterparty.formatter';
 import { parsePrismaAssetToAssetEntity } from '@/lib/utils/formatter/asset.formatter';
 import {
   getDaysBetweenDates,
   getLastDatesOfMonthsBetweenDates,
-  isFloatsEqual,
   timestampInSeconds,
 } from '@/lib/utils/common';
 import { EventType, ProgressStatus, TransactionStatus } from '@/constants/account';
@@ -60,17 +60,17 @@ export type IGetManyVoucherBetaEntity = IVoucherEntity & {
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   sum: {
     debit: boolean;
-    amount: number;
+    amount: string;
   };
   payableInfo: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
   receivingInfo: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
   originalEvents: IEventEntity[];
   resultEvents: IEventEntity[];
@@ -165,13 +165,10 @@ export const voucherAPIGetUtils = {
   },
 
   getLineItemAmountSum(lineItems: ILineItemEntity[]) {
-    const sum = lineItems.reduce((acc, lineItem) => {
-      if (lineItem.debit) {
-        return acc + lineItem.amount;
-      }
-      return acc;
-    }, 0);
-    return sum;
+    const debitAmounts = lineItems
+      .filter(lineItem => lineItem.debit)
+      .map(lineItem => lineItem.amount);
+    return DecimalOperations.sum(debitAmounts);
   },
   /**
    * Info: (20241112 - Murky)
@@ -254,40 +251,36 @@ export const voucherAPIGetUtils = {
       account: IAccountEntity;
     })[]
   ) => {
-    const payableTotal = lineItems.reduce((acc, lineItem) => {
-      if (!lineItem.debit && AccountCodesOfAP.includes(lineItem.account.code)) {
-        return acc + lineItem.amount;
-      }
-      return acc;
-    }, 0);
+    const payableAmounts = lineItems
+      .filter(lineItem => !lineItem.debit && AccountCodesOfAP.includes(lineItem.account.code))
+      .map(lineItem => lineItem.amount);
+    const payableTotal = DecimalOperations.sum(payableAmounts);
 
-    const receivingTotal = lineItems.reduce((acc, lineItem) => {
-      if (lineItem.debit && AccountCodesOfAR.includes(lineItem.account.code)) {
-        return acc + lineItem.amount;
-      }
-      return acc;
-    }, 0);
+    const receivingAmounts = lineItems
+      .filter(lineItem => lineItem.debit && AccountCodesOfAR.includes(lineItem.account.code))
+      .map(lineItem => lineItem.amount);
+    const receivingTotal = DecimalOperations.sum(receivingAmounts);
 
     const payableInfo = {
       total: payableTotal,
-      alreadyHappened: 0,
-      remain: 0,
+      alreadyHappened: '0',
+      remain: '0',
     };
 
     const receivingInfo = {
       total: receivingTotal,
-      alreadyHappened: 0,
-      remain: 0,
+      alreadyHappened: '0',
+      remain: '0',
     };
 
     events.forEach((event) => {
       const { payableInfo: newPayableInfo, receivingInfo: newReceivingInfo } =
         voucherAPIGetOneUtils.getPayableReceivableInfo(event);
-      payableInfo.alreadyHappened += newPayableInfo.alreadyHappened;
-      payableInfo.remain += newPayableInfo.remain;
+      payableInfo.alreadyHappened = DecimalOperations.add(payableInfo.alreadyHappened, newPayableInfo.alreadyHappened);
+      payableInfo.remain = DecimalOperations.add(payableInfo.remain, newPayableInfo.remain);
 
-      receivingInfo.alreadyHappened += newReceivingInfo.alreadyHappened;
-      receivingInfo.remain += newReceivingInfo.remain;
+      receivingInfo.alreadyHappened = DecimalOperations.add(receivingInfo.alreadyHappened, newReceivingInfo.alreadyHappened);
+      receivingInfo.remain = DecimalOperations.add(receivingInfo.remain, newReceivingInfo.remain);
     });
 
     return {
@@ -306,22 +299,22 @@ export const voucherAPIGetUtils = {
       switch (sortBy) {
         case SortBy.CREDIT:
         case SortBy.DEBIT:
-          return a.sum.amount - b.sum.amount;
+          return DecimalOperations.compare(a.sum.amount, b.sum.amount);
 
         case SortBy.PAY_RECEIVE_TOTAL:
           return tab === VoucherListTabV2.PAYMENT
-            ? a.payableInfo.total - b.payableInfo.total
-            : a.receivingInfo.total - b.receivingInfo.total;
+            ? DecimalOperations.compare(a.payableInfo.total, b.payableInfo.total)
+            : DecimalOperations.compare(a.receivingInfo.total, b.receivingInfo.total);
 
         case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
           return tab === VoucherListTabV2.PAYMENT
-            ? a.payableInfo.alreadyHappened - b.payableInfo.alreadyHappened
-            : a.receivingInfo.alreadyHappened - b.receivingInfo.alreadyHappened;
+            ? DecimalOperations.compare(a.payableInfo.alreadyHappened, b.payableInfo.alreadyHappened)
+            : DecimalOperations.compare(a.receivingInfo.alreadyHappened, b.receivingInfo.alreadyHappened);
 
         case SortBy.PAY_RECEIVE_REMAIN:
           return tab === VoucherListTabV2.PAYMENT
-            ? a.payableInfo.remain - b.payableInfo.remain
-            : a.receivingInfo.remain - b.receivingInfo.remain;
+            ? DecimalOperations.compare(a.payableInfo.remain, b.payableInfo.remain)
+            : DecimalOperations.compare(a.receivingInfo.remain, b.receivingInfo.remain);
 
         default:
           return 0; // Info: (20241121 - Murky) 默認不排序
@@ -364,15 +357,15 @@ export const voucherAPIGetUtils = {
       switch (status) {
         case TransactionStatus.PENDING:
           if (tab === VoucherListTabV2.PAYMENT) {
-            return voucher.payableInfo.remain > 0;
+            return DecimalOperations.isGreaterThan(voucher.payableInfo.remain, '0');
           } else {
-            return voucher.receivingInfo.remain > 0;
+            return DecimalOperations.isGreaterThan(voucher.receivingInfo.remain, '0');
           }
         case TransactionStatus.REVERSED:
           if (tab === VoucherListTabV2.PAYMENT) {
-            return voucher.payableInfo.remain === 0;
+            return DecimalOperations.isEqual(voucher.payableInfo.remain, '0');
           } else {
-            return voucher.receivingInfo.remain === 0;
+            return DecimalOperations.isEqual(voucher.receivingInfo.remain, '0');
           }
         case undefined:
         default:
@@ -448,20 +441,22 @@ export const voucherAPIPostUtils = {
 
   isLineItemsBalanced: (
     lineItems: {
-      amount: number;
+      amount: string;
       debit: boolean;
     }[]
   ) => {
-    let debit = 0;
-    let credit = 0;
+    const debitAmounts: string[] = [];
+    const creditAmounts: string[] = [];
     lineItems.forEach((lineItem) => {
       if (lineItem.debit) {
-        debit += lineItem.amount;
+        debitAmounts.push(lineItem.amount);
       } else {
-        credit += lineItem.amount;
+        creditAmounts.push(lineItem.amount);
       }
     });
-    return isFloatsEqual(debit, credit);
+    const totalDebit = DecimalOperations.sum(debitAmounts);
+    const totalCredit = DecimalOperations.sum(creditAmounts);
+    return DecimalOperations.isEqual(totalDebit, totalCredit);
   },
   /**
    * Info: (20241025 - Murky)
@@ -587,7 +582,7 @@ export const voucherAPIPostUtils = {
     associateVouchers: Array<{
       originalVoucher: IVoucherEntity;
       resultVoucher: IVoucherEntity;
-      amount: number;
+      amount: string;
     }>;
   }) => {
     const revertEvent: IEventEntity = initEventEntity({
@@ -876,7 +871,7 @@ export const voucherAPIPostUtils = {
     lineItems: {
       debit: boolean;
       description: string;
-      amount: number;
+      amount: string;
       accountId: number;
     }[]
   ) => {
@@ -919,7 +914,7 @@ export const voucherAPIPostUtils = {
     revertOtherLineItems: ILineItemEntity[];
     reverseVouchersInfo: Array<{
       voucherId: number;
-      amount: number;
+      amount: string;
       lineItemIdBeReversed: number;
       lineItemIdReverseOther: number;
     }>;
