@@ -166,8 +166,8 @@ export const voucherAPIGetUtils = {
 
   getLineItemAmountSum(lineItems: ILineItemEntity[]) {
     const debitAmounts = lineItems
-      .filter(lineItem => lineItem.debit)
-      .map(lineItem => lineItem.amount);
+      .filter((lineItem) => lineItem.debit)
+      .map((lineItem) => lineItem.amount);
     return DecimalOperations.sum(debitAmounts);
   },
   /**
@@ -251,14 +251,19 @@ export const voucherAPIGetUtils = {
       account: IAccountEntity;
     })[]
   ) => {
-    const payableAmounts = lineItems
-      .filter(lineItem => !lineItem.debit && AccountCodesOfAP.includes(lineItem.account.code))
-      .map(lineItem => lineItem.amount);
-    const payableTotal = DecimalOperations.sum(payableAmounts);
+    const payableAmounts: string[] = [];
+    const receivingAmounts: string[] = [];
 
-    const receivingAmounts = lineItems
-      .filter(lineItem => lineItem.debit && AccountCodesOfAR.includes(lineItem.account.code))
-      .map(lineItem => lineItem.amount);
+    lineItems.forEach((lineItem) => {
+      if (!lineItem.debit && AccountCodesOfAP.includes(lineItem.account.code)) {
+        payableAmounts.push(lineItem.amount);
+      }
+      if (lineItem.debit && AccountCodesOfAR.includes(lineItem.account.code)) {
+        receivingAmounts.push(lineItem.amount);
+      }
+    });
+
+    const payableTotal = DecimalOperations.sum(payableAmounts);
     const receivingTotal = DecimalOperations.sum(receivingAmounts);
 
     const payableInfo = {
@@ -357,9 +362,9 @@ export const voucherAPIGetUtils = {
       switch (status) {
         case TransactionStatus.PENDING:
           if (tab === VoucherListTabV2.PAYMENT) {
-            return DecimalOperations.isGreaterThan(voucher.payableInfo.remain, '0');
+            return DecimalOperations.compare(voucher.payableInfo.remain, '0') > 0;
           } else {
-            return DecimalOperations.isGreaterThan(voucher.receivingInfo.remain, '0');
+            return DecimalOperations.compare(voucher.receivingInfo.remain, '0') > 0;
           }
         case TransactionStatus.REVERSED:
           if (tab === VoucherListTabV2.PAYMENT) {
@@ -385,7 +390,7 @@ export const voucherAPIPostUtils = {
     debit: boolean;
     lineItemBeReversed: ILineItemEntity;
     lineItemRevertOther: ILineItemEntity;
-    amount: number;
+    amount: string;
   }>,
   /**
    * Info: (20241025 - Murky)
@@ -1244,12 +1249,12 @@ export const mockVouchersReturn = [
     lineItemsInfo: {
       sum: {
         debit: true,
-        amount: 1000,
+        amount: '1000',
       },
       lineItems: [
         {
           id: 1001,
-          amount: 1000,
+          amount: '1000',
           description: 'This is a description',
           debit: true,
           account: {
@@ -1276,7 +1281,7 @@ export const mockVouchersReturn = [
         },
         {
           id: 1002,
-          amount: 1001,
+          amount: '1001',
           description: 'This is a description',
           debit: false,
           account: {

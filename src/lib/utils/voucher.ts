@@ -80,9 +80,11 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
 
   const totalDebit = DecimalOperations.sum(debitAmounts);
   const totalCredit = DecimalOperations.sum(creditAmounts);
-  
+
   const isDebitCreditEqual = DecimalOperations.isEqual(totalDebit, totalCredit);
-  const isDebitCreditGreaterOrEqualPaymentAmount = DecimalOperations.isGreaterThanOrEqual(totalDebit, price) && DecimalOperations.isGreaterThanOrEqual(totalCredit, price);
+  const isDebitCreditGreaterOrEqualPaymentAmount =
+    DecimalOperations.isGreaterThanOrEqual(totalDebit, price) &&
+    DecimalOperations.isGreaterThanOrEqual(totalCredit, price);
 
   return isDebitCreditEqual && isDebitCreditGreaterOrEqualPaymentAmount;
 }

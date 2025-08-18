@@ -2183,7 +2183,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                   },
                 },
                 debit: resultLineItem.debit,
-                amount: resultLineItem.amount,
+                amount: Number(resultLineItem.amount),
                 createdAt: nowInSecond,
                 updatedAt: nowInSecond,
               },

@@ -257,7 +257,7 @@ export const voucherGetByAccountAPIUtils = {
       const isSameAccount = associate.resultLineItem.account.id === targetAccountId;
       const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
       // Info: (20250423 - Anna) associate.amount 替換為 associate.resultLineItem.amount
-      const adjustedAmount = isSameDirection 
+      const adjustedAmount = isSameDirection
         ? DecimalOperations.toExactString(associate.resultLineItem.amount)
         : DecimalOperations.negate(associate.resultLineItem.amount);
 
@@ -281,7 +281,7 @@ export const voucherGetByAccountAPIUtils = {
           if (isSameAccount) {
             const isSameDirection =
               originalAssociate.resultLineItem.debit === lineItemWithAssociate.debit;
-            const adjustAmount = isSameDirection 
+            const adjustAmount = isSameDirection
               ? DecimalOperations.toExactString(originalAssociate.amount)
               : DecimalOperations.negate(originalAssociate.amount);
             writeOffAmount = DecimalOperations.add(writeOffAmount, adjustAmount);

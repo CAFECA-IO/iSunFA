@@ -788,7 +788,7 @@ const voucherGetOneOutputValidatorV2 = z
         },
         reverseList: lineItem.resultLineItems.map((resultLineItem) => ({
           voucherId: resultLineItem.associateVoucher.originalVoucherId,
-          amount: typeof resultLineItem.amount === 'string' ? resultLineItem.amount : resultLineItem.amount.toString(),
+          amount: resultLineItem.amount,
           description: resultLineItem.originalLineItem.description,
           debit: resultLineItem.debit,
           account: {
