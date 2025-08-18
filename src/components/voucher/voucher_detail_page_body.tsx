@@ -9,7 +9,8 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelection from '@/components/certificate/certificate_selection';
 import { Button } from '@/components/button/button';
-import { timestampToString, numberWithCommas } from '@/lib/utils/common';
+import { timestampToString } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { useModalContext } from '@/contexts/modal_context';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { useUserCtx } from '@/contexts/user_context';
@@ -96,8 +97,11 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
-  const totalDebit = lineItems.reduce((acc, cur) => (cur.debit ? acc + parseFloat(cur.amount) : acc), 0);
-  const totalCredit = lineItems.reduce((acc, cur) => (!cur.debit ? acc + parseFloat(cur.amount) : acc), 0);
+  // Info: (20250818 - Claude) 使用 DecimalOperations 進行精確計算
+  const debitAmounts = lineItems.filter((item) => item.debit).map((item) => item.amount);
+  const creditAmounts = lineItems.filter((item) => !item.debit).map((item) => item.amount);
+  const totalDebit = parseFloat(DecimalOperations.sum(debitAmounts));
+  const totalCredit = parseFloat(DecimalOperations.sum(creditAmounts));
 
   // Info: (20241227 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
@@ -246,7 +250,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
         className="rounded-sm bg-input-surface-input-background px-12px py-10px text-right"
       >
         {lineItem.debit ? (
-          numberWithCommas(lineItem.amount)
+          DecimalOperations.format(lineItem.amount)
         ) : (
           <p className="text-input-text-input-placeholder">0</p>
         )}
@@ -258,7 +262,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
         {lineItem.debit ? (
           <p className="text-input-text-input-placeholder">0</p>
         ) : (
-          numberWithCommas(lineItem.amount)
+          DecimalOperations.format(lineItem.amount)
         )}
       </div>
     </>
@@ -336,7 +340,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   const isDisplayPayableAmount = !isLoading ? (
     <p className="text-input-text-primary">
-      {numberWithCommas(payableAmount ?? 0)}
+      {DecimalOperations.format(payableAmount ?? 0)}
       <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
@@ -345,7 +349,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   const isDisplayPaidAmount = !isLoading ? (
     <p className="text-input-text-primary">
-      {numberWithCommas(paidAmount ?? 0)}
+      {DecimalOperations.format(paidAmount ?? 0)}
       <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
@@ -354,7 +358,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   const isDisplayRemainAmount = !isLoading ? (
     <p className="text-input-text-primary">
-      {numberWithCommas(remainAmount ?? 0)}
+      {DecimalOperations.format(remainAmount ?? 0)}
       <span className="ml-4px text-text-neutral-tertiary">{t('common:CURRENCY_ALIAS.TWD')}</span>
     </p>
   ) : (
@@ -584,8 +588,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
           </div>
           {/* Info: (20241008 - Julian) Voucher Line Total */}
           <div className="grid grid-cols-4 gap-24px text-right text-sm text-text-neutral-solid-dark">
-            <div className="col-start-3">{numberWithCommas(totalDebit)}</div>
-            <div>{numberWithCommas(totalCredit)}</div>
+            <div className="col-start-3">{DecimalOperations.format(totalDebit)}</div>
+            <div>{DecimalOperations.format(totalCredit)}</div>
           </div>
         </div>
       </div>
