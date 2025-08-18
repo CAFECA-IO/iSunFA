@@ -7,7 +7,13 @@ import { IAccountValidator } from '@/lib/utils/zod_schema/account';
  */
 export const lineItemEntityValidator = z.object({
   id: z.number(),
-  amount: z.string(),
+  amount: z.union([z.string(), z.any().transform((val: any) => {
+    // Handle Prisma Decimal objects
+    if (val && typeof val === 'object' && typeof val.toString === 'function') {
+      return val.toString();
+    }
+    return String(val);
+  })]),
   description: z.string(),
   debit: z.boolean(),
   accountId: z.number(),
