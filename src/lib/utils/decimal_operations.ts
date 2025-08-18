@@ -290,7 +290,7 @@ export class DecimalOperations {
   }
 
   /**
-   * Info: (20250815 - Claude)
+   * Info: (20250815 - Shirley)
    * Compare two decimal values for sorting
    * Returns -1 if a < b, 0 if a === b, 1 if a > b
    */

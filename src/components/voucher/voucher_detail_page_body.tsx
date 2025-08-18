@@ -97,7 +97,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   const { messageModalVisibilityHandler, messageModalDataHandler, toastHandler } =
     useModalContext();
 
-  // Info: (20250818 - Claude) 使用 DecimalOperations 進行精確計算
+  // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確計算
   const debitAmounts = lineItems.filter((item) => item.debit).map((item) => item.amount);
   const creditAmounts = lineItems.filter((item) => !item.debit).map((item) => item.amount);
   const totalDebit = parseFloat(DecimalOperations.sum(debitAmounts));
