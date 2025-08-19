@@ -176,7 +176,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     if (success && data) {
       if (formState.taxRate === undefined) {
         // Info: (20250414 - Anna) 因為 inputOrOutput 永遠是 OUTPUT，所以不需再判斷 if (formState.inputOrOutput === OUTPUT)
-        handleInputChange('taxRate', data.taxSettings.salesTax.rate * 100);
+        handleInputChange('taxRate', data.taxSettings.salesTax.rate);
       }
     }
   }, [accountBookId, formState.taxRate]);
