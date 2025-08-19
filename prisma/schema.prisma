@@ -1132,7 +1132,6 @@ enum RoleName {
   INDIVIDUAL
   ACCOUNTING_FIRMS
   ENTERPRISE
-  TEST
 }
 
 // Info: (20250325 - Tzuhan) `RoleType` 用來區分系統角色與公司角色，這是之前的設計，保留應該可以用來開測試帳號
