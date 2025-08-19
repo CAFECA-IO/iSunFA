@@ -53,14 +53,14 @@ type GetOneVoucherResponse = IVoucherEntity & {
   invoiceRC2List: InvoiceRC2WithFullRelations[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
   payableInfo?: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
   receivingInfo?: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
 };
 

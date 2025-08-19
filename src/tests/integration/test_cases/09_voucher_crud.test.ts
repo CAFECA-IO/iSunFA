@@ -86,8 +86,8 @@ describe('Voucher V2 – 完整 CRUD + Restore', () => {
       type: EventType.INCOME,
       note: 'integration test',
       lineItems: [
-        { description: '測試借方', debit: true, amount: 1000, accountId: 2103 },
-        { description: '測試貸方', debit: false, amount: 1000, accountId: 1603 },
+        { description: '測試借方', debit: true, amount: '1000', accountId: 2103 },
+        { description: '測試貸方', debit: false, amount: '1000', accountId: 1603 },
       ],
       assetIds: [],
       counterPartyId: null,

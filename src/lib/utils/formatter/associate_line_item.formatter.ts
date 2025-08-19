@@ -10,7 +10,7 @@ export function parsePrismaAssociateLineItemToEntity(
     originalLineItemId: prismaAssociateLineItem.originalLineItemId,
     resultLineItemId: prismaAssociateLineItem.resultLineItemId,
     debit: prismaAssociateLineItem.debit,
-    amount: prismaAssociateLineItem.amount,
+    amount: String(prismaAssociateLineItem.amount),
     createdAt: prismaAssociateLineItem.createdAt,
     updatedAt: prismaAssociateLineItem.updatedAt,
     deletedAt: prismaAssociateLineItem.deletedAt,

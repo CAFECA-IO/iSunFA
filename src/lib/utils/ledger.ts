@@ -120,9 +120,11 @@ export const sortAndCalculateBalances = (
       if (!accountBalances[accountKey]) {
         accountBalances[accountKey] = 0;
       }
-      const debit = item.debit ? item.amount : 0;
-      const credit = !item.debit ? item.amount : 0;
-      const balanceChange = item.debit ? item.amount : -item.amount;
+      const amountNumber =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+      const debit = item.debit ? amountNumber : 0;
+      const credit = !item.debit ? amountNumber : 0;
+      const balanceChange = item.debit ? amountNumber : -amountNumber;
       accountBalances[accountKey] += balanceChange;
 
       /* Info: (20250115 - Luphia) convert item.vaucher.type to VoucherType

@@ -40,21 +40,25 @@ export function sumLineItemsAndReturnBiggest(
   }
 
   lineItems.forEach((lineItem) => {
+    const amountNumber =
+      typeof lineItem.amount === 'string'
+        ? parseFloat(lineItem.amount)
+        : lineItem.amount.toNumber();
     if (lineItem.debit) {
-      if (lineItem.amount > debitLargestAmount) {
+      if (amountNumber > debitLargestAmount) {
         debit.id = lineItem.id;
         debit.account = lineItem.account.name;
-        debitLargestAmount = lineItem.amount;
+        debitLargestAmount = amountNumber;
       }
-      debit.amount += lineItem.amount;
+      debit.amount += amountNumber;
     } else {
-      if (lineItem.amount > creditLargestAmount) {
+      if (amountNumber > creditLargestAmount) {
         credit.id = lineItem.id;
         credit.account = lineItem.account.name;
-        creditLargestAmount = lineItem.amount;
+        creditLargestAmount = amountNumber;
       }
 
-      credit.amount += lineItem.amount;
+      credit.amount += amountNumber;
     }
   });
 
@@ -70,7 +74,7 @@ export function sumLineItemsAndReturnBiggest(
  */
 export function initLineItemEntity(
   dto: Partial<PrismaLineItem> & {
-    amount: number;
+    amount: string | number;
     debit: boolean;
     accountId: number;
     accountEntity?: IAccountEntity;
@@ -81,7 +85,7 @@ export function initLineItemEntity(
 
   const lineItemEntity: ILineItemEntity = {
     id: dto.id || 0,
-    amount: dto.amount,
+    amount: typeof dto.amount === 'string' ? dto.amount : dto.amount.toString(),
     description: dto.description || '',
     debit: dto.debit,
     accountId: dto.accountId,

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { FiBookOpen } from 'react-icons/fi';
 import { useTranslation } from 'next-i18next';
-import { numberWithCommas } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import VoucherLineItem from '@/components/voucher/voucher_line_item';
 import { Button } from '@/components/button/button';
 import {
@@ -16,7 +16,6 @@ import { inputStyle } from '@/constants/display';
 import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
-import BigNumber from 'bignumber.js';
 
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
@@ -86,19 +85,19 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
-    // Info: (20250321 - Anna) 計算總借貸金額
-    const debitTotal = lineItems.reduce((acc, item) => {
-      const amount = new BigNumber(item.amount);
-      return item.debit === true ? acc.plus(amount) : acc;
-    }, new BigNumber(0));
+    // Info: (20250818 - Shirley) 計算總借貸金額 - 使用 DecimalOperations 保持精確度
+    const debitAmounts = lineItems
+      .filter((item) => item.debit === true)
+      .map((item) => item.amount);
+    const debitTotal = DecimalOperations.sum(debitAmounts);
 
-    const creditTotal = lineItems.reduce((acc, item) => {
-      const amount = new BigNumber(item.amount);
-      return item.debit === false ? acc.plus(amount) : acc;
-    }, new BigNumber(0));
+    const creditAmounts = lineItems
+      .filter((item) => item.debit === false)
+      .map((item) => item.amount);
+    const creditTotal = DecimalOperations.sum(creditAmounts);
 
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = lineItems.some((item) => item.amount === 0 || item.debit === null);
+    const zeroLine = lineItems.some((item) => DecimalOperations.isZero(item.amount) || item.debit === null);
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = lineItems.some((item) => item.account === null);
 
@@ -112,15 +111,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
       return AccountCodesOfAsset.includes(item.account?.code || '');
     });
 
-    // Info: (20250319 - Anna) BigNumber ➝ number：setState 用原生數字
-    setTotalDebit(debitTotal.toNumber());
-    setTotalCredit(creditTotal.toNumber());
+    // Info: (20250818 - Shirley) 保存字串格式的總計以保持精確度
+    setTotalDebit(parseFloat(debitTotal));
+    setTotalCredit(parseFloat(creditTotal));
 
-    // Info: (20250319 - Anna) 判斷總借貸金額是否為 0
-    setIsTotalZero(debitTotal.isZero() && creditTotal.isZero());
-
-    // Info: (20250319 - Anna) 判斷總借貸金額是否相等
-    setIsTotalNotEqual(!debitTotal.eq(creditTotal));
+    // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確比較
+    setIsTotalZero(DecimalOperations.isZero(debitTotal) && DecimalOperations.isZero(creditTotal));
+    setIsTotalNotEqual(!DecimalOperations.isEqual(debitTotal, creditTotal));
     setHaveZeroLine(zeroLine);
     setIsAccountingNull(accountingNull);
     setIsVoucherLineEmpty(lineItems.length === 0);
@@ -139,7 +136,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           flagOfClear={flagOfClear}
           flagOfSubmit={flagOfSubmit}
           accountIsNull={lineItem.account === null}
-          amountIsZero={lineItem.amount === 0}
+          amountIsZero={DecimalOperations.isZero(lineItem.amount)}
           amountNotEqual={totalCredit !== totalDebit}
           isShowReverseHint={isShowReverseHint}
         />
@@ -174,11 +171,11 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
         {/* Info: (20240927 - Julian) Total calculation */}
         {/* Info: (20240927 - Julian) Total Debit */}
         <div className="col-start-7 col-end-10 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
+          <p className={totalStyle}>{DecimalOperations.format(totalDebit)}</p>
         </div>
         {/* Info: (20240927 - Julian) Total Debit */}
         <div className="col-start-11 col-end-13 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
+          <p className={totalStyle}>{DecimalOperations.format(totalCredit)}</p>
         </div>
       </div>
 
@@ -238,14 +235,14 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
             <div
               className={`${inputStyle.PREVIEW} col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px`}
             >
-              {debit ? numberWithCommas(amount) : ''}
+              {debit ? DecimalOperations.format(amount) : ''}
             </div>
 
             {/* Info: (20241018 - Julian) Credit */}
             <div
               className={`${inputStyle.PREVIEW} col-span-3 rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px`}
             >
-              {!debit ? numberWithCommas(amount) : ''}
+              {!debit ? DecimalOperations.format(amount) : ''}
             </div>
 
             {/* Info: (20240927 - Julian) Delete button */}
@@ -288,11 +285,11 @@ export const VoucherLinePreview: React.FC<IVoucherLinePreviewProps> = ({
         {/* Info: (20241018 - Julian) Total calculation */}
         {/* Info: (20241018 - Julian) Total Debit */}
         <div className="col-start-7 col-end-10 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalDebit)}</p>
+          <p className={totalStyle}>{DecimalOperations.format(totalDebit)}</p>
         </div>
         {/* Info: (20241018 - Julian) Total Debit */}
         <div className="col-start-11 col-end-13 text-right">
-          <p className={totalStyle}>{numberWithCommas(totalCredit)}</p>
+          <p className={totalStyle}>{DecimalOperations.format(totalCredit)}</p>
         </div>
 
         {/* Info: (20241018 - Julian) Add button */}
