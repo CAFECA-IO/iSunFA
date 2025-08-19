@@ -64,7 +64,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
   } = APIHandler(
     APIName.VOUCHER_DELETE_V2,
     // { params }
-    { params: { companyId: accountBookId, voucherId } }
+    { params: { accountBookId, voucherId } }
   );
 
   // Info: (20250221 - Julian) Restore voucher API
