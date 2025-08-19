@@ -882,6 +882,7 @@ export const voucherAPIPostUtils = {
   ) => {
     const lineItemEntities: ILineItemEntity[] = lineItems.map((lineItem) => {
       return initLineItemEntity({
+        // Deprecated: (20250819- Luphia) remove eslint disable
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore: Type conflict between Decimal and number during migration
         amount: lineItem.amount,
