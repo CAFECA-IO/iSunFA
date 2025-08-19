@@ -30,45 +30,123 @@ const getSalaryLevel = (options: iGetSalaryLevelOptions) => {
 };
 
 const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorResult => {
-  const {
-    year,
-    month,
-    workedDays,
-    baseSalaryTaxable,
-    baseSalaryTaxFree,
-    otherAllowancesTaxable,
-    otherAllowancesTaxFree,
-    overTimeHoursTaxable100,
-    overTimeHoursTaxable133,
-    overTimeHoursTaxable166,
-    overTimeHoursTaxable200,
-    overTimeHoursTaxable233,
-    overTimeHoursTaxable266,
-    overTimeHoursTaxFree100,
-    overTimeHoursTaxFree133,
-    overTimeHoursTaxFree166,
-    overTimeHoursTaxFree200,
-    overTimeHoursTaxFree233,
-    overTimeHoursTaxFree266,
-    sickLeaveHours,
-    personalLeaveHours,
-    employeeBurdenHealthInsurancePremiums,
-    employeeBurdenSecondGenerationHealthInsurancePremiums,
-    employeeBurdenOtherOverflowDeductions,
-    employeeBurdenPensionInsurance,
-  } = options;
+  const { year, month } = options;
 
-  // Info: (20250727 - Luphia) 計算表定薪資
+  // Info: (20250815 - Luphia) 取得是否保勞健退
+  const isLaborInsuranceEnrolled = options.isLaborInsuranceEnrolled ?? false;
+  const isHealthInsuranceEnrolled = options.isHealthInsuranceEnrolled ?? false;
+  const isPensionInsuranceEnrolled = options.isPensionInsuranceEnrolled ?? false;
+
+  // Info: (20250814 - Luphia) 取得有效薪資數字
+  const baseSalaryTaxable = (options.baseSalaryTaxable ?? 0) > 0 ? options.baseSalaryTaxable : 0;
+  const baseSalaryTaxFree = (options.baseSalaryTaxFree ?? 0) > 0 ? options.baseSalaryTaxFree : 0;
+  const otherAllowancesTaxable =
+    typeof options.otherAllowancesTaxable === 'number' ? options.otherAllowancesTaxable : 0;
+  const otherAllowancesTaxFree =
+    typeof options.otherAllowancesTaxFree === 'number' ? options.otherAllowancesTaxFree : 0;
+
+  // Info: (20250814 - Luphia) 取得有效加班時數
+  const overTimeHoursTaxable100 =
+    (options.overTimeHoursTaxable100 ?? 0) > 0 ? (options.overTimeHoursTaxable100 ?? 0) : 0;
+  const overTimeHoursTaxable133 =
+    (options.overTimeHoursTaxable133 ?? 0) > 0 ? (options.overTimeHoursTaxable133 ?? 0) : 0;
+  const overTimeHoursTaxable166 =
+    (options.overTimeHoursTaxable166 ?? 0) > 0 ? (options.overTimeHoursTaxable166 ?? 0) : 0;
+  const overTimeHoursTaxable200 =
+    (options.overTimeHoursTaxable200 ?? 0) > 0 ? (options.overTimeHoursTaxable200 ?? 0) : 0;
+  const overTimeHoursTaxable233 =
+    (options.overTimeHoursTaxable233 ?? 0) > 0 ? (options.overTimeHoursTaxable233 ?? 0) : 0;
+  const overTimeHoursTaxable266 =
+    (options.overTimeHoursTaxable266 ?? 0) > 0 ? (options.overTimeHoursTaxable266 ?? 0) : 0;
+  const overTimeHoursTaxFree100 =
+    (options.overTimeHoursTaxFree100 ?? 0) > 0 ? (options.overTimeHoursTaxFree100 ?? 0) : 0;
+  const overTimeHoursTaxFree133 =
+    (options.overTimeHoursTaxFree133 ?? 0) > 0 ? (options.overTimeHoursTaxFree133 ?? 0) : 0;
+  const overTimeHoursTaxFree166 =
+    (options.overTimeHoursTaxFree166 ?? 0) > 0 ? (options.overTimeHoursTaxFree166 ?? 0) : 0;
+  const overTimeHoursTaxFree200 =
+    (options.overTimeHoursTaxFree200 ?? 0) > 0 ? (options.overTimeHoursTaxFree200 ?? 0) : 0;
+  const overTimeHoursTaxFree233 =
+    (options.overTimeHoursTaxFree233 ?? 0) > 0 ? (options.overTimeHoursTaxFree233 ?? 0) : 0;
+  const overTimeHoursTaxFree266 =
+    (options.overTimeHoursTaxFree266 ?? 0) > 0 ? (options.overTimeHoursTaxFree266 ?? 0) : 0;
+
+  // Info: (20250815 - Luphia) 取得有效加保金額
+  const employeeBurdenHealthInsurancePremiums =
+    typeof options.employeeBurdenHealthInsurancePremiums === 'number'
+      ? options.employeeBurdenHealthInsurancePremiums
+      : 0;
+  const employeeBurdenOtherOverflowDeductions =
+    typeof options.employeeBurdenOtherOverflowDeductions === 'number'
+      ? options.employeeBurdenOtherOverflowDeductions
+      : 0;
+  let employeeBurdenPensionInsurance = 0;
+  if (
+    typeof options.employeeBurdenPensionInsurance === 'number' &&
+    options.employeeBurdenPensionInsurance > 0
+  ) {
+    employeeBurdenPensionInsurance = options.employeeBurdenPensionInsurance;
+    // Info: (20250815 - Luphia) 員工自負勞退只有 1%, 2%, 3%, 4%, 5%, 6%
+    if (![0.01, 0.02, 0.03, 0.04, 0.05, 0.06].includes(employeeBurdenPensionInsurance)) {
+      employeeBurdenPensionInsurance = 0;
+    }
+  }
+
+  // Info: (20250814 - Luphia) 取得有效請假時數
+  const sickLeaveHours =
+    typeof options.sickLeaveHours === 'number' && options.sickLeaveHours > 0
+      ? options.sickLeaveHours
+      : 0;
+  const personalLeaveHours =
+    typeof options.personalLeaveHours === 'number' && options.personalLeaveHours > 0
+      ? options.personalLeaveHours
+      : 0;
+
+  // Info: (20250814 - Luphia) 是否使用 30 日制計算薪資
+  const isUsing30DaysSystem = options.baseSalary30Days ?? false;
+
+  // Info: (20250814 - Luphia) 取得記錄月份總日數
+  const realDaysInMonth = new Date(year, month, 0).getDate();
+  // Info: (20250814 - Luphia) 取得員工記薪起始日
+  const employeeStartDate = options.employeeStartDate ? options.employeeStartDate : 1;
+  // Info: (20250814 - Luphia) 取得員工記薪結束日
+  const employeeEndDateRaw = options.employeeEndDate ? options.employeeEndDate : realDaysInMonth;
+  const employeeEndDate =
+    employeeEndDateRaw > realDaysInMonth || employeeEndDateRaw < employeeStartDate
+      ? realDaysInMonth
+      : employeeEndDateRaw;
+  // Info: (20250814 - Luphia) 計算基礎薪資比例 1. 完整一個月 2. 工作不滿一個月但等於 30 日 3. 該月不到 30 日且工作不滿一個月
+  const baseSalaryRatio = isUsing30DaysSystem
+    ? // Info: (20250814 - Luphia) 30 日制計算方式
+      employeeStartDate === 1 && employeeEndDate === realDaysInMonth
+      ? 30 / 30
+      : realDaysInMonth < 30
+        ? (employeeEndDate - employeeStartDate + 1 + 30 - realDaysInMonth) / 30
+        : (employeeEndDate - employeeStartDate + 1) / 30
+    : // Info: (20250814 - Luphia) 際日曆天數計算方式
+      (employeeEndDate - employeeStartDate + 1) / realDaysInMonth;
+  const workedDays = isUsing30DaysSystem
+    ? 30 * baseSalaryRatio
+    : employeeEndDate - employeeStartDate + 1;
+
+  // Info: (20250814 - Luphia) 計算約定月薪
   const baseSalary = baseSalaryTaxable + baseSalaryTaxFree;
+
+  // Info: (20250814 -Luphia) 計算當月基礎薪資
+  // const currentMonthBaseSalary = baseSalary * baseSalaryRatio;
 
   // Info: (20250727 - Luphia) 計算勞保、健保、勞退費用
   const salaryLevel = getSalaryLevel({ year, salary: baseSalary });
-  const healthInsuranceLevel = salaryLevel.salary;
-  const laborInsuranceLevel = salaryLevel.salary;
+  const healthInsuranceLevel = salaryLevel.healthInsurance.salary;
+  const laborInsuranceLevel = salaryLevel.laborInsurance.salary;
   const employmentInsuranceLevel = salaryLevel.salary;
   const occupationalDisasterInsuranceLevel = salaryLevel.salary;
-  const pensionInsuranceLevel = salaryLevel.salary;
-  const insuredSalary = salaryLevel.salary;
+  const pensionInsuranceLevel = salaryLevel.pensionInsurance.salary;
+  // Info: (20250815 - Luphia) 若未保健保則需計算 2.11% 二代健保費
+  const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
+    ? 0
+    : baseSalary * 0.0211;
+  const insuredSalary = baseSalary;
 
   // ToDo: (20250727 - Luphia) 計算代扣所得稅款
   const employeeBurdenIncomeTax = 0;
@@ -77,9 +155,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   const occupationalDisasterIndustryRate = 0;
 
   // Info: (20250727 - Luphia) 計算當月總日數
-  // const daysInMonth = new Date(year, month, 0).getDate();
-  // ToDo: (20250730 - Luphia) 暫時用固定 30 日制
-  const daysInMonth = month < 13 ? 30 : new Date(year, month, 0).getDate();
+  const daysInMonth = isUsing30DaysSystem ? 30 : new Date(year, month, 0).getDate();
   const hoursInMonth = daysInMonth * 8;
 
   // Info: (20250727 - Luphia) 計算每小時薪資
@@ -88,26 +164,26 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算在職小時數
   const workedHours = workedDays * 8;
 
-  // Info: (20250727 - Luphia) 總請假時數
+  // Info: (20250727 - Luphia) 總扣薪時數
   const totalLeaveHours = sickLeaveHours * 0.5 + personalLeaveHours;
 
   // Info: (20250727 - Luphia) 計算加班費，無條件進入整數位
   const overTimePayTaxable = Math.ceil(
     (overTimeHoursTaxable100 +
-      overTimeHoursTaxable133 * 1.33 +
-      overTimeHoursTaxable166 * 1.66 +
+      overTimeHoursTaxable133 * 1.34 +
+      overTimeHoursTaxable166 * 1.67 +
       overTimeHoursTaxable200 * 2 +
-      overTimeHoursTaxable233 * 2.33 +
-      overTimeHoursTaxable266 * 2.66) *
+      overTimeHoursTaxable233 * 2.34 +
+      overTimeHoursTaxable266 * 2.67) *
       baseSalaryPerHour
   );
   const overTimePayTaxFree = Math.ceil(
     (overTimeHoursTaxFree100 +
-      overTimeHoursTaxFree133 * 1.33 +
-      overTimeHoursTaxFree166 * 1.66 +
+      overTimeHoursTaxFree133 * 1.34 +
+      overTimeHoursTaxFree166 * 1.67 +
       overTimeHoursTaxFree200 * 2 +
-      overTimeHoursTaxFree233 * 2.33 +
-      overTimeHoursTaxFree266 * 2.66) *
+      overTimeHoursTaxFree233 * 2.34 +
+      overTimeHoursTaxFree266 * 2.67) *
       baseSalaryPerHour
   );
 
@@ -129,10 +205,35 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   const totalSalaryTaxFree = resultBaseSalaryTaxFree + overTimePayTaxFree + otherAllowancesTaxFree;
   const totalSalary = totalSalaryTaxable + totalSalaryTaxFree;
 
+  // Info: (20250727 - Luphia) 計算公司負擔
+  // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
+  const companyBurdenHealthInsurance =
+    isHealthInsuranceEnrolled && employeeEndDateRaw === daysInMonth
+      ? salaryLevel.healthInsurance.company
+      : 0;
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
+  const companyBurdenLaborInsurance = isLaborInsuranceEnrolled
+    ? salaryLevel.laborInsurance.company * baseSalaryRatio
+    : 0;
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞退
+  const companyBurdenPensionInsurance = isPensionInsuranceEnrolled
+    ? salaryLevel.pensionInsurance.company * baseSalaryRatio
+    : 0;
+  const totalCompanyBurden =
+    companyBurdenHealthInsurance + companyBurdenLaborInsurance + companyBurdenPensionInsurance;
+
   // Info: (20250727 - Luphia) 計算員工負擔與扣項
-  const employeeBurdenLaborInsurance = salaryLevel.laborInsurance.employee;
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
+  const employeeBurdenLaborInsurance = isLaborInsuranceEnrolled
+    ? salaryLevel.laborInsurance.employee * baseSalaryRatio
+    : 0;
+  // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
-    salaryLevel.healthInsurance.employee + employeeBurdenHealthInsurancePremiums;
+    isHealthInsuranceEnrolled && employeeEndDateRaw === daysInMonth
+      ? salaryLevel.healthInsurance.employee + employeeBurdenHealthInsurancePremiums
+      : 0;
+  // Info: (20250815 - Luphia) 根據自負比例計算實際金額
+  employeeBurdenPensionInsurance *= companyBurdenPensionInsurance / 0.06;
   const totalEmployeeBurden =
     employeeBurdenLaborInsurance +
     employeeBurdenHealthInsurance +
@@ -140,13 +241,6 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
     employeeBurdenIncomeTax +
     employeeBurdenSecondGenerationHealthInsurancePremiums +
     employeeBurdenOtherOverflowDeductions;
-
-  // Info: (20250727 - Luphia) 計算公司負擔
-  const companyBurdenHealthInsurance = salaryLevel.healthInsurance.company;
-  const companyBurdenLaborInsurance = salaryLevel.laborInsurance.company;
-  const companyBurdenPensionInsurance = salaryLevel.pensionInsurance.company;
-  const totalCompanyBurden =
-    companyBurdenHealthInsurance + companyBurdenLaborInsurance + companyBurdenPensionInsurance;
 
   // Info: (20250727 - Luphia) 計算給付總額
   const totalPayment = totalSalary - totalEmployeeBurden;

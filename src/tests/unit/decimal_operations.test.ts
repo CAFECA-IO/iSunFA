@@ -6,7 +6,7 @@ describe('DecimalOperations', () => {
       it('should correctly add positive numbers', () => {
         expect(DecimalOperations.add('1.23', '2.34')).toBe('3.57');
         expect(DecimalOperations.add(1, 2)).toBe('3');
-        expect(DecimalOperations.add('0.1', '0.2')).toBe('0.3'); // Critical precision test
+        expect(DecimalOperations.add('0.1', '0.2')).toBe('0.3'); // Info: (20250813 - Shirley) Critical precision test
       });
 
       it('should handle negative numbers', () => {
@@ -243,7 +243,7 @@ describe('DecimalOperations', () => {
     describe('round', () => {
       it('should round to specified decimal places', () => {
         expect(DecimalOperations.round('1.234567', 2)).toBe('1.23');
-        expect(DecimalOperations.round('1.235', 2)).toBe('1.24'); // Round half up
+        expect(DecimalOperations.round('1.235', 2)).toBe('1.24'); // Info: (20250813 - Shirley) Round half up
         expect(DecimalOperations.round('1.999', 1)).toBe('2.0');
       });
 
