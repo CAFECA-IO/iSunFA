@@ -139,7 +139,10 @@ export async function getFolderContent(
       id: Number(lineItem.account.code),
       debit: lineItem.debit,
       account: lineItem.account.name,
-      amount: lineItem.amount,
+      amount:
+        typeof lineItem.amount === 'string'
+          ? parseFloat(lineItem.amount)
+          : lineItem.amount.toNumber(),
     };
   });
 

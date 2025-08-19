@@ -1,24 +1,27 @@
 import { IVoucherBeta } from '@/interfaces/voucher';
 import { AccountCodesOfAP, AccountCodesOfAR } from '@/constants/asset';
 import { JOURNAL_EVENT } from '@/constants/journal';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export function isCompleteVoucherBeta(voucher: IVoucherBeta): boolean {
   if (!voucher.lineItemsInfo || voucher.lineItemsInfo.lineItems.length === 0) return false;
 
   const allValid = voucher.lineItemsInfo.lineItems.every(
     (item) =>
-      item.account?.id !== undefined && item.amount !== 0 && (item.description?.trim() ?? '') !== ''
+      item.account?.id !== undefined && !DecimalOperations.isZero(item.amount) && (item.description?.trim() ?? '') !== ''
   );
 
-  const totalDebit = voucher.lineItemsInfo.lineItems
+  const debitAmounts = voucher.lineItemsInfo.lineItems
     .filter((item) => item.debit)
-    .reduce((sum, i) => sum + i.amount, 0);
+    .map((item) => item.amount);
+  const totalDebit = DecimalOperations.sum(debitAmounts);
 
-  const totalCredit = voucher.lineItemsInfo.lineItems
+  const creditAmounts = voucher.lineItemsInfo.lineItems
     .filter((item) => !item.debit)
-    .reduce((sum, i) => sum + i.amount, 0);
+    .map((item) => item.amount);
+  const totalCredit = DecimalOperations.sum(creditAmounts);
 
-  return allValid && totalDebit === totalCredit;
+  return allValid && DecimalOperations.isEqual(totalDebit, totalCredit);
 }
 
 export function countIncompleteVouchersByTab(vouchers: IVoucherBeta[]) {

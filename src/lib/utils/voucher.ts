@@ -1,4 +1,5 @@
 import { IVoucherDataForSavingToDB, IVoucherEntity } from '@/interfaces/voucher';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { EventType } from '@/constants/account';
 import { JOURNAL_EVENT } from '@/constants/journal';
 import { Voucher as PrismaVoucher } from '@prisma/client';
@@ -66,19 +67,24 @@ export function isVoucherAmountGreaterOrEqualThenPaymentAmount(
   voucher: IVoucherDataForSavingToDB,
   price: number
 ): boolean {
-  let debitAmount = 0;
-  let creditAmount = 0;
+  const debitAmounts: string[] = [];
+  const creditAmounts: string[] = [];
 
   voucher.lineItems.forEach((lineItem) => {
     if (lineItem.debit) {
-      debitAmount += lineItem.amount;
+      debitAmounts.push(lineItem.amount);
     } else {
-      creditAmount += lineItem.amount;
+      creditAmounts.push(lineItem.amount);
     }
   });
 
-  const isDebitCreditEqual = debitAmount === creditAmount;
-  const isDebitCreditGreaterOrEqualPaymentAmount = debitAmount >= price && creditAmount >= price;
+  const totalDebit = DecimalOperations.sum(debitAmounts);
+  const totalCredit = DecimalOperations.sum(creditAmounts);
+
+  const isDebitCreditEqual = DecimalOperations.isEqual(totalDebit, totalCredit);
+  const isDebitCreditGreaterOrEqualPaymentAmount =
+    DecimalOperations.isGreaterThanOrEqual(totalDebit, price) &&
+    DecimalOperations.isGreaterThanOrEqual(totalCredit, price);
 
   return isDebitCreditEqual && isDebitCreditGreaterOrEqualPaymentAmount;
 }

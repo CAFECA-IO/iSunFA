@@ -455,6 +455,13 @@ export async function updateVoucherByJournalIdInPrisma(
       const newVoucherData = {
         ...voucherBeUpdated,
         journalId,
+        lineItems: voucherBeUpdated.lineItems.map((lineItem) => ({
+          ...lineItem,
+          amount:
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber(),
+        })),
       };
 
       return newVoucherData;
@@ -605,10 +612,14 @@ export async function postVoucherV2({
           const originalLineItem = original.lineItems[0];
           const resultLineItem = originalVoucherInDB.lineItems.find((li) => {
             const target = resultVoucher.lineItems[0];
+            const liAmount =
+              typeof li.amount === 'string' ? parseFloat(li.amount) : li.amount.toNumber();
+            const targetAmount =
+              typeof target.amount === 'number' ? target.amount : parseFloat(String(target.amount));
             return (
               li.accountId === target.accountId &&
               li.debit === target.debit &&
-              li.amount === target.amount &&
+              liAmount === targetAmount &&
               li.description === target.description
             );
           });
@@ -656,7 +667,7 @@ export async function postVoucherV2({
                       createdAt: nowInSecond,
                       updatedAt: nowInSecond,
                       debit: originalLineItem.debit,
-                      amount: originalLineItem.amount,
+                      amount: +originalLineItem.amount,
                     },
                   },
                 },
@@ -701,13 +712,13 @@ export async function putVoucherWithoutCreateNew(
           eventId: number;
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
         new: {
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
       }
@@ -913,7 +924,7 @@ export async function putVoucherWithoutCreateNew(
                     },
                   },
                   debit: newRelation.lineItemReverseOther.debit,
-                  amount: newRelation.amount,
+                  amount: parseInt(newRelation.amount, 10),
                   createdAt: nowInSecond,
                   updatedAt: nowInSecond,
                 },
@@ -1214,7 +1225,9 @@ export function isFullyReversed(lineItem: DeepNestedLineItem): boolean {
     return sum + pair.amount;
   }, 0);
 
-  return totalReversedAmount >= lineItem.amount;
+  const lineItemAmount =
+    typeof lineItem.amount === 'string' ? parseFloat(lineItem.amount) : lineItem.amount.toNumber();
+  return totalReversedAmount >= lineItemAmount;
 }
 
 export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems: T[]): T[] {
@@ -2101,7 +2114,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                   },
                 },
                 debit: lineItemPair.newDeleteReverseLineItem.debit,
-                amount: lineItemPair.newDeleteReverseLineItem.amount,
+                amount: +lineItemPair.newDeleteReverseLineItem.amount,
                 createdAt: nowInSecond,
                 updatedAt: nowInSecond,
               })),
@@ -2170,7 +2183,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                   },
                 },
                 debit: resultLineItem.debit,
-                amount: resultLineItem.amount,
+                amount: Number(resultLineItem.amount),
                 createdAt: nowInSecond,
                 updatedAt: nowInSecond,
               },
