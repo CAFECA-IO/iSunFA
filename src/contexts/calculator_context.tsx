@@ -301,7 +301,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         withheldSecondGenerationNHIPremium:
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
         salaryDeductionForLeave: result.leaveDeduction,
-        totalEmployeeContribution: result.totalEmployeeBurden,
+        totalDeduction: result.totalEmployeeBurden,
       },
       insuredSalary: {
         healthInsuranceSalaryBracket: result.healthInsuranceLevel,

@@ -25,7 +25,7 @@ export interface IEmployeeContribution {
   withheldIncomeTax: number; // Info: (20250710 - Julian) 代扣所得稅款
   withheldSecondGenerationNHIPremium: number; // Info: (20250710 - Julian) 代扣二代健保
   salaryDeductionForLeave: number; // Info: (20250710 - Julian) 請假扣薪
-  totalEmployeeContribution: number; // Info: (20250710 - Julian) 員工負擔總計
+  totalDeduction: number; // Info: (20250819 - Julian) 扣項總計
 }
 
 export interface IInsuredSalary {
@@ -74,7 +74,7 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     withheldIncomeTax: 0,
     withheldSecondGenerationNHIPremium: 0,
     salaryDeductionForLeave: 0,
-    totalEmployeeContribution: 0,
+    totalDeduction: 0,
   },
   insuredSalary: {
     healthInsuranceSalaryBracket: 0,
