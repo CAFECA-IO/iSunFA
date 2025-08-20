@@ -50,7 +50,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
       withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
       salaryDeductionForLeave, // Info: (20250710 - Julian) 請假扣薪
-      totalEmployeeContribution, // Info: (20250710 - Julian) 員工負擔總計
+      totalEmployeeBurden, // Info: (20250819 - Julian) 扣項總計
     },
     insuredSalary: {
       healthInsuranceSalaryBracket, // Info: (20250710 - Julian) 健保投保級距
@@ -139,8 +139,12 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       value: salaryDeductionForLeave,
     },
     {
-      label: t('calculator:RESULT.TOTAL_EMPLOYEE_CONTRIBUTION'),
-      value: totalEmployeeContribution,
+      label: t('calculator:RESULT.OTHER_DEDUCTIONS_ADJUSTMENTS'),
+      value: 0,
+    },
+    {
+      label: t('calculator:RESULT.TOTAL_DEDUCTIONS'),
+      value: totalEmployeeBurden,
     },
   ];
 

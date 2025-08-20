@@ -253,7 +253,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
         </ol>
         <h3 className="mt-4 text-xs font-semibold leading-6">{t('reports:REPORTS.OTHERS')}</h3>
         <ol className="list-decimal pl-6 text-xs font-normal leading-5 text-text-neutral-primary">
-          {thirdThought?.split('\n').map((line) => (
+          {thirdThought?.split('\n').map((line: string) => (
             <li key={line} className="mb-2 ml-1">
               {t(`reports:REPORTS.${line}`)}
             </li>

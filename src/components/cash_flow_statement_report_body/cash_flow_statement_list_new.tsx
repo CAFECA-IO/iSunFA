@@ -273,7 +273,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
       <div className="mt-4 text-text-neutral-primary">
         <h3 className="text-sm font-semibold leading-6">{t('reports:REPORTS.PPE')}</h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
-          {firstThought?.split('\n').map((line) => (
+          {firstThought?.split('\n').map((line: string) => (
             <li key={line} className="mb-2 ml-1">
               {t(`reports:REPORTS.${line}`)}
             </li>
@@ -284,7 +284,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
           {t('reports:REPORTS.STRATEGIC_INVESTMENTS')}
         </h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
-          {secondThought?.split('\n').map((line) => (
+          {secondThought?.split('\n').map((line: string) => (
             <li key={line} className="mb-2 ml-1">
               {t(`reports:REPORTS.${line}`)}
             </li>
@@ -292,7 +292,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         </ol>
         <h3 className="mt-4 text-sm font-semibold leading-6">{t('reports:REPORTS.OTHERS')}</h3>
         <ol className="list-decimal pl-6 pt-2 text-sm font-normal leading-5 text-text-neutral-primary">
-          {thirdThought?.split('\n').map((line) => (
+          {thirdThought?.split('\n').map((line: string) => (
             <li key={line} className="mb-2 ml-1">
               {t(`reports:REPORTS.${line}`)}
             </li>

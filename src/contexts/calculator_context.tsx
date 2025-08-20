@@ -237,7 +237,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
 
     // Info: (20250728 - Julian) 計算加班費（應稅）
-    const overTimeHoursTaxable100 = 0; // ToDo: (20250728 - Julian) 要補欄位
     const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
     const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
     const overTimeHoursTaxable200 = twoHoursForTaxable;
@@ -245,7 +244,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const overTimeHoursTaxable266 = twoAndTwoThirdsHoursForTaxable;
 
     // Info: (20250728 - Julian) 計算加班費（免稅）
-    const overTimeHoursTaxFree100 = 0; // ToDo: (20250728 - Julian) 要補欄位
     const overTimeHoursTaxFree133 = oneAndOneThirdsHoursForNonTax;
     const overTimeHoursTaxFree166 = oneAndTwoThirdsHoursForNonTax;
     const overTimeHoursTaxFree200 = twoHoursForNonTax;
@@ -259,24 +257,28 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
       otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
       otherAllowancesTaxFree: otherAllowanceWithoutTax, // Info: (20250728 - Julian) 當月免稅其他津貼
-      overTimeHoursTaxable100, // Info: (20250728 - Julian) 當月 100% 加班費（應稅）
       overTimeHoursTaxable133, // Info: (20250728 - Julian) 當月 133% 加班費（應稅）
       overTimeHoursTaxable166, // Info: (20250728 - Julian) 當月 166% 加班費（應稅）
       overTimeHoursTaxable200, // Info: (20250728 - Julian) 當月 200% 加班費（應稅）
       overTimeHoursTaxable233, // Info: (20250728 - Julian) 當月 233% 加班費（應稅）
       overTimeHoursTaxable266, // Info: (20250728 - Julian) 當月 266% 加班費（應稅）
-      overTimeHoursTaxFree100, // Info: (20250728 - Julian) 當月 100% 加班費（免稅）
       overTimeHoursTaxFree133, // Info: (20250728 - Julian) 當月 133% 加班費（免稅）
       overTimeHoursTaxFree166, // Info: (20250728 - Julian) 當月 166% 加班費（免稅）
       overTimeHoursTaxFree200, // Info: (20250728 - Julian) 當月 200% 加班費（免稅）
       overTimeHoursTaxFree233, // Info: (20250728 - Julian) 當月 233% 加班費（免稅）
       overTimeHoursTaxFree266, // Info: (20250728 - Julian) 當月 266% 加班費（免稅）
+      vacationToPayHours: leavePayoutHours, // Info: (20250819 - Julian) 休假換算成薪資的時數
       sickLeaveHours, // Info: (20250728 - Julian) 當月病假時數
       personalLeaveHours, // Info: (20250728 - Julian) 當月事假時數
+      isLaborInsuranceEnrolled: isLaborInsurance, // Info: (20250819 - Julian) 是否投保勞保
+      isHealthInsuranceEnrolled: isNHI, // Info: (20250819 - Julian) 是否投保健保
+      isPensionInsuranceEnrolled: isLaborPension, // Info: (20250819 - Julian) 是否投保勞退
       employeeBurdenHealthInsurancePremiums: nhiBackPremium, // Info: (20250728 - Julian) 健保加保費用
       employeeBurdenSecondGenerationHealthInsurancePremiums: secondGenNhiTax, // Info: (20250728 - Julian) 二代健保費用
       employeeBurdenOtherOverflowDeductions: otherAdjustments, // Info: (20250728 - Julian) 其他溢扣／補收
       employeeBurdenPensionInsurance: voluntaryPensionContribution, // Info: (20250728 - Julian) 勞退自提金額
+      dependentsCount: numberOfDependents, // Info: (20250819 - Julian) 扶養人數
+      baseSalary30Days: payrollDaysBase === 'FIXED', // Info: (20250819 - Julian) 基準天數選項：是否以 30 天計算
     });
 
     const formattedResult: ISalaryCalculator = {
@@ -295,13 +297,14 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       employeeContribution: {
         employeePaidLaborInsurance: result.employeeBurdenLaborInsurance,
         employeePaidHealthInsurance: result.employeeBurdenHealthInsurance,
-        healthInsuranceAdditionalPremium: 0, // ToDo: (20250806 - Julian) 新增欄位：健保加保費用
+        healthInsuranceAdditionalPremium: 0,
         voluntaryPensionContribution: result.employeeBurdenPensionInsurance,
         withheldIncomeTax: result.employeeBurdenIncomeTax,
         withheldSecondGenerationNHIPremium:
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
         salaryDeductionForLeave: result.leaveDeduction,
-        totalEmployeeContribution: result.totalEmployeeBurden,
+        otherDeductionsOrAdjustments: result.employeeBurdenOtherOverflowDeductions,
+        totalEmployeeBurden: result.totalEmployeeBurden,
       },
       insuredSalary: {
         healthInsuranceSalaryBracket: result.healthInsuranceLevel,

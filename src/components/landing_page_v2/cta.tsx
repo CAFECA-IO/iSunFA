@@ -18,7 +18,7 @@ const CTAIntroCard: React.FC<{
   buttonText: string;
 }> = ({ imageSrc, imageAlt, description, buttonText }) => {
   // Info: (20250115 - Julian) 手動換行
-  const descriptionStr = description.split('\n').map((line) => (
+  const descriptionStr = description.split('\n').map((line: string) => (
     <>
       {line}
       <br />
@@ -93,7 +93,7 @@ const CTA: React.FC = () => {
   // Info: (20250115 - Julian) 手動換行
   const titleStr = t('landing_page_v2:CTA.MAIN_TITLE')
     .split('\n')
-    .map((line) => (
+    .map((line: string) => (
       <>
         {line}
         <br />
@@ -102,7 +102,7 @@ const CTA: React.FC = () => {
 
   const subtitleStr = t('landing_page_v2:CTA.MAIN_DESCRIPTION')
     .split('\n')
-    .map((line) => (
+    .map((line: string) => (
       <>
         {line}
         <br />
