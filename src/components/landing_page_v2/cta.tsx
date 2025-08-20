@@ -102,7 +102,7 @@ const CTA: React.FC = () => {
 
   const subtitleStr = t('landing_page_v2:CTA.MAIN_DESCRIPTION')
     .split('\n')
-    .map((line) => (
+    .map((line: string) => (
       <>
         {line}
         <br />
