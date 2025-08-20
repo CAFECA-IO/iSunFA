@@ -1,5 +1,6 @@
 import { IAccountNodeWithDebitAndCredit } from '@/interfaces/accounting_account';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { Prisma, Account } from '@prisma/client';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import {
   ILineItemInTrialBalanceItem,
@@ -9,7 +10,6 @@ import {
   ITrialBalanceTotal,
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
-import { Account } from '@prisma/client';
 
 export function sortTrialBalanceItem(
   items: TrialBalanceItem[],
@@ -239,14 +239,18 @@ export function mergeLineItems(
 
   lineItems.forEach((item) => {
     if (!map[item.accountId]) {
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
       map[item.accountId] = {
         ...item,
-        debitAmount: item.debit ? item.amount : 0,
-        creditAmount: !item.debit ? item.amount : 0,
+        debitAmount: item.debit ? itemAmount : 0,
+        creditAmount: !item.debit ? itemAmount : 0,
       };
     } else {
-      map[item.accountId].debitAmount += item.debit ? item.amount : 0;
-      map[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+      map[item.accountId].debitAmount += item.debit ? itemAmount : 0;
+      map[item.accountId].creditAmount += !item.debit ? itemAmount : 0;
     }
   });
 
@@ -270,18 +274,22 @@ export function mergeLineItemsByAccount(
 
     if (existingSummary) {
       // Info: (20250102 - Shirley) 如果該科目已存在，則加總金額
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
       if (item.debit) {
-        existingSummary.debitAmount += item.amount;
+        existingSummary.debitAmount += itemAmount;
       } else {
-        existingSummary.creditAmount += item.amount;
+        existingSummary.creditAmount += itemAmount;
       }
     } else {
       // Info: (20250102 - Shirley) 如果該科目不存在，則建立新的紀錄
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
       accountSummary.set(item.accountId, {
         ...item,
         // accountId: item.accountId,
-        debitAmount: item.debit ? item.amount : 0,
-        creditAmount: !item.debit ? item.amount : 0,
+        debitAmount: item.debit ? itemAmount : 0,
+        creditAmount: !item.debit ? itemAmount : 0,
         accountCode: item.account.code,
         accountName: item.account.name,
         // debit: item.debit,
@@ -382,7 +390,9 @@ export function calculateEndingBalance(
     if (existingItem) {
       existingItem.debitAmount += item.debitAmount;
       existingItem.creditAmount += item.creditAmount;
-      existingItem.amount = Math.abs(existingItem.debitAmount - existingItem.creditAmount);
+      existingItem.amount = new Prisma.Decimal(
+        Math.abs(existingItem.debitAmount - existingItem.creditAmount)
+      );
       existingItem.debit = existingItem.debitAmount > existingItem.creditAmount;
     } else {
       endingMap.set(item.accountId, item);
@@ -576,7 +586,7 @@ export function processLineItems(
             accountName: parentAccount.name,
             debitAmount: 0,
             creditAmount: 0,
-            amount: 0,
+            amount: new Prisma.Decimal(0),
             id: parentAccount.id,
             debit: parentAccount.debit,
             description: '',

@@ -85,13 +85,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1603,
-            amount: 100,
+            amount: '100',
             description: '測試1',
             debit: false,
           },
           {
             accountId: 1601,
-            amount: 100,
+            amount: '100',
             description: '測試1',
             debit: true,
           },
@@ -104,13 +104,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2108,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 2127,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
@@ -123,13 +123,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2103,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 1603,
-            amount: 10000,
+            amount: '10000',
             description: '1203',
             debit: false,
           },
@@ -142,13 +142,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2117,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 2121,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
@@ -161,13 +161,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1645,
-            amount: 100000,
+            amount: '100000',
             description: '',
             debit: false,
           },
           {
             accountId: 1668,
-            amount: 100000,
+            amount: '100000',
             description: '',
             debit: true,
           },
@@ -180,13 +180,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1607,
-            amount: 120000,
+            amount: '120000',
             description: '',
             debit: false,
           },
           {
             accountId: 1618,
-            amount: 120000,
+            amount: '120000',
             description: '',
             debit: true,
           },
@@ -199,13 +199,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1601,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
           {
             accountId: 1608,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
@@ -218,13 +218,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1369,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
           {
             accountId: 1603,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
@@ -245,13 +245,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1601,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
           {
             accountId: 1608,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
@@ -264,13 +264,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1369,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
           {
             accountId: 1603,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
@@ -283,19 +283,19 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1603,
-            amount: 10000,
+            amount: '10000',
             description: '222',
             debit: true,
           },
           {
             accountId: 2032,
-            amount: 5000,
+            amount: '5000',
             description: '',
             debit: false,
           },
           {
             accountId: 1568,
-            amount: 5000,
+            amount: '5000',
             description: '',
             debit: false,
           },
@@ -308,13 +308,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1568,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
           {
             accountId: 1969,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
@@ -327,13 +327,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1601,
-            amount: 1233,
+            amount: '1233',
             description: '',
             debit: true,
           },
           {
             accountId: 1606,
-            amount: 1233,
+            amount: '1233',
             description: '',
             debit: false,
           },
@@ -346,13 +346,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1607,
-            amount: 120000,
+            amount: '120000',
             description: '',
             debit: false,
           },
           {
             accountId: 1618,
-            amount: 120000,
+            amount: '120000',
             description: '',
             debit: true,
           },
@@ -365,13 +365,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2103,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 1603,
-            amount: 10000,
+            amount: '10000',
             description: '1203',
             debit: false,
           },
@@ -384,13 +384,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2119,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 2125,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
@@ -403,13 +403,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1601,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 2128,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
@@ -422,13 +422,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2117,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 2121,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
@@ -441,13 +441,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2124,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: true,
           },
           {
             accountId: 2124,
-            amount: 10000,
+            amount: '10000',
             description: '',
             debit: false,
           },
@@ -460,13 +460,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1645,
-            amount: 100000,
+            amount: '100000',
             description: '',
             debit: false,
           },
           {
             accountId: 1668,
-            amount: 100000,
+            amount: '100000',
             description: '',
             debit: true,
           },
@@ -479,73 +479,73 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2108,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 2127,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
           {
             accountId: 2126,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 2109,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
           {
             accountId: 1629,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 1602,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
           {
             accountId: 1609,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 10001469,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
           {
             accountId: 10001469,
-            amount: 10,
+            amount: '10',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 10001469,
-            amount: 10,
+            amount: '10',
             description: '120611111',
             debit: true,
           },
           {
             accountId: 2126,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: false,
           },
           {
             accountId: 1605,
-            amount: 100,
+            amount: '100',
             description: '120611111',
             debit: true,
           },
@@ -558,13 +558,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1668,
-            amount: 100,
+            amount: '100',
             description: '',
             debit: true,
           },
           {
             accountId: 10001469,
-            amount: 100,
+            amount: '100',
             description: '010',
             debit: false,
           },
@@ -577,13 +577,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2126,
-            amount: 1000000,
+            amount: '1000000',
             description: '',
             debit: false,
           },
           {
             accountId: 10001469,
-            amount: 1000000,
+            amount: '1000000',
             description: '',
             debit: true,
           },
@@ -596,13 +596,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1603,
-            amount: 100,
+            amount: '100',
             description: '測試1',
             debit: false,
           },
           {
             accountId: 1601,
-            amount: 100,
+            amount: '100',
             description: '測試1',
             debit: true,
           },
@@ -615,13 +615,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 2108,
-            amount: 123,
+            amount: '123',
             description: '',
             debit: false,
           },
           {
             accountId: 1601,
-            amount: 123,
+            amount: '123',
             description: '123',
             debit: true,
           },
@@ -634,13 +634,13 @@ export class TestDataFactory {
         lineItems: [
           {
             accountId: 1606,
-            amount: 1230,
+            amount: '1230',
             description: '',
             debit: false,
           },
           {
             accountId: 1604,
-            amount: 1230,
+            amount: '1230',
             description: '',
             debit: true,
           },

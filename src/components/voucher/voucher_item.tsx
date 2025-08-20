@@ -6,7 +6,7 @@ import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { HiCheck } from 'react-icons/hi';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { VoucherType } from '@/constants/account';
 import { IVoucherUI } from '@/interfaces/voucher';
 
@@ -175,7 +175,7 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
             key={index}
             className={de === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
-            {numberWithCommas(de)}
+            {DecimalOperations.format(de)}
           </p>
         ))}
       </div>
@@ -193,13 +193,13 @@ const VoucherItem: React.FC<IVoucherItemProps> = ({
             key={index}
             className={cre === 0 ? 'text-text-neutral-tertiary' : 'text-text-neutral-primary'}
           >
-            {numberWithCommas(cre)}
+            {DecimalOperations.format(cre)}
           </p>
         ))}
       </div>
       <hr className="my-10px border-divider-stroke-lv-1" />
       {/* Info: (20240920 - Julian) Total */}
-      <p className="text-right text-hxs text-text-neutral-primary">{numberWithCommas(total)}</p>
+      <p className="text-right text-hxs text-text-neutral-primary">{DecimalOperations.format(total)}</p>
     </>
   );
 

@@ -11,6 +11,7 @@
  * 7. 邊界條件和錯誤處理
  */
 
+import { Prisma, Account } from '@prisma/client';
 import {
   getCurrent401Period,
   convertToTrialBalanceItem,
@@ -26,7 +27,6 @@ import { SortBy, SortOrder } from '@/constants/sort';
 import { DEFAULT_SORT_OPTIONS } from '@/constants/trial_balance';
 import { TrialBalanceItem, ILineItemInTrialBalanceItem } from '@/interfaces/trial_balance';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
-import { Account } from '@prisma/client';
 
 // Info: (20250611 - Shirley) ========== Mock Data Helpers ==========
 
@@ -41,7 +41,7 @@ const createMockLineItem = (
   voucherDate: number
 ): ILineItemSimpleAccountVoucher => ({
   id,
-  amount,
+  amount: new Prisma.Decimal(amount),
   description: `Line item ${id}`,
   debit,
   accountId,
@@ -93,8 +93,8 @@ const createMockLineItemWithDebitCredit = (
   lineItem: ILineItemSimpleAccountVoucher
 ): ILineItemInTrialBalanceItem => ({
   ...lineItem,
-  debitAmount: lineItem.debit ? lineItem.amount : 0,
-  creditAmount: !lineItem.debit ? lineItem.amount : 0,
+  debitAmount: lineItem.debit ? lineItem.amount.toNumber() : 0,
+  creditAmount: !lineItem.debit ? lineItem.amount.toNumber() : 0,
 });
 
 // Info: (20250611 - Shirley) ========== 1. API 核心流程測試 ==========
@@ -281,7 +281,7 @@ describe('Trial Balance API 核心流程', () => {
           {
             id: 1,
             accountId: 1101,
-            amount: 100000,
+            amount: new Prisma.Decimal(100000),
             debitAmount: 100000,
             creditAmount: 0,
             description: 'Test',
@@ -301,7 +301,7 @@ describe('Trial Balance API 核心流程', () => {
           {
             id: 2,
             accountId: 1101,
-            amount: 50000,
+            amount: new Prisma.Decimal(50000),
             debitAmount: 50000,
             creditAmount: 0,
             description: 'Test',
@@ -321,7 +321,7 @@ describe('Trial Balance API 核心流程', () => {
           {
             id: 3,
             accountId: 1101,
-            amount: 150000,
+            amount: new Prisma.Decimal(150000),
             debitAmount: 150000,
             creditAmount: 0,
             description: 'Test',

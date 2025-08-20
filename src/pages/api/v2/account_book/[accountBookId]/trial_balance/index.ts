@@ -164,11 +164,15 @@ async function handleGetRequest(req: NextApiRequest) {
     });
 
     // Info: (20250424 - Shirley) Step 4 整理資料
-    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => ({
-      ...item,
-      debitAmount: item.debit ? item.amount : 0,
-      creditAmount: !item.debit ? item.amount : 0,
-    }));
+    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+      return {
+        ...item,
+        debitAmount: item.debit ? itemAmount : 0,
+        creditAmount: !item.debit ? itemAmount : 0,
+      };
+    });
 
     // Info: (20250424 - Shirley) Step 4, 5, 6, 7, 8, 9, 10, 11
     const threeStagesOfLineItems = convertToTrialBalanceItem(

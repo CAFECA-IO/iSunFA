@@ -20,6 +20,7 @@ import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
+import { Prisma } from '@prisma/client';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -110,7 +111,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     closeAccount.push({
       id: netIncomeInEquity?.id || -1,
-      amount: curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount,
+      amount: new Prisma.Decimal(curPeriod ? netIncome.curPeriodAmount : netIncome.prePeriodAmount),
       description: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.name,
       debit: SPECIAL_ACCOUNTS.NET_INCOME_IN_EQUITY.debit,
       accountId: netIncomeInEquity?.id || -1,
@@ -139,9 +140,11 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     closeAccount.push({
       id: accumulateProfitAndLossInEquity?.id || -1,
-      amount: curPeriod
-        ? accumulateProfitAndLoss.curPeriodAmount
-        : accumulateProfitAndLoss.prePeriodAmount,
+      amount: new Prisma.Decimal(
+        curPeriod
+          ? accumulateProfitAndLoss.curPeriodAmount
+          : accumulateProfitAndLoss.prePeriodAmount
+      ),
       description: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.name,
       debit: SPECIAL_ACCOUNTS.ACCUMULATED_PROFIT_AND_LOSS.debit,
       accountId: accumulateProfitAndLossInEquity?.id || -1,
@@ -170,11 +173,13 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
 
     closeAccount.push({
       id: otherEquityOther?.id || -1,
-      amount: curPeriod
-        ? currentOtherComprehensiveIncome.curPeriodAmount +
-          beforeOtherComprehensiveIncome.curPeriodAmount
-        : beforeOtherComprehensiveIncome.prePeriodAmount +
-          beforeOtherComprehensiveIncome.prePeriodAmount,
+      amount: new Prisma.Decimal(
+        curPeriod
+          ? currentOtherComprehensiveIncome.curPeriodAmount +
+            beforeOtherComprehensiveIncome.curPeriodAmount
+          : beforeOtherComprehensiveIncome.prePeriodAmount +
+            beforeOtherComprehensiveIncome.prePeriodAmount
+      ),
       description: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.name,
       debit: SPECIAL_ACCOUNTS.OTHER_EQUITY_OTHER.debit,
       accountId: otherEquityOther?.id || -1,

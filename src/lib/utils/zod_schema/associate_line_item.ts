@@ -6,7 +6,16 @@ export const IAssociateLineItemEntitySchema = z.object({
   originalLineItemId: z.number(),
   resultLineItemId: z.number(),
   debit: z.boolean(),
-  amount: z.number(),
+  amount: z.any().transform((val: unknown): string => {
+    // Handle Prisma Decimal objects and ensure string output
+    if (typeof val === 'string') {
+      return val;
+    }
+    if (val && typeof val === 'object' && typeof val.toString === 'function') {
+      return val.toString();
+    }
+    return String(val);
+  }),
   createdAt: z.number(),
   updatedAt: z.number(),
   deletedAt: z.number().nullable(),
