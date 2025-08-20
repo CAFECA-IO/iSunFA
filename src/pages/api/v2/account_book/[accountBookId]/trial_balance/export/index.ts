@@ -85,11 +85,15 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, acco
     loggerBack.info(`Retrieved ${accounts.data.length} accounts for trial balance export`);
 
     // Info: (20250425 - Shirley) Transform line items with debit and credit amounts
-    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => ({
-      ...item,
-      debitAmount: item.debit ? item.amount : 0,
-      creditAmount: !item.debit ? item.amount : 0,
-    }));
+    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
+      const itemAmount =
+        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+      return {
+        ...item,
+        debitAmount: item.debit ? itemAmount : 0,
+        creditAmount: !item.debit ? itemAmount : 0,
+      };
+    });
 
     // Info: (20250425 - Shirley) Convert line items to trial balance format
     const threeStagesOfLineItems = convertToTrialBalanceItem(

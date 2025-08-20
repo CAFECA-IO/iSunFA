@@ -18,7 +18,7 @@ export interface IAssociateLineItemEntity {
   originalLineItemId: number;
   resultLineItemId: number;
   debit: boolean;
-  amount: number;
+  amount: string;
   createdAt: number;
   updatedAt: number;
   deletedAt: number | null;

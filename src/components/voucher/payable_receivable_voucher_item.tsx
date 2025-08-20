@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { FaDownload, FaUpload } from 'react-icons/fa';
 import { VoucherType } from '@/constants/account';
 import { FiRepeat } from 'react-icons/fi';
@@ -105,20 +105,20 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedTotalAmount = (
     <div className="whitespace-nowrap text-right">
-      {numberWithCommas(totalAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {DecimalOperations.format(totalAmount)} <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
   const displayedAlreadyHappenedAmount = (
     <div className="whitespace-nowrap text-right">
-      {numberWithCommas(alreadyHappenedAmount)}{' '}
+      {DecimalOperations.format(alreadyHappenedAmount)}{' '}
       <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
   const displayedRemainAmount = (
     <div className="whitespace-nowrap text-right">
-      {numberWithCommas(remainAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {DecimalOperations.format(remainAmount)} <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 

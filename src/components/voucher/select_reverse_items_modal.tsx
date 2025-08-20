@@ -4,7 +4,7 @@ import { RxCross2 } from 'react-icons/rx';
 import FilterSection from '@/components/filter_section/filter_section';
 import { checkboxStyle } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
-import { numberWithCommas } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { Button } from '@/components/button/button';
 import { useTranslation } from 'next-i18next';
 import { IReverseItemModal } from '@/interfaces/reverse';
@@ -61,7 +61,8 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
     const numValue = Number.isNaN(num) ? 0 : num;
 
     // Info: (20241105 - Julian) 金額範圍限制 0 ~ amount
-    const valueInRange = numValue < 0 ? 0 : numValue > amount ? amount : numValue;
+    const amountNum = parseFloat(amount);
+    const valueInRange = numValue < 0 ? 0 : numValue > amountNum ? amountNum : numValue;
 
     // Info: (20250213 - Anna) 使用 `voucherId + lineItemIndex` 避免影響相同 `voucherId` 的其他行
     amountChangeHandler(voucherId, lineItemIndex, valueInRange);
@@ -79,7 +80,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
         id="input-reverse-amount"
         name="input-reverse-amount"
         type="text"
-        value={numberWithCommas(reverseAmount)}
+        value={DecimalOperations.format(reverseAmount)}
         onChange={reverseAmountChangeHandler}
         className="w-0 flex-1 bg-transparent px-12px py-10px text-right outline-none"
       />
@@ -118,7 +119,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
       <div className="col-start-7 col-end-9 hidden tablet:block">{description}</div>
       {/* Info: (20241104 - Julian) Amount */}
       <div className="col-start-9 col-end-11 hidden tablet:block">
-        {numberWithCommas(amount)}
+        {DecimalOperations.format(amount)}
         <span className="text-text-neutral-tertiary"> {t('journal:JOURNAL.TWD')}</span>
       </div>
       {/* Info: (20241104 - Julian) Reverse Amount */}
@@ -150,7 +151,7 @@ const ReverseItem: React.FC<IReverseItemProps> = ({
           {description !== '' && <p>{description}</p>}
           {/* Info: (20250528 - Julian) Amount */}
           <p>
-            {numberWithCommas(amount)}
+            {DecimalOperations.format(amount)}
             <span className="text-text-neutral-tertiary"> {t('journal:JOURNAL.TWD')}</span>
           </p>
           {/* Info: (20250528 - Julian) Reverse Amount */}
@@ -189,14 +190,15 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
 
   const selectedReverseItems = uiReverseItemList.filter((reverse) => reverse.isSelected);
 
-  // Info: (20241104 - Julian) reverse item 總金額
-  const totalReverseAmount = selectedReverseItems.reduce((acc, reverse) => {
-    return acc + reverse.reverseAmount;
-  }, 0);
+  // Info: (20241104 - Julian) reverse item 總金額 - 使用 DecimalOperations 保持精確度
+  const reverseAmounts = selectedReverseItems.map((reverse) => reverse.reverseAmount);
+  const totalReverseAmountStr = DecimalOperations.sum(reverseAmounts);
+  const totalReverseAmount = parseFloat(totalReverseAmountStr);
 
   // Info: (20241105 - Julian) 如果沒有選取任何 reverse item 或是有選取但金額為 0，則無法確認
   const confirmDisabled =
-    totalReverseAmount === 0 || selectedReverseItems.some((reverse) => reverse.reverseAmount === 0);
+    DecimalOperations.isZero(totalReverseAmountStr) ||
+    selectedReverseItems.some((reverse) => DecimalOperations.isZero(reverse.reverseAmount));
 
   // Info: (20241105 - Julian) 全選
   const checkAllHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,7 +249,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
           return {
             ...reverse,
             isSelected: false,
-            reverseAmount: 0,
+            reverseAmount: '0',
           };
         });
       });
@@ -281,7 +283,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               if (item.voucherId === id && item.lineItemIndex === itemIndex) {
                 return {
                   ...item,
-                  reverseAmount: value,
+                  reverseAmount: value.toString(),
                 };
               }
               return item;
@@ -345,7 +347,7 @@ const SelectReverseItemsModal: React.FC<ISelectReverseItemsModal> = ({
               <p className="ml-auto text-text-neutral-secondary">
                 {t('journal:REVERSE_MODAL.TOTAL_REVERSE_AMOUNT')}:{' '}
                 <span className="text-text-neutral-primary">
-                  {numberWithCommas(totalReverseAmount)}{' '}
+                  {DecimalOperations.format(totalReverseAmount)}{' '}
                 </span>
                 {t('common:CURRENCY_ALIAS.TWD')}
               </p>

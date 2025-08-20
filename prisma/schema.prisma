@@ -719,7 +719,7 @@ model KYCRole {
 
 model LineItem {
   id          Int     @id @default(autoincrement())
-  amount      Float
+  amount      Decimal @db.Decimal(26, 8)
   description String
   debit       Boolean
   accountId   Int     @map("account_id")

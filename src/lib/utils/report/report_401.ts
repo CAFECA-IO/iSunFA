@@ -49,7 +49,10 @@ function updateSalesResult(
   if (invoiceVoucherJournal.voucher?.lineItems) {
     invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
       if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-        updatedSales.includeFixedAsset += lineItem.amount;
+        updatedSales.includeFixedAsset +=
+          typeof lineItem.amount === 'string'
+            ? parseFloat(lineItem.amount)
+            : lineItem.amount.toNumber();
       }
     });
   }
@@ -92,8 +95,12 @@ function updatePurchasesResult(
     if (invoiceVoucherJournal.invoice?.deductible) {
       invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          fixedAssets.amount += lineItem.amount;
-          fixedAssets.tax += lineItem.amount * (invoiceVoucherJournal.invoice?.taxRatio ?? 0.05);
+          const lineItemAmount =
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
+          fixedAssets.amount += lineItemAmount;
+          fixedAssets.tax += lineItemAmount * (invoiceVoucherJournal.invoice?.taxRatio ?? 0.05);
         }
       });
       generalPurchases = {
@@ -103,7 +110,10 @@ function updatePurchasesResult(
     } else {
       invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          unDeductible.fixedAssets += lineItem.amount;
+          unDeductible.fixedAssets +=
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber();
         }
       });
       unDeductible.generalPurchases =
