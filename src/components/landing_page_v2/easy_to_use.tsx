@@ -30,13 +30,13 @@ const EasyIntroCard: React.FC<{
   const onClick = order === 0 ? onRightClick : order === 2 ? onLeftClick : undefined;
 
   // Info: (20250115 - Julian) 手動換行
-  const titleStr = title.split('\n').map((line) => (
+  const titleStr = title.split('\n').map((line: string) => (
     <>
       {line}
       <br />
     </>
   ));
-  const descriptionStr = description.split('\n').map((line) => (
+  const descriptionStr = description.split('\n').map((line: string) => (
     <>
       {line}
       <br />

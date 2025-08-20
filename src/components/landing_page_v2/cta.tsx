@@ -18,7 +18,7 @@ const CTAIntroCard: React.FC<{
   buttonText: string;
 }> = ({ imageSrc, imageAlt, description, buttonText }) => {
   // Info: (20250115 - Julian) 手動換行
-  const descriptionStr = description.split('\n').map((line) => (
+  const descriptionStr = description.split('\n').map((line: string) => (
     <>
       {line}
       <br />
