@@ -48,6 +48,7 @@ import {
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 interface DeepNestedLineItem extends PrismaLineItem {
@@ -924,7 +925,7 @@ export async function putVoucherWithoutCreateNew(
                     },
                   },
                   debit: newRelation.lineItemReverseOther.debit,
-                  amount: parseInt(newRelation.amount, 10),
+                  amount: newRelation.amount,
                   createdAt: nowInSecond,
                   updatedAt: nowInSecond,
                 },
@@ -1221,13 +1222,11 @@ export async function getOneVoucherByVoucherNoV2(options: {
 export function isFullyReversed(lineItem: DeepNestedLineItem): boolean {
   const reversedPairs = lineItem.originalLineItem ?? [];
 
-  const totalReversedAmount = reversedPairs.reduce((sum, pair) => {
-    return sum + pair.amount;
-  }, 0);
+  const amounts = reversedPairs.map((pair) => String(pair.amount));
+  const totalReversedAmount = DecimalOperations.sum(amounts);
 
-  const lineItemAmount =
-    typeof lineItem.amount === 'string' ? parseFloat(lineItem.amount) : lineItem.amount.toNumber();
-  return totalReversedAmount >= lineItemAmount;
+  const lineItemAmount = String(lineItem.amount);
+  return DecimalOperations.isGreaterThanOrEqual(totalReversedAmount, lineItemAmount);
 }
 
 export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems: T[]): T[] {
