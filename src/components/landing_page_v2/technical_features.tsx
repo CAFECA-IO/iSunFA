@@ -30,14 +30,14 @@ const TechnicalCard: React.FC<ITechnicalCardProps> = ({
     : 'first:translate-x-full even:translate-y-full last:-translate-x-full opacity-0';
 
   // Info: (20250115 - Julian) 手動換行
-  const title1Str = title1.split('\n').map((line) => (
+  const title1Str = title1.split('\n').map((line: string) => (
     <>
       {line}
       <br />
     </>
   ));
 
-  const title2Str = title2.split('\n').map((line) => (
+  const title2Str = title2.split('\n').map((line: string) => (
     <>
       {line}
       <br />

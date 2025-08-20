@@ -263,7 +263,7 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(headers.length).toBeGreaterThanOrEqual(8);
 
       // Info: (20250721 - Shirley) Convert CSV to JSON format for comparison
-      const csvData = lines.slice(1).map((line) => {
+      const csvData = lines.slice(1).map((line: string) => {
         const values = line.split(',');
         return {
           accountingTitle: values[0],
