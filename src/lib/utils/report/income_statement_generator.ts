@@ -16,6 +16,8 @@ import {
 } from '@/interfaces/accounting_account';
 import { IFinancialReportInDB, IncomeStatementOtherInfo } from '@/interfaces/report';
 import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
+import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   private eslintEscape = '';
@@ -72,8 +74,14 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage:
-          operatingRevenueAmount === 0 ? 0 : value.accountNode.amount / operatingRevenueAmount,
+        percentage: DecimalCompatibility.decimalToNumber(
+          DecimalOperations.isZero(operatingRevenueAmount) 
+            ? '0' 
+            : DecimalOperations.divide(
+                DecimalCompatibility.numberToDecimal(value.accountNode.amount),
+                DecimalCompatibility.numberToDecimal(operatingRevenueAmount)
+              )
+        ),
       });
     });
 
@@ -131,30 +139,38 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    if (
-      totalCost.curPeriodAmount +
-        salesExpense.curPeriodAmount +
-        administrativeExpense.curPeriodAmount !==
-      0
-    ) {
-      curRatio =
-        revenue.curPeriodAmount /
-        (totalCost.curPeriodAmount +
-          salesExpense.curPeriodAmount +
-          administrativeExpense.curPeriodAmount);
+    const totalCurrentExpenses = DecimalOperations.add(
+      DecimalOperations.add(
+        DecimalCompatibility.numberToDecimal(totalCost.curPeriodAmount),
+        DecimalCompatibility.numberToDecimal(salesExpense.curPeriodAmount)
+      ),
+      DecimalCompatibility.numberToDecimal(administrativeExpense.curPeriodAmount)
+    );
+
+    if (!DecimalOperations.isZero(totalCurrentExpenses)) {
+      curRatio = DecimalCompatibility.decimalToNumber(
+        DecimalOperations.divide(
+          DecimalCompatibility.numberToDecimal(revenue.curPeriodAmount),
+          totalCurrentExpenses
+        )
+      );
     }
 
-    if (
-      totalCost.prePeriodAmount +
-        salesExpense.prePeriodAmount +
-        administrativeExpense.prePeriodAmount !==
-      0
-    ) {
-      preRatio =
-        revenue.prePeriodAmount /
-        (totalCost.prePeriodAmount +
-          salesExpense.prePeriodAmount +
-          administrativeExpense.prePeriodAmount);
+    const totalPreviousExpenses = DecimalOperations.add(
+      DecimalOperations.add(
+        DecimalCompatibility.numberToDecimal(totalCost.prePeriodAmount),
+        DecimalCompatibility.numberToDecimal(salesExpense.prePeriodAmount)
+      ),
+      DecimalCompatibility.numberToDecimal(administrativeExpense.prePeriodAmount)
+    );
+
+    if (!DecimalOperations.isZero(totalPreviousExpenses)) {
+      preRatio = DecimalCompatibility.decimalToNumber(
+        DecimalOperations.divide(
+          DecimalCompatibility.numberToDecimal(revenue.prePeriodAmount),
+          totalPreviousExpenses
+        )
+      );
     }
 
     return {
@@ -206,12 +222,24 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    if (revenue.curPeriodAmount !== 0) {
-      curRatio = researchAndDevelopment.curPeriodAmount / revenue.curPeriodAmount;
+    const currentRevenueAmount = DecimalCompatibility.numberToDecimal(revenue.curPeriodAmount);
+    if (!DecimalOperations.isZero(currentRevenueAmount)) {
+      curRatio = DecimalCompatibility.decimalToNumber(
+        DecimalOperations.divide(
+          DecimalCompatibility.numberToDecimal(researchAndDevelopment.curPeriodAmount),
+          currentRevenueAmount
+        )
+      );
     }
 
-    if (revenue.prePeriodAmount !== 0) {
-      preRatio = researchAndDevelopment.prePeriodAmount / revenue.prePeriodAmount;
+    const previousRevenueAmount = DecimalCompatibility.numberToDecimal(revenue.prePeriodAmount);
+    if (!DecimalOperations.isZero(previousRevenueAmount)) {
+      preRatio = DecimalCompatibility.decimalToNumber(
+        DecimalOperations.divide(
+          DecimalCompatibility.numberToDecimal(researchAndDevelopment.prePeriodAmount),
+          previousRevenueAmount
+        )
+      );
     }
 
     return {

@@ -22,6 +22,7 @@ import Toggle from '@/components/toggle/toggle';
 import BalanceSheetA4Template from '@/components/balance_sheet_report_body/balance_sheet_a4_template';
 import DownloadBalanceSheet from '@/components/balance_sheet_report_body/download_balance_sheet';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface BalanceSheetListProps {
   selectedDateRange: IDatePeriod | null; // Info: (20241023 - Anna) 接收來自上層的日期範圍
@@ -75,8 +76,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     setTotalSubAccountsToggle((prevState) => !prevState);
   };
 
-  const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
-  const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
+  const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<string>>([]);
+  const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<string>>([]);
   const [curAssetLiabilityRatioLabels, setCurAssetLiabilityRatioLabels] = useStateRef<
     Array<string>
   >([]);
@@ -84,8 +85,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     Array<string>
   >([]);
 
-  const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
-  const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
+  const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<string>>([]);
+  const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<string>>([]);
   const [curAssetMixLabels, setCurAssetMixLabels] = useStateRef<Array<string>>([]);
   const [preAssetMixLabels, setPreAssetMixLabels] = useStateRef<Array<string>>([]);
 
@@ -152,8 +153,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     // }, [getBalanceSheetReport, selectedDateRange]); // Info: (20241121 - Anna) 直接依賴 getBalanceSheetReport
   }, [selectedDateRange, getBalanceSheetReport]); // Info: (20241121 - Anna) 簡化依賴
 
-  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
-  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
+  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => parseFloat(value) === 0);
+  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => parseFloat(value) === 0);
 
   // Info: (20241001 - Anna) 管理表格摺疊狀態(項目彙總格式)
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
@@ -188,21 +189,21 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       const previousYear = previousDateString.year;
 
       const curALR = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
-        ?.data || [0, 0, 0];
+        ?.data || ['0', '0', '0'];
       const preALR = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
-        ?.data || [0, 0, 0];
+        ?.data || ['0', '0', '0'];
       const curALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[currentDateString.date]
         ?.labels || ['', '', ''];
       const preALRLabels = reportFinancial.otherInfo.assetLiabilityRatio[previousDateString.date]
         ?.labels || ['', '', ''];
 
       const curAMR = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]?.data || [
-        0, 0, 0, 0, 0, 0,
+        '0', '0', '0', '0', '0', '0',
       ];
       const curAMRLabels = reportFinancial.otherInfo.assetMixRatio[currentDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
       const preAMR = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]?.data || [
-        0, 0, 0, 0, 0, 0,
+        '0', '0', '0', '0', '0', '0',
       ];
       const preAMRLabels = reportFinancial.otherInfo.assetMixRatio[previousDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
@@ -282,7 +283,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   ) : (
     <div>
-      <PieChart data={curAssetLiabilityRatio} />
+      <PieChart data={curAssetLiabilityRatio.map(val => parseFloat(val))} />
     </div>
   );
 
@@ -300,7 +301,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   ) : (
     <div>
-      <PieChart data={preAssetLiabilityRatio} />
+      <PieChart data={preAssetLiabilityRatio.map(val => parseFloat(val))} />
     </div>
   );
 
@@ -343,12 +344,15 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         : 'prePeriodAdjustedPercentageString';
 
     // Info: (20250610 - Anna) 篩掉金額為 0 的子項
-    const noZeroChildren = children.filter((child) => child[amountKey] !== 0);
+    const noZeroChildren = children.filter((child) => !DecimalOperations.isZero(child[amountKey]));
 
     // Info: (20250610 - Anna) 計算每個子項的原始百分比(含小數)
     const childrenWithValues = noZeroChildren.map((child) => ({
       ...child,
-      [realPercentageKey]: (child[amountKey] / totalAsset) * 100,
+      [realPercentageKey]: parseFloat(DecimalOperations.multiply(
+        DecimalOperations.divide(child[amountKey], totalAsset.toString()),
+        '100'
+      )),
     })) as Array<IAccountReadyForFrontend & { [key in typeof realPercentageKey]: number }>;
 
     // Info: (20250610 - Anna) 子項百分比四捨五入為整數
@@ -381,9 +385,10 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         const defaultAdjustmentPercentage = roundedPercentage + remaining;
 
         // Info: (20250610 - Anna) 百分比應該和數值同方向
+        const childAmountNum = parseFloat(childAmount);
         const directionIsValid =
-          (childAmount >= 0 && defaultAdjustmentPercentage >= 0) ||
-          (childAmount < 0 && defaultAdjustmentPercentage <= 0);
+          (childAmountNum >= 0 && defaultAdjustmentPercentage >= 0) ||
+          (childAmountNum < 0 && defaultAdjustmentPercentage <= 0);
 
         if (directionIsValid) {
           roundedPercentages[i] = defaultAdjustmentPercentage;
@@ -438,7 +443,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       if (children.length === 0) return;
 
       const parentAmountKey = key === 'curPeriod' ? 'curPeriodAmount' : 'prePeriodAmount';
-      const parentAmount = parent[parentAmountKey] ?? 0;
+      const parentAmount = parseFloat(parent[parentAmountKey] ?? '0');
 
       const parentPercentageStr =
         key === 'curPeriod' ? parent.curPeriodPercentageString : parent.prePeriodPercentageString;
@@ -448,7 +453,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
       const adjustedChildren = adjustChildPercentageTailGap(
         children,
         parentAmount,
-        totalAsset,
+        typeof totalAsset === 'string' ? parseFloat(totalAsset) : totalAsset,
         parentPercentage,
         key
       );
@@ -482,7 +487,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     const createDisplayPercentagesForGroup = (group: typeof parents): typeof group => {
       const accountsWithPercentageMeta = group.map((parent) => {
         const parentAmount = key === 'curPeriod' ? parent.curPeriodAmount : parent.prePeriodAmount;
-        const realPercentage = parentAmount && totalAsset ? (parentAmount / totalAsset) * 100 : 0;
+        const parentAmountNum = parseFloat(parentAmount || '0');
+        const totalAssetNum = typeof totalAsset === 'string' ? parseFloat(totalAsset || '0') : totalAsset;
+        const realPercentage = parentAmountNum && totalAssetNum ? (parentAmountNum / totalAssetNum) * 100 : 0;
         const roundedPercentage = Math.round(realPercentage);
         const gap = Math.abs(realPercentage - roundedPercentage);
         return { ...parent, realPercentage, roundedPercentage, gap };
@@ -494,10 +501,13 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
         const children = parent.children ?? [];
 
         const allChildrenZero = children.every(
-          (child) => (key === 'curPeriod' ? child.curPeriodAmount : child.prePeriodAmount) === 0
+          (child) => {
+            const childAmount = key === 'curPeriod' ? child.curPeriodAmount : child.prePeriodAmount;
+            return DecimalOperations.isZero(childAmount);
+          }
         );
 
-        return parentAmount === 0 && allChildrenZero;
+        return DecimalOperations.isZero(parentAmount) && allChildrenZero;
       });
       if (allZero) {
         return group.map((parent) => ({
@@ -562,10 +572,12 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     return str.includes('(') ? -value : value;
   };
   // Info: (20250610 - Anna) 取出「當期總資產」與「前期總資產」
-  const curTotalAsset =
-    reportFinancial?.general?.find((account) => account.code === '1XXX')?.curPeriodAmount ?? 1;
-  const preTotalAsset =
-    reportFinancial?.general?.find((account) => account.code === '1XXX')?.prePeriodAmount ?? 1;
+  const curTotalAsset = parseFloat(
+    reportFinancial?.general?.find((account) => account.code === '1XXX')?.curPeriodAmount ?? '1'
+  );
+  const preTotalAsset = parseFloat(
+    reportFinancial?.general?.find((account) => account.code === '1XXX')?.prePeriodAmount ?? '1'
+  );
 
   const rowsForSummary = (items: Array<IAccountReadyForFrontend>) => {
     // Info: (20250616 - Anna) 修正子科目百分比總和不等於父科目的尾差（含當期與前期）
@@ -716,7 +728,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
             (() => {
               const adjustedCurChildren = adjustChildPercentageTailGap(
                 item.children,
-                item.curPeriodAmount,
+                parseFloat(item.curPeriodAmount || '0'),
                 curTotalAsset,
                 parseBracketPercentage(item.curPeriodAdjustedPercentageString),
                 'curPeriod'
@@ -724,7 +736,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
 
               const adjustedPreChildren = adjustChildPercentageTailGap(
                 item.children,
-                item.prePeriodAmount,
+                parseFloat(item.prePeriodAmount || '0'),
                 preTotalAsset,
                 parseBracketPercentage(item.prePeriodAdjustedPercentageString),
                 'prePeriod'
@@ -1003,9 +1015,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => {
                   // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
-                  if (curAssetMixRatio[index] === 0) return null;
+                  if (DecimalOperations.isZero(curAssetMixRatio[index])) return null;
                   if (
-                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    curAssetMixRatio.slice(0, 5).every((value) => DecimalOperations.isZero(value)) &&
                     label === '其他'
                   ) return null;
                   return (
@@ -1021,7 +1033,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                {curAssetMixRatio.slice(0, -1).every((value) => DecimalOperations.isZero(value)) ? (
                   <div className="flex w-300px items-center justify-center">
                     <div
                       className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
@@ -1035,7 +1047,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={curAssetMixRatio}
+                    data={curAssetMixRatio.map(val => parseFloat(val))}
                     labels={curAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1050,9 +1062,9 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => {
                   // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
-                  if (preAssetMixRatio[index] === 0) return null;
+                  if (DecimalOperations.isZero(preAssetMixRatio[index])) return null;
                   if (
-                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    preAssetMixRatio.slice(0, 5).every((value) => DecimalOperations.isZero(value)) &&
                     label === '其他'
                   ) return null;
                   return (
@@ -1068,7 +1080,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                 })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                {preAssetMixRatio.slice(0, -1).every((value) => DecimalOperations.isZero(value)) ? (
                   <div className="flex w-300px items-center justify-center">
                     <div
                       className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
@@ -1082,7 +1094,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={preAssetMixRatio}
+                    data={preAssetMixRatio.map(val => parseFloat(val))}
                     labels={preAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1127,8 +1139,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <tbody>
             {renderDataRow(
               t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
-              reportFinancial?.otherInfo?.dso.curDso,
-              reportFinancial?.otherInfo?.dso.preDso
+              reportFinancial?.otherInfo?.dso.curDso ? parseFloat(reportFinancial.otherInfo.dso.curDso) : undefined,
+              reportFinancial?.otherInfo?.dso.preDso ? parseFloat(reportFinancial.otherInfo.dso.preDso) : undefined
             )}
           </tbody>
         </table>
@@ -1153,8 +1165,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
           <tbody>
             {renderDataRow(
               t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
-              reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
-              reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays ? parseFloat(reportFinancial.otherInfo.inventoryTurnoverDays.curInventoryTurnoverDays) : undefined,
+              reportFinancial?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays ? parseFloat(reportFinancial.otherInfo.inventoryTurnoverDays.preInventoryTurnoverDays) : undefined
             )}
           </tbody>
         </table>

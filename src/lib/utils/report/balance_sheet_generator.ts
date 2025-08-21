@@ -21,6 +21,8 @@ import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/util
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 import { Prisma } from '@prisma/client';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
+import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -231,8 +233,11 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const liabilityAndEquity = accountTree.find((account) => account.code === '3X2X');
 
     if (liabilityAndEquity) {
-      liabilityAndEquity.amount = liability?.amount || 0;
-      liabilityAndEquity.amount += equity?.amount || 0;
+      const liabilityAmount = DecimalCompatibility.numberToDecimal(liability?.amount || 0);
+      const equityAmount = DecimalCompatibility.numberToDecimal(equity?.amount || 0);
+      liabilityAndEquity.amount = DecimalCompatibility.decimalToNumber(
+        DecimalOperations.add(liabilityAmount, equityAmount)
+      );
     }
   }
 
@@ -270,7 +275,14 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage: totalAssetAmount === 0 ? 0 : value.accountNode.amount / totalAssetAmount,
+        percentage: DecimalCompatibility.decimalToNumber(
+          DecimalOperations.isZero(DecimalCompatibility.numberToDecimal(totalAssetAmount)) 
+            ? '0' 
+            : DecimalOperations.divide(
+                DecimalCompatibility.numberToDecimal(value.accountNode.amount),
+                DecimalCompatibility.numberToDecimal(totalAssetAmount)
+              )
+        ),
       });
     });
 
@@ -307,8 +319,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getAmount(account: IAccountReadyForFrontend) {
-    const cur = Math.abs(account.curPeriodAmount);
-    const pre = Math.abs(account.prePeriodAmount);
+    const cur = DecimalCompatibility.decimalToNumber(
+      DecimalOperations.abs(DecimalCompatibility.numberToDecimal(account.curPeriodAmount))
+    );
+    const pre = DecimalCompatibility.decimalToNumber(
+      DecimalOperations.abs(DecimalCompatibility.numberToDecimal(account.prePeriodAmount))
+    );
 
     return {
       cur,
@@ -317,17 +333,48 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static calculateAssetLiabilityRatio(asset: number, liability: number, equity: number) {
-    const total = asset + liability + equity;
-    let assetPercentage = total === 0 ? 0 : Math.round((asset / total) * 100);
-    let liabilityPercentage = total === 0 ? 0 : Math.round((liability / total) * 100);
-    let equityPercentage = total === 0 ? 0 : Math.round((equity / total) * 100);
+    const assetDecimal = DecimalCompatibility.numberToDecimal(asset);
+    const liabilityDecimal = DecimalCompatibility.numberToDecimal(liability);
+    const equityDecimal = DecimalCompatibility.numberToDecimal(equity);
+    
+    const total = DecimalOperations.add(
+      DecimalOperations.add(assetDecimal, liabilityDecimal),
+      equityDecimal
+    );
+    
+    let assetPercentage = DecimalOperations.isZero(total) 
+      ? 0 
+      : Math.round(DecimalCompatibility.decimalToNumber(
+          DecimalOperations.multiply(
+            DecimalOperations.divide(assetDecimal, total),
+            '100'
+          )
+        ));
+        
+    let liabilityPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(DecimalCompatibility.decimalToNumber(
+          DecimalOperations.multiply(
+            DecimalOperations.divide(liabilityDecimal, total),
+            '100'
+          )
+        ));
+        
+    let equityPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(DecimalCompatibility.decimalToNumber(
+          DecimalOperations.multiply(
+            DecimalOperations.divide(equityDecimal, total),
+            '100'
+          )
+        ));
 
     const surplus = 100 - (assetPercentage + liabilityPercentage + equityPercentage);
 
     const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
 
     // Info: (20240731 - Murky) 判斷哪一項是最大的，並將surplus加上去
-    if (total > 0 && surplus !== 0) {
+    if (DecimalCompatibility.decimalToNumber(total) > 0 && surplus !== 0) {
       if (maxPercentage === assetPercentage) {
         assetPercentage += surplus;
       } else if (maxPercentage === liabilityPercentage) {
@@ -388,8 +435,22 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getTopAssetsPercentage(asset: IAccountReadyForFrontend[]) {
-    const curTop5Asset = asset.sort((a, b) => b.curPeriodAmount - a.curPeriodAmount).slice(0, 5);
-    const preTop5Asset = asset.sort((a, b) => b.prePeriodAmount - a.prePeriodAmount).slice(0, 5);
+    const curTop5Asset = asset.sort((a, b) => 
+      DecimalCompatibility.decimalToNumber(
+        DecimalOperations.subtract(
+          DecimalCompatibility.numberToDecimal(b.curPeriodAmount),
+          DecimalCompatibility.numberToDecimal(a.curPeriodAmount)
+        )
+      )
+    ).slice(0, 5);
+    const preTop5Asset = asset.sort((a, b) => 
+      DecimalCompatibility.decimalToNumber(
+        DecimalOperations.subtract(
+          DecimalCompatibility.numberToDecimal(b.prePeriodAmount),
+          DecimalCompatibility.numberToDecimal(a.prePeriodAmount)
+        )
+      )
+    ).slice(0, 5);
     const curSurplus = 100 - curTop5Asset.reduce((acc, cur) => acc + cur.curPeriodPercentage, 0);
     const preSurplus = 100 - preTop5Asset.reduce((acc, cur) => acc + cur.prePeriodPercentage, 0);
 
@@ -456,15 +517,26 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const curDso = Math.abs(
-      salesTotal.curPeriodAmount !== 0
-        ? Math.round((accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR)
-        : 0
+    const salesCurrentAmount = DecimalCompatibility.numberToDecimal(salesTotal.curPeriodAmount);
+    const receivableCurrentAmount = DecimalCompatibility.numberToDecimal(accountReceivable.curPeriodAmount);
+    const salesPreviousAmount = DecimalCompatibility.numberToDecimal(salesTotal.prePeriodAmount);
+    const receivablePreviousAmount = DecimalCompatibility.numberToDecimal(accountReceivable.prePeriodAmount);
+    
+    const curDso = DecimalOperations.abs(
+      !DecimalOperations.isZero(salesCurrentAmount)
+        ? Math.round(parseFloat(DecimalOperations.multiply(
+            DecimalOperations.divide(receivableCurrentAmount, salesCurrentAmount),
+            DAY_IN_YEAR.toString()
+          ))).toString()
+        : '0'
     );
-    const preDso = Math.abs(
-      salesTotal.prePeriodAmount !== 0
-        ? Math.round((accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR)
-        : 0
+    const preDso = DecimalOperations.abs(
+      !DecimalOperations.isZero(salesPreviousAmount)
+        ? Math.round(parseFloat(DecimalOperations.multiply(
+            DecimalOperations.divide(receivablePreviousAmount, salesPreviousAmount),
+            DAY_IN_YEAR.toString()
+          ))).toString()
+        : '0'
     );
     const dso = {
       curDso,
@@ -482,19 +554,27 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const curInventoryTurnoverDays = Math.abs(
-      operatingCost.curPeriodAmount !== 0
-        ? Math.round(
-            ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
-              2 /
-              operatingCost.curPeriodAmount) *
-              DAY_IN_YEAR
-          )
-        : 0
+    const operatingCostCurrentAmount = DecimalCompatibility.numberToDecimal(operatingCost.curPeriodAmount);
+    const inventoryCurrentAmount = DecimalCompatibility.numberToDecimal(inventory.curPeriodAmount);
+    const inventoryPreviousAmount = DecimalCompatibility.numberToDecimal(inventory.prePeriodAmount);
+    
+    const curInventoryTurnoverDays = DecimalOperations.abs(
+      !DecimalOperations.isZero(operatingCostCurrentAmount)
+        ? Math.round(parseFloat(DecimalOperations.multiply(
+            DecimalOperations.divide(
+              DecimalOperations.divide(
+                DecimalOperations.add(inventoryCurrentAmount, inventoryPreviousAmount),
+                '2'
+              ),
+              operatingCostCurrentAmount
+            ),
+            DAY_IN_YEAR.toString()
+          ))).toString()
+        : '0'
     );
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
-    const preInventoryTurnoverDays = 0;
+    const preInventoryTurnoverDays = '0';
     const inventoryTurnoverDays = {
       curInventoryTurnoverDays,
       preInventoryTurnoverDays,

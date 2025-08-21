@@ -74,13 +74,13 @@ export interface IAccountReadyForFrontend {
   accountId: number;
   code: string;
   name: string;
-  curPeriodAmount: number;
+  curPeriodAmount: string;
   curPeriodAmountString: string;
-  curPeriodPercentage: number;
+  curPeriodPercentage: string;
   curPeriodPercentageString: string;
-  prePeriodAmount: number;
+  prePeriodAmount: string;
   prePeriodAmountString: string;
-  prePeriodPercentage: number;
+  prePeriodPercentage: string;
   prePeriodPercentageString: string;
   indent: number;
   children: IAccountReadyForFrontend[];
