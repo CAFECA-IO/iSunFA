@@ -154,24 +154,28 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     ) {
       curPeriodContent.forEach((curPeriodAccount, index) => {
         const lastPeriodAccount = prePeriodContent[index];
-        const curPeriodAmount = curPeriodAccount.amount || 0;
-        const prePeriodAmount = lastPeriodAccount.amount || 0;
-        const curPeriodAmountString = numberBeDashIfFalsy(curPeriodAmount);
-        const prePeriodAmountString = numberBeDashIfFalsy(prePeriodAmount);
+        const curPeriodAmount = typeof curPeriodAccount.amount === 'number' 
+          ? curPeriodAccount.amount.toString() 
+          : (curPeriodAccount.amount || '0');
+        const prePeriodAmount = typeof lastPeriodAccount.amount === 'number'
+          ? lastPeriodAccount.amount.toString()
+          : (lastPeriodAccount.amount || '0');
+        const curPeriodAmountString = numberBeDashIfFalsy(parseFloat(curPeriodAmount));
+        const prePeriodAmountString = numberBeDashIfFalsy(parseFloat(prePeriodAmount));
         const curPeriodPercentage = curPeriodAccount?.percentage
-          ? Math.round(curPeriodAccount.percentage * 100)
-          : 0;
+          ? Math.round(curPeriodAccount.percentage * 100).toString()
+          : '0';
         const prePeriodPercentage = lastPeriodAccount?.percentage
-          ? Math.round(lastPeriodAccount.percentage * 100)
-          : 0;
+          ? Math.round(lastPeriodAccount.percentage * 100).toString()
+          : '0';
 
         const children = this.combineTwoFSReportArray(
           curPeriodAccount.children,
           lastPeriodAccount.children
         );
 
-        const curPeriodPercentageString = numberBeDashIfFalsy(curPeriodPercentage);
-        const prePeriodPercentageString = numberBeDashIfFalsy(prePeriodPercentage);
+        const curPeriodPercentageString = numberBeDashIfFalsy(parseFloat(curPeriodPercentage));
+        const prePeriodPercentageString = numberBeDashIfFalsy(parseFloat(prePeriodPercentage));
         const accountReadyForFrontend: IAccountReadyForFrontend = {
           accountId: curPeriodAccount.accountId,
           code: curPeriodAccount.code,

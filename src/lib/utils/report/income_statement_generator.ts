@@ -126,11 +126,11 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     salesExpense?: IAccountReadyForFrontend,
     administrativeExpense?: IAccountReadyForFrontend
   ): {
-    curRatio: number;
-    preRatio: number;
+    curRatio: string;
+    preRatio: string;
   } {
-    let curRatio = 0;
-    let preRatio = 0;
+    let curRatio = '0';
+    let preRatio = '0';
 
     if (!revenue || !totalCost || !salesExpense || !administrativeExpense) {
       return {
@@ -141,35 +141,31 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
 
     const totalCurrentExpenses = DecimalOperations.add(
       DecimalOperations.add(
-        DecimalCompatibility.numberToDecimal(totalCost.curPeriodAmount),
-        DecimalCompatibility.numberToDecimal(salesExpense.curPeriodAmount)
+        totalCost.curPeriodAmount || '0',
+        salesExpense.curPeriodAmount || '0'
       ),
-      DecimalCompatibility.numberToDecimal(administrativeExpense.curPeriodAmount)
+      administrativeExpense.curPeriodAmount || '0'
     );
 
     if (!DecimalOperations.isZero(totalCurrentExpenses)) {
-      curRatio = DecimalCompatibility.decimalToNumber(
-        DecimalOperations.divide(
-          DecimalCompatibility.numberToDecimal(revenue.curPeriodAmount),
-          totalCurrentExpenses
-        )
+      curRatio = DecimalOperations.divide(
+        revenue.curPeriodAmount || '0',
+        totalCurrentExpenses
       );
     }
 
     const totalPreviousExpenses = DecimalOperations.add(
       DecimalOperations.add(
-        DecimalCompatibility.numberToDecimal(totalCost.prePeriodAmount),
-        DecimalCompatibility.numberToDecimal(salesExpense.prePeriodAmount)
+        totalCost.prePeriodAmount || '0',
+        salesExpense.prePeriodAmount || '0'
       ),
-      DecimalCompatibility.numberToDecimal(administrativeExpense.prePeriodAmount)
+      administrativeExpense.prePeriodAmount || '0'
     );
 
     if (!DecimalOperations.isZero(totalPreviousExpenses)) {
-      preRatio = DecimalCompatibility.decimalToNumber(
-        DecimalOperations.divide(
-          DecimalCompatibility.numberToDecimal(revenue.prePeriodAmount),
-          totalPreviousExpenses
-        )
+      preRatio = DecimalOperations.divide(
+        revenue.prePeriodAmount || '0',
+        totalPreviousExpenses
       );
     }
 
@@ -209,11 +205,11 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     revenue?: IAccountReadyForFrontend,
     researchAndDevelopment?: IAccountReadyForFrontend
   ): {
-    curRatio: number;
-    preRatio: number;
+    curRatio: string;
+    preRatio: string;
   } {
-    let curRatio = 0;
-    let preRatio = 0;
+    let curRatio = '0';
+    let preRatio = '0';
 
     if (!revenue || !researchAndDevelopment) {
       return {
@@ -222,23 +218,19 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    const currentRevenueAmount = DecimalCompatibility.numberToDecimal(revenue.curPeriodAmount);
+    const currentRevenueAmount = revenue.curPeriodAmount || '0';
     if (!DecimalOperations.isZero(currentRevenueAmount)) {
-      curRatio = DecimalCompatibility.decimalToNumber(
-        DecimalOperations.divide(
-          DecimalCompatibility.numberToDecimal(researchAndDevelopment.curPeriodAmount),
-          currentRevenueAmount
-        )
+      curRatio = DecimalOperations.divide(
+        researchAndDevelopment.curPeriodAmount || '0',
+        currentRevenueAmount
       );
     }
 
-    const previousRevenueAmount = DecimalCompatibility.numberToDecimal(revenue.prePeriodAmount);
+    const previousRevenueAmount = revenue.prePeriodAmount || '0';
     if (!DecimalOperations.isZero(previousRevenueAmount)) {
-      preRatio = DecimalCompatibility.decimalToNumber(
-        DecimalOperations.divide(
-          DecimalCompatibility.numberToDecimal(researchAndDevelopment.prePeriodAmount),
-          previousRevenueAmount
-        )
+      preRatio = DecimalOperations.divide(
+        researchAndDevelopment.prePeriodAmount || '0',
+        previousRevenueAmount
       );
     }
 

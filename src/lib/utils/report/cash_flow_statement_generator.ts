@@ -721,15 +721,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
     const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
-    const result: { [key: string]: number } = {};
+    const result: { [key: string]: string } = {};
 
     years.forEach((year) => {
-      result[year] = 0;
+      result[year] = '0';
     });
 
-    result[currentYear] = parseFloat(accountReadyForFrontend?.curPeriodAmount || '0');
+    result[currentYear] = accountReadyForFrontend?.curPeriodAmount || '0';
 
-    result[currentYear - 1] = parseFloat(accountReadyForFrontend?.prePeriodAmount || '0');
+    result[currentYear - 1] = accountReadyForFrontend?.prePeriodAmount || '0';
     return result;
   }
 
@@ -874,11 +874,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const preYearString = (currentYear - 1).toString();
     return {
       [curYearString]: {
-        data: [curPPEInvest, curStrategyInvest, curOtherInvest],
+        data: [curPPEInvest.toString(), curStrategyInvest.toString(), curOtherInvest.toString()],
         labels,
       },
       [preYearString]: {
-        data: [prePPEInvest, preStrategyInvest, preOtherInvest],
+        data: [prePPEInvest.toString(), preStrategyInvest.toString(), preOtherInvest.toString()],
         labels,
       },
     };
