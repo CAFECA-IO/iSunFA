@@ -504,7 +504,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </div>
             <div className="mb-16 flex flex-col lg:flex-row">
               <div className="mt-18px w-full lg:w-3/5">
-                <LineChart data={lineChartData.map(val => parseFloat(val))} labels={lineChartLabels} />
+                <LineChart data={lineChartData.map((val) => parseFloat(val))} labels={lineChartLabels} />
               </div>
               <div className="mt-18px w-full lg:w-2/5 lg:pl-8">
                 <p className="mb-1 text-xs iphonese:text-sm">
@@ -710,7 +710,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <BarChart
-              data={curBarChartData.map(val => parseFloat(val))}
+              data={curBarChartData.map((val) => parseFloat(val))}
               labels={curBarChartLabels.map((label) => t(`reports:REPORTS.${label}`))}
             />
           </div>
@@ -729,7 +729,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
             <BarChart
-              data={preBarChartData.map(val => parseFloat(val))}
+              data={preBarChartData.map((val) => parseFloat(val))}
               labels={preBarChartLabels.map((label) => t(`reports:REPORTS.${label}`))}
             />
           </div>

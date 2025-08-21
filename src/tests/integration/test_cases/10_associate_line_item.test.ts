@@ -7,7 +7,7 @@ import { APIPath, APIName } from '@/constants/api_connection';
 import { EventType } from '@/constants/account';
 import { validateOutputData } from '@/lib/utils/validator';
 import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
-import { DecimalOperations, isEqual, toExactString, isValidDecimal } from '@/lib/utils/decimal_operations';
+import { isEqual, toExactString, isValidDecimal } from '@/lib/utils/decimal_operations';
 
 describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', () => {
   let helper: APITestHelper;

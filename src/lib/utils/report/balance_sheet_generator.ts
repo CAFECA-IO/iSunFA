@@ -276,8 +276,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
         percentage: DecimalCompatibility.decimalToNumber(
-          DecimalOperations.isZero(DecimalCompatibility.numberToDecimal(totalAssetAmount)) 
-            ? '0' 
+          DecimalOperations.isZero(DecimalCompatibility.numberToDecimal(totalAssetAmount))
+            ? '0'
             : DecimalOperations.divide(
                 DecimalCompatibility.numberToDecimal(value.accountNode.amount),
                 DecimalCompatibility.numberToDecimal(totalAssetAmount)
@@ -336,38 +336,35 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const assetDecimal = DecimalCompatibility.numberToDecimal(asset);
     const liabilityDecimal = DecimalCompatibility.numberToDecimal(liability);
     const equityDecimal = DecimalCompatibility.numberToDecimal(equity);
-    
+
     const total = DecimalOperations.add(
       DecimalOperations.add(assetDecimal, liabilityDecimal),
       equityDecimal
     );
-    
-    let assetPercentage = DecimalOperations.isZero(total) 
-      ? 0 
-      : Math.round(DecimalCompatibility.decimalToNumber(
-          DecimalOperations.multiply(
-            DecimalOperations.divide(assetDecimal, total),
-            '100'
+
+    let assetPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(
+          DecimalCompatibility.decimalToNumber(
+            DecimalOperations.multiply(DecimalOperations.divide(assetDecimal, total), '100')
           )
-        ));
-        
+        );
+
     let liabilityPercentage = DecimalOperations.isZero(total)
       ? 0
-      : Math.round(DecimalCompatibility.decimalToNumber(
-          DecimalOperations.multiply(
-            DecimalOperations.divide(liabilityDecimal, total),
-            '100'
+      : Math.round(
+          DecimalCompatibility.decimalToNumber(
+            DecimalOperations.multiply(DecimalOperations.divide(liabilityDecimal, total), '100')
           )
-        ));
-        
+        );
+
     let equityPercentage = DecimalOperations.isZero(total)
       ? 0
-      : Math.round(DecimalCompatibility.decimalToNumber(
-          DecimalOperations.multiply(
-            DecimalOperations.divide(equityDecimal, total),
-            '100'
+      : Math.round(
+          DecimalCompatibility.decimalToNumber(
+            DecimalOperations.multiply(DecimalOperations.divide(equityDecimal, total), '100')
           )
-        ));
+        );
 
     const surplus = 100 - (assetPercentage + liabilityPercentage + equityPercentage);
 
@@ -435,24 +432,34 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getTopAssetsPercentage(asset: IAccountReadyForFrontend[]) {
-    const curTop5Asset = asset.sort((a, b) => 
-      DecimalCompatibility.decimalToNumber(
-        DecimalOperations.subtract(
-          DecimalCompatibility.numberToDecimal(b.curPeriodAmount),
-          DecimalCompatibility.numberToDecimal(a.curPeriodAmount)
+    const curTop5Asset = asset
+      .sort((a, b) =>
+        DecimalCompatibility.decimalToNumber(
+          DecimalOperations.subtract(
+            DecimalCompatibility.numberToDecimal(b.curPeriodAmount),
+            DecimalCompatibility.numberToDecimal(a.curPeriodAmount)
+          )
         )
       )
-    ).slice(0, 5);
-    const preTop5Asset = asset.sort((a, b) => 
-      DecimalCompatibility.decimalToNumber(
-        DecimalOperations.subtract(
-          DecimalCompatibility.numberToDecimal(b.prePeriodAmount),
-          DecimalCompatibility.numberToDecimal(a.prePeriodAmount)
+      .slice(0, 5);
+    const preTop5Asset = asset
+      .sort((a, b) =>
+        DecimalCompatibility.decimalToNumber(
+          DecimalOperations.subtract(
+            DecimalCompatibility.numberToDecimal(b.prePeriodAmount),
+            DecimalCompatibility.numberToDecimal(a.prePeriodAmount)
+          )
         )
       )
-    ).slice(0, 5);
-    const curSurplus = DecimalOperations.subtract('100', curTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.curPeriodPercentage), '0'));
-    const preSurplus = DecimalOperations.subtract('100', preTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.prePeriodPercentage), '0'));
+      .slice(0, 5);
+    const curSurplus = DecimalOperations.subtract(
+      '100',
+      curTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.curPeriodPercentage), '0')
+    );
+    const preSurplus = DecimalOperations.subtract(
+      '100',
+      preTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.prePeriodPercentage), '0')
+    );
 
     const curPercentage = curTop5Asset.map((account) => account.curPeriodPercentage);
     const curAssetName = curTop5Asset.map((account) => account.name);
@@ -518,24 +525,36 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
     const salesCurrentAmount = DecimalCompatibility.numberToDecimal(salesTotal.curPeriodAmount);
-    const receivableCurrentAmount = DecimalCompatibility.numberToDecimal(accountReceivable.curPeriodAmount);
+    const receivableCurrentAmount = DecimalCompatibility.numberToDecimal(
+      accountReceivable.curPeriodAmount
+    );
     const salesPreviousAmount = DecimalCompatibility.numberToDecimal(salesTotal.prePeriodAmount);
-    const receivablePreviousAmount = DecimalCompatibility.numberToDecimal(accountReceivable.prePeriodAmount);
-    
+    const receivablePreviousAmount = DecimalCompatibility.numberToDecimal(
+      accountReceivable.prePeriodAmount
+    );
+
     const curDso = DecimalOperations.abs(
       !DecimalOperations.isZero(salesCurrentAmount)
-        ? Math.round(parseFloat(DecimalOperations.multiply(
-            DecimalOperations.divide(receivableCurrentAmount, salesCurrentAmount),
-            DAY_IN_YEAR.toString()
-          ))).toString()
+        ? Math.round(
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(receivableCurrentAmount, salesCurrentAmount),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
         : '0'
     );
     const preDso = DecimalOperations.abs(
       !DecimalOperations.isZero(salesPreviousAmount)
-        ? Math.round(parseFloat(DecimalOperations.multiply(
-            DecimalOperations.divide(receivablePreviousAmount, salesPreviousAmount),
-            DAY_IN_YEAR.toString()
-          ))).toString()
+        ? Math.round(
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(receivablePreviousAmount, salesPreviousAmount),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
         : '0'
     );
     const dso = {
@@ -554,22 +573,28 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const operatingCostCurrentAmount = DecimalCompatibility.numberToDecimal(operatingCost.curPeriodAmount);
+    const operatingCostCurrentAmount = DecimalCompatibility.numberToDecimal(
+      operatingCost.curPeriodAmount
+    );
     const inventoryCurrentAmount = DecimalCompatibility.numberToDecimal(inventory.curPeriodAmount);
     const inventoryPreviousAmount = DecimalCompatibility.numberToDecimal(inventory.prePeriodAmount);
-    
+
     const curInventoryTurnoverDays = DecimalOperations.abs(
       !DecimalOperations.isZero(operatingCostCurrentAmount)
-        ? Math.round(parseFloat(DecimalOperations.multiply(
-            DecimalOperations.divide(
-              DecimalOperations.divide(
-                DecimalOperations.add(inventoryCurrentAmount, inventoryPreviousAmount),
-                '2'
-              ),
-              operatingCostCurrentAmount
-            ),
-            DAY_IN_YEAR.toString()
-          ))).toString()
+        ? Math.round(
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(
+                  DecimalOperations.divide(
+                    DecimalOperations.add(inventoryCurrentAmount, inventoryPreviousAmount),
+                    '2'
+                  ),
+                  operatingCostCurrentAmount
+                ),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
         : '0'
     );
 

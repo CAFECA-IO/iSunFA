@@ -154,8 +154,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
     ) {
       curPeriodContent.forEach((curPeriodAccount, index) => {
         const lastPeriodAccount = prePeriodContent[index];
-        const curPeriodAmount = typeof curPeriodAccount.amount === 'number' 
-          ? curPeriodAccount.amount.toString() 
+        const curPeriodAmount = typeof curPeriodAccount.amount === 'number'
+          ? curPeriodAccount.amount.toString()
           : (curPeriodAccount.amount || '0');
         const prePeriodAmount = typeof lastPeriodAccount.amount === 'number'
           ? lastPeriodAccount.amount.toString()

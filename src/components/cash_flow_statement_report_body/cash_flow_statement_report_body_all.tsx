@@ -696,7 +696,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
             </div>
             <div className="mb-16 flex">
               <div className="mt-18px w-3/5">
-                <LineChart data={lineChartData.map(val => parseFloat(val))} labels={lineChartLabels} />
+                <LineChart data={lineChartData.map((val) => parseFloat(val))} labels={lineChartLabels} />
               </div>
               <div className="mt-18px w-2/5 pl-8 text-xs">
                 <p className="mb-1 text-xs">
@@ -921,7 +921,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={curBarChartData.map(val => parseFloat(val))} labels={['A', 'B', 'C']} />
+            <BarChart data={curBarChartData.map((val) => parseFloat(val))} labels={['A', 'B', 'C']} />
             <div className="ml-11 text-xs font-semibold">
               <p>A: {curBarChartLabels[0]}</p>
               <p>B: {curBarChartLabels[1]}</p>
@@ -942,7 +942,7 @@ const CashFlowStatementReportBodyAll = ({ reportId }: ICashFlowStatementReportBo
               </p>
               <div className="absolute bottom-0 left-0 h-px w-full bg-stroke-neutral-secondary"></div>
             </div>
-            <BarChart data={preBarChartData.map(val => parseFloat(val))} labels={['A', 'B', 'C']} />
+            <BarChart data={preBarChartData.map((val) => parseFloat(val))} labels={['A', 'B', 'C']} />
             <div className="ml-8 text-xs font-semibold">
               <p>A: {preBarChartLabels[0]}</p>
               <p>B: {preBarChartLabels[1]}</p>

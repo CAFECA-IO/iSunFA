@@ -231,7 +231,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   ) : (
     <div className="ml-10">
-      <PieChart data={curAssetLiabilityRatio.map(val => parseFloat(val))} />
+      <PieChart data={curAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -249,7 +249,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   ) : (
     <div className="ml-10">
-      <PieChart data={preAssetLiabilityRatio.map(val => parseFloat(val))} />
+      <PieChart data={preAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -1473,7 +1473,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={curAssetMixRatio.map(val => parseFloat(val))}
+                    data={curAssetMixRatio.map((val) => parseFloat(val))}
                     labels={curAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1518,7 +1518,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={preAssetMixRatio.map(val => parseFloat(val))}
+                    data={preAssetMixRatio.map((val) => parseFloat(val))}
                     labels={preAssetMixLabels}
                     colors={COLORS}
                   />

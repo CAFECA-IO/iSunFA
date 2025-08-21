@@ -201,8 +201,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
             accountAmount = accountAmountDecimal;
             break;
           default:
-            accountAmount = debit !== isAccountDebit 
-              ? DecimalOperations.negate(accountAmountDecimal) 
+            accountAmount = debit !== isAccountDebit
+              ? DecimalOperations.negate(accountAmountDecimal)
               : accountAmountDecimal;
         }
 

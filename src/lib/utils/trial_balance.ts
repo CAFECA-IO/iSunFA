@@ -89,9 +89,18 @@ export function sortTrialBalanceItem(
 const calculateTotal = (items: TrialBalanceItem[]): ITrialBalanceTotal => {
   const result = items.reduce(
     (total, item) => ({
-      beginningCreditAmount: DecimalOperations.add(total.beginningCreditAmount, item.beginningCreditAmount),
-      beginningDebitAmount: DecimalOperations.add(total.beginningDebitAmount, item.beginningDebitAmount),
-      midtermCreditAmount: DecimalOperations.add(total.midtermCreditAmount, item.midtermCreditAmount),
+      beginningCreditAmount: DecimalOperations.add(
+        total.beginningCreditAmount,
+        item.beginningCreditAmount
+      ),
+      beginningDebitAmount: DecimalOperations.add(
+        total.beginningDebitAmount,
+        item.beginningDebitAmount
+      ),
+      midtermCreditAmount: DecimalOperations.add(
+        total.midtermCreditAmount,
+        item.midtermCreditAmount
+      ),
       midtermDebitAmount: DecimalOperations.add(total.midtermDebitAmount, item.midtermDebitAmount),
       endingCreditAmount: DecimalOperations.add(total.endingCreditAmount, item.endingCreditAmount),
       endingDebitAmount: DecimalOperations.add(total.endingDebitAmount, item.endingDebitAmount),
@@ -248,20 +257,18 @@ export function mergeLineItems(
 
   lineItems.forEach((item) => {
     if (!map[item.accountId]) {
-      const itemAmount =
-        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       map[item.accountId] = {
         ...item,
         debitAmount: item.debit ? itemAmount : '0',
         creditAmount: !item.debit ? itemAmount : '0',
       };
     } else {
-      const itemAmount =
-        typeof item.amount === 'string' ? item.amount : item.amount.toString();
-      map[item.accountId].debitAmount = item.debit 
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      map[item.accountId].debitAmount = item.debit
         ? DecimalOperations.add(map[item.accountId].debitAmount, itemAmount)
         : map[item.accountId].debitAmount;
-      map[item.accountId].creditAmount = !item.debit 
+      map[item.accountId].creditAmount = !item.debit
         ? DecimalOperations.add(map[item.accountId].creditAmount, itemAmount)
         : map[item.accountId].creditAmount;
     }
@@ -287,17 +294,21 @@ export function mergeLineItemsByAccount(
 
     if (existingSummary) {
       // Info: (20250102 - Shirley) 如果該科目已存在，則加總金額
-      const itemAmount =
-        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       if (item.debit) {
-        existingSummary.debitAmount = DecimalOperations.add(existingSummary.debitAmount, itemAmount);
+        existingSummary.debitAmount = DecimalOperations.add(
+          existingSummary.debitAmount,
+          itemAmount
+        );
       } else {
-        existingSummary.creditAmount = DecimalOperations.add(existingSummary.creditAmount, itemAmount);
+        existingSummary.creditAmount = DecimalOperations.add(
+          existingSummary.creditAmount,
+          itemAmount
+        );
       }
     } else {
       // Info: (20250102 - Shirley) 如果該科目不存在，則建立新的紀錄
-      const itemAmount =
-        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       accountSummary.set(item.accountId, {
         ...item,
         // accountId: item.accountId,
@@ -402,10 +413,19 @@ export function calculateEndingBalance(
     const existingItem = endingMap.get(item.accountId);
     if (existingItem) {
       existingItem.debitAmount = DecimalOperations.add(existingItem.debitAmount, item.debitAmount);
-      existingItem.creditAmount = DecimalOperations.add(existingItem.creditAmount, item.creditAmount);
-      const debitCredit = DecimalOperations.subtract(existingItem.debitAmount, existingItem.creditAmount);
+      existingItem.creditAmount = DecimalOperations.add(
+        existingItem.creditAmount,
+        item.creditAmount
+      );
+      const debitCredit = DecimalOperations.subtract(
+        existingItem.debitAmount,
+        existingItem.creditAmount
+      );
       existingItem.amount = new Prisma.Decimal(DecimalOperations.abs(debitCredit));
-      existingItem.debit = DecimalOperations.isGreaterThan(existingItem.debitAmount, existingItem.creditAmount);
+      existingItem.debit = DecimalOperations.isGreaterThan(
+        existingItem.debitAmount,
+        existingItem.creditAmount
+      );
     } else {
       endingMap.set(item.accountId, item);
     }
@@ -437,7 +457,10 @@ export function convertToTrialBalanceItem(
   const ending = calculateEndingBalance(beginning, midterm);
 
   // Info: (20250102 - Shirley) 篩選掉借貸方金額都為 0 的科目
-  const filteredEnding = ending.filter((item) => !DecimalOperations.isZero(item.debitAmount) || !DecimalOperations.isZero(item.creditAmount));
+  const filteredEnding = ending.filter(
+    (item) =>
+      !DecimalOperations.isZero(item.debitAmount) || !DecimalOperations.isZero(item.creditAmount)
+  );
 
   return {
     beginning,
@@ -458,12 +481,16 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
 }): ITrialBalancePayload {
   // Info: (20250102 - Shirley) 計算總額
   const total = {
-    beginningCreditAmount: DecimalOperations.sum(lineItems.beginning.map(item => item.creditAmount)),
-    beginningDebitAmount: DecimalOperations.sum(lineItems.beginning.map(item => item.debitAmount)),
-    midtermCreditAmount: DecimalOperations.sum(lineItems.midterm.map(item => item.creditAmount)),
-    midtermDebitAmount: DecimalOperations.sum(lineItems.midterm.map(item => item.debitAmount)),
-    endingCreditAmount: DecimalOperations.sum(lineItems.ending.map(item => item.creditAmount)),
-    endingDebitAmount: DecimalOperations.sum(lineItems.ending.map(item => item.debitAmount)),
+    beginningCreditAmount: DecimalOperations.sum(
+      lineItems.beginning.map((item) => item.creditAmount)
+    ),
+    beginningDebitAmount: DecimalOperations.sum(
+      lineItems.beginning.map((item) => item.debitAmount)
+    ),
+    midtermCreditAmount: DecimalOperations.sum(lineItems.midterm.map((item) => item.creditAmount)),
+    midtermDebitAmount: DecimalOperations.sum(lineItems.midterm.map((item) => item.debitAmount)),
+    endingCreditAmount: DecimalOperations.sum(lineItems.ending.map((item) => item.creditAmount)),
+    endingDebitAmount: DecimalOperations.sum(lineItems.ending.map((item) => item.debitAmount)),
     createAt: Math.floor(Date.now() / 1000),
     updateAt: Math.floor(Date.now() / 1000),
   };
@@ -515,12 +542,16 @@ export const aggregateAmounts = (
     let currentDebit = '0';
     let currentCredit = '0';
     if (account.children.length > 0) {
-      currentDebit = DecimalOperations.sum(updatedChildren.map(child => child.debitAmount.toString()));
-      currentCredit = DecimalOperations.sum(updatedChildren.map(child => child.creditAmount.toString()));
+      currentDebit = DecimalOperations.sum(
+        updatedChildren.map((child) => child.debitAmount.toString())
+      );
+      currentCredit = DecimalOperations.sum(
+        updatedChildren.map((child) => child.creditAmount.toString())
+      );
     } else {
       const currentLineItems = lineItemsForCal.filter((item) => item.accountId === account.id);
-      currentDebit = DecimalOperations.sum(currentLineItems.map(item => item.debitAmount));
-      currentCredit = DecimalOperations.sum(currentLineItems.map(item => item.creditAmount));
+      currentDebit = DecimalOperations.sum(currentLineItems.map((item) => item.debitAmount));
+      currentCredit = DecimalOperations.sum(currentLineItems.map((item) => item.creditAmount));
     }
 
     return {
@@ -631,7 +662,10 @@ export function processLineItems(
   arrWithChildren.forEach((item) => {
     if (item.children && item.children.length > 0) {
       // Info: (20250217 - Shirley) 計算本科目的原始金額
-      const selfAmounts = accountAmounts.get(item.accountId) || { debitAmount: '0', creditAmount: '0' };
+      const selfAmounts = accountAmounts.get(item.accountId) || {
+        debitAmount: '0',
+        creditAmount: '0',
+      };
 
       // Info: (20250217 - Shirley) 建立虛擬科目（保存本科目的原始金額）
       const virtualItem: ILineItemInTrialBalanceItemWithHierarchy = {
@@ -651,8 +685,10 @@ export function processLineItems(
       };
 
       // Info: (20250217 - Shirley) 計算總金額（包含本科目和所有子科目）
-      const childrenDebits = DecimalOperations.sum(item.children.map(child => child.debitAmount));
-      const childrenCredits = DecimalOperations.sum(item.children.map(child => child.creditAmount));
+      const childrenDebits = DecimalOperations.sum(item.children.map((child) => child.debitAmount));
+      const childrenCredits = DecimalOperations.sum(
+        item.children.map((child) => child.creditAmount)
+      );
       const totalDebit = DecimalOperations.add(selfAmounts.debitAmount, childrenDebits);
       const totalCredit = DecimalOperations.add(selfAmounts.creditAmount, childrenCredits);
 
@@ -768,12 +804,30 @@ export function convertToAPIFormat(
     if (item.no.includes('-')) {
       return;
     }
-    total.beginningCreditAmount = DecimalOperations.add(total.beginningCreditAmount, item.beginningCreditAmount);
-    total.beginningDebitAmount = DecimalOperations.add(total.beginningDebitAmount, item.beginningDebitAmount);
-    total.midtermCreditAmount = DecimalOperations.add(total.midtermCreditAmount, item.midtermCreditAmount);
-    total.midtermDebitAmount = DecimalOperations.add(total.midtermDebitAmount, item.midtermDebitAmount);
-    total.endingCreditAmount = DecimalOperations.add(total.endingCreditAmount, item.endingCreditAmount);
-    total.endingDebitAmount = DecimalOperations.add(total.endingDebitAmount, item.endingDebitAmount);
+    total.beginningCreditAmount = DecimalOperations.add(
+      total.beginningCreditAmount,
+      item.beginningCreditAmount
+    );
+    total.beginningDebitAmount = DecimalOperations.add(
+      total.beginningDebitAmount,
+      item.beginningDebitAmount
+    );
+    total.midtermCreditAmount = DecimalOperations.add(
+      total.midtermCreditAmount,
+      item.midtermCreditAmount
+    );
+    total.midtermDebitAmount = DecimalOperations.add(
+      total.midtermDebitAmount,
+      item.midtermDebitAmount
+    );
+    total.endingCreditAmount = DecimalOperations.add(
+      total.endingCreditAmount,
+      item.endingCreditAmount
+    );
+    total.endingDebitAmount = DecimalOperations.add(
+      total.endingDebitAmount,
+      item.endingDebitAmount
+    );
   });
 
   const itemsWithSubAccounts = items.map((item) => {

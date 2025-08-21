@@ -283,7 +283,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   ) : (
     <div>
-      <PieChart data={curAssetLiabilityRatio.map(val => parseFloat(val))} />
+      <PieChart data={curAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -301,7 +301,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     </div>
   ) : (
     <div>
-      <PieChart data={preAssetLiabilityRatio.map(val => parseFloat(val))} />
+      <PieChart data={preAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -1047,7 +1047,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={curAssetMixRatio.map(val => parseFloat(val))}
+                    data={curAssetMixRatio.map((val) => parseFloat(val))}
                     labels={curAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1094,7 +1094,7 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={preAssetMixRatio.map(val => parseFloat(val))}
+                    data={preAssetMixRatio.map((val) => parseFloat(val))}
                     labels={preAssetMixLabels}
                     colors={COLORS}
                   />

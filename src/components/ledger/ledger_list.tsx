@@ -10,7 +10,6 @@ import { useReactToPrint } from 'react-to-print';
 import { useUserCtx } from '@/contexts/user_context';
 import { CurrencyType } from '@/constants/currency';
 import loggerFront from '@/lib/utils/logger_front';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
