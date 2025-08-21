@@ -127,10 +127,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
       expect(firstItem.id).toBeDefined();
       expect(firstItem.no).toBeDefined();
       expect(firstItem.accountingTitle).toBeDefined();
-      expect(typeof firstItem.beginningCreditAmount).toBe('number');
-      expect(typeof firstItem.beginningDebitAmount).toBe('number');
-      expect(typeof firstItem.endingCreditAmount).toBe('number');
-      expect(typeof firstItem.endingDebitAmount).toBe('number');
+      expect(typeof firstItem.beginningCreditAmount).toBe('string');
+      expect(typeof firstItem.beginningDebitAmount).toBe('string');
+      expect(typeof firstItem.endingCreditAmount).toBe('string');
+      expect(typeof firstItem.endingDebitAmount).toBe('string');
     });
   });
 
@@ -192,10 +192,10 @@ describe('Integration Test - Trial Balance Integration (Test Case 8.3)', () => {
         expect(firstItem.id).toBeDefined();
         expect(firstItem.no).toBeDefined();
         expect(firstItem.accountingTitle).toBeDefined();
-        expect(typeof firstItem.beginningCreditAmount).toBe('number');
-        expect(typeof firstItem.beginningDebitAmount).toBe('number');
-        expect(typeof firstItem.endingCreditAmount).toBe('number');
-        expect(typeof firstItem.endingDebitAmount).toBe('number');
+        expect(typeof firstItem.beginningCreditAmount).toBe('string');
+        expect(typeof firstItem.beginningDebitAmount).toBe('string');
+        expect(typeof firstItem.endingCreditAmount).toBe('string');
+        expect(typeof firstItem.endingDebitAmount).toBe('string');
       }
 
       // Info: (20250721 - Shirley) Trial balance should have proper structure
