@@ -2,6 +2,7 @@ import React from 'react';
 import { CashFlowStatementReport, FinancialReportItem } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface DownloadCashFlowStatementProps {
   reportFinancial: CashFlowStatementReport | null;
@@ -182,18 +183,18 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
                   {t(`reports:ACCOUNTING_ACCOUNT.${value.name}`)}
                 </td>
                 <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {value.curPeriodAmount === 0
+                  {DecimalOperations.isZero(value.curPeriodAmount ?? '0')
                     ? '-'
-                    : value.curPeriodAmount < 0
-                      ? `(${Math.abs(value.curPeriodAmount).toLocaleString()})`
-                      : value.curPeriodAmount.toLocaleString()}
+                    : DecimalOperations.isNegative(value.curPeriodAmount ?? '0')
+                      ? `(${Math.abs(parseFloat(value.curPeriodAmount ?? '0')).toLocaleString()})`
+                      : parseFloat(value.curPeriodAmount ?? '0').toLocaleString()}
                 </td>
                 <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm">
-                  {value.prePeriodAmount === 0
+                  {DecimalOperations.isZero(value.prePeriodAmount ?? '0')
                     ? '-'
-                    : value.prePeriodAmount < 0
-                      ? `(${Math.abs(value.prePeriodAmount).toLocaleString()})`
-                      : value.prePeriodAmount.toLocaleString()}
+                    : DecimalOperations.isNegative(value.prePeriodAmount ?? '0')
+                      ? `(${Math.abs(parseFloat(value.prePeriodAmount ?? '0')).toLocaleString()})`
+                      : parseFloat(value.prePeriodAmount ?? '0').toLocaleString()}
                 </td>
               </tr>
             ))}
@@ -286,22 +287,22 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
               {t('reports:REPORTS.CASH_INFLOWS_FROM_OPERATING')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow ?? '0')).toLocaleString()})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[
                       currentYear
-                    ]?.operatingCashFlow.toLocaleString()}
+                    ]?.operatingCashFlow ?? '0').toLocaleString()}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[
                       previousYear
-                    ]?.operatingCashFlow.toLocaleString()}
+                    ]?.operatingCashFlow ?? '0').toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -309,18 +310,18 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
               {t('reports:REPORTS.PROPERTY_PLANT_EQUIPMENT')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe.toLocaleString()}
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe ?? '0').toLocaleString()}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe.toLocaleString()}
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe ?? '0').toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -328,22 +329,22 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
               {t('reports:REPORTS.EXPENDITURES_ON_INTANGIBLE_ASSETS')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[
                       currentYear
-                    ]?.intangibleAsset.toLocaleString()}
+                    ]?.intangibleAsset ?? '0').toLocaleString()}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[
                       previousYear
-                    ]?.intangibleAsset.toLocaleString()}
+                    ]?.intangibleAsset ?? '0').toLocaleString()}
             </td>
           </tr>
           <tr>
@@ -351,18 +352,18 @@ const DownloadCashFlowStatement: React.FC<DownloadCashFlowStatementProps> = ({
               {t('reports:REPORTS.AVAILABLE_CASH_FLOW')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash.toLocaleString()}
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash ?? '0').toLocaleString()}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash === 0
+              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash ?? '0')
                 ? '-'
-                : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash < 0
-                  ? `(${Math.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash).toLocaleString()})`
-                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash.toLocaleString()}
+                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash ?? '0')
+                  ? `(${Math.abs(parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash ?? '0')).toLocaleString()})`
+                  : parseFloat(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash ?? '0').toLocaleString()}
             </td>
           </tr>
         </tbody>
