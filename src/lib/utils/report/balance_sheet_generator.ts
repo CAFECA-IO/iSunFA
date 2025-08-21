@@ -18,10 +18,10 @@ import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 import { Prisma } from '@prisma/client';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
@@ -385,9 +385,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     }
 
     return {
-      assetPercentage,
-      liabilityPercentage,
-      equityPercentage,
+      assetPercentage: assetPercentage.toString(),
+      liabilityPercentage: liabilityPercentage.toString(),
+      equityPercentage: equityPercentage.toString(),
     };
   }
 
@@ -451,8 +451,8 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
         )
       )
     ).slice(0, 5);
-    const curSurplus = 100 - curTop5Asset.reduce((acc, cur) => acc + cur.curPeriodPercentage, 0);
-    const preSurplus = 100 - preTop5Asset.reduce((acc, cur) => acc + cur.prePeriodPercentage, 0);
+    const curSurplus = DecimalOperations.subtract('100', curTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.curPeriodPercentage), '0'));
+    const preSurplus = DecimalOperations.subtract('100', preTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.prePeriodPercentage), '0'));
 
     const curPercentage = curTop5Asset.map((account) => account.curPeriodPercentage);
     const curAssetName = curTop5Asset.map((account) => account.name);
@@ -460,12 +460,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const prePercentage = preTop5Asset.map((account) => account.prePeriodPercentage);
     const preAssetName = preTop5Asset.map((account) => account.name);
 
-    if (curSurplus > 0) {
+    if (DecimalOperations.isPositive(curSurplus)) {
       curPercentage.push(curSurplus);
       curAssetName.push('其他');
     }
 
-    if (preSurplus > 0) {
+    if (DecimalOperations.isPositive(preSurplus)) {
       prePercentage.push(preSurplus);
       preAssetName.push('其他');
     }

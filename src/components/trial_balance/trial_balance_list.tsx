@@ -69,12 +69,12 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       return {
         currencyAlias: CurrencyType.TWD,
         total: {
-          beginningCreditAmount: 0,
-          beginningDebitAmount: 0,
-          midtermCreditAmount: 0,
-          midtermDebitAmount: 0,
-          endingCreditAmount: 0,
-          endingDebitAmount: 0,
+          beginningCreditAmount: '0',
+          beginningDebitAmount: '0',
+          midtermCreditAmount: '0',
+          midtermDebitAmount: '0',
+          endingCreditAmount: '0',
+          endingDebitAmount: '0',
           createAt: 0,
           updateAt: 0,
         },
@@ -634,37 +634,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.beginningDebitAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.beginningDebitAmount ?? '0'))}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.beginningCreditAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.beginningCreditAmount ?? '0'))}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.midtermDebitAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.midtermDebitAmount ?? '0'))}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.midtermCreditAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.midtermCreditAmount ?? '0'))}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.endingDebitAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.endingDebitAmount ?? '0'))}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.endingCreditAmount ?? 0)}
+                  {formatNumber(parseFloat(totalData?.endingCreditAmount ?? '0'))}
                 </div>
               </div>
             </div>

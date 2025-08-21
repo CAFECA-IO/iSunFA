@@ -526,7 +526,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.name,
-      amount: startCashBalance,
+      amount: parseFloat(startCashBalance),
       indent: 0,
       percentage: null,
       children: [],
@@ -536,7 +536,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.name,
-      amount: endCashBalance,
+      amount: parseFloat(endCashBalance),
       indent: 0,
       percentage: null,
       children: [],
@@ -627,16 +627,16 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
     const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
-    const ratio: { [key: string]: number } = {};
-    const amortizationDepreciation: { [key: string]: number } = {};
+    const ratio: { [key: string]: string } = {};
+    const amortizationDepreciation: { [key: string]: string } = {};
 
     years.forEach((year) => {
-      ratio[year] = 0;
-      amortizationDepreciation[year] = 0;
+      ratio[year] = '0';
+      amortizationDepreciation[year] = '0';
     });
 
-    let curDepreciateAndAmortize = 0;
-    let preDepreciateAndAmortize = 0;
+    let curDepreciateAndAmortize = '0';
+    let preDepreciateAndAmortize = '0';
     if (
       beforeIncomeTax &&
       salesDepreciation &&
@@ -647,34 +647,64 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       tax &&
       operatingIncomeCashFlow
     ) {
-      curDepreciateAndAmortize =
-        salesDepreciation.curPeriodAmount +
-        salesAmortization.curPeriodAmount +
-        manageDepreciation.curPeriodAmount +
-        manageAmortization.curPeriodAmount +
-        rdDepreciation.curPeriodAmount;
+      curDepreciateAndAmortize = DecimalOperations.add(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            DecimalOperations.add(
+              salesDepreciation.curPeriodAmount,
+              salesAmortization.curPeriodAmount
+            ),
+            manageDepreciation.curPeriodAmount
+          ),
+          manageAmortization.curPeriodAmount
+        ),
+        rdDepreciation.curPeriodAmount
+      );
 
-      preDepreciateAndAmortize =
-        salesDepreciation.prePeriodAmount +
-        salesAmortization.prePeriodAmount +
-        manageDepreciation.prePeriodAmount +
-        manageAmortization.prePeriodAmount +
-        rdDepreciation.prePeriodAmount;
+      preDepreciateAndAmortize = DecimalOperations.add(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            DecimalOperations.add(
+              salesDepreciation.prePeriodAmount,
+              salesAmortization.prePeriodAmount
+            ),
+            manageDepreciation.prePeriodAmount
+          ),
+          manageAmortization.prePeriodAmount
+        ),
+        rdDepreciation.prePeriodAmount
+      );
 
       amortizationDepreciation[currentYear] = curDepreciateAndAmortize;
       amortizationDepreciation[currentYear - 1] = preDepreciateAndAmortize;
 
       ratio[currentYear] =
-        operatingIncomeCashFlow.curPeriodAmount !== 0
-          ? (beforeIncomeTax.curPeriodAmount + curDepreciateAndAmortize - tax.curPeriodAmount) /
-            operatingIncomeCashFlow.curPeriodAmount
-          : 0;
+        !DecimalOperations.isZero(operatingIncomeCashFlow.curPeriodAmount)
+          ? DecimalOperations.divide(
+              DecimalOperations.subtract(
+                DecimalOperations.add(
+                  beforeIncomeTax.curPeriodAmount,
+                  curDepreciateAndAmortize
+                ),
+                tax.curPeriodAmount
+              ),
+              operatingIncomeCashFlow.curPeriodAmount
+            )
+          : '0';
 
       ratio[currentYear - 1] =
-        operatingIncomeCashFlow.prePeriodAmount !== 0
-          ? (beforeIncomeTax.prePeriodAmount + preDepreciateAndAmortize - tax.prePeriodAmount) /
-            operatingIncomeCashFlow.prePeriodAmount
-          : 0;
+        !DecimalOperations.isZero(operatingIncomeCashFlow.prePeriodAmount)
+          ? DecimalOperations.divide(
+              DecimalOperations.subtract(
+                DecimalOperations.add(
+                  beforeIncomeTax.prePeriodAmount,
+                  preDepreciateAndAmortize
+                ),
+                tax.prePeriodAmount
+              ),
+              operatingIncomeCashFlow.prePeriodAmount
+            )
+          : '0';
     }
     const lineChartDataForRatio = {
       data: Object.values(ratio),
@@ -770,18 +800,42 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
-    const curPPEInvest = -1 * (getPPE.curPeriodAmount - salePPE.curPeriodAmount);
-    const curStrategyInvest =
-      -1 *
-      (getFVPL.curPeriodAmount +
-        getFVOCI.curPeriodAmount +
-        getAmortizedFA.curPeriodAmount -
-        saleFVOCI.curPeriodAmount -
-        saleAmortizedFA.curPeriodAmount -
-        removeHedgeAsset.curPeriodAmount +
-        receiveStockDividend.curPeriodAmount);
-    const curOtherInvest =
-      -1 * (totalInvestCashFlow.curPeriodAmount + curPPEInvest + curStrategyInvest);
+    const curPPEInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.subtract(getPPE.curPeriodAmount, salePPE.curPeriodAmount)
+    );
+    const curStrategyInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.add(
+        DecimalOperations.subtract(
+          DecimalOperations.subtract(
+            DecimalOperations.subtract(
+              DecimalOperations.add(
+                DecimalOperations.add(
+                  getFVPL.curPeriodAmount,
+                  getFVOCI.curPeriodAmount
+                ),
+                getAmortizedFA.curPeriodAmount
+              ),
+              saleFVOCI.curPeriodAmount
+            ),
+            saleAmortizedFA.curPeriodAmount
+          ),
+          removeHedgeAsset.curPeriodAmount
+        ),
+        receiveStockDividend.curPeriodAmount
+      )
+    );
+    const curOtherInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.add(
+        DecimalOperations.add(
+          totalInvestCashFlow.curPeriodAmount,
+          curPPEInvest
+        ),
+        curStrategyInvest
+      )
+    );
 
     const prePPEInvest = -1 * (getPPE.prePeriodAmount - salePPE.prePeriodAmount);
     const preStrategyInvest =

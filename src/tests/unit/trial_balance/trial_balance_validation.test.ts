@@ -93,8 +93,8 @@ const createMockLineItemWithDebitCredit = (
   lineItem: ILineItemSimpleAccountVoucher
 ): ILineItemInTrialBalanceItem => ({
   ...lineItem,
-  debitAmount: lineItem.debit ? lineItem.amount.toNumber() : 0,
-  creditAmount: !lineItem.debit ? lineItem.amount.toNumber() : 0,
+  debitAmount: lineItem.debit ? lineItem.amount.toString() : '0',
+  creditAmount: !lineItem.debit ? lineItem.amount.toString() : '0',
 });
 
 // Info: (20250611 - Shirley) ========== 1. API 核心流程測試 ==========
@@ -282,8 +282,8 @@ describe('Trial Balance API 核心流程', () => {
             id: 1,
             accountId: 1101,
             amount: new Prisma.Decimal(100000),
-            debitAmount: 100000,
-            creditAmount: 0,
+            debitAmount: '100000',
+            creditAmount: '0',
             description: 'Test',
             debit: true,
             voucherId: 1,
@@ -302,8 +302,8 @@ describe('Trial Balance API 核心流程', () => {
             id: 2,
             accountId: 1101,
             amount: new Prisma.Decimal(50000),
-            debitAmount: 50000,
-            creditAmount: 0,
+            debitAmount: '50000',
+            creditAmount: '0',
             description: 'Test',
             debit: true,
             voucherId: 2,
@@ -322,8 +322,8 @@ describe('Trial Balance API 核心流程', () => {
             id: 3,
             accountId: 1101,
             amount: new Prisma.Decimal(150000),
-            debitAmount: 150000,
-            creditAmount: 0,
+            debitAmount: '150000',
+            creditAmount: '0',
             description: 'Test',
             debit: true,
             voucherId: 3,
@@ -375,12 +375,12 @@ describe('Trial Balance API 核心流程', () => {
       id,
       no,
       accountingTitle,
-      beginningDebitAmount: 1000,
-      beginningCreditAmount: 0,
-      midtermDebitAmount: 500,
-      midtermCreditAmount: 0,
-      endingDebitAmount: 1500,
-      endingCreditAmount: 0,
+      beginningDebitAmount: '1000',
+      beginningCreditAmount: '0',
+      midtermDebitAmount: '500',
+      midtermCreditAmount: '0',
+      endingDebitAmount: '1500',
+      endingCreditAmount: '0',
       createAt: Date.now(),
       updateAt: Date.now(),
       subAccounts: [],
@@ -445,12 +445,12 @@ describe('Trial Balance 排序邏輯', () => {
     id,
     no,
     accountingTitle,
-    beginningDebitAmount: beginningDebit,
-    beginningCreditAmount: beginningCredit,
-    midtermDebitAmount: midtermDebit,
-    midtermCreditAmount: midtermCredit,
-    endingDebitAmount: endingDebit,
-    endingCreditAmount: endingCredit,
+    beginningDebitAmount: beginningDebit.toString(),
+    beginningCreditAmount: beginningCredit.toString(),
+    midtermDebitAmount: midtermDebit.toString(),
+    midtermCreditAmount: midtermCredit.toString(),
+    endingDebitAmount: endingDebit.toString(),
+    endingCreditAmount: endingCredit.toString(),
     createAt: Date.now(),
     updateAt: Date.now(),
     subAccounts: [],
@@ -504,7 +504,7 @@ describe('Trial Balance 排序邏輯', () => {
 
       expect(result).toHaveLength(3);
       // Info: (20250611 - Shirley) 第一個排序條件應生效
-      expect(result[0].beginningDebitAmount).toBeGreaterThanOrEqual(result[1].beginningDebitAmount);
+      expect(parseFloat(result[0].beginningDebitAmount)).toBeGreaterThanOrEqual(parseFloat(result[1].beginningDebitAmount));
     });
 
     it('應該正確處理相同金額時的次要排序', () => {
