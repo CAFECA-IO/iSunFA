@@ -13,6 +13,7 @@ import { ReportLanguagesKey } from '@/interfaces/report_language';
 import { ReportType } from '@/constants/report';
 import Image from 'next/image';
 import DownloadButton from '@/components/button/download_button';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import PrintButton from '@/components/button/print_button';
 import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/button/button';
@@ -216,8 +217,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
 
   // Info: (20240730 - Anna) 格式化數字為千分位 - Updated for decimal accounting
   const formatNumber = (num: number | string) => {
-    const numValue = typeof num === 'string' ? parseFloat(num) : num;
-    return numValue.toLocaleString();
+    return DecimalOperations.format(num);
   };
 
   // Info: (20240816 - Anna) 轉換和格式化日期

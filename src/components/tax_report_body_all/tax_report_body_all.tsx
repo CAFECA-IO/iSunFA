@@ -7,6 +7,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useTranslation } from 'next-i18next';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface ITaxReportBodyAllProps {
   reportId: string;
@@ -75,8 +76,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
 
   // Info: (20240730 - Anna) 格式化數字為千分位 - Updated for decimal accounting
   const formatNumber = (num: number | string) => {
-    const numValue = typeof num === 'string' ? parseFloat(num) : num;
-    return numValue.toLocaleString();
+    return DecimalOperations.format(num);
   };
 
   // Info: (20240816 - Anna) 轉換和格式化日期
