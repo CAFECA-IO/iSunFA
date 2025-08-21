@@ -160,8 +160,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
         const prePeriodAmount = typeof lastPeriodAccount.amount === 'number'
           ? lastPeriodAccount.amount.toString()
           : (lastPeriodAccount.amount || '0');
-        const curPeriodAmountString = numberBeDashIfFalsy(parseFloat(curPeriodAmount));
-        const prePeriodAmountString = numberBeDashIfFalsy(parseFloat(prePeriodAmount));
+        const curPeriodAmountString = numberBeDashIfFalsy(curPeriodAmount);
+        const prePeriodAmountString = numberBeDashIfFalsy(prePeriodAmount);
         const curPeriodPercentage = curPeriodAccount?.percentage
           ? Math.round(curPeriodAccount.percentage * 100).toString()
           : '0';
@@ -174,8 +174,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
           lastPeriodAccount.children
         );
 
-        const curPeriodPercentageString = numberBeDashIfFalsy(parseFloat(curPeriodPercentage));
-        const prePeriodPercentageString = numberBeDashIfFalsy(parseFloat(prePeriodPercentage));
+        const curPeriodPercentageString = numberBeDashIfFalsy(curPeriodPercentage);
+        const prePeriodPercentageString = numberBeDashIfFalsy(prePeriodPercentage);
         const accountReadyForFrontend: IAccountReadyForFrontend = {
           accountId: curPeriodAccount.accountId,
           code: curPeriodAccount.code,
