@@ -10,6 +10,7 @@ import { useReactToPrint } from 'react-to-print';
 import { useUserCtx } from '@/contexts/user_context';
 import { CurrencyType } from '@/constants/currency';
 import loggerFront from '@/lib/utils/logger_front';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
@@ -50,8 +51,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       return {
         currencyAlias: CurrencyType.TWD,
         total: {
-          totalDebitAmount: 0,
-          totalCreditAmount: 0,
+          totalDebitAmount: '0',
+          totalCreditAmount: '0',
           createdAt: 0,
           updatedAt: 0,
         },
@@ -167,9 +168,9 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
         key={id}
         ledger={{
           ...ledger,
-          creditAmount,
-          debitAmount,
-          balance,
+          creditAmount: parseFloat(creditAmount || '0'),
+          debitAmount: parseFloat(debitAmount || '0'),
+          balance: parseFloat(balance || '0'),
           // Info: (20241224 - Anna) 將字串轉換為整數
           voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
         }}
@@ -258,13 +259,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
               {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {formatNumber(total.totalDebitAmount)}
+              {formatNumber(parseFloat(total.totalDebitAmount || '0'))}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
               {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {formatNumber(total.totalCreditAmount)}
+              {formatNumber(parseFloat(total.totalCreditAmount || '0'))}
             </div>
           </div>
         </div>

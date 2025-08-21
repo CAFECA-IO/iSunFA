@@ -727,9 +727,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       result[year] = 0;
     });
 
-    result[currentYear] = accountReadyForFrontend?.curPeriodAmount || 0;
+    result[currentYear] = parseFloat(accountReadyForFrontend?.curPeriodAmount || '0');
 
-    result[currentYear - 1] = accountReadyForFrontend?.prePeriodAmount || 0;
+    result[currentYear - 1] = parseFloat(accountReadyForFrontend?.prePeriodAmount || '0');
     return result;
   }
 
@@ -837,18 +837,36 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       )
     );
 
-    const prePPEInvest = -1 * (getPPE.prePeriodAmount - salePPE.prePeriodAmount);
+    const prePPEInvest = -1 * parseFloat(DecimalOperations.subtract(getPPE.prePeriodAmount || '0', salePPE.prePeriodAmount || '0'));
     const preStrategyInvest =
       -1 *
-      (getFVPL.prePeriodAmount +
-        getFVOCI.prePeriodAmount +
-        getAmortizedFA.prePeriodAmount -
-        saleFVOCI.prePeriodAmount -
-        saleAmortizedFA.prePeriodAmount -
-        removeHedgeAsset.prePeriodAmount +
-        receiveStockDividend.prePeriodAmount);
+      parseFloat(DecimalOperations.subtract(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            getFVPL.prePeriodAmount || '0',
+            getFVOCI.prePeriodAmount || '0'
+          ),
+          DecimalOperations.add(
+            getAmortizedFA.prePeriodAmount || '0',
+            receiveStockDividend.prePeriodAmount || '0'
+          )
+        ),
+        DecimalOperations.add(
+          DecimalOperations.add(
+            saleFVOCI.prePeriodAmount || '0',
+            saleAmortizedFA.prePeriodAmount || '0'
+          ),
+          removeHedgeAsset.prePeriodAmount || '0'
+        )
+      ));
     const preOtherInvest =
-      -1 * (totalInvestCashFlow.prePeriodAmount + prePPEInvest + preStrategyInvest);
+      -1 * parseFloat(DecimalOperations.add(
+        DecimalOperations.add(
+          totalInvestCashFlow.prePeriodAmount || '0',
+          prePPEInvest.toString()
+        ),
+        preStrategyInvest.toString()
+      ));
 
     const labels = ['不動產', '策略性投資項目', '其他'];
 
@@ -885,18 +903,32 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     // Info: (20240730 - Anna) get本來就是負的
-    const curFreeCash =
-      operatingCashFlow.curPeriodAmount +
-      getPPE.curPeriodAmount -
-      salePPE.curPeriodAmount +
-      getIntangibleAsset.curPeriodAmount -
-      saleIntangibleAsset.curPeriodAmount;
-    const preFreeCash =
-      operatingCashFlow.prePeriodAmount +
-      getPPE.prePeriodAmount -
-      salePPE.prePeriodAmount +
-      getIntangibleAsset.prePeriodAmount -
-      saleIntangibleAsset.prePeriodAmount;
+    const curFreeCash = parseFloat(DecimalOperations.subtract(
+      DecimalOperations.add(
+        DecimalOperations.add(
+          operatingCashFlow.curPeriodAmount || '0',
+          getPPE.curPeriodAmount || '0'
+        ),
+        getIntangibleAsset.curPeriodAmount || '0'
+      ),
+      DecimalOperations.add(
+        salePPE.curPeriodAmount || '0',
+        saleIntangibleAsset.curPeriodAmount || '0'
+      )
+    ));
+    const preFreeCash = parseFloat(DecimalOperations.subtract(
+      DecimalOperations.add(
+        DecimalOperations.add(
+          operatingCashFlow.prePeriodAmount || '0',
+          getPPE.prePeriodAmount || '0'
+        ),
+        getIntangibleAsset.prePeriodAmount || '0'
+      ),
+      DecimalOperations.add(
+        salePPE.prePeriodAmount || '0',
+        saleIntangibleAsset.prePeriodAmount || '0'
+      )
+    ));
 
     const curYearString = currentYear.toString();
     const preYearString = (currentYear - 1).toString();
@@ -904,19 +936,19 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return {
       [curYearString]: {
         operatingCashFlow: operatingCashFlow.curPeriodAmount,
-        ppe: Math.abs(getPPE.curPeriodAmount - salePPE.curPeriodAmount),
-        intangibleAsset: Math.abs(
-          getIntangibleAsset.curPeriodAmount - saleIntangibleAsset.curPeriodAmount
-        ),
-        freeCash: curFreeCash,
+        ppe: Math.abs(parseFloat(DecimalOperations.subtract(getPPE.curPeriodAmount || '0', salePPE.curPeriodAmount || '0'))).toString(),
+        intangibleAsset: Math.abs(parseFloat(
+          DecimalOperations.subtract(getIntangibleAsset.curPeriodAmount || '0', saleIntangibleAsset.curPeriodAmount || '0')
+        )).toString(),
+        freeCash: curFreeCash.toString(),
       },
       [preYearString]: {
         operatingCashFlow: operatingCashFlow.prePeriodAmount,
-        ppe: Math.abs(getPPE.prePeriodAmount - salePPE.prePeriodAmount),
-        intangibleAsset: Math.abs(
-          getIntangibleAsset.prePeriodAmount - saleIntangibleAsset.prePeriodAmount
-        ),
-        freeCash: preFreeCash,
+        ppe: Math.abs(parseFloat(DecimalOperations.subtract(getPPE.prePeriodAmount || '0', salePPE.prePeriodAmount || '0'))).toString(),
+        intangibleAsset: Math.abs(parseFloat(
+          DecimalOperations.subtract(getIntangibleAsset.prePeriodAmount || '0', saleIntangibleAsset.prePeriodAmount || '0')
+        )).toString(),
+        freeCash: preFreeCash.toString(),
       },
     };
   }

@@ -73,8 +73,11 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
     getFinancialReport();
   }, [isAuthLoading, reportId, connectedAccountBook]);
 
-  // Info: (20240730 - Anna) 格式化數字為千分位
-  const formatNumber = (num: number) => num.toLocaleString();
+  // Info: (20240730 - Anna) 格式化數字為千分位 - Updated for decimal accounting
+  const formatNumber = (num: number | string) => {
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+    return numValue.toLocaleString();
+  };
 
   // Info: (20240816 - Anna) 轉換和格式化日期
   const createdAt = financialReport?.createdAt ? new Date(financialReport.createdAt * 1000) : null;
