@@ -17,7 +17,6 @@ import {
 import { IFinancialReportInDB, IncomeStatementOtherInfo } from '@/interfaces/report';
 import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
-import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   private eslintEscape = '';
@@ -74,12 +73,12 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage: DecimalCompatibility.decimalToNumber(
+        percentage: parseFloat(
           DecimalOperations.isZero(operatingRevenueAmount)
             ? '0'
             : DecimalOperations.divide(
-                DecimalCompatibility.numberToDecimal(value.accountNode.amount),
-                DecimalCompatibility.numberToDecimal(operatingRevenueAmount)
+                value.accountNode.amount.toString(),
+                operatingRevenueAmount.toString()
               )
         ),
       });

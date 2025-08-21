@@ -16,7 +16,6 @@ import { InvoiceVoucherJournal, Journal, Invoice, Voucher, LineItem } from '@pri
 import { Account } from 'next-auth';
 import { listInvoiceVoucherJournalFor401 } from '@/lib/utils/repo/beta_transition.repo';
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
-import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 /** Info: (20240814 - Jacky) 更新銷項資料
  * Updates the sales result based on the provided journal, category, and sales object.
@@ -39,14 +38,14 @@ function updateSalesResult(
   const updatedSales = sales;
   if (invoiceVoucherJournal.invoice?.taxRatio === 0) {
     if (invoiceVoucherJournal.invoice?.taxRatio === 0) {
-      const priceBeforeTax = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0);
+      const priceBeforeTax = (invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0).toString();
       updatedSales.breakdown[category].zeroTax = DecimalOperations.add(
         updatedSales.breakdown[category].zeroTax,
         priceBeforeTax
       );
     } else {
-      const priceBeforeTax = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0);
-      const taxPrice = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.taxPrice ?? 0);
+      const priceBeforeTax = (invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0).toString();
+      const taxPrice = (invoiceVoucherJournal.invoice?.taxPrice ?? 0).toString();
       updatedSales.breakdown[category].sales = DecimalOperations.add(
         updatedSales.breakdown[category].sales,
         priceBeforeTax
@@ -68,11 +67,9 @@ function updateSalesResult(
   if (invoiceVoucherJournal.voucher?.lineItems) {
     invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
       if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-        const lineItemAmount = DecimalCompatibility.numberToDecimal(
-          typeof lineItem.amount === 'string'
-            ? lineItem.amount
-            : lineItem.amount.toNumber()
-        );
+        const lineItemAmount = typeof lineItem.amount === 'string'
+          ? lineItem.amount
+          : lineItem.amount.toString();
         updatedSales.includeFixedAsset = DecimalOperations.add(
           updatedSales.includeFixedAsset,
           lineItemAmount
@@ -121,12 +118,10 @@ function updatePurchasesResult(
     if (invoiceVoucherJournal.invoice?.deductible) {
       invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          const lineItemAmount = DecimalCompatibility.numberToDecimal(
-            typeof lineItem.amount === 'string'
-              ? lineItem.amount
-              : lineItem.amount.toNumber()
-          );
-          const taxRatio = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.taxRatio ?? 0.05);
+          const lineItemAmount = typeof lineItem.amount === 'string'
+            ? lineItem.amount
+            : lineItem.amount.toString();
+          const taxRatio = (invoiceVoucherJournal.invoice?.taxRatio ?? 0.05).toString();
           fixedAssets.amount = DecimalOperations.add(fixedAssets.amount, lineItemAmount);
           fixedAssets.tax = DecimalOperations.add(
             fixedAssets.tax,
@@ -134,8 +129,8 @@ function updatePurchasesResult(
           );
         }
       });
-      const priceBeforeTax = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice.priceBeforeTax ?? 0);
-      const taxPrice = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.taxPrice ?? 0);
+      const priceBeforeTax = (invoiceVoucherJournal.invoice.priceBeforeTax ?? 0).toString();
+      const taxPrice = (invoiceVoucherJournal.invoice?.taxPrice ?? 0).toString();
       generalPurchases = {
         amount: DecimalOperations.subtract(priceBeforeTax, fixedAssets.amount),
         tax: DecimalOperations.subtract(taxPrice, fixedAssets.tax),
@@ -143,15 +138,13 @@ function updatePurchasesResult(
     } else {
       invoiceVoucherJournal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          const lineItemAmount = DecimalCompatibility.numberToDecimal(
-            typeof lineItem.amount === 'string'
-              ? lineItem.amount
-              : lineItem.amount.toNumber()
-          );
+          const lineItemAmount = typeof lineItem.amount === 'string'
+            ? lineItem.amount
+            : lineItem.amount.toString();
           unDeductible.fixedAssets = DecimalOperations.add(unDeductible.fixedAssets, lineItemAmount);
         }
       });
-      const priceBeforeTax = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0);
+      const priceBeforeTax = (invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0).toString();
       unDeductible.generalPurchases = DecimalOperations.subtract(priceBeforeTax, unDeductible.fixedAssets);
     }
   }
@@ -216,7 +209,7 @@ function updateImportsResult(
 ) {
   const updatedImports = imports;
   if (!invoiceVoucherJournal.invoice?.taxRatio) {
-    const priceBeforeTax = DecimalCompatibility.numberToDecimal(invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0);
+    const priceBeforeTax = (invoiceVoucherJournal.invoice?.priceBeforeTax ?? 0).toString();
     updatedImports[category] = DecimalOperations.add(updatedImports[category], priceBeforeTax);
   }
 }

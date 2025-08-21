@@ -22,7 +22,6 @@ import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 import { Prisma } from '@prisma/client';
-import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class BalanceSheetGenerator extends FinancialReportGenerator {
   private startSecondOfYear: number;
@@ -233,9 +232,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const liabilityAndEquity = accountTree.find((account) => account.code === '3X2X');
 
     if (liabilityAndEquity) {
-      const liabilityAmount = DecimalCompatibility.numberToDecimal(liability?.amount || 0);
-      const equityAmount = DecimalCompatibility.numberToDecimal(equity?.amount || 0);
-      liabilityAndEquity.amount = DecimalCompatibility.decimalToNumber(
+      const liabilityAmount = (liability?.amount || 0).toString();
+      const equityAmount = (equity?.amount || 0).toString();
+      liabilityAndEquity.amount = parseFloat(
         DecimalOperations.add(liabilityAmount, equityAmount)
       );
     }
@@ -275,12 +274,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage: DecimalCompatibility.decimalToNumber(
-          DecimalOperations.isZero(DecimalCompatibility.numberToDecimal(totalAssetAmount))
+        percentage: parseFloat(
+          DecimalOperations.isZero(totalAssetAmount.toString())
             ? '0'
             : DecimalOperations.divide(
-                DecimalCompatibility.numberToDecimal(value.accountNode.amount),
-                DecimalCompatibility.numberToDecimal(totalAssetAmount)
+                value.accountNode.amount.toString(),
+                totalAssetAmount.toString()
               )
         ),
       });
@@ -319,11 +318,11 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getAmount(account: IAccountReadyForFrontend) {
-    const cur = DecimalCompatibility.decimalToNumber(
-      DecimalOperations.abs(DecimalCompatibility.numberToDecimal(account.curPeriodAmount))
+    const cur = parseFloat(
+      DecimalOperations.abs(account.curPeriodAmount.toString())
     );
-    const pre = DecimalCompatibility.decimalToNumber(
-      DecimalOperations.abs(DecimalCompatibility.numberToDecimal(account.prePeriodAmount))
+    const pre = parseFloat(
+      DecimalOperations.abs(account.prePeriodAmount.toString())
     );
 
     return {
@@ -333,9 +332,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static calculateAssetLiabilityRatio(asset: number, liability: number, equity: number) {
-    const assetDecimal = DecimalCompatibility.numberToDecimal(asset);
-    const liabilityDecimal = DecimalCompatibility.numberToDecimal(liability);
-    const equityDecimal = DecimalCompatibility.numberToDecimal(equity);
+    const assetDecimal = asset.toString();
+    const liabilityDecimal = liability.toString();
+    const equityDecimal = equity.toString();
 
     const total = DecimalOperations.add(
       DecimalOperations.add(assetDecimal, liabilityDecimal),
@@ -345,7 +344,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     let assetPercentage = DecimalOperations.isZero(total)
       ? 0
       : Math.round(
-          DecimalCompatibility.decimalToNumber(
+          parseFloat(
             DecimalOperations.multiply(DecimalOperations.divide(assetDecimal, total), '100')
           )
         );
@@ -353,7 +352,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     let liabilityPercentage = DecimalOperations.isZero(total)
       ? 0
       : Math.round(
-          DecimalCompatibility.decimalToNumber(
+          parseFloat(
             DecimalOperations.multiply(DecimalOperations.divide(liabilityDecimal, total), '100')
           )
         );
@@ -361,7 +360,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     let equityPercentage = DecimalOperations.isZero(total)
       ? 0
       : Math.round(
-          DecimalCompatibility.decimalToNumber(
+          parseFloat(
             DecimalOperations.multiply(DecimalOperations.divide(equityDecimal, total), '100')
           )
         );
@@ -371,7 +370,7 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
 
     // Info: (20240731 - Murky) 判斷哪一項是最大的，並將surplus加上去
-    if (DecimalCompatibility.decimalToNumber(total) > 0 && surplus !== 0) {
+    if (parseFloat(total) > 0 && surplus !== 0) {
       if (maxPercentage === assetPercentage) {
         assetPercentage += surplus;
       } else if (maxPercentage === liabilityPercentage) {
@@ -434,20 +433,20 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   static getTopAssetsPercentage(asset: IAccountReadyForFrontend[]) {
     const curTop5Asset = asset
       .sort((a, b) =>
-        DecimalCompatibility.decimalToNumber(
+        parseFloat(
           DecimalOperations.subtract(
-            DecimalCompatibility.numberToDecimal(b.curPeriodAmount),
-            DecimalCompatibility.numberToDecimal(a.curPeriodAmount)
+            b.curPeriodAmount.toString(),
+            a.curPeriodAmount.toString()
           )
         )
       )
       .slice(0, 5);
     const preTop5Asset = asset
       .sort((a, b) =>
-        DecimalCompatibility.decimalToNumber(
+        parseFloat(
           DecimalOperations.subtract(
-            DecimalCompatibility.numberToDecimal(b.prePeriodAmount),
-            DecimalCompatibility.numberToDecimal(a.prePeriodAmount)
+            b.prePeriodAmount.toString(),
+            a.prePeriodAmount.toString()
           )
         )
       )
@@ -524,14 +523,10 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const salesCurrentAmount = DecimalCompatibility.numberToDecimal(salesTotal.curPeriodAmount);
-    const receivableCurrentAmount = DecimalCompatibility.numberToDecimal(
-      accountReceivable.curPeriodAmount
-    );
-    const salesPreviousAmount = DecimalCompatibility.numberToDecimal(salesTotal.prePeriodAmount);
-    const receivablePreviousAmount = DecimalCompatibility.numberToDecimal(
-      accountReceivable.prePeriodAmount
-    );
+    const salesCurrentAmount = salesTotal.curPeriodAmount.toString();
+    const receivableCurrentAmount = accountReceivable.curPeriodAmount.toString();
+    const salesPreviousAmount = salesTotal.prePeriodAmount.toString();
+    const receivablePreviousAmount = accountReceivable.prePeriodAmount.toString();
 
     const curDso = DecimalOperations.abs(
       !DecimalOperations.isZero(salesCurrentAmount)
@@ -573,11 +568,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const operatingCostCurrentAmount = DecimalCompatibility.numberToDecimal(
-      operatingCost.curPeriodAmount
-    );
-    const inventoryCurrentAmount = DecimalCompatibility.numberToDecimal(inventory.curPeriodAmount);
-    const inventoryPreviousAmount = DecimalCompatibility.numberToDecimal(inventory.prePeriodAmount);
+    const operatingCostCurrentAmount = operatingCost.curPeriodAmount.toString();
+    const inventoryCurrentAmount = inventory.curPeriodAmount.toString();
+    const inventoryPreviousAmount = inventory.prePeriodAmount.toString();
 
     const curInventoryTurnoverDays = DecimalOperations.abs(
       !DecimalOperations.isZero(operatingCostCurrentAmount)

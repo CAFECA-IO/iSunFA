@@ -24,7 +24,6 @@ import { timestampInMilliSeconds } from '@/lib/utils/common';
 import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
-import { DecimalCompatibility } from '@/lib/utils/decimal_compatibility';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -179,7 +178,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       );
       childAccountForSheet.forEach((childValue) => {
         if (childValue.indent === level + 1) {
-          const childValueAmount = DecimalCompatibility.numberToDecimal(childValue.amount || 0);
+          const childValueAmount = (childValue.amount || 0).toString();
           childAmount = DecimalOperations.add(childAmount, childValueAmount);
         }
       });
@@ -192,7 +191,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       const account = referenceMap.get(code);
       if (account) {
         const isAccountDebit = account.debit;
-        const accountAmountDecimal = DecimalCompatibility.numberToDecimal(account.amount);
+        const accountAmountDecimal = account.amount.toString();
 
         let accountAmount = '0';
         switch (operatingFunction) {
@@ -207,25 +206,25 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         }
 
         // Note: operatingFunction expects number parameters, so we need compatibility
-        const accNum = DecimalCompatibility.decimalToNumber(acc);
-        const amountNum = DecimalCompatibility.decimalToNumber(accountAmount);
+        const accNum = parseFloat(acc);
+        const amountNum = parseFloat(accountAmount);
         const result = operatingFunction(accNum, amountNum);
-        return DecimalCompatibility.numberToDecimal(result);
+        return result.toString();
       }
       return acc;
     }, '0');
 
     // Note: operatingFunction expects number parameters, so we need compatibility
-    const amountNum = DecimalCompatibility.decimalToNumber(amount);
-    const childAmountNum = DecimalCompatibility.decimalToNumber(childAmount);
+    const amountNum = parseFloat(amount);
+    const childAmountNum = parseFloat(childAmount);
     const finalAmount = operatingFunction(amountNum, childAmountNum);
-    amount = DecimalCompatibility.numberToDecimal(finalAmount);
+    amount = finalAmount.toString();
 
     const accountForSheetDisplay: IAccountForSheetDisplay = {
       accountId: -1,
       code: currentCode,
       name,
-      amount: DecimalCompatibility.decimalToNumber(amount),
+      amount: parseFloat(amount),
       indent: level,
       debit,
       percentage: null,
@@ -255,22 +254,22 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   private static sumIndirectOperatingCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>
   ): number {
-    const operatingAmount = DecimalCompatibility.numberToDecimal(
+    const operatingAmount = (
       indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_GENERATE_FROM_OPERATING.code)?.amount || 0
-    );
-    const dividendAmount = DecimalCompatibility.numberToDecimal(
+    ).toString();
+    const dividendAmount = (
       indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_OUTFLOW_FOR_DIVIDEND.code)?.amount || 0
-    );
-    const taxRefundAmount = DecimalCompatibility.numberToDecimal(
+    ).toString();
+    const taxRefundAmount = (
       indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FROM_TAX_REFUND.code)?.amount || 0
-    );
+    ).toString();
 
     const sum = DecimalOperations.add(
       DecimalOperations.add(operatingAmount, dividendAmount),
       taxRefundAmount
     );
 
-    return DecimalCompatibility.decimalToNumber(sum);
+    return parseFloat(sum);
   }
 
   private async getIndirectOperatingCashFlow(
@@ -333,11 +332,9 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
           return regex.test(lineItem.account.code);
         })
       ) {
-        const lineItemAmount = DecimalCompatibility.numberToDecimal(
-          typeof lineItem.amount === 'string'
-            ? lineItem.amount
-            : lineItem.amount.toNumber()
-        );
+        const lineItemAmount = typeof lineItem.amount === 'string'
+          ? lineItem.amount
+          : lineItem.amount.toString();
         if (lineItem.debit) {
           debitAmount = DecimalOperations.add(debitAmount, lineItemAmount);
         } else {
@@ -392,7 +389,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         accountId: -1,
         code: investCode,
         name: mapping.name,
-        amount: DecimalCompatibility.decimalToNumber(total),
+        amount: parseFloat(total),
         indent: 1,
         percentage: null,
         children: [],
@@ -403,7 +400,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     });
     return {
       reportSheetMapping: result,
-      directCashFlow: DecimalCompatibility.decimalToNumber(directCashFlow),
+      directCashFlow: parseFloat(directCashFlow),
     };
   }
 

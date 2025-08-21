@@ -40,10 +40,10 @@ export function sumLineItemsAndReturnBiggest(
   }
 
   lineItems.forEach((lineItem) => {
-    const amountNumber =
-      typeof lineItem.amount === 'string'
-        ? parseFloat(lineItem.amount)
-        : lineItem.amount.toNumber();
+    const amountString = typeof lineItem.amount === 'string'
+      ? lineItem.amount
+      : lineItem.amount.toString();
+    const amountNumber = parseFloat(amountString);
     if (lineItem.debit) {
       if (amountNumber > debitLargestAmount) {
         debit.id = lineItem.id;
