@@ -75,8 +75,8 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
         percentage: DecimalCompatibility.decimalToNumber(
-          DecimalOperations.isZero(operatingRevenueAmount) 
-            ? '0' 
+          DecimalOperations.isZero(operatingRevenueAmount)
+            ? '0'
             : DecimalOperations.divide(
                 DecimalCompatibility.numberToDecimal(value.accountNode.amount),
                 DecimalCompatibility.numberToDecimal(operatingRevenueAmount)
@@ -140,33 +140,21 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     }
 
     const totalCurrentExpenses = DecimalOperations.add(
-      DecimalOperations.add(
-        totalCost.curPeriodAmount || '0',
-        salesExpense.curPeriodAmount || '0'
-      ),
+      DecimalOperations.add(totalCost.curPeriodAmount || '0', salesExpense.curPeriodAmount || '0'),
       administrativeExpense.curPeriodAmount || '0'
     );
 
     if (!DecimalOperations.isZero(totalCurrentExpenses)) {
-      curRatio = DecimalOperations.divide(
-        revenue.curPeriodAmount || '0',
-        totalCurrentExpenses
-      );
+      curRatio = DecimalOperations.divide(revenue.curPeriodAmount || '0', totalCurrentExpenses);
     }
 
     const totalPreviousExpenses = DecimalOperations.add(
-      DecimalOperations.add(
-        totalCost.prePeriodAmount || '0',
-        salesExpense.prePeriodAmount || '0'
-      ),
+      DecimalOperations.add(totalCost.prePeriodAmount || '0', salesExpense.prePeriodAmount || '0'),
       administrativeExpense.prePeriodAmount || '0'
     );
 
     if (!DecimalOperations.isZero(totalPreviousExpenses)) {
-      preRatio = DecimalOperations.divide(
-        revenue.prePeriodAmount || '0',
-        totalPreviousExpenses
-      );
+      preRatio = DecimalOperations.divide(revenue.prePeriodAmount || '0', totalPreviousExpenses);
     }
 
     return {

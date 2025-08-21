@@ -1,5 +1,6 @@
 import { ReportSheetType } from '@/constants/report';
 import ReportGenerator from '@/lib/utils/report/report_generator';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 import {
   Imports,
@@ -276,25 +277,37 @@ export default class Report401Generator extends ReportGenerator {
   ) {
     const updatedTaxCalculation = taxCalculation;
     updatedTaxCalculation.outputTax = sales.breakdown.total.tax;
-    updatedTaxCalculation.deductibleInputTax =
-      purchases.breakdown.total.generalPurchases.tax + purchases.breakdown.total.fixedAssets.tax;
-    updatedTaxCalculation.previousPeriodOffset = 0; // TODO (20240808 - Jacky): Implement this field in next change
-    updatedTaxCalculation.subtotal =
-      updatedTaxCalculation.deductibleInputTax + updatedTaxCalculation.previousPeriodOffset;
-    const tempTax = updatedTaxCalculation.outputTax - updatedTaxCalculation.subtotal;
-    if (tempTax >= 0) {
+    updatedTaxCalculation.deductibleInputTax = DecimalOperations.add(
+      purchases.breakdown.total.generalPurchases.tax,
+      purchases.breakdown.total.fixedAssets.tax
+    );
+    updatedTaxCalculation.previousPeriodOffset = '0'; // TODO (20240808 - Jacky): Implement this field in next change
+    updatedTaxCalculation.subtotal = DecimalOperations.add(
+      updatedTaxCalculation.deductibleInputTax,
+      updatedTaxCalculation.previousPeriodOffset
+    );
+    const tempTax = DecimalOperations.subtract(
+      updatedTaxCalculation.outputTax,
+      updatedTaxCalculation.subtotal
+    );
+    if (!DecimalOperations.isNegative(tempTax)) {
       updatedTaxCalculation.currentPeriodTaxPayable = tempTax;
     } else {
-      updatedTaxCalculation.currentPeriodFilingOffset = -tempTax;
-      updatedTaxCalculation.refundCeiling =
-        sales.breakdown.total.zeroTax * 0.05 + purchases.breakdown.total.fixedAssets.tax;
-      updatedTaxCalculation.currentPeriodRefundableTax = Math.min(
+      updatedTaxCalculation.currentPeriodFilingOffset = DecimalOperations.negate(tempTax);
+      updatedTaxCalculation.refundCeiling = DecimalOperations.add(
+        DecimalOperations.multiply(sales.breakdown.total.zeroTax, '0.05'),
+        purchases.breakdown.total.fixedAssets.tax
+      );
+      updatedTaxCalculation.currentPeriodRefundableTax = DecimalOperations.isLessThan(
         updatedTaxCalculation.refundCeiling,
         updatedTaxCalculation.currentPeriodFilingOffset
+      )
+        ? updatedTaxCalculation.refundCeiling
+        : updatedTaxCalculation.currentPeriodFilingOffset;
+      updatedTaxCalculation.currentPeriodAccumulatedOffset = DecimalOperations.subtract(
+        updatedTaxCalculation.currentPeriodFilingOffset,
+        updatedTaxCalculation.currentPeriodRefundableTax
       );
-      updatedTaxCalculation.currentPeriodAccumulatedOffset =
-        updatedTaxCalculation.currentPeriodFilingOffset -
-        updatedTaxCalculation.currentPeriodRefundableTax;
     }
   }
 
@@ -349,64 +362,64 @@ export default class Report401Generator extends ReportGenerator {
     };
     const sales = {
       breakdown: {
-        triplicateAndElectronic: { sales: 0, tax: 0, zeroTax: 0 },
-        cashRegisterTriplicate: { sales: 0, tax: 0, zeroTax: 0 },
-        duplicateAndCashRegister: { sales: 0, tax: 0, zeroTax: 0 },
-        invoiceExempt: { sales: 0, tax: 0, zeroTax: 0 },
-        returnsAndAllowances: { sales: 0, tax: 0, zeroTax: 0 },
-        total: { sales: 0, tax: 0, zeroTax: 0 },
+        triplicateAndElectronic: { sales: '0', tax: '0', zeroTax: '0' },
+        cashRegisterTriplicate: { sales: '0', tax: '0', zeroTax: '0' },
+        duplicateAndCashRegister: { sales: '0', tax: '0', zeroTax: '0' },
+        invoiceExempt: { sales: '0', tax: '0', zeroTax: '0' },
+        returnsAndAllowances: { sales: '0', tax: '0', zeroTax: '0' },
+        total: { sales: '0', tax: '0', zeroTax: '0' },
       },
-      totalTaxableAmount: 0,
-      includeFixedAsset: 0,
+      totalTaxableAmount: '0',
+      includeFixedAsset: '0',
     };
     const purchases = {
       breakdown: {
         uniformInvoice: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         cashRegisterAndElectronic: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         otherTaxableVouchers: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         customsDutyPayment: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         returnsAndAllowances: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         total: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
       },
       totalWithNonDeductible: {
-        generalPurchases: 0,
-        fixedAssets: 0,
+        generalPurchases: '0',
+        fixedAssets: '0',
       },
     };
     const taxCalculation = {
-      outputTax: 0,
-      deductibleInputTax: 0,
-      previousPeriodOffset: 0,
-      subtotal: 0,
-      currentPeriodTaxPayable: 0,
-      currentPeriodFilingOffset: 0,
-      refundCeiling: 0,
-      currentPeriodRefundableTax: 0,
-      currentPeriodAccumulatedOffset: 0,
+      outputTax: '0',
+      deductibleInputTax: '0',
+      previousPeriodOffset: '0',
+      subtotal: '0',
+      currentPeriodTaxPayable: '0',
+      currentPeriodFilingOffset: '0',
+      refundCeiling: '0',
+      currentPeriodRefundableTax: '0',
+      currentPeriodAccumulatedOffset: '0',
     };
     const imports = {
-      taxExemptGoods: 0,
-      foreignServices: 0,
+      taxExemptGoods: '0',
+      foreignServices: '0',
     };
-    const bondedAreaSalesToTaxArea = 0;
+    const bondedAreaSalesToTaxArea = '0';
 
     journalList.forEach((journal) => {
       if (journal.invoice && journal.invoice.type) {
