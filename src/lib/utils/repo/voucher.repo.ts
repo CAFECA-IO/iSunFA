@@ -613,14 +613,12 @@ export async function postVoucherV2({
           const originalLineItem = original.lineItems[0];
           const resultLineItem = originalVoucherInDB.lineItems.find((li) => {
             const target = resultVoucher.lineItems[0];
-            const liAmount =
-              typeof li.amount === 'string' ? parseFloat(li.amount) : li.amount.toNumber();
-            const targetAmount =
-              typeof target.amount === 'number' ? target.amount : parseFloat(String(target.amount));
+            const liAmountString = typeof li.amount === 'string' ? li.amount : li.amount.toString();
+            const targetAmountString = target.amount.toString();
             return (
               li.accountId === target.accountId &&
               li.debit === target.debit &&
-              liAmount === targetAmount &&
+              DecimalOperations.isEqual(liAmountString, targetAmountString) &&
               li.description === target.description
             );
           });
