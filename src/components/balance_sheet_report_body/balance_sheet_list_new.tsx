@@ -153,8 +153,8 @@ const BalanceSheetList: React.FC<BalanceSheetListProps> = ({
     // }, [getBalanceSheetReport, selectedDateRange]); // Info: (20241121 - Anna) 直接依賴 getBalanceSheetReport
   }, [selectedDateRange, getBalanceSheetReport]); // Info: (20241121 - Anna) 簡化依賴
 
-  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => parseFloat(value) === 0);
-  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => parseFloat(value) === 0);
+  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => DecimalOperations.isZero(value));
+  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => DecimalOperations.isZero(value));
 
   // Info: (20241001 - Anna) 管理表格摺疊狀態(項目彙總格式)
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);

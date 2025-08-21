@@ -15,9 +15,9 @@ export interface ILedgerBeta {
   particulars: string;
   no: string;
   accountingTitle: string;
-  creditAmount: number;
-  debitAmount: number;
-  balance: number;
+  creditAmount: string;
+  debitAmount: string;
+  balance: string;
   voucherId: number;
 }
 
