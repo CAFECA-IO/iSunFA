@@ -9,7 +9,7 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
 import { useTranslation } from 'next-i18next';
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
@@ -134,7 +134,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
-  const curPeriodTotal = numberBeDashIfFalsy(
+  const curPeriodTotal = numberBeDashIfFalsyWithoutCommas(
     parseFloat(DecimalOperations.add(
       DecimalOperations.add(
         otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
@@ -143,7 +143,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
       otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || '0'
     ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
-  const prePeriodTotal = numberBeDashIfFalsy(
+  const prePeriodTotal = numberBeDashIfFalsyWithoutCommas(
     parseFloat(DecimalOperations.add(
       DecimalOperations.add(
         otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',

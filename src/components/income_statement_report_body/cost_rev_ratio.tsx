@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
 import { useCurrencyCtx } from '@/contexts/currency_context';
@@ -26,7 +26,7 @@ const CostRevRatio = ({
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
-  const curPeriodTotal = numberBeDashIfFalsy(
+  const curPeriodTotal = numberBeDashIfFalsyWithoutCommas(
     parseFloat(DecimalOperations.add(
       DecimalOperations.add(
         otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
@@ -36,7 +36,7 @@ const CostRevRatio = ({
     ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
 
-  const prePeriodTotal = numberBeDashIfFalsy(
+  const prePeriodTotal = numberBeDashIfFalsyWithoutCommas(
     parseFloat(DecimalOperations.add(
       DecimalOperations.add(
         otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',
