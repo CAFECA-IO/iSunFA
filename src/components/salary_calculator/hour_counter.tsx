@@ -18,8 +18,9 @@ const HourCounter: React.FC<IHourCounterProps> = ({
   maxValue,
   minValue,
 }) => {
-  // Info: (20250806 - Julian) 如果沒有設定最大 / 最小值，則不禁用按鈕
-  const minusDisabled = minValue ? value <= minValue : false;
+  // Info: (20250822 - Julian) 如果沒有設定最小，則只在值為 0 時禁用 minus
+  const minusDisabled = minValue ? value <= minValue : value === 0;
+  // Info: (20250822 - Julian) 如果沒有設定最大則不禁用按鈕
   const plusDisabled = maxValue ? value >= maxValue : false;
 
   const minusClickHandler = () => setValue((prev) => prev - 1);
