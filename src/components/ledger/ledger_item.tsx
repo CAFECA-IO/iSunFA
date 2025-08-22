@@ -1,6 +1,5 @@
 import React from 'react';
 import CalendarIcon from '@/components/calendar_icon/calendar_icon';
-import { numberWithCommas } from '@/lib/utils/common';
 import { FaUpload, FaDownload } from 'react-icons/fa';
 import { FiRepeat } from 'react-icons/fi';
 import { EventType, VoucherType } from '@/constants/account';
@@ -98,18 +97,18 @@ const LedgerItem = React.memo(
     // Info: (20241118 - Anna) 使用傳入的 creditAmount、debitAmount、balance，而非 ledgerItemsData 的遍歷
     const displayedCredit = (
       <p className="font-semibold text-text-neutral-primary">
-        {numberWithCommas(ledger.creditAmount)}
+        {ledger.creditAmount}
       </p>
     );
 
     const displayedDebit = (
       <p className="font-semibold text-text-neutral-primary">
-        {numberWithCommas(ledger.debitAmount)}
+        {ledger.debitAmount}
       </p>
     );
 
     const displayedBalance = (
-      <p className="font-semibold text-text-neutral-primary">{numberWithCommas(ledger.balance)}</p>
+      <p className="font-semibold text-text-neutral-primary">{ledger.balance}</p>
     );
 
     return (

@@ -13,7 +13,6 @@ import {
   ITrialBalanceNote,
   ITrialBalanceTotal,
 } from '@/interfaces/trial_balance';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import Toggle from '@/components/toggle/toggle';
 import { RiCoinsLine } from 'react-icons/ri';
 import { SkeletonList } from '@/components/skeleton/skeleton';
@@ -631,37 +630,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.beginningDebitAmount ?? '0')}
+                  {totalData?.beginningDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.beginningCreditAmount ?? '0')}
+                  {totalData?.beginningCreditAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.midtermDebitAmount ?? '0')}
+                  {totalData?.midtermDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.midtermCreditAmount ?? '0')}
+                  {totalData?.midtermCreditAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.endingDebitAmount ?? '0')}
+                  {totalData?.endingDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {DecimalOperations.format(totalData?.endingCreditAmount ?? '0')}
+                  {totalData?.endingCreditAmount ?? '0'}
                 </div>
               </div>
             </div>

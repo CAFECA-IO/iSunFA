@@ -10,7 +10,6 @@ import { useReactToPrint } from 'react-to-print';
 import { useUserCtx } from '@/contexts/user_context';
 import { CurrencyType } from '@/constants/currency';
 import loggerFront from '@/lib/utils/logger_front';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface LedgerListProps {
   ledgerData: ILedgerPayload | null; // Info: (20241118 - Anna) 接收 API 數據
@@ -257,13 +256,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
               {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {DecimalOperations.format(total.totalDebitAmount || '0')}
+              {total.totalDebitAmount || '0'}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
               {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {DecimalOperations.format(total.totalCreditAmount || '0')}
+              {total.totalCreditAmount || '0'}
             </div>
           </div>
         </div>
