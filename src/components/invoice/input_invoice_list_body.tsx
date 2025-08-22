@@ -78,7 +78,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
   const [certificates, setCertificates] = useState<IInvoiceRC2InputUI[]>([]);
   const [selectedCertificates, setSelectedCertificates] = useState<IInvoiceRC2InputUI[]>([]);
 
-  const [totalCertificatePrice, setTotalCertificatePrice] = useState<number>(0);
+  const [totalCertificatePrice, setTotalCertificatePrice] = useState<string>('0');
   const [count, setCount] = useState<{
     withVoucher: number;
     withoutVoucher: number;
@@ -240,7 +240,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
         };
         // Info: (20250616 - Anna) 因為後端回傳的欄位名稱為 "_sum"，需暫時忽略 ESLint 的 no-underscore-dangle 規則
         // eslint-disable-next-line no-underscore-dangle
-        setTotalCertificatePrice(parseFloat(note.totalPrice?._sum?.totalAmount || '0') || 0);
+        setTotalCertificatePrice(note.totalPrice?._sum?.totalAmount || '0');
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);

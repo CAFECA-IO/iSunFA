@@ -22,7 +22,7 @@ interface SelectionToolbarProps {
   onActiveChange: (active: boolean) => void; // Info: (20240920 - Anna) 當打開狀態變更時的回調函數
   items: ICertificateUI[] | IVoucherBeta[] | IInvoiceRC2InputUI[] | IInvoiceRC2OutputUI[]; // Info: (20240920 - Anna) 項目列表
   subtitle?: string;
-  totalPrice?: number;
+  totalPrice?: string;
   currency?: string;
   selectedCount: number; // Info: (20240920 - Anna) 選中的項目數量
   totalCount: number; // Info: (20240920 - Anna) 總項目數量
@@ -115,7 +115,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             <div className="hidden font-medium text-text-neutral-tertiary tablet:flex">
               <span className="mr-1 whitespace-nowrap">{subtitle} </span>
               <span className="mr-1 text-text-neutral-primary">
-                {numberWithCommas(totalPrice ?? 0)}
+                {numberWithCommas(totalPrice ?? '0')}
               </span>
               <span>{currency}</span>
             </div>
@@ -161,7 +161,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             {subtitle && currency && (
               <div className="mb-6 mt-18px flex font-medium text-text-neutral-tertiary tablet:hidden">
                 <span className="mr-1">{subtitle} </span>
-                <span className="mr-1 text-black">{numberWithCommas(totalPrice ?? 0)}</span>
+                <span className="mr-1 text-black">{numberWithCommas(totalPrice ?? '0')}</span>
                 <span>{currency}</span>
               </div>
             )}

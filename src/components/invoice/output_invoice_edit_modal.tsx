@@ -279,7 +279,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
   const netAmountChangeHandler = (value: string) => {
     handleInputChange('netAmount', value);
-    const numericValue = parseFloat(value);
+    const numericValue = value;
 
     // Info : (20250516 - Anna) 格式 32、格式 34、格式 30、格式 36，稅額永遠為 0
     if (
@@ -293,9 +293,12 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       return;
     }
 
-    const updateTaxPrice = Math.round((numericValue * (formState.taxRate ?? 0)) / 100);
-    handleInputChange('taxAmount', updateTaxPrice.toString());
-    handleInputChange('totalAmount', (numericValue + updateTaxPrice).toString());
+    const updateTaxPrice = DecimalOperations.multiply(
+      DecimalOperations.multiply(numericValue, (formState.taxRate ?? 0).toString()),
+      '0.01'
+    );
+    handleInputChange('taxAmount', updateTaxPrice);
+    handleInputChange('totalAmount', DecimalOperations.add(numericValue, updateTaxPrice));
   };
 
   const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
@@ -304,20 +307,23 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
     // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
     setFormState((prev) => {
-      const netAmount = parseFloat(prev.netAmount?.toString() || '0');
-      const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
+      const netAmount = prev.netAmount?.toString() || '0';
+      const newTaxAmount = DecimalOperations.multiply(
+        DecimalOperations.multiply(netAmount, (normalizedTaxRate ?? 0).toString()),
+        '0.01'
+      );
       const updated = {
         ...prev,
         taxRate: normalizedTaxRate,
         taxType,
-        taxAmount: newTaxAmount.toString(),
-        totalAmount: (netAmount + newTaxAmount).toString(),
+        taxAmount: newTaxAmount,
+        totalAmount: DecimalOperations.add(netAmount, newTaxAmount),
       };
       formStateRef.current = updated;
 
       // Info: (20250514 - Anna) 如果稅額變了就立即儲存
-      const prevTaxAmount = parseFloat(prev.taxAmount?.toString() || '0');
-      if (prevTaxAmount !== newTaxAmount) {
+      const prevTaxAmount = prev.taxAmount?.toString() || '0';
+      if (!DecimalOperations.isEqual(prevTaxAmount, newTaxAmount)) {
         setTimeout(() => {
           handleSave();
         }, 0);
@@ -329,12 +335,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
   const totalAmountChangeHandler = (value: string) => {
     handleInputChange('totalAmount', value);
-    const numericValue = parseFloat(value);
-    const ratio = (100 + (formState.taxRate ?? 0)) / 100;
-    const updatePriceBeforeTax = Math.round(numericValue / ratio);
-    handleInputChange('netAmount', updatePriceBeforeTax.toString());
-    const updateTaxPrice = numericValue - updatePriceBeforeTax;
-    handleInputChange('taxAmount', updateTaxPrice.toString());
+    const numericValue = value;
+    const ratio = DecimalOperations.add('100', (formState.taxRate ?? 0).toString());
+    const ratioDecimal = DecimalOperations.divide(ratio, '100');
+    const updatePriceBeforeTax = DecimalOperations.divide(numericValue, ratioDecimal);
+    handleInputChange('netAmount', updatePriceBeforeTax);
+    const updateTaxPrice = DecimalOperations.subtract(numericValue, updatePriceBeforeTax);
+    handleInputChange('taxAmount', updateTaxPrice);
   };
 
   // Info: (20241206 - Julian) currency alias setting
@@ -426,10 +433,13 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       newFormState.taxType = TaxType.TAXABLE;
 
       if (newFormState.netAmount != null) {
-        const netAmountNum = parseFloat(newFormState.netAmount?.toString() || '0');
-        const computedTax = Math.round((netAmountNum * 5) / 100);
-        newFormState.taxAmount = computedTax.toString();
-        newFormState.totalAmount = (netAmountNum + computedTax).toString();
+        const netAmountNum = newFormState.netAmount?.toString() || '0';
+        const computedTax = DecimalOperations.multiply(
+          DecimalOperations.multiply(netAmountNum, '5'),
+          '0.01'
+        );
+        newFormState.taxAmount = computedTax;
+        newFormState.totalAmount = DecimalOperations.add(netAmountNum, computedTax);
       }
     }
 
@@ -927,6 +937,36 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                               required
                               hasComma
                               className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
+                              // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
+                              // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
+                              triggerWhenChanged={(value: string) => {
+                                const currentTaxAmount = formStateRef.current.taxAmount?.toString() || '0';
+                                const newTaxAmount = value;
+                                if (DecimalOperations.isEqual(newTaxAmount, currentTaxAmount)) return;
+
+                                // Info: (20250516 - Anna) 更新 taxAmount 欄位
+                                handleInputChange('taxAmount', value);
+
+                                // Info: (20250516 - Anna) 最新的稅額 + 原本的淨額，算出總金額，更新 totalAmount 欄位。
+                                const netAmount = formStateRef.current.netAmount?.toString() || '0';
+                                const updatedTotal = DecimalOperations.add(netAmount, newTaxAmount);
+                                handleInputChange('totalAmount', updatedTotal);
+
+                                // Info: (20250516 - Anna) 如果前一次的 debounce timer 還沒觸發，就清掉，避免多次呼叫 handleSave()
+                                if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+                                // Info: (20250516 - Anna) 設一個新的 timer，如果現在的資料與上一次儲存的不同， 1 秒後觸發儲存
+                                debounceTimer.current = setTimeout(() => {
+                                  const isSame = shallowEqual(
+                                    formStateRef.current,
+                                    savedInvoiceRC2Ref.current
+                                  );
+                                  const isValid = validateForm();
+                                  if (!isSame && isValid) {
+                                    handleSave();
+                                  }
+                                }, 1000);
+                              }}
                             />
                             <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                               <Image

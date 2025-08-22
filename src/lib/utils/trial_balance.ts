@@ -58,8 +58,9 @@ export function sortTrialBalanceItem(
             break;
         }
 
-        // Info: (20250820 - Shirley) Use decimal comparison for amount fields
-        if (typeof fieldA === 'string' && typeof fieldB === 'string') {
+        // Info: (20250820 - Shirley) Use decimal comparison for amount fields only
+        const isAmountField = option.sortBy.toString().toLowerCase().includes('amount');
+        if (isAmountField && typeof fieldA === 'string' && typeof fieldB === 'string') {
           const compareResult = DecimalOperations.compare(fieldA, fieldB);
           if (compareResult !== 0) {
             return option.sortOrder === SortOrder.ASC ? compareResult : -compareResult;
