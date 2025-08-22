@@ -721,6 +721,28 @@ export function numberBeDashIfFalsy(num: number | null | undefined | string) {
   return num < 0 ? `(${formattedNumber})` : formattedNumber;
 }
 
+export function numberBeDashIfFalsyWithoutCommas(num: number | null | undefined | string) {
+  if (typeof num === 'string') {
+    // Info: (20250821 - Claude) For string input, preserve all digits but handle negatives with parentheses
+    const numValue = parseFloat(num);
+    if (Number.isNaN(numValue)) {
+      return num; // Return original string if not a valid number
+    }
+    if (numValue < 0.1 && numValue > -0.1) {
+      return '-';
+    }
+    return numValue < 0 ? `(${Math.abs(numValue).toString()})` : num;
+  }
+
+  if (num === null || num === undefined || (num < 0.1 && num > -0.1)) {
+    return '-';
+  }
+
+  const absoluteValue = Math.abs(num).toString();
+
+  return num < 0 ? `(${absoluteValue})` : absoluteValue;
+}
+
 /**
  * Info: (20241029 - Murky)
  * @describe 給定startDateInSecond和endDateInSecond，回傳這段時間內每個月的最後一秒, 包含endDate的月份

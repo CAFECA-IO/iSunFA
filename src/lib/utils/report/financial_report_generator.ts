@@ -16,7 +16,7 @@ import {
   IFinancialReportInDB,
   IncomeStatementOtherInfo,
 } from '@/interfaces/report';
-import { getTimestampOfSameDateOfLastYear, numberBeDashIfFalsy } from '@/lib/utils/common';
+import { getTimestampOfSameDateOfLastYear, numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 
 export default abstract class FinancialReportGenerator extends ReportGenerator {
   protected lastPeriodStartDateInSecond: number;
@@ -160,8 +160,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
         const prePeriodAmount = typeof lastPeriodAccount.amount === 'number'
           ? lastPeriodAccount.amount.toString()
           : (lastPeriodAccount.amount || '0');
-        const curPeriodAmountString = numberBeDashIfFalsy(curPeriodAmount);
-        const prePeriodAmountString = numberBeDashIfFalsy(prePeriodAmount);
+        const curPeriodAmountString = numberBeDashIfFalsyWithoutCommas(curPeriodAmount);
+        const prePeriodAmountString = numberBeDashIfFalsyWithoutCommas(prePeriodAmount);
         const curPeriodPercentage = curPeriodAccount?.percentage
           ? Math.round(curPeriodAccount.percentage * 100).toString()
           : '0';
@@ -174,8 +174,8 @@ export default abstract class FinancialReportGenerator extends ReportGenerator {
           lastPeriodAccount.children
         );
 
-        const curPeriodPercentageString = numberBeDashIfFalsy(curPeriodPercentage);
-        const prePeriodPercentageString = numberBeDashIfFalsy(prePeriodPercentage);
+        const curPeriodPercentageString = numberBeDashIfFalsyWithoutCommas(curPeriodPercentage);
+        const prePeriodPercentageString = numberBeDashIfFalsyWithoutCommas(prePeriodPercentage);
         const accountReadyForFrontend: IAccountReadyForFrontend = {
           accountId: curPeriodAccount.accountId,
           code: curPeriodAccount.code,
