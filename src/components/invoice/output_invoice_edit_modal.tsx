@@ -11,6 +11,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { IoCloseOutline /* IoArrowBackOutline, IoArrowForward */ } from 'react-icons/io5';
 import { LuTrash2 } from 'react-icons/lu';
 import { CurrencyType } from '@/constants/currency';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import CounterpartyInput, {
   CounterpartyInputRef,
 } from '@/components/certificate/counterparty_input';
@@ -124,16 +125,16 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
     if (!selectedDate || selectedDate <= 0) {
       newErrors.date = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_DATE');
     }
-    const netAmountNum = parseFloat(netAmount?.toString() || '0') || 0;
-    if (!netAmount || netAmountNum <= 0) {
+    const netAmountStr = netAmount?.toString() || '0';
+    if (!netAmount || DecimalOperations.isLessThanOrEqual(netAmountStr, '0')) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
-    const taxAmountNum = parseFloat(taxAmount?.toString() || '0') || 0;
+    const taxAmountStr = taxAmount?.toString() || '0';
     if (
       type === InvoiceType.OUTPUT_31 &&
-      ((formStateRef.current.taxRate !== undefined && (!taxAmount || taxAmountNum <= 0)) ||
+      ((formStateRef.current.taxRate !== undefined && (!taxAmount || DecimalOperations.isLessThanOrEqual(taxAmountStr, '0'))) ||
         taxAmount == null)
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
@@ -278,7 +279,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
   const netAmountChangeHandler = (value: string) => {
     handleInputChange('netAmount', value);
-    const numericValue = parseFloat(value) || 0;
+    const numericValue = parseFloat(value);
 
     // Info : (20250516 - Anna) 格式 32、格式 34、格式 30、格式 36，稅額永遠為 0
     if (
@@ -303,7 +304,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
     // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
     setFormState((prev) => {
-      const netAmount = parseFloat(prev.netAmount?.toString() || '0') || 0;
+      const netAmount = parseFloat(prev.netAmount?.toString() || '0');
       const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
       const updated = {
         ...prev,
@@ -315,7 +316,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       formStateRef.current = updated;
 
       // Info: (20250514 - Anna) 如果稅額變了就立即儲存
-      const prevTaxAmount = parseFloat(prev.taxAmount?.toString() || '0') || 0;
+      const prevTaxAmount = parseFloat(prev.taxAmount?.toString() || '0');
       if (prevTaxAmount !== newTaxAmount) {
         setTimeout(() => {
           handleSave();
@@ -328,7 +329,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
 
   const totalAmountChangeHandler = (value: string) => {
     handleInputChange('totalAmount', value);
-    const numericValue = parseFloat(value) || 0;
+    const numericValue = parseFloat(value);
     const ratio = (100 + (formState.taxRate ?? 0)) / 100;
     const updatePriceBeforeTax = Math.round(numericValue / ratio);
     handleInputChange('netAmount', updatePriceBeforeTax.toString());
@@ -425,7 +426,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       newFormState.taxType = TaxType.TAXABLE;
 
       if (newFormState.netAmount != null) {
-        const netAmountNum = parseFloat(newFormState.netAmount?.toString() || '0') || 0;
+        const netAmountNum = parseFloat(newFormState.netAmount?.toString() || '0');
         const computedTax = Math.round((netAmountNum * 5) / 100);
         newFormState.taxAmount = computedTax.toString();
         newFormState.totalAmount = (netAmountNum + computedTax).toString();
