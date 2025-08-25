@@ -208,7 +208,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算公司負擔
   // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const companyBurdenHealthInsurance =
-    isHealthInsuranceEnrolled && employeeEndDateRaw === daysInMonth
+    isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
       ? salaryLevel.healthInsurance.company
       : 0;
   // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
@@ -229,7 +229,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
     : 0;
   // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
-    isHealthInsuranceEnrolled && employeeEndDateRaw === daysInMonth
+    isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
       ? salaryLevel.healthInsurance.employee + employeeBurdenHealthInsurancePremiums
       : 0;
   // Info: (20250815 - Luphia) 根據自負比例計算實際金額
