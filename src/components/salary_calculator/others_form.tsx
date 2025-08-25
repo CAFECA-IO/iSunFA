@@ -27,7 +27,7 @@ const OthersForm: React.FC = () => {
   } = useCalculatorCtx();
 
   // Info: (20250806 - Julian) 自提勞退選項：0%, 1%, 2%, 3%, 4%, 5%, 6%
-  const vpcOptions = Array.from({ length: 7 }, (_, i) => i);
+  const vpcOptions = Array.from({ length: 7 }, (_, i) => i * 0.01);
   const vpcRadios = vpcOptions.map((i) => {
     const isChecked = voluntaryPensionContribution === i;
     const changeVpc = () => changeVoluntaryPensionContribution(i);
@@ -42,7 +42,7 @@ const OthersForm: React.FC = () => {
           onChange={changeVpc}
           className={radioButtonStyle}
         />
-        <p className="text-sm font-normal text-checkbox-text-primary">{i}%</p>
+        <p className="text-sm font-normal text-checkbox-text-primary">{i * 100}%</p>
       </label>
     );
   });

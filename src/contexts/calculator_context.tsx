@@ -39,9 +39,6 @@ interface ICalculatorContext {
   changeSelectedYear: (year: string) => void;
   selectedMonth: MonthType;
   changeSelectedMonth: (month: MonthType) => void;
-  workedDays: number;
-  // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
-  setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
   payrollDaysBase: string;
   changePayrollDaysBase: (base: string) => void;
   isJoined: boolean;
@@ -153,7 +150,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
-  const [workedDays, setWorkedDays] = useState<number>(31);
   const [payrollDaysBase, setPayrollDaysBase] = useState<string>(payrollDaysBaseOptions[0]); // Info: (20250710 - Julian) 基準天數選項
   const [isJoined, setIsJoined] = useState<boolean>(false);
   const [dayOfJoining, setDayOfJoining] = useState<string>('01'); // Info: (20250709 - Julian) 入職日期
@@ -236,6 +232,14 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const yearInt = parseInt(selectedYear, 10);
     const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
 
+    const employeeStartStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfJoining}`;
+    const employeeStartTimestamp = new Date(employeeStartStr).getTime() / 1000;
+    const employeeStartDate = isJoined ? employeeStartTimestamp : undefined;
+
+    const employeeEndStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfLeaving}`;
+    const employeeEndTimestamp = new Date(employeeEndStr).getTime() / 1000;
+    const employeeEndDate = isLeft ? employeeEndTimestamp : undefined;
+
     // Info: (20250728 - Julian) 計算加班費（應稅）
     const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
     const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
@@ -253,6 +257,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const result = salaryCalculator({
       year: yearInt,
       month: monthIndex,
+      employeeStartDate, // Info: (20250822 - Julian) 員工入職日期
+      employeeEndDate, // Info: (20250822 - Julian) 員工離職日期
       baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
       baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
       otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
@@ -328,7 +334,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   }, [
     selectedYear,
     selectedMonth,
-    workedDays,
+    isJoined,
+    dayOfJoining,
+    isLeft,
+    dayOfLeaving,
     baseSalary,
     oneAndOneThirdHoursForTaxable,
     oneAndTwoThirdsHoursForTaxable,
@@ -345,6 +354,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     otherAllowanceWithoutTax,
     sickLeaveHours,
     personalLeaveHours,
+    leavePayoutHours,
+    isLaborInsurance,
+    isNHI,
+    isLaborPension,
+    numberOfDependents,
     nhiBackPremium,
     secondGenNhiTax,
     otherAdjustments,
@@ -374,7 +388,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(defaultMonth);
-    setWorkedDays(31);
     setPayrollDaysBase(payrollDaysBaseOptions[0]);
     setIsJoined(false);
     setIsLeft(false);
@@ -432,8 +445,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   };
   const changeSelectedMonth = (month: MonthType) => {
     setSelectedMonth(month);
-    // Info: (20250710 - Julian) 根據選擇的月份更新工作天數
-    setWorkedDays(month.days);
   };
   const changePayrollDaysBase = (base: string) => {
     setPayrollDaysBase(base);
@@ -475,8 +486,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeSelectedYear,
       selectedMonth,
       changeSelectedMonth,
-      workedDays,
-      setWorkedDays,
       payrollDaysBase,
       changePayrollDaysBase,
       isJoined,
@@ -554,7 +563,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       employeeEmail,
       selectedYear,
       selectedMonth,
-      workedDays,
       payrollDaysBase,
       isJoined,
       dayOfJoining,
