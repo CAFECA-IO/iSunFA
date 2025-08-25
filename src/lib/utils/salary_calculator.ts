@@ -1,8 +1,8 @@
 import { iSalaryLevel, SALARY_LEVELS } from '@/constants/salary_levels';
 import {
-  iGetSalaryLevelOptions,
-  iSalaryCalculatorOptions,
-  iSalaryCalculatorResult,
+  IGetSalaryLevelOptions,
+  ISalaryCalculatorOptions,
+  ISalaryCalculatorResult,
 } from '@/interfaces/salary_calculator';
 
 const getSalaryLevelsByYear = (year: number): iSalaryLevel[] => {
@@ -14,7 +14,7 @@ const getSalaryLevelsByYear = (year: number): iSalaryLevel[] => {
   return salaryLevels.data;
 };
 
-const getSalaryLevel = (options: iGetSalaryLevelOptions) => {
+const getSalaryLevel = (options: IGetSalaryLevelOptions) => {
   const { year, salary } = options;
   const salaryLevels = getSalaryLevelsByYear(year);
   let salaryLevel = salaryLevels.find((level) => level.salary >= salary);
@@ -29,9 +29,8 @@ const getSalaryLevel = (options: iGetSalaryLevelOptions) => {
   return salaryLevel;
 };
 
-const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorResult => {
+const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorResult => {
   const { year, month } = options;
-
   // Info: (20250815 - Luphia) 取得是否保勞健退
   const isLaborInsuranceEnrolled = options.isLaborInsuranceEnrolled ?? false;
   const isHealthInsuranceEnrolled = options.isHealthInsuranceEnrolled ?? false;
@@ -108,9 +107,13 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250814 - Luphia) 取得記錄月份總日數
   const realDaysInMonth = new Date(year, month, 0).getDate();
   // Info: (20250814 - Luphia) 取得員工記薪起始日
-  const employeeStartDate = options.employeeStartDate ? options.employeeStartDate : 1;
+  const employeeStartDate = options.employeeStartDate
+    ? new Date(options.employeeStartDate * 1000).getDate()
+    : 1;
   // Info: (20250814 - Luphia) 取得員工記薪結束日
-  const employeeEndDateRaw = options.employeeEndDate ? options.employeeEndDate : realDaysInMonth;
+  const employeeEndDateRaw = options.employeeEndDate
+    ? new Date(options.employeeEndDate * 1000).getDate()
+    : realDaysInMonth;
   const employeeEndDate =
     employeeEndDateRaw > realDaysInMonth || employeeEndDateRaw < employeeStartDate
       ? realDaysInMonth
@@ -145,7 +148,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250815 - Luphia) 若未保健保則需計算 2.11% 二代健保費
   const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
     ? 0
-    : baseSalary * 0.0211;
+    : Math.ceil(baseSalary * 0.0211);
   const insuredSalary = baseSalary;
 
   // ToDo: (20250727 - Luphia) 計算代扣所得稅款
@@ -160,6 +163,11 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
 
   // Info: (20250727 - Luphia) 計算每小時薪資
   const baseSalaryPerHour = baseSalary / (daysInMonth * 8);
+
+  // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資
+  const vacationToPayHours =
+    (options.vacationToPayHours ?? 0) > 0 ? (options.vacationToPayHours ?? 0) : 0;
+  const vacationToPay = Math.ceil(baseSalaryPerHour * vacationToPayHours);
 
   // Info: (20250727 - Luphia) 計算在職小時數
   const workedHours = workedDays * 8;
@@ -202,7 +210,8 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
 
   // Info: (20250727 - Luphia) 計算薪資加項
   const totalSalaryTaxable = resultBaseSalaryTaxable + overTimePayTaxable + otherAllowancesTaxable;
-  const totalSalaryTaxFree = resultBaseSalaryTaxFree + overTimePayTaxFree + otherAllowancesTaxFree;
+  const totalSalaryTaxFree =
+    resultBaseSalaryTaxFree + overTimePayTaxFree + otherAllowancesTaxFree + vacationToPay;
   const totalSalary = totalSalaryTaxable + totalSalaryTaxFree;
 
   // Info: (20250727 - Luphia) 計算公司負擔
@@ -213,11 +222,11 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
       : 0;
   // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
   const companyBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? salaryLevel.laborInsurance.company * baseSalaryRatio
+    ? Math.ceil(salaryLevel.laborInsurance.company * baseSalaryRatio)
     : 0;
   // Info: (20250815 - Luphia) 按照到職日數比例計算勞退
   const companyBurdenPensionInsurance = isPensionInsuranceEnrolled
-    ? salaryLevel.pensionInsurance.company * baseSalaryRatio
+    ? Math.ceil(salaryLevel.pensionInsurance.company * baseSalaryRatio)
     : 0;
   const totalCompanyBurden =
     companyBurdenHealthInsurance + companyBurdenLaborInsurance + companyBurdenPensionInsurance;
@@ -225,7 +234,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算員工負擔與扣項
   // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
   const employeeBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? salaryLevel.laborInsurance.employee * baseSalaryRatio
+    ? Math.ceil(salaryLevel.laborInsurance.employee * baseSalaryRatio)
     : 0;
   // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
@@ -245,7 +254,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250727 - Luphia) 計算給付總額
   const totalPayment = totalSalary - totalEmployeeBurden;
 
-  const result: iSalaryCalculatorResult = {
+  const result: ISalaryCalculatorResult = {
     totalPayment, // Info: (20250727 - Luphia) 實際給付金額
     baseSalaryTaxable: resultBaseSalaryTaxable, // Info: (20250727 - Luphia) 本薪（應稅）
     overTimePayTaxable, // Info: (20250727 - Luphia) 加班費（應稅）
@@ -254,6 +263,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
     baseSalaryTaxFree: resultBaseSalaryTaxFree, // Info: (20250727 - Luphia) 伙食費（免稅）
     overTimePayTaxFree, // Info: (20250727 - Luphia) 加班費（免稅）
     otherAllowancesTaxFree, // Info: (20250727 - Luphia) 其他津貼（免稅）
+    vacationToPay, // Info: (20250825 - Luphia) 休假折抵薪資（免稅）
     totalSalaryTaxFree, // Info: (20250727 - Luphia) 總免稅薪資
     totalSalary, // Info: (20250727 - Luphia) 月薪資合計
     healthInsuranceLevel, // Info: (20250727 - Luphia) 健保投保級距

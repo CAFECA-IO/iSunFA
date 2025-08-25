@@ -25,8 +25,6 @@ const BasicInfoForm: React.FC = () => {
     changeSelectedYear,
     selectedMonth,
     changeSelectedMonth,
-    // workedDays,
-    // setWorkedDays,
     isNameError,
     payrollDaysBaseOptions,
     payrollDaysBase,

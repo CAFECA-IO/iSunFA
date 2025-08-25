@@ -1,4 +1,4 @@
-type iSalaryCalculatorOptions = {
+type ISalaryCalculatorOptions = {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
   employeeStartDate?: number; // Info: (20250727 - Luphia) 員工入職日期
@@ -33,7 +33,7 @@ type iSalaryCalculatorOptions = {
   baseSalary30Days?: boolean; // Info: (20250814 - Luphia) 薪資基準日數以30日計算
 };
 
-type iSalaryCalculatorResult = {
+type ISalaryCalculatorResult = {
   totalPayment: number; // Info: (20250727 - Luphia) 實際給付金額
   baseSalaryTaxable: number; // Info: (20250727 - Luphia) 本薪（應稅）
   overTimePayTaxable: number; // Info: (20250727 - Luphia) 加班費（應稅）
@@ -42,6 +42,7 @@ type iSalaryCalculatorResult = {
   baseSalaryTaxFree: number; // Info: (20250727 - Luphia) 伙食費（免稅）
   overTimePayTaxFree: number; // Info: (20250727 - Luphia) 加班費（免稅）
   otherAllowancesTaxFree: number; // Info: (20250727 - Luphia) 其他津貼（免稅）
+  vacationToPay: number; // Info: (20250825 - Luphia) 休假折抵薪資（免稅）
   totalSalaryTaxFree: number; // Info: (20250727 - Luphia) 總免稅薪資
   totalSalary: number; // Info: (20250727 - Luphia) 月薪資合計
   healthInsuranceLevel: number; // Info: (20250727 - Luphia) 健保投保級距
@@ -65,9 +66,9 @@ type iSalaryCalculatorResult = {
   totalCompanyBurden: number; // Info: (20270727 - Luphia) 公司負擔勞健退
 };
 
-type iGetSalaryLevelOptions = {
+type IGetSalaryLevelOptions = {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   salary: number; // Info: (20250727 - Luphia) 薪資金額
 };
 
-export type { iSalaryCalculatorOptions, iSalaryCalculatorResult, iGetSalaryLevelOptions };
+export type { ISalaryCalculatorOptions, ISalaryCalculatorResult, IGetSalaryLevelOptions };
