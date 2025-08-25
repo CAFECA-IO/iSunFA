@@ -297,6 +297,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         mealAllowanceWithoutTax: result.baseSalaryTaxFree,
         overtimePayWithoutTax: result.overTimePayTaxFree,
         otherAllowanceWithoutTax: result.otherAllowancesTaxFree,
+        leaveSalaryWithoutTax: result.vacationToPay,
         totalSalaryWithoutTax: result.totalSalaryTaxFree,
         totalMonthlySalary: result.totalSalary,
       },
@@ -322,7 +323,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         insuredSalary: result.insuredSalary,
       },
       employerContribution: {
-        employerContributions: result.totalCompanyBurden,
         employerPaidLaborInsurance: result.companyBurdenLaborInsurance,
         employerPaidHealthInsurance: result.companyBurdenHealthInsurance,
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,

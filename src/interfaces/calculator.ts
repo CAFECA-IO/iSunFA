@@ -8,12 +8,11 @@ export interface IMonthlySalary {
   overtimePayWithTax: number; // Info: (20250722 - Julian) 加班費（應稅）
   otherAllowanceWithTax: number; // Info: (20250722 - Julian) 其他加給（應稅）
   totalSalaryWithTax: number; // Info: (20250722 - Julian) 總應稅薪資
-
   mealAllowanceWithoutTax: number; // Info: (20250722 - Julian) 伙食費（免稅）
   overtimePayWithoutTax: number; // Info: (20250722 - Julian) 加班費（免稅）
-  otherAllowanceWithoutTax: number; // Info: (20250722 - Julian) 其他加給（免稅）
+  otherAllowanceWithoutTax: number; // Info: (20250722 - Julian) 其他津貼（免稅）
+  leaveSalaryWithoutTax: number; // Info: (20250722 - Julian) 休假折抵薪資（免稅）
   totalSalaryWithoutTax: number; // Info: (20250722 - Julian) 總免稅薪資
-
   totalMonthlySalary: number; // Info: (20250710 - Julian) 月薪資合計
 }
 
@@ -40,7 +39,6 @@ export interface IInsuredSalary {
 }
 
 export interface IEmployerContribution {
-  employerContributions: number; // Info: (20250710 - Julian) 公司負擔勞健退
   employerPaidLaborInsurance: number; // Info: (20250710 - Julian) 公司負擔勞保費
   employerPaidHealthInsurance: number; // Info: (20250710 - Julian) 公司負擔健保費
   employerPaidPensionContribution: number; // Info: (20250710 - Julian) 公司負擔退休金
@@ -64,6 +62,7 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     mealAllowanceWithoutTax: 0,
     overtimePayWithoutTax: 0,
     otherAllowanceWithoutTax: 0,
+    leaveSalaryWithoutTax: 0,
     totalSalaryWithoutTax: 0,
     totalMonthlySalary: 0,
   },
@@ -88,7 +87,6 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     insuredSalary: 0,
   },
   employerContribution: {
-    employerContributions: 0,
     employerPaidLaborInsurance: 0,
     employerPaidHealthInsurance: 0,
     employerPaidPensionContribution: 0,
