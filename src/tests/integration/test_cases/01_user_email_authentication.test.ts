@@ -2,26 +2,30 @@ import { APITestHelper } from '@/tests/integration/setup/api_helper';
 import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
-import { APIPath } from '@/constants/api_connection';
+import { APIPath, APIName } from '@/constants/api_connection';
+import { validateOutputData, validateAndFormatData } from '@/lib/utils/validator';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
+import { z } from 'zod';
 import agreementHandler from '@/pages/api/v2/user/[userId]/agreement';
 import roleListHandler from '@/pages/api/v2/role';
 import userRoleHandler from '@/pages/api/v2/user/[userId]/role';
 import userRoleSelectHandler from '@/pages/api/v2/user/[userId]/selected_role';
+import statusInfoHandler from '@/pages/api/v2/status_info';
 
 /**
- * Info: (20250701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
+ * Info: (20250825 - Shirley) Integration Test - User Email Authentication
  *
  * Testing Philosophy:
- * - Uses system default emails and verification codes for authentication testing
- * - Focuses on authentication logic through real API calls
- * - Tests session persistence across multiple API calls
- * - Validates both success and failure scenarios
- * - Simulates real user behavior without direct database manipulation
- * - Tests multi-user authentication and session switching
+ * - Uses BaseTestContext for consistent test resource management
+ * - Tests core authentication functionality through real API calls
+ * - Validates session management and user registration flow
+ * - Follows step-by-step workflow pattern for clear test organization
+ * - Simulates real user behavior with proper API endpoints
  */
-// ToDo: (20250821 - Luphia) Fix this test case
-xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
-  let apiHelper: APITestHelper;
+describe('User Authentication Workflow', () => {
+  let helper: APITestHelper;
+  let userId: number;
+  let cookies: string[];
   let multiUserHelper: APITestHelper;
 
   const testUsers = {
@@ -32,17 +36,18 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
   };
 
   beforeAll(async () => {
-    // Info: (20250701 - Shirley) Initialize API helpers for testing
-    apiHelper = new APITestHelper();
+    const sharedContext = await BaseTestContext.getSharedContext();
+    helper = sharedContext.helper;
+    userId = sharedContext.userId;
+    cookies = sharedContext.cookies;
 
     // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
     multiUserHelper = await APITestHelper.createHelper({
       emails: [testUsers.user1, testUsers.user2, testUsers.user3, testUsers.user4],
     });
-  });
+  }, 120000);
 
   afterAll(() => {
-    apiHelper.clearAllUserSessions();
     multiUserHelper.clearAllUserSessions();
   });
 
@@ -54,7 +59,7 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
   describe('Test Case 1.4: Session and Status Validation', () => {
     it('should return status info with proper structure', async () => {
       // Info: (20250701 - Shirley) Test status info endpoint structure
-      const statusResponse = await apiHelper.getStatusInfo();
+      const statusResponse = await helper.getStatusInfo();
 
       // Info: (20250701 - Shirley) Verify status info structure
       expect(statusResponse.body.success).toBe(true);
@@ -392,11 +397,11 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should list user roles after role creation', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       const response = await userRoleClient
         .get(APIPath.USER_ROLE_LIST.replace(':userId', currentUserId))
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -437,13 +442,13 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should reject role operations with missing data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       // Info: (20250707 - Shirley) Test role creation with missing roleName
       const createRoleResponse = await userRoleCreateClient
         .post(APIPath.USER_CREATE_ROLE.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing roleName
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(422);
 
       expect(createRoleResponse.body.success).toBe(false);
@@ -453,7 +458,7 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
       const selectRoleResponse = await userRoleSelectClient
         .put(APIPath.USER_SELECT_ROLE.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing roleName
-        .set('Cookie', cookies.join('; '));
+        .set('Cookie', testCookies.join('; '));
 
       // Info: (20250707 - Shirley) Accept both 405 (method routing issue) and 422 (validation error)
       expect([405, 422]).toContain(selectRoleResponse.status);
@@ -468,12 +473,12 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should reject terms agreement with missing data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       const response = await agreementClient
         .post(APIPath.AGREE_TO_TERMS.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing agreementHash
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(422);
 
       expect(response.body.success).toBe(false);
@@ -573,34 +578,9 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
       }
     });
 
-    // it('should validate all test emails are from default_value.ts', async () => {
-    //   // Info: (20250707 - Shirley) Verify test emails match default_value.ts
-    //   const expectedEmails = [
-    //     'user@isunfa.com',
-    //     'user1@isunfa.com',
-    //     'user2@isunfa.com',
-    //     'user3@isunfa.com',
-    //   ];
-
-    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS).toEqual(expectedEmails);
-    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS.length).toBe(4);
-
-    //   // Info: (20250707 - Shirley) Verify each email is processed correctly
-    //   const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
-    //     const result = await APITestHelper.processTestUser(email);
-    //     expect(result.success).toBe(true);
-    //     expect(result.email).toBe(email);
-    //     return result;
-    //   });
-
-    //   await Promise.all(emailPromises);
-
-    // });
-
-    it('should reject processing of non-default test emails', async () => {
+    it('Input validation → Reject non-default test emails', async () => {
+      // Info: (20250825 - Shirley) Test email validation for processing
       const invalidEmail = 'invalid@example.com';
-
-      // Info: (20250707 - Shirley) Should reject non-default email
       const result = await APITestHelper.processTestUser(invalidEmail);
 
       expect(result.success).toBe(false);
@@ -609,19 +589,22 @@ xdescribe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(result.error?.message).toContain('not in the default test emails list');
     });
 
-    it('should handle list roles functionality for authenticated users', async () => {
+    it('Role listing → Handle roles functionality for authenticated users', async () => {
+      // Info: (20250825 - Shirley) Test role listing for authenticated users
       const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[2];
-      const helper = await APITestHelper.createHelper({ email: testEmail });
+      const rolesHelper = await APITestHelper.createHelper({ email: testEmail });
 
-      // Info: (20250707 - Shirley) List roles for authenticated user
-      const rolesResponse = await helper.listRoles();
+      const rolesResponse = await rolesHelper.listRoles();
 
-      // Info: (20250707 - Shirley) Should return a response (accept various status codes for role API)
+      // Info: (20250825 - Shirley) Accept various valid responses for role API
       expect([200, 401, 500]).toContain(rolesResponse.status);
 
       if (rolesResponse.status === 200) {
         expect(rolesResponse.body.success).toBe(true);
       }
+
+      // Info: (20250825 - Shirley) Clean up roles helper
+      rolesHelper.clearAllUserSessions();
     });
   });
 });
