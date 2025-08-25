@@ -31,7 +31,6 @@ const getSalaryLevel = (options: iGetSalaryLevelOptions) => {
 
 const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorResult => {
   const { year, month } = options;
-
   // Info: (20250815 - Luphia) 取得是否保勞健退
   const isLaborInsuranceEnrolled = options.isLaborInsuranceEnrolled ?? false;
   const isHealthInsuranceEnrolled = options.isHealthInsuranceEnrolled ?? false;
@@ -108,9 +107,13 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250814 - Luphia) 取得記錄月份總日數
   const realDaysInMonth = new Date(year, month, 0).getDate();
   // Info: (20250814 - Luphia) 取得員工記薪起始日
-  const employeeStartDate = options.employeeStartDate ? options.employeeStartDate : 1;
+  const employeeStartDate = options.employeeStartDate
+    ? new Date(options.employeeStartDate * 1000).getDate()
+    : 1;
   // Info: (20250814 - Luphia) 取得員工記薪結束日
-  const employeeEndDateRaw = options.employeeEndDate ? options.employeeEndDate : realDaysInMonth;
+  const employeeEndDateRaw = options.employeeEndDate
+    ? new Date(options.employeeEndDate * 1000).getDate()
+    : realDaysInMonth;
   const employeeEndDate =
     employeeEndDateRaw > realDaysInMonth || employeeEndDateRaw < employeeStartDate
       ? realDaysInMonth
@@ -145,7 +148,7 @@ const salaryCalculator = (options: iSalaryCalculatorOptions): iSalaryCalculatorR
   // Info: (20250815 - Luphia) 若未保健保則需計算 2.11% 二代健保費
   const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
     ? 0
-    : baseSalary * 0.0211;
+    : Math.ceil(baseSalary * 0.0211);
   const insuredSalary = baseSalary;
 
   // ToDo: (20250727 - Luphia) 計算代扣所得稅款
