@@ -51,7 +51,7 @@
     "formidable": "^3.5.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.10.3",
-    "i18next": "^23.11.5",
+    "i18next": "^25.4.2",
     "jest-mock-extended": "^3.0.7",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
