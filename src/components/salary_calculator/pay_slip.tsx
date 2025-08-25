@@ -38,7 +38,8 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       totalSalaryWithTax, // Info: (20250722 - Julian) 總應稅薪資
       mealAllowanceWithoutTax, // Info: (20250710 - Julian) 伙食費（免稅）
       overtimePayWithoutTax, // Info: (20250710 - Julian) 加班費（免稅）
-      otherAllowanceWithoutTax, // Info: (20250710 - Julian) 其他加給（免稅）
+      otherAllowanceWithoutTax, // Info: (20250710 - Julian) 其他津貼（免稅）
+      leaveSalaryWithoutTax, // Info: (20250825 - Julian) 休假折抵薪資（免稅）
       totalSalaryWithoutTax, // Info: (20250710 - Julian) 總免稅薪資
       totalMonthlySalary, // Info: (20250710 - Julian) 月薪資合計
     },
@@ -50,6 +51,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
       withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
       salaryDeductionForLeave, // Info: (20250710 - Julian) 請假扣薪
+      otherDeductionsOrAdjustments, // Info: (20250825 - Julian) 其他溢扣/ 補收
       totalEmployeeBurden, // Info: (20250819 - Julian) 扣項總計
     },
     insuredSalary: {
@@ -62,13 +64,13 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       insuredSalary, // Info: (20250710 - Julian) 投保薪資
     },
     employerContribution: {
-      employerContributions, // Info: (20250710 - Julian) 公司負擔勞健退
       employerPaidLaborInsurance, // Info: (20250710 - Julian) 公司負擔勞保費
       employerPaidHealthInsurance, // Info: (20250710 - Julian) 公司負擔健保費
       employerPaidPensionContribution, // Info: (20250710 - Julian) 公司負擔退休金
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
-    totalSalary, // Info: (20250710 - Julian) 薪資合計
+    totalSalary, // Info: (20250710 - Julian) 實際發放金額
+    totalSalaryTaxable, // Info: (20250825 - Julian) 扣繳憑單金額
   } = resultData;
 
   // Info: (20250708 - Julian) 月薪資項目
@@ -97,6 +99,10 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     {
       label: t('calculator:RESULT.OTHER_ALLOWANCE_WITHOUT_TAX'),
       value: otherAllowanceWithoutTax,
+    },
+    {
+      label: t('calculator:RESULT.LEAVE_SALARY_WITHOUT_TAX'),
+      value: leaveSalaryWithoutTax,
     },
     {
       label: t('calculator:RESULT.TOTAL_SALARY_WITHOUT_TAX'),
@@ -140,7 +146,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     },
     {
       label: t('calculator:RESULT.OTHER_DEDUCTIONS_ADJUSTMENTS'),
-      value: 0,
+      value: otherDeductionsOrAdjustments,
     },
     {
       label: t('calculator:RESULT.TOTAL_DEDUCTIONS'),
@@ -183,10 +189,6 @@ const PaySlip: React.FC<IPaySlipProps> = ({
   // Info: (20250708 - Julian) 雇主負擔項目
   const employerRowItems: RowItem[] = [
     {
-      label: t('calculator:RESULT.EMPLOYER_CONTRIBUTIONS'),
-      value: employerContributions,
-    },
-    {
       label: t('calculator:RESULT.EMPLOYER_PAID_LABOR_INSURANCE'),
       value: employerPaidLaborInsurance,
     },
@@ -228,7 +230,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
               {t('calculator:RESULT.REPORTED')}
             </p>
             <div className="text-2xl font-bold text-text-brand-primary-lv2">
-              {numberWithCommas(totalSalary)}{' '}
+              {numberWithCommas(totalSalaryTaxable)}{' '}
               <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
             </div>
           </div>
