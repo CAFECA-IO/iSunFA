@@ -289,6 +289,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
 
     const formattedResult: ISalaryCalculator = {
       totalSalary: result.totalPayment,
+      totalSalaryTaxable: result.totalSalaryTaxable,
       monthlySalary: {
         baseSalaryWithTax: result.baseSalaryTaxable,
         overtimePayWithTax: result.overTimePayTaxable,

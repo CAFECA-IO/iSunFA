@@ -69,7 +69,8 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       employerPaidPensionContribution, // Info: (20250710 - Julian) 公司負擔退休金
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
-    totalSalary, // Info: (20250710 - Julian) 薪資合計
+    totalSalary, // Info: (20250710 - Julian) 實際發放金額
+    totalSalaryTaxable, // Info: (20250825 - Julian) 扣繳憑單金額
   } = resultData;
 
   // Info: (20250708 - Julian) 月薪資項目
@@ -229,7 +230,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
               {t('calculator:RESULT.REPORTED')}
             </p>
             <div className="text-2xl font-bold text-text-brand-primary-lv2">
-              {numberWithCommas(totalSalary)}{' '}
+              {numberWithCommas(totalSalaryTaxable)}{' '}
               <span className="text-base font-semibold text-text-neutral-tertiary">NTD</span>
             </div>
           </div>

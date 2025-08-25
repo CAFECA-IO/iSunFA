@@ -50,7 +50,8 @@ export interface ISalaryCalculator {
   employeeContribution: IEmployeeContribution; // Info: (20250710 - Julian) 員工負擔項目
   insuredSalary: IInsuredSalary; // Info: (20250710 - Julian) 投保薪資
   employerContribution: IEmployerContribution; // Info: (20250710 - Julian) 雇主負擔項目
-  totalSalary: number; // Info: (20250710 - Julian) 薪資合計
+  totalSalary: number; // Info: (20250710 - Julian) 實際發放金額
+  totalSalaryTaxable: number; // Info: (20250825 - Julian) 扣繳憑單金額
 }
 
 export const defaultSalaryCalculatorResult: ISalaryCalculator = {
@@ -93,4 +94,5 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     totalEmployerCost: 0,
   },
   totalSalary: 0,
+  totalSalaryTaxable: 0,
 };
