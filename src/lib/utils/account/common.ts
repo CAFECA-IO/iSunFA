@@ -9,6 +9,7 @@ import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { AccountType } from '@/constants/account';
 import { Account as PrismaAccount } from '@prisma/client';
 import { getTimestampNow } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export function initAccountEntity(
   dto: Partial<PrismaAccount> & {
@@ -62,11 +63,14 @@ export function transformLineItemsFromDBToMap(
     const isAccountDebit = lineItem.account.debit;
     const isLineItemDebit = lineItem.debit;
     const { amount } = lineItem;
-    const amountNumber = typeof amount === 'string' ? parseFloat(amount) : amount.toNumber();
-    const adjustedAmount = isAccountDebit === isLineItemDebit ? amountNumber : -amountNumber;
+    const amountString = typeof amount === 'string' ? amount : amount.toString();
+    const adjustedAmountString = isAccountDebit === isLineItemDebit
+      ? amountString
+      : DecimalOperations.negate(amountString);
 
-    const lineItemOriginalAmount = lineItems.get(lineItem.accountId) || 0;
-    lineItems.set(lineItem.accountId, lineItemOriginalAmount + adjustedAmount);
+    const lineItemOriginalAmountString = (lineItems.get(lineItem.accountId) || 0).toString();
+    const newAmountString = DecimalOperations.add(lineItemOriginalAmountString, adjustedAmountString);
+    lineItems.set(lineItem.accountId, parseFloat(newAmountString));
   });
   return lineItems;
 }

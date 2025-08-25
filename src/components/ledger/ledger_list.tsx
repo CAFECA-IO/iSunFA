@@ -33,8 +33,6 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
   const { t } = useTranslation(['journal', 'date_picker', 'reports']);
   const printRef = useRef<HTMLDivElement>(null); // Info: (20241203 - Anna) 引用列印內容
 
-  const formatNumber = (number: number) => new Intl.NumberFormat().format(number);
-
   // Info: (20241118 - Anna) 確保 ledgerItemsData 是一個有效的陣列
   const ledgerItemsData = Array.isArray(ledgerData?.data) ? ledgerData.data : [];
 
@@ -50,8 +48,8 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       return {
         currencyAlias: CurrencyType.TWD,
         total: {
-          totalDebitAmount: 0,
-          totalCreditAmount: 0,
+          totalDebitAmount: '0',
+          totalCreditAmount: '0',
           createdAt: 0,
           updatedAt: 0,
         },
@@ -167,9 +165,9 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
         key={id}
         ledger={{
           ...ledger,
-          creditAmount,
-          debitAmount,
-          balance,
+          creditAmount: creditAmount || '0',
+          debitAmount: debitAmount || '0',
+          balance: balance || '0',
           // Info: (20241224 - Anna) 將字串轉換為整數
           voucherId: typeof voucherId === 'string' ? parseInt(voucherId, 10) : voucherId,
         }}
@@ -258,13 +256,13 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
               {t('journal:LEDGER.TOTAL_DEBIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {formatNumber(total.totalDebitAmount)}
+              {total.totalDebitAmount || '0'}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle">
               {t('journal:LEDGER.TOTAL_CREDIT_AMOUNT')}
             </div>
             <div className="col-span-2 flex items-center justify-start py-8px text-left align-middle font-semibold text-text-neutral-primary">
-              {formatNumber(total.totalCreditAmount)}
+              {total.totalCreditAmount || '0'}
             </div>
           </div>
         </div>

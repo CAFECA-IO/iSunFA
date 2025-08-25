@@ -138,16 +138,16 @@ export interface FinancialReportItem {
   code: string;
 
   name: string;
-  curPeriodAmount: number;
+  curPeriodAmount: string;
   curPeriodAmountString: string;
-  curPeriodPercentage: number;
-  prePeriodAmount: number;
+  curPeriodPercentage: string;
+  prePeriodAmount: string;
   prePeriodAmountString: string;
-  prePeriodPercentage: number;
+  prePeriodPercentage: string;
   indent: number;
 }
 export interface YearlyData {
-  [year: string]: number;
+  [year: string]: string;
 }
 // Info: (20240729 - Murky): To Shirley, New Interface need to be connect to front end
 export interface FinancialReport {
@@ -183,24 +183,24 @@ export interface IFinancialReportInDB {
 export interface BalanceSheetOtherInfo {
   assetLiabilityRatio: {
     [date: string]: {
-      data: number[]; // Info: (20240730 - Shirley) [資產,負債,權益], 數字是已經*100的數字, 不會有小數點
+      data: string[]; // Info: (20240730 - Shirley) [資產,負債,權益], decimal support for precise calculations
       labels: string[]; // Info: (20240730 - Shirley) ["資產", "負債", "權益"]
     };
   };
   assetMixRatio: {
     // Info: (20240730 - Shirley) 資產組成，包含數量最大的五種資產跟其他
     [date: string]: {
-      data: number[]; // Info: (20240730 - Shirley) [資產1, 資產2, 資產3, 資產4, 資產5, 其他], 數字是已經*100的數字, 不會有小數點
+      data: string[]; // Info: (20240730 - Shirley) [資產1, 資產2, 資產3, 資產4, 資產5, 其他], decimal support for precise calculations
       labels: string[];
     };
   };
   dso: {
-    curDso: number;
-    preDso: number;
+    curDso: string;
+    preDso: string;
   };
   inventoryTurnoverDays: {
-    curInventoryTurnoverDays: number;
-    preInventoryTurnoverDays: number;
+    curInventoryTurnoverDays: string;
+    preInventoryTurnoverDays: string;
   };
 }
 
@@ -211,16 +211,16 @@ export interface IncomeStatementOtherInfo {
     salesExpense: IAccountReadyForFrontend;
     administrativeExpense: IAccountReadyForFrontend;
     ratio: {
-      curRatio: number;
-      preRatio: number;
+      curRatio: string;
+      preRatio: string;
     };
   };
   revenueToRD: {
     revenue: IAccountReadyForFrontend;
     researchAndDevelopmentExpense: IAccountReadyForFrontend;
     ratio: {
-      curRatio: number;
-      preRatio: number;
+      curRatio: string;
+      preRatio: string;
     };
   };
 }
@@ -234,12 +234,12 @@ export interface CashFlowStatementOtherInfo {
     ratio: YearlyData;
   };
   lineChartDataForRatio: {
-    data: number[];
+    data: string[];
     labels: string[];
   };
   strategyInvest: {
     [year: string]: {
-      data: number[];
+      data: string[];
       labels: string[];
     };
   };
@@ -249,10 +249,10 @@ export interface CashFlowStatementOtherInfo {
   ourThoughts: string[];
   freeCash: {
     [year: string]: {
-      operatingCashFlow: number;
-      ppe: number;
-      intangibleAsset: number;
-      freeCash: number;
+      operatingCashFlow: string;
+      ppe: string;
+      intangibleAsset: string;
+      freeCash: string;
     };
   };
 }
@@ -305,7 +305,7 @@ export interface TaxReport401 {
   purchases: Purchases;
   taxCalculation: TaxCalculation;
   imports: Imports;
-  bondedAreaSalesToTaxArea: number;
+  bondedAreaSalesToTaxArea: string;
 }
 
 interface BasicInfo {
@@ -322,8 +322,8 @@ interface BasicInfo {
 
 export interface Sales {
   breakdown: SalesBreakdown;
-  totalTaxableAmount: number;
-  includeFixedAsset: number;
+  totalTaxableAmount: string;
+  includeFixedAsset: string;
 }
 
 export interface SalesBreakdown {
@@ -336,14 +336,14 @@ export interface SalesBreakdown {
 }
 
 interface SalesDetail {
-  sales: number;
-  tax: number;
-  zeroTax: number;
+  sales: string;
+  tax: string;
+  zeroTax: string;
 }
 
 interface PurchasesDetail {
-  amount: number;
-  tax: number;
+  amount: string;
+  tax: string;
 }
 
 export interface Purchases {
@@ -366,25 +366,25 @@ interface PurchaseCategory {
 }
 
 interface PurchaseTotal {
-  generalPurchases: number;
-  fixedAssets: number;
+  generalPurchases: string;
+  fixedAssets: string;
 }
 
 export interface TaxCalculation {
-  outputTax: number;
-  deductibleInputTax: number;
-  previousPeriodOffset: number;
-  subtotal: number;
-  currentPeriodTaxPayable: number;
-  currentPeriodFilingOffset: number;
-  refundCeiling: number;
-  currentPeriodRefundableTax: number;
-  currentPeriodAccumulatedOffset: number;
+  outputTax: string;
+  deductibleInputTax: string;
+  previousPeriodOffset: string;
+  subtotal: string;
+  currentPeriodTaxPayable: string;
+  currentPeriodFilingOffset: string;
+  refundCeiling: string;
+  currentPeriodRefundableTax: string;
+  currentPeriodAccumulatedOffset: string;
 }
 
 export interface Imports {
-  taxExemptGoods: number;
-  foreignServices: number;
+  taxExemptGoods: string;
+  foreignServices: string;
 }
 
 export interface TaxReport401Content {

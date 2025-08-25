@@ -18,6 +18,7 @@ import ImageZoom from '@/components/image_zoom/image_zoom';
 import EInvoicePreview from '@/components/invoice/e_invoice_preview';
 import dayjs from 'dayjs';
 import html2canvas from 'html2canvas';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import APIHandler from '@/lib/utils/api_handler';
 import { IAccountingSetting } from '@/interfaces/accounting_setting';
 import { APIName } from '@/constants/api_connection';
@@ -145,22 +146,22 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
 
     // Info: (20250514 - Anna) 檢查金額的淨額
-    const netAmountNum = parseFloat(netAmount?.toString() || '0') || 0;
-    if (!netAmount || netAmountNum <= 0) {
+    const netAmountStr = netAmount?.toString() || '0';
+    if (!netAmount || DecimalOperations.isLessThanOrEqual(netAmountStr, '0')) {
       newErrors.netAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM'); // Info: (20250106 - Anna) 備用 t('certificate:ERROR.REQUIRED_PRICE');
     }
 
     // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20、INPUT_22 、INPUT_24、INPUT_27 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
-    const taxAmountNum = parseFloat(taxAmount?.toString() || '0') || 0;
+    const taxAmountStr = taxAmount?.toString() || '0';
     if (
       (type !== InvoiceType.INPUT_20 &&
         type !== InvoiceType.INPUT_22 &&
         type !== InvoiceType.INPUT_24 &&
         type !== InvoiceType.INPUT_27 &&
         formStateRef.current.taxRate !== undefined &&
-        (!taxAmount || taxAmountNum <= 0)) ||
+        (!taxAmount || DecimalOperations.isLessThanOrEqual(taxAmountStr, '0'))) ||
       taxAmount == null
     ) {
       newErrors.taxAmount = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
@@ -181,11 +182,10 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     }
 
     // Info: (20250514 - Anna) 格式 26 和 27 要填 totalOfSummarizedInvoices
-    const totalOfSummarizedInvoicesNum =
-      parseFloat(totalOfSummarizedInvoices?.toString() || '0') || 0;
+    const totalOfSummarizedInvoicesStr = totalOfSummarizedInvoices?.toString() || '0';
     if (
       (type === InvoiceType.INPUT_26 || type === InvoiceType.INPUT_27) &&
-      (!totalOfSummarizedInvoices || totalOfSummarizedInvoicesNum <= 0)
+      (!totalOfSummarizedInvoices || DecimalOperations.isLessThanOrEqual(totalOfSummarizedInvoicesStr, '0'))
     ) {
       newErrors.totalOfSummarizedInvoices = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
@@ -331,16 +331,19 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
   const netAmountChangeHandler = (value: string) => {
     handleInputChange('netAmount', value);
-    const numericValue = parseFloat(value) || 0;
+    const numericValue = value;
     const updateTaxPrice =
       // Info: (20250415  - Anna) 格式22、格式24 、格式20 稅額為 0
       formState.type === InvoiceType.INPUT_22 ||
       formState.type === InvoiceType.INPUT_24 ||
       formState.type === InvoiceType.INPUT_20
-        ? 0
-        : Math.round((numericValue * (formState.taxRate ?? 0)) / 100);
-    handleInputChange('taxAmount', updateTaxPrice.toString());
-    handleInputChange('totalAmount', (numericValue + updateTaxPrice).toString());
+        ? '0'
+        : DecimalOperations.multiply(
+            DecimalOperations.multiply(numericValue, (formState.taxRate ?? 0).toString()),
+            '0.01'
+          );
+    handleInputChange('taxAmount', updateTaxPrice);
+    handleInputChange('totalAmount', DecimalOperations.add(numericValue, updateTaxPrice));
   };
 
   const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
@@ -349,20 +352,23 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     // Info: (20250514 - Anna) 只觸發一次 setFormState，資料更新也更同步
     setFormState((prev) => {
-      const netAmount = parseFloat(prev.netAmount?.toString() || '0') || 0;
-      const newTaxAmount = Math.round((netAmount * (normalizedTaxRate ?? 0)) / 100);
+      const netAmount = prev.netAmount?.toString() || '0';
+      const newTaxAmount = DecimalOperations.multiply(
+        DecimalOperations.multiply(netAmount, (normalizedTaxRate ?? 0).toString()),
+        '0.01'
+      );
       const updated = {
         ...prev,
         taxRate: normalizedTaxRate,
         taxType,
-        taxAmount: newTaxAmount.toString(),
-        totalAmount: (netAmount + newTaxAmount).toString(),
+        taxAmount: newTaxAmount,
+        totalAmount: DecimalOperations.add(netAmount, newTaxAmount),
       };
       formStateRef.current = updated;
 
       // Info: (20250514 - Anna) 如果稅額變了就立即儲存
-      const prevTaxAmount = parseFloat(prev.taxAmount?.toString() || '0') || 0;
-      if (prevTaxAmount !== newTaxAmount) {
+      const prevTaxAmount = prev.taxAmount?.toString() || '0';
+      if (!DecimalOperations.isEqual(prevTaxAmount, newTaxAmount)) {
         setTimeout(() => {
           handleSave();
         }, 0);
@@ -378,12 +384,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
   const totalAmountChangeHandler = (value: string) => {
     handleInputChange('totalAmount', value);
-    const numericValue = parseFloat(value) || 0;
-    const ratio = (100 + (formState.taxRate ?? 0)) / 100;
-    const updatePriceBeforeTax = Math.round(numericValue / ratio);
-    handleInputChange('netAmount', updatePriceBeforeTax.toString());
-    const updateTaxPrice = numericValue - updatePriceBeforeTax;
-    handleInputChange('taxAmount', updateTaxPrice.toString());
+    const numericValue = value;
+    const ratio = DecimalOperations.add('100', (formState.taxRate ?? 0).toString());
+    const ratioDecimal = DecimalOperations.divide(ratio, '100');
+    const updatePriceBeforeTax = DecimalOperations.divide(numericValue, ratioDecimal);
+    handleInputChange('netAmount', updatePriceBeforeTax);
+    const updateTaxPrice = DecimalOperations.subtract(numericValue, updatePriceBeforeTax);
+    handleInputChange('taxAmount', updateTaxPrice);
   };
 
   // Info: (20241206 - Julian) currency alias setting
@@ -462,10 +469,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       newFormState.taxRate != null &&
       newFormState.netAmount != null
     ) {
-      const netAmountNum = parseFloat(newFormState.netAmount?.toString() || '0') || 0;
-      const computedTax = Math.round((netAmountNum * newFormState.taxRate) / 100);
-      newFormState.taxAmount = computedTax.toString();
-      newFormState.totalAmount = (netAmountNum + computedTax).toString();
+      const netAmountNum = newFormState.netAmount?.toString() || '0';
+      const computedTax = DecimalOperations.multiply(
+        DecimalOperations.multiply(netAmountNum, newFormState.taxRate.toString()),
+        '0.01'
+      );
+      newFormState.taxAmount = computedTax;
+      newFormState.totalAmount = DecimalOperations.add(netAmountNum, computedTax);
     }
 
     setFormState(newFormState);
@@ -726,15 +736,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         }}
                         // Info: (20250428 - Anna) 只在值是 0 或 undefined 時全部選取
                         onFocus={() => {
-                          const value =
-                            parseFloat(formState.totalOfSummarizedInvoices?.toString() || '0') || 0;
-                          if (formState.totalOfSummarizedInvoices === undefined || value === 0) {
+                          const value = formState.totalOfSummarizedInvoices?.toString() || '0';
+                          if (formState.totalOfSummarizedInvoices === undefined || DecimalOperations.isZero(value)) {
                             summarizedInvoiceInputRef.current?.select();
                           }
                         }}
                         className={`h-44px w-16 flex-1 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-right uppercase outline-none ${
-                          (parseFloat(formState.totalOfSummarizedInvoices?.toString() || '0') ||
-                            0) === 0 || formState.totalOfSummarizedInvoices === undefined
+                          DecimalOperations.isZero(formState.totalOfSummarizedInvoices?.toString() || '0') || formState.totalOfSummarizedInvoices === undefined
                             ? 'text-neutral-300'
                             : 'text-neutral-600'
                         }`}
@@ -1217,19 +1225,17 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
                           // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
                           triggerWhenChanged={(value: string) => {
-                            const currentTaxAmount =
-                              parseFloat(formStateRef.current.taxAmount?.toString() || '0') || 0;
-                            const newTaxAmount = parseFloat(value) || 0;
-                            if (newTaxAmount === currentTaxAmount) return;
+                            const currentTaxAmount = formStateRef.current.taxAmount?.toString() || '0';
+                            const newTaxAmount = value;
+                            if (DecimalOperations.isEqual(newTaxAmount, currentTaxAmount)) return;
 
                             // Info: (20250516 - Anna) 更新 taxAmount 欄位
                             handleInputChange('taxAmount', value);
 
                             // Info: (20250516 - Anna) 最新的稅額 + 原本的淨額，算出總金額，更新 totalAmount 欄位。
-                            const netAmount =
-                              parseFloat(formStateRef.current.netAmount?.toString() || '0') || 0;
-                            const updatedTotal = netAmount + newTaxAmount;
-                            handleInputChange('totalAmount', updatedTotal.toString());
+                            const netAmount = formStateRef.current.netAmount?.toString() || '0';
+                            const updatedTotal = DecimalOperations.add(netAmount, newTaxAmount);
+                            handleInputChange('totalAmount', updatedTotal);
 
                             // Info: (20250516 - Anna) 如果前一次的 debounce timer 還沒觸發，就清掉，避免多次呼叫 handleSave()
                             if (debounceTimer.current) clearTimeout(debounceTimer.current);

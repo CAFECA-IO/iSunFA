@@ -18,6 +18,7 @@ import { DAY_IN_YEAR } from '@/constants/common';
 import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { ASSET_CODE, SPECIAL_ACCOUNTS } from '@/constants/account';
 import { getTimestampOfFirstDateOfThisYear, timestampToString } from '@/lib/utils/common';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { ILineItemIncludeAccount } from '@/interfaces/line_item';
 import { findAccountByIdInPrisma } from '@/lib/utils/repo/account.repo';
 import { Prisma } from '@prisma/client';
@@ -231,8 +232,11 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const liabilityAndEquity = accountTree.find((account) => account.code === '3X2X');
 
     if (liabilityAndEquity) {
-      liabilityAndEquity.amount = liability?.amount || 0;
-      liabilityAndEquity.amount += equity?.amount || 0;
+      const liabilityAmount = (liability?.amount || 0).toString();
+      const equityAmount = (equity?.amount || 0).toString();
+      liabilityAndEquity.amount = parseFloat(
+        DecimalOperations.add(liabilityAmount, equityAmount)
+      );
     }
   }
 
@@ -270,7 +274,14 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage: totalAssetAmount === 0 ? 0 : value.accountNode.amount / totalAssetAmount,
+        percentage: parseFloat(
+          DecimalOperations.isZero(totalAssetAmount.toString())
+            ? '0'
+            : DecimalOperations.divide(
+                value.accountNode.amount.toString(),
+                totalAssetAmount.toString()
+              )
+        ),
       });
     });
 
@@ -307,8 +318,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getAmount(account: IAccountReadyForFrontend) {
-    const cur = Math.abs(account.curPeriodAmount);
-    const pre = Math.abs(account.prePeriodAmount);
+    const cur = parseFloat(
+      DecimalOperations.abs(account.curPeriodAmount.toString())
+    );
+    const pre = parseFloat(
+      DecimalOperations.abs(account.prePeriodAmount.toString())
+    );
 
     return {
       cur,
@@ -317,17 +332,45 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static calculateAssetLiabilityRatio(asset: number, liability: number, equity: number) {
-    const total = asset + liability + equity;
-    let assetPercentage = total === 0 ? 0 : Math.round((asset / total) * 100);
-    let liabilityPercentage = total === 0 ? 0 : Math.round((liability / total) * 100);
-    let equityPercentage = total === 0 ? 0 : Math.round((equity / total) * 100);
+    const assetDecimal = asset.toString();
+    const liabilityDecimal = liability.toString();
+    const equityDecimal = equity.toString();
+
+    const total = DecimalOperations.add(
+      DecimalOperations.add(assetDecimal, liabilityDecimal),
+      equityDecimal
+    );
+
+    let assetPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(
+          parseFloat(
+            DecimalOperations.multiply(DecimalOperations.divide(assetDecimal, total), '100')
+          )
+        );
+
+    let liabilityPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(
+          parseFloat(
+            DecimalOperations.multiply(DecimalOperations.divide(liabilityDecimal, total), '100')
+          )
+        );
+
+    let equityPercentage = DecimalOperations.isZero(total)
+      ? 0
+      : Math.round(
+          parseFloat(
+            DecimalOperations.multiply(DecimalOperations.divide(equityDecimal, total), '100')
+          )
+        );
 
     const surplus = 100 - (assetPercentage + liabilityPercentage + equityPercentage);
 
     const maxPercentage = Math.max(assetPercentage, liabilityPercentage, equityPercentage);
 
     // Info: (20240731 - Murky) 判斷哪一項是最大的，並將surplus加上去
-    if (total > 0 && surplus !== 0) {
+    if (parseFloat(total) > 0 && surplus !== 0) {
       if (maxPercentage === assetPercentage) {
         assetPercentage += surplus;
       } else if (maxPercentage === liabilityPercentage) {
@@ -338,9 +381,9 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     }
 
     return {
-      assetPercentage,
-      liabilityPercentage,
-      equityPercentage,
+      assetPercentage: assetPercentage.toString(),
+      liabilityPercentage: liabilityPercentage.toString(),
+      equityPercentage: equityPercentage.toString(),
     };
   }
 
@@ -388,10 +431,34 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
   }
 
   static getTopAssetsPercentage(asset: IAccountReadyForFrontend[]) {
-    const curTop5Asset = asset.sort((a, b) => b.curPeriodAmount - a.curPeriodAmount).slice(0, 5);
-    const preTop5Asset = asset.sort((a, b) => b.prePeriodAmount - a.prePeriodAmount).slice(0, 5);
-    const curSurplus = 100 - curTop5Asset.reduce((acc, cur) => acc + cur.curPeriodPercentage, 0);
-    const preSurplus = 100 - preTop5Asset.reduce((acc, cur) => acc + cur.prePeriodPercentage, 0);
+    const curTop5Asset = asset
+      .sort((a, b) =>
+        parseFloat(
+          DecimalOperations.subtract(
+            b.curPeriodAmount.toString(),
+            a.curPeriodAmount.toString()
+          )
+        )
+      )
+      .slice(0, 5);
+    const preTop5Asset = asset
+      .sort((a, b) =>
+        parseFloat(
+          DecimalOperations.subtract(
+            b.prePeriodAmount.toString(),
+            a.prePeriodAmount.toString()
+          )
+        )
+      )
+      .slice(0, 5);
+    const curSurplus = DecimalOperations.subtract(
+      '100',
+      curTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.curPeriodPercentage), '0')
+    );
+    const preSurplus = DecimalOperations.subtract(
+      '100',
+      preTop5Asset.reduce((acc, cur) => DecimalOperations.add(acc, cur.prePeriodPercentage), '0')
+    );
 
     const curPercentage = curTop5Asset.map((account) => account.curPeriodPercentage);
     const curAssetName = curTop5Asset.map((account) => account.name);
@@ -399,12 +466,12 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const prePercentage = preTop5Asset.map((account) => account.prePeriodPercentage);
     const preAssetName = preTop5Asset.map((account) => account.name);
 
-    if (curSurplus > 0) {
+    if (DecimalOperations.isPositive(curSurplus)) {
       curPercentage.push(curSurplus);
       curAssetName.push('其他');
     }
 
-    if (preSurplus > 0) {
+    if (DecimalOperations.isPositive(preSurplus)) {
       prePercentage.push(preSurplus);
       preAssetName.push('其他');
     }
@@ -456,15 +523,34 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Info: (20240731 - Murky) DSO = (Account Receivable / Sales) * 365
 
-    const curDso = Math.abs(
-      salesTotal.curPeriodAmount !== 0
-        ? Math.round((accountReceivable.curPeriodAmount / salesTotal.curPeriodAmount) * DAY_IN_YEAR)
-        : 0
+    const salesCurrentAmount = salesTotal.curPeriodAmount.toString();
+    const receivableCurrentAmount = accountReceivable.curPeriodAmount.toString();
+    const salesPreviousAmount = salesTotal.prePeriodAmount.toString();
+    const receivablePreviousAmount = accountReceivable.prePeriodAmount.toString();
+
+    const curDso = DecimalOperations.abs(
+      !DecimalOperations.isZero(salesCurrentAmount)
+        ? Math.round(
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(receivableCurrentAmount, salesCurrentAmount),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
+        : '0'
     );
-    const preDso = Math.abs(
-      salesTotal.prePeriodAmount !== 0
-        ? Math.round((accountReceivable.prePeriodAmount / salesTotal.prePeriodAmount) * DAY_IN_YEAR)
-        : 0
+    const preDso = DecimalOperations.abs(
+      !DecimalOperations.isZero(salesPreviousAmount)
+        ? Math.round(
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(receivablePreviousAmount, salesPreviousAmount),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
+        : '0'
     );
     const dso = {
       curDso,
@@ -482,19 +568,31 @@ export default class BalanceSheetGenerator extends FinancialReportGenerator {
     const inventory =
       accountMap.get(SPECIAL_ACCOUNTS.INVENTORY_TOTAL.code) || EMPTY_I_ACCOUNT_READY_FRONTEND;
     // Inventory turnover days = ((Inventory begin + Inventory end) / 2)/ Operating cost) * 365
-    const curInventoryTurnoverDays = Math.abs(
-      operatingCost.curPeriodAmount !== 0
+    const operatingCostCurrentAmount = operatingCost.curPeriodAmount.toString();
+    const inventoryCurrentAmount = inventory.curPeriodAmount.toString();
+    const inventoryPreviousAmount = inventory.prePeriodAmount.toString();
+
+    const curInventoryTurnoverDays = DecimalOperations.abs(
+      !DecimalOperations.isZero(operatingCostCurrentAmount)
         ? Math.round(
-            ((inventory.curPeriodAmount + inventory.prePeriodAmount) /
-              2 /
-              operatingCost.curPeriodAmount) *
-              DAY_IN_YEAR
-          )
-        : 0
+            parseFloat(
+              DecimalOperations.multiply(
+                DecimalOperations.divide(
+                  DecimalOperations.divide(
+                    DecimalOperations.add(inventoryCurrentAmount, inventoryPreviousAmount),
+                    '2'
+                  ),
+                  operatingCostCurrentAmount
+                ),
+                DAY_IN_YEAR.toString()
+              )
+            )
+          ).toString()
+        : '0'
     );
 
     // Info: (20240729 - Murky) I need data of 2 two periods before, so this on can't be calculated
-    const preInventoryTurnoverDays = 0;
+    const preInventoryTurnoverDays = '0';
     const inventoryTurnoverDays = {
       curInventoryTurnoverDays,
       preInventoryTurnoverDays,

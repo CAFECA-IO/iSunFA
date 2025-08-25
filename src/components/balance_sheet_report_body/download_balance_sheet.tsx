@@ -283,8 +283,8 @@ const DownloadBalanceSheet: React.FC<DownloadBalanceSheetProps> = ({
 
   const renderDataRow = (
     label: string,
-    curValue: number | undefined,
-    preValue: number | undefined
+    curValue: string | undefined,
+    preValue: string | undefined
   ) => (
     <tr>
       <td className="border border-stroke-neutral-quaternary p-10px text-sm">{label}</td>

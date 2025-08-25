@@ -545,7 +545,10 @@ export const voucherAPIGetOneUtils = {
       const lineItem = revertAPLineItem.get(key);
       if (lineItem) {
         if (originalAPLineItem.has(key)) {
-          payableInfo.alreadyHappened = DecimalOperations.add(payableInfo.alreadyHappened, lineItem.amount);
+          payableInfo.alreadyHappened = DecimalOperations.add(
+            payableInfo.alreadyHappened,
+            lineItem.amount
+          );
           payableInfo.remain = DecimalOperations.subtract(payableInfo.remain, lineItem.amount);
         }
       }
@@ -569,7 +572,10 @@ export const voucherAPIGetOneUtils = {
       const lineItem = revertARLineItem.get(key);
       if (lineItem) {
         if (originalARLineItem.has(key)) {
-          receivingInfo.alreadyHappened = DecimalOperations.add(receivingInfo.alreadyHappened, lineItem.amount);
+          receivingInfo.alreadyHappened = DecimalOperations.add(
+            receivingInfo.alreadyHappened,
+            lineItem.amount
+          );
           receivingInfo.remain = DecimalOperations.subtract(receivingInfo.remain, lineItem.amount);
         }
       }
@@ -598,17 +604,25 @@ export const voucherAPIGetOneUtils = {
       const { payableInfo: newPayableInfo, receivingInfo: newReceivingInfo } =
         voucherAPIGetOneUtils.getPayableReceivableInfo(event);
       payableInfo.total = DecimalOperations.add(payableInfo.total, newPayableInfo.total);
-      payableInfo.alreadyHappened = DecimalOperations.add(payableInfo.alreadyHappened, newPayableInfo.alreadyHappened);
+      payableInfo.alreadyHappened = DecimalOperations.add(
+        payableInfo.alreadyHappened,
+        newPayableInfo.alreadyHappened
+      );
       payableInfo.remain = DecimalOperations.add(payableInfo.remain, newPayableInfo.remain);
 
       receivingInfo.total = DecimalOperations.add(receivingInfo.total, newReceivingInfo.total);
-      receivingInfo.alreadyHappened = DecimalOperations.add(receivingInfo.alreadyHappened, newReceivingInfo.alreadyHappened);
+      receivingInfo.alreadyHappened = DecimalOperations.add(
+        receivingInfo.alreadyHappened,
+        newReceivingInfo.alreadyHappened
+      );
       receivingInfo.remain = DecimalOperations.add(receivingInfo.remain, newReceivingInfo.remain);
     });
 
     return {
       payableInfo: DecimalOperations.isEqual(payableInfo.total, '0') ? undefined : payableInfo,
-      receivingInfo: DecimalOperations.isEqual(receivingInfo.total, '0') ? undefined : receivingInfo,
+      receivingInfo: DecimalOperations.isEqual(receivingInfo.total, '0')
+        ? undefined
+        : receivingInfo,
     };
   },
 

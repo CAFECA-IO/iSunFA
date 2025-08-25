@@ -84,14 +84,14 @@ async function handlePostRequest(req: NextApiRequest, res: NextApiResponse, acco
     });
     loggerBack.info(`Retrieved ${accounts.data.length} accounts for trial balance export`);
 
-    // Info: (20250425 - Shirley) Transform line items with debit and credit amounts
+    // Info: (20250425 - Shirley) Transform line items with debit and credit amounts - Use decimal operations
     const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
       const itemAmount =
-        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+        typeof item.amount === 'string' ? item.amount : item.amount.toString();
       return {
         ...item,
-        debitAmount: item.debit ? itemAmount : 0,
-        creditAmount: !item.debit ? itemAmount : 0,
+        debitAmount: item.debit ? itemAmount : '0',
+        creditAmount: !item.debit ? itemAmount : '0',
       };
     });
 

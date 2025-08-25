@@ -1,8 +1,9 @@
 import Image from 'next/image';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 import { FinancialReport, IncomeStatementOtherInfo } from '@/interfaces/report';
 import { useTranslation } from 'next-i18next';
 import { useCurrencyCtx } from '@/contexts/currency_context';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface CostRevRatioProps {
   financialReport: FinancialReport;
@@ -25,16 +26,24 @@ const CostRevRatio = ({
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
-  const curPeriodTotal = numberBeDashIfFalsy(
-    (otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || 0)
+  const curPeriodTotal = numberBeDashIfFalsyWithoutCommas(
+    parseFloat(DecimalOperations.add(
+      DecimalOperations.add(
+        otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
+        otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || '0'
+      ),
+      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || '0'
+    ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
 
-  const prePeriodTotal = numberBeDashIfFalsy(
-    (otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || 0)
+  const prePeriodTotal = numberBeDashIfFalsyWithoutCommas(
+    parseFloat(DecimalOperations.add(
+      DecimalOperations.add(
+        otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',
+        otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || '0'
+      ),
+      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || '0'
+    ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
   /* Info: (20240730 - Anna) 提取 curRatio 、 preRatio 、revenueToRD */
   const curRatio = otherInfo?.revenueAndExpenseRatio.ratio.curRatio || 0;
@@ -272,7 +281,7 @@ const CostRevRatio = ({
               {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: curRatio.toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(curRatio.toString()).toFixed(2) })}
             </span>
           </p>
         )}
@@ -282,7 +291,7 @@ const CostRevRatio = ({
               {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: preRatio.toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(preRatio.toString()).toFixed(2) })}
             </span>
           </p>
         )}
@@ -392,12 +401,12 @@ const CostRevRatio = ({
                         className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}
                       >
                         {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                        {revenueToRD.ratio.curRatio.toFixed(2)}%
+                        {parseFloat(revenueToRD.ratio.curRatio.toString()).toFixed(2)}%
                       </td>
                       <td
                         className={`${isPrint ? 'text-xs' : 'text-sm'} border border-stroke-neutral-quaternary p-10px text-end`}
                       >
-                        {revenueToRD.ratio.preRatio.toFixed(2)}%
+                        {parseFloat(revenueToRD.ratio.preRatio.toString()).toFixed(2)}%
                       </td>
                     </tr>
                   </>

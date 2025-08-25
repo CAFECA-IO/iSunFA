@@ -1,6 +1,6 @@
 // Info: (20241204 - Liz) 沒用到
 import { FinancialReportItem } from '@/interfaces/report';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 
 function IncomeStatementReportTableRow({
   code,
@@ -19,13 +19,13 @@ function IncomeStatementReportTableRow({
   const key = `${code}_${name}_${curPeriodAmount}_${curPeriodPercentage}_${prePeriodAmount}_${prePeriodPercentage}`;
 
   const displayCode = isCodeExist ? code : '';
-  const displayCurPeriodAmount: string = isCodeExist ? numberBeDashIfFalsy(curPeriodAmount) : '';
+  const displayCurPeriodAmount: string = isCodeExist ? numberBeDashIfFalsyWithoutCommas(curPeriodAmount) : '';
   const displayCurPeriodPercentage: string = isCodeExist
-    ? numberBeDashIfFalsy(curPeriodPercentage)
+    ? numberBeDashIfFalsyWithoutCommas(curPeriodPercentage)
     : '';
-  const displayPrePeriodAmount: string = isCodeExist ? numberBeDashIfFalsy(prePeriodAmount) : '';
+  const displayPrePeriodAmount: string = isCodeExist ? numberBeDashIfFalsyWithoutCommas(prePeriodAmount) : '';
   const displayPrePeriodPercentage: string = isCodeExist
-    ? numberBeDashIfFalsy(prePeriodPercentage)
+    ? numberBeDashIfFalsyWithoutCommas(prePeriodPercentage)
     : '';
 
   return (

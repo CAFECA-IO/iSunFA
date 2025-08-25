@@ -281,10 +281,16 @@ export const voucherAPIGetUtils = {
     events.forEach((event) => {
       const { payableInfo: newPayableInfo, receivingInfo: newReceivingInfo } =
         voucherAPIGetOneUtils.getPayableReceivableInfo(event);
-      payableInfo.alreadyHappened = DecimalOperations.add(payableInfo.alreadyHappened, newPayableInfo.alreadyHappened);
+      payableInfo.alreadyHappened = DecimalOperations.add(
+        payableInfo.alreadyHappened,
+        newPayableInfo.alreadyHappened
+      );
       payableInfo.remain = DecimalOperations.add(payableInfo.remain, newPayableInfo.remain);
 
-      receivingInfo.alreadyHappened = DecimalOperations.add(receivingInfo.alreadyHappened, newReceivingInfo.alreadyHappened);
+      receivingInfo.alreadyHappened = DecimalOperations.add(
+        receivingInfo.alreadyHappened,
+        newReceivingInfo.alreadyHappened
+      );
       receivingInfo.remain = DecimalOperations.add(receivingInfo.remain, newReceivingInfo.remain);
     });
 
@@ -313,8 +319,14 @@ export const voucherAPIGetUtils = {
 
         case SortBy.PAY_RECEIVE_ALREADY_HAPPENED:
           return tab === VoucherListTabV2.PAYMENT
-            ? DecimalOperations.compare(a.payableInfo.alreadyHappened, b.payableInfo.alreadyHappened)
-            : DecimalOperations.compare(a.receivingInfo.alreadyHappened, b.receivingInfo.alreadyHappened);
+            ? DecimalOperations.compare(
+                a.payableInfo.alreadyHappened,
+                b.payableInfo.alreadyHappened
+              )
+            : DecimalOperations.compare(
+                a.receivingInfo.alreadyHappened,
+                b.receivingInfo.alreadyHappened
+              );
 
         case SortBy.PAY_RECEIVE_REMAIN:
           return tab === VoucherListTabV2.PAYMENT

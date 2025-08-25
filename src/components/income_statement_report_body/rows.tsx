@@ -1,5 +1,5 @@
 import { IAccountReadyForFrontend } from '@/interfaces/accounting_account';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 import { useTranslation } from 'next-i18next';
 
 interface RowsProps {
@@ -37,16 +37,16 @@ const Rows = ({ flattenAccounts, isPrint }: RowsProps) => {
         const isCodeExist = code.length > 0;
         const displayCode = isCodeExist ? code : '';
         const displayCurPeriodAmount: string = isCodeExist
-          ? numberBeDashIfFalsy(curPeriodAmount)
+          ? numberBeDashIfFalsyWithoutCommas(curPeriodAmount)
           : '';
         const displayCurPeriodPercentage: string = isCodeExist
-          ? numberBeDashIfFalsy(curPeriodPercentage)
+          ? numberBeDashIfFalsyWithoutCommas(curPeriodPercentage)
           : '';
         const displayPrePeriodAmount: string = isCodeExist
-          ? numberBeDashIfFalsy(prePeriodAmount)
+          ? numberBeDashIfFalsyWithoutCommas(prePeriodAmount)
           : '';
         const displayPrePeriodPercentage: string = isCodeExist
-          ? numberBeDashIfFalsy(prePeriodPercentage)
+          ? numberBeDashIfFalsyWithoutCommas(prePeriodPercentage)
           : '';
 
         // Info: (20250213 - Anna) 判斷是否四個欄位都是 "0" 或 "-"

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { numberWithCommas } from '@/lib/utils/common';
 import type { TrialBalanceItem } from '@/interfaces/trial_balance';
 import CollapseButton from '@/components/button/collapse_button';
 
@@ -40,36 +39,36 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
 
   const displayedBeginningDebitAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.beginningDebitAmount)}
+      {account.beginningDebitAmount}
     </div>
   );
 
   const displayedBeginningCreditAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.beginningCreditAmount)}
+      {account.beginningCreditAmount}
     </div>
   );
   const displayedMidtermDebitAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.midtermDebitAmount)}
+      {account.midtermDebitAmount}
     </div>
   );
 
   const displayedMidtermCreditAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.midtermCreditAmount)}
+      {account.midtermCreditAmount}
     </div>
   );
 
   const displayedEndingDebitAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.endingDebitAmount)}
+      {account.endingDebitAmount}
     </div>
   );
 
   const displayedEndingCreditAmount = (
     <div className="flex items-center justify-end">
-      {numberWithCommas(account.endingCreditAmount)}
+      {account.endingCreditAmount}
     </div>
   );
 
@@ -148,27 +147,27 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.beginningDebitAmount)}
+              {subAccount.beginningDebitAmount}
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.beginningCreditAmount)}
+              {subAccount.beginningCreditAmount}
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.midtermDebitAmount)}
+              {subAccount.midtermDebitAmount}
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.midtermCreditAmount)}
+              {subAccount.midtermCreditAmount}
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.endingDebitAmount)}
+              {subAccount.endingDebitAmount}
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}
             <div className="table-cell border-l border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold print:max-w-65px print:px-1">
-              {numberWithCommas(subAccount.endingCreditAmount)}
+              {subAccount.endingCreditAmount}
             </div>
           </div>
         ))}

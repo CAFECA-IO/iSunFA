@@ -69,12 +69,12 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       return {
         currencyAlias: CurrencyType.TWD,
         total: {
-          beginningCreditAmount: 0,
-          beginningDebitAmount: 0,
-          midtermCreditAmount: 0,
-          midtermDebitAmount: 0,
-          endingCreditAmount: 0,
-          endingDebitAmount: 0,
+          beginningCreditAmount: '0',
+          beginningDebitAmount: '0',
+          midtermCreditAmount: '0',
+          midtermDebitAmount: '0',
+          endingCreditAmount: '0',
+          endingDebitAmount: '0',
           createAt: 0,
           updateAt: 0,
         },
@@ -508,10 +508,6 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
     <TrialBalanceItemRow key={account.id} account={account} totalExpanded={subAccountsToggle} />
   ));
 
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('en-US');
-  };
-
   // Info: (20241105 - Anna) 頁面渲染邏輯
   if (!hasFetchedOnce && !isLoading) {
     // Info: (20241105 - Anna) 如果尚未成功請求過 API 且沒有加載
@@ -634,37 +630,37 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.beginningDebitAmount ?? 0)}
+                  {totalData?.beginningDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-green p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.beginningCreditAmount ?? 0)}
+                  {totalData?.beginningCreditAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.midtermDebitAmount ?? 0)}
+                  {totalData?.midtermDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-baby p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.midtermCreditAmount ?? 0)}
+                  {totalData?.midtermCreditAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-r border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.endingDebitAmount ?? 0)}
+                  {totalData?.endingDebitAmount ?? '0'}
                 </div>
                 {/* Info: (20241018 - Anna) print:max-w-65px print:px-1 */}
                 <div
                   className={`table-cell w-100px border-stroke-neutral-quaternary bg-surface-support-soft-pink p-8px text-right align-middle font-semibold text-text-neutral-solid-dark print:max-w-65px print:px-1`}
                 >
-                  {formatNumber(totalData?.endingCreditAmount ?? 0)}
+                  {totalData?.endingCreditAmount ?? '0'}
                 </div>
               </div>
             </div>
