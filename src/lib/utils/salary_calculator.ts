@@ -167,7 +167,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資
   const vacationToPayHours =
     (options.vacationToPayHours ?? 0) > 0 ? (options.vacationToPayHours ?? 0) : 0;
-  const vacationToPay = baseSalaryPerHour * vacationToPayHours;
+  const vacationToPay = Math.ceil(baseSalaryPerHour * vacationToPayHours);
 
   // Info: (20250727 - Luphia) 計算在職小時數
   const workedHours = workedDays * 8;
