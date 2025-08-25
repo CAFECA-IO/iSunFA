@@ -29,7 +29,7 @@ describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', 
     accountBookId = (await helper.createAccountBook(userId, teamId)).id;
 
     // Info: (20250820 - Shirley) Use decimal amount for precision testing
-    testAmount = '73.23'; // Same as Postman example
+    testAmount = '73.23'; // Info: (20250822 - Shirley) Same as Postman example
 
     payload = {
       actions: [],
@@ -42,19 +42,19 @@ describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', 
         {
           description: 'Debit entry for AssociateLineItem test',
           debit: true,
-          amount: testAmount, // String format for decimal precision
-          accountId: 1601, // Match Postman example
+          amount: testAmount, // Info: (20250822 - Shirley) String format for decimal precision
+          accountId: 1601, // Info: (20250822 - Shirley) Match Postman example
         },
         {
           description: 'Credit entry for AssociateLineItem test',
           debit: false,
-          amount: testAmount, // String format for decimal precision
-          accountId: 1602, // Match Postman example
+          amount: testAmount, // Info: (20250822 - Shirley) String format for decimal precision
+          accountId: 1602, // Info: (20250822 - Shirley) Match Postman example
         },
       ],
       assetIds: [],
       counterPartyId: null,
-      reverseVouchers: [], // Empty for initial voucher creation
+      reverseVouchers: [], // Info: (20250822 - Shirley) Empty for initial voucher creation
     };
   });
 
@@ -144,8 +144,10 @@ describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', 
 
       expect(res.body.success).toBe(true);
 
-      // Info: (20250820 - Shirley) Voucher deletion should trigger AssociateLineItem creation
-      // The actual AssociateLineItem entries are created as part of the voucher deletion process
+      /* Info: (20250820 - Shirley)
+       * Voucher deletion should trigger AssociateLineItem creation
+       * The actual AssociateLineItem entries are created as part of the voucher deletion process
+       */
     });
 
     it('GET /voucher/:id → Verify voucher is marked as deleted', async () => {
@@ -323,10 +325,10 @@ describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', 
 
       // Info: (20250820 - Shirley) Test various decimal amounts for precision validation
       const decimalTestCases = [
-        '73.23', // Original Postman example
-        '1000.5678', // More decimal places
-        '0.01', // Small amount
-        '999999.999999', // Large amount with many decimals
+        '73.23', // Info: (20250822 - Shirley) Original Postman example
+        '1000.5678', // Info: (20250822 - Shirley) More decimal places
+        '0.01', // Info: (20250822 - Shirley) Small amount
+        '999999.999999', // Info: (20250822 - Shirley) Large amount with many decimals
       ];
 
       // Info: (20250820 - Shirley) Validate decimal precision without creating vouchers
@@ -337,10 +339,12 @@ describe('AssociateLineItem Test Workflow - Decimal Accounting Implementation', 
     });
 
     it('Should handle AssociateLineItem.amount migration from Int to DECIMAL', async () => {
-      // Info: (20250820 - Shirley) This test verifies the critical migration point
-      // AssociateLineItem.amount currently Int → needs DECIMAL(20,10) conversion
+      /* Info: (20250820 - Shirley)
+       * This test verifies the critical migration point
+       * AssociateLineItem.amount currently Int → needs DECIMAL(20,10) conversion
+       */
 
-      const migrationTestAmount = '123.456789'; // Amount with many decimal places
+      const migrationTestAmount = '123.456789'; // Info: (20250822 - Shirley) Amount with many decimal places
 
       // Info: (20250820 - Shirley) Create and delete voucher to trigger AssociateLineItem
       const migrationPayload = {
