@@ -8,7 +8,9 @@ export function isCompleteVoucherBeta(voucher: IVoucherBeta): boolean {
 
   const allValid = voucher.lineItemsInfo.lineItems.every(
     (item) =>
-      item.account?.id !== undefined && !DecimalOperations.isZero(item.amount) && (item.description?.trim() ?? '') !== ''
+      item.account?.id !== undefined &&
+      !DecimalOperations.isZero(item.amount) &&
+      (item.description?.trim() ?? '') !== ''
   );
 
   const debitAmounts = voucher.lineItemsInfo.lineItems

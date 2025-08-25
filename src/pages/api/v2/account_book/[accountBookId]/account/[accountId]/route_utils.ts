@@ -134,16 +134,16 @@ export const lineItemGetByAccountAPIUtils = {
     originalAmount: number;
   }) => {
     const { originDebit, reverseLineItems, originalAmount } = options;
-    let adjustedAmount = originalAmount;
+    let adjustedAmount = originalAmount.toString();
     reverseLineItems.forEach((reverseLineItem) => {
       if (reverseLineItem.debit !== originDebit) {
-        adjustedAmount -=
-          typeof reverseLineItem.amount === 'string'
-            ? parseFloat(reverseLineItem.amount)
-            : reverseLineItem.amount.toNumber();
+        const reverseAmount = typeof reverseLineItem.amount === 'string'
+          ? reverseLineItem.amount
+          : reverseLineItem.amount.toString();
+        adjustedAmount = DecimalOperations.subtract(adjustedAmount, reverseAmount);
       }
     });
-    return adjustedAmount;
+    return parseFloat(adjustedAmount);
   },
 
   /**

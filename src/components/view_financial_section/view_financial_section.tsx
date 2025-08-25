@@ -7,6 +7,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import {
   BalanceSheetReport,
   CashFlowStatementReport,
@@ -48,7 +49,7 @@ function isTaxReport401(report: TaxReport401Content): boolean {
   const taxCalculation = report.content.taxCalculation ? report.content.taxCalculation : '0';
   const imports = report.content.imports ? report.content.imports : '0';
   const bondedAreaSalesToTaxArea =
-    report.content.bondedAreaSalesToTaxArea === 0 ? '0' : report.content.bondedAreaSalesToTaxArea;
+    DecimalOperations.isZero(report.content.bondedAreaSalesToTaxArea) ? '0' : report.content.bondedAreaSalesToTaxArea;
   return !!(
     basicInfo &&
     sales &&

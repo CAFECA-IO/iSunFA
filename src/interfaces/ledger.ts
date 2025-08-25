@@ -22,16 +22,16 @@ export type ILedgerItem = {
   voucherNumber: string;
   voucherType: VoucherType;
   particulars: string;
-  debitAmount: number;
-  creditAmount: number;
-  balance: number;
+  debitAmount: string;
+  creditAmount: string;
+  balance: string;
   createdAt: number;
   updatedAt: number;
 };
 
 export type ILedgerTotal = {
-  totalDebitAmount: number;
-  totalCreditAmount: number;
+  totalDebitAmount: string;
+  totalCreditAmount: string;
   createdAt: number;
   updatedAt: number;
 };
@@ -56,9 +56,9 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       accountingTitle: '應收帳款',
       voucherNumber: 'ZV2024-001',
       particulars: '設備採購',
-      debitAmount: 300000,
-      creditAmount: 0,
-      balance: 420000,
+      debitAmount: '300000.00',
+      creditAmount: '0.00',
+      balance: '420000.00',
       voucherType: VoucherType.RECEIVE,
       createdAt: 1706745600,
       updatedAt: 1706745600,
@@ -72,9 +72,9 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       accountingTitle: '應收票據',
       voucherNumber: 'ZV2024-002',
       particulars: '開立發票',
-      debitAmount: 500000,
-      creditAmount: 0,
-      balance: 500000,
+      debitAmount: '500000.00',
+      creditAmount: '0.00',
+      balance: '500000.00',
       voucherType: VoucherType.RECEIVE,
       createdAt: 1706745600,
       updatedAt: 1706745600,
@@ -88,9 +88,9 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       accountingTitle: '應付帳款',
       voucherNumber: 'ZV2024-003',
       particulars: '原物料採購',
-      debitAmount: 0,
-      creditAmount: 200000,
-      balance: -200000,
+      debitAmount: '0.00',
+      creditAmount: '200000.00',
+      balance: '-200000.00',
       voucherType: VoucherType.EXPENSE,
       createdAt: 1706745600,
       updatedAt: 1706745600,
@@ -104,9 +104,9 @@ export const MOCK_RESPONSE: ILedgerPayload = {
       accountingTitle: '銀行存款',
       voucherNumber: 'ZV2024-004',
       particulars: '資金調度',
-      debitAmount: 100000,
-      creditAmount: 0,
-      balance: 100000,
+      debitAmount: '100000.00',
+      creditAmount: '0.00',
+      balance: '100000.00',
       voucherType: VoucherType.TRANSFER,
       createdAt: 1706745600,
       updatedAt: 1706745600,
@@ -127,8 +127,8 @@ export const MOCK_RESPONSE: ILedgerPayload = {
   note: JSON.stringify({
     currencyAlias: 'TWD',
     total: {
-      totalDebitAmount: 800000,
-      totalCreditAmount: 800000,
+      totalDebitAmount: '800000.00',
+      totalCreditAmount: '800000.00',
       createdAt: 1706745600,
       updatedAt: 1708854635,
     },

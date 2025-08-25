@@ -47,6 +47,7 @@ import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { IInvoiceRC2, IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
 import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
@@ -203,13 +204,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
-  const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + parseFloat(item.amount) : acc),
-    0
+  const aiTotalCredit = parseFloat(
+    aiLineItems.reduce(
+      (acc, item) => (item.debit === false ? DecimalOperations.add(acc, item.amount) : acc),
+      '0'
+    )
   );
-  const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + parseFloat(item.amount) : acc),
-    0
+  const aiTotalDebit = parseFloat(
+    aiLineItems.reduce(
+      (acc, item) => (item.debit === true ? DecimalOperations.add(acc, item.amount) : acc),
+      '0'
+    )
   );
 
   const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);

@@ -83,9 +83,7 @@ export function formatIJournal(
         return {
           lineItemIndex: lineItem.id.toString(),
           amount:
-            typeof lineItem.amount === 'string'
-              ? lineItem.amount
-              : lineItem.amount.toString(),
+            typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString(),
           debit: lineItem.debit,
           account: `${lineItem.account.code} - ${lineItem.account.name}`,
           description: lineItem.description,

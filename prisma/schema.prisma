@@ -135,7 +135,7 @@ model AssociateLineItem {
   originalLineItemId Int     @map("original_line_item_id")
   resultLineItemId   Int     @map("result_line_item_id")
   debit              Boolean
-  amount             Int
+  amount             Decimal @db.Decimal(26, 8)
   createdAt          Int     @map("created_at")
   updatedAt          Int     @map("updated_at")
   deletedAt          Int?    @map("deleted_at")

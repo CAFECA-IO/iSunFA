@@ -138,9 +138,9 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
       expect(firstItem.accountId).toBeDefined();
       expect(firstItem.voucherId).toBeDefined();
       expect(firstItem.accountingTitle).toBeDefined();
-      expect(typeof firstItem.debitAmount).toBe('number');
-      expect(typeof firstItem.creditAmount).toBe('number');
-      expect(typeof firstItem.balance).toBe('number');
+      expect(typeof firstItem.debitAmount).toBe('string');
+      expect(typeof firstItem.creditAmount).toBe('string');
+      expect(typeof firstItem.balance).toBe('string');
     });
   });
 
@@ -199,9 +199,9 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
         expect(firstItem.accountId).toBeDefined();
         expect(firstItem.voucherId).toBeDefined();
         expect(firstItem.accountingTitle).toBeDefined();
-        expect(typeof firstItem.debitAmount).toBe('number');
-        expect(typeof firstItem.creditAmount).toBe('number');
-        expect(typeof firstItem.balance).toBe('number');
+        expect(typeof firstItem.debitAmount).toBe('string');
+        expect(typeof firstItem.creditAmount).toBe('string');
+        expect(typeof firstItem.balance).toBe('string');
       }
 
       // Info: (20250729 - Shirley) 驗證分類帳總額平衡 (借貸相等)
@@ -298,6 +298,9 @@ describe('Integration Test - Ledger Integration (Test Case 8.4)', () => {
           voucherNumber: values[2],
           voucherDate,
           particulars: values[4],
+          // debitAmount: values[5],
+          // creditAmount: values[6],
+          // balance: values[7],
           debitAmount: parseInt(values[5], 10) || 0,
           creditAmount: parseInt(values[6], 10) || 0,
           balance: parseInt(values[7], 10) || 0,

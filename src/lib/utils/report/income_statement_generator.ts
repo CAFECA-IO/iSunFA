@@ -16,6 +16,7 @@ import {
 } from '@/interfaces/accounting_account';
 import { IFinancialReportInDB, IncomeStatementOtherInfo } from '@/interfaces/report';
 import FinancialReportGenerator from '@/lib/utils/report/financial_report_generator';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export default class IncomeStatementGenerator extends FinancialReportGenerator {
   private eslintEscape = '';
@@ -72,8 +73,14 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     accountMap.forEach((value, key) => {
       updatedAccountMap.set(key, {
         accountNode: value.accountNode,
-        percentage:
-          operatingRevenueAmount === 0 ? 0 : value.accountNode.amount / operatingRevenueAmount,
+        percentage: parseFloat(
+          DecimalOperations.isZero(operatingRevenueAmount)
+            ? '0'
+            : DecimalOperations.divide(
+                value.accountNode.amount.toString(),
+                operatingRevenueAmount.toString()
+              )
+        ),
       });
     });
 
@@ -118,11 +125,11 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     salesExpense?: IAccountReadyForFrontend,
     administrativeExpense?: IAccountReadyForFrontend
   ): {
-    curRatio: number;
-    preRatio: number;
+    curRatio: string;
+    preRatio: string;
   } {
-    let curRatio = 0;
-    let preRatio = 0;
+    let curRatio = '0';
+    let preRatio = '0';
 
     if (!revenue || !totalCost || !salesExpense || !administrativeExpense) {
       return {
@@ -131,30 +138,22 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    if (
-      totalCost.curPeriodAmount +
-        salesExpense.curPeriodAmount +
-        administrativeExpense.curPeriodAmount !==
-      0
-    ) {
-      curRatio =
-        revenue.curPeriodAmount /
-        (totalCost.curPeriodAmount +
-          salesExpense.curPeriodAmount +
-          administrativeExpense.curPeriodAmount);
+    const totalCurrentExpenses = DecimalOperations.add(
+      DecimalOperations.add(totalCost.curPeriodAmount || '0', salesExpense.curPeriodAmount || '0'),
+      administrativeExpense.curPeriodAmount || '0'
+    );
+
+    if (!DecimalOperations.isZero(totalCurrentExpenses)) {
+      curRatio = DecimalOperations.divide(revenue.curPeriodAmount || '0', totalCurrentExpenses);
     }
 
-    if (
-      totalCost.prePeriodAmount +
-        salesExpense.prePeriodAmount +
-        administrativeExpense.prePeriodAmount !==
-      0
-    ) {
-      preRatio =
-        revenue.prePeriodAmount /
-        (totalCost.prePeriodAmount +
-          salesExpense.prePeriodAmount +
-          administrativeExpense.prePeriodAmount);
+    const totalPreviousExpenses = DecimalOperations.add(
+      DecimalOperations.add(totalCost.prePeriodAmount || '0', salesExpense.prePeriodAmount || '0'),
+      administrativeExpense.prePeriodAmount || '0'
+    );
+
+    if (!DecimalOperations.isZero(totalPreviousExpenses)) {
+      preRatio = DecimalOperations.divide(revenue.prePeriodAmount || '0', totalPreviousExpenses);
     }
 
     return {
@@ -193,11 +192,11 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
     revenue?: IAccountReadyForFrontend,
     researchAndDevelopment?: IAccountReadyForFrontend
   ): {
-    curRatio: number;
-    preRatio: number;
+    curRatio: string;
+    preRatio: string;
   } {
-    let curRatio = 0;
-    let preRatio = 0;
+    let curRatio = '0';
+    let preRatio = '0';
 
     if (!revenue || !researchAndDevelopment) {
       return {
@@ -206,12 +205,20 @@ export default class IncomeStatementGenerator extends FinancialReportGenerator {
       };
     }
 
-    if (revenue.curPeriodAmount !== 0) {
-      curRatio = researchAndDevelopment.curPeriodAmount / revenue.curPeriodAmount;
+    const currentRevenueAmount = revenue.curPeriodAmount || '0';
+    if (!DecimalOperations.isZero(currentRevenueAmount)) {
+      curRatio = DecimalOperations.divide(
+        researchAndDevelopment.curPeriodAmount || '0',
+        currentRevenueAmount
+      );
     }
 
-    if (revenue.prePeriodAmount !== 0) {
-      preRatio = researchAndDevelopment.prePeriodAmount / revenue.prePeriodAmount;
+    const previousRevenueAmount = revenue.prePeriodAmount || '0';
+    if (!DecimalOperations.isZero(previousRevenueAmount)) {
+      preRatio = DecimalOperations.divide(
+        researchAndDevelopment.prePeriodAmount || '0',
+        previousRevenueAmount
+      );
     }
 
     return {

@@ -163,14 +163,14 @@ async function handleGetRequest(req: NextApiRequest) {
       forUser: true,
     });
 
-    // Info: (20250424 - Shirley) Step 4 整理資料
+    // Info: (20250424 - Shirley) Step 4 整理資料 - Use decimal operations for precise calculations
     const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
       const itemAmount =
-        typeof item.amount === 'string' ? parseFloat(item.amount) : item.amount.toNumber();
+        typeof item.amount === 'string' ? item.amount : item.amount.toString();
       return {
         ...item,
-        debitAmount: item.debit ? itemAmount : 0,
-        creditAmount: !item.debit ? itemAmount : 0,
+        debitAmount: item.debit ? itemAmount : '0',
+        creditAmount: !item.debit ? itemAmount : '0',
       };
     });
 

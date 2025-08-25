@@ -9,9 +9,10 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import CollapseButton from '@/components/button/collapse_button';
-import { numberBeDashIfFalsy } from '@/lib/utils/common';
+import { numberBeDashIfFalsyWithoutCommas } from '@/lib/utils/common';
 import IncomeStatementReportTableRow from '@/components/income_statement_report_body/income_statement_report_table_row';
 import { useTranslation } from 'next-i18next';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface IIncomeStatementReportBodyAllProps {
   reportId: string;
@@ -69,10 +70,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                 !(
                   // Info: (20250217 - Anna) 如果 item. 是 null 或 undefined，則轉為 0 再進行判斷
                   (
-                    (item.curPeriodAmount ?? 0) === 0 &&
-                    (item.curPeriodPercentage ?? 0) === 0 &&
-                    (item.prePeriodAmount ?? 0) === 0 &&
-                    (item.prePeriodPercentage ?? 0) === 0
+                    DecimalOperations.isZero(item.curPeriodAmount ?? '0') &&
+                    DecimalOperations.isZero(item.curPeriodPercentage ?? '0') &&
+                    DecimalOperations.isZero(item.prePeriodAmount ?? '0') &&
+                    DecimalOperations.isZero(item.prePeriodPercentage ?? '0')
                   )
                 )
             ) ?? [];
@@ -81,10 +82,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
             report.details?.filter(
               (item) =>
                 !(
-                  (item.curPeriodAmount ?? 0) === 0 &&
-                  (item.curPeriodPercentage ?? 0) === 0 &&
-                  (item.prePeriodAmount ?? 0) === 0 &&
-                  (item.prePeriodPercentage ?? 0) === 0
+                  DecimalOperations.isZero(item.curPeriodAmount ?? '0') &&
+                  DecimalOperations.isZero(item.curPeriodPercentage ?? '0') &&
+                  DecimalOperations.isZero(item.prePeriodAmount ?? '0') &&
+                  DecimalOperations.isZero(item.prePeriodPercentage ?? '0')
                 )
             ) ?? [];
 
@@ -133,15 +134,23 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
   const otherInfo = financialReport?.otherInfo as IncomeStatementOtherInfo;
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
-  const curPeriodTotal = numberBeDashIfFalsy(
-    (otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || 0)
+  const curPeriodTotal = numberBeDashIfFalsyWithoutCommas(
+    parseFloat(DecimalOperations.add(
+      DecimalOperations.add(
+        otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
+        otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || '0'
+      ),
+      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || '0'
+    ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
-  const prePeriodTotal = numberBeDashIfFalsy(
-    (otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || 0) +
-      (otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || 0)
+  const prePeriodTotal = numberBeDashIfFalsyWithoutCommas(
+    parseFloat(DecimalOperations.add(
+      DecimalOperations.add(
+        otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',
+        otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || '0'
+      ),
+      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || '0'
+    ))
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
 
   /* Info: (20240730 - Anna) 提取 curRatio 、 preRatio 、revenueToRD */
@@ -856,13 +865,13 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     {value.name}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-                    {value.curPeriodAmount === 0 ? '-' : value.curPeriodAmount}
+                    {DecimalOperations.isZero(value.curPeriodAmount ?? '0') ? '-' : value.curPeriodAmount}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-                    {value.prePeriodAmount === 0 ? '-' : value.prePeriodAmount}
+                    {DecimalOperations.isZero(value.prePeriodAmount ?? '0') ? '-' : value.prePeriodAmount}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
@@ -1066,7 +1075,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: curRatio.toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(curRatio.toString()).toFixed(2) })}
             </span>
           </p>
         )}
@@ -1076,7 +1085,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: preRatio.toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(preRatio.toString()).toFixed(2) })}
             </span>
           </p>
         )}
@@ -1154,10 +1163,10 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
                     {/* Info: (20240724 - Anna) 保留兩位小數 */}
-                    {revenueToRD.ratio.curRatio.toFixed(2)}%
+                    {parseFloat(revenueToRD.ratio.curRatio.toString()).toFixed(2)}%
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-                    {revenueToRD.ratio.preRatio.toFixed(2)}%
+                    {parseFloat(revenueToRD.ratio.preRatio.toString()).toFixed(2)}%
                   </td>
                 </tr>
               </>
