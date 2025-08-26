@@ -51,12 +51,13 @@ const getSalaryDeductionsByYear = (year: number): ISalaryDeduction[] => {
 
 const getForeignEmployeeBurdenIncomeTax = (year: number, salary: number): number => {
   /* Info: (20250825 - Luphia) 外籍員工代扣所得稅
-   * 外籍人士薪資小於 1.5 倍最低薪資，預扣 6%
-   * 外籍人士薪資大於等於 1.5 倍最低薪資，預扣 18%
+   * 1. 外籍人士薪資小於 1.5 倍最低薪資，預扣 6%
+   * 2. 外籍人士薪資大於等於 1.5 倍最低薪資，預扣 18%
+   * 3. 採四捨五入計算
    */
   const minimumWage = getMinimumWage(year);
   const employeeBurdenIncomeTax =
-    salary < minimumWage * 1.5 ? Math.ceil(salary * 0.06) : Math.ceil(salary * 0.18);
+    salary < minimumWage * 1.5 ? Math.round(salary * 0.06) : Math.round(salary * 0.18);
   return employeeBurdenIncomeTax;
 };
 
@@ -65,7 +66,7 @@ const getEmployeeBurdenIncomeTax = (
   salary: number,
   dependentsCount: number
 ): number => {
-  // Info: (20250825 - Luphia) 員工預扣所得稅
+  // Info: (20250825 - Luphia) 員工預扣所得稅，用查表法
   const salaryDeduction = getSalaryDeductionsByYear(year);
   let deductionLevel = salaryDeduction.find((deduction) => deduction[0] >= salary);
   // Info: (20250727 - Luphia) 如果薪資超過最大級距，則使用最大級距
@@ -212,7 +213,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const baseSalaryTaxFreePerHour = baseSalaryTaxFree / (daysInMonth * 8);
   const baseSalaryPerHour = baseSalaryTaxablePerHour + baseSalaryTaxFreePerHour;
 
-  // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資
+  // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資，無條件進入整數位
   const vacationToPayHours =
     (options.vacationToPayHours ?? 0) > 0 ? (options.vacationToPayHours ?? 0) : 0;
   const vacationToPay = Math.ceil(baseSalaryPerHour * vacationToPayHours);
@@ -251,10 +252,10 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   // Info: (20250727 - Luphia) 計算本薪（應稅），無條件進入整數位
   const resultBaseSalaryTaxable = Math.ceil(baseSalaryTaxablePay - leaveDeductionTaxable);
 
-  // Info: (20250815 - Luphia) 計算二代健保費，若未保健保則需計算 2.11% 二代健保費
+  // Info: (20250815 - Luphia) 計算二代健保費，若未保健保則需計算 2.11% 二代健保費，採四捨五入
   const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
     ? 0
-    : Math.ceil(resultBaseSalaryTaxable * 0.0211);
+    : Math.round(resultBaseSalaryTaxable * 0.0211);
 
   // Info: (20250727 - Luphia) 計算伙食費，無條件進入整數位
   const resultBaseSalaryTaxFree = Math.ceil(baseSalaryTaxFreePay - leaveDeductionTaxFree);
@@ -281,21 +282,21 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
       ? salaryLevel.healthInsurance.company
       : 0;
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保，採四捨五入
   const companyBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? Math.ceil(salaryLevel.laborInsurance.company * baseSalaryRatio)
+    ? Math.round(salaryLevel.laborInsurance.company * baseSalaryRatio)
     : 0;
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞退
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞退，採四捨五入
   const companyBurdenPensionInsurance = isPensionInsuranceEnrolled
-    ? Math.ceil(salaryLevel.pensionInsurance.company * baseSalaryRatio)
+    ? Math.round(salaryLevel.pensionInsurance.company * baseSalaryRatio)
     : 0;
   const totalCompanyBurden =
     companyBurdenHealthInsurance + companyBurdenLaborInsurance + companyBurdenPensionInsurance;
 
   // Info: (20250727 - Luphia) 計算員工負擔與扣項
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保
+  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保，採四捨五入
   const employeeBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? Math.ceil(salaryLevel.laborInsurance.employee * baseSalaryRatio)
+    ? Math.round(salaryLevel.laborInsurance.employee * baseSalaryRatio)
     : 0;
   // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
