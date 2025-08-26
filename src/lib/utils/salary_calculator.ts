@@ -145,10 +145,6 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const employmentInsuranceLevel = salaryLevel.salary;
   const occupationalDisasterInsuranceLevel = salaryLevel.salary;
   const pensionInsuranceLevel = salaryLevel.pensionInsurance.salary;
-  // Info: (20250815 - Luphia) 若未保健保則需計算 2.11% 二代健保費
-  const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
-    ? 0
-    : Math.ceil(baseSalary * 0.0211);
   const insuredSalary = baseSalary;
 
   // ToDo: (20250727 - Luphia) 計算代扣所得稅款
@@ -202,6 +198,11 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const resultBaseSalaryTaxable = Math.ceil(
     (baseSalaryTaxable / hoursInMonth) * (workedHours - totalLeaveHours)
   );
+
+  // Info: (20250815 - Luphia) 計算二代健保費，若未保健保則需計算 2.11% 二代健保費
+  const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
+    ? 0
+    : Math.ceil(resultBaseSalaryTaxable * 0.0211);
 
   // Info: (20250727 - Luphia) 計算伙食費，無條件進入整數位
   const resultBaseSalaryTaxFree = Math.ceil(
