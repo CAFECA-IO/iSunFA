@@ -32,6 +32,7 @@ import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty'
 import { useIsLg } from '@/lib/utils/use_is_lg';
 import { useCurrencyCtx } from '@/contexts/currency_context';
 import eventManager from '@/lib/utils/event_manager';
+import { ToastType } from '@/interfaces/toastify';
 
 interface InputInvoiceEditModalProps {
   isOpen: boolean;
@@ -95,7 +96,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     startTimeStamp: certificate?.issuedDate ?? 0,
     endTimeStamp: 0,
   });
-  const { isMessageModalVisible } = useModalContext();
+  const { isMessageModalVisible, toastHandler } = useModalContext();
   const [formState, setFormState] = useState(
     () =>
       ({
@@ -185,7 +186,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     const totalOfSummarizedInvoicesStr = totalOfSummarizedInvoices?.toString() || '0';
     if (
       (type === InvoiceType.INPUT_26 || type === InvoiceType.INPUT_27) &&
-      (!totalOfSummarizedInvoices || DecimalOperations.isLessThanOrEqual(totalOfSummarizedInvoicesStr, '0'))
+      (!totalOfSummarizedInvoices ||
+        DecimalOperations.isLessThanOrEqual(totalOfSummarizedInvoicesStr, '0'))
     ) {
       newErrors.totalOfSummarizedInvoices = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
@@ -241,6 +243,14 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
     // Info: (20250414 - Anna) 更新最新儲存成功的內容
     savedInvoiceRC2Ref.current = updatedCertificate;
+
+    // Info: (20250827 - Julian) 顯示成功訊息
+    toastHandler({
+      id: 'invoice-edit-auto-save-success',
+      type: ToastType.SUCCESS,
+      content: '儲存成功',
+      closeable: true,
+    });
   }, [certificate, onSave]);
 
   const handleInputChange = useCallback(
@@ -393,6 +403,82 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     handleInputChange('taxAmount', updateTaxPrice);
   };
 
+  const saveBtnClickHandler = async () => {
+    const isDateValid = date.startTimeStamp && date.startTimeStamp > 0;
+    const isInvoiceNumberValid = formState.no && formState.no.trim() !== '';
+    const isPriceBeforeTaxValid =
+      formState.netAmount &&
+      !DecimalOperations.isLessThanOrEqual(formState.netAmount.toString(), '0');
+    const isTaxAmountValid =
+      (formState.type !== InvoiceType.INPUT_20 &&
+        formState.type !== InvoiceType.INPUT_22 &&
+        formState.type !== InvoiceType.INPUT_24 &&
+        formState.type !== InvoiceType.INPUT_27 &&
+        formState.taxRate !== undefined &&
+        formState.taxAmount &&
+        !DecimalOperations.isLessThanOrEqual(formState.taxAmount.toString(), '0')) ||
+      (formState.type !== InvoiceType.INPUT_20 && formState.taxAmount != null);
+
+    // ToDo: (20250827 - Julian) 翻譯錯誤訊息
+    if (!isDateValid) {
+      toastHandler({
+        id: 'invoice-edit-date-error',
+        type: ToastType.ERROR,
+        content: '請填寫發票日期',
+        closeable: true,
+      });
+      return;
+    }
+    if (!isInvoiceNumberValid) {
+      toastHandler({
+        id: 'invoice-edit-no-error',
+        type: ToastType.ERROR,
+        content: '請填寫發票號碼',
+        closeable: true,
+      });
+      return;
+    }
+    if (!isPriceBeforeTaxValid) {
+      toastHandler({
+        id: 'invoice-edit-amount-error',
+        type: ToastType.ERROR,
+        content: '請填寫銷售額',
+        closeable: true,
+      });
+      return;
+    }
+    if (!isTaxAmountValid) {
+      toastHandler({
+        id: 'invoice-edit-tax-error',
+        type: ToastType.ERROR,
+        content: '請填寫稅額',
+        closeable: true,
+      });
+      return;
+    }
+    if (!certificate) {
+      toastHandler({
+        id: 'invoice-edit-certificate-error',
+        type: ToastType.ERROR,
+        content: '發生錯誤，找不到此憑證',
+        closeable: true,
+      });
+      return;
+    }
+    if (!validateForm()) {
+      toastHandler({
+        id: 'invoice-edit-form-error',
+        type: ToastType.ERROR,
+        content: '表單資料有誤，請確認後再儲存',
+        closeable: true,
+      });
+      return;
+    }
+
+    handleSave();
+    toggleModel();
+  };
+
   // Info: (20241206 - Julian) currency alias setting
   const currencyAliasImageAlt = `currency-${(certificate?.currencyCode || currencyAlias).toLowerCase()}-icon`;
 
@@ -519,9 +605,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       className={`fixed inset-0 z-120 flex items-center justify-center ${isMessageModalVisible ? '' : 'bg-black/50'}`}
     >
       <div className="overflow-hidden rounded-sm">
-        <div className="max-h-90vh w-90vw max-w-95vw overflow-y-auto bg-surface-neutral-surface-lv2 px-8 py-4 md:max-w-1000px">
+        <div className="w-90vw max-w-95vw bg-surface-neutral-surface-lv2 px-8 py-4 md:max-w-1000px">
           <form
-            className={`relative flex flex-col gap-4`}
+            className={`relative flex max-h-90vh flex-col gap-4`}
             onSubmit={(e) => e.preventDefault()} // Info: (20250414 - Anna) 防止表單預設行為
           >
             {/* Info: (20240924 - Anna) 關閉按鈕 */}
@@ -543,7 +629,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             </div>
 
             {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-            <div className="hide-scrollbar flex w-full flex-col items-start justify-between gap-5 overflow-y-scroll lg:h-600px lg:flex-row">
+            <div className="hide-scrollbar flex h-550px w-full flex-col items-start justify-between gap-5 lg:flex-row">
               {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
               {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
@@ -564,14 +650,14 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 </div>
               )}
               {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
-                <div className="relative w-full lg:h-570px">
+                <div className="relative lg:h-570px">
                   <ImageZoom
                     imageUrl={
                       certificate.isGenerated && eInvoiceImageUrl
                         ? eInvoiceImageUrl
                         : certificate.file.thumbnail?.url || certificate.file.url
                     }
-                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:max-h-640px tablet:min-h-510px tablet:w-440px lg:mx-0"
+                    className="mx-auto h-350px w-240px iphonese:w-256px tablet:h-500px tablet:w-440px lg:mx-0"
                     controlPosition={isLg ? 'bottom-right' : 'bottom-center'}
                   />
                 </div>
@@ -579,22 +665,21 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
               {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
               <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
-                <div>
-                  {/* Info: (20250801 - Julian) 儲存紐 */}
-                  <Button
-                    type="button"
-                    className="w-full"
-                    onClick={() => {
-                      handleSave();
-                      toggleModel();
-                    }}
-                  >
-                    <p>{t('common:COMMON.SAVE')}</p>
-                  </Button>
-                  {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
-                  <div className="ml-auto flex items-center gap-4">
-                    {/* Info: (20250415 - Anna) 上一筆 */}
-                    {/* <Button
+                {/* Info: (20250801 - Julian) 儲存紐 */}
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={() => {
+                    handleSave();
+                    toggleModel();
+                  }}
+                >
+                  <p>{t('common:COMMON.SAVE')}</p>
+                </Button>
+                {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
+                <div className="ml-auto flex items-center gap-4">
+                  {/* Info: (20250415 - Anna) 上一筆 */}
+                  {/* <Button
                       type="button"
                       disabled={!hasPrev}
                       onClick={() => setEditingId(certificates[currentIndex - 1].id)}
@@ -604,8 +689,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <IoArrowBackOutline size={20} />
                       <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
                     </Button> */}
-                    {/* Info: (20250415 - Anna) 下一筆 */}
-                    {/* <Button
+                  {/* Info: (20250415 - Anna) 下一筆 */}
+                  {/* <Button
                       onClick={() => setEditingId(certificates[currentIndex + 1].id)}
                       type="button"
                       disabled={!hasNext}
@@ -615,29 +700,28 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
                       <IoArrowForward size={20} />
                     </Button> */}
-                  </div>
-                  {!certificate?.voucherNo && (
-                    <Button
-                      id="certificate-delete-btn"
-                      type="button"
-                      className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
-                      onClick={() => {
-                        if (certificate?.id !== undefined) {
-                          onDelete(certificate.id);
-                        }
-                      }}
-                      variant="errorOutline"
-                    >
-                      <LuTrash2 size={20} />
-                      <p>{t('common:COMMON.DELETE')}</p>
-                    </Button>
-                  )}
                 </div>
+                {!certificate?.voucherNo && (
+                  <Button
+                    id="certificate-delete-btn"
+                    type="button"
+                    className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
+                    onClick={() => {
+                      if (certificate?.id !== undefined) {
+                        onDelete(certificate.id);
+                      }
+                    }}
+                    variant="errorOutline"
+                  >
+                    <LuTrash2 size={20} />
+                    <p>{t('common:COMMON.DELETE')}</p>
+                  </Button>
+                )}
               </div>
 
               {/* Info: (20240924 - Anna) 編輯表單 */}
               {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-              <div className="hide-scrollbar flex h-600px w-full flex-col items-start space-y-4 pb-80px pt-20 lg:overflow-y-scroll lg:pt-0">
+              <div className="hide-scrollbar flex h-550px w-full flex-col items-start space-y-4 pb-80px pt-20 lg:overflow-y-scroll lg:pt-0">
                 {/* Info: (20240924 - Anna) Invoice Type */}
                 <div className="flex w-full flex-col items-start gap-2">
                   <p className="text-sm font-semibold text-neutral-300">
@@ -737,12 +821,17 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         // Info: (20250428 - Anna) 只在值是 0 或 undefined 時全部選取
                         onFocus={() => {
                           const value = formState.totalOfSummarizedInvoices?.toString() || '0';
-                          if (formState.totalOfSummarizedInvoices === undefined || DecimalOperations.isZero(value)) {
+                          if (
+                            formState.totalOfSummarizedInvoices === undefined ||
+                            DecimalOperations.isZero(value)
+                          ) {
                             summarizedInvoiceInputRef.current?.select();
                           }
                         }}
                         className={`h-44px w-16 flex-1 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-right uppercase outline-none ${
-                          DecimalOperations.isZero(formState.totalOfSummarizedInvoices?.toString() || '0') || formState.totalOfSummarizedInvoices === undefined
+                          DecimalOperations.isZero(
+                            formState.totalOfSummarizedInvoices?.toString() || '0'
+                          ) || formState.totalOfSummarizedInvoices === undefined
                             ? 'text-neutral-300'
                             : 'text-neutral-600'
                         }`}
@@ -1181,13 +1270,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                         className="h-46px w-full rounded-l-sm border border-input-stroke-input bg-input-surface-input-background p-10px text-right outline-none"
                         triggerWhenChanged={netAmountChangeHandler}
                       />
-                      <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                      <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                         <Image
                           src={`/currencies/${currency.toLowerCase()}.svg`}
                           width={16}
                           height={16}
                           alt={currencyAliasImageAlt}
-                          className="aspect-square rounded-full object-cover"
+                          className="aspect-square shrink-0 rounded-full object-cover"
                         />
                         <p>{currency}</p>
                       </div>
@@ -1225,7 +1314,8 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                           // Info: (20250516 - Anna) 手動改變稅額時，更新總金額，觸發儲存 API
                           // Info: (20250516 - Anna) 如果輸入的值 value 跟目前的稅額 taxAmount 相同，就什麼都不做
                           triggerWhenChanged={(value: string) => {
-                            const currentTaxAmount = formStateRef.current.taxAmount?.toString() || '0';
+                            const currentTaxAmount =
+                              formStateRef.current.taxAmount?.toString() || '0';
                             const newTaxAmount = value;
                             if (DecimalOperations.isEqual(newTaxAmount, currentTaxAmount)) return;
 
@@ -1253,13 +1343,13 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                             }, 1000);
                           }}
                         />
-                        <div className="flex h-46px w-91px min-w-91px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
+                        <div className="flex h-46px items-center gap-4px rounded-r-sm border border-l-0 border-input-stroke-input bg-input-surface-input-background p-14px text-sm text-input-text-input-placeholder">
                           <Image
                             src={`/currencies/${currency.toLowerCase()}.svg`}
                             width={16}
                             height={16}
                             alt={currencyAliasImageAlt}
-                            className="aspect-square rounded-full object-cover"
+                            className="aspect-square shrink-0 rounded-full object-cover"
                           />
                           <p>{currency}</p>
                         </div>
@@ -1373,13 +1463,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               )}
               <div className="ml-auto flex items-center gap-4">
                 {/* Info: (20250801 - Julian) 儲存紐 */}
-                <Button
-                  type="button"
-                  onClick={() => {
-                    handleSave();
-                    toggleModel();
-                  }}
-                >
+                <Button type="button" onClick={saveBtnClickHandler}>
                   <p>{t('common:COMMON.SAVE')}</p>
                 </Button>
                 {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
