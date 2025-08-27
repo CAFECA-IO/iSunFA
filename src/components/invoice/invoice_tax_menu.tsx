@@ -21,7 +21,10 @@ interface ITaxMenuProps {
 
 const TaxMenu: React.FC<ITaxMenuProps> = ({ selectTaxHandler, initialTaxType }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
-  const [selectedTax, setSelectedTax] = useState<TaxOptions>(TaxOptions.TAXABLE_5);
+  const initialTax =
+    initialTaxType === TaxType.TAXABLE ? TaxOptions.TAXABLE_5 : TaxOptions.TAX_FREE;
+
+  const [selectedTax, setSelectedTax] = useState<TaxOptions>(initialTax);
 
   const {
     targetRef: taxRatioMenuRef,

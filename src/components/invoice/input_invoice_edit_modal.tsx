@@ -629,7 +629,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
             </div>
 
             {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
-            <div className="hide-scrollbar flex h-550px w-full flex-col items-start justify-between gap-5 lg:flex-row">
+            <div className="hide-scrollbar flex w-full flex-col items-start justify-between gap-5 overflow-y-auto lg:h-550px lg:flex-row lg:overflow-y-hidden">
               {/* Info: (20240924 - Anna) 發票縮略圖 */}
 
               {/*  Info: (20250430 - Anna) e-invoice UI (格式25的時候套用) */}
@@ -650,7 +650,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                 </div>
               )}
               {(certificate?.file?.url || (certificate?.isGenerated && eInvoiceImageUrl)) && (
-                <div className="relative lg:h-570px">
+                <div className="relative mx-auto lg:h-560px">
                   <ImageZoom
                     imageUrl={
                       certificate.isGenerated && eInvoiceImageUrl
@@ -662,62 +662,6 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                   />
                 </div>
               )}
-
-              {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以下) */}
-              <div className="flex w-full justify-center tablet:pt-20 lg:hidden">
-                {/* Info: (20250801 - Julian) 儲存紐 */}
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={() => {
-                    handleSave();
-                    toggleModel();
-                  }}
-                >
-                  <p>{t('common:COMMON.SAVE')}</p>
-                </Button>
-                {/* ToDo: (20250801 - Julian) 暫時隱藏 */}
-                <div className="ml-auto flex items-center gap-4">
-                  {/* Info: (20250415 - Anna) 上一筆 */}
-                  {/* <Button
-                      type="button"
-                      disabled={!hasPrev}
-                      onClick={() => setEditingId(certificates[currentIndex - 1].id)}
-                      variant="tertiaryOutline"
-                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
-                    >
-                      <IoArrowBackOutline size={20} />
-                      <p>{t('certificate:OUTPUT_CERTIFICATE.PREVIOUS')}</p>
-                    </Button> */}
-                  {/* Info: (20250415 - Anna) 下一筆 */}
-                  {/* <Button
-                      onClick={() => setEditingId(certificates[currentIndex + 1].id)}
-                      type="button"
-                      disabled={!hasNext}
-                      variant="tertiary"
-                      className="h-36px px-8px py-8px iphonese:px-16px md:h-40px md:px-24px"
-                    >
-                      <p>{t('certificate:OUTPUT_CERTIFICATE.NEXT')}</p>
-                      <IoArrowForward size={20} />
-                    </Button> */}
-                </div>
-                {!certificate?.voucherNo && (
-                  <Button
-                    id="certificate-delete-btn"
-                    type="button"
-                    className="mt-10px h-36px w-full px-16px py-8px md:h-40px"
-                    onClick={() => {
-                      if (certificate?.id !== undefined) {
-                        onDelete(certificate.id);
-                      }
-                    }}
-                    variant="errorOutline"
-                  >
-                    <LuTrash2 size={20} />
-                    <p>{t('common:COMMON.DELETE')}</p>
-                  </Button>
-                )}
-              </div>
 
               {/* Info: (20240924 - Anna) 編輯表單 */}
               {/* Info: (20241210 - Anna) 隱藏 scrollbar */}
@@ -1444,7 +1388,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
               </div>
             </div>
             {/* Info: (20250527 - Anna) 刪除、上一筆、下一筆( lg 以上) */}
-            <div className="hidden items-center lg:flex">
+            <div className="flex items-center">
               {!certificate?.voucherNo && (
                 <Button
                   id="certificate-delete-btn"
