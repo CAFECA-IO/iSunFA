@@ -29,7 +29,8 @@
     "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts",
     "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/generate_signature.ts",
     "clear_jest": "jest --clearCache",
-    "refresh": "rimraf .next node_modules && npm ci"
+    "refresh": "rimraf .next node_modules && npm ci",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",

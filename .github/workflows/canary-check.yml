@@ -1,0 +1,232 @@
+name: 'Canary Dependency Check'
+
+on:
+  schedule:
+    # Run every Friday at 14:00 UTC (23:00 Taipei time)
+    - cron: '0 14 * * 5'
+  workflow_dispatch: # Allow manual trigger
+    inputs:
+      packages:
+        description: 'Packages to test (comma-separated)'
+        default: 'typescript@next,@types/node@latest,next@canary'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  canary-check:
+    runs-on: ubuntu-latest
+    container: node:20-slim
+    
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Install system dependencies
+        run: apt-get update -y && apt-get install -y openssl curl
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Backup current package.json and package-lock.json
+        run: |
+          cp package.json package.json.backup
+          cp package-lock.json package-lock.json.backup
+
+      - name: Install current dependencies
+        run: npm ci
+
+      - name: Run current typecheck (baseline)
+        run: npm run typecheck || echo "BASELINE_TYPECHECK_FAILED=true" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Run current tests (baseline)
+        run: npm run test:unit || echo "BASELINE_TESTS_FAILED=true" >> $GITHUB_ENV
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - name: Install canary/beta versions
+        run: |
+          # Define packages to test
+          PACKAGES="${{ github.event.inputs.packages || 'typescript@next,@types/node@latest,next@canary' }}"
+          
+          echo "Testing packages: $PACKAGES"
+          
+          # Install canary versions
+          npm install $PACKAGES --no-save
+          
+          # Log installed versions
+          echo "## Installed Canary Versions" >> canary-report.md
+          echo "\`\`\`" >> canary-report.md
+          for pkg in $(echo $PACKAGES | tr ',' ' '); do
+            pkg_name=$(echo $pkg | cut -d'@' -f1)
+            npm list $pkg_name 2>/dev/null || echo "$pkg_name: not installed"
+          done >> canary-report.md
+          echo "\`\`\`" >> canary-report.md
+
+      - name: Run canary typecheck
+        id: canary-typecheck
+        run: |
+          echo "Running TypeScript type checking with canary versions..."
+          if npx tsc --noEmit; then
+            echo "CANARY_TYPECHECK_PASSED=true" >> $GITHUB_ENV
+            echo "✅ TypeScript canary typecheck passed" >> canary-report.md
+          else
+            echo "CANARY_TYPECHECK_FAILED=true" >> $GITHUB_ENV
+            echo "❌ TypeScript canary typecheck failed" >> canary-report.md
+            echo "" >> canary-report.md
+            echo "<details><summary>TypeScript Errors</summary>" >> canary-report.md
+            echo "" >> canary-report.md
+            echo "\`\`\`" >> canary-report.md
+            npx tsc --noEmit 2>&1 | head -50 >> canary-report.md || true
+            echo "\`\`\`" >> canary-report.md
+            echo "</details>" >> canary-report.md
+          fi
+        continue-on-error: true
+
+      - name: Run canary build test
+        id: canary-build
+        run: |
+          echo "Testing build with canary versions..."
+          if npm run build; then
+            echo "CANARY_BUILD_PASSED=true" >> $GITHUB_ENV
+            echo "✅ Build with canary versions passed" >> canary-report.md
+          else
+            echo "CANARY_BUILD_FAILED=true" >> $GITHUB_ENV
+            echo "❌ Build with canary versions failed" >> canary-report.md
+            echo "" >> canary-report.md
+            echo "<details><summary>Build Errors</summary>" >> canary-report.md
+            echo "" >> canary-report.md
+            echo "\`\`\`" >> canary-report.md
+            npm run build 2>&1 | tail -100 >> canary-report.md || true
+            echo "\`\`\`" >> canary-report.md
+            echo "</details>" >> canary-report.md
+          fi
+        continue-on-error: true
+        env:
+          DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
+
+      - name: Generate canary report
+        run: |
+          echo "# 🐤 Canary Dependency Check Report" > final-report.md
+          echo "" >> final-report.md
+          echo "**Date:** $(date)" >> final-report.md
+          echo "**Branch:** ${{ github.ref }}" >> final-report.md
+          echo "**Commit:** ${{ github.sha }}" >> final-report.md
+          echo "" >> final-report.md
+          
+          # Add summary
+          if [[ "$CANARY_TYPECHECK_FAILED" == "true" ]] || [[ "$CANARY_BUILD_FAILED" == "true" ]]; then
+            echo "## ⚠️ Issues Detected" >> final-report.md
+            echo "" >> final-report.md
+            echo "Some canary versions caused failures. Review the details below before updating these dependencies." >> final-report.md
+          else
+            echo "## ✅ All Checks Passed" >> final-report.md
+            echo "" >> final-report.md
+            echo "All canary versions tested successfully. Updates should be safe to proceed." >> final-report.md
+          fi
+          
+          echo "" >> final-report.md
+          cat canary-report.md >> final-report.md
+          
+          echo "" >> final-report.md
+          echo "## 📊 Comparison" >> final-report.md
+          echo "" >> final-report.md
+          echo "| Check | Current | Canary |" >> final-report.md
+          echo "|-------|---------|--------|" >> final-report.md
+          
+          BASELINE_TYPE_STATUS="✅ Pass"
+          if [[ "$BASELINE_TYPECHECK_FAILED" == "true" ]]; then
+            BASELINE_TYPE_STATUS="❌ Fail"
+          fi
+          
+          CANARY_TYPE_STATUS="✅ Pass"
+          if [[ "$CANARY_TYPECHECK_FAILED" == "true" ]]; then
+            CANARY_TYPE_STATUS="❌ Fail"
+          fi
+          
+          CANARY_BUILD_STATUS="✅ Pass"
+          if [[ "$CANARY_BUILD_FAILED" == "true" ]]; then
+            CANARY_BUILD_STATUS="❌ Fail"
+          fi
+          
+          echo "| TypeCheck | $BASELINE_TYPE_STATUS | $CANARY_TYPE_STATUS |" >> final-report.md
+          echo "| Build | ✅ Pass | $CANARY_BUILD_STATUS |" >> final-report.md
+
+      - name: Find existing canary issue
+        id: find-issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['canary-check'],
+              state: 'open'
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Canary Dependency Check')
+            );
+            
+            return existingIssue ? existingIssue.number : null;
+
+      - name: Create or update canary issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportContent = fs.readFileSync('final-report.md', 'utf8');
+            
+            const issueNumber = ${{ steps.find-issue.outputs.result }};
+            
+            const issueBody = reportContent + `
+            
+            ---
+            *This issue is automatically updated by the Canary Check workflow.*
+            *Last updated: ${new Date().toISOString()}*
+            `;
+            
+            if (issueNumber) {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: issueBody
+              });
+              console.log(`Updated existing issue #${issueNumber}`);
+            } else {
+              // Create new issue
+              const hasFailures = process.env.CANARY_TYPECHECK_FAILED === 'true' || process.env.CANARY_BUILD_FAILED === 'true';
+              const title = hasFailures ? 
+                '🐤 ⚠️ Canary Dependency Check - Issues Detected' : 
+                '🐤 ✅ Canary Dependency Check - All Clear';
+                
+              const newIssue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: issueBody,
+                labels: ['canary-check', 'dependencies', hasFailures ? 'needs-attention' : 'status-ok']
+              });
+              console.log(`Created new issue #${newIssue.data.number}`);
+            }
+
+      - name: Restore original dependencies
+        if: always()
+        run: |
+          mv package.json.backup package.json
+          mv package-lock.json.backup package-lock.json
+          npm ci

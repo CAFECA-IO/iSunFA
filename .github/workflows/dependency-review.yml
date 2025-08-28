@@ -1,0 +1,44 @@
+name: 'Dependency Review'
+
+on: 
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          # Fail the action if any critical vulnerabilities are detected
+          fail-on-severity: critical
+          # Allow moderate and below
+          allow-dependencies-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, GPL-3.0
+          # Deny GPL-2.0 and other restrictive licenses
+          deny-dependencies-licenses: GPL-2.0, LGPL-2.1
+          # Comment on PR with summary
+          comment-summary-in-pr: on-failure
+          # Create review with annotations
+          warn-only: false
+          # Enable vulnerability database
+          vulnerability-check: true
+          # License check
+          license-check: true
+          # Configuration for specific package exclusions if needed
+          # exclude-scopes: development,runtime
+      
+      - name: Upload Dependency Review Results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: dependency-review-results.sarif
+          category: dependency-review
