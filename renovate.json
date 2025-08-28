@@ -1,0 +1,122 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "iSunFA Dependency Management Configuration",
+  "extends": [
+    "config:base",
+    ":timezone(Asia/Taipei)",
+    ":assignee(arealclimber)"
+  ],
+  "schedule": ["before 10am on monday"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 3,
+  "rangeStrategy": "pin",
+  "semanticCommits": "enabled",
+  "labels": ["dependencies"],
+  "reviewers": ["arealclimber"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "description": "High-risk dependencies - Manual review required",
+      "matchPackageNames": [
+        "typescript",
+        "@types/node",
+        "next",
+        "react",
+        "react-dom",
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser"
+      ],
+      "labels": ["high-risk", "needs-manual-review"],
+      "automerge": false,
+      "reviewers": ["arealclimber"],
+      "addLabels": ["needs-approval"]
+    },
+    {
+      "description": "TypeScript and Next.js major updates - Monthly schedule",
+      "matchPackageNames": ["typescript", "next"],
+      "matchUpdateTypes": ["major"],
+      "schedule": ["on the first day of the month"],
+      "labels": ["major-update", "typescript", "needs-canary-check"],
+      "prBodyTemplate": "⚠️ Major update detected. Please check Canary results before merging.\n\n{{{body}}}"
+    },
+    {
+      "description": "Testing frameworks - Semi-automatic",
+      "matchPackageNames": [
+        "jest",
+        "@testing-library/react",
+        "@testing-library/jest-dom",
+        "supertest",
+        "@types/jest",
+        "@types/supertest"
+      ],
+      "labels": ["testing", "semi-automatic"],
+      "automerge": false,
+      "reviewers": ["arealclimber"]
+    },
+    {
+      "description": "Development tools - Auto-merge patch and minor",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch", "minor"],
+      "excludePackageNames": [
+        "typescript",
+        "@types/node",
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "jest",
+        "@testing-library/react",
+        "@testing-library/jest-dom"
+      ],
+      "automerge": true,
+      "labels": ["auto-merge", "dev-tools"]
+    },
+    {
+      "description": "Low-risk production dependencies - Auto-merge patch updates",
+      "matchDepTypes": ["dependencies"],
+      "matchUpdateTypes": ["patch"],
+      "excludePackageNames": [
+        "next",
+        "react",
+        "react-dom",
+        "@prisma/client",
+        "prisma"
+      ],
+      "automerge": true,
+      "labels": ["auto-merge", "patch-update"]
+    },
+    {
+      "description": "Security updates - High priority",
+      "matchPackageNames": ["*"],
+      "matchUpdateTypes": ["patch"],
+      "labels": ["security"],
+      "schedule": ["at any time"],
+      "prPriority": 10
+    },
+    {
+      "description": "Database-related packages - Manual review",
+      "matchPackageNames": ["@prisma/client", "prisma"],
+      "labels": ["database", "needs-manual-review"],
+      "automerge": false,
+      "reviewers": ["arealclimber"]
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 10am on monday"],
+    "commitMessageAction": "Lock file maintenance",
+    "labels": ["lockfile-maintenance"]
+  },
+  "osvVulnerabilityAlerts": true,
+  "transitiveRemediation": true,
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/tmp/**",
+    "**/.next/**"
+  ],
+  "ignoreDeps": [
+    "node",
+    "npm"
+  ]
+}
