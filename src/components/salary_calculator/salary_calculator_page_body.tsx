@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslation } from 'next-i18next';
 import SalaryResultSection from '@/components/salary_calculator/salary_result_section';
 import SalaryFormSection from '@/components/salary_calculator/salary_form_section';
 import CalculatorNavbar from '@/components/salary_calculator/calculator_navbar';
+import ProgressBar from '@/components/salary_calculator/progress_bar';
 
 enum CalcTab {
   CALCULATOR = 'calculator',
@@ -10,6 +12,7 @@ enum CalcTab {
 }
 
 const SalaryCalculatorPageBody: React.FC = () => {
+  const { t } = useTranslation('calculator');
   const [currentTab, setCurrentTab] = useState<CalcTab>(CalcTab.CALCULATOR);
 
   const isCalculatorTab = currentTab === CalcTab.CALCULATOR;
@@ -33,6 +36,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
 
       {/* Info: (20250887 - Julian) Main Content Mobile */}
       <div className="flex flex-col gap-lv-7 px-lv-5 py-lv-7 tablet:hidden">
+        {/* Info: (20250828 - Julian) Mobile Tabs */}
         <div className="grid grid-cols-2 gap-lv-4">
           <button
             type="button"
@@ -40,7 +44,7 @@ const SalaryCalculatorPageBody: React.FC = () => {
             className={`${isCalculatorTab ? 'border-tabs-stroke-active text-tabs-text-active' : 'border-tabs-stroke-default text-tabs-text-default'} flex items-center justify-center gap-8px border-b-2 px-12px py-8px text-base font-medium hover:border-tabs-stroke-active hover:text-tabs-text-active`}
           >
             <Image src="/icons/calculator_tab.svg" alt="calculator_icon" width={24} height={24} />
-            <p>Calculator</p>
+            <p>{t('calculator:TABS.CALCULATOR')}</p>
           </button>
           <button
             type="button"
@@ -48,11 +52,18 @@ const SalaryCalculatorPageBody: React.FC = () => {
             className={`${isPaySlipTab ? 'border-tabs-stroke-active text-tabs-text-active' : 'border-tabs-stroke-default text-tabs-text-default'} flex items-center justify-center gap-8px border-b-2 px-12px py-8px text-base font-medium hover:border-tabs-stroke-active hover:text-tabs-text-active`}
           >
             <Image src="/icons/pay_slip_tab.svg" alt="pay_slip_icon" width={24} height={24} />
-            <p>Pay Slip</p>
+            <p>{t('calculator:TABS.PAY_SLIP')}</p>
           </button>
         </div>
         {/* Info: (20250828 - Julian) Form Part */}
         {isCalculatorTab && <SalaryFormSection />}
+        {/* Info: (20250828 - Julian) Result Part */}
+        {isPaySlipTab && (
+          <div className="flex flex-col gap-lv-7">
+            <ProgressBar />
+            <SalaryResultSection />
+          </div>
+        )}
       </div>
     </main>
   );

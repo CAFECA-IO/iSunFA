@@ -207,12 +207,19 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       className={`flex flex-col gap-12px bg-surface-neutral-surface-lv2 ${className}`}
     >
       {/* Info: (20250708 - Julian) Title */}
-      <div className="grid grid-cols-2 gap-12px">
+      <div className="grid grid-cols-1 gap-12px tablet:grid-cols-2">
         {/* Info: (20250708 - Julian) 姓名和日期 */}
         <div className="flex flex-col items-start gap-8px">
-          <p className="text-base font-semibold text-text-brand-primary-lv1">{formattedDate}</p>
-          <p className="text-28px font-bold text-text-neutral-primary">{showingName}</p>
-          <p className="text-xs font-medium text-text-neutral-primary">{showingNumber}</p>
+          <p className="text-xs font-medium text-text-brand-primary-lv1 tablet:text-base tablet:font-semibold">
+            {formattedDate}
+          </p>
+          <div className="flex items-baseline gap-lv-2 text-2xl font-bold text-text-neutral-primary tablet:text-28px">
+            {showingName}
+            <span className="block text-xs font-medium tablet:hidden">{showingNumber}</span>
+          </div>
+          <p className="hidden text-xs font-medium text-text-neutral-primary tablet:block">
+            {showingNumber}
+          </p>
         </div>
         {/* Info: (20250708 - Julian) 薪資合計 */}
         {/* <div className="flex items-end justify-end gap-8px text-28px font-bold text-text-brand-primary-lv2">
@@ -241,7 +248,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
         </div>
       </div>
       {/* Info: (20250708 - Julian) Result Field */}
-      <div className="grid grid-cols-2 gap-12px">
+      <div className="grid grid-cols-1 gap-12px tablet:grid-cols-2">
         {/* Info: (20250708 - Julian) 月薪資合計 */}
         <ResultBlock backgroundColor="bg-surface-support-soft-maple" rowItems={monthlyRowItems} />
         {/* Info: (20250708 - Julian) 員工負擔 */}

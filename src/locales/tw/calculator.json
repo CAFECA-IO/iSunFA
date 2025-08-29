@@ -14,7 +14,9 @@
     "BASIC_INFO": "基本資料",
     "BASE_PAY": " 基本薪資",
     "WORK_HOURS": "工作時數",
-    "OTHERS": "其他項目"
+    "OTHERS": "其他項目",
+    "CALCULATOR": "計算機",
+    "PAY_SLIP": "薪資單"
   },
   "BASIC_INFO_FORM": {
     "EMPLOYEE_NAME": "員工姓名",
