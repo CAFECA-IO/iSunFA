@@ -305,7 +305,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       employeeContribution: {
         employeePaidLaborInsurance: result.employeeBurdenLaborInsurance,
         employeePaidHealthInsurance: result.employeeBurdenHealthInsurance,
-        healthInsuranceAdditionalPremium: 0,
         voluntaryPensionContribution: result.employeeBurdenPensionInsurance,
         withheldIncomeTax: result.employeeBurdenIncomeTax,
         withheldSecondGenerationNHIPremium:

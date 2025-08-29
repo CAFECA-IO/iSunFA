@@ -33,7 +33,7 @@ const OthersForm: React.FC = () => {
     const changeVpc = () => changeVoluntaryPensionContribution(i);
 
     return (
-      <label htmlFor={`radio-vpc-${i}`} className="flex items-center gap-8px">
+      <label htmlFor={`radio-vpc-${i}`} className="flex h-44px items-center gap-8px">
         <input
           id={`radio-vpc-${i}`}
           name="radio-vpc"
@@ -54,7 +54,7 @@ const OthersForm: React.FC = () => {
         <p className="text-sm font-semibold text-input-text-primary">
           {t('calculator:OTHERS_FORM.LABOR_COVERAGE_STATUS')}
         </p>
-        <div className="flex flex-col items-start gap-18px">
+        <div className="flex flex-col items-start gap-lv-7 tablet:gap-18px">
           {/* Info: (20250806 - Julian) 勞保是否勾選 */}
           <ToggleSwitch
             isOn={isLaborInsurance}
@@ -76,7 +76,7 @@ const OthersForm: React.FC = () => {
         </div>
       </div>
       {/* Info: (20250709 - Julian) 扶養人數 */}
-      <div className="flex w-fit flex-col gap-12px">
+      <div className="flex w-full flex-col gap-12px tablet:w-fit">
         <HourCounter
           title={t('calculator:OTHERS_FORM.NUMBER_OF_DEPENDENTS')}
           value={numberOfDependents}
@@ -100,7 +100,7 @@ const OthersForm: React.FC = () => {
         <p className="text-sm font-semibold text-input-text-primary">
           {t('calculator:OTHERS_FORM.VOLUNTARY_PENSION_CONTRIBUTION')}
         </p>
-        <div className="flex items-center gap-36px">{vpcRadios}</div>
+        <div className="flex flex-wrap items-center gap-x-36px gap-y-12px">{vpcRadios}</div>
       </div>
     </form>
   );
