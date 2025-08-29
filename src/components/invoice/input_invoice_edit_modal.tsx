@@ -155,6 +155,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     // Info: (20250514 - Anna) 檢查稅額（除了 INPUT_20、INPUT_22 、INPUT_24、INPUT_27 以外）
     // Info: (20250514 - Anna) 只有在「非免稅」（taxRate 有值）時，才檢查 taxAmount 是否 > 0
     // Info: (20250514 - Anna) taxAmount 是 null（沒選稅類），還是會報錯
+    // ToDo: (20250829 - Julian) 新增零稅率的檢查 (taxType === TAXABLE && taxRate === 0)
     const taxAmountStr = taxAmount?.toString() || '0';
     if (
       (type !== InvoiceType.INPUT_20 &&
@@ -1134,6 +1135,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                       <TaxMenu
                         selectTaxHandler={selectTaxHandler}
                         initialTaxType={formState.taxType}
+                        initialTaxRate={formState.taxRate}
                       />
                     </div>
                     {errors.taxAmount && (

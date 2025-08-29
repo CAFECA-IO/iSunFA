@@ -848,6 +848,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <TaxMenu
                         selectTaxHandler={selectTaxHandler}
                         initialTaxType={formState.taxType}
+                        initialTaxRate={formState.taxRate}
                       />
                     </div>
                     {errors.taxAmount && (
@@ -971,7 +972,9 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                                 const currentTaxAmount =
                                   formStateRef.current.taxAmount?.toString() || '0';
                                 const newTaxAmount = value;
-                                if (DecimalOperations.isEqual(newTaxAmount, currentTaxAmount)) return;
+                                if (DecimalOperations.isEqual(newTaxAmount, currentTaxAmount)) {
+                                  return;
+                                }
 
                                 // Info: (20250516 - Anna) 更新 taxAmount 欄位
                                 handleInputChange('taxAmount', value);
