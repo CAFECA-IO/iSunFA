@@ -56,7 +56,7 @@ const WorkHoursForm: React.FC = () => {
           </h2>
           <p className={`text-lg font-bold ${totalNonTaxableStyle}`}>{totalNonTaxableHours} hrs</p>
         </div>
-        <div className="grid grid-cols-3 gap-24px">
+        <div className="grid grid-cols-1 gap-lv-3 tablet:grid-cols-3 tablet:gap-24px">
           {/* Info: (20250709 - Julian) 1.33 小時 */}
           <HourCounter
             title="1.33"
@@ -108,7 +108,7 @@ const WorkHoursForm: React.FC = () => {
           </h2>
           <p className={`text-lg font-bold ${totalTaxableStyle}`}>{totalTaxableHours} hrs</p>
         </div>
-        <div className="grid grid-cols-3 gap-24px">
+        <div className="grid grid-cols-1 gap-lv-3 tablet:grid-cols-3 tablet:gap-24px">
           {/* Info: (20250709 - Julian) 1.33 小時 */}
           <HourCounter
             title="1.33"
@@ -157,7 +157,7 @@ const WorkHoursForm: React.FC = () => {
         <h2 className="text-lg font-bold text-text-brand-secondary-lv1">
           {t('calculator:WORK_HOURS_FORM.LEAVE_HOUR')}
         </h2>
-        <div className="grid grid-cols-3 gap-24px">
+        <div className="grid grid-cols-1 gap-lv-3 tablet:grid-cols-3 tablet:gap-24px">
           {/* Info: (20250709 - Julian) 病假 */}
           <HourCounter
             title={t('calculator:WORK_HOURS_FORM.SICK_MENSTRUAL_LEAVE')}

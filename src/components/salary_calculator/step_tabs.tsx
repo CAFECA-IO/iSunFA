@@ -85,7 +85,7 @@ const StepTabs: React.FC = () => {
       <button
         type="button"
         onClick={clickHandler}
-        className={`${stepClass} flex h-40px w-full items-center justify-center gap-8px rounded-sm border px-12px py-8px text-xs font-medium`}
+        className={`${stepClass} flex h-40px w-full items-center justify-center gap-8px rounded-sm border px-12px py-lv-3 text-xs font-medium tablet:py-8px`}
       >
         <FaCircleCheck size={20} className={iconClass} />
         {step}
@@ -93,7 +93,7 @@ const StepTabs: React.FC = () => {
     );
   });
 
-  return <div className="flex items-center gap-8px">{tabs}</div>;
+  return <div className="grid grid-cols-2 gap-8px tablet:grid-cols-4">{tabs}</div>;
 };
 
 export default StepTabs;
