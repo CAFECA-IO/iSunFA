@@ -46,7 +46,6 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     employeeContribution: {
       employeePaidLaborInsurance, // Info: (20250710 - Julian) 自行負擔勞保費
       employeePaidHealthInsurance, // Info: (20250710 - Julian) 自行負擔健保費
-      healthInsuranceAdditionalPremium, // Info: (20250806 - Julian) 健保加保費
       voluntaryPensionContribution, // Info: (20250710 - Julian) 自提勞退
       withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
       withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
@@ -123,10 +122,6 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     {
       label: t('calculator:RESULT.EMPLOYEE_PAID_HEALTH_INSURANCE'),
       value: employeePaidHealthInsurance,
-    },
-    {
-      label: t('calculator:RESULT.HEALTH_INSURANCE_ADDITIONAL_PREMIUM'),
-      value: healthInsuranceAdditionalPremium,
     },
     {
       label: t('calculator:RESULT.VOLUNTARY_PENSION_CONTRIBUTION'),

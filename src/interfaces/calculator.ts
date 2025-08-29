@@ -19,7 +19,6 @@ export interface IMonthlySalary {
 export interface IEmployeeContribution {
   employeePaidLaborInsurance: number; // Info: (20250710 - Julian) 自行負擔勞保費
   employeePaidHealthInsurance: number; // Info: (20250710 - Julian) 自行負擔健保費
-  healthInsuranceAdditionalPremium: number; // Info: (20250710 - Julian) 健保加保費
   voluntaryPensionContribution: number; // Info: (20250710 - Julian) 自提勞退
   withheldIncomeTax: number; // Info: (20250710 - Julian) 代扣所得稅款
   withheldSecondGenerationNHIPremium: number; // Info: (20250710 - Julian) 代扣二代健保
@@ -70,7 +69,6 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
   employeeContribution: {
     employeePaidLaborInsurance: 0,
     employeePaidHealthInsurance: 0,
-    healthInsuranceAdditionalPremium: 0,
     voluntaryPensionContribution: 0,
     withheldIncomeTax: 0,
     withheldSecondGenerationNHIPremium: 0,
