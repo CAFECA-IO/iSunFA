@@ -34,7 +34,7 @@ const HourCounter: React.FC<IHourCounterProps> = ({
           type="button"
           disabled={minusDisabled}
           onClick={minusClickHandler}
-          className="h-full px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
         >
           <FaMinus size={16} />
         </button>
@@ -49,7 +49,7 @@ const HourCounter: React.FC<IHourCounterProps> = ({
           type="button"
           disabled={plusDisabled}
           onClick={plusClickHandler}
-          className="h-full px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
+          className="h-44px px-12px py-10px text-icon-surface-single-color-primary disabled:text-icon-surface-single-color-tertiary"
         >
           <FaPlus size={16} />
         </button>
