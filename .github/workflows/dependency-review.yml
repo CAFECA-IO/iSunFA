@@ -20,4 +20,4 @@ jobs:
           # （選配）忽略個別套件的授權檢查：使用 purl
           allow-dependencies-licenses: >
             pkg:npm/%40types/node@22.4.2,
-            pkg:npm/lodash@4.17.20
+            pkg:npm/lodash@4.17.21
