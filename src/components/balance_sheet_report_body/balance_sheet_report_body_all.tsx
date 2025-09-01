@@ -13,6 +13,7 @@ import { SkeletonList } from '@/components/skeleton/skeleton';
 import { DEFAULT_SKELETON_COUNT_FOR_PAGE } from '@/constants/display';
 import { useTranslation } from 'next-i18next';
 import CollapseButton from '@/components/button/collapse_button';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 interface IBalanceSheetReportBodyAllProps {
   reportId: string;
@@ -36,8 +37,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
   const { t } = useTranslation('common');
   const { connectedAccountBook } = useUserCtx();
 
-  const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<number>>([]);
-  const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<number>>([]);
+  const [curAssetLiabilityRatio, setCurAssetLiabilityRatio] = useStateRef<Array<string>>([]);
+  const [preAssetLiabilityRatio, setPreAssetLiabilityRatio] = useStateRef<Array<string>>([]);
   const [curAssetLiabilityRatioLabels, setCurAssetLiabilityRatioLabels] = useStateRef<
     Array<string>
   >([]);
@@ -45,8 +46,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     Array<string>
   >([]);
 
-  const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<number>>([]);
-  const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<number>>([]);
+  const [curAssetMixRatio, setCurAssetMixRatio] = useStateRef<Array<string>>([]);
+  const [preAssetMixRatio, setPreAssetMixRatio] = useStateRef<Array<string>>([]);
   const [curAssetMixLabels, setCurAssetMixLabels] = useStateRef<Array<string>>([]);
   const [preAssetMixLabels, setPreAssetMixLabels] = useStateRef<Array<string>>([]);
 
@@ -94,8 +95,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     getFinancialReport();
   }, [reportId]);
 
-  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => value === 0);
-  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => value === 0);
+  const isNoDataForCurALR = curAssetLiabilityRatio.every((value) => DecimalOperations.isZero(value));
+  const isNoDataForPreALR = preAssetLiabilityRatio.every((value) => DecimalOperations.isZero(value));
 
   // Info: (20241001 - Anna) 管理表格摺疊狀態
   const [isSummaryCollapsed, setIsSummaryCollapsed] = useState(false);
@@ -117,21 +118,21 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
       const previousYear = previousDateString.year;
 
       const curALR = financialReport.otherInfo.assetLiabilityRatio[currentDateString.date]
-        ?.data || [0, 0, 0];
+        ?.data || ['0', '0', '0'];
       const preALR = financialReport.otherInfo.assetLiabilityRatio[previousDateString.date]
-        ?.data || [0, 0, 0];
+        ?.data || ['0', '0', '0'];
       const curALRLabels = financialReport.otherInfo.assetLiabilityRatio[currentDateString.date]
         ?.labels || ['', '', ''];
       const preALRLabels = financialReport.otherInfo.assetLiabilityRatio[previousDateString.date]
         ?.labels || ['', '', ''];
 
       const curAMR = financialReport.otherInfo.assetMixRatio[currentDateString.date]?.data || [
-        0, 0, 0, 0, 0, 0,
+        '0', '0', '0', '0', '0', '0',
       ];
       const curAMRLabels = financialReport.otherInfo.assetMixRatio[currentDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
       const preAMR = financialReport.otherInfo.assetMixRatio[previousDateString.date]?.data || [
-        0, 0, 0, 0, 0, 0,
+        '0', '0', '0', '0', '0', '0',
       ];
       const preAMRLabels = financialReport.otherInfo.assetMixRatio[previousDateString.date]
         ?.labels || ['', '', '', '', '', '其他'];
@@ -158,10 +159,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               // Info: (20250219 - Anna) 如果是標題列（沒有 code），則保留
               if (!item.code) return true;
               return !(
-                item.curPeriodAmount === 0 &&
-                item.curPeriodPercentage === 0 &&
-                item.prePeriodAmount === 0 &&
-                item.prePeriodPercentage === 0
+                DecimalOperations.isZero(item.curPeriodAmount) &&
+                DecimalOperations.isZero(item.curPeriodPercentage) &&
+                DecimalOperations.isZero(item.prePeriodAmount) &&
+                DecimalOperations.isZero(item.prePeriodPercentage)
               );
             })
           : [];
@@ -171,10 +172,10 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               // Info: (20250219 - Anna) 如果是標題列（沒有 code），則保留
               if (!item.code) return true;
               return !(
-                item.curPeriodAmount === 0 &&
-                item.curPeriodPercentage === 0 &&
-                item.prePeriodAmount === 0 &&
-                item.prePeriodPercentage === 0
+                DecimalOperations.isZero(item.curPeriodAmount) &&
+                DecimalOperations.isZero(item.curPeriodPercentage) &&
+                DecimalOperations.isZero(item.prePeriodAmount) &&
+                DecimalOperations.isZero(item.prePeriodPercentage)
               );
             })
           : [];
@@ -230,7 +231,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   ) : (
     <div className="ml-10">
-      <PieChart data={curAssetLiabilityRatio} />
+      <PieChart data={curAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -248,7 +249,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
     </div>
   ) : (
     <div className="ml-10">
-      <PieChart data={preAssetLiabilityRatio} />
+      <PieChart data={preAssetLiabilityRatio.map((val) => parseFloat(val))} />
     </div>
   );
 
@@ -301,32 +302,32 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
             {
-              item.curPeriodAmount === 0
+              DecimalOperations.isZero(item.curPeriodAmount)
                 ? '-' // Info: (20241022 - Anna) 如果數字是 0，顯示 "-"
-                : item.curPeriodAmount < 0
-                  ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})` // Info: (20241022 - Anna) 負數，顯示括號和千分位
-                  : item.curPeriodAmount.toLocaleString() // Info: (20241022 - Anna) 正數，顯示千分位
+                : DecimalOperations.isNegative(item.curPeriodAmount)
+                  ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})` // Info: (20241022 - Anna) 負數，顯示括號和千分位
+                  : parseFloat(item.curPeriodAmount).toLocaleString() // Info: (20241022 - Anna) 正數，顯示千分位
             }
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -356,31 +357,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -410,31 +411,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -464,31 +465,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -518,31 +519,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -572,31 +573,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -626,31 +627,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -680,31 +681,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -734,31 +735,31 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.code}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-xs">{item.name}</td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.curPeriodAmount === 0
+            {DecimalOperations.isZero(item.curPeriodAmount)
               ? '-'
-              : item.curPeriodAmount < 0
-                ? `(${Math.abs(item.curPeriodAmount).toLocaleString()})`
-                : item.curPeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.curPeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodAmount)).toLocaleString()})`
+                : parseFloat(item.curPeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.curPeriodPercentage === 0
+            {DecimalOperations.isZero(item.curPeriodPercentage)
               ? '-'
-              : item.curPeriodPercentage < 0
-                ? `(${Math.abs(item.curPeriodPercentage).toLocaleString()})`
-                : `${item.curPeriodPercentage.toLocaleString()}`}
+              : DecimalOperations.isNegative(item.curPeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.curPeriodPercentage)).toLocaleString()})`
+                : `${parseFloat(item.curPeriodPercentage).toLocaleString()}`}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-            {item.prePeriodAmount === 0
+            {DecimalOperations.isZero(item.prePeriodAmount)
               ? '-'
-              : item.prePeriodAmount < 0
-                ? `(${Math.abs(item.prePeriodAmount).toLocaleString()})`
-                : item.prePeriodAmount.toLocaleString()}
+              : DecimalOperations.isNegative(item.prePeriodAmount)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodAmount)).toLocaleString()})`
+                : parseFloat(item.prePeriodAmount).toLocaleString()}
           </td>
           <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
-            {item.prePeriodPercentage === 0
+            {DecimalOperations.isZero(item.prePeriodPercentage)
               ? '-'
-              : item.prePeriodPercentage < 0
-                ? `(${Math.abs(item.prePeriodPercentage).toLocaleString()})`
+              : DecimalOperations.isNegative(item.prePeriodPercentage)
+                ? `(${parseFloat(DecimalOperations.abs(item.prePeriodPercentage)).toLocaleString()})`
                 : `${item.prePeriodPercentage.toLocaleString()}`}
           </td>
         </tr>
@@ -1442,9 +1443,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <ul className="space-y-2">
                 {curAssetMixLabels.map((label, index) => {
                   // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
-                  if (curAssetMixRatio[index] === 0) return null;
+                  if (DecimalOperations.isZero(curAssetMixRatio[index])) return null;
                   if (
-                    curAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    curAssetMixRatio.slice(0, 5).every((value) => DecimalOperations.isZero(value)) &&
                     label === '其他'
                   ) return null;
                   return (
@@ -1458,7 +1459,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                {curAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                {curAssetMixRatio.slice(0, -1).every((value) => DecimalOperations.isZero(value)) ? (
                   <div className="flex w-300px items-center justify-center">
                     <div
                       className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
@@ -1472,7 +1473,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={curAssetMixRatio}
+                    data={curAssetMixRatio.map((val) => parseFloat(val))}
                     labels={curAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1487,9 +1488,9 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
               <ul className="space-y-2">
                 {preAssetMixLabels.map((label, index) => {
                   // Info: (20250619 - Anna) 如果百分比為 0 ，label就不顯示
-                  if (preAssetMixRatio[index] === 0) return null;
+                  if (DecimalOperations.isZero(preAssetMixRatio[index])) return null;
                   if (
-                    preAssetMixRatio.slice(0, 5).every((value) => value === 0) &&
+                    preAssetMixRatio.slice(0, 5).every((value) => DecimalOperations.isZero(value)) &&
                     label === '其他'
                   ) return null;
                   return (
@@ -1503,7 +1504,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                 })}
               </ul>
               <div className="relative" style={{ marginTop: '-20px' }}>
-                {preAssetMixRatio.slice(0, -1).every((value) => value === 0) ? (
+                {preAssetMixRatio.slice(0, -1).every((value) => DecimalOperations.isZero(value)) ? (
                   <div className="flex w-300px items-center justify-center">
                     <div
                       className="flex items-center justify-center rounded-full bg-neutral-100 text-xl text-white"
@@ -1517,7 +1518,7 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
                   </div>
                 ) : (
                   <PieChartAssets
-                    data={preAssetMixRatio}
+                    data={preAssetMixRatio.map((val) => parseFloat(val))}
                     labels={preAssetMixLabels}
                     colors={COLORS}
                   />
@@ -1576,8 +1577,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tbody>
             {renderDataRow(
               t('reports:REPORTS.ACCOUNTS_RECEIVABLE_TURNOVER_DAYS'),
-              financialReport?.otherInfo?.dso.curDso,
-              financialReport?.otherInfo?.dso.preDso
+              financialReport?.otherInfo?.dso.curDso ? parseFloat(financialReport.otherInfo.dso.curDso) : undefined,
+              financialReport?.otherInfo?.dso.preDso ? parseFloat(financialReport.otherInfo.dso.preDso) : undefined
             )}
           </tbody>
         </table>
@@ -1600,8 +1601,8 @@ const BalanceSheetReportBodyAll = ({ reportId }: IBalanceSheetReportBodyAllProps
           <tbody>
             {renderDataRow(
               t('reports:REPORTS.INVENTORY_TURNOVER_DAYS'),
-              financialReport?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays,
-              financialReport?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays
+              financialReport?.otherInfo?.inventoryTurnoverDays.curInventoryTurnoverDays ? parseFloat(financialReport.otherInfo.inventoryTurnoverDays.curInventoryTurnoverDays) : undefined,
+              financialReport?.otherInfo?.inventoryTurnoverDays.preInventoryTurnoverDays ? parseFloat(financialReport.otherInfo.inventoryTurnoverDays.preInventoryTurnoverDays) : undefined
             )}
           </tbody>
         </table>

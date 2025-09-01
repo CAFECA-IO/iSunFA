@@ -82,7 +82,8 @@ export function formatIJournal(
       lineItems: invoiceVoucherJournal.voucher.lineItems.map((lineItem) => {
         return {
           lineItemIndex: lineItem.id.toString(),
-          amount: lineItem.amount,
+          amount:
+            typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString(),
           debit: lineItem.debit,
           account: `${lineItem.account.code} - ${lineItem.account.name}`,
           description: lineItem.description,

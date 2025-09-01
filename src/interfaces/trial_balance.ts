@@ -4,7 +4,7 @@ import { IPaginatedData } from '@/interfaces/pagination';
 // Info: (20241118 - Shirley) 在計算試算表過程會用到的資料結構
 export interface LineItemTemp {
   id: number;
-  amount: number;
+  amount: string;
   description: string;
   debit: boolean;
   accountId: number;
@@ -32,12 +32,12 @@ export interface AccountForResult {
   id: number;
   no: string;
   accountingTitle: string;
-  beginningCreditAmount: number;
-  beginningDebitAmount: number;
-  midtermCreditAmount: number;
-  midtermDebitAmount: number;
-  endingCreditAmount: number;
-  endingDebitAmount: number;
+  beginningCreditAmount: string;
+  beginningDebitAmount: string;
+  midtermCreditAmount: string;
+  midtermDebitAmount: string;
+  endingCreditAmount: string;
+  endingDebitAmount: string;
   subAccounts: AccountForResult[];
   createAt: number;
   updateAt: number;
@@ -46,8 +46,8 @@ export interface AccountForResult {
 }
 
 export interface ILineItemInTrialBalanceItem extends ILineItemSimpleAccountVoucher {
-  debitAmount: number;
-  creditAmount: number;
+  debitAmount: string;
+  creditAmount: string;
 }
 
 export interface IMergedAccounts extends ILineItemInTrialBalanceItem {
@@ -60,32 +60,32 @@ export interface ILineItemInTrialBalanceItemWithHierarchy extends IMergedAccount
 }
 
 export interface ILineItemInTrialBalanceTotal {
-  totalDebit: number;
-  totalCredit: number;
+  totalDebit: string;
+  totalCredit: string;
 }
 
 export interface TrialBalanceItem {
   id: number;
   no: string;
   accountingTitle: string;
-  beginningCreditAmount: number;
-  beginningDebitAmount: number;
-  midtermCreditAmount: number;
-  midtermDebitAmount: number;
-  endingCreditAmount: number;
-  endingDebitAmount: number;
+  beginningCreditAmount: string;
+  beginningDebitAmount: string;
+  midtermCreditAmount: string;
+  midtermDebitAmount: string;
+  endingCreditAmount: string;
+  endingDebitAmount: string;
   createAt: number;
   updateAt: number;
   subAccounts: TrialBalanceItem[];
 }
 
 export interface ITrialBalanceTotal {
-  beginningCreditAmount: number;
-  beginningDebitAmount: number;
-  midtermCreditAmount: number;
-  midtermDebitAmount: number;
-  endingCreditAmount: number;
-  endingDebitAmount: number;
+  beginningCreditAmount: string;
+  beginningDebitAmount: string;
+  midtermCreditAmount: string;
+  midtermDebitAmount: string;
+  endingCreditAmount: string;
+  endingDebitAmount: string;
   createAt: number;
   updateAt: number;
 }
@@ -105,12 +105,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
       id: 1,
       no: '1141',
       accountingTitle: '應收帳款',
-      beginningCreditAmount: 10,
-      beginningDebitAmount: 1785000,
-      midtermCreditAmount: 10,
-      midtermDebitAmount: 1785000,
-      endingCreditAmount: 10,
-      endingDebitAmount: 1785000,
+      beginningCreditAmount: '10.00',
+      beginningDebitAmount: '1785000.00',
+      midtermCreditAmount: '10.00',
+      midtermDebitAmount: '1785000.00',
+      endingCreditAmount: '10.00',
+      endingDebitAmount: '1785000.00',
       createAt: 1704067200,
       updateAt: 1704067200,
       subAccounts: [
@@ -118,12 +118,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
           id: 114100,
           no: '114100',
           accountingTitle: '應收帳款',
-          beginningCreditAmount: 10,
-          beginningDebitAmount: 1785000,
-          midtermCreditAmount: 10,
-          midtermDebitAmount: 1785000,
-          endingCreditAmount: 10,
-          endingDebitAmount: 1785000,
+          beginningCreditAmount: '10.00',
+          beginningDebitAmount: '1785000.00',
+          midtermCreditAmount: '10.00',
+          midtermDebitAmount: '1785000.00',
+          endingCreditAmount: '10.00',
+          endingDebitAmount: '1785000.00',
           createAt: 1704067200,
           updateAt: 1704067200,
           subAccounts: [],
@@ -132,12 +132,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
           id: 2,
           no: '114101',
           accountingTitle: '應收帳款-A公司',
-          beginningCreditAmount: 10,
-          beginningDebitAmount: 1785000,
-          midtermCreditAmount: 10,
-          midtermDebitAmount: 1785000,
-          endingCreditAmount: 10,
-          endingDebitAmount: 1785000,
+          beginningCreditAmount: '10.00',
+          beginningDebitAmount: '1785000.00',
+          midtermCreditAmount: '10.00',
+          midtermDebitAmount: '1785000.00',
+          endingCreditAmount: '10.00',
+          endingDebitAmount: '1785000.00',
           createAt: 1704067200,
           updateAt: 1704067200,
           subAccounts: [],
@@ -148,12 +148,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
       id: 3,
       no: '1151',
       accountingTitle: '其他應收款',
-      beginningCreditAmount: 0,
-      beginningDebitAmount: 500000,
-      midtermCreditAmount: 0,
-      midtermDebitAmount: 500000,
-      endingCreditAmount: 0,
-      endingDebitAmount: 500000,
+      beginningCreditAmount: '0.00',
+      beginningDebitAmount: '500000.00',
+      midtermCreditAmount: '0.00',
+      midtermDebitAmount: '500000.00',
+      endingCreditAmount: '0.00',
+      endingDebitAmount: '500000.00',
       createAt: 1704067200,
       updateAt: 1704067200,
       subAccounts: [
@@ -161,12 +161,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
           id: 115100,
           no: '115100',
           accountingTitle: '其他應收款',
-          beginningCreditAmount: 10,
-          beginningDebitAmount: 1785000,
-          midtermCreditAmount: 10,
-          midtermDebitAmount: 1785000,
-          endingCreditAmount: 10,
-          endingDebitAmount: 1785000,
+          beginningCreditAmount: '10.00',
+          beginningDebitAmount: '1785000.00',
+          midtermCreditAmount: '10.00',
+          midtermDebitAmount: '1785000.00',
+          endingCreditAmount: '10.00',
+          endingDebitAmount: '1785000.00',
           createAt: 1704067200,
           updateAt: 1704067200,
           subAccounts: [],
@@ -189,12 +189,12 @@ export const MOCK_RESPONSE: ITrialBalancePayload = {
   note: JSON.stringify({
     currencyAlias: 'TWD',
     total: {
-      beginningCreditAmount: 0,
-      beginningDebitAmount: 2285000,
-      midtermCreditAmount: 0,
-      midtermDebitAmount: 2285000,
-      endingCreditAmount: 0,
-      endingDebitAmount: 2285000,
+      beginningCreditAmount: '0.00',
+      beginningDebitAmount: '2285000.00',
+      midtermCreditAmount: '0.00',
+      midtermDebitAmount: '2285000.00',
+      endingCreditAmount: '0.00',
+      endingDebitAmount: '2285000.00',
       createAt: 1704067200,
       updateAt: 1704067200,
     },

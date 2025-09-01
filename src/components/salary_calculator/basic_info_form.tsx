@@ -4,8 +4,8 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { FaChevronDown } from 'react-icons/fa6';
 import { FiSearch } from 'react-icons/fi';
 import { PiUserFill } from 'react-icons/pi';
-import NumericInput from '@/components/numeric_input/numeric_input';
 import EmployeeListModal from '@/components/salary_calculator/employee_list_modal';
+import ToggleSwitch from '@/components/salary_calculator/toggle_switch';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useUserCtx } from '@/contexts/user_context';
 
@@ -25,9 +25,18 @@ const BasicInfoForm: React.FC = () => {
     changeSelectedYear,
     selectedMonth,
     changeSelectedMonth,
-    workedDays,
-    setWorkedDays,
     isNameError,
+    payrollDaysBaseOptions,
+    payrollDaysBase,
+    changePayrollDaysBase,
+    isJoined,
+    toggleJoined,
+    dayOfJoining,
+    changeJoinedDay,
+    isLeft,
+    toggleLeft,
+    dayOfLeaving,
+    changeLeavingDay,
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
 
@@ -43,14 +52,46 @@ const BasicInfoForm: React.FC = () => {
     setComponentVisible: setIsMonthOpen,
   } = useOuterClick<HTMLDivElement>(false);
 
-  // Info: (20250710 - Julian) 當月的最大天數
+  const {
+    targetRef: payrollDropdownRef,
+    componentVisible: isPayrollOpen,
+    setComponentVisible: setIsPayrollOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: joiningDayRef,
+    componentVisible: isJoiningDayOpen,
+    setComponentVisible: setIsJoiningDayOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  const {
+    targetRef: leavingDayRef,
+    componentVisible: isLeavingDayOpen,
+    setComponentVisible: setIsLeavingDayOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
+  // Info: (20250806 - Julian) 生成日期字串
+  const selectedMonthNum = monthOptions.findIndex((month) => month.name === selectedMonth.name) + 1; // 月份從 1 開始計算
+  const dateStr = `${selectedYear}/${selectedMonthNum < 10 ? `0${selectedMonthNum}` : selectedMonthNum}/`;
+
+  // Info: (20250806 - Julian) 當月的最大天數
   const maxDaysInMonth = selectedMonth.days === 28 ? 29 : selectedMonth.days;
+  // Info: (20250806 - Julian) 生成當月的天數選項
+  const joiningDayOptions = Array.from({ length: maxDaysInMonth }, (_, i) => i + 1);
+  // Info: (20250808 - Julian) 離職日應大於等於到職日，因此篩掉小於到職日的日期
+  const leavingDayOptions = joiningDayOptions.filter((day) => {
+    const joiningDay = parseInt(dayOfJoining, 10);
+    return day >= joiningDay;
+  });
 
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
   // Info: (20250709 - Julian) 下拉選單開關
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
   const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
+  const togglePayrollDropdown = () => setIsPayrollOpen((prev) => !prev);
+  const toggleJoiningDayDropdown = () => setIsJoiningDayOpen((prev) => !prev);
+  const toggleLeavingDayDropdown = () => setIsLeavingDayOpen((prev) => !prev);
 
   // Info: (20250709 - Julian) input change handlers
   const handleEmployeeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,12 +129,62 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
+  const payrollDropdown = payrollDaysBaseOptions.map((option) => {
+    const clickHandler = () => changePayrollDaysBase(option);
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {t(`calculator:BASIC_INFO_FORM.PAYROLL_OPTION_${option}`)}
+      </button>
+    );
+  });
+
+  const joiningDayDropdown = joiningDayOptions.map((day) => {
+    const dayStr = day.toString().padStart(2, '0');
+    const clickHandler = () => {
+      changeJoinedDay(dayStr);
+      // Info: (20250808 - Julian) 如果離職日小於到職日，則自動更新離職日
+      if (!isLeft || parseInt(dayOfLeaving, 10) < day) {
+        changeLeavingDay(dayStr);
+      }
+    };
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {dayStr}
+      </button>
+    );
+  });
+
+  const leavingDayDropdown = leavingDayOptions.map((day) => {
+    const dayStr = day.toString().padStart(2, '0');
+    const clickHandler = () => changeLeavingDay(dayStr);
+
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {dayStr}
+      </button>
+    );
+  });
+
   return (
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
-      <form className="flex flex-col gap-24px">
+      <form className="grid grid-cols-2 gap-24px">
         {/* Info: (20250708 - Julian) 員工姓名 */}
-        <div className="flex flex-col gap-8px">
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME')}
             <span className="text-text-state-error">*</span>
@@ -133,7 +224,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250708 - Julian) 員工編號 */}
-        <div className="flex flex-col gap-8px">
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER')}
           </p>
@@ -198,24 +289,98 @@ const BasicInfoForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Info: (20250708 - Julian) 工作天數 */}
-        <div className="flex flex-col gap-8px">
+        {/* Info: (20250806 - Julian) 基準天數 */}
+        <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
-            {t('calculator:BASIC_INFO_FORM.DAYS_WORKED')}{' '}
+            {t('calculator:BASIC_INFO_FORM.PAYROLL_DAYS_BASE')}{' '}
             <span className="text-text-state-error">*</span>
           </p>
-          <div className="flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background">
-            <NumericInput
-              id="input-worked-days"
-              name="input-worked-days"
-              value={workedDays}
-              setValue={setWorkedDays}
-              min={0}
-              max={maxDaysInMonth}
-              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
-              required
-            />
+          <div
+            ref={payrollDropdownRef}
+            onClick={togglePayrollDropdown}
+            className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+          >
+            <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+              {t(`calculator:BASIC_INFO_FORM.PAYROLL_OPTION_${payrollDaysBase}`)}
+            </div>
+            <div className="px-12px py-10px">
+              <FaChevronDown size={16} />
+            </div>
+            {isPayrollOpen && (
+              <div className="absolute top-50px z-10 flex max-h-200px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                {payrollDropdown}
+              </div>
+            )}
           </div>
+          <p className="text-sm font-medium text-input-text-secondary">
+            {t('calculator:BASIC_INFO_FORM.PAYROLL_DAYS_BASE_HINT')}
+          </p>
+        </div>
+
+        {/* Info: (20250806 - Julian) 到職日 */}
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
+          <ToggleSwitch
+            isOn={isJoined}
+            handleToggle={toggleJoined}
+            title={t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_1')}
+          />
+          {isJoined && (
+            <div className="flex items-center gap-8px">
+              <p className="text-base font-medium">
+                {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
+              </p>
+              <div
+                ref={joiningDayRef}
+                onClick={toggleJoiningDayDropdown}
+                className="relative flex h-44px w-90px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+              >
+                <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+                  {dayOfJoining}
+                </div>
+                <div className="px-12px py-10px">
+                  <FaChevronDown size={16} />
+                </div>
+                {isJoiningDayOpen && (
+                  <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                    {joiningDayDropdown}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Info: (20250806 - Julian) 離職日 */}
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
+          <ToggleSwitch
+            isOn={isLeft}
+            handleToggle={toggleLeft}
+            title={t('calculator:BASIC_INFO_FORM.LEFT_THIS_MONTH')}
+          />
+          {isLeft && (
+            <div className="flex items-center gap-8px">
+              <p className="text-base font-medium">
+                {t('calculator:BASIC_INFO_FORM.JOINED_THIS_MONTH_2')} {dateStr}
+              </p>
+              <div
+                ref={leavingDayRef}
+                onClick={toggleLeavingDayDropdown}
+                className="relative flex h-44px w-90px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+              >
+                <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+                  {dayOfLeaving}
+                </div>
+                <div className="px-12px py-10px">
+                  <FaChevronDown size={16} />
+                </div>
+                {isLeavingDayOpen && (
+                  <div className="absolute top-50px z-10 flex max-h-100px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                    {leavingDayDropdown}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </form>
 

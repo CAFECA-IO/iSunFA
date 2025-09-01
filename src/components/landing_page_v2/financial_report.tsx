@@ -33,7 +33,7 @@ const FinancialReport: React.FC = () => {
   // Info: (20250115 - Julian) 手動換行
   const titleStr = t('landing_page_v2:REAL_TIME_REPORT.MAIN_TITLE')
     .split('\n')
-    .map((line) => (
+    .map((line: string) => (
       <>
         {line}
         <br />

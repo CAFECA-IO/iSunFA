@@ -10,6 +10,7 @@ import {
   AssociateVoucher as PrismaAssociateVoucher,
   Event as PrismaEvent,
 } from '@prisma/client';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import {
   AccountCodesOfAPandAR,
   AccountCodesOfAPRegex,
@@ -133,13 +134,16 @@ export const lineItemGetByAccountAPIUtils = {
     originalAmount: number;
   }) => {
     const { originDebit, reverseLineItems, originalAmount } = options;
-    let adjustedAmount = originalAmount;
+    let adjustedAmount = originalAmount.toString();
     reverseLineItems.forEach((reverseLineItem) => {
       if (reverseLineItem.debit !== originDebit) {
-        adjustedAmount -= reverseLineItem.amount;
+        const reverseAmount = typeof reverseLineItem.amount === 'string'
+          ? reverseLineItem.amount
+          : reverseLineItem.amount.toString();
+        adjustedAmount = DecimalOperations.subtract(adjustedAmount, reverseAmount);
       }
     });
-    return adjustedAmount;
+    return parseFloat(adjustedAmount);
   },
 
   /**
@@ -160,7 +164,10 @@ export const lineItemGetByAccountAPIUtils = {
     const adjustedAmount = lineItemGetByAccountAPIUtils.calculateLineItemAdjustedAmount({
       originDebit,
       reverseLineItems: reverseItems,
-      originalAmount: amountThatWillBeReversed,
+      originalAmount:
+        typeof amountThatWillBeReversed === 'string'
+          ? parseFloat(amountThatWillBeReversed)
+          : amountThatWillBeReversed.toNumber(),
     });
     return adjustedAmount > 0;
   },
@@ -245,19 +252,21 @@ export const voucherGetByAccountAPIUtils = {
 
   isARorAPBeenWriteOff: (lineItemWithAssociate: ILineItemEntityWithAssociate): boolean => {
     const targetAccountId = lineItemWithAssociate.account.id;
-    let remainingAmount = lineItemWithAssociate.amount;
+    let remainingAmount = DecimalOperations.toExactString(lineItemWithAssociate.amount);
     lineItemWithAssociate.lineItemsAssociateThatWriteOffMe.forEach((associate) => {
       const isSameAccount = associate.resultLineItem.account.id === targetAccountId;
       const isSameDirection = associate.resultLineItem.debit === lineItemWithAssociate.debit;
       // Info: (20250423 - Anna) associate.amount 替換為 associate.resultLineItem.amount
-      const adjustedAmount = associate.resultLineItem.amount * (isSameDirection ? 1 : -1);
+      const adjustedAmount = isSameDirection
+        ? DecimalOperations.toExactString(associate.resultLineItem.amount)
+        : DecimalOperations.negate(associate.resultLineItem.amount);
 
       if (isSameAccount) {
-        remainingAmount += adjustedAmount;
+        remainingAmount = DecimalOperations.add(remainingAmount, adjustedAmount);
       }
     });
     // Info: (20250423 - Anna) 是否剩餘金額為0
-    return remainingAmount === 0;
+    return DecimalOperations.isZero(remainingAmount);
   },
 
   isARorAPWriteOffOriginalVoucher: (
@@ -268,13 +277,16 @@ export const voucherGetByAccountAPIUtils = {
       return associate.originalLineItem.lineItemsAssociateThatWriteOffMe.every(
         (originalAssociate) => {
           const isSameAccount = originalAssociate.resultLineItem.account.id === targetAccountId;
-          let writeOffAmount = lineItemWithAssociate.amount;
+          let writeOffAmount = DecimalOperations.toExactString(lineItemWithAssociate.amount);
           if (isSameAccount) {
             const isSameDirection =
               originalAssociate.resultLineItem.debit === lineItemWithAssociate.debit;
-            writeOffAmount += originalAssociate.amount * (isSameDirection ? 1 : -1);
+            const adjustAmount = isSameDirection
+              ? DecimalOperations.toExactString(originalAssociate.amount)
+              : DecimalOperations.negate(originalAssociate.amount);
+            writeOffAmount = DecimalOperations.add(writeOffAmount, adjustAmount);
           }
-          return writeOffAmount === 0;
+          return DecimalOperations.isZero(writeOffAmount);
         }
       );
     });

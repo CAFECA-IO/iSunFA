@@ -1,5 +1,6 @@
 import { IAccountNodeWithDebitAndCredit } from '@/interfaces/accounting_account';
 import { SortBy, SortOrder } from '@/constants/sort';
+import { Prisma, Account } from '@prisma/client';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
 import {
   ILineItemInTrialBalanceItem,
@@ -9,7 +10,7 @@ import {
   ITrialBalanceTotal,
   TrialBalanceItem,
 } from '@/interfaces/trial_balance';
-import { Account } from '@prisma/client';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export function sortTrialBalanceItem(
   items: TrialBalanceItem[],
@@ -57,11 +58,20 @@ export function sortTrialBalanceItem(
             break;
         }
 
-        if (fieldA < fieldB) {
-          return option.sortOrder === SortOrder.ASC ? -1 : 1;
-        }
-        if (fieldA > fieldB) {
-          return option.sortOrder === SortOrder.ASC ? 1 : -1;
+        // Info: (20250820 - Shirley) Use decimal comparison for amount fields only
+        const isAmountField = option.sortBy.toString().toLowerCase().includes('amount');
+        if (isAmountField && typeof fieldA === 'string' && typeof fieldB === 'string') {
+          const compareResult = DecimalOperations.compare(fieldA, fieldB);
+          if (compareResult !== 0) {
+            return option.sortOrder === SortOrder.ASC ? compareResult : -compareResult;
+          }
+        } else {
+          if (fieldA < fieldB) {
+            return option.sortOrder === SortOrder.ASC ? -1 : 1;
+          }
+          if (fieldA > fieldB) {
+            return option.sortOrder === SortOrder.ASC ? 1 : -1;
+          }
         }
         return 0; // Info: (20241118 - Shirley) 若相等，繼續判斷下一個排序條件
       }, 0);
@@ -80,22 +90,31 @@ export function sortTrialBalanceItem(
 const calculateTotal = (items: TrialBalanceItem[]): ITrialBalanceTotal => {
   const result = items.reduce(
     (total, item) => ({
-      beginningCreditAmount: total.beginningCreditAmount + item.beginningCreditAmount,
-      beginningDebitAmount: total.beginningDebitAmount + item.beginningDebitAmount,
-      midtermCreditAmount: total.midtermCreditAmount + item.midtermCreditAmount,
-      midtermDebitAmount: total.midtermDebitAmount + item.midtermDebitAmount,
-      endingCreditAmount: total.endingCreditAmount + item.endingCreditAmount,
-      endingDebitAmount: total.endingDebitAmount + item.endingDebitAmount,
+      beginningCreditAmount: DecimalOperations.add(
+        total.beginningCreditAmount,
+        item.beginningCreditAmount
+      ),
+      beginningDebitAmount: DecimalOperations.add(
+        total.beginningDebitAmount,
+        item.beginningDebitAmount
+      ),
+      midtermCreditAmount: DecimalOperations.add(
+        total.midtermCreditAmount,
+        item.midtermCreditAmount
+      ),
+      midtermDebitAmount: DecimalOperations.add(total.midtermDebitAmount, item.midtermDebitAmount),
+      endingCreditAmount: DecimalOperations.add(total.endingCreditAmount, item.endingCreditAmount),
+      endingDebitAmount: DecimalOperations.add(total.endingDebitAmount, item.endingDebitAmount),
       createAt: 0,
       updateAt: 0,
     }),
     {
-      beginningCreditAmount: 0,
-      beginningDebitAmount: 0,
-      midtermCreditAmount: 0,
-      midtermDebitAmount: 0,
-      endingCreditAmount: 0,
-      endingDebitAmount: 0,
+      beginningCreditAmount: '0',
+      beginningDebitAmount: '0',
+      midtermCreditAmount: '0',
+      midtermDebitAmount: '0',
+      endingCreditAmount: '0',
+      endingDebitAmount: '0',
       createAt: 0,
       updateAt: 0,
     }
@@ -107,12 +126,12 @@ const calculateTotal = (items: TrialBalanceItem[]): ITrialBalanceTotal => {
 const filterZeroAmounts = (items: TrialBalanceItem[]): TrialBalanceItem[] => {
   const result = items.filter((item) => {
     const hasNonZeroAmount =
-      item.beginningCreditAmount !== 0 ||
-      item.beginningDebitAmount !== 0 ||
-      item.midtermCreditAmount !== 0 ||
-      item.midtermDebitAmount !== 0 ||
-      item.endingCreditAmount !== 0 ||
-      item.endingDebitAmount !== 0;
+      !DecimalOperations.isZero(item.beginningCreditAmount) ||
+      !DecimalOperations.isZero(item.beginningDebitAmount) ||
+      !DecimalOperations.isZero(item.midtermCreditAmount) ||
+      !DecimalOperations.isZero(item.midtermDebitAmount) ||
+      !DecimalOperations.isZero(item.endingCreditAmount) ||
+      !DecimalOperations.isZero(item.endingDebitAmount);
 
     const filteredSubAccounts =
       item.subAccounts?.length > 0 ? filterZeroAmounts(item.subAccounts) : [];
@@ -239,14 +258,20 @@ export function mergeLineItems(
 
   lineItems.forEach((item) => {
     if (!map[item.accountId]) {
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       map[item.accountId] = {
         ...item,
-        debitAmount: item.debit ? item.amount : 0,
-        creditAmount: !item.debit ? item.amount : 0,
+        debitAmount: item.debit ? itemAmount : '0',
+        creditAmount: !item.debit ? itemAmount : '0',
       };
     } else {
-      map[item.accountId].debitAmount += item.debit ? item.amount : 0;
-      map[item.accountId].creditAmount += !item.debit ? item.amount : 0;
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      map[item.accountId].debitAmount = item.debit
+        ? DecimalOperations.add(map[item.accountId].debitAmount, itemAmount)
+        : map[item.accountId].debitAmount;
+      map[item.accountId].creditAmount = !item.debit
+        ? DecimalOperations.add(map[item.accountId].creditAmount, itemAmount)
+        : map[item.accountId].creditAmount;
     }
   });
 
@@ -270,18 +295,26 @@ export function mergeLineItemsByAccount(
 
     if (existingSummary) {
       // Info: (20250102 - Shirley) 如果該科目已存在，則加總金額
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       if (item.debit) {
-        existingSummary.debitAmount += item.amount;
+        existingSummary.debitAmount = DecimalOperations.add(
+          existingSummary.debitAmount,
+          itemAmount
+        );
       } else {
-        existingSummary.creditAmount += item.amount;
+        existingSummary.creditAmount = DecimalOperations.add(
+          existingSummary.creditAmount,
+          itemAmount
+        );
       }
     } else {
       // Info: (20250102 - Shirley) 如果該科目不存在，則建立新的紀錄
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       accountSummary.set(item.accountId, {
         ...item,
         // accountId: item.accountId,
-        debitAmount: item.debit ? item.amount : 0,
-        creditAmount: !item.debit ? item.amount : 0,
+        debitAmount: item.debit ? itemAmount : '0',
+        creditAmount: !item.debit ? itemAmount : '0',
         accountCode: item.account.code,
         accountName: item.account.name,
         // debit: item.debit,
@@ -380,10 +413,20 @@ export function calculateEndingBalance(
   midterm.forEach((item) => {
     const existingItem = endingMap.get(item.accountId);
     if (existingItem) {
-      existingItem.debitAmount += item.debitAmount;
-      existingItem.creditAmount += item.creditAmount;
-      existingItem.amount = Math.abs(existingItem.debitAmount - existingItem.creditAmount);
-      existingItem.debit = existingItem.debitAmount > existingItem.creditAmount;
+      existingItem.debitAmount = DecimalOperations.add(existingItem.debitAmount, item.debitAmount);
+      existingItem.creditAmount = DecimalOperations.add(
+        existingItem.creditAmount,
+        item.creditAmount
+      );
+      const debitCredit = DecimalOperations.subtract(
+        existingItem.debitAmount,
+        existingItem.creditAmount
+      );
+      existingItem.amount = new Prisma.Decimal(DecimalOperations.abs(debitCredit));
+      existingItem.debit = DecimalOperations.isGreaterThan(
+        existingItem.debitAmount,
+        existingItem.creditAmount
+      );
     } else {
       endingMap.set(item.accountId, item);
     }
@@ -415,7 +458,10 @@ export function convertToTrialBalanceItem(
   const ending = calculateEndingBalance(beginning, midterm);
 
   // Info: (20250102 - Shirley) 篩選掉借貸方金額都為 0 的科目
-  const filteredEnding = ending.filter((item) => item.debitAmount !== 0 || item.creditAmount !== 0);
+  const filteredEnding = ending.filter(
+    (item) =>
+      !DecimalOperations.isZero(item.debitAmount) || !DecimalOperations.isZero(item.creditAmount)
+  );
 
   return {
     beginning,
@@ -436,12 +482,16 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
 }): ITrialBalancePayload {
   // Info: (20250102 - Shirley) 計算總額
   const total = {
-    beginningCreditAmount: lineItems.beginning.reduce((sum, item) => sum + item.creditAmount, 0),
-    beginningDebitAmount: lineItems.beginning.reduce((sum, item) => sum + item.debitAmount, 0),
-    midtermCreditAmount: lineItems.midterm.reduce((sum, item) => sum + item.creditAmount, 0),
-    midtermDebitAmount: lineItems.midterm.reduce((sum, item) => sum + item.debitAmount, 0),
-    endingCreditAmount: lineItems.ending.reduce((sum, item) => sum + item.creditAmount, 0),
-    endingDebitAmount: lineItems.ending.reduce((sum, item) => sum + item.debitAmount, 0),
+    beginningCreditAmount: DecimalOperations.sum(
+      lineItems.beginning.map((item) => item.creditAmount)
+    ),
+    beginningDebitAmount: DecimalOperations.sum(
+      lineItems.beginning.map((item) => item.debitAmount)
+    ),
+    midtermCreditAmount: DecimalOperations.sum(lineItems.midterm.map((item) => item.creditAmount)),
+    midtermDebitAmount: DecimalOperations.sum(lineItems.midterm.map((item) => item.debitAmount)),
+    endingCreditAmount: DecimalOperations.sum(lineItems.ending.map((item) => item.creditAmount)),
+    endingDebitAmount: DecimalOperations.sum(lineItems.ending.map((item) => item.debitAmount)),
     createAt: Math.floor(Date.now() / 1000),
     updateAt: Math.floor(Date.now() / 1000),
   };
@@ -452,13 +502,13 @@ export function convertLineItemsToTrialBalanceAPIFormat(lineItems: {
     no: item.account.code,
     accountingTitle: item.account.name,
     beginningCreditAmount:
-      lineItems.beginning.find((b) => b.accountId === item.accountId)?.creditAmount || 0,
+      lineItems.beginning.find((b) => b.accountId === item.accountId)?.creditAmount || '0',
     beginningDebitAmount:
-      lineItems.beginning.find((b) => b.accountId === item.accountId)?.debitAmount || 0,
+      lineItems.beginning.find((b) => b.accountId === item.accountId)?.debitAmount || '0',
     midtermCreditAmount:
-      lineItems.midterm.find((m) => m.accountId === item.accountId)?.creditAmount || 0,
+      lineItems.midterm.find((m) => m.accountId === item.accountId)?.creditAmount || '0',
     midtermDebitAmount:
-      lineItems.midterm.find((m) => m.accountId === item.accountId)?.debitAmount || 0,
+      lineItems.midterm.find((m) => m.accountId === item.accountId)?.debitAmount || '0',
     endingCreditAmount: item.creditAmount,
     endingDebitAmount: item.debitAmount,
     createAt: item.createdAt,
@@ -490,21 +540,25 @@ export const aggregateAmounts = (
 
     // Info: (20250106 - Shirley) 計算當前帳戶的 debitAmount 和 creditAmount
     // Info: (20250106 - Shirley) 如果有 children 的話，此科目的 debitAmount 跟 creditAmount 單純為 children 的 debitAmount 跟 creditAmount 加總
-    let currentDebit = 0;
-    let currentCredit = 0;
+    let currentDebit = '0';
+    let currentCredit = '0';
     if (account.children.length > 0) {
-      currentDebit = updatedChildren.reduce((sum, child) => sum + child.debitAmount, 0);
-      currentCredit = updatedChildren.reduce((sum, child) => sum + child.creditAmount, 0);
+      currentDebit = DecimalOperations.sum(
+        updatedChildren.map((child) => child.debitAmount.toString())
+      );
+      currentCredit = DecimalOperations.sum(
+        updatedChildren.map((child) => child.creditAmount.toString())
+      );
     } else {
       const currentLineItems = lineItemsForCal.filter((item) => item.accountId === account.id);
-      currentDebit = currentLineItems.reduce((sum, item) => sum + item.debitAmount, 0);
-      currentCredit = currentLineItems.reduce((sum, item) => sum + item.creditAmount, 0);
+      currentDebit = DecimalOperations.sum(currentLineItems.map((item) => item.debitAmount));
+      currentCredit = DecimalOperations.sum(currentLineItems.map((item) => item.creditAmount));
     }
 
     return {
       ...account,
-      debitAmount: currentDebit,
-      creditAmount: currentCredit,
+      debitAmount: parseFloat(currentDebit),
+      creditAmount: parseFloat(currentCredit),
       children: updatedChildren,
     };
   });
@@ -530,18 +584,18 @@ export function processLineItems(
   const arrWithCopySelf: ILineItemInTrialBalanceItemWithHierarchy[] = [];
 
   // Info: (20250217 - Shirley) 第一步：建立科目金額的映射
-  const accountAmounts = new Map<number, { debitAmount: number; creditAmount: number }>();
+  const accountAmounts = new Map<number, { debitAmount: string; creditAmount: string }>();
   array.forEach((item) => {
-    const existing = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
+    const existing = accountAmounts.get(item.accountId) || { debitAmount: '0', creditAmount: '0' };
     accountAmounts.set(item.accountId, {
-      debitAmount: existing.debitAmount + item.debitAmount,
-      creditAmount: existing.creditAmount + item.creditAmount,
+      debitAmount: DecimalOperations.add(existing.debitAmount, item.debitAmount),
+      creditAmount: DecimalOperations.add(existing.creditAmount, item.creditAmount),
     });
   });
 
   // Info: (20250217 - Shirley) 第二步：建立所有科目的基本資料
   array.forEach((item) => {
-    const amounts = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
+    const amounts = accountAmounts.get(item.accountId) || { debitAmount: '0', creditAmount: '0' };
     if (!arrWithChildren.some((existing) => existing.accountId === item.accountId)) {
       const baseItem: ILineItemInTrialBalanceItemWithHierarchy = {
         ...item,
@@ -574,9 +628,9 @@ export function processLineItems(
           const newParentItem: ILineItemInTrialBalanceItemWithHierarchy = {
             accountCode: parentAccount.code,
             accountName: parentAccount.name,
-            debitAmount: 0,
-            creditAmount: 0,
-            amount: 0,
+            debitAmount: '0',
+            creditAmount: '0',
+            amount: new Prisma.Decimal('0'),
             id: parentAccount.id,
             debit: parentAccount.debit,
             description: '',
@@ -609,7 +663,10 @@ export function processLineItems(
   arrWithChildren.forEach((item) => {
     if (item.children && item.children.length > 0) {
       // Info: (20250217 - Shirley) 計算本科目的原始金額
-      const selfAmounts = accountAmounts.get(item.accountId) || { debitAmount: 0, creditAmount: 0 };
+      const selfAmounts = accountAmounts.get(item.accountId) || {
+        debitAmount: '0',
+        creditAmount: '0',
+      };
 
       // Info: (20250217 - Shirley) 建立虛擬科目（保存本科目的原始金額）
       const virtualItem: ILineItemInTrialBalanceItemWithHierarchy = {
@@ -629,11 +686,12 @@ export function processLineItems(
       };
 
       // Info: (20250217 - Shirley) 計算總金額（包含本科目和所有子科目）
-      const totalDebit =
-        selfAmounts.debitAmount + item.children.reduce((sum, child) => sum + child.debitAmount, 0);
-      const totalCredit =
-        selfAmounts.creditAmount +
-        item.children.reduce((sum, child) => sum + child.creditAmount, 0);
+      const childrenDebits = DecimalOperations.sum(item.children.map((child) => child.debitAmount));
+      const childrenCredits = DecimalOperations.sum(
+        item.children.map((child) => child.creditAmount)
+      );
+      const totalDebit = DecimalOperations.add(selfAmounts.debitAmount, childrenDebits);
+      const totalCredit = DecimalOperations.add(selfAmounts.creditAmount, childrenCredits);
 
       const processedItem: ILineItemInTrialBalanceItemWithHierarchy = {
         ...item,
@@ -690,12 +748,12 @@ export function convertToAPIFormat(
         id: item.account.id,
         no: item.account.code,
         accountingTitle: item.account.name,
-        beginningCreditAmount: 0,
-        beginningDebitAmount: 0,
-        midtermCreditAmount: 0,
-        midtermDebitAmount: 0,
-        endingCreditAmount: 0,
-        endingDebitAmount: 0,
+        beginningCreditAmount: '0',
+        beginningDebitAmount: '0',
+        midtermCreditAmount: '0',
+        midtermDebitAmount: '0',
+        endingCreditAmount: '0',
+        endingDebitAmount: '0',
         subAccounts: [],
         createAt: 0,
         updateAt: 0,
@@ -729,12 +787,12 @@ export function convertToAPIFormat(
 
   // Info: (20250106 - Shirley) 計算總計
   const total = {
-    beginningCreditAmount: 0,
-    beginningDebitAmount: 0,
-    midtermCreditAmount: 0,
-    midtermDebitAmount: 0,
-    endingCreditAmount: 0,
-    endingDebitAmount: 0,
+    beginningCreditAmount: '0',
+    beginningDebitAmount: '0',
+    midtermCreditAmount: '0',
+    midtermDebitAmount: '0',
+    endingCreditAmount: '0',
+    endingDebitAmount: '0',
     createAt: 0,
     updateAt: 0,
   };
@@ -747,12 +805,30 @@ export function convertToAPIFormat(
     if (item.no.includes('-')) {
       return;
     }
-    total.beginningCreditAmount += item.beginningCreditAmount;
-    total.beginningDebitAmount += item.beginningDebitAmount;
-    total.midtermCreditAmount += item.midtermCreditAmount;
-    total.midtermDebitAmount += item.midtermDebitAmount;
-    total.endingCreditAmount += item.endingCreditAmount;
-    total.endingDebitAmount += item.endingDebitAmount;
+    total.beginningCreditAmount = DecimalOperations.add(
+      total.beginningCreditAmount,
+      item.beginningCreditAmount
+    );
+    total.beginningDebitAmount = DecimalOperations.add(
+      total.beginningDebitAmount,
+      item.beginningDebitAmount
+    );
+    total.midtermCreditAmount = DecimalOperations.add(
+      total.midtermCreditAmount,
+      item.midtermCreditAmount
+    );
+    total.midtermDebitAmount = DecimalOperations.add(
+      total.midtermDebitAmount,
+      item.midtermDebitAmount
+    );
+    total.endingCreditAmount = DecimalOperations.add(
+      total.endingCreditAmount,
+      item.endingCreditAmount
+    );
+    total.endingDebitAmount = DecimalOperations.add(
+      total.endingDebitAmount,
+      item.endingDebitAmount
+    );
   });
 
   const itemsWithSubAccounts = items.map((item) => {

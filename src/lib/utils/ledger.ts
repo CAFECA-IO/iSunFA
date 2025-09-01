@@ -3,6 +3,7 @@ import { getAllLineItemsInPrisma } from '@/lib/utils/repo/line_item.repo';
 import { ILedgerItem, ILedgerTotal } from '@/interfaces/ledger';
 import { EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP, VoucherType } from '@/constants/account';
 import { ILineItemSimpleAccountVoucher } from '@/interfaces/line_item';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export const filterLedgerItemsByLabelType = (ledgers: ILedgerItem[], labelType: LabelType) => {
   const filteredLedgers = ledgers.filter((ledger) => {
@@ -105,7 +106,7 @@ export const filterByLabelType = (
 export const sortAndCalculateBalances = (
   lineItems: ILineItemSimpleAccountVoucher[]
 ): ILedgerItem[] => {
-  const accountBalances: { [key: string]: number } = {};
+  const accountBalances: { [key: string]: string } = {};
 
   const output = lineItems
     .sort((a, b) => {
@@ -118,12 +119,14 @@ export const sortAndCalculateBalances = (
     .map((item) => {
       const accountKey = item.account.code;
       if (!accountBalances[accountKey]) {
-        accountBalances[accountKey] = 0;
+        accountBalances[accountKey] = '0';
       }
-      const debit = item.debit ? item.amount : 0;
-      const credit = !item.debit ? item.amount : 0;
-      const balanceChange = item.debit ? item.amount : -item.amount;
-      accountBalances[accountKey] += balanceChange;
+      const amountString =
+        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      const debit = item.debit ? amountString : '0';
+      const credit = !item.debit ? amountString : '0';
+      const balanceChange = item.debit ? amountString : DecimalOperations.negate(amountString);
+      accountBalances[accountKey] = DecimalOperations.add(accountBalances[accountKey], balanceChange);
 
       /* Info: (20250115 - Luphia) convert item.vaucher.type to VoucherType
        * 1. itee.voucher.type might be EventType
@@ -159,13 +162,13 @@ export const sortAndCalculateBalances = (
 export const calculateTotals = (processedLineItems: ILedgerItem[]): ILedgerTotal => {
   return processedLineItems.reduce(
     (acc: ILedgerTotal, item: ILedgerItem) => {
-      acc.totalDebitAmount += item.debitAmount;
-      acc.totalCreditAmount += item.creditAmount;
+      acc.totalDebitAmount = DecimalOperations.add(acc.totalDebitAmount, item.debitAmount);
+      acc.totalCreditAmount = DecimalOperations.add(acc.totalCreditAmount, item.creditAmount);
       return acc;
     },
     {
-      totalDebitAmount: 0,
-      totalCreditAmount: 0,
+      totalDebitAmount: '0',
+      totalCreditAmount: '0',
       createdAt: 0,
       updatedAt: 0,
     }

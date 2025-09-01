@@ -12,7 +12,8 @@ import html2canvas from 'html2canvas';
 
 const SalaryResultSection: React.FC = () => {
   const { t } = useTranslation('calculator');
-  const { employeeName, selectedYear, selectedMonth, salaryCalculatorResult } = useCalculatorCtx();
+  const { employeeName, employeeNumber, selectedYear, selectedMonth, salaryCalculatorResult } =
+    useCalculatorCtx();
 
   const downloadRef = useRef<HTMLDivElement>(null);
   const [isShowLoginModal, setIsShowLoginModal] = useState<boolean>(false);
@@ -68,21 +69,22 @@ const SalaryResultSection: React.FC = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col gap-24px">
+      <div className="flex flex-col gap-24px tablet:w-fit">
         {/* Info: (20250708 - Julian) Result */}
         <div
           ref={downloadRef}
-          className="w-650px shrink-0 gap-12px rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS"
+          className="w-full shrink-0 rounded-lg bg-surface-neutral-surface-lv2 p-24px shadow-Dropshadow_XS tablet:w-650px"
         >
           <PaySlip
             employeeName={showingName}
+            employeeNumber={employeeNumber}
             selectedMonth={formattedMonth}
             selectedYear={selectedYear}
             resultData={salaryCalculatorResult}
           />
         </div>
         {/* Info: (20250708 - Julian) Buttons */}
-        <div className="grid grid-cols-2 gap-24px">
+        <div className="grid grid-cols-1 gap-24px tablet:grid-cols-2">
           <Button type="button" variant="tertiary" onClick={downloadPng} disabled={btnDisabled}>
             {t('calculator:BUTTON.DOWNLOAD')} <TbDownload size={20} />
           </Button>

@@ -14,7 +14,9 @@
     "BASIC_INFO": "Basic Info",
     "BASE_PAY": " Base Pay",
     "WORK_HOURS": "Work Hours",
-    "OTHERS": "Others"
+    "OTHERS": "Others",
+    "CALCULATOR": "Calculator",
+    "PAY_SLIP": "Pay Slip"
   },
   "BASIC_INFO_FORM": {
     "EMPLOYEE_NAME": "Employee Name",
@@ -23,7 +25,13 @@
     "EMPLOYEE_NUMBER_PLACEHOLDER": "Enter employee number",
     "YEAR": "Year",
     "MONTH": "Month",
-    "DAYS_WORKED": "Days Worked"
+    "PAYROLL_DAYS_BASE": "Payroll Days Base",
+    "PAYROLL_DAYS_BASE_HINT": "Default to 30-day calculation if unspecified.",
+    "PAYROLL_OPTION_FIXED": "Fixed 30 days",
+    "PAYROLL_OPTION_ACTUAL": "Actual calendar days",
+    "JOINED_THIS_MONTH_1": "Joined This Month",
+    "JOINED_THIS_MONTH_2": "On",
+    "LEFT_THIS_MONTH": "Left This Month"
   },
   "BASE_PAY_FORM": {
     "BASE_SALARY": "Base Salary (Taxable)",
@@ -35,15 +43,20 @@
   "WORK_HOURS_FORM": {
     "OVERTIME_HOUR_WITHOUT_TAX": "Overtime Hour (Non-taxable)",
     "OVERTIME_HOUR_WITH_TAX": "Overtime Hour (Taxable)",
-    "LEAVE_HOUR": "Leave Hour",
+    "LEAVE_HOUR": "Leave & Payout",
     "SICK_MENSTRUAL_LEAVE": "Sick / Menstrual Leave",
     "PERSONAL_LEAVE": "Personal Leave",
+    "LEAVE_PAYOUT_HOURS": "Leave Payout Hours",
     "TOTAL_LEAVE_HOUR": "Total Leave Hour",
     "TOTAL_OVERTIME_HOUR": "Total Overtime Hour"
   },
   "OTHERS_FORM": {
+    "LABOR_COVERAGE_STATUS": "Labor Coverage Status",
+    "OPTION_LABOR_INSURANCE": "Labor Insurance",
+    "OPTION_NHI": "NHI",
+    "OPTION_LABOR_PENSION": "Labor Pension",
+    "NUMBER_OF_DEPENDENTS": "Number of Dependents",
     "NHI_BACK_PREMIUM": "NHI Back Premium",
-    "INCOME_TAX_SECOND_GEN_NHI_TAX": "Income Tax / 2nd Gen NHI Tax",
     "OTHER_ADJUSTMENTS": "Other Adjustments (Reimbursement / Extra Deduction)",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution"
   },
@@ -72,15 +85,18 @@
     "MEAL_ALLOWANCE_WITHOUT_TAX": "Meal Allowance (Non-taxable)",
     "OVERTIME_PAY_WITHOUT_TAX": "Overtime Pay (Non-taxable)",
     "OTHER_ALLOWANCE_WITHOUT_TAX": "Other Allowance (Non-taxable)",
+    "LEAVE_SALARY_WITHOUT_TAX": "Leave Salary (Non-taxable)",
     "TOTAL_SALARY_WITHOUT_TAX": "Total Salary (Non-taxable)",
     "TOTAL_MONTHLY_SALARY": "Total Monthly Salary",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "Employee Paid Labor Insurance",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "Employee Paid Health Insurance",
+    "HEALTH_INSURANCE_ADDITIONAL_PREMIUM": "Health Insurance Additional Premium",
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution",
     "WITHHELD_INCOME_TAX": "Withheld Income Tax",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "Withheld 2nd Gen NHI Premium",
     "SALARY_DEDUCTION_FOR_LEAVE": "Salary Deduction for Leave",
-    "TOTAL_EMPLOYEE_CONTRIBUTION": "Total Employee Contribution",
+    "OTHER_DEDUCTIONS_ADJUSTMENTS": "Other Deductions / Adjustments",
+    "TOTAL_DEDUCTIONS": "Total Deduction",
     "HEALTH_INSURANCE_SALARY_BRACKET": "Health Insurance Salary Bracket",
     "LABOR_INSURANCE_SALARY_BRACKET": "Labor Insurance Salary Bracket",
     "EMPLOYMENT_INSURANCE_SALARY_BRACKET": "Employment Insurance Salary Bracket",
@@ -88,11 +104,12 @@
     "LABOR_PENSION_SALARY_BRACKET": "Labor Pension Salary Bracket",
     "OCCUPATIONAL_INJURY_INDUSTRY_RATE": "Occupational Injury Industry Rate",
     "INSURED_SALARY": "Insured Salary",
-    "EMPLOYER_CONTRIBUTIONS": "Employer Contributions",
     "EMPLOYER_PAID_LABOR_INSURANCE": "Employer Paid Labor Insurance",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "Employer Paid Health Insurance",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
-    "TOTAL_EMPLOYER_COST": "Total Employer Cost"
+    "TOTAL_EMPLOYER_COST": "Total Employer Cost",
+    "REPORTED": "Reported",
+    "PAID": "Paid"
   },
   "LOGIN_MODAL": {
     "TITLE": "Please Login in",

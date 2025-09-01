@@ -163,12 +163,16 @@ async function handleGetRequest(req: NextApiRequest) {
       forUser: true,
     });
 
-    // Info: (20250424 - Shirley) Step 4 整理資料
-    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => ({
-      ...item,
-      debitAmount: item.debit ? item.amount : 0,
-      creditAmount: !item.debit ? item.amount : 0,
-    }));
+    // Info: (20250424 - Shirley) Step 4 整理資料 - Use decimal operations for precise calculations
+    const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
+      const itemAmount =
+        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      return {
+        ...item,
+        debitAmount: item.debit ? itemAmount : '0',
+        creditAmount: !item.debit ? itemAmount : '0',
+      };
+    });
 
     // Info: (20250424 - Shirley) Step 4, 5, 6, 7, 8, 9, 10, 11
     const threeStagesOfLineItems = convertToTrialBalanceItem(
@@ -210,10 +214,8 @@ async function handleGetRequest(req: NextApiRequest) {
   } catch (error) {
     // Info: (20250424 - Shirley) Step 13
     const err = error as Error;
-    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`, {
-      error: err,
-      errorMessage: err.message,
-    });
+    loggerBack.error(`Failed to retrieve trial balance for company ${accountBookId}`);
+    loggerBack.error(error);
     statusMessage = err.message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 

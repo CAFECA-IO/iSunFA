@@ -1,5 +1,6 @@
 import { ReportSheetType } from '@/constants/report';
 import ReportGenerator from '@/lib/utils/report/report_generator';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 import {
   Imports,
@@ -91,22 +92,27 @@ export default class Report401Generator extends ReportGenerator {
   ) {
     const updatedSales = sales;
     if (journal.invoice?.taxType === 'zeroTax') {
-      updatedSales.breakdown[category].zeroTax += journal.invoice?.totalPrice ?? 0;
+      updatedSales.breakdown[category].zeroTax = DecimalOperations.add(
+        updatedSales.breakdown[category].zeroTax,
+        (journal.invoice?.totalPrice ?? 0).toString()
+      );
     } else {
       /**
        * Info: (20241015 - Murky)
        * 傳票上借方加總的數字
        */
-      let totalAmount = 0;
-      let taxPrice = 0;
+      let totalAmount = '0';
+      let taxPrice = '0';
       if (Report401Generator.isVoucherHasOutputTax(journal.voucher)) {
         journal.voucher?.lineItems.forEach((lineItem) => {
+          const lineItemAmount = typeof lineItem.amount === 'string'
+            ? lineItem.amount
+            : lineItem.amount.toString();
           if (lineItem.debit) {
-            totalAmount += lineItem.amount;
+            totalAmount = DecimalOperations.add(totalAmount, lineItemAmount);
           }
           if (Report401Generator.isOutputTax(lineItem.account.code) && !lineItem.debit) {
-            const tax = lineItem.amount;
-            taxPrice += tax;
+            taxPrice = DecimalOperations.add(taxPrice, lineItemAmount);
           }
         });
       }
@@ -118,20 +124,42 @@ export default class Report401Generator extends ReportGenerator {
       // updatedSales.breakdown[category].tax += journal.invoice?.payment.taxPrice ?? 0;
       // updatedSales.breakdown.total.tax += journal.invoice?.payment.taxPrice ?? 0;
 
-      updatedSales.breakdown[category].sales += totalAmount - Math.abs(taxPrice);
-      updatedSales.breakdown.total.sales += totalAmount - Math.abs(taxPrice);
-      updatedSales.breakdown[category].tax += Math.abs(taxPrice);
-      updatedSales.breakdown.total.tax += Math.abs(taxPrice);
+      const salesAmount = DecimalOperations.subtract(totalAmount, DecimalOperations.abs(taxPrice));
+      updatedSales.breakdown[category].sales = DecimalOperations.add(
+        updatedSales.breakdown[category].sales,
+        salesAmount
+      );
+      updatedSales.breakdown.total.sales = DecimalOperations.add(
+        updatedSales.breakdown.total.sales,
+        salesAmount
+      );
+      const absTaxPrice = DecimalOperations.abs(taxPrice);
+      updatedSales.breakdown[category].tax = DecimalOperations.add(
+        updatedSales.breakdown[category].tax,
+        absTaxPrice
+      );
+      updatedSales.breakdown.total.tax = DecimalOperations.add(
+        updatedSales.breakdown.total.tax,
+        absTaxPrice
+      );
     }
     if (journal.voucher?.lineItems) {
       journal.voucher?.lineItems.forEach((lineItem) => {
         if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-          updatedSales.includeFixedAsset += lineItem.amount;
+          const lineItemAmountStr = typeof lineItem.amount === 'string'
+            ? lineItem.amount
+            : lineItem.amount.toString();
+          updatedSales.includeFixedAsset = DecimalOperations.add(
+            updatedSales.includeFixedAsset,
+            lineItemAmountStr
+          );
         }
       });
     }
-    updatedSales.totalTaxableAmount =
-      updatedSales.breakdown.total.sales + updatedSales.breakdown.total.zeroTax;
+    updatedSales.totalTaxableAmount = DecimalOperations.add(
+      updatedSales.breakdown.total.sales,
+      updatedSales.breakdown.total.zeroTax
+    );
   }
 
   /** Info (20240814 - Jacky): 更新進項資料
@@ -154,35 +182,39 @@ export default class Report401Generator extends ReportGenerator {
   ) {
     const updatedPurchase = purchases;
     let generalPurchases = {
-      amount: 0,
-      tax: 0,
+      amount: '0',
+      tax: '0',
     };
     const fixedAssets = {
-      amount: 0,
-      tax: 0,
+      amount: '0',
+      tax: '0',
     };
     const unDeductible = {
-      generalPurchases: 0,
-      fixedAssets: 0,
+      generalPurchases: '0',
+      fixedAssets: '0',
     };
     if (Report401Generator.isVoucherHasInputTax(journal.voucher)) {
       if (journal.invoice?.deductible) {
-        let inputTax = 0;
-        let totalAmount = 0;
+        let inputTax = '0';
+        let totalAmount = '0';
         journal.voucher?.lineItems.forEach((lineItem) => {
+          const lineItemAmount = typeof lineItem.amount === 'string'
+            ? lineItem.amount
+            : lineItem.amount.toString();
           if (lineItem.debit) {
-            totalAmount += lineItem.amount;
+            totalAmount = DecimalOperations.add(totalAmount, lineItemAmount);
           }
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
             // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
-            fixedAssets.amount += lineItem.amount;
-            fixedAssets.tax += lineItem.amount * (journal.invoice?.taxRatio ?? 0.05);
+            fixedAssets.amount = DecimalOperations.add(fixedAssets.amount, lineItemAmount);
+            const taxRatio = (journal.invoice?.taxRatio ?? 0.05).toString();
+            const taxAmount = DecimalOperations.multiply(lineItemAmount, taxRatio);
+            fixedAssets.tax = DecimalOperations.add(fixedAssets.tax, taxAmount);
           }
 
           // Info: (20240920 - Murky) To Jacky, emergency patch, use Input tax code to calculate tax
           if (Report401Generator.isInputTax(lineItem.account.code) && lineItem.debit) {
-            const tax = lineItem.amount;
-            inputTax += tax;
+            inputTax = DecimalOperations.add(inputTax, lineItemAmount);
           }
         });
 
@@ -192,30 +224,74 @@ export default class Report401Generator extends ReportGenerator {
         //   tax: (journal.invoice?.payment.taxPrice ?? 0) - fixedAssets.tax,
         // };
         generalPurchases = {
-          amount: totalAmount - Math.abs(inputTax) - fixedAssets.amount,
-          tax: Math.abs(inputTax) - fixedAssets.tax,
+          amount: DecimalOperations.subtract(
+            DecimalOperations.subtract(totalAmount, DecimalOperations.abs(inputTax)),
+            fixedAssets.amount
+          ),
+          tax: DecimalOperations.subtract(
+            DecimalOperations.abs(inputTax),
+            fixedAssets.tax
+          ),
         };
       } else {
         journal.voucher?.lineItems.forEach((lineItem) => {
           if (lineItem.account?.rootCode === SPECIAL_ACCOUNTS.FIXED_ASSET.rootCode) {
-            unDeductible.fixedAssets += lineItem.amount;
+            const lineItemAmountStr = typeof lineItem.amount === 'string'
+              ? lineItem.amount
+              : lineItem.amount.toString();
+            unDeductible.fixedAssets = DecimalOperations.add(
+              unDeductible.fixedAssets,
+              lineItemAmountStr
+            );
           }
         });
-        unDeductible.generalPurchases =
-          journal.invoice?.priceBeforeTax ?? 0 - unDeductible.fixedAssets;
+        unDeductible.generalPurchases = DecimalOperations.subtract(
+          (journal.invoice?.priceBeforeTax ?? 0).toString(),
+          unDeductible.fixedAssets
+        );
       }
     }
 
-    updatedPurchase.breakdown[category].generalPurchases.amount += generalPurchases.amount;
-    updatedPurchase.breakdown[category].generalPurchases.tax += generalPurchases.tax;
-    updatedPurchase.breakdown[category].fixedAssets.amount += fixedAssets.amount;
-    updatedPurchase.breakdown[category].fixedAssets.tax += fixedAssets.tax;
-    updatedPurchase.breakdown.total.generalPurchases.amount += generalPurchases.amount;
-    updatedPurchase.breakdown.total.generalPurchases.tax += generalPurchases.tax;
-    updatedPurchase.breakdown.total.fixedAssets.amount += fixedAssets.amount;
-    updatedPurchase.breakdown.total.fixedAssets.tax += fixedAssets.tax;
-    updatedPurchase.totalWithNonDeductible.generalPurchases += unDeductible.generalPurchases;
-    updatedPurchase.totalWithNonDeductible.fixedAssets += unDeductible.fixedAssets;
+    updatedPurchase.breakdown[category].generalPurchases.amount = DecimalOperations.add(
+      updatedPurchase.breakdown[category].generalPurchases.amount,
+      generalPurchases.amount
+    );
+    updatedPurchase.breakdown[category].generalPurchases.tax = DecimalOperations.add(
+      updatedPurchase.breakdown[category].generalPurchases.tax,
+      generalPurchases.tax
+    );
+    updatedPurchase.breakdown[category].fixedAssets.amount = DecimalOperations.add(
+      updatedPurchase.breakdown[category].fixedAssets.amount,
+      fixedAssets.amount
+    );
+    updatedPurchase.breakdown[category].fixedAssets.tax = DecimalOperations.add(
+      updatedPurchase.breakdown[category].fixedAssets.tax,
+      fixedAssets.tax
+    );
+    updatedPurchase.breakdown.total.generalPurchases.amount = DecimalOperations.add(
+      updatedPurchase.breakdown.total.generalPurchases.amount,
+      generalPurchases.amount
+    );
+    updatedPurchase.breakdown.total.generalPurchases.tax = DecimalOperations.add(
+      updatedPurchase.breakdown.total.generalPurchases.tax,
+      generalPurchases.tax
+    );
+    updatedPurchase.breakdown.total.fixedAssets.amount = DecimalOperations.add(
+      updatedPurchase.breakdown.total.fixedAssets.amount,
+      fixedAssets.amount
+    );
+    updatedPurchase.breakdown.total.fixedAssets.tax = DecimalOperations.add(
+      updatedPurchase.breakdown.total.fixedAssets.tax,
+      fixedAssets.tax
+    );
+    updatedPurchase.totalWithNonDeductible.generalPurchases = DecimalOperations.add(
+      updatedPurchase.totalWithNonDeductible.generalPurchases,
+      unDeductible.generalPurchases
+    );
+    updatedPurchase.totalWithNonDeductible.fixedAssets = DecimalOperations.add(
+      updatedPurchase.totalWithNonDeductible.fixedAssets,
+      unDeductible.fixedAssets
+    );
   }
 
   /** Info (20240814 - Jacky): 更新進口資料
@@ -262,25 +338,37 @@ export default class Report401Generator extends ReportGenerator {
   ) {
     const updatedTaxCalculation = taxCalculation;
     updatedTaxCalculation.outputTax = sales.breakdown.total.tax;
-    updatedTaxCalculation.deductibleInputTax =
-      purchases.breakdown.total.generalPurchases.tax + purchases.breakdown.total.fixedAssets.tax;
-    updatedTaxCalculation.previousPeriodOffset = 0; // TODO (20240808 - Jacky): Implement this field in next change
-    updatedTaxCalculation.subtotal =
-      updatedTaxCalculation.deductibleInputTax + updatedTaxCalculation.previousPeriodOffset;
-    const tempTax = updatedTaxCalculation.outputTax - updatedTaxCalculation.subtotal;
-    if (tempTax >= 0) {
+    updatedTaxCalculation.deductibleInputTax = DecimalOperations.add(
+      purchases.breakdown.total.generalPurchases.tax,
+      purchases.breakdown.total.fixedAssets.tax
+    );
+    updatedTaxCalculation.previousPeriodOffset = '0'; // TODO (20240808 - Jacky): Implement this field in next change
+    updatedTaxCalculation.subtotal = DecimalOperations.add(
+      updatedTaxCalculation.deductibleInputTax,
+      updatedTaxCalculation.previousPeriodOffset
+    );
+    const tempTax = DecimalOperations.subtract(
+      updatedTaxCalculation.outputTax,
+      updatedTaxCalculation.subtotal
+    );
+    if (!DecimalOperations.isNegative(tempTax)) {
       updatedTaxCalculation.currentPeriodTaxPayable = tempTax;
     } else {
-      updatedTaxCalculation.currentPeriodFilingOffset = -tempTax;
-      updatedTaxCalculation.refundCeiling =
-        sales.breakdown.total.zeroTax * 0.05 + purchases.breakdown.total.fixedAssets.tax;
-      updatedTaxCalculation.currentPeriodRefundableTax = Math.min(
+      updatedTaxCalculation.currentPeriodFilingOffset = DecimalOperations.negate(tempTax);
+      updatedTaxCalculation.refundCeiling = DecimalOperations.add(
+        DecimalOperations.multiply(sales.breakdown.total.zeroTax, '0.05'),
+        purchases.breakdown.total.fixedAssets.tax
+      );
+      updatedTaxCalculation.currentPeriodRefundableTax = DecimalOperations.isLessThan(
         updatedTaxCalculation.refundCeiling,
         updatedTaxCalculation.currentPeriodFilingOffset
+      )
+        ? updatedTaxCalculation.refundCeiling
+        : updatedTaxCalculation.currentPeriodFilingOffset;
+      updatedTaxCalculation.currentPeriodAccumulatedOffset = DecimalOperations.subtract(
+        updatedTaxCalculation.currentPeriodFilingOffset,
+        updatedTaxCalculation.currentPeriodRefundableTax
       );
-      updatedTaxCalculation.currentPeriodAccumulatedOffset =
-        updatedTaxCalculation.currentPeriodFilingOffset -
-        updatedTaxCalculation.currentPeriodRefundableTax;
     }
   }
 
@@ -335,64 +423,64 @@ export default class Report401Generator extends ReportGenerator {
     };
     const sales = {
       breakdown: {
-        triplicateAndElectronic: { sales: 0, tax: 0, zeroTax: 0 },
-        cashRegisterTriplicate: { sales: 0, tax: 0, zeroTax: 0 },
-        duplicateAndCashRegister: { sales: 0, tax: 0, zeroTax: 0 },
-        invoiceExempt: { sales: 0, tax: 0, zeroTax: 0 },
-        returnsAndAllowances: { sales: 0, tax: 0, zeroTax: 0 },
-        total: { sales: 0, tax: 0, zeroTax: 0 },
+        triplicateAndElectronic: { sales: '0', tax: '0', zeroTax: '0' },
+        cashRegisterTriplicate: { sales: '0', tax: '0', zeroTax: '0' },
+        duplicateAndCashRegister: { sales: '0', tax: '0', zeroTax: '0' },
+        invoiceExempt: { sales: '0', tax: '0', zeroTax: '0' },
+        returnsAndAllowances: { sales: '0', tax: '0', zeroTax: '0' },
+        total: { sales: '0', tax: '0', zeroTax: '0' },
       },
-      totalTaxableAmount: 0,
-      includeFixedAsset: 0,
+      totalTaxableAmount: '0',
+      includeFixedAsset: '0',
     };
     const purchases = {
       breakdown: {
         uniformInvoice: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         cashRegisterAndElectronic: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         otherTaxableVouchers: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         customsDutyPayment: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         returnsAndAllowances: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
         total: {
-          generalPurchases: { amount: 0, tax: 0 },
-          fixedAssets: { amount: 0, tax: 0 },
+          generalPurchases: { amount: '0', tax: '0' },
+          fixedAssets: { amount: '0', tax: '0' },
         },
       },
       totalWithNonDeductible: {
-        generalPurchases: 0,
-        fixedAssets: 0,
+        generalPurchases: '0',
+        fixedAssets: '0',
       },
     };
     const taxCalculation = {
-      outputTax: 0,
-      deductibleInputTax: 0,
-      previousPeriodOffset: 0,
-      subtotal: 0,
-      currentPeriodTaxPayable: 0,
-      currentPeriodFilingOffset: 0,
-      refundCeiling: 0,
-      currentPeriodRefundableTax: 0,
-      currentPeriodAccumulatedOffset: 0,
+      outputTax: '0',
+      deductibleInputTax: '0',
+      previousPeriodOffset: '0',
+      subtotal: '0',
+      currentPeriodTaxPayable: '0',
+      currentPeriodFilingOffset: '0',
+      refundCeiling: '0',
+      currentPeriodRefundableTax: '0',
+      currentPeriodAccumulatedOffset: '0',
     };
     const imports = {
-      taxExemptGoods: 0,
-      foreignServices: 0,
+      taxExemptGoods: '0',
+      foreignServices: '0',
     };
-    const bondedAreaSalesToTaxArea = 0;
+    const bondedAreaSalesToTaxArea = '0';
 
     journalList.forEach((journal) => {
       if (journal.invoice && journal.invoice.type) {

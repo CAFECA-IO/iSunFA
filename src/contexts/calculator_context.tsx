@@ -26,6 +26,7 @@ interface ICalculatorContext {
   // Info: (20250714 - Julian) 表單選項
   yearOptions: string[];
   monthOptions: MonthType[];
+  payrollDaysBaseOptions: string[];
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state 和 functions
   employeeName: string;
@@ -38,9 +39,16 @@ interface ICalculatorContext {
   changeSelectedYear: (year: string) => void;
   selectedMonth: MonthType;
   changeSelectedMonth: (month: MonthType) => void;
-  workedDays: number;
-  // Info: (20250709 - Julian) <NumericInput /> 這個元件須使用 Dispatch 來更新 state
-  setWorkedDays: React.Dispatch<React.SetStateAction<number>>;
+  payrollDaysBase: string;
+  changePayrollDaysBase: (base: string) => void;
+  isJoined: boolean;
+  toggleJoined: () => void;
+  dayOfJoining: string;
+  changeJoinedDay: (day: string) => void;
+  isLeft: boolean;
+  toggleLeft: () => void;
+  dayOfLeaving: string;
+  changeLeavingDay: (day: string) => void;
 
   // Info: (20250709 - Julian) 是否有姓名錯誤
   isNameError: boolean;
@@ -87,10 +95,19 @@ interface ICalculatorContext {
   setSickLeaveHours: React.Dispatch<React.SetStateAction<number>>;
   personalLeaveHours: number;
   setPersonalLeaveHours: React.Dispatch<React.SetStateAction<number>>;
-  totalLeaveHours: number;
+  leavePayoutHours: number;
+  setLeavePayoutHours: React.Dispatch<React.SetStateAction<number>>;
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state 和 functions
   // 除了 VPC 皆使用 Dispatch 來更新 state
+  isLaborInsurance: boolean;
+  toggleLaborInsurance: () => void;
+  isNHI: boolean;
+  toggleNHI: () => void;
+  isLaborPension: boolean;
+  toggleLaborPension: () => void;
+  numberOfDependents: number;
+  setNumberOfDependents: React.Dispatch<React.SetStateAction<number>>;
   nhiBackPremium: number;
   setNhiBackPremium: React.Dispatch<React.SetStateAction<number>>;
   secondGenNhiTax: number;
@@ -111,29 +128,33 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250714 - Julian) 計算機的表單選項
   const thisYear = new Date().getFullYear();
   const thisMonth = new Date().getMonth() + 1; // 月份從 0 開始，所以要加 1
+
   // Info: (20250714 - Julian) 年份選項：今年起往後推到 2025 年
   const yearGap = thisYear - 2025 + 1;
   const yearOptions = Array.from({ length: yearGap }, (_, i) => `${i + 2025}`).reverse();
 
   // Info: (20250714 - Julian) 月份選項：只顯示 1 月到現在的月份
   const monthOptions = MONTHS.slice(0, thisMonth);
+  const defaultMonth = monthOptions[monthOptions.length - 1]; // Info: (20250815 - Julian) 預設為當前月份
+
+  // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
+  const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
 
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
-
-  // ToDo: (20250710 - Julian) 計算機的整體計算結果
-  // const [salaryCalculatorResult, setSalaryCalculatorResult] = useState<ISalaryCalculator>(
-  //   defaultSalaryCalculatorResult
-  // );
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>('');
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
-  const [selectedMonth, setSelectedMonth] = useState<MonthType>(monthOptions[0]);
-  const [workedDays, setWorkedDays] = useState<number>(31);
+  const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
+  const [payrollDaysBase, setPayrollDaysBase] = useState<string>(payrollDaysBaseOptions[0]); // Info: (20250710 - Julian) 基準天數選項
+  const [isJoined, setIsJoined] = useState<boolean>(false);
+  const [dayOfJoining, setDayOfJoining] = useState<string>('01'); // Info: (20250709 - Julian) 入職日期
+  const [isLeft, setIsLeft] = useState<boolean>(false);
+  const [dayOfLeaving, setDayOfLeaving] = useState<string>('01'); // Info: (20250709 - Julian) 離職日期
 
   // Info: (20250711 - Julian) 是否有姓名錯誤
   const [isNameError, setIsNameError] = useState<boolean>(false);
@@ -159,9 +180,13 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [totalTaxableHours, setTotalTaxableHours] = useState<number>(0);
   const [sickLeaveHours, setSickLeaveHours] = useState<number>(0);
   const [personalLeaveHours, setPersonalLeaveHours] = useState<number>(0);
-  const [totalLeaveHours, setTotalLeaveHours] = useState<number>(0);
+  const [leavePayoutHours, setLeavePayoutHours] = useState<number>(0);
 
   // Info: (20250710 - Julian) Step 4: 其他相關 state
+  const [isLaborInsurance, setIsLaborInsurance] = useState<boolean>(true);
+  const [isNHI, setIsNHI] = useState<boolean>(true);
+  const [isLaborPension, setIsLaborPension] = useState<boolean>(true);
+  const [numberOfDependents, setNumberOfDependents] = useState<number>(0);
   const [nhiBackPremium, setNhiBackPremium] = useState<number>(0);
   const [secondGenNhiTax, setSecondGenNhiTax] = useState<number>(0);
   const [otherAdjustments, setOtherAdjustments] = useState<number>(0);
@@ -201,20 +226,21 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     twoAndTwoThirdsHoursForTaxable,
   ]);
 
-  useEffect(() => {
-    // Info: (20250710 - Julian) 計算總休假時數
-    const totalLeave = sickLeaveHours + personalLeaveHours;
-    setTotalLeaveHours(totalLeave);
-  }, [sickLeaveHours, personalLeaveHours]);
-
   // Info: (20250728 - Julian) 計算結果
   // ToDo: (20250728 - Julian) 計算邏輯須搬到 lib
   const salaryCalculatorResult: ISalaryCalculator = useMemo(() => {
     const yearInt = parseInt(selectedYear, 10);
     const monthIndex = MONTHS.findIndex((month) => month.name === selectedMonth.name) + 1; // Info: (20250728 - Julian) index 從 0 開始，所以要加 1
 
+    const employeeStartStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfJoining}`;
+    const employeeStartTimestamp = new Date(employeeStartStr).getTime() / 1000;
+    const employeeStartDate = isJoined ? employeeStartTimestamp : undefined;
+
+    const employeeEndStr = `${yearInt}-${monthIndex.toString().padStart(2, '0')}-${dayOfLeaving}`;
+    const employeeEndTimestamp = new Date(employeeEndStr).getTime() / 1000;
+    const employeeEndDate = isLeft ? employeeEndTimestamp : undefined;
+
     // Info: (20250728 - Julian) 計算加班費（應稅）
-    const overTimeHoursTaxable100 = 0; // ToDo: (20250728 - Julian) 要補欄位
     const overTimeHoursTaxable133 = oneAndOneThirdHoursForTaxable;
     const overTimeHoursTaxable166 = oneAndTwoThirdsHoursForTaxable;
     const overTimeHoursTaxable200 = twoHoursForTaxable;
@@ -222,7 +248,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const overTimeHoursTaxable266 = twoAndTwoThirdsHoursForTaxable;
 
     // Info: (20250728 - Julian) 計算加班費（免稅）
-    const overTimeHoursTaxFree100 = 0; // ToDo: (20250728 - Julian) 要補欄位
     const overTimeHoursTaxFree133 = oneAndOneThirdsHoursForNonTax;
     const overTimeHoursTaxFree166 = oneAndTwoThirdsHoursForNonTax;
     const overTimeHoursTaxFree200 = twoHoursForNonTax;
@@ -232,33 +257,39 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const result = salaryCalculator({
       year: yearInt,
       month: monthIndex,
-      workedDays,
+      employeeStartDate, // Info: (20250822 - Julian) 員工入職日期
+      employeeEndDate, // Info: (20250822 - Julian) 員工離職日期
       baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
       baseSalaryTaxFree: mealAllowance, // Info: (20250728 - Julian) 當月免稅基本工資（伙食津貼）
       otherAllowancesTaxable: otherAllowanceWithTax, // Info: (20250728 - Julian) 當月應稅其他津貼
       otherAllowancesTaxFree: otherAllowanceWithoutTax, // Info: (20250728 - Julian) 當月免稅其他津貼
-      overTimeHoursTaxable100, // Info: (20250728 - Julian) 當月 100% 加班費（應稅）
       overTimeHoursTaxable133, // Info: (20250728 - Julian) 當月 133% 加班費（應稅）
       overTimeHoursTaxable166, // Info: (20250728 - Julian) 當月 166% 加班費（應稅）
       overTimeHoursTaxable200, // Info: (20250728 - Julian) 當月 200% 加班費（應稅）
       overTimeHoursTaxable233, // Info: (20250728 - Julian) 當月 233% 加班費（應稅）
       overTimeHoursTaxable266, // Info: (20250728 - Julian) 當月 266% 加班費（應稅）
-      overTimeHoursTaxFree100, // Info: (20250728 - Julian) 當月 100% 加班費（免稅）
       overTimeHoursTaxFree133, // Info: (20250728 - Julian) 當月 133% 加班費（免稅）
       overTimeHoursTaxFree166, // Info: (20250728 - Julian) 當月 166% 加班費（免稅）
       overTimeHoursTaxFree200, // Info: (20250728 - Julian) 當月 200% 加班費（免稅）
       overTimeHoursTaxFree233, // Info: (20250728 - Julian) 當月 233% 加班費（免稅）
       overTimeHoursTaxFree266, // Info: (20250728 - Julian) 當月 266% 加班費（免稅）
+      vacationToPayHours: leavePayoutHours, // Info: (20250819 - Julian) 休假換算成薪資的時數
       sickLeaveHours, // Info: (20250728 - Julian) 當月病假時數
       personalLeaveHours, // Info: (20250728 - Julian) 當月事假時數
+      isLaborInsuranceEnrolled: isLaborInsurance, // Info: (20250819 - Julian) 是否投保勞保
+      isHealthInsuranceEnrolled: isNHI, // Info: (20250819 - Julian) 是否投保健保
+      isPensionInsuranceEnrolled: isLaborPension, // Info: (20250819 - Julian) 是否投保勞退
       employeeBurdenHealthInsurancePremiums: nhiBackPremium, // Info: (20250728 - Julian) 健保加保費用
       employeeBurdenSecondGenerationHealthInsurancePremiums: secondGenNhiTax, // Info: (20250728 - Julian) 二代健保費用
       employeeBurdenOtherOverflowDeductions: otherAdjustments, // Info: (20250728 - Julian) 其他溢扣／補收
       employeeBurdenPensionInsurance: voluntaryPensionContribution, // Info: (20250728 - Julian) 勞退自提金額
+      dependentsCount: numberOfDependents, // Info: (20250819 - Julian) 扶養人數
+      baseSalary30Days: payrollDaysBase === 'FIXED', // Info: (20250819 - Julian) 基準天數選項：是否以 30 天計算
     });
 
     const formattedResult: ISalaryCalculator = {
       totalSalary: result.totalPayment,
+      totalSalaryTaxable: result.totalSalaryTaxable,
       monthlySalary: {
         baseSalaryWithTax: result.baseSalaryTaxable,
         overtimePayWithTax: result.overTimePayTaxable,
@@ -267,6 +298,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         mealAllowanceWithoutTax: result.baseSalaryTaxFree,
         overtimePayWithoutTax: result.overTimePayTaxFree,
         otherAllowanceWithoutTax: result.otherAllowancesTaxFree,
+        leaveSalaryWithoutTax: result.vacationToPay,
         totalSalaryWithoutTax: result.totalSalaryTaxFree,
         totalMonthlySalary: result.totalSalary,
       },
@@ -278,7 +310,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         withheldSecondGenerationNHIPremium:
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
         salaryDeductionForLeave: result.leaveDeduction,
-        totalEmployeeContribution: result.totalEmployeeBurden,
+        otherDeductionsOrAdjustments: result.employeeBurdenOtherOverflowDeductions,
+        totalEmployeeBurden: result.totalEmployeeBurden,
       },
       insuredSalary: {
         healthInsuranceSalaryBracket: result.healthInsuranceLevel,
@@ -290,7 +323,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         insuredSalary: result.insuredSalary,
       },
       employerContribution: {
-        employerContributions: result.totalCompanyBurden,
         employerPaidLaborInsurance: result.companyBurdenLaborInsurance,
         employerPaidHealthInsurance: result.companyBurdenHealthInsurance,
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,
@@ -302,7 +334,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   }, [
     selectedYear,
     selectedMonth,
-    workedDays,
+    isJoined,
+    dayOfJoining,
+    isLeft,
+    dayOfLeaving,
     baseSalary,
     oneAndOneThirdHoursForTaxable,
     oneAndTwoThirdsHoursForTaxable,
@@ -319,6 +354,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     otherAllowanceWithoutTax,
     sickLeaveHours,
     personalLeaveHours,
+    leavePayoutHours,
+    isLaborInsurance,
+    isNHI,
+    isLaborPension,
+    numberOfDependents,
     nhiBackPremium,
     secondGenNhiTax,
     otherAdjustments,
@@ -347,8 +387,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setEmployeeNumber('');
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
-    setSelectedMonth(monthOptions[0]);
-    setWorkedDays(31);
+    setSelectedMonth(defaultMonth);
+    setPayrollDaysBase(payrollDaysBaseOptions[0]);
+    setIsJoined(false);
+    setIsLeft(false);
+    setDayOfJoining('01');
+    setDayOfLeaving('01');
     setBaseSalary(0);
     setMealAllowance(0);
     setOtherAllowanceWithTax(0);
@@ -368,10 +412,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setTotalTaxableHours(0);
     setSickLeaveHours(0);
     setPersonalLeaveHours(0);
+    setLeavePayoutHours(0);
+    setIsLaborInsurance(true);
+    setIsNHI(true);
+    setIsLaborPension(true);
     setNhiBackPremium(0);
     setSecondGenNhiTax(0);
     setOtherAdjustments(0);
     setVoluntaryPensionContribution(0);
+    setNumberOfDependents(0);
     // Info: (20250710 - Julian) 重置計算機狀態
     // setSalaryCalculatorResult(defaultSalaryCalculatorResult);
     // Info: (20250710 - Julian) 重置步驟狀態
@@ -396,11 +445,23 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   };
   const changeSelectedMonth = (month: MonthType) => {
     setSelectedMonth(month);
-    // Info: (20250710 - Julian) 根據選擇的月份更新工作天數
-    setWorkedDays(month.days);
   };
+  const changePayrollDaysBase = (base: string) => {
+    setPayrollDaysBase(base);
+  };
+  const changeJoinedDay = (day: string) => {
+    setDayOfJoining(day);
+  };
+  const changeLeavingDay = (day: string) => {
+    setDayOfLeaving(day);
+  };
+  const toggleJoined = () => setIsJoined((prev) => !prev);
+  const toggleLeft = () => setIsLeft((prev) => !prev);
 
   // Info: (20250710 - Julian) =========== 其他相關 state 和 functions ===========
+  const toggleLaborInsurance = () => setIsLaborInsurance((prev) => !prev);
+  const toggleNHI = () => setIsNHI((prev) => !prev);
+  const toggleLaborPension = () => setIsLaborPension((prev) => !prev);
   const changeVoluntaryPensionContribution = (contribution: number) => {
     setVoluntaryPensionContribution(contribution);
   };
@@ -409,6 +470,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     () => ({
       yearOptions,
       monthOptions,
+      payrollDaysBaseOptions,
       currentStep,
       completeSteps,
       salaryCalculatorResult,
@@ -424,8 +486,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeSelectedYear,
       selectedMonth,
       changeSelectedMonth,
-      workedDays,
-      setWorkedDays,
+      payrollDaysBase,
+      changePayrollDaysBase,
+      isJoined,
+      toggleJoined,
+      dayOfJoining,
+      changeJoinedDay,
+      isLeft,
+      toggleLeft,
+      dayOfLeaving,
+      changeLeavingDay,
       baseSalary,
       setBaseSalary,
       mealAllowance,
@@ -462,7 +532,16 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       setSickLeaveHours,
       personalLeaveHours,
       setPersonalLeaveHours,
-      totalLeaveHours,
+      leavePayoutHours,
+      setLeavePayoutHours,
+      isLaborInsurance,
+      toggleLaborInsurance,
+      isNHI,
+      toggleNHI,
+      isLaborPension,
+      toggleLaborPension,
+      numberOfDependents,
+      setNumberOfDependents,
       nhiBackPremium,
       setNhiBackPremium,
       secondGenNhiTax,
@@ -475,6 +554,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     [
       yearOptions,
       monthOptions,
+      payrollDaysBaseOptions,
       currentStep,
       completeSteps,
       salaryCalculatorResult,
@@ -483,7 +563,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       employeeEmail,
       selectedYear,
       selectedMonth,
-      workedDays,
+      payrollDaysBase,
+      isJoined,
+      dayOfJoining,
+      isLeft,
+      dayOfLeaving,
       baseSalary,
       mealAllowance,
       otherAllowanceWithTax,
@@ -503,7 +587,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       totalTaxableHours,
       sickLeaveHours,
       personalLeaveHours,
-      totalLeaveHours,
+      leavePayoutHours,
+      isLaborInsurance,
+      isNHI,
+      isLaborPension,
+      numberOfDependents,
       nhiBackPremium,
       secondGenNhiTax,
       otherAdjustments,

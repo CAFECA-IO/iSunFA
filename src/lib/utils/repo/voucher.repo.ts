@@ -48,6 +48,7 @@ import {
 } from '@/constants/asset';
 import { DefaultValue } from '@/constants/default_value';
 import { parseNoteData } from '@/lib/utils/parser/note_with_counterparty';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { toPaginatedData } from '@/lib/utils/formatter/pagination.formatter';
 
 interface DeepNestedLineItem extends PrismaLineItem {
@@ -455,6 +456,13 @@ export async function updateVoucherByJournalIdInPrisma(
       const newVoucherData = {
         ...voucherBeUpdated,
         journalId,
+        lineItems: voucherBeUpdated.lineItems.map((lineItem) => ({
+          ...lineItem,
+          amount:
+            typeof lineItem.amount === 'string'
+              ? parseFloat(lineItem.amount)
+              : lineItem.amount.toNumber(),
+        })),
       };
 
       return newVoucherData;
@@ -605,19 +613,23 @@ export async function postVoucherV2({
           const originalLineItem = original.lineItems[0];
           const resultLineItem = originalVoucherInDB.lineItems.find((li) => {
             const target = resultVoucher.lineItems[0];
+            const liAmountString = typeof li.amount === 'string' ? li.amount : li.amount.toString();
+            const targetAmountString = target.amount.toString();
             return (
               li.accountId === target.accountId &&
               li.debit === target.debit &&
-              li.amount === target.amount &&
+              DecimalOperations.isEqual(liAmountString, targetAmountString) &&
               li.description === target.description
             );
           });
 
           if (!resultLineItem) {
-            loggerBack.error('resultLineItem not found', {
-              originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
-              target: resultVoucher.lineItems[0],
-            });
+            loggerBack.error(
+              `resultLineItem not found ${JSON.stringify({
+                originalVoucherInDBLineItems: originalVoucherInDB.lineItems,
+                target: resultVoucher.lineItems[0],
+              })}`
+            );
             const error = new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
             error.name = STATUS_CODE.INTERNAL_SERVICE_ERROR;
             throw error;
@@ -654,7 +666,7 @@ export async function postVoucherV2({
                       createdAt: nowInSecond,
                       updatedAt: nowInSecond,
                       debit: originalLineItem.debit,
-                      amount: originalLineItem.amount,
+                      amount: +originalLineItem.amount,
                     },
                   },
                 },
@@ -699,13 +711,13 @@ export async function putVoucherWithoutCreateNew(
           eventId: number;
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
         new: {
           lineItemIdBeReversed: number;
           lineItemReverseOther: ILineItemEntity;
-          amount: number;
+          amount: string;
           voucherId: number;
         }[];
       }
@@ -756,9 +768,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            `delete voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed`
           );
+          loggerBack.error(error);
         }
       }
 
@@ -774,9 +786,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete invoice RC2 by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -792,9 +804,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'delete asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -810,9 +822,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create voucher certificate by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -830,10 +842,8 @@ export async function putVoucherWithoutCreateNew(
             },
           });
         } catch (error) {
-          loggerBack.error(
-            'update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed',
-            error as Error
-          );
+          loggerBack.error('update invoiceRC2.voucherId in putVoucherWithoutCreateNew failed');
+          loggerBack.error(error);
         }
       }
 
@@ -849,9 +859,9 @@ export async function putVoucherWithoutCreateNew(
           });
         } catch (error) {
           loggerBack.error(
-            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-            error as Error
+            'create asset voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
           );
+          loggerBack.error(error);
         }
       }
 
@@ -930,9 +940,9 @@ export async function putVoucherWithoutCreateNew(
     });
   } catch (error) {
     loggerBack.error(
-      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed',
-      { message: (error as Error).message, stack: (error as Error).stack }
+      'update voucher by voucher id in putVoucherWithoutCreateNew in voucher.repo.ts failed'
     );
+    loggerBack.error(error);
   }
   return voucherUpdated;
 }
@@ -1210,11 +1220,11 @@ export async function getOneVoucherByVoucherNoV2(options: {
 export function isFullyReversed(lineItem: DeepNestedLineItem): boolean {
   const reversedPairs = lineItem.originalLineItem ?? [];
 
-  const totalReversedAmount = reversedPairs.reduce((sum, pair) => {
-    return sum + pair.amount;
-  }, 0);
+  const amounts = reversedPairs.map((pair) => String(pair.amount));
+  const totalReversedAmount = DecimalOperations.sum(amounts);
 
-  return totalReversedAmount >= lineItem.amount;
+  const lineItemAmount = String(lineItem.amount);
+  return DecimalOperations.isGreaterThanOrEqual(totalReversedAmount, lineItemAmount);
 }
 
 export function filterAvailableLineItems<T extends DeepNestedLineItem>(lineItems: T[]): T[] {
@@ -2101,7 +2111,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                   },
                 },
                 debit: lineItemPair.newDeleteReverseLineItem.debit,
-                amount: lineItemPair.newDeleteReverseLineItem.amount,
+                amount: +lineItemPair.newDeleteReverseLineItem.amount,
                 createdAt: nowInSecond,
                 updatedAt: nowInSecond,
               })),
@@ -2170,7 +2180,7 @@ export async function deleteVoucherByCreateReverseVoucher(options: {
                   },
                 },
                 debit: resultLineItem.debit,
-                amount: resultLineItem.amount,
+                amount: Number(resultLineItem.amount),
                 createdAt: nowInSecond,
                 updatedAt: nowInSecond,
               },

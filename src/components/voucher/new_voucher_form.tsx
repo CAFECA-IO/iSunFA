@@ -45,6 +45,7 @@ import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import { VoucherV2Action } from '@/constants/voucher';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { IAIResultVoucher } from '@/interfaces/voucher';
 import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
@@ -203,13 +204,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
 
-  const aiTotalCredit = aiLineItems.reduce(
-    (acc, item) => (item.debit === false ? acc + item.amount : acc),
-    0
+  const aiTotalCredit = parseFloat(
+    aiLineItems.reduce(
+      (acc, item) => (item.debit === false ? DecimalOperations.add(acc, item.amount) : acc),
+      '0'
+    )
   );
-  const aiTotalDebit = aiLineItems.reduce(
-    (acc, item) => (item.debit === true ? acc + item.amount : acc),
-    0
+  const aiTotalDebit = parseFloat(
+    aiLineItems.reduce(
+      (acc, item) => (item.debit === true ? DecimalOperations.add(acc, item.amount) : acc),
+      '0'
+    )
   );
 
   const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
@@ -624,7 +629,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       voucherId: number;
       lineItemIdBeReversed: number;
       lineItemIdReverseOther: number;
-      amount: number;
+      amount: string;
     }[] =
       isReverseRequired && reverses.length > 0
         ? reverses.map((reverse) => {

@@ -40,6 +40,7 @@ import {
 import { invoiceEntityValidator } from '@/lib/utils/zod_schema/invoice';
 import { accountingSettingEntityValidator } from '@/lib/utils/zod_schema/accounting_setting';
 import { IReverseItemValidator, lineItemEntityValidator } from '@/lib/utils/zod_schema/line_item';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 import { IAssociateLineItemEntitySchema } from '@/lib/utils/zod_schema/associate_line_item';
 import { IAssociateVoucherEntitySchema } from '@/lib/utils/zod_schema/associate_voucher';
 import { isCompleteVoucherBeta } from '@/lib/utils/voucher_common';
@@ -143,7 +144,7 @@ export const IVoucherBetaValidator = z.object({
   lineItemsInfo: z.object({
     sum: z.object({
       debit: z.boolean(),
-      amount: z.number(),
+      amount: z.string(),
     }),
     lineItems: z.array(ILineItemBetaValidator),
   }),
@@ -160,7 +161,7 @@ export const IVoucherForSingleAccountValidator = z.object({
     .array(
       z.object({
         id: z.number().describe('line item id'),
-        amount: z.number().describe('line item amount'),
+        amount: z.string().describe('line item amount'),
         description: z.string().describe('line item description (for `particular`)'),
         debit: z.boolean().describe('line item debit or credit'),
       })
@@ -231,17 +232,17 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
     ),
     sum: z.object({
       debit: z.boolean(),
-      amount: z.number(),
+      amount: z.string(),
     }),
     payableInfo: z.object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
+      total: z.string(),
+      alreadyHappened: z.string(),
+      remain: z.string(),
     }),
     receivingInfo: z.object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
+      total: z.string(),
+      alreadyHappened: z.string(),
+      remain: z.string(),
     }),
     originalEvents: z.array(eventEntityValidator),
     resultEvents: z.array(eventEntityValidator),
@@ -291,7 +292,7 @@ export const voucherGetAllOutputValidatorV2 = paginatedDataSchema(
           id: lineItem.id,
           description: lineItem.description,
           debit: lineItem.debit,
-          amount: lineItem.amount,
+          amount: DecimalOperations.toExactString(lineItem.amount),
           account: {
             ...lineItem.account,
             note: lineItem.account.note ?? null,
@@ -363,7 +364,7 @@ const voucherPostBodyValidatorV2 = z.object({
         voucherId: z.number().int(),
         lineItemIdBeReversed: z.number().int(),
         lineItemIdReverseOther: z.number().int(),
-        amount: z.number(),
+        amount: z.string(),
       })
     )
     .optional()
@@ -455,9 +456,9 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
   issuedDate: z.number().nullable().optional(),
   taxType: z.nativeEnum(TaxType).nullable().optional(),
   currencyCode: z.nativeEnum(CurrencyCode),
-  netAmount: z.number().nullable().optional(),
-  taxAmount: z.number().nullable().optional(),
-  totalAmount: z.number().nullable().optional(),
+  netAmount: z.string().nullable().optional(),
+  taxAmount: z.string().nullable().optional(),
+  totalAmount: z.string().nullable().optional(),
   taxRate: z.number().nullable().optional(),
   note: z.union([z.record(z.any()), z.string(), z.null()]).optional(),
   aiResultId: z.string(),
@@ -482,7 +483,7 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
   incomplete: z.boolean(),
   description: z.string().nullable().optional(),
 
-  totalOfSummarizedInvoices: z.number().nullable().optional(),
+  totalOfSummarizedInvoices: z.string().nullable().optional(),
   carrierSerialNumber: z.string().nullable().optional(),
   otherCertificateNo: z.string().nullable().optional(),
 });
@@ -616,8 +617,20 @@ const voucherGetOneOutputValidatorV2 = z
         daysOfWeek: [],
         monthsOfYear: [],
       },
-      payableInfo: data.payableInfo,
-      receivingInfo: data.receivingInfo,
+      payableInfo: data.payableInfo
+        ? {
+            total: DecimalOperations.toExactString(data.payableInfo.total),
+            alreadyHappened: DecimalOperations.toExactString(data.payableInfo.alreadyHappened),
+            remain: DecimalOperations.toExactString(data.payableInfo.remain),
+          }
+        : undefined,
+      receivingInfo: data.receivingInfo
+        ? {
+            total: DecimalOperations.toExactString(data.receivingInfo.total),
+            alreadyHappened: DecimalOperations.toExactString(data.receivingInfo.alreadyHappened),
+            remain: DecimalOperations.toExactString(data.receivingInfo.remain),
+          }
+        : undefined,
       reverseVoucherIds,
       deletedReverseVoucherIds,
       assets: data.asset.map((asset) => ({
@@ -733,16 +746,16 @@ const voucherGetOneOutputValidatorV2 = z
           currencyCode: invoice.currencyCode,
           taxType: invoice.taxType ?? undefined,
           taxRate: invoice.taxRate ?? undefined,
-          netAmount: invoice.netAmount ?? undefined,
-          taxAmount: invoice.taxAmount ?? undefined,
-          totalAmount: invoice.totalAmount ?? undefined,
+          netAmount: (invoice.netAmount ?? 0).toString(),
+          taxAmount: (invoice.taxAmount ?? 0).toString(),
+          totalAmount: (invoice.totalAmount ?? 0).toString(),
 
           isGenerated: invoice.isGenerated,
           incomplete: invoice.incomplete,
           description: invoice.description ?? undefined,
           note: invoice.note ?? undefined,
 
-          totalOfSummarizedInvoices: invoice.totalOfSummarizedInvoices ?? undefined,
+          totalOfSummarizedInvoices: (invoice.totalOfSummarizedInvoices ?? 0).toString(),
           carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
           otherCertificateNo: invoice.otherCertificateNo ?? undefined,
 
@@ -772,7 +785,7 @@ const voucherGetOneOutputValidatorV2 = z
         id: lineItem.id,
         description: lineItem.description,
         debit: lineItem.debit,
-        amount: lineItem.amount,
+        amount: DecimalOperations.toExactString(lineItem.amount),
         account: {
           ...lineItem.account,
           note: lineItem.account.note ?? null,
@@ -820,16 +833,16 @@ const IVoucherDetailForFrontendValidator = z.object({
   }),
   payableInfo: z
     .object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
+      total: z.string(),
+      alreadyHappened: z.string(),
+      remain: z.string(),
     })
     .optional(),
   receivingInfo: z
     .object({
-      total: z.number(),
-      alreadyHappened: z.number(),
-      remain: z.number(),
+      total: z.string(),
+      alreadyHappened: z.string(),
+      remain: z.string(),
     })
     .optional(),
   reverseVoucherIds: z.array(
@@ -958,7 +971,7 @@ const voucherGetByAccountOutputValidatorV2 = paginatedDataSchema(
   const vouchers = data.data.map((voucher) => {
     const lineItems = voucher.lineItems.map((lineItem) => ({
       id: lineItem.id,
-      amount: lineItem.amount,
+      amount: DecimalOperations.toExactString(lineItem.amount),
       description: lineItem.description,
       debit: lineItem.debit,
     }));

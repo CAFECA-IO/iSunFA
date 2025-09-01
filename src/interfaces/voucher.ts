@@ -60,7 +60,7 @@ export interface IVoucherDataForAPIResponse {
   no: string;
   lineItems: {
     id: number;
-    amount: number;
+    amount: string;
     description: string;
     debit: boolean;
     accountId: number;
@@ -126,16 +126,16 @@ export interface IVoucherDetailForFrontend {
   };
   payableInfo:
     | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
+        total: string;
+        alreadyHappened: string;
+        remain: string;
       }
     | undefined;
   receivingInfo:
     | {
-        total: number;
-        alreadyHappened: number;
-        remain: number;
+        total: string;
+        alreadyHappened: string;
+        remain: string;
       }
     | undefined;
   reverseVoucherIds: {
@@ -221,19 +221,19 @@ export interface IVoucherBeta {
   lineItemsInfo: {
     sum: {
       debit: boolean;
-      amount: number;
+      amount: string;
     };
     lineItems: ILineItemBeta[];
   };
   payableInfo: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
   receivingInfo: {
-    total: number;
-    alreadyHappened: number;
-    remain: number;
+    total: string;
+    alreadyHappened: string;
+    remain: string;
   };
   /**
    * Info: (20241121 - Murky)
@@ -311,7 +311,7 @@ export interface IVoucherForSingleAccount {
      * Info: (20241106 - Murky)
      * @description line item amount
      */
-    amount: number;
+    amount: string;
 
     /**
      * Info: (20241106 - Murky)

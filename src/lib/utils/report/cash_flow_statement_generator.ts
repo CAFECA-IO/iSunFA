@@ -23,6 +23,7 @@ import { EMPTY_I_ACCOUNT_READY_FRONTEND } from '@/constants/financial_report';
 import { timestampInMilliSeconds } from '@/lib/utils/common';
 import { absoluteNetIncome, noAdjustNetIncome } from '@/lib/utils/account/common';
 import { SPECIAL_ACCOUNTS } from '@/constants/account';
+import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
 export default class CashFlowStatementGenerator extends FinancialReportGenerator {
   private balanceSheetGenerator: BalanceSheetGenerator;
@@ -132,21 +133,21 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   private getCashStartAndEndAmount(curPeriod: boolean): {
-    startCashBalance: number;
-    endCashBalance: number;
+    startCashBalance: string;
+    endCashBalance: string;
   } {
     const voucherRelatedToCash = curPeriod ? this.voucherRelatedToCash : this.voucherLastPeriod;
     const voucherLastPeriod = curPeriod ? this.voucherLastPeriod : this.voucherTwoYearsAgo;
     const startCashBalance = voucherLastPeriod.reduce((acc, voucher) => {
       const { debitAmount, creditAmount } =
         CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
-      return acc + debitAmount - creditAmount;
-    }, 0);
+      return DecimalOperations.subtract(DecimalOperations.add(acc, debitAmount), creditAmount);
+    }, '0');
 
     const endCashBalance = voucherRelatedToCash.reduce((acc, voucher) => {
       const { debitAmount, creditAmount } =
         CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
-      return acc + debitAmount - creditAmount;
+      return DecimalOperations.subtract(DecimalOperations.add(acc, debitAmount), creditAmount);
     }, startCashBalance);
 
     return { startCashBalance, endCashBalance };
@@ -161,7 +162,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     // Info: (20240710 - Murky) DFS
     let childMap = new Map<string, IAccountForSheetDisplay>();
 
-    let childAmount = 0;
+    let childAmount = '0';
     node.child?.forEach((value, key) => {
       const childAccountForSheet = this.generateIndirectOperatingCashFlowRecursive(
         referenceMap,
@@ -171,7 +172,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       );
       childAccountForSheet.forEach((childValue) => {
         if (childValue.indent === level + 1) {
-          childAmount += childValue.amount || 0;
+          const childValueAmount = (childValue.amount || 0).toString();
+          childAmount = DecimalOperations.add(childAmount, childValueAmount);
         }
       });
       childMap = new Map([...childMap, ...childAccountForSheet]);
@@ -183,29 +185,41 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       const account = referenceMap.get(code);
       if (account) {
         const isAccountDebit = account.debit;
+        const accountAmountDecimal = account.amount.toString();
 
-        let accountAmount = 0;
+        let accountAmount = '0';
         switch (operatingFunction) {
           case noAdjustNetIncome:
           case absoluteNetIncome:
-            accountAmount = account.amount;
+            accountAmount = accountAmountDecimal;
             break;
           default:
-            accountAmount = debit !== isAccountDebit ? -account.amount : account.amount;
+            accountAmount =
+              debit !== isAccountDebit
+                ? DecimalOperations.negate(accountAmountDecimal)
+                : accountAmountDecimal;
         }
 
-        return operatingFunction(acc, accountAmount);
+        // Info: (20250822 - Shirley) operatingFunction expects number parameters, so we need compatibility
+        const accNum = parseFloat(acc);
+        const amountNum = parseFloat(accountAmount);
+        const result = operatingFunction(accNum, amountNum);
+        return result.toString();
       }
       return acc;
-    }, 0);
+    }, '0');
 
-    amount = operatingFunction(amount, childAmount);
+    // Info: (20250822 - Shirley) operatingFunction expects number parameters, so we need compatibility
+    const amountNum = parseFloat(amount);
+    const childAmountNum = parseFloat(childAmount);
+    const finalAmount = operatingFunction(amountNum, childAmountNum);
+    amount = finalAmount.toString();
 
     const accountForSheetDisplay: IAccountForSheetDisplay = {
       accountId: -1,
       code: currentCode,
       name,
-      amount,
+      amount: parseFloat(amount),
       indent: level,
       debit,
       percentage: null,
@@ -235,14 +249,22 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   private static sumIndirectOperatingCashFlow(
     indirectOperatingCashFlow: Map<string, IAccountForSheetDisplay>
   ): number {
-    const sum =
-      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_GENERATE_FROM_OPERATING.code)?.amount ||
-        0) +
-      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_OUTFLOW_FOR_DIVIDEND.code)?.amount ||
-        0) +
-      (indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FROM_TAX_REFUND.code)?.amount || 0);
+    const operatingAmount = (
+      indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_GENERATE_FROM_OPERATING.code)?.amount || 0
+    ).toString();
+    const dividendAmount = (
+      indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_OUTFLOW_FOR_DIVIDEND.code)?.amount || 0
+    ).toString();
+    const taxRefundAmount = (
+      indirectOperatingCashFlow.get(SPECIAL_ACCOUNTS.CASH_FROM_TAX_REFUND.code)?.amount || 0
+    ).toString();
 
-    return sum;
+    const sum = DecimalOperations.add(
+      DecimalOperations.add(operatingAmount, dividendAmount),
+      taxRefundAmount
+    );
+
+    return parseFloat(sum);
   }
 
   private async getIndirectOperatingCashFlow(
@@ -297,18 +319,20 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
   }
 
   private static sumDebitAndCreditAmount(voucher: IVoucherForCashFlow) {
-    let debitAmount = 0;
-    let creditAmount = 0;
+    let debitAmount = '0';
+    let creditAmount = '0';
     voucher.lineItems.forEach((lineItem) => {
       if (
         Array.from(CASH_AND_CASH_EQUIVALENTS_REGEX).some((regex) => {
           return regex.test(lineItem.account.code);
         })
       ) {
+        const lineItemAmount =
+          typeof lineItem.amount === 'string' ? lineItem.amount : lineItem.amount.toString();
         if (lineItem.debit) {
-          debitAmount += lineItem.amount;
+          debitAmount = DecimalOperations.add(debitAmount, lineItemAmount);
         } else {
-          creditAmount += lineItem.amount;
+          creditAmount = DecimalOperations.add(creditAmount, lineItemAmount);
         }
       }
     });
@@ -334,12 +358,12 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       children: [],
     });
 
-    let directCashFlow = 0;
+    let directCashFlow = '0';
     const voucherRelatedToCash = curPeriod
       ? this.voucherRelatedToCash
       : this.voucherLastPeriodStartToEndDate;
     cashFlowMapping.forEach((mapping, investCode) => {
-      let total = 0;
+      let total = '0';
       voucherRelatedToCash.forEach((voucher) => {
         const { debitCodes, creditCodes } = CashFlowStatementGenerator.getDebitCreditCodes(voucher);
         const isMatchingMapping = this.isMatchingInvestingCashFlowMapping(
@@ -350,8 +374,8 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         if (isMatchingMapping) {
           const { debitAmount, creditAmount } =
             CashFlowStatementGenerator.sumDebitAndCreditAmount(voucher);
-          total += debitAmount;
-          total -= creditAmount;
+          total = DecimalOperations.add(total, debitAmount);
+          total = DecimalOperations.subtract(total, creditAmount);
         }
       });
 
@@ -359,18 +383,18 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
         accountId: -1,
         code: investCode,
         name: mapping.name,
-        amount: total,
+        amount: parseFloat(total),
         indent: 1,
         percentage: null,
         children: [],
       };
 
-      directCashFlow += total;
+      directCashFlow = DecimalOperations.add(directCashFlow, total);
       result.set(investCode, accountForSheetDisplay);
     });
     return {
       reportSheetMapping: result,
-      directCashFlow,
+      directCashFlow: parseFloat(directCashFlow),
     };
   }
 
@@ -493,7 +517,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_BEGINNING.name,
-      amount: startCashBalance,
+      amount: parseFloat(startCashBalance),
       indent: 0,
       percentage: null,
       children: [],
@@ -503,7 +527,7 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountId: -1,
       code: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.code,
       name: SPECIAL_ACCOUNTS.CASH_AMOUNT_IN_END.name,
-      amount: endCashBalance,
+      amount: parseFloat(endCashBalance),
       indent: 0,
       percentage: null,
       children: [],
@@ -594,16 +618,16 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
     const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
-    const ratio: { [key: string]: number } = {};
-    const amortizationDepreciation: { [key: string]: number } = {};
+    const ratio: { [key: string]: string } = {};
+    const amortizationDepreciation: { [key: string]: string } = {};
 
     years.forEach((year) => {
-      ratio[year] = 0;
-      amortizationDepreciation[year] = 0;
+      ratio[year] = '0';
+      amortizationDepreciation[year] = '0';
     });
 
-    let curDepreciateAndAmortize = 0;
-    let preDepreciateAndAmortize = 0;
+    let curDepreciateAndAmortize = '0';
+    let preDepreciateAndAmortize = '0';
     if (
       beforeIncomeTax &&
       salesDepreciation &&
@@ -614,34 +638,56 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       tax &&
       operatingIncomeCashFlow
     ) {
-      curDepreciateAndAmortize =
-        salesDepreciation.curPeriodAmount +
-        salesAmortization.curPeriodAmount +
-        manageDepreciation.curPeriodAmount +
-        manageAmortization.curPeriodAmount +
-        rdDepreciation.curPeriodAmount;
+      curDepreciateAndAmortize = DecimalOperations.add(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            DecimalOperations.add(
+              salesDepreciation.curPeriodAmount,
+              salesAmortization.curPeriodAmount
+            ),
+            manageDepreciation.curPeriodAmount
+          ),
+          manageAmortization.curPeriodAmount
+        ),
+        rdDepreciation.curPeriodAmount
+      );
 
-      preDepreciateAndAmortize =
-        salesDepreciation.prePeriodAmount +
-        salesAmortization.prePeriodAmount +
-        manageDepreciation.prePeriodAmount +
-        manageAmortization.prePeriodAmount +
-        rdDepreciation.prePeriodAmount;
+      preDepreciateAndAmortize = DecimalOperations.add(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            DecimalOperations.add(
+              salesDepreciation.prePeriodAmount,
+              salesAmortization.prePeriodAmount
+            ),
+            manageDepreciation.prePeriodAmount
+          ),
+          manageAmortization.prePeriodAmount
+        ),
+        rdDepreciation.prePeriodAmount
+      );
 
       amortizationDepreciation[currentYear] = curDepreciateAndAmortize;
       amortizationDepreciation[currentYear - 1] = preDepreciateAndAmortize;
 
-      ratio[currentYear] =
-        operatingIncomeCashFlow.curPeriodAmount !== 0
-          ? (beforeIncomeTax.curPeriodAmount + curDepreciateAndAmortize - tax.curPeriodAmount) /
+      ratio[currentYear] = !DecimalOperations.isZero(operatingIncomeCashFlow.curPeriodAmount)
+        ? DecimalOperations.divide(
+            DecimalOperations.subtract(
+              DecimalOperations.add(beforeIncomeTax.curPeriodAmount, curDepreciateAndAmortize),
+              tax.curPeriodAmount
+            ),
             operatingIncomeCashFlow.curPeriodAmount
-          : 0;
+          )
+        : '0';
 
-      ratio[currentYear - 1] =
-        operatingIncomeCashFlow.prePeriodAmount !== 0
-          ? (beforeIncomeTax.prePeriodAmount + preDepreciateAndAmortize - tax.prePeriodAmount) /
+      ratio[currentYear - 1] = !DecimalOperations.isZero(operatingIncomeCashFlow.prePeriodAmount)
+        ? DecimalOperations.divide(
+            DecimalOperations.subtract(
+              DecimalOperations.add(beforeIncomeTax.prePeriodAmount, preDepreciateAndAmortize),
+              tax.prePeriodAmount
+            ),
             operatingIncomeCashFlow.prePeriodAmount
-          : 0;
+          )
+        : '0';
     }
     const lineChartDataForRatio = {
       data: Object.values(ratio),
@@ -658,15 +704,15 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const startYear = currentYear - this.YEAR_RANGE + 1;
 
     const years = Array.from({ length: this.YEAR_RANGE }, (_, i) => (startYear + i).toString());
-    const result: { [key: string]: number } = {};
+    const result: { [key: string]: string } = {};
 
     years.forEach((year) => {
-      result[year] = 0;
+      result[year] = '0';
     });
 
-    result[currentYear] = accountReadyForFrontend?.curPeriodAmount || 0;
+    result[currentYear] = accountReadyForFrontend?.curPeriodAmount || '0';
 
-    result[currentYear - 1] = accountReadyForFrontend?.prePeriodAmount || 0;
+    result[currentYear - 1] = accountReadyForFrontend?.prePeriodAmount || '0';
     return result;
   }
 
@@ -737,31 +783,73 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       accountMap.get(SPECIAL_ACCOUNTS.CASH_FLOW_FROM_INVESTING.code) ||
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
-    const curPPEInvest = -1 * (getPPE.curPeriodAmount - salePPE.curPeriodAmount);
-    const curStrategyInvest =
-      -1 *
-      (getFVPL.curPeriodAmount +
-        getFVOCI.curPeriodAmount +
-        getAmortizedFA.curPeriodAmount -
-        saleFVOCI.curPeriodAmount -
-        saleAmortizedFA.curPeriodAmount -
-        removeHedgeAsset.curPeriodAmount +
-        receiveStockDividend.curPeriodAmount);
-    const curOtherInvest =
-      -1 * (totalInvestCashFlow.curPeriodAmount + curPPEInvest + curStrategyInvest);
+    const curPPEInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.subtract(getPPE.curPeriodAmount, salePPE.curPeriodAmount)
+    );
+    const curStrategyInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.add(
+        DecimalOperations.subtract(
+          DecimalOperations.subtract(
+            DecimalOperations.subtract(
+              DecimalOperations.add(
+                DecimalOperations.add(getFVPL.curPeriodAmount, getFVOCI.curPeriodAmount),
+                getAmortizedFA.curPeriodAmount
+              ),
+              saleFVOCI.curPeriodAmount
+            ),
+            saleAmortizedFA.curPeriodAmount
+          ),
+          removeHedgeAsset.curPeriodAmount
+        ),
+        receiveStockDividend.curPeriodAmount
+      )
+    );
+    const curOtherInvest = DecimalOperations.multiply(
+      '-1',
+      DecimalOperations.add(
+        DecimalOperations.add(totalInvestCashFlow.curPeriodAmount, curPPEInvest),
+        curStrategyInvest
+      )
+    );
 
-    const prePPEInvest = -1 * (getPPE.prePeriodAmount - salePPE.prePeriodAmount);
+    const prePPEInvest =
+      -1 *
+      parseFloat(
+        DecimalOperations.subtract(getPPE.prePeriodAmount || '0', salePPE.prePeriodAmount || '0')
+      );
     const preStrategyInvest =
       -1 *
-      (getFVPL.prePeriodAmount +
-        getFVOCI.prePeriodAmount +
-        getAmortizedFA.prePeriodAmount -
-        saleFVOCI.prePeriodAmount -
-        saleAmortizedFA.prePeriodAmount -
-        removeHedgeAsset.prePeriodAmount +
-        receiveStockDividend.prePeriodAmount);
+      parseFloat(
+        DecimalOperations.subtract(
+          DecimalOperations.add(
+            DecimalOperations.add(getFVPL.prePeriodAmount || '0', getFVOCI.prePeriodAmount || '0'),
+            DecimalOperations.add(
+              getAmortizedFA.prePeriodAmount || '0',
+              receiveStockDividend.prePeriodAmount || '0'
+            )
+          ),
+          DecimalOperations.add(
+            DecimalOperations.add(
+              saleFVOCI.prePeriodAmount || '0',
+              saleAmortizedFA.prePeriodAmount || '0'
+            ),
+            removeHedgeAsset.prePeriodAmount || '0'
+          )
+        )
+      );
     const preOtherInvest =
-      -1 * (totalInvestCashFlow.prePeriodAmount + prePPEInvest + preStrategyInvest);
+      -1 *
+      parseFloat(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            totalInvestCashFlow.prePeriodAmount || '0',
+            prePPEInvest.toString()
+          ),
+          preStrategyInvest.toString()
+        )
+      );
 
     const labels = ['不動產', '策略性投資項目', '其他'];
 
@@ -769,11 +857,11 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     const preYearString = (currentYear - 1).toString();
     return {
       [curYearString]: {
-        data: [curPPEInvest, curStrategyInvest, curOtherInvest],
+        data: [curPPEInvest.toString(), curStrategyInvest.toString(), curOtherInvest.toString()],
         labels,
       },
       [preYearString]: {
-        data: [prePPEInvest, preStrategyInvest, preOtherInvest],
+        data: [prePPEInvest.toString(), preStrategyInvest.toString(), preOtherInvest.toString()],
         labels,
       },
     };
@@ -798,18 +886,36 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
       EMPTY_I_ACCOUNT_READY_FRONTEND;
 
     // Info: (20240730 - Anna) get本來就是負的
-    const curFreeCash =
-      operatingCashFlow.curPeriodAmount +
-      getPPE.curPeriodAmount -
-      salePPE.curPeriodAmount +
-      getIntangibleAsset.curPeriodAmount -
-      saleIntangibleAsset.curPeriodAmount;
-    const preFreeCash =
-      operatingCashFlow.prePeriodAmount +
-      getPPE.prePeriodAmount -
-      salePPE.prePeriodAmount +
-      getIntangibleAsset.prePeriodAmount -
-      saleIntangibleAsset.prePeriodAmount;
+    const curFreeCash = parseFloat(
+      DecimalOperations.subtract(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            operatingCashFlow.curPeriodAmount || '0',
+            getPPE.curPeriodAmount || '0'
+          ),
+          getIntangibleAsset.curPeriodAmount || '0'
+        ),
+        DecimalOperations.add(
+          salePPE.curPeriodAmount || '0',
+          saleIntangibleAsset.curPeriodAmount || '0'
+        )
+      )
+    );
+    const preFreeCash = parseFloat(
+      DecimalOperations.subtract(
+        DecimalOperations.add(
+          DecimalOperations.add(
+            operatingCashFlow.prePeriodAmount || '0',
+            getPPE.prePeriodAmount || '0'
+          ),
+          getIntangibleAsset.prePeriodAmount || '0'
+        ),
+        DecimalOperations.add(
+          salePPE.prePeriodAmount || '0',
+          saleIntangibleAsset.prePeriodAmount || '0'
+        )
+      )
+    );
 
     const curYearString = currentYear.toString();
     const preYearString = (currentYear - 1).toString();
@@ -817,19 +923,29 @@ export default class CashFlowStatementGenerator extends FinancialReportGenerator
     return {
       [curYearString]: {
         operatingCashFlow: operatingCashFlow.curPeriodAmount,
-        ppe: Math.abs(getPPE.curPeriodAmount - salePPE.curPeriodAmount),
-        intangibleAsset: Math.abs(
-          getIntangibleAsset.curPeriodAmount - saleIntangibleAsset.curPeriodAmount
+        ppe: DecimalOperations.abs(
+          DecimalOperations.subtract(getPPE.curPeriodAmount || '0', salePPE.curPeriodAmount || '0')
         ),
-        freeCash: curFreeCash,
+        intangibleAsset: DecimalOperations.abs(
+          DecimalOperations.subtract(
+            getIntangibleAsset.curPeriodAmount || '0',
+            saleIntangibleAsset.curPeriodAmount || '0'
+          )
+        ).toString(),
+        freeCash: curFreeCash.toString(),
       },
       [preYearString]: {
         operatingCashFlow: operatingCashFlow.prePeriodAmount,
-        ppe: Math.abs(getPPE.prePeriodAmount - salePPE.prePeriodAmount),
-        intangibleAsset: Math.abs(
-          getIntangibleAsset.prePeriodAmount - saleIntangibleAsset.prePeriodAmount
-        ),
-        freeCash: preFreeCash,
+        ppe: DecimalOperations.abs(
+          DecimalOperations.subtract(getPPE.prePeriodAmount || '0', salePPE.prePeriodAmount || '0')
+        ).toString(),
+        intangibleAsset: DecimalOperations.abs(
+          DecimalOperations.subtract(
+            getIntangibleAsset.prePeriodAmount || '0',
+            saleIntangibleAsset.prePeriodAmount || '0'
+          )
+        ).toString(),
+        freeCash: preFreeCash.toString(),
       },
     };
   }

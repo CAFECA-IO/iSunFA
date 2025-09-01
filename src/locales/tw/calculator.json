@@ -14,7 +14,9 @@
     "BASIC_INFO": "基本資料",
     "BASE_PAY": " 基本薪資",
     "WORK_HOURS": "工作時數",
-    "OTHERS": "其他項目"
+    "OTHERS": "其他項目",
+    "CALCULATOR": "計算機",
+    "PAY_SLIP": "薪資單"
   },
   "BASIC_INFO_FORM": {
     "EMPLOYEE_NAME": "員工姓名",
@@ -23,7 +25,13 @@
     "EMPLOYEE_NUMBER_PLACEHOLDER": "請輸入員工編號",
     "YEAR": "年度",
     "MONTH": "月份",
-    "DAYS_WORKED": "在職天數"
+    "PAYROLL_DAYS_BASE": "基準天數",
+    "PAYROLL_DAYS_BASE_HINT": "如果未指定，則預設為 30 天計算。",
+    "PAYROLL_OPTION_FIXED": "固定 30 天",
+    "PAYROLL_OPTION_ACTUAL": "實際日曆天數",
+    "JOINED_THIS_MONTH_1": "到職日",
+    "JOINED_THIS_MONTH_2": "",
+    "LEFT_THIS_MONTH": "離職日"
   },
   "BASE_PAY_FORM": {
     "BASE_SALARY": "本薪（應稅）",
@@ -35,15 +43,20 @@
   "WORK_HOURS_FORM": {
     "OVERTIME_HOUR_WITHOUT_TAX": "加班時數（免稅）",
     "OVERTIME_HOUR_WITH_TAX": "加班時數（應稅）",
-    "LEAVE_HOUR": "請假時數",
+    "LEAVE_HOUR": "請假 / 補休時數",
     "SICK_MENSTRUAL_LEAVE": "病假/生理假",
     "PERSONAL_LEAVE": "事假",
+    "LEAVE_PAYOUT_HOURS": "休假折抵薪資時數",
     "TOTAL_LEAVE_HOUR": "總請假時數",
     "TOTAL_OVERTIME_HOUR": "總加班時數"
   },
   "OTHERS_FORM": {
+    "LABOR_COVERAGE_STATUS": "勞保投保狀態",
+    "OPTION_LABOR_INSURANCE": "勞保",
+    "OPTION_NHI": "健保",
+    "OPTION_LABOR_PENSION": "勞退",
+    "NUMBER_OF_DEPENDENTS": "扶養人數",
     "NHI_BACK_PREMIUM": "健保加保費用",
-    "INCOME_TAX_SECOND_GEN_NHI_TAX": "代扣所得稅／二代健保費",
     "OTHER_ADJUSTMENTS": "其他溢扣／補收",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退"
   },
@@ -72,15 +85,18 @@
     "MEAL_ALLOWANCE_WITHOUT_TAX": "伙食費（免稅）",
     "OVERTIME_PAY_WITHOUT_TAX": "加班費（免稅）",
     "OTHER_ALLOWANCE_WITHOUT_TAX": "其他津貼（免稅）",
+    "LEAVE_SALARY_WITHOUT_TAX": "休假折抵薪資（免稅）",
     "TOTAL_SALARY_WITHOUT_TAX": "總免稅薪資",
     "TOTAL_MONTHLY_SALARY": "月薪資合計",
     "EMPLOYEE_PAID_LABOR_INSURANCE": "自行負擔勞保費",
     "EMPLOYEE_PAID_HEALTH_INSURANCE": "自行負擔健保費",
+    "HEALTH_INSURANCE_ADDITIONAL_PREMIUM": "健保加保費",
     "VOLUNTARY_PENSION_CONTRIBUTION": "自提勞退",
     "WITHHELD_INCOME_TAX": "代扣所得稅款",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "代扣二代健保",
     "SALARY_DEDUCTION_FOR_LEAVE": "請假扣薪",
-    "TOTAL_EMPLOYEE_CONTRIBUTION": "員工負擔總計",
+    "OTHER_DEDUCTIONS_ADJUSTMENTS": "其他溢扣/ 補收",
+    "TOTAL_DEDUCTIONS": "扣項總計",
     "HEALTH_INSURANCE_SALARY_BRACKET": "健保投保級距",
     "LABOR_INSURANCE_SALARY_BRACKET": "勞保投保級距",
     "EMPLOYMENT_INSURANCE_SALARY_BRACKET": "就業保險級距",
@@ -88,11 +104,12 @@
     "LABOR_PENSION_SALARY_BRACKET": "勞退級距",
     "OCCUPATIONAL_INJURY_INDUSTRY_RATE": "職災行業別費率",
     "INSURED_SALARY": "投保薪資",
-    "EMPLOYER_CONTRIBUTIONS": "公司負擔勞健退",
     "EMPLOYER_PAID_LABOR_INSURANCE": "公司負擔勞保費",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
-    "TOTAL_EMPLOYER_COST": "雇主總負擔"
+    "TOTAL_EMPLOYER_COST": "公司總負擔",
+    "REPORTED": "扣繳憑單金額",
+    "PAID": "實際發放金額"
   },
   "LOGIN_MODAL": {
     "TITLE": "請先登入",

@@ -31,9 +31,9 @@ const ledgerItemSchema = z.object({
   voucherNumber: z.string(),
   voucherType: z.nativeEnum(VoucherType),
   particulars: z.string(),
-  debitAmount: z.number(),
-  creditAmount: z.number(),
-  balance: z.number(),
+  debitAmount: z.string(),
+  creditAmount: z.string(),
+  balance: z.string(),
   createdAt: z.number(),
   updatedAt: z.number(),
 });

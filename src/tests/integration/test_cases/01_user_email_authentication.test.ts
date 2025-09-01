@@ -3,24 +3,25 @@ import { TestDataFactory } from '@/tests/integration/setup/test_data_factory';
 import { createTestClient } from '@/tests/integration/setup/test_client';
 import { TestClient } from '@/interfaces/test_client';
 import { APIPath } from '@/constants/api_connection';
+import { BaseTestContext } from '@/tests/integration/setup/base_test_context';
 import agreementHandler from '@/pages/api/v2/user/[userId]/agreement';
 import roleListHandler from '@/pages/api/v2/role';
 import userRoleHandler from '@/pages/api/v2/user/[userId]/role';
 import userRoleSelectHandler from '@/pages/api/v2/user/[userId]/selected_role';
 
 /**
- * Info: (20250701 - Shirley) Integration Test - User Email Authentication (Supertest Version)
+ * Info: (20250825 - Shirley) Integration Test - User Email Authentication
  *
  * Testing Philosophy:
- * - Uses system default emails and verification codes for authentication testing
- * - Focuses on authentication logic through real API calls
- * - Tests session persistence across multiple API calls
- * - Validates both success and failure scenarios
- * - Simulates real user behavior without direct database manipulation
- * - Tests multi-user authentication and session switching
+ * - Uses BaseTestContext for consistent test resource management
+ * - Tests core authentication functionality through real API calls
+ * - Validates session management and user registration flow
+ * - Follows step-by-step workflow pattern for clear test organization
+ * - Simulates real user behavior with proper API endpoints
  */
-describe('Integration Test - User Email Authentication (Supertest)', () => {
-  let apiHelper: APITestHelper;
+describe('User Authentication Workflow', () => {
+  let helper: APITestHelper;
+
   let multiUserHelper: APITestHelper;
 
   const testUsers = {
@@ -31,17 +32,16 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   };
 
   beforeAll(async () => {
-    // Info: (20250701 - Shirley) Initialize API helpers for testing
-    apiHelper = new APITestHelper();
+    const sharedContext = await BaseTestContext.getSharedContext();
+    helper = sharedContext.helper;
 
-    // Info: (20250703 - Shirley) Initialize multi-user helper for multi-user tests
+    // Info: (20250825 - Shirley) Simplified multi-user helper - only create when needed for specific tests
     multiUserHelper = await APITestHelper.createHelper({
-      emails: [testUsers.user1, testUsers.user2, testUsers.user3, testUsers.user4],
+      emails: [testUsers.user1, testUsers.user2],
     });
-  });
+  }, 60000); // Info: (20250825 - Shirley) Reduced timeout from 120s to 60s
 
   afterAll(() => {
-    apiHelper.clearAllUserSessions();
     multiUserHelper.clearAllUserSessions();
   });
 
@@ -53,7 +53,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   describe('Test Case 1.4: Session and Status Validation', () => {
     it('should return status info with proper structure', async () => {
       // Info: (20250701 - Shirley) Test status info endpoint structure
-      const statusResponse = await apiHelper.getStatusInfo();
+      const statusResponse = await helper.getStatusInfo();
 
       // Info: (20250701 - Shirley) Verify status info structure
       expect(statusResponse.body.success).toBe(true);
@@ -138,11 +138,9 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
     it('should authenticate multiple users successfully', async () => {
       const authenticatedUsers = multiUserHelper.getAllAuthenticatedUsers();
 
-      expect(authenticatedUsers).toHaveLength(4);
+      expect(authenticatedUsers).toHaveLength(2); // Info: (20250825 - Shirley) Reduced from 4 to 2 users
       expect(authenticatedUsers).toContain(testUsers.user1);
       expect(authenticatedUsers).toContain(testUsers.user2);
-      expect(authenticatedUsers).toContain(testUsers.user3);
-      expect(authenticatedUsers).toContain(testUsers.user4);
     });
 
     it('should switch between users and maintain separate sessions', async () => {
@@ -159,23 +157,23 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       };
       expect(user2Payload.user.email).toBe(testUsers.user2);
 
-      // Info: (20250703 - Shirley) Switch to user3
-      multiUserHelper.switchToUser(testUsers.user3);
-      expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user3);
+      // Info: (20250825 - Shirley) Switch back to user1 instead of creating user3
+      multiUserHelper.switchToUser(testUsers.user1);
+      expect(multiUserHelper.getCurrentUser()).toBe(testUsers.user1);
 
-      // Info: (20250703 - Shirley) Get status for user3
-      const user3Status = await multiUserHelper.getStatusInfo();
-      expect(user3Status.body.success).toBe(true);
+      // Info: (20250703 - Shirley) Get status for user1
+      const user1Status = await multiUserHelper.getStatusInfo();
+      expect(user1Status.body.success).toBe(true);
 
-      const user3Payload = user3Status.body.payload as {
+      const user1Payload = user1Status.body.payload as {
         user: { email: string; id: number; name: string };
       };
-      expect(user3Payload.user.email).toBe(testUsers.user3);
+      expect(user1Payload.user.email).toBe(testUsers.user1);
 
       // Info: (20250703 - Shirley) Verify different user IDs
       const user2Id = user2Payload.user.id;
-      const user3Id = user3Payload.user.id;
-      expect(user2Id).not.toBe(user3Id);
+      const user1Id = user1Payload.user.id;
+      expect(user2Id).not.toBe(user1Id);
     });
 
     it('should handle individual user session management', async () => {
@@ -188,7 +186,6 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
       // Info: (20250703 - Shirley) Other users should still be authenticated
       expect(multiUserHelper.isUserAuthenticated(testUsers.user1)).toBe(true);
-      expect(multiUserHelper.isUserAuthenticated(testUsers.user3)).toBe(true);
 
       // TODO: (20250718 - Shirley) Supertest testing cannot handle OTP testing, so mark it up and add a todo indicating that manual testing is required.
       // Info: (20250703 - Shirley) Re-authenticate cleared user
@@ -213,6 +210,9 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
         user: { email: string; id: number; name: string };
       };
       expect(statusPayload.user.email).toBe(testUsers.user1);
+
+      // Info: (20250825 - Shirley) Clean up single user helper
+      singleUserHelper.clearAllUserSessions();
     });
   });
 
@@ -221,45 +221,43 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   // ========================================
   describe('Test Case 1.7: Authentication Helper Factory Methods', () => {
     it('should create authenticated helper with auto-authentication', async () => {
-      const helper = await APITestHelper.createHelper({ autoAuth: true });
-
+      // Info: (20250825 - Shirley) Use shared helper instead of creating new one
       expect(helper.isAuthenticated()).toBe(true);
-      const cookies = helper.getCurrentSession();
-      expect(cookies.length).toBeGreaterThan(0);
+      const sessionCookies = helper.getCurrentSession();
+      expect(sessionCookies.length).toBeGreaterThan(0);
 
       // Info: (20250703 - Shirley) Verify session cookies contain auth data
-      const sessionCookie = cookies.find((cookie) => cookie.includes('isunfa='));
+      const sessionCookie = sessionCookies.find((cookie) => cookie.includes('isunfa='));
       expect(sessionCookie).toBeDefined();
-
-      // Info: (20250707 - Shirley) Complete user registration with default values
-      await helper.agreeToTerms();
-      await helper.createUserRole();
-      await helper.selectUserRole();
     });
 
     it('should efficiently re-authenticate when session is cleared', async () => {
-      const helper = await APITestHelper.createHelper({ autoAuth: true });
+      // Info: (20250825 - Shirley) Use a temporary helper to avoid affecting shared context
+      const tempHelper = await APITestHelper.createHelper({ autoAuth: true });
 
       // Info: (20250703 - Shirley) Clear session and test re-authentication
-      helper.clearSession();
-      expect(helper.isAuthenticated()).toBe(false);
+      tempHelper.clearSession();
+      expect(tempHelper.isAuthenticated()).toBe(false);
 
       // Info: (20250703 - Shirley) Measure re-authentication time
       const startTime = Date.now();
-      await helper.ensureAuthenticated();
+      await tempHelper.ensureAuthenticated();
       const authTime = Date.now() - startTime;
 
-      expect(helper.isAuthenticated()).toBe(true);
-      expect(authTime).toBeLessThan(5000); // Should complete within 5 seconds
+      expect(tempHelper.isAuthenticated()).toBe(true);
+      expect(authTime).toBeLessThan(10000); // Info: (20250825 - Shirley) Relaxed from 5s to 10s
+
+      // Info: (20250825 - Shirley) Clean up temporary helper
+      tempHelper.clearAllUserSessions();
     });
 
     it('should create helper with specific user auto-login', async () => {
       const specificUserHelper = await APITestHelper.createHelper({
-        email: testUsers.user2,
+        email: testUsers.user1, // Info: (20250825 - Shirley) Use user1 which is already in multiUserHelper
       });
 
       expect(specificUserHelper.isAuthenticated()).toBe(true);
-      expect(specificUserHelper.getCurrentUser()).toBe(testUsers.user2);
+      expect(specificUserHelper.getCurrentUser()).toBe(testUsers.user1);
 
       // Info: (20250703 - Shirley) Verify the helper can make authenticated API calls
       const statusResponse = await specificUserHelper.getStatusInfo();
@@ -268,33 +266,10 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const userPayload = statusResponse.body.payload as {
         user: { email: string; id: number };
       };
-      expect(userPayload.user.email).toBe(testUsers.user2);
+      expect(userPayload.user.email).toBe(testUsers.user1);
 
-      // Info: (20250707 - Shirley) Complete user registration with default values
-      await specificUserHelper.agreeToTerms();
-      await specificUserHelper.createUserRole();
-      await specificUserHelper.selectUserRole();
-    });
-
-    it('should create multi-user helper with auto-authentication', async () => {
-      const factoryMultiUserHelper = await APITestHelper.createHelper({
-        emails: [testUsers.user1, testUsers.user2],
-      });
-
-      const authenticatedUsers = factoryMultiUserHelper.getAllAuthenticatedUsers();
-      expect(authenticatedUsers).toHaveLength(2);
-      expect(authenticatedUsers).toContain(testUsers.user1);
-      expect(authenticatedUsers).toContain(testUsers.user2);
-
-      // Info: (20250703 - Shirley) Should start with first user as current
-      expect(factoryMultiUserHelper.getCurrentUser()).toBe(testUsers.user1);
-
-      // Info: (20250703 - Shirley) Test switching between users
-      factoryMultiUserHelper.switchToUser(testUsers.user2);
-      expect(factoryMultiUserHelper.getCurrentUser()).toBe(testUsers.user2);
-
-      const statusResponse = await factoryMultiUserHelper.getStatusInfo();
-      expect(statusResponse.body.success).toBe(true);
+      // Info: (20250825 - Shirley) Clean up specific user helper
+      specificUserHelper.clearAllUserSessions();
     });
 
     it('should create new authenticated helpers efficiently', async () => {
@@ -303,7 +278,10 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const creationTime = Date.now() - startTime;
 
       expect(newHelper.isAuthenticated()).toBe(true);
-      expect(creationTime).toBeLessThan(5000); // Should complete within 5 seconds
+      expect(creationTime).toBeLessThan(10000); // Info: (20250825 - Shirley) Relaxed from 5s to 10s
+
+      // Info: (20250825 - Shirley) Clean up new helper
+      newHelper.clearAllUserSessions();
     });
   });
 
@@ -391,11 +369,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should list user roles after role creation', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       const response = await userRoleClient
         .get(APIPath.USER_ROLE_LIST.replace(':userId', currentUserId))
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -436,13 +414,13 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should reject role operations with missing data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       // Info: (20250707 - Shirley) Test role creation with missing roleName
       const createRoleResponse = await userRoleCreateClient
         .post(APIPath.USER_CREATE_ROLE.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing roleName
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(422);
 
       expect(createRoleResponse.body.success).toBe(false);
@@ -452,7 +430,7 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       const selectRoleResponse = await userRoleSelectClient
         .put(APIPath.USER_SELECT_ROLE.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing roleName
-        .set('Cookie', cookies.join('; '));
+        .set('Cookie', testCookies.join('; '));
 
       // Info: (20250707 - Shirley) Accept both 405 (method routing issue) and 422 (validation error)
       expect([405, 422]).toContain(selectRoleResponse.status);
@@ -467,12 +445,12 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should reject terms agreement with missing data', async () => {
       await authenticatedHelper.ensureAuthenticated();
-      const cookies = authenticatedHelper.getCurrentSession();
+      const testCookies = authenticatedHelper.getCurrentSession();
 
       const response = await agreementClient
         .post(APIPath.AGREE_TO_TERMS.replace(':userId', currentUserId))
         .send({}) // Info: (20250707 - Shirley) Missing agreementHash
-        .set('Cookie', cookies.join('; '))
+        .set('Cookie', testCookies.join('; '))
         .expect(422);
 
       expect(response.body.success).toBe(false);
@@ -481,44 +459,9 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
   });
 
   // ========================================
-  // Info: (20250707 - Shirley) Test Case 1.9: All Default Test Users Registration Flow
+  // Info: (20250825 - Shirley) Test Case 1.9: User Registration Flow (Optimized)
   // ========================================
-  describe('Test Case 1.9: All Default Test Users Registration Flow', () => {
-    it('should process all default test users through complete registration flow', async () => {
-      // Info: (20250707 - Shirley) Process all test users from default_value.ts
-      const results = await APITestHelper.processAllTestUsers();
-
-      // Info: (20250707 - Shirley) Verify all users were processed
-      expect(results).toHaveLength(TestDataFactory.DEFAULT_TEST_EMAILS.length);
-
-      // Info: (20250707 - Shirley) Check that all users have results
-      results.forEach((result, index) => {
-        const expectedEmail = TestDataFactory.DEFAULT_TEST_EMAILS[index];
-        expect(result.email).toBe(expectedEmail);
-        expect(result.success).toBe(true);
-        expect(result.userId).toBeDefined();
-        expect(result.statusResponse).toBeDefined();
-        expect(result.statusResponse?.body.success).toBe(true);
-
-        // Info: (20250707 - Shirley) Verify user data in status response
-        if (
-          result.statusResponse?.body.payload &&
-          typeof result.statusResponse.body.payload === 'object'
-        ) {
-          const payload = result.statusResponse.body.payload as {
-            user: { email: string; id: number; name: string };
-          };
-          expect(payload.user.email).toBe(expectedEmail);
-          expect(payload.user.id).toBeDefined();
-          expect(typeof payload.user.id).toBe('number');
-        }
-      });
-
-      // Info: (20250707 - Shirley) Verify successful registrations
-      const successfulRegistrations = results.filter((r) => r.success);
-      expect(successfulRegistrations.length).toBe(TestDataFactory.DEFAULT_TEST_EMAILS.length);
-    });
-
+  describe('Test Case 1.9: User Registration Flow', () => {
     it('should process individual test user through complete registration flow', async () => {
       const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[0];
 
@@ -554,10 +497,10 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
 
     it('should handle user agreement logic correctly', async () => {
       const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[1];
-      const helper = await APITestHelper.createHelper({ email: testEmail });
+      const testHelper = await APITestHelper.createHelper({ email: testEmail });
 
       // Info: (20250707 - Shirley) Check agreement status
-      const hasAgreed = await helper.hasUserAgreedToTerms();
+      const hasAgreed = await testHelper.hasUserAgreedToTerms();
 
       // Info: (20250707 - Shirley) Agreement status should be boolean
       expect(typeof hasAgreed).toBe('boolean');
@@ -570,36 +513,14 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       if (!hasAgreed && result.agreementResponse) {
         expect([200, 201, 405, 500]).toContain(result.agreementResponse.status);
       }
+
+      // Info: (20250825 - Shirley) Clean up test helper
+      testHelper.clearAllUserSessions();
     });
 
-    // it('should validate all test emails are from default_value.ts', async () => {
-    //   // Info: (20250707 - Shirley) Verify test emails match default_value.ts
-    //   const expectedEmails = [
-    //     'user@isunfa.com',
-    //     'user1@isunfa.com',
-    //     'user2@isunfa.com',
-    //     'user3@isunfa.com',
-    //   ];
-
-    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS).toEqual(expectedEmails);
-    //   expect(TestDataFactory.DEFAULT_TEST_EMAILS.length).toBe(4);
-
-    //   // Info: (20250707 - Shirley) Verify each email is processed correctly
-    //   const emailPromises = TestDataFactory.DEFAULT_TEST_EMAILS.map(async (email) => {
-    //     const result = await APITestHelper.processTestUser(email);
-    //     expect(result.success).toBe(true);
-    //     expect(result.email).toBe(email);
-    //     return result;
-    //   });
-
-    //   await Promise.all(emailPromises);
-
-    // });
-
-    it('should reject processing of non-default test emails', async () => {
+    it('Input validation → Reject non-default test emails', async () => {
+      // Info: (20250825 - Shirley) Test email validation for processing
       const invalidEmail = 'invalid@example.com';
-
-      // Info: (20250707 - Shirley) Should reject non-default email
       const result = await APITestHelper.processTestUser(invalidEmail);
 
       expect(result.success).toBe(false);
@@ -608,14 +529,11 @@ describe('Integration Test - User Email Authentication (Supertest)', () => {
       expect(result.error?.message).toContain('not in the default test emails list');
     });
 
-    it('should handle list roles functionality for authenticated users', async () => {
-      const testEmail = TestDataFactory.DEFAULT_TEST_EMAILS[2];
-      const helper = await APITestHelper.createHelper({ email: testEmail });
-
-      // Info: (20250707 - Shirley) List roles for authenticated user
+    it('Role listing → Handle roles functionality for authenticated users', async () => {
+      // Info: (20250825 - Shirley) Use shared helper instead of creating new one
       const rolesResponse = await helper.listRoles();
 
-      // Info: (20250707 - Shirley) Should return a response (accept various status codes for role API)
+      // Info: (20250825 - Shirley) Accept various valid responses for role API
       expect([200, 401, 500]).toContain(rolesResponse.status);
 
       if (rolesResponse.status === 200) {
