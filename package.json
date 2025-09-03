@@ -58,7 +58,7 @@
     "jest-mock-extended": "^3.0.7",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.20",
     "lodash-es": "^4.17.21",
     "mjml": "^4.15.3",
     "mustache": "^4.2.0",
