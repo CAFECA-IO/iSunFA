@@ -213,16 +213,16 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const baseSalaryTaxFreePerHour = baseSalaryTaxFree / (daysInMonth * 8);
   const baseSalaryPerHour = baseSalaryTaxablePerHour + baseSalaryTaxFreePerHour;
 
-  // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資，無條件進入整數位
+  // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資，採四捨五入計算
   const vacationToPayHours =
     (options.vacationToPayHours ?? 0) > 0 ? (options.vacationToPayHours ?? 0) : 0;
-  const vacationToPay = Math.ceil(baseSalaryPerHour * vacationToPayHours);
+  const vacationToPay = Math.round(baseSalaryPerHour * vacationToPayHours);
 
   // Info: (20250727 - Luphia) 總扣薪時數
   const totalLeaveHours = sickLeaveHours * 0.5 + personalLeaveHours;
 
-  // Info: (20250727 - Luphia) 計算加班費，無條件進入整數位
-  const overTimePayTaxable = Math.ceil(
+  // Info: (20250727 - Luphia) 計算加班費，採四捨五入計算
+  const overTimePayTaxable = Math.round(
     (overTimeHoursTaxable100 +
       overTimeHoursTaxable133 * 1.34 +
       overTimeHoursTaxable166 * 1.67 +
@@ -231,7 +231,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       overTimeHoursTaxable266 * 2.67) *
       baseSalaryPerHour
   );
-  const overTimePayTaxFree = Math.ceil(
+  const overTimePayTaxFree = Math.round(
     (overTimeHoursTaxFree100 +
       overTimeHoursTaxFree133 * 1.34 +
       overTimeHoursTaxFree166 * 1.67 +
@@ -241,13 +241,9 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       baseSalaryPerHour
   );
 
-  // Info: (20250727 - Luphia) 計算請假扣薪，無條件捨棄小數位
-  const leaveDeductionTaxable = Math.floor(
-    (sickLeaveHours / 2 + totalLeaveHours) * baseSalaryTaxablePerHour
-  );
-  const leaveDeductionTaxFree = Math.floor(
-    (sickLeaveHours / 2 + totalLeaveHours) * baseSalaryTaxFreePerHour
-  );
+  // Info: (20250727 - Luphia) 計算請假扣薪，採四捨五入計算
+  const leaveDeductionTaxable = Math.round(totalLeaveHours * baseSalaryTaxablePerHour);
+  const leaveDeductionTaxFree = Math.round(totalLeaveHours * baseSalaryTaxFreePerHour);
 
   // Info: (20250727 - Luphia) 計算本薪（應稅），無條件進入整數位
   const resultBaseSalaryTaxable = Math.ceil(baseSalaryTaxablePay - leaveDeductionTaxable);

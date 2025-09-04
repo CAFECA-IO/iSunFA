@@ -182,7 +182,7 @@ const BasicInfoForm: React.FC = () => {
   return (
     <>
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
-      <form className="grid grid-cols-1 gap-24px tablet:grid-cols-2">
+      <form className="grid grid-cols-2 gap-24px">
         {/* Info: (20250708 - Julian) 員工姓名 */}
         <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
@@ -318,7 +318,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 到職日 */}
-        <div className="col-span-2 flex h-44px items-center justify-between gap-40px">
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
           <ToggleSwitch
             isOn={isJoined}
             handleToggle={toggleJoined}
@@ -351,7 +351,7 @@ const BasicInfoForm: React.FC = () => {
         </div>
 
         {/* Info: (20250806 - Julian) 離職日 */}
-        <div className="col-span-2 flex h-44px items-center justify-between gap-40px">
+        <div className="col-span-2 flex flex-col items-start justify-between gap-x-40px gap-y-lv-3 tablet:h-44px tablet:flex-row tablet:items-center">
           <ToggleSwitch
             isOn={isLeft}
             handleToggle={toggleLeft}

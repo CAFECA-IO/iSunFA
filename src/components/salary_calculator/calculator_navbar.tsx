@@ -40,12 +40,7 @@ const CalculatorNavbar: React.FC = () => {
 
   const displayedLinks =
     isSignIn && userAuth ? (
-      <div className="flex items-center gap-lv-4">
-        <div ref={i18nRef}>
-          <I18n isMenuOpen={isShowI18nMenu} setIsMenuOpen={toggleI18nMenu} />
-        </div>
-
-        {/* Info: (20250715 - Julian) Links */}
+      <>
         <div className="flex items-center gap-24px">
           <Link
             href={ISUNFA_ROUTE.SALARY_CALCULATOR}
@@ -86,7 +81,7 @@ const CalculatorNavbar: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+      </>
     ) : // Info: (20250724 - Julian) 先隱藏
     // <Link
     //   href={ISUNFA_ROUTE.LOGIN}
@@ -97,19 +92,28 @@ const CalculatorNavbar: React.FC = () => {
     // </Link>
     null;
   return (
-    <div className="flex w-full items-center justify-between bg-surface-neutral-main-background px-60px py-12px">
+    <div className="flex w-full items-center justify-between bg-surface-neutral-surface-lv1 px-lv-4 py-12px tablet:bg-surface-neutral-main-background tablet:px-60px">
       {/* Info: (20250715 - Julian) Logo and Title */}
-      <div className="flex flex-1 items-center gap-lv-4">
+      <div className="flex flex-1 flex-col items-start gap-x-lv-4 tablet:flex-row tablet:items-center">
         <Link href={ISUNFA_ROUTE.DASHBOARD}>
           <Image src="/logo/isunfa_logo_light.svg" alt="iSunFa_logo" width={100} height={30} />
         </Link>
-        <p className="text-lg font-bold text-text-brand-primary-lv2">
+        <p className="text-base font-bold text-text-brand-primary-lv2 tablet:text-lg">
           {t('calculator:PAGE.MAIN_TITLE')}
         </p>
       </div>
 
       {/* Info: (20250715 - Julian) Links / Login Button */}
-      {displayedLinks}
+      <div className="flex items-center gap-lv-4">
+        <div
+          ref={i18nRef}
+          className="mr-40px" // ToDo: (20250829 - Julian) 為了避免 language menu 跑版，先用 margin-right 調整
+        >
+          <I18n isMenuOpen={isShowI18nMenu} setIsMenuOpen={toggleI18nMenu} />
+        </div>
+
+        {displayedLinks}
+      </div>
     </div>
   );
 };
