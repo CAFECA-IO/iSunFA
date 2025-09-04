@@ -152,7 +152,7 @@
     }
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.19.5"
   },
   "overrides": {
     "typescript": "^5.9.2",
