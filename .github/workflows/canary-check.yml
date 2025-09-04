@@ -2,8 +2,10 @@ name: 'Canary Dependency Check'
 
 on:
   schedule:
-    # Run every Friday at 14:00 UTC (23:00 Taipei time)
-    - cron: '0 14 * * 5'
+    # TESTING: Run in 5 minutes (remove after testing)
+    - cron: '20 05 * * *'
+    # Original: Run every Friday at 14:00 UTC (23:00 Taipei time)
+    # - cron: '0 14 * * 5'
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     paths:
