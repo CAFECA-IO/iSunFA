@@ -4,6 +4,11 @@ on:
   schedule:
     # Run every Friday at 14:00 UTC (23:00 Taipei time)
     - cron: '0 14 * * 5'
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
   workflow_dispatch: # Allow manual trigger
     inputs:
       packages:
@@ -20,6 +25,8 @@ jobs:
   canary-check:
     runs-on: ubuntu-latest
     container: node:20-slim
+    # Only run on scheduled events, manual dispatch, or PRs with needs-canary-check label
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'needs-canary-check')
     
     services:
       postgres:

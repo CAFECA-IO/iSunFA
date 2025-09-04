@@ -3,8 +3,7 @@
   "description": "iSunFA Dependency Management Configuration",
   "extends": [
     "config:base",
-    ":timezone(Asia/Taipei)",
-    ":assignee(arealclimber)"
+    ":timezone(Asia/Taipei)"
   ],
   "schedule": ["before 10am on monday"],
   "prConcurrentLimit": 10,
@@ -12,7 +11,7 @@
   "rangeStrategy": "pin",
   "semanticCommits": "enabled",
   "labels": ["dependencies"],
-  "reviewers": ["arealclimber"],
+  "reviewers": ["@CAFECA-IO/iSunFA-team"],
   "vulnerabilityAlerts": {
     "enabled": true,
     "schedule": ["at any time"]
@@ -31,7 +30,7 @@
       ],
       "labels": ["high-risk", "needs-manual-review"],
       "automerge": false,
-      "reviewers": ["arealclimber"],
+      "reviewers": ["@CAFECA-IO/iSunFA-team"],
       "addLabels": ["needs-approval"]
     },
     {
