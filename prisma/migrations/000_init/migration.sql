@@ -23,7 +23,7 @@ CREATE TYPE "InvoiceDirection" AS ENUM ('INPUT', 'OUTPUT');
 CREATE TYPE "InvoiceType" AS ENUM ('INPUT_20', 'INPUT_21', 'INPUT_22', 'INPUT_23', 'INPUT_24', 'INPUT_25', 'INPUT_26', 'INPUT_27', 'INPUT_28', 'INPUT_29', 'OUTPUT_30', 'OUTPUT_31', 'OUTPUT_32', 'OUTPUT_33', 'OUTPUT_34', 'OUTPUT_35', 'OUTPUT_36');
 
 -- CreateEnum
-CREATE TYPE "CurrencyCode" AS ENUM ('TWD', 'USD', 'CNY', 'HKD', 'JPY');
+CREATE TYPE "CurrencyCode" AS ENUM ('TWD', 'EUR');
 
 -- CreateEnum
 CREATE TYPE "TaxType" AS ENUM ('TAXABLE', 'TAX_FREE');
@@ -73,7 +73,7 @@ CREATE TYPE "Proficiency" AS ENUM ('ELEMENTARY', 'LIMITED', 'PROFESSIONAL', 'NAT
 -- CreateTable
 CREATE TABLE "account" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL DEFAULT 0,
+    "company_id" INTEGER NOT NULL DEFAULT 0,
     "system" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "debit" BOOLEAN NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE "account" (
 -- CreateTable
 CREATE TABLE "asset" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "created_user_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE "asset_voucher" (
 -- CreateTable
 CREATE TABLE "audit_report" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "information_year" TEXT NOT NULL,
     "credit_rating" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE "authentication" (
 -- CreateTable
 CREATE TABLE "accounting_setting" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "sales_tax_taxable" BOOLEAN NOT NULL,
     "sales_tax_rate" DOUBLE PRECISION NOT NULL,
     "purchase_tax_taxable" BOOLEAN NOT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE "associate_line_item" (
     "original_line_item_id" INTEGER NOT NULL,
     "result_line_item_id" INTEGER NOT NULL,
     "debit" BOOLEAN NOT NULL,
-    "amount" DECIMAL(26,8) NOT NULL,
+    "amount" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
@@ -206,7 +206,7 @@ CREATE TABLE "associate_voucher" (
 -- CreateTable
 CREATE TABLE "counterparty" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "tax_id" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -236,7 +236,7 @@ CREATE TABLE "country" (
 );
 
 -- CreateTable
-CREATE TABLE "account_book" (
+CREATE TABLE "company" (
     "id" SERIAL NOT NULL,
     "team_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
@@ -251,13 +251,13 @@ CREATE TABLE "account_book" (
     "is_transferring" BOOLEAN NOT NULL DEFAULT false,
     "tag" "Tag" NOT NULL DEFAULT 'ALL',
 
-    CONSTRAINT "account_book_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "company_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "account_book_kyc" (
+CREATE TABLE "company_kyc" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "address" TEXT NOT NULL,
     "representative_name" TEXT NOT NULL,
     "country" TEXT NOT NULL,
@@ -284,13 +284,13 @@ CREATE TABLE "account_book_kyc" (
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
 
-    CONSTRAINT "account_book_kyc_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "company_kyc_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "account_book_setting" (
+CREATE TABLE "company_setting" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "tax_serial_number" TEXT NOT NULL,
     "representative_name" TEXT NOT NULL,
     "country" TEXT NOT NULL,
@@ -310,7 +310,7 @@ CREATE TABLE "account_book_setting" (
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
 
-    CONSTRAINT "account_book_setting_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "company_setting_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -318,7 +318,7 @@ CREATE TABLE "contract" (
     "id" SERIAL NOT NULL,
     "file_url" TEXT NOT NULL,
     "project_id" INTEGER,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "signatory" TEXT NOT NULL,
     "signatory_date" INTEGER NOT NULL,
@@ -345,7 +345,7 @@ CREATE TABLE "contract" (
 CREATE TABLE "certificate" (
     "id" SERIAL NOT NULL,
     "ai_result_id" TEXT NOT NULL DEFAULT '0',
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "file_id" INTEGER NOT NULL,
     "uploader_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
@@ -374,9 +374,9 @@ CREATE TABLE "invoice_rc2" (
     "currency_code" "CurrencyCode" NOT NULL,
     "tax_type" "TaxType",
     "tax_rate" INTEGER,
-    "net_amount" DECIMAL(26,8),
-    "tax_amount" DECIMAL(26,8),
-    "total_amount" DECIMAL(26,8),
+    "net_amount" INTEGER,
+    "tax_amount" INTEGER,
+    "total_amount" INTEGER,
     "is_generated" BOOLEAN NOT NULL DEFAULT false,
     "incomplete" BOOLEAN NOT NULL DEFAULT true,
     "description" TEXT,
@@ -388,7 +388,7 @@ CREATE TABLE "invoice_rc2" (
     "buyer_name" TEXT,
     "buyer_id_number" TEXT,
     "return_or_allowance" BOOLEAN DEFAULT false,
-    "total_of_summarized_invoices" DECIMAL(26,8),
+    "total_of_summarized_invoices" INTEGER,
     "carrier_serial_number" TEXT,
     "other_certificate_no" TEXT,
 
@@ -398,7 +398,7 @@ CREATE TABLE "invoice_rc2" (
 -- CreateTable
 CREATE TABLE "department" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -413,7 +413,7 @@ CREATE TABLE "employee" (
     "name" TEXT NOT NULL,
     "image_id" TEXT,
     "department_id" INTEGER NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "salary" INTEGER NOT NULL,
     "insurance_payment" INTEGER NOT NULL,
     "bonus" INTEGER NOT NULL,
@@ -523,7 +523,7 @@ CREATE TABLE "income_expense" (
     "id" SERIAL NOT NULL,
     "income" INTEGER NOT NULL,
     "expense" INTEGER NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "project_id" INTEGER,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -540,7 +540,7 @@ CREATE TABLE "journal" (
     "aich_result_id" TEXT,
     "project_id" INTEGER,
     "contract_id" INTEGER,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "event" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -576,7 +576,7 @@ CREATE TABLE "kyc_role" (
 -- CreateTable
 CREATE TABLE "line_item" (
     "id" SERIAL NOT NULL,
-    "amount" DECIMAL(26,8) NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
     "description" TEXT NOT NULL,
     "debit" BOOLEAN NOT NULL,
     "account_id" INTEGER NOT NULL,
@@ -620,7 +620,7 @@ CREATE TABLE "news" (
 CREATE TABLE "ocr" (
     "id" SERIAL NOT NULL,
     "aich_result_id" TEXT NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "image_file_id" INTEGER NOT NULL,
     "status" TEXT NOT NULL,
     "type" TEXT NOT NULL,
@@ -635,7 +635,7 @@ CREATE TABLE "ocr" (
 CREATE TABLE "order" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "plan_id" INTEGER NOT NULL,
     "status" TEXT NOT NULL,
     "detail" JSONB,
@@ -649,7 +649,7 @@ CREATE TABLE "order" (
 -- CreateTable
 CREATE TABLE "project" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "completed_percent" INTEGER NOT NULL,
     "stage" TEXT NOT NULL,
@@ -722,7 +722,7 @@ CREATE TABLE "plan" (
 -- CreateTable
 CREATE TABLE "report" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "token_contract" TEXT,
     "token_id" TEXT,
     "name" TEXT NOT NULL,
@@ -750,7 +750,7 @@ CREATE TABLE "report" (
 CREATE TABLE "subscription" (
     "id" SERIAL NOT NULL,
     "plan_id" INTEGER NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "auto_renewal" BOOLEAN NOT NULL,
     "status" BOOLEAN NOT NULL,
     "start_date" INTEGER NOT NULL,
@@ -947,24 +947,24 @@ CREATE TABLE "role_feature" (
 );
 
 -- CreateTable
-CREATE TABLE "user_todo_account_book" (
+CREATE TABLE "user_todo_company" (
     "id" SERIAL NOT NULL,
     "user_id" INTEGER NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "todo_id" INTEGER NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
     "deleted_at" INTEGER,
 
-    CONSTRAINT "user_todo_account_book_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "user_todo_company_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "voucher" (
     "id" SERIAL NOT NULL,
     "issuer_id" INTEGER NOT NULL,
-    "counter_party_id" INTEGER,
-    "account_book_id" INTEGER NOT NULL,
+    "counter_party_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "ai_result_id" TEXT NOT NULL DEFAULT '0',
     "status" TEXT NOT NULL DEFAULT 'journal:JOURNAL.UPLOADED',
     "editable" BOOLEAN NOT NULL DEFAULT true,
@@ -1007,7 +1007,7 @@ CREATE TABLE "voucher_salary_record" (
 -- CreateTable
 CREATE TABLE "voucher_salary_record_folder" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" INTEGER NOT NULL,
     "updated_at" INTEGER NOT NULL,
@@ -1219,7 +1219,7 @@ CREATE TABLE "team_invoice" (
 -- CreateTable
 CREATE TABLE "accountBook_transfer" (
     "id" SERIAL NOT NULL,
-    "account_book_id" INTEGER NOT NULL,
+    "company_id" INTEGER NOT NULL,
     "from_team_id" INTEGER NOT NULL,
     "to_team_id" INTEGER NOT NULL,
     "initiated_by_user_id" INTEGER NOT NULL,
@@ -1386,35 +1386,23 @@ CREATE TABLE "resume_certificate_skills" (
     CONSTRAINT "resume_certificate_skills_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "external_user" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "external_id" TEXT NOT NULL,
-    "external_provider" TEXT NOT NULL,
-    "created_at" INTEGER NOT NULL,
-    "updated_at" INTEGER NOT NULL,
-
-    CONSTRAINT "external_user_pkey" PRIMARY KEY ("id")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "authentication_credential_id_key" ON "authentication"("credential_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_book_image_file_id_key" ON "account_book"("image_file_id");
+CREATE UNIQUE INDEX "company_image_file_id_key" ON "company"("image_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_book_kyc_registration_certificate_file_id_key" ON "account_book_kyc"("registration_certificate_file_id");
+CREATE UNIQUE INDEX "company_kyc_registration_certificate_file_id_key" ON "company_kyc"("registration_certificate_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_book_kyc_tax_certificate_file_id_key" ON "account_book_kyc"("tax_certificate_file_id");
+CREATE UNIQUE INDEX "company_kyc_tax_certificate_file_id_key" ON "company_kyc"("tax_certificate_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_book_kyc_representative_id_card_file_id_key" ON "account_book_kyc"("representative_id_card_file_id");
+CREATE UNIQUE INDEX "company_kyc_representative_id_card_file_id_key" ON "company_kyc"("representative_id_card_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "account_book_setting_account_book_id_key" ON "account_book_setting"("account_book_id");
+CREATE UNIQUE INDEX "company_setting_company_id_key" ON "company_setting"("company_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "contract_payment_id_key" ON "contract"("payment_id");
@@ -1462,10 +1450,10 @@ CREATE UNIQUE INDEX "value_project_id_key" ON "value"("project_id");
 CREATE UNIQUE INDEX "team_plan_type_key" ON "team_plan"("type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "team_plan_feature_plan_id_feature_key_key" ON "team_plan_feature"("plan_id", "feature_key");
+CREATE UNIQUE INDEX "team_image_file_id_key" ON "team"("image_file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "team_image_file_id_key" ON "team"("image_file_id");
+CREATE UNIQUE INDEX "invite_team_member_email_key" ON "invite_team_member"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "team_member_team_id_user_id_key" ON "team_member"("team_id", "user_id");
@@ -1480,7 +1468,7 @@ CREATE UNIQUE INDEX "resume_attachment_file_id_key" ON "resume"("attachment_file
 CREATE UNIQUE INDEX "resume_certificate_skills_file_id_key" ON "resume_certificate_skills"("file_id");
 
 -- AddForeignKey
-ALTER TABLE "account" ADD CONSTRAINT "account_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "account" ADD CONSTRAINT "account_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "account" ADD CONSTRAINT "account_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "account"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1489,7 +1477,7 @@ ALTER TABLE "account" ADD CONSTRAINT "account_parent_id_fkey" FOREIGN KEY ("pare
 ALTER TABLE "account" ADD CONSTRAINT "account_root_id_fkey" FOREIGN KEY ("root_id") REFERENCES "account"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "asset" ADD CONSTRAINT "asset_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "asset" ADD CONSTRAINT "asset_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "asset" ADD CONSTRAINT "asset_created_user_id_fkey" FOREIGN KEY ("created_user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1501,7 +1489,7 @@ ALTER TABLE "asset_voucher" ADD CONSTRAINT "asset_voucher_asset_id_fkey" FOREIGN
 ALTER TABLE "asset_voucher" ADD CONSTRAINT "asset_voucher_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "audit_report" ADD CONSTRAINT "audit_report_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "audit_report" ADD CONSTRAINT "audit_report_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "audit_report" ADD CONSTRAINT "audit_report_report_id_fkey" FOREIGN KEY ("report_id") REFERENCES "report"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1510,7 +1498,7 @@ ALTER TABLE "audit_report" ADD CONSTRAINT "audit_report_report_id_fkey" FOREIGN 
 ALTER TABLE "authentication" ADD CONSTRAINT "authentication_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "accounting_setting" ADD CONSTRAINT "accounting_setting_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "accounting_setting" ADD CONSTRAINT "accounting_setting_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "associate_line_item" ADD CONSTRAINT "associate_line_item_associate_voucher_id_fkey" FOREIGN KEY ("associate_voucher_id") REFERENCES "associate_voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1531,34 +1519,34 @@ ALTER TABLE "associate_voucher" ADD CONSTRAINT "associate_voucher_original_vouch
 ALTER TABLE "associate_voucher" ADD CONSTRAINT "associate_voucher_result_voucher_id_fkey" FOREIGN KEY ("result_voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "counterparty" ADD CONSTRAINT "counterparty_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "counterparty" ADD CONSTRAINT "counterparty_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book" ADD CONSTRAINT "account_book_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "team"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company" ADD CONSTRAINT "company_team_id_fkey" FOREIGN KEY ("team_id") REFERENCES "team"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book" ADD CONSTRAINT "account_book_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company" ADD CONSTRAINT "company_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book" ADD CONSTRAINT "account_book_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company" ADD CONSTRAINT "company_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book_kyc" ADD CONSTRAINT "account_book_kyc_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book_kyc" ADD CONSTRAINT "account_book_kyc_registration_certificate_file_id_fkey" FOREIGN KEY ("registration_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_registration_certificate_file_id_fkey" FOREIGN KEY ("registration_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book_kyc" ADD CONSTRAINT "account_book_kyc_tax_certificate_file_id_fkey" FOREIGN KEY ("tax_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_tax_certificate_file_id_fkey" FOREIGN KEY ("tax_certificate_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book_kyc" ADD CONSTRAINT "account_book_kyc_representative_id_card_file_id_fkey" FOREIGN KEY ("representative_id_card_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company_kyc" ADD CONSTRAINT "company_kyc_representative_id_card_file_id_fkey" FOREIGN KEY ("representative_id_card_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "account_book_setting" ADD CONSTRAINT "account_book_setting_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "company_setting" ADD CONSTRAINT "company_setting_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "contract" ADD CONSTRAINT "contract_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "contract" ADD CONSTRAINT "contract_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "contract" ADD CONSTRAINT "contract_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1567,7 +1555,7 @@ ALTER TABLE "contract" ADD CONSTRAINT "contract_project_id_fkey" FOREIGN KEY ("p
 ALTER TABLE "contract" ADD CONSTRAINT "contract_payment_id_fkey" FOREIGN KEY ("payment_id") REFERENCES "payment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "certificate" ADD CONSTRAINT "certificate_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "certificate" ADD CONSTRAINT "certificate_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "certificate" ADD CONSTRAINT "certificate_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1576,7 +1564,7 @@ ALTER TABLE "certificate" ADD CONSTRAINT "certificate_file_id_fkey" FOREIGN KEY 
 ALTER TABLE "certificate" ADD CONSTRAINT "certificate_uploader_id_fkey" FOREIGN KEY ("uploader_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "invoice_rc2" ADD CONSTRAINT "invoice_rc2_accountbook_id_fkey" FOREIGN KEY ("accountbook_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "invoice_rc2" ADD CONSTRAINT "invoice_rc2_accountbook_id_fkey" FOREIGN KEY ("accountbook_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "invoice_rc2" ADD CONSTRAINT "invoice_rc2_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1588,10 +1576,10 @@ ALTER TABLE "invoice_rc2" ADD CONSTRAINT "invoice_rc2_uploader_id_fkey" FOREIGN 
 ALTER TABLE "invoice_rc2" ADD CONSTRAINT "invoice_rc2_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "department" ADD CONSTRAINT "department_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "department" ADD CONSTRAINT "department_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "employee" ADD CONSTRAINT "employee_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "employee" ADD CONSTRAINT "employee_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "employee" ADD CONSTRAINT "employee_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "department"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1618,13 +1606,13 @@ ALTER TABLE "invoice_voucher_journal" ADD CONSTRAINT "invoice_voucher_journal_vo
 ALTER TABLE "invoice_voucher_journal" ADD CONSTRAINT "invoice_voucher_journal_journal_id_fkey" FOREIGN KEY ("journal_id") REFERENCES "journal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "income_expense" ADD CONSTRAINT "income_expense_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "income_expense" ADD CONSTRAINT "income_expense_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "income_expense" ADD CONSTRAINT "income_expense_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "journal" ADD CONSTRAINT "journal_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "journal" ADD CONSTRAINT "journal_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "journal" ADD CONSTRAINT "journal_contract_id_fkey" FOREIGN KEY ("contract_id") REFERENCES "contract"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -1654,19 +1642,19 @@ ALTER TABLE "milestone" ADD CONSTRAINT "milestone_project_id_fkey" FOREIGN KEY (
 ALTER TABLE "news" ADD CONSTRAINT "news_image_id_fkey" FOREIGN KEY ("image_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ocr" ADD CONSTRAINT "ocr_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ocr" ADD CONSTRAINT "ocr_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ocr" ADD CONSTRAINT "ocr_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "order" ADD CONSTRAINT "order_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "order" ADD CONSTRAINT "order_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "order" ADD CONSTRAINT "order_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "project" ADD CONSTRAINT "project_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "project" ADD CONSTRAINT "project_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "project" ADD CONSTRAINT "project_image_file_id_fkey" FOREIGN KEY ("image_file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1675,13 +1663,13 @@ ALTER TABLE "project" ADD CONSTRAINT "project_image_file_id_fkey" FOREIGN KEY ("
 ALTER TABLE "payment_record" ADD CONSTRAINT "payment_record_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "report" ADD CONSTRAINT "report_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "report" ADD CONSTRAINT "report_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "report" ADD CONSTRAINT "report_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "subscription" ADD CONSTRAINT "subscription_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "subscription" ADD CONSTRAINT "subscription_plan_id_fkey" FOREIGN KEY ("plan_id") REFERENCES "plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1717,22 +1705,22 @@ ALTER TABLE "user_setting" ADD CONSTRAINT "user_setting_country_id_fkey" FOREIGN
 ALTER TABLE "user_role" ADD CONSTRAINT "user_role_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_todo_account_book" ADD CONSTRAINT "user_todo_account_book_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_todo_company" ADD CONSTRAINT "user_todo_company_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_todo_account_book" ADD CONSTRAINT "user_todo_account_book_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_todo_company" ADD CONSTRAINT "user_todo_company_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_todo_account_book" ADD CONSTRAINT "user_todo_account_book_todo_id_fkey" FOREIGN KEY ("todo_id") REFERENCES "todo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_todo_company" ADD CONSTRAINT "user_todo_company_todo_id_fkey" FOREIGN KEY ("todo_id") REFERENCES "todo"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "voucher" ADD CONSTRAINT "voucher_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "voucher" ADD CONSTRAINT "voucher_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "voucher" ADD CONSTRAINT "voucher_issuer_id_fkey" FOREIGN KEY ("issuer_id") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "voucher" ADD CONSTRAINT "voucher_counter_party_id_fkey" FOREIGN KEY ("counter_party_id") REFERENCES "counterparty"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "voucher" ADD CONSTRAINT "voucher_counter_party_id_fkey" FOREIGN KEY ("counter_party_id") REFERENCES "counterparty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "voucher_certificate" ADD CONSTRAINT "voucher_certificate_voucher_id_fkey" FOREIGN KEY ("voucher_id") REFERENCES "voucher"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1750,7 +1738,7 @@ ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_salary
 ALTER TABLE "voucher_salary_record" ADD CONSTRAINT "voucher_salary_record_voucher_salary_record_folder_id_fkey" FOREIGN KEY ("voucher_salary_record_folder_id") REFERENCES "voucher_salary_record_folder"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "voucher_salary_record_folder" ADD CONSTRAINT "voucher_salary_record_folder_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "value" ADD CONSTRAINT "value_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1813,7 +1801,7 @@ ALTER TABLE "team_invoice" ADD CONSTRAINT "team_invoice_team_order_id_fkey" FORE
 ALTER TABLE "team_invoice" ADD CONSTRAINT "team_invoice_team_payment_transaction_id_fkey" FOREIGN KEY ("team_payment_transaction_id") REFERENCES "team_payment_transaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_account_book_id_fkey" FOREIGN KEY ("account_book_id") REFERENCES "account_book"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "accountBook_transfer" ADD CONSTRAINT "accountBook_transfer_from_team_id_fkey" FOREIGN KEY ("from_team_id") REFERENCES "team"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1851,41 +1839,31 @@ ALTER TABLE "resume_certificate_skills" ADD CONSTRAINT "resume_certificate_skill
 -- AddForeignKey
 ALTER TABLE "resume_certificate_skills" ADD CONSTRAINT "resume_certificate_skills_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "file"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
-ALTER TABLE "external_user" ADD CONSTRAINT "external_user_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
 -- Alter Sequence to Start from 10000000
 ALTER SEQUENCE "account_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "accounting_setting_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "account_book_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "account_book_kyc_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "account_book_setting_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "accountBook_transfer_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "asset_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "asset_voucher_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "associate_line_item_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "associate_voucher_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "audit_report_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "authentication_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "certificate_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "contract_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "accounting_setting_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "associate_line_item_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "associate_voucher_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "counterparty_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "country_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "company_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "company_kyc_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "company_setting_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "contract_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "certificate_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "invoice_rc2_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "department_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "email_job_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "email_login_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "employee_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "employee_project_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "event_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "external_user_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "file_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "income_expense_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "invite_team_member_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "invoice_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "invoice_rc2_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "invoice_voucher_journal_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "job_posting_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "job_posting_detail_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "income_expense_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "journal_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "kyc_role_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "line_item_id_seq" RESTART WITH 10000000;
@@ -1893,43 +1871,50 @@ ALTER SEQUENCE "milestone_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "news_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "ocr_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "order_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "project_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "payment_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "payment_record_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "plan_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "project_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "report_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "resume_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "resume_certificate_skills_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "resume_education_experiences_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "resume_language_skills_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "resume_work_experiences_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "role_feature_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "subscription_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "sale_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "salary_record_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "salary_record_project_hour_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "sale_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "shortcut_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "subscription_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_invoice_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_member_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_order_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_order_detail_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_payment_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_payment_transaction_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_plan_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_plan_feature_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "team_subscription_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "todo_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "user_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "user_action_log_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "user_agreement_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "user_action_log_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "user_payment_info_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "user_role_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "user_setting_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "user_todo_account_book_id_seq" RESTART WITH 10000000;
-ALTER SEQUENCE "value_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "user_role_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "role_feature_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "user_todo_company_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "voucher_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "voucher_certificate_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "voucher_salary_record_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "voucher_salary_record_folder_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "value_id_seq" RESTART WITH 10000000;
 ALTER SEQUENCE "work_rate_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_plan_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_plan_feature_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "invite_team_member_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_member_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_subscription_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_order_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_order_detail_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_payment_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_payment_transaction_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "team_invoice_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "accountBook_transfer_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "email_job_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "email_login_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "notification_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "job_posting_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "job_posting_detail_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "resume_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "resume_education_experiences_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "resume_work_experiences_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "resume_language_skills_id_seq" RESTART WITH 10000000;
+ALTER SEQUENCE "resume_certificate_skills_id_seq" RESTART WITH 10000000;

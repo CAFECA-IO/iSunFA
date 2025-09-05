@@ -4,7 +4,6 @@
   "versionName": "RC1",
   "private": false,
   "type": "commonjs",
-  "packageManager": "npm@10.8.2",
   "scripts": {
     "dev": "next dev",
     "build": "npm run generate && next build",
@@ -28,9 +27,7 @@
     "retrieve-certificate": "ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"CommonJS\"}' scripts/retrieve_certificate.ts",
     "email:loop": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/cron_job/email.ts",
     "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/generate_signature.ts",
-    "clear_jest": "jest --clearCache",
-    "refresh": "rimraf .next node_modules && npm ci",
-    "typecheck": "tsc --noEmit"
+    "clear_jest": "jest --clearCache"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
@@ -58,7 +55,7 @@
     "jest-mock-extended": "^3.0.7",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "lodash-es": "^4.17.21",
     "mjml": "^4.15.3",
     "mustache": "^4.2.0",
@@ -137,8 +134,7 @@
     "postcss": "^8.4.32",
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
-    "prisma": "^5.21.1",
-    "rimraf": "^6.0.1",
+    "prisma": "^5.14.0",
     "supertest": "^7.1.1",
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.1.4",
@@ -152,11 +148,7 @@
     }
   },
   "engines": {
-    "node": ">=20.19.5"
-  },
-  "overrides": {
-    "typescript": "^5.9.2",
-    "@types/node": "^22.4.2"
+    "node": ">=18.17.1"
   },
   "prisma": {
     "seed": "ts-node  -r tsconfig-paths/register --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
