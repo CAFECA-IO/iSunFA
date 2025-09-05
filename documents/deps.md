@@ -8,6 +8,9 @@
 
 # **整體做法**
 
+<img width="900" height="1796" alt="image" src="https://github.com/user-attachments/assets/7249c652-2a3c-420c-add9-cf87b5dc5ae6" />
+
+
 - 將開發功能跟維護這兩種工作拆開，在依賴出錯時另外拉出 branch 進行維護工作，避免影響開發功能。
 
 1. **共享鎖檔 + 可重現安裝**：`package-lock.json` 入版控，CI/本機一律 `npm ci`。
