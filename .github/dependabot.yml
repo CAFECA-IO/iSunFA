@@ -7,6 +7,7 @@ updates:
       day: "friday"
       time: "09:00"
       timezone: "Asia/Taipei"
+    target-branch: "develop"
     open-pull-requests-limit: 5
     groups:
       typescript-core:
