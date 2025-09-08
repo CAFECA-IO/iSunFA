@@ -1,7 +1,7 @@
 {
   "name": "iSunFA",
-  "version": "0.11.1+3",
-  "versionName": "RC1",
+  "version": "0.11.2",
+  "versionName": "RC2",
   "private": false,
   "type": "commonjs",
   "packageManager": "npm@10.8.2",
