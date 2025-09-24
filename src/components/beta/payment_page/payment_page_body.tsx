@@ -4,6 +4,7 @@ import { PLANS } from '@/constants/subscription';
 import PlanInfo from '@/components/beta/payment_page/plan_info';
 import PaymentInfo from '@/components/beta/payment_page/payment_info';
 import CreditCardInfo from '@/components/beta/payment_page/credit_card_info';
+import ReferralCodeInput from '@/components/beta/payment_page/referral_code_input';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
@@ -196,6 +197,8 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
       <PlanInfo team={team} plan={plan} />
 
       <section className="flex flex-auto flex-col gap-lv-4 tablet:gap-24px">
+        <ReferralCodeInput />
+
         <PaymentInfo plan={plan} />
 
         <CreditCardInfo
