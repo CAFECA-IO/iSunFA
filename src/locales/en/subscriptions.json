@@ -156,9 +156,13 @@
     "TOAST_SUBSCRIPTION_SUCCESS": "You have successfully completed your subscription.",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "Subscription update error",
     "DOWNGRADED_TO_BEGINNER_PLAN": "Downgraded to Beginner plan",
+    "REFERRAL_CODE": "Referral Code",
+    "REFERRAL_CODE_PLACEHOLDER": "Enter referral code (optional)",
+    "MONTHLY_SUBSCRIPTION_ERROR_MESSAGE": "Invalid referral code",
     "MONTHLY_SUBSCRIPTION": "Monthly Subscription",
     "SUBTOTAL": "Subtotal",
     "TAX": "Tax",
+    "DISCOUNT": "Discount",
     "TOTAL_PRICE": "Total Price",
     "TOAST_GET_CREDIT_CARD_INFO_FAILED": "Credit card information failed to add, please try again.",
     "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "Credit card information added successfully!"
