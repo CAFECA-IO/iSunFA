@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCheckmarkCircleOutline, IoWarningOutline } from 'react-icons/io5';
 
-const ReferralCodeInput: React.FC = () => {
+interface IReferralCodeInputProps {
+  discountHandler: (amount: number) => void;
+}
+
+const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler }) => {
   const { t } = useTranslation(['subscriptions']);
 
   // Info: (20250924 - Julian) 推薦碼輸入框狀態
@@ -16,6 +20,7 @@ const ReferralCodeInput: React.FC = () => {
     // ToDo: (20250924 - Julian) 模擬推薦碼驗證
     const validCodes = ['DISCOUNT10', 'SAVE20', 'WELCOME5'];
     const isValid = validCodes.includes(value.toUpperCase());
+    discountHandler(isValid ? 199 : 0); // ToDo: (20250924 - Julian) 模擬折扣金額
     setIsReferralCodeValid(isValid);
   };
 

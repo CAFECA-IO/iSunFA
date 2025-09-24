@@ -42,6 +42,13 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
+  // Info: (20250924 - Julian) 折扣金額
+  const [discount, setDiscount] = useState<number>(0);
+
+  const discountHandler = (amount: number) => {
+    setDiscount(amount);
+  };
+
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
     setTeamForAutoRenewalOff(undefined);
@@ -197,9 +204,9 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
       <PlanInfo team={team} plan={plan} />
 
       <section className="flex flex-auto flex-col gap-lv-4 tablet:gap-24px">
-        <ReferralCodeInput />
+        <ReferralCodeInput discountHandler={discountHandler} />
 
-        <PaymentInfo plan={plan} />
+        <PaymentInfo plan={plan} discount={discount} />
 
         <CreditCardInfo
           team={team}

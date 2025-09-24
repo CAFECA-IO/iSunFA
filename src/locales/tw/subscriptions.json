@@ -162,6 +162,7 @@
     "MONTHLY_SUBSCRIPTION_ERROR_MESSAGE": "無效的推薦碼",
     "SUBTOTAL": "小計",
     "TAX": "稅金",
+    "DISCOUNT": "折扣",
     "TOTAL_PRICE": "總金額",
     "TOAST_GET_CREDIT_CARD_INFO_FAILED": "信用卡新增失敗，請再試一次",
     "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "信用卡新增成功！"

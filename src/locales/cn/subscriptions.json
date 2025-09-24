@@ -162,6 +162,7 @@
     "MONTHLY_SUBSCRIPTION": "每月订阅",
     "SUBTOTAL": "小计",
     "TAX": "税金",
+    "DISCOUNT": "折扣",
     "TOTAL_PRICE": "总金额",
     "TOAST_GET_CREDIT_CARD_INFO_FAILED": "信用卡新增失败，请再试一次",
     "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "信用卡新增成功！"
