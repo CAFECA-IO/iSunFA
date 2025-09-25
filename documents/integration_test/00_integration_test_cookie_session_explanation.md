@@ -116,7 +116,7 @@ curl -v -X POST \
 
 ```typescript
 const authResponse = await otpClient.post('/').send({ code: '555666' });
-console.log('Set-Cookie headers:', authResponse.headers['set-cookie']);
+// console.log('Set-Cookie headers:', authResponse.headers['set-cookie']);
 // 輸出: ['isunfa=abc123def...; Path=/; HttpOnly; SameSite=Lax']
 ```
 

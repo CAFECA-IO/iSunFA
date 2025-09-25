@@ -179,4 +179,5 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
 
   [APIName.GET_VACANCY_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_IMAGE]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_REFERRAL_CODE]: [AuthFunctionsKeysNew.user],
 };

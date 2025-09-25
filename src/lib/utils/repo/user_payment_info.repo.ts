@@ -32,6 +32,7 @@ export const PaymentQuerySchema = z.object({
 export const PaymentBodySchema = z.object({
   teamPlanType: z.nativeEnum(TPlanType),
   teamId: z.number(),
+  referralCode: z.string().optional(),
 });
 
 // Info: (20250218 - tzuhan) 已綁定信用卡資訊，具備 user_payment_info id
