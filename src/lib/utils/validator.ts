@@ -68,8 +68,6 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
       errorType: 'Validate and format data by zod failed',
       errorMessage: JSON.stringify(errorOption),
     });
-    // eslint-disable-next-line no-console
-    console.error(error);
     throw new ApiValidationError(`Data validation failed`, errorOption);
   }
 }
@@ -80,13 +78,6 @@ export function validateRequestData<T extends APIName>(
 ): { query: query<T>; body: body<T> } {
   const { input } = ZOD_SCHEMA_API[apiName];
   const { querySchema, bodySchema } = input;
-
-  // eslint-disable-next-line no-console
-  // console.log('Validating request data for API:', apiName);
-  // eslint-disable-next-line no-console
-  // console.log(req.query);
-  // eslint-disable-next-line no-console
-  // console.log(req.body);
 
   /**
    * ToDo: (20250925 - Luphia) Error Handling Issue
