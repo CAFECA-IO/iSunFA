@@ -3,9 +3,10 @@ import { useTranslation } from 'next-i18next';
 
 interface PaymentInfoProps {
   plan: IPlan | undefined;
+  discount?: number;
 }
 
-const PaymentInfo = ({ plan }: PaymentInfoProps) => {
+const PaymentInfo = ({ plan, discount }: PaymentInfoProps) => {
   const { t } = useTranslation(['subscriptions']);
   if (!plan) {
     return (
@@ -15,8 +16,11 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
     );
   }
 
+  const isShowDiscount = discount && discount > 0;
+
   const tax = 0;
-  const totalPrice = plan.price + tax;
+  const totalPrice = plan.price + tax - (discount ?? 0);
+
   return (
     <section className="flex flex-col gap-lv-4 rounded-md bg-surface-neutral-surface-lv2 px-lv-6 py-lv-5 shadow-Dropshadow_XS">
       <p className="flex flex-wrap items-center justify-between gap-8px">
@@ -41,6 +45,17 @@ const PaymentInfo = ({ plan }: PaymentInfoProps) => {
         </span>
         <span className="text-xl font-bold leading-8 text-text-neutral-tertiary">{`$ ${tax.toLocaleString('zh-TW')} NTD`}</span>
       </p>
+
+      <div
+        className={`${isShowDiscount ? 'grid-rows-1' : 'grid-rows-0'} grid grid-cols-1 overflow-hidden transition-all duration-300 ease-in-out`}
+      >
+        <p className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-text-neutral-tertiary tablet:text-lg">
+            {t('subscriptions:PAYMENT_PAGE.DISCOUNT')}
+          </span>
+          <span className="text-xl font-bold leading-8 text-text-state-error">{`$ -${discount?.toLocaleString('zh-TW')} NTD`}</span>
+        </p>
+      </div>
 
       <div className="h-1px bg-divider-stroke-lv-4"></div>
 
