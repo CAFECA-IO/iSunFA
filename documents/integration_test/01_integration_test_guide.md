@@ -627,7 +627,7 @@ const teamData = expectValidationSuccess(APIName.LIST_TEAM, response.body.payloa
 ```typescript
 if (process.env.DEBUG_TESTS === 'true') {
   // eslint-disable-next-line no-console
-  // console.log('✅ Validation successful:', outputData);
+  console.log('✅ Validation successful:', outputData);
 }
 ```
 
