@@ -150,7 +150,8 @@ export type IAPIName =
   | 'LIST_BAIFA_ACCOUNT_BOOK'
   | 'LIST_BAIFA_VOUCHER'
   | 'GET_VACANCY_BY_ID'
-  | 'GET_IMAGE';
+  | 'GET_IMAGE'
+  | 'GET_REFERRAL_CODE';
 
 export type IHttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 
