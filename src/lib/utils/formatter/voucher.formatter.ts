@@ -31,7 +31,7 @@ export function parsePrismaVoucherToVoucherEntity(dto: PrismaVoucher): IVoucherE
     throw new FormatterError('VoucherEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 
