@@ -20,7 +20,7 @@ export function parsePrismaFileToFileEntity(
     throw new FormatterError('FileEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 
