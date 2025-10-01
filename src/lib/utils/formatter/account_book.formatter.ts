@@ -51,7 +51,7 @@ export function parsePrismaAccountBookToAccountBookEntity(
     throw new FormatterError('AccountBookEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
   return data;
