@@ -1,6 +1,7 @@
 type ISalaryCalculatorOptions = {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
+  job?: number; // Info: (20250727 - Luphia) 行業別代碼，預設 41 電腦程式設計、諮詢及相關服務業、資訊服務業
   employeeStartDate?: number; // Info: (20250727 - Luphia) 員工入職日期
   employeeEndDate?: number; // Info: (20250727 - Luphia) 員工離職日期
   baseSalaryTaxable: number; // Info: (20250727 - Luphia) 當月應稅基本工資（本薪）
@@ -63,6 +64,7 @@ type ISalaryCalculatorResult = {
   companyBurdenLaborInsurance: number; // Info: (20270727 - Luphia) 公司負擔勞保費
   companyBurdenHealthInsurance: number; // Info: (20270727 - Luphia) 公司負擔健保費
   companyBurdenPensionInsurance: number; // Info: (20270727 - Luphia) 公司負擔退休金
+  companyBurdenOccupationalAccidentInsurance: number; // Info: (20270727 - Luphia) 公司負擔職災保險
   totalCompanyBurden: number; // Info: (20270727 - Luphia) 公司負擔勞健退
 };
 
