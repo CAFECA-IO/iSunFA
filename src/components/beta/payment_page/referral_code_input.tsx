@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
 import { IoCheckmarkCircleOutline, IoWarningOutline } from 'react-icons/io5';
+import APIHandler from '@/lib/utils/api_handler';
+import { APIName } from '@/constants/api_connection';
+import { IDiscount } from '@/interfaces/discount';
 
 interface IReferralCodeInputProps {
-  discountHandler: (amount: number) => void;
+  discountHandler: (discount: IDiscount) => void;
 }
 
 const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler }) => {
@@ -12,20 +15,65 @@ const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler 
   // Info: (20250924 - Julian) 推薦碼輸入框狀態
   const [referralCodeInput, setReferralCodeInput] = useState<string>('');
   const [isReferralCodeValid, setIsReferralCodeValid] = useState<boolean>(false);
+  // Info: (20251002 - Julian) 用來呼叫 API 的值
+  const [debouncedCode, setDebouncedCode] = useState<string>('');
 
-  const changeReferralCodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    setReferralCodeInput(value);
+  const { trigger: getReferralCode } = APIHandler<{
+    userId: number;
+    code: string;
+    discountPercentage: number;
+    discountAmount: number;
+  }>(APIName.GET_REFERRAL_CODE);
 
-    // ToDo: (20250924 - Julian) 模擬推薦碼驗證
-    const validCodes = ['DISCOUNT10', 'SAVE20', 'WELCOME5'];
-    const isValid = validCodes.includes(value.toUpperCase());
-    discountHandler(isValid ? 199 : 0); // ToDo: (20250924 - Julian) 模擬折扣金額
-    setIsReferralCodeValid(isValid);
+  const verifyReferralCode = async (code: string) => {
+    try {
+      const response = await getReferralCode({ params: { code } });
+      if (response && response.success && response.data && response.data.userId !== 0) {
+        const discount = {
+          discountAmount: response.data.discountAmount,
+          discountPercentage: response.data.discountPercentage,
+        };
+        discountHandler(discount);
+        setIsReferralCodeValid(true);
+      } else {
+        discountHandler({ discountAmount: 0, discountPercentage: 0 });
+        setIsReferralCodeValid(false);
+      }
+    } catch (error) {
+      discountHandler({ discountAmount: 0, discountPercentage: 0 });
+      setIsReferralCodeValid(false);
+    }
   };
 
-  const isShowError = referralCodeInput.length > 0 && isReferralCodeValid === false;
-  const isShowPass = referralCodeInput.length > 0 && isReferralCodeValid === true;
+  useEffect(() => {
+    // Info: (20251002 - Julian) 延遲 500ms 後再更新
+    const handler = setTimeout(() => {
+      setDebouncedCode(referralCodeInput);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler); // Info: (20251002 - Julian) 清除計時器
+    };
+  }, [referralCodeInput]);
+
+  useEffect(() => {
+    if (debouncedCode !== '') {
+      // Info: (20251002 - Julian) 轉成大寫後再呼叫 API
+      const upperValue = debouncedCode.toUpperCase();
+      verifyReferralCode(upperValue);
+    } else {
+      // Info: (20251002 - Julian) 如果輸入框是空的，重置狀態
+      discountHandler({ discountAmount: 0, discountPercentage: 0 });
+      setIsReferralCodeValid(false);
+    }
+  }, [debouncedCode]);
+
+  const changeReferralCodeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReferralCodeInput(e.target.value);
+  };
+
+  const isShowError = referralCodeInput !== '' && isReferralCodeValid === false;
+  const isShowPass = referralCodeInput !== '' && isReferralCodeValid === true;
 
   const borderStyle = isShowError
     ? 'border-input-stroke-error'

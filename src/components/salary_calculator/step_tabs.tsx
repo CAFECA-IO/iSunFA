@@ -4,7 +4,7 @@ import { FaCircleCheck } from 'react-icons/fa6';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { MessageType } from '@/interfaces/message_modal';
-import { MIN_BASE_SALARY } from '@/constants/salary_calculator';
+import { getMinimumWage } from '@/lib/utils/salary_calculator';
 
 const StepTabs: React.FC = () => {
   const { t } = useTranslation(['calculator', 'common']);
@@ -15,9 +15,26 @@ const StepTabs: React.FC = () => {
     t('calculator:TABS.OTHERS'),
   ];
 
-  const { currentStep, completeSteps, switchStep, employeeName, baseSalary, setIsNameError } =
-    useCalculatorCtx();
+  const {
+    currentStep,
+    completeSteps,
+    switchStep,
+    employeeName,
+    baseSalary,
+    mealAllowance,
+    otherAllowanceWithTax,
+    otherAllowanceWithoutTax,
+    setIsNameError,
+  } = useCalculatorCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
+
+  // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
+  const thisYear = new Date().getFullYear();
+  const minBasicSalary = getMinimumWage(thisYear);
+
+  // Info: (20251002 - Julian) 本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）應大於等於最低基本薪資
+  const wage = baseSalary + mealAllowance + otherAllowanceWithTax + otherAllowanceWithoutTax;
+  const isWageError = wage < minBasicSalary;
 
   const tabs = steps.map((step, index) => {
     const isActive = currentStep === index + 1;
@@ -48,8 +65,8 @@ const StepTabs: React.FC = () => {
           break;
         case 2:
           // Info: (20250714 - Julian) 第二步（基本薪資）的檢查條件
-          if (baseSalary < MIN_BASE_SALARY) {
-            // Info: (20250714 - Julian) 如果基本薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
+          if (isWageError) {
+            // Info: (20250714 - Julian) 如果薪資小於最小值，則不允許切換到下一步，且顯示錯誤訊息
             messageModalDataHandler({
               messageType: MessageType.ERROR,
               title: t('calculator:MESSAGE.SALARY_ERROR_TITLE'),
