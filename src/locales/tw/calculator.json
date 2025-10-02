@@ -155,8 +155,8 @@
   "MESSAGE": {
     "NAME_ERROR_TITLE": "員工姓名未填寫",
     "NAME_ERROR_CONTENT": "請在前往下一步之前輸入員工姓名",
-    "SALARY_ERROR_TITLE": "本薪未填寫",
-    "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。",
+    "SALARY_ERROR_TITLE": "薪資輸入有誤",
+    "SALARY_ERROR_CONTENT": "本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）必須高於或等於最低工資。",
     "REMOVE_EMPLOYEE_TITLE": "移除員工",
     "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
     "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。",

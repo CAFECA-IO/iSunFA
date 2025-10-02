@@ -393,4 +393,4 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   return result;
 };
 
-export { salaryCalculator };
+export { salaryCalculator, getMinimumWage };
