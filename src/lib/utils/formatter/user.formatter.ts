@@ -50,7 +50,7 @@ export function parsePrismaUserToUserEntity(dto: PrismaUser): IUserEntity {
     throw new FormatterError('UserEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 

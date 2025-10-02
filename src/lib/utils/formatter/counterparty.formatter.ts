@@ -21,7 +21,7 @@ export function parsePrismaCounterPartyToCounterPartyEntity(
     throw new FormatterError('CounterPartyEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 
@@ -42,7 +42,7 @@ export function parsePartialPrismaCounterPartyToCounterPartyEntity(
     throw new FormatterError('CounterPartyEntityPartial format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 

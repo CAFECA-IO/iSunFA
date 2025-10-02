@@ -70,7 +70,7 @@ export function parsePrismaAccountToAccountEntity(dto: PrismaAccount): IAccountE
     throw new FormatterError('AccountEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 

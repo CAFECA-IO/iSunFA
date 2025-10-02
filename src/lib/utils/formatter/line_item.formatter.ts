@@ -16,7 +16,7 @@ export function parsePrismaLineItemToLineItemEntity(dto: PrismaLineItem): ILineI
     throw new FormatterError('LineItemEntity format prisma data error', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 

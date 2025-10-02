@@ -63,8 +63,10 @@ export const handlePostRequest = async (req: NextApiRequest) => {
   try {
     // Info: (20250218 - tzuhan) 驗證 URL 參數
     const { userId, paymentMethodId } = PaymentQuerySchema.parse(req.query);
-    //  Info: (20250218 - tzuhan) 驗證請求 Body
-    const { teamPlanType, teamId } = PaymentBodySchema.parse(req.body);
+    // Info: (20250218 - tzuhan) 驗證請求 Body
+    // ToDo: (20250331 - Luphia) 新增 referralCode 驗證
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { teamPlanType, teamId, referralCode } = PaymentBodySchema.parse(req.body);
 
     // ToDo: (20250331 - Luphia) 檢驗用戶是否屬於該團隊，避免替不相干團隊付費訂閱
 
