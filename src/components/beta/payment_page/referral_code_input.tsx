@@ -3,9 +3,10 @@ import { useTranslation } from 'next-i18next';
 import { IoCheckmarkCircleOutline, IoWarningOutline } from 'react-icons/io5';
 import APIHandler from '@/lib/utils/api_handler';
 import { APIName } from '@/constants/api_connection';
+import { IDiscount } from '@/interfaces/discount';
 
 interface IReferralCodeInputProps {
-  discountHandler: (amount: number) => void;
+  discountHandler: (discount: IDiscount) => void;
 }
 
 const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler }) => {
@@ -28,14 +29,18 @@ const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler 
     try {
       const response = await getReferralCode({ params: { code } });
       if (response && response.success && response.data && response.data.userId !== 0) {
-        discountHandler(response.data.discountAmount);
+        const discount = {
+          discountAmount: response.data.discountAmount,
+          discountPercentage: response.data.discountPercentage,
+        };
+        discountHandler(discount);
         setIsReferralCodeValid(true);
       } else {
-        discountHandler(0);
+        discountHandler({ discountAmount: 0, discountPercentage: 0 });
         setIsReferralCodeValid(false);
       }
     } catch (error) {
-      discountHandler(0);
+      discountHandler({ discountAmount: 0, discountPercentage: 0 });
       setIsReferralCodeValid(false);
     }
   };

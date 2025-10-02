@@ -17,6 +17,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { IDiscount } from '@/interfaces/discount';
 
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
@@ -42,11 +43,13 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
 
-  // Info: (20250924 - Julian) 折扣金額
-  const [discount, setDiscount] = useState<number>(0);
+  // Info: (20251002 - Julian) 折扣
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
 
-  const discountHandler = (amount: number) => {
-    setDiscount(amount);
+  const discountHandler = (discount: IDiscount) => {
+    setDiscountAmount(discount.discountAmount);
+    setDiscountPercentage(discount.discountPercentage);
   };
 
   const closeAutoRenewalModal = () => {
@@ -206,7 +209,7 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
       <section className="flex flex-auto flex-col gap-lv-4 tablet:gap-24px">
         <ReferralCodeInput discountHandler={discountHandler} />
 
-        <PaymentInfo plan={plan} discount={discount} />
+        <PaymentInfo plan={plan} discount={{ discountAmount, discountPercentage }} />
 
         <CreditCardInfo
           team={team}
