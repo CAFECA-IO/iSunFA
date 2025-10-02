@@ -61,6 +61,10 @@ const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler 
       // Info: (20251002 - Julian) 轉成大寫後再呼叫 API
       const upperValue = debouncedCode.toUpperCase();
       verifyReferralCode(upperValue);
+    } else {
+      // Info: (20251002 - Julian) 如果輸入框是空的，重置狀態
+      discountHandler({ discountAmount: 0, discountPercentage: 0 });
+      setIsReferralCodeValid(false);
     }
   }, [debouncedCode]);
 
