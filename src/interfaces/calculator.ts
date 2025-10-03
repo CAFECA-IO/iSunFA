@@ -41,6 +41,7 @@ export interface IEmployerContribution {
   employerPaidLaborInsurance: number; // Info: (20250710 - Julian) 公司負擔勞保費
   employerPaidHealthInsurance: number; // Info: (20250710 - Julian) 公司負擔健保費
   employerPaidPensionContribution: number; // Info: (20250710 - Julian) 公司負擔退休金
+  companyBurdenOccupationalAccidentInsurance: number; // Info: (20251003 - Julian) 公司負擔職災保險
   totalEmployerCost: number; // Info: (20250710 - Julian) 雇主總負擔
 }
 
@@ -89,6 +90,7 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     employerPaidLaborInsurance: 0,
     employerPaidHealthInsurance: 0,
     employerPaidPensionContribution: 0,
+    companyBurdenOccupationalAccidentInsurance: 0,
     totalEmployerCost: 0,
   },
   totalSalary: 0,
