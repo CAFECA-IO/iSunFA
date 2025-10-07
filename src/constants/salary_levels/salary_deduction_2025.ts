@@ -842,7 +842,7 @@ const salaryData = `
 `;
 
 // Info: (20250825 - Luphia) 整理為 [[80001, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ...]
-const data = salaryData
+const DATA = salaryData
   .trim()
   .split('\n')
   .map((line: string) => {
@@ -855,8 +855,8 @@ const data = salaryData
   });
 
 const SALARY_DEDUCTION_2025 = {
-  year: 2025,
-  data,
+  YEAR: 2025,
+  DATA,
 };
 
 export { SALARY_DEDUCTION_2025 };
