@@ -1,9 +1,8 @@
 import {
-  ISalaryLevel,
-  SALARY_LEVELS,
-  ISalaryDeduction,
+  SalaryDeduction,
   SALARY_DEDUCTIONS,
-  IOccupationalAccidentInsuranceRate,
+  InsuranceParameters,
+  INSURANCE_PARAMETERS,
   OCCUPATIONAL_ACCIDENT_INSURANCE_RATE,
 } from '@/constants/salary_levels';
 import {
@@ -12,56 +11,84 @@ import {
   ISalaryCalculatorResult,
 } from '@/interfaces/salary_calculator';
 
-const getSalaryLevelsByYear = (year: number): ISalaryLevel[] => {
-  const salaryLevels = SALARY_LEVELS.find((level) => level.year <= year);
-  if (!salaryLevels) {
-    // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
-    throw new Error(`No salary levels found for year ${year}`);
+const getInsuranceParametersByYear = (year: number): InsuranceParameters => {
+  const insuranceParameters = INSURANCE_PARAMETERS.find((params) => params.YEAR === year);
+  if (!insuranceParameters) {
+    // ToDo: (20250727 - Luphia) Defined ErrorCode and ErrorMessage
+    throw new Error(`No insurance parameters found for year ${year}`);
   }
-  return salaryLevels.data;
-};
-
-const getSalaryLevel = (options: IGetSalaryLevelOptions) => {
-  const { year, salary } = options;
-  const salaryLevels = getSalaryLevelsByYear(year);
-  let salaryLevel = salaryLevels.find((level) => level.salary >= salary);
-  // Info: (20250727 - Luphia) 如果薪資超過最大級距，則使用最大級距
-  if (salary > salaryLevels[salaryLevels.length - 1].salary) {
-    salaryLevel = salaryLevels[salaryLevels.length - 1];
-  }
-  if (!salaryLevel) {
-    // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
-    throw new Error(`No salary level found for year ${year} and salary ${salary}`);
-  }
-  return salaryLevel;
+  const { DATA } = insuranceParameters;
+  return DATA;
 };
 
 const getMinimumWage = (year: number): number => {
-  // Info: (20250825 - Luphia) 1 元健保級距即為最低薪資
-  const salaryLevels = getSalaryLevel({ year, salary: 1 });
-  return salaryLevels.healthInsurance.salary;
+  const insuranceParameters = getInsuranceParametersByYear(year);
+  const minimumWage = insuranceParameters.MINIMUM_WAGE;
+  return minimumWage;
 };
 
-const getSalaryDeductionsByYear = (year: number): ISalaryDeduction[] => {
-  const salaryDeduction = SALARY_DEDUCTIONS.find((deduction) => deduction.year === year);
+/**
+ * Info: (20251003 - Luphia) 薪資級距公式說明
+ * 從 InsuranceParameters 取得參數，包含級距與最高最低薪資
+ * 若薪資低於最低薪資，則級距為最低薪資
+ * 若薪資高於最高薪資，則級距為最高薪資
+ * 其他情況從大於等於薪資的級距中取最小值作為薪資級距
+ * 需注意不同保險最高薪資與最低薪資不同，故不同保險的薪資級距不一定相同
+ */
+export const getSalaryLevel = (options: IGetSalaryLevelOptions) => {
+  const { salary, year } = options;
+  const insuranceParameters = getInsuranceParametersByYear(year);
+
+  const {
+    MINIMUM_WAGE: minimumWage,
+    MAX_LABOR_INSURANCE_WAGE: maxLaborInsuranceWage,
+    MAX_HEALTH_INSURANCE_WAGE: maxHealthInsuranceWage,
+    MAX_ACCIDENT_INSURANCE_WAGE: maxAccidentInsuranceWage,
+    MAX_PENSION_INSURANCE_WAGE: maxPensionInsuranceWage,
+    MAX_EMPLOYMENT_INSURANCE_WAGE: maxEmploymentInsuranceWage,
+    SALARY_LEVELS: salaryLevels,
+  } = insuranceParameters;
+  let level: number;
+
+  // Info: (20251009 - Luphia) 若薪資低於最低薪資，則級距為最低薪資
+  if (salary <= minimumWage) level = minimumWage;
+  else {
+    // Info: (20251009 - Luphia) 其他情況從大於等於薪資的級距中取最小值作為薪資級距
+    level =
+      Math.min(...salaryLevels.filter((data) => data >= salary)) ??
+      salaryLevels[salaryLevels.length - 1];
+  }
+  const salaryLevel = {
+    laborInsuranceLevel: level > maxLaborInsuranceWage ? maxLaborInsuranceWage : level,
+    healthInsuranceLevel: level > maxHealthInsuranceWage ? maxHealthInsuranceWage : level,
+    accidentInsuranceLevel: level > maxAccidentInsuranceWage ? maxAccidentInsuranceWage : level,
+    pensionInsuranceLevel: level > maxPensionInsuranceWage ? maxPensionInsuranceWage : level,
+    employmentInsuranceLevel:
+      level > maxEmploymentInsuranceWage ? maxEmploymentInsuranceWage : level,
+  };
+  return salaryLevel;
+};
+
+const getSalaryDeductionsByYear = (year: number): SalaryDeduction[] => {
+  const salaryDeduction = SALARY_DEDUCTIONS.find((deduction) => deduction.YEAR === year);
   if (!salaryDeduction) {
     // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
     throw new Error(`No salary deduction found for year ${year}`);
   }
-  return salaryDeduction.data;
+  return salaryDeduction.DATA;
 };
 
-const getOccupationalAccidentInsuranceRatesByYearJob = (
-  year: number
-): IOccupationalAccidentInsuranceRate[] => {
+const getOccupationalAccidentInsuranceRatesByYearJob = (year: number, job = 41): number => {
   const occupationalAccidentInsuranceRates = OCCUPATIONAL_ACCIDENT_INSURANCE_RATE.find(
-    (rate) => rate.year === year
+    (rate) => rate.YEAR === year
   );
   if (!occupationalAccidentInsuranceRates) {
     // ToDo: (20250727 - Luphia) 定義 ErrorCode 與 ErrorMessage
     throw new Error(`No occupational accident insurance rates found for year ${year}`);
   }
-  return occupationalAccidentInsuranceRates.data;
+  const rateRaw = occupationalAccidentInsuranceRates.DATA[job - 1];
+  const rate = rateRaw.INDUSTRY + rateRaw.COMMUTING;
+  return rate;
 };
 
 const getOccupationalAccidentInsuranceFeeByYearSalaryJob = (
@@ -69,12 +96,14 @@ const getOccupationalAccidentInsuranceFeeByYearSalaryJob = (
   salary: number,
   job = 41
 ): number => {
-  const occupationalAccidentInsuranceRates = getOccupationalAccidentInsuranceRatesByYearJob(year);
-  const rate = occupationalAccidentInsuranceRates[job - 1];
+  const occupationalAccidentInsuranceRate = getOccupationalAccidentInsuranceRatesByYearJob(
+    year,
+    job
+  );
   const salaryLevel = getSalaryLevel({ year, salary });
-  const baseSalary = salaryLevel.accidentInsurance.salary;
+  const baseSalary = salaryLevel.accidentInsuranceLevel;
   const occupationalAccidentInsuranceFee = Math.round(
-    baseSalary * (rate.industry + rate.commuting)
+    baseSalary * occupationalAccidentInsuranceRate
   );
   return occupationalAccidentInsuranceFee;
 };
@@ -85,7 +114,7 @@ const getForeignEmployeeBurdenIncomeTax = (year: number, salary: number): number
    * 2. 外籍人士薪資大於等於 1.5 倍最低薪資，預扣 18%
    * 3. 採四捨五入計算
    */
-  const minimumWage = getMinimumWage(year);
+  const { MINIMUM_WAGE: minimumWage } = getInsuranceParametersByYear(year);
   const employeeBurdenIncomeTax =
     salary < minimumWage * 1.5 ? Math.round(salary * 0.06) : Math.round(salary * 0.18);
   return employeeBurdenIncomeTax;
@@ -221,6 +250,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
 
   // Info: (20250814 - Luphia) 計算約定月薪
   const baseSalary = baseSalaryTaxable + baseSalaryTaxFree;
+  const insuredSalary = baseSalary;
 
   // Info: (20250814 - Luphia) 計算當月基礎薪資
   const baseSalaryTaxablePay = Math.ceil(baseSalaryTaxable * baseSalaryRatio);
@@ -228,15 +258,21 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
 
   // Info: (20250727 - Luphia) 計算勞保、健保、勞退費用
   const salaryLevel = getSalaryLevel({ year, salary: baseSalary });
-  const healthInsuranceLevel = salaryLevel.healthInsurance.salary;
-  const laborInsuranceLevel = salaryLevel.laborInsurance.salary;
-  const employmentInsuranceLevel = salaryLevel.salary;
-  const occupationalDisasterInsuranceLevel = salaryLevel.accidentInsurance.salary;
-  const pensionInsuranceLevel = salaryLevel.pensionInsurance.salary;
-  const insuredSalary = baseSalary;
-
-  // ToDo: (20250727 - Luphia) 定義職災行業別費率
-  const occupationalDisasterIndustryRate = 0;
+  const {
+    laborInsuranceLevel,
+    healthInsuranceLevel,
+    accidentInsuranceLevel: occupationalDisasterInsuranceLevel,
+    pensionInsuranceLevel,
+    employmentInsuranceLevel,
+  } = salaryLevel;
+  const insuranceParameters = getInsuranceParametersByYear(year);
+  const {
+    LABOR_INSURANCE_RATE: laborInsuranceRate,
+    HEALTH_INSURANCE_RATE: healthInsuranceRate,
+    EMPLOYMENT_INSURANCE_RATE: employmentInsuranceRate,
+    PENSION_INSURANCE_RATE: pensionInsuranceRate,
+    INSURANCE_BURDEN: insuranceBurden,
+  } = insuranceParameters;
 
   // Info: (20250727 - Luphia) 計算當月總日數
   const daysInMonth = isUsing30DaysSystem ? 30 : new Date(year, month, 0).getDate();
@@ -306,16 +342,39 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     : getEmployeeBurdenIncomeTax(year, totalSalary, dependentsCount);
 
   // Info: (20250727 - Luphia) 計算公司負擔
-  // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
+  // Info: (20251009 - Luphia) 若員工記薪結束日不是月底則不需要保健保，需乘上 (1 + 平均扶養人數)
   const companyBurdenHealthInsurance =
     isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
-      ? salaryLevel.healthInsurance.company
+      ? Math.round(
+          salaryLevel.healthInsuranceLevel *
+            healthInsuranceRate *
+            (1 + insuranceParameters.AVERAGE_DEPENDENTS) *
+            insuranceBurden.HEALTH_INSURANCE.COMPANY
+        )
       : 0;
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保，採四捨五入
+  // Info: (20251009 - Luphia) 按照到職日數比例計算勞保，採四捨五入
   const companyBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? Math.round(salaryLevel.laborInsurance.company * baseSalaryRatio)
+    ? Math.round(
+        salaryLevel.laborInsuranceLevel *
+          laborInsuranceRate *
+          insuranceBurden.LABOR_INSURANCE.COMPANY *
+          baseSalaryRatio
+      )
     : 0;
-  // Info: (20250727 - Luphia) 按著到職日數比例計算職災保險，採四捨五入
+  // Info: (20251009 - Luphia) 按照到職日數比例計算就保，採四捨五入
+  const companyBurdenEmploymentInsurance = isLaborInsuranceEnrolled
+    ? Math.round(
+        salaryLevel.employmentInsuranceLevel *
+          employmentInsuranceRate *
+          insuranceBurden.EMPLOYMENT_INSURANCE.COMPANY *
+          baseSalaryRatio
+      )
+    : 0;
+  // Info: (20251009 - Luphia) 按著到職日數比例計算職災保險，採四捨五入
+  const occupationalDisasterIndustryRate = getOccupationalAccidentInsuranceRatesByYearJob(
+    year,
+    job
+  );
   const baseOccupationalAccidentInsuranceFee = getOccupationalAccidentInsuranceFeeByYearSalaryJob(
     year,
     baseSalary,
@@ -324,37 +383,63 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   const companyBurdenOccupationalAccidentInsurance = isLaborInsuranceEnrolled
     ? Math.round(baseOccupationalAccidentInsuranceFee * baseSalaryRatio)
     : 0;
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞退，採四捨五入
+  // Info: (20251009 - Luphia) 按照到職日數比例計算勞退，採四捨五入
   const companyBurdenPensionInsurance = isPensionInsuranceEnrolled
-    ? Math.round(salaryLevel.pensionInsurance.company * baseSalaryRatio)
+    ? Math.round(
+        salaryLevel.pensionInsuranceLevel *
+          pensionInsuranceRate *
+          insuranceBurden.PENSION_INSURANCE.COMPANY *
+          baseSalaryRatio
+      )
     : 0;
   const totalCompanyBurden =
     companyBurdenHealthInsurance +
     companyBurdenLaborInsurance +
+    companyBurdenEmploymentInsurance +
     companyBurdenPensionInsurance +
     companyBurdenOccupationalAccidentInsurance;
 
   // Info: (20250727 - Luphia) 計算員工負擔與扣項
-  // Info: (20250815 - Luphia) 按照到職日數比例計算勞保，採四捨五入
+  // Info: (20251009 - Luphia) 按照到職日數比例計算勞保，採四捨五入
   const employeeBurdenLaborInsurance = isLaborInsuranceEnrolled
-    ? Math.floor(salaryLevel.laborInsurance.employee * baseSalaryRatio)
+    ? Math.round(
+        salaryLevel.laborInsuranceLevel *
+          laborInsuranceRate *
+          insuranceBurden.LABOR_INSURANCE.EMPLOYEE *
+          baseSalaryRatio
+      )
     : 0;
-  // Info: (20250815 - Luphia) 若員工記薪結束日不是月底則不需要保健保
+  // Info: (20251009 - Luphia) 按照到職日數比例計算就保，採四捨五入
+  const employeeBurdenEmploymentInsurance = isLaborInsuranceEnrolled
+    ? Math.round(
+        salaryLevel.employmentInsuranceLevel *
+          employmentInsuranceRate *
+          insuranceBurden.EMPLOYMENT_INSURANCE.EMPLOYEE *
+          baseSalaryRatio
+      )
+    : 0;
+  // Info: (20251009 - Luphia) 若員工記薪結束日不是月底則不需要保健保
   const employeeBurdenHealthInsurance =
     isHealthInsuranceEnrolled && employeeEndDateRaw === realDaysInMonth
-      ? salaryLevel.healthInsurance.employee + employeeBurdenHealthInsurancePremiums
+      ? Math.round(
+          salaryLevel.healthInsuranceLevel *
+            healthInsuranceRate *
+            insuranceBurden.HEALTH_INSURANCE.EMPLOYEE +
+            employeeBurdenHealthInsurancePremiums
+        )
       : 0;
-  // Info: (20250815 - Luphia) 根據自負比例計算實際金額
+  // Info: (20251009 - Luphia) 根據自負比例計算勞退自負金額
   employeeBurdenPensionInsurance *= companyBurdenPensionInsurance / 0.06;
   const totalEmployeeBurden =
     employeeBurdenLaborInsurance +
+    employeeBurdenEmploymentInsurance +
     employeeBurdenHealthInsurance +
     employeeBurdenPensionInsurance +
     employeeBurdenIncomeTax +
     employeeBurdenSecondGenerationHealthInsurancePremiums +
     employeeBurdenOtherOverflowDeductions;
 
-  // Info: (20250727 - Luphia) 計算給付總額
+  // Info: (20251009 - Luphia) 計算給付總額
   const totalPayment = totalSalary - totalEmployeeBurden;
 
   const result: ISalaryCalculatorResult = {
@@ -376,19 +461,19 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     pensionInsuranceLevel, // Info: (20250727 - Luphia) 勞退級距
     occupationalDisasterIndustryRate, // Info: (20250727 - Luphia) 職災行業別費率
     insuredSalary, // Info: (20250727 - Luphia) 投保薪資
-    employeeBurdenLaborInsurance, // Info: (20250727 - Luphia) 員工負擔勞保費
-    employeeBurdenHealthInsurance, // Info: (20250727 - Luphia) 員工負擔健保費
-    employeeBurdenPensionInsurance, // Info: (20250727 - Luphia) 員工自願提繳退休金
-    employeeBurdenIncomeTax, // Info: (20250727 - Luphia) 代扣所得稅款
-    employeeBurdenSecondGenerationHealthInsurancePremiums, // Info: (20250727 - Luphia) 代扣二代健保費
-    employeeBurdenOtherOverflowDeductions, // Info: (20250727 - Luphia) 其他溢扣／補收
+    employeeBurdenLaborInsurance: employeeBurdenLaborInsurance + employeeBurdenEmploymentInsurance, // Info: (20251009 - Luphia) 員工負擔勞保費 + 就保費
+    employeeBurdenHealthInsurance, // Info: (20251009 - Luphia) 員工負擔健保費
+    employeeBurdenPensionInsurance, // Info: (20251009 - Luphia) 員工自願提繳退休金
+    employeeBurdenIncomeTax, // Info: (20251009 - Luphia) 代扣所得稅款
+    employeeBurdenSecondGenerationHealthInsurancePremiums, // Info: (20251009 - Luphia) 代扣二代健保費
+    employeeBurdenOtherOverflowDeductions, // Info: (20251009 - Luphia) 其他溢扣／補收
     leaveDeduction: leaveDeductionTaxable, // Info: (20250727 - Luphia) 請假扣薪
     totalEmployeeBurden, // Info: (20250727 - Luphia) 員工負擔總計
-    companyBurdenLaborInsurance, // Info: (20270727 - Luphia) 公司負擔勞保費
-    companyBurdenHealthInsurance, // Info: (20270727 - Luphia) 公司負擔健保費
-    companyBurdenPensionInsurance, // Info: (20270727 - Luphia) 公司負擔退休金
-    companyBurdenOccupationalAccidentInsurance, // Info: (20270727 - Luphia) 公司負擔職災保險
-    totalCompanyBurden, // Info: (20270727 - Luphia) 公司負擔勞健退
+    companyBurdenLaborInsurance: companyBurdenLaborInsurance + companyBurdenEmploymentInsurance, // Info: (20251009 - Luphia) 公司負擔勞保費 + 就保費
+    companyBurdenHealthInsurance, // Info: (20251009 - Luphia) 公司負擔健保費
+    companyBurdenPensionInsurance, // Info: (20251009 - Luphia) 公司負擔退休金
+    companyBurdenOccupationalAccidentInsurance, // Info: (20251009 - Luphia) 公司負擔職災保險
+    totalCompanyBurden, // Info: (20251009 - Luphia) 公司負擔勞健退
   };
   return result;
 };
