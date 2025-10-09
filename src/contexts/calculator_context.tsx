@@ -331,6 +331,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         employerPaidLaborInsurance: result.companyBurdenLaborInsurance,
         employerPaidHealthInsurance: result.companyBurdenHealthInsurance,
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,
+        companyBurdenOccupationalAccidentInsurance:
+          result.companyBurdenOccupationalAccidentInsurance,
         totalEmployerCost: result.totalCompanyBurden,
       },
     };

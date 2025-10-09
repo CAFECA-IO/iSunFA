@@ -66,6 +66,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       employerPaidLaborInsurance, // Info: (20250710 - Julian) 公司負擔勞保費
       employerPaidHealthInsurance, // Info: (20250710 - Julian) 公司負擔健保費
       employerPaidPensionContribution, // Info: (20250710 - Julian) 公司負擔退休金
+      companyBurdenOccupationalAccidentInsurance, // Info: (20251003 - Julian) 公司負擔職保費
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
     totalSalary, // Info: (20250710 - Julian) 實際發放金額
@@ -194,6 +195,10 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     {
       label: t('calculator:RESULT.EMPLOYER_PAID_PENSION_CONTRIBUTION'),
       value: employerPaidPensionContribution,
+    },
+    {
+      label: t('calculator:RESULT.COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE'),
+      value: companyBurdenOccupationalAccidentInsurance,
     },
     {
       label: t('calculator:RESULT.TOTAL_EMPLOYER_COST'),
