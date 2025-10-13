@@ -4,6 +4,7 @@ import { PLANS } from '@/constants/subscription';
 import PlanInfo from '@/components/beta/payment_page/plan_info';
 import PaymentInfo from '@/components/beta/payment_page/payment_info';
 import CreditCardInfo from '@/components/beta/payment_page/credit_card_info';
+import ReferralCodeInput from '@/components/beta/payment_page/referral_code_input';
 import MessageModal from '@/components/message_modal/message_modal';
 import { IMessageModal, MessageType } from '@/interfaces/message_modal';
 import { useTranslation } from 'next-i18next';
@@ -16,6 +17,7 @@ import { ToastType } from '@/interfaces/toastify';
 import { Button } from '@/components/button/button';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { ISUNFA_ROUTE } from '@/constants/url';
+import { IDiscount } from '@/interfaces/discount';
 
 interface PaymentPageBodyProps {
   team: IUserOwnedTeam;
@@ -40,6 +42,15 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
   // Info: (20250116 - Liz) 開啟或關閉自動續約的 Modal 狀態
   const [teamForAutoRenewalOn, setTeamForAutoRenewalOn] = useState<IUserOwnedTeam | undefined>();
   const [teamForAutoRenewalOff, setTeamForAutoRenewalOff] = useState<IUserOwnedTeam | undefined>();
+
+  // Info: (20251002 - Julian) 折扣
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0);
+
+  const discountHandler = (discount: IDiscount) => {
+    setDiscountAmount(discount.discountAmount);
+    setDiscountPercentage(discount.discountPercentage);
+  };
 
   const closeAutoRenewalModal = () => {
     setTeamForAutoRenewalOn(undefined);
@@ -196,7 +207,9 @@ const PaymentPageBody = ({ team, subscriptionPlan, getOwnedTeam }: PaymentPageBo
       <PlanInfo team={team} plan={plan} />
 
       <section className="flex flex-auto flex-col gap-lv-4 tablet:gap-24px">
-        <PaymentInfo plan={plan} />
+        <ReferralCodeInput discountHandler={discountHandler} />
+
+        <PaymentInfo plan={plan} discount={{ discountAmount, discountPercentage }} />
 
         <CreditCardInfo
           team={team}

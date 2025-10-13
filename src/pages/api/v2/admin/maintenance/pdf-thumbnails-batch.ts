@@ -413,7 +413,7 @@ async function processFilesSequentially(
     url: string;
     isEncrypted: boolean;
     encryptedSymmetricKey: string;
-    iv: Buffer;
+    iv: Uint8Array;
     certificate: {
       accountBookId: number;
       accountBook: {
@@ -461,6 +461,7 @@ async function processFilesSequentially(
       try {
         // Info: (20250529 - Shirley) 檢查檔案是否存在
         await fs.access(pdfPath);
+        const ivBuffer = Buffer.from(iv);
 
         // Info: (20250529 - Shirley) 處理此PDF檔案
         loggerBack.info(`[PDF_BATCH_THUMBNAIL] Processing PDF file: ${pdfPath}`);
@@ -470,7 +471,7 @@ async function processFilesSequentially(
           accountBookId,
           isEncrypted,
           encryptedSymmetricKey,
-          iv
+          ivBuffer
         );
 
         results.push({

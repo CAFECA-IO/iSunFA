@@ -149,6 +149,7 @@ import {
 } from '@/lib/utils/zod_schema/notification';
 import { listBaifaAccountBookSchema } from '@/lib/utils/zod_schema/baifa/account_book';
 import { listBaifaVoucherSchema } from '@/lib/utils/zod_schema/baifa/voucher';
+import { getReferralCodeSchema } from '@/lib/utils/zod_schema/referral_code';
 
 /*
  * Info: (20240909 - Murky) Record need to implement all the keys of the enum,
@@ -343,4 +344,5 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_BAIFA_ACCOUNT_BOOK]: listBaifaAccountBookSchema,
   [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
   [APIName.GET_VACANCY_BY_ID]: nullAPISchema, // ToDo: (20250704 - Julian) need to define the schema for get vacancy by id
+  [APIName.GET_REFERRAL_CODE]: getReferralCodeSchema,
 };

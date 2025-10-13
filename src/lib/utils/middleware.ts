@@ -61,7 +61,7 @@ export function checkRequestData<T extends APIName>(
   session: ISessionData
 ) {
   const { query, body } = validateRequestData(apiName, req);
-
+  // Info: (20240909 - Murky) If both query and body are null, it means validation failed
   if (query === null && body === null) {
     loggerError({
       userId: session.userId || DefaultValue.USER_ID.GUEST,

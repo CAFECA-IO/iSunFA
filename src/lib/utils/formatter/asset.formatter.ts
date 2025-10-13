@@ -25,7 +25,7 @@ export function parsePrismaAssetToAssetEntity(dto: PrismaAsset): IAssetEntity {
     throw new FormatterError('parsePrismaAssetToAssetEntity', {
       dto,
       zodErrorMessage: error.message,
-      issues: error.errors,
+      issues: error.issues,
     });
   }
 

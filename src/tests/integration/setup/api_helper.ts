@@ -903,9 +903,7 @@ export class APITestHelper {
 
   async createTestVouchers(accountBookId: number, baseTs: number) {
     // eslint-disable-next-line no-console
-    console.log(
-      `Creating test vouchers for account book ID: ${accountBookId} at base timestamp: ${baseTs}`
-    );
+    // console.log(`Creating test vouchers for account book ID: ${accountBookId} at base timestamp: ${baseTs}`);
     const samples = TestDataFactory.sampleVoucherData(baseTs);
     const cookies = this.getCurrentSession();
 

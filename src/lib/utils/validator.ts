@@ -58,7 +58,6 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
     return data;
   } else {
     const zodErrorMessage = JSON.parse(JSON.stringify(error.message));
-    // // Info: (20241023 - Jacky) No logger used here, since this function needs to be used in the frontend too
     const errorOption = {
       dto: rawData,
       zodErrorMessage,
@@ -76,19 +75,23 @@ export function validateAndFormatData<T extends z.ZodTypeAny>(
 export function validateRequestData<T extends APIName>(
   apiName: T,
   req: NextApiRequest
-): { query: query<T> | null; body: body<T> | null } {
+): { query: query<T>; body: body<T> } {
   const { input } = ZOD_SCHEMA_API[apiName];
   const { querySchema, bodySchema } = input;
-  let query = null;
-  let body = null;
 
+  /**
+   * ToDo: (20250925 - Luphia) Error Handling Issue
+   * If query or body is invalid, ** JUST throw the error **
+   * Parsing returns null instead of throwing an error, making it difficult for tests to catch failures
+   */
+  let query: query<T>;
+  let body: body<T>;
   try {
     query = validateAndFormatData(querySchema, req.query);
     body = validateAndFormatData(bodySchema, req.body);
   } catch (error) {
-    // Info: (20240909 - Murky) if validator is z.ZodOptional (which used when query or body is not needed), it will return null
-    query = null;
-    body = null;
+    query = null as unknown as query<T>;
+    body = null as unknown as body<T>;
   }
 
   return { query, body };

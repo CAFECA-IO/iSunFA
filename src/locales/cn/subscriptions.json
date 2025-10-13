@@ -156,9 +156,13 @@
     "TOAST_SUBSCRIPTION_SUCCESS": "您已成功订阅",
     "TOAST_SUBSCRIPTION_UPDATE_ERROR": "订阅更新失败",
     "DOWNGRADED_TO_BEGINNER_PLAN": "已降级为基础版方案",
+    "REFERRAL_CODE": "推荐码",
+    "REFERRAL_CODE_PLACEHOLDER": "输入推荐码（选填）",
+    "MONTHLY_SUBSCRIPTION_ERROR_MESSAGE": "无效的推荐码",
     "MONTHLY_SUBSCRIPTION": "每月订阅",
     "SUBTOTAL": "小计",
     "TAX": "税金",
+    "DISCOUNT": "折扣",
     "TOTAL_PRICE": "总金额",
     "TOAST_GET_CREDIT_CARD_INFO_FAILED": "信用卡新增失败，请再试一次",
     "TOAST_GET_CREDIT_CARD_INFO_SUCCESS": "信用卡新增成功！"
