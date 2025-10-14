@@ -752,6 +752,8 @@ module.exports = {
         'join-us': 'url("/elements/join_us_bg.png")',
         'job-detail': "url('/elements/job_detail.png')",
         finish: "url('/elements/finish.png')",
+
+        aaa: 'url("/elements/aaa_bg.png")',
       },
       zIndex: {
         '-10': '-10',
