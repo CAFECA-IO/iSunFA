@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
+import { useUserCtx } from '@/contexts/user_context';
+import { FaRegCheckCircle } from 'react-icons/fa';
 import { FiLayout, FiLogIn } from 'react-icons/fi';
+import { LuArchive } from 'react-icons/lu';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/button/button';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { numberWithCommas } from '@/lib/utils/common';
 import InvoiceItem from '@/components/ai_accounting_assistance/invoice_item';
+
+enum InvoiceTab {
+  DRAFT = 'draft',
+  DONE = 'done',
+}
 
 interface ISidebarProps {
   isOpen: boolean;
@@ -42,21 +50,16 @@ const mockInvoiceList: IInvoiceItem[] = [
 ];
 
 const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
+  const { isSignIn } = useUserCtx();
+
   // ToDo: (20251014 - Julian) Replace mock data with real data from backend
-  const invoiceData = mockInvoiceList;
+  const invoiceData: IInvoiceItem[] = mockInvoiceList;
   const invoiceCount = numberWithCommas(invoiceData.length);
 
   const invoiceList = invoiceData.map((invoice) => ({ ...invoice, isSelected: false }));
 
   const [uiInvoiceList, setUiInvoiceList] = useState(invoiceList);
-
-  const loginBtn = (
-    <Link href={ISUNFA_ROUTE.LOGIN}>
-      <Button type="button" size={isOpen ? 'default' : 'defaultSquare'} className="w-full">
-        {isOpen ? 'Log in' : <FiLogIn size={20} />}
-      </Button>
-    </Link>
-  );
+  const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
 
   // Info: (20251015 - Julian) 點擊 invoice item 事件
   const clickInvoice = (id: number) => {
@@ -70,6 +73,41 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     }));
     setUiInvoiceList(newInvoiceList);
   };
+
+  const displayedTabs = isSignIn && (
+    <div className="grid grid-cols-2 gap-8px">
+      {Object.values(InvoiceTab).map((tab) => {
+        const isActive = currentTab === tab;
+        const icon =
+          tab === InvoiceTab.DRAFT ? (
+            <LuArchive size={20} className="shrink-0" />
+          ) : (
+            <FaRegCheckCircle size={20} className="shrink-0" />
+          );
+        const clickHandler = () => setCurrentTab(tab);
+
+        return (
+          <button
+            type="button"
+            key={tab}
+            onClick={clickHandler}
+            className={` ${isActive ? 'border-tabs-stroke-active text-tabs-text-active' : 'border-tabs-stroke-default text-tabs-text-default'} flex items-center gap-8px border-b-2 px-12px py-8px text-base font-medium`}
+          >
+            {icon}
+            <p>{tab}</p>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const loginBtn = !isSignIn && (
+    <Link href={ISUNFA_ROUTE.LOGIN}>
+      <Button type="button" size={isOpen ? 'default' : 'defaultSquare'} className="w-full">
+        {isOpen ? 'Log in' : <FiLogIn size={20} />}
+      </Button>
+    </Link>
+  );
 
   const displayedInvoices = uiInvoiceList.map((invoice) => {
     const clickHandler = () => clickInvoice(invoice.id);
@@ -87,18 +125,17 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     uiInvoiceList.length > 0 ? (
       // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
       <div className="flex min-h-0 flex-col gap-8px">
+        {/* ToDo: (20251014 - Julian) Develop Filter section */}
+        <div className="flex items-center gap-4px">
+          <div className="h-40px w-150px flex-1 bg-slate-400"></div>
+          <div className="h-40px w-40px bg-slate-400"></div>
+        </div>
         <p className="text-sm font-medium text-text-neutral-tertiary">
           {invoiceCount} Certificates
         </p>
-        {/* ToDo: (20251014 - Julian) Develop Filter section */}
-        <div className="flex items-center"></div>
         {/* Info: (20251015 - Julian) Invoice List */}
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col gap-8px">
-            {displayedInvoices}
-            {displayedInvoices}
-            {displayedInvoices}
-          </div>
+          <div className="flex flex-col gap-8px">{displayedInvoices}</div>
         </div>
       </div>
     ) : (
@@ -113,9 +150,37 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
     <div className="flex min-h-0 flex-1 flex-col gap-32px">
       <p className="text-sm font-semibold uppercase text-text-neutral-tertiary">Invoice List</p>
+      {/* Info: (20251015 - Julian) Tabs */}
+      {displayedTabs}
       {displayedList}
     </div>
   );
+
+  const displayedCopyright = (
+    <div className="flex flex-col items-center gap-8px">
+      <p className="text-xs font-normal text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
+      <p className="text-sm font-semibold text-link-text-primary">Support</p>
+      <div className="flex items-center gap-8px">
+        <p className="text-sm font-semibold text-link-text-primary">Private Policy</p>
+        <hr className="h-full w-px border border-stroke-neutral-quaternary" />
+        <p className="text-sm font-semibold text-link-text-primary">Service Term</p>
+      </div>
+    </div>
+  );
+
+  // ToDo: (20251015 - Julian) Develop UserInfo component
+  const displayedFooter =
+    isOpen &&
+    (isSignIn ? (
+      <>
+        {/* Info: (20251015 - Julian) 實體高度 */}
+        <div className="h-40px"></div>
+        {/* Info: (20251015 - Julian) UserInfo 內容 */}
+        <div className="absolute bottom-0 left-0 h-80px w-full bg-slate-400"></div>
+      </>
+    ) : (
+      displayedCopyright
+    ));
 
   return (
     <div
@@ -147,17 +212,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
       </div>
 
       {/* Info: (20251014 - Julian) Footer */}
-      {isOpen && (
-        <div className="flex flex-col items-center gap-8px">
-          <p className="text-xs font-normal text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
-          <p className="text-sm font-semibold text-link-text-primary">Support</p>
-          <div className="flex items-center gap-8px">
-            <p className="text-sm font-semibold text-link-text-primary">Private Policy</p>
-            <hr className="h-full w-px border border-stroke-neutral-quaternary" />
-            <p className="text-sm font-semibold text-link-text-primary">Service Term</p>
-          </div>
-        </div>
-      )}
+      {displayedFooter}
     </div>
   );
 };
