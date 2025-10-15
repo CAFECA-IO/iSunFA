@@ -260,6 +260,7 @@ module.exports = {
           70: 'var(--surface-brand-primary-70)',
           moderate: 'var(--surface-brand-primary-moderate)',
           soft: 'var(--surface-brand-primary-soft)',
+          lv3: 'var(--surface-brand-primary-lv-3)',
         },
 
         'surface-brand-secondary': {
