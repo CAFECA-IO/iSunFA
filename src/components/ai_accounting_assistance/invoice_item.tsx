@@ -11,8 +11,14 @@ interface IInvoiceItem {
   unread: boolean;
 }
 
+interface IInvoiceItemProps {
+  invoice: IInvoiceItem;
+  isSelected: boolean;
+  clickHandler: () => void;
+}
+
 // ToDo: (20251014 - Julian) during development
-const InvoiceItem = ({ invoice, isSelected }: { invoice: IInvoiceItem; isSelected: boolean }) => {
+const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHandler }) => {
   const { id, name, unread } = invoice;
   const unfinished = true; // ToDo: (20251014 - Julian) determine if the invoice is unfinished
 
@@ -24,9 +30,10 @@ const InvoiceItem = ({ invoice, isSelected }: { invoice: IInvoiceItem; isSelecte
 
   return (
     <div
+      onClick={clickHandler}
       className={`${
         isSelected
-          ? 'border-stroke-brand-primary' // ToDo: (20251014 - Julian) background color
+          ? 'border-stroke-brand-primary bg-surface-brand-primary-lv3'
           : 'border-stroke-neutral-quaternary hover:border-stroke-brand-primary hover:bg-surface-brand-primary-30'
       } flex items-center gap-8px rounded-xs border p-8px hover:cursor-pointer`}
     >

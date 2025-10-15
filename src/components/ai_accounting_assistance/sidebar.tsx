@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FiLayout, FiLogIn } from 'react-icons/fi';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -43,8 +43,12 @@ const mockInvoiceList: IInvoiceItem[] = [
 
 const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
   // ToDo: (20251014 - Julian) Replace mock data with real data from backend
-  const invoiceList = mockInvoiceList;
-  const invoiceCount = numberWithCommas(invoiceList.length);
+  const invoiceData = mockInvoiceList;
+  const invoiceCount = numberWithCommas(invoiceData.length);
+
+  const invoiceList = invoiceData.map((invoice) => ({ ...invoice, isSelected: false }));
+
+  const [uiInvoiceList, setUiInvoiceList] = useState(invoiceList);
 
   const loginBtn = (
     <Link href={ISUNFA_ROUTE.LOGIN}>
@@ -54,17 +58,48 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     </Link>
   );
 
+  // Info: (20251015 - Julian) 點擊 invoice item 事件
+  const clickInvoice = (id: number) => {
+    // Info: (20251015 - Julian) 找到目前點擊的 item 狀態
+    const selected = uiInvoiceList.find((invoice) => invoice.id === id)?.isSelected;
+
+    const newInvoiceList = uiInvoiceList.map((invoice) => ({
+      ...invoice,
+      // Info: (20251015 - Julian) 找到被點擊的 item 後，將狀態反轉，其他 item 狀態不變
+      isSelected: invoice.id === id ? !selected : invoice.isSelected,
+    }));
+    setUiInvoiceList(newInvoiceList);
+  };
+
+  const displayedInvoices = uiInvoiceList.map((invoice) => {
+    const clickHandler = () => clickInvoice(invoice.id);
+    return (
+      <InvoiceItem
+        key={invoice.id}
+        invoice={invoice}
+        isSelected={invoice.isSelected}
+        clickHandler={clickHandler}
+      />
+    );
+  });
+
   const displayedList =
-    invoiceList.length > 0 ? (
-      <div className="flex flex-col gap-8px">
+    uiInvoiceList.length > 0 ? (
+      // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
+      <div className="flex min-h-0 flex-col gap-8px">
         <p className="text-sm font-medium text-text-neutral-tertiary">
           {invoiceCount} Certificates
         </p>
         {/* ToDo: (20251014 - Julian) Develop Filter section */}
         <div className="flex items-center"></div>
-        {invoiceList.map((invoice) => (
-          <InvoiceItem key={invoice.id} invoice={invoice} isSelected />
-        ))}
+        {/* Info: (20251015 - Julian) Invoice List */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="flex flex-col gap-8px">
+            {displayedInvoices}
+            {displayedInvoices}
+            {displayedInvoices}
+          </div>
+        </div>
       </div>
     ) : (
       <div className="flex flex-col items-center">
@@ -75,7 +110,8 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     );
 
   const displayedContent = isOpen && (
-    <div className="flex flex-col gap-32px">
+    // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
+    <div className="flex min-h-0 flex-1 flex-col gap-32px">
       <p className="text-sm font-semibold uppercase text-text-neutral-tertiary">Invoice List</p>
       {displayedList}
     </div>
@@ -102,7 +138,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
       </button>
 
       {/* Info: (20251014 - Julian) Body */}
-      <div className="flex flex-1 flex-col items-stretch gap-32px">
+      <div className="flex flex-1 flex-col items-stretch gap-32px overflow-hidden">
         {/* Info: (20251014 - Julian) Login button */}
         {loginBtn}
 
