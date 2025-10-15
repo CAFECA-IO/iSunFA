@@ -176,7 +176,22 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
         {/* Info: (20251015 - Julian) 實體高度 */}
         <div className="h-40px"></div>
         {/* Info: (20251015 - Julian) UserInfo 內容 */}
-        <div className="absolute bottom-0 left-0 h-80px w-full bg-slate-400"></div>
+        <div className="absolute bottom-0 left-0 h-80px w-full border-t border-stroke-neutral-quaternary p-12px">
+          <div className="flex items-center gap-24px">
+            <div className="h-64px w-64px shrink-0 overflow-hidden rounded-full">
+              <Image
+                src="/images/fake_company_avatar.svg"
+                width={64}
+                height={64}
+                alt="user_avatar"
+              />
+            </div>
+            <div className="flex flex-col">
+              <p className="text-base font-semibold text-text-neutral-primary">User name</p>
+              <p className="text-xs font-normal text-text-neutral-secondary">user@abc.com</p>
+            </div>
+          </div>
+        </div>
       </>
     ) : (
       displayedCopyright
