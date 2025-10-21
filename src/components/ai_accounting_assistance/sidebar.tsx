@@ -5,7 +5,9 @@ import { FaRegCheckCircle } from 'react-icons/fa';
 import { FiLayout, FiLogIn } from 'react-icons/fi';
 import { LuArchive } from 'react-icons/lu';
 import { PiSliders } from 'react-icons/pi';
+import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
+import Toggle from '@/components/toggle/toggle';
 import InvoiceItem from '@/components/ai_accounting_assistance/invoice_item';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { ISUNFA_ROUTE } from '@/constants/url';
@@ -56,15 +58,36 @@ const mockInvoiceList: IInvoiceItem[] = [
 const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
   const { isSignIn } = useUserCtx();
 
+  const {
+    targetRef: sortRef,
+    componentVisible: isSortOpen,
+    setComponentVisible: setIsSortOpen,
+  } = useOuterClick<HTMLDivElement>(false);
+
   // ToDo: (20251014 - Julian) Replace mock data with real data from backend
   const invoiceData: IInvoiceItem[] = mockInvoiceList;
   const invoiceCount = numberWithCommas(invoiceData.length);
+
+  // ToDo: (20251021 - Julian) 目前先用 string 儲存排序選項，之後再改成其他更合適的型別
+  const sortByOptions = [
+    'Invoice Date: New →Old',
+    'Invoice Date: Old →New',
+    'Upload Date: New →Old',
+    'Upload Date: Old →New',
+  ];
 
   const invoiceList = invoiceData.map((invoice) => ({ ...invoice, isSelected: false }));
 
   const [uiInvoiceList, setUiInvoiceList] = useState(invoiceList);
   const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
+  const [isShownOnlyIncomplete, setIsShownOnlyIncomplete] = useState<boolean>(false);
+  // ToDo: (20251021 - Julian) Develop sorting function
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [sortBy, setSortBy] = useState<string>(sortByOptions[0]);
+
+  const toggleSortDropdown = () => setIsSortOpen((prev) => !prev);
+  const toggleShownOnlyIncomplete = () => setIsShownOnlyIncomplete((prev) => !prev);
 
   // Info: (20251015 - Julian) 點擊 invoice item 事件
   const clickInvoice = (id: number) => {
@@ -114,6 +137,43 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     </Link>
   );
 
+  const displayedSortOptions = sortByOptions.map((option) => {
+    const clickHandler = () => {
+      setSortBy(option);
+      setIsSortOpen(false);
+    };
+    return (
+      <button
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-8px text-left text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+      >
+        {option}
+      </button>
+    );
+  });
+
+  const displayedSortDropdown = isSortOpen && (
+    <div
+      ref={sortRef}
+      className="absolute right-0 top-50px z-10 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M"
+    >
+      <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
+        Sort by
+      </p>
+      {displayedSortOptions}
+      <hr className="m-8px border-t border-divider-stroke-lv-4" />
+      <div className="flex items-center justify-between gap-8px px-12px py-8px text-xs font-medium text-switch-text-primary">
+        <p>Show Incomplete Only</p>
+        <Toggle
+          id="show_incomplete_only_toggle"
+          toggleStateFromParent={isShownOnlyIncomplete}
+          getToggledState={toggleShownOnlyIncomplete}
+        />
+      </div>
+    </div>
+  );
+
   const displayedInvoices = uiInvoiceList.map((invoice) => {
     const clickHandler = () => clickInvoice(invoice.id);
     return (
@@ -130,8 +190,8 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     uiInvoiceList.length > 0 ? (
       // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
       <div className="flex min-h-0 flex-col gap-8px">
-        {/* ToDo: (20251014 - Julian) Develop Filter section */}
-        <div className="flex items-center gap-4px">
+        {/* Info: (20251021 - Julian) Develop Filter section */}
+        <div className="relative flex items-center gap-4px">
           <DatePicker
             type={DatePickerType.TEXT_PERIOD}
             period={selectedPeriod}
@@ -141,10 +201,13 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
           />
           <button
             type="button"
+            onClick={toggleSortDropdown}
             className="p-12px text-button-text-secondary hover:text-button-text-secondary-hover"
           >
             <PiSliders size={24} />
           </button>
+
+          {displayedSortDropdown}
         </div>
         <p className="text-sm font-medium text-text-neutral-tertiary">
           {invoiceCount} Certificates
