@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { useUserCtx } from '@/contexts/user_context';
+import Link from 'next/link';
+import Image from 'next/image';
 import { FaRegCheckCircle } from 'react-icons/fa';
 import { FiLayout, FiLogIn } from 'react-icons/fi';
 import { LuArchive } from 'react-icons/lu';
-import Link from 'next/link';
-import Image from 'next/image';
+import { PiSliders } from 'react-icons/pi';
 import { Button } from '@/components/button/button';
-import { ISUNFA_ROUTE } from '@/constants/url';
-import { numberWithCommas } from '@/lib/utils/common';
 import InvoiceItem from '@/components/ai_accounting_assistance/invoice_item';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import { ISUNFA_ROUTE } from '@/constants/url';
+import { default30DayPeriodInSec } from '@/constants/display';
+import { numberWithCommas } from '@/lib/utils/common';
+import { useUserCtx } from '@/contexts/user_context';
+import { IDatePeriod } from '@/interfaces/date_period';
 
 enum InvoiceTab {
   DRAFT = 'draft',
@@ -60,6 +64,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   const [uiInvoiceList, setUiInvoiceList] = useState(invoiceList);
   const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
+  const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
 
   // Info: (20251015 - Julian) 點擊 invoice item 事件
   const clickInvoice = (id: number) => {
@@ -127,8 +132,19 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
       <div className="flex min-h-0 flex-col gap-8px">
         {/* ToDo: (20251014 - Julian) Develop Filter section */}
         <div className="flex items-center gap-4px">
-          <div className="h-40px w-150px flex-1 bg-slate-400"></div>
-          <div className="h-40px w-40px bg-slate-400"></div>
+          <DatePicker
+            type={DatePickerType.TEXT_PERIOD}
+            period={selectedPeriod}
+            setFilteredPeriod={setSelectedPeriod}
+            calenderClassName="scale-75 w-250px md:scale-60 origin-top-left"
+            buttonStyleAfterDateSelected="w-100px truncate"
+          />
+          <button
+            type="button"
+            className="p-12px text-button-text-secondary hover:text-button-text-secondary-hover"
+          >
+            <PiSliders size={24} />
+          </button>
         </div>
         <p className="text-sm font-medium text-text-neutral-tertiary">
           {invoiceCount} Certificates

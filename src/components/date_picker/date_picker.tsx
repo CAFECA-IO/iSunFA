@@ -641,7 +641,7 @@ const DatePicker = ({
             {/* Info: (20241226 - Tzuhan) 顯示當前「年份 / 月份」文字，且可點擊切換 viewMode */}
             {viewMode === 'date' && (
               <div
-                className="flex cursor-pointer space-x-4 text-date-picker-text-default"
+                className="flex cursor-pointer flex-wrap items-center gap-x-4 text-date-picker-text-default"
                 onClick={() => setViewMode('month')}
               >
                 <p>{displayedYear}</p>
