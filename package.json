@@ -68,7 +68,7 @@
     "next-logger": "^5.0.0",
     "next-qrcode": "^2.5.1",
     "next-session": "^4.0.5",
-    "nodemailer": "^^7.0.7",
+    "nodemailer": "^7.0.7",
     "pdf-to-img": "^4.4.0",
     "pino": "^9.9.2",
     "pino-multi-stream": "^6.0.0",
