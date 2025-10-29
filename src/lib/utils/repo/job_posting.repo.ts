@@ -74,7 +74,8 @@ export const getVacancyById = async (
     };
     return formattedDetails;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.RESOURCE_NOT_FOUND);
+    (error as Error).message = STATUS_MESSAGE.RESOURCE_NOT_FOUND;
+    throw error;
   }
 };
 

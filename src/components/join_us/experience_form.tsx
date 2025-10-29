@@ -204,6 +204,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
     return (
       <div
+        key={education.id}
         className="grid grid-flow-row items-center"
         style={{
           gridTemplateColumns: milestoneTemplateColumns,
@@ -237,6 +238,7 @@ const ExperienceForm: React.FC<IExperienceFormProps> = ({ toPrevStep, toNextStep
 
     return (
       <div
+        key={work.id}
         className="grid grid-flow-row items-center"
         style={{
           gridTemplateColumns: milestoneTemplateColumns,

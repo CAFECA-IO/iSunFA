@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { numberWithCommas } from '@/lib/utils/common';
-import BigNumber from 'bignumber.js';
+import BigNumberjs from 'bignumber.js';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 
 interface INumericInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -114,12 +114,12 @@ const NumericInput: React.FC<INumericInputProps> = ({
 
     // Info: (20250321 - Anna) 使用 BigNumber.js 確保數字精度
     let validNumericValue = isDecimal
-      ? new BigNumber(sanitizedValue) // Info: (20250321 - Anna) 小數轉 BigNumber
-      : new BigNumber(parseInt(sanitizedValue || '0', 10)); // Info: (20250321 - Anna) 整數轉 int，避免變小數 123 ➝ 123.0
+      ? new BigNumberjs(sanitizedValue) // Info: (20250321 - Anna) 小數轉 BigNumber
+      : new BigNumberjs(parseInt(sanitizedValue || '0', 10)); // Info: (20250321 - Anna) 整數轉 int，避免變小數 123 ➝ 123.0
 
     // Info: (20250321 - Anna) 處理 NaN 的情況
     if (validNumericValue.isNaN()) {
-      validNumericValue = new BigNumber(0);
+      validNumericValue = new BigNumberjs(0);
     }
 
     // Info: (20240723 - Liz) 根據 isDecimal 和 hasComma 的值來決定顯示值的格式

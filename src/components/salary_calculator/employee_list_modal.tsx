@@ -44,6 +44,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
 
         return (
           <div
+            key={employee.id}
             onClick={handleClick}
             className="group flex items-center bg-surface-neutral-surface-lv2 px-24px py-12px hover:cursor-pointer hover:bg-surface-brand-primary-soft"
           >

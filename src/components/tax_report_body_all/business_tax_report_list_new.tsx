@@ -178,6 +178,7 @@ const BusinessTaxList: React.FC<BusinessTaxListProps> = ({
       setFinancialReport(report);
       return report; // Info: (20241204 - Anna) 成功時返回獲取的報告
     } catch (error) {
+      (error as Error).message += ' (from getFinancialReport)';
       return null; // Info: (20241204 - Anna) 異常時返回 null
     } finally {
       setIsLoading(false);

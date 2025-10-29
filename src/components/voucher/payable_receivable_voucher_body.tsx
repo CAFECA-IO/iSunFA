@@ -97,6 +97,7 @@ const PayableReceivableVoucherPageBody: React.FC = () => {
         setTotalCount(data.data.length); // Info: (20250124 - Anna) 改為不是全部傳票的總筆數，而是應收/應付傳票的總筆數
         setVoucherList(data.data);
       } catch (error) {
+        (error as Error).message += ' (from handleApiResponse)';
         toastHandler({
           id: 'voucher-list-error',
           type: ToastType.ERROR,

@@ -9,7 +9,7 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 // import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
-import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
@@ -29,7 +29,6 @@ import {
   EventType,
   EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
-  ProgressStatus,
 } from '@/constants/account';
 import { /* AIWorkingArea, */ AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
@@ -45,29 +44,12 @@ import { CERTIFICATE_USER_INTERACT_OPERATION } from '@/constants/invoice_rc2';
 import { VoucherV2Action } from '@/constants/voucher';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { ToastType } from '@/interfaces/toastify';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
-import { IAIResultVoucher } from '@/interfaces/voucher';
-import { AI_TYPE } from '@/constants/aich';
 import CounterpartyInput from '@/components/voucher/counterparty_input';
 import { ToastId } from '@/constants/toast_id';
 import { FREE_ACCOUNT_BOOK_ID } from '@/constants/config';
 import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
 import loggerFront from '@/lib/utils/logger_front';
-
-// enum RecurringUnit {
-//   MONTH = 'month',
-//   WEEK = 'week',
-// }
-
-const dummyAIResult: IAIResultVoucher = {
-  aiType: AI_TYPE.VOUCHER,
-  aiStatus: ProgressStatus.SUCCESS,
-  voucherDate: 0,
-  type: '',
-  note: '',
-  lineItems: [],
-};
 
 interface NewVoucherFormProps {
   selectedData: { [id: string]: ICertificateUI };
@@ -97,21 +79,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20250116 - Julian) 不顯示 Opening
   const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
-
-  // Info: (20241108 - Julian) POST ASK AI
-  // Deprecated: (20250122 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
-    reason: string;
-    resultId: string;
-  }>(APIName.ASK_AI_V2);
-
-  // Info: (20241108 - Julian) GET AI RESULT
-  // Deprecated: (20250122 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
-    APIName.ASK_AI_RESULT_V2
-  );
 
   const {
     trigger: createVoucher,
@@ -181,9 +148,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // Deprecated: (20250122 - Julian) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
-  const [targetIdList, setTargetIdList] = useState<number[]>([]);
-  const [resultId, setResultId] = useState<string>('');
-  const [resultData, setResultData] = useState<IAIResultVoucher | null>(null);
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
@@ -193,62 +157,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   const [certificates, setCertificates] = useState<{ [id: string]: ICertificateUI }>({});
   const [selectedCertificates, setSelectedCertificates] = useState<ICertificateUI[]>([]);
 
-  // Info: (20241108 - Julian) 取得 AI 分析結果
-  const {
-    voucherDate: aiVoucherDate,
-    type: aiType,
-    note: aiNote,
-    counterParty: aiCounterParty,
-    lineItems: aiLineItems,
-  } = resultData ?? dummyAIResult;
-
-  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
-
-  const aiTotalCredit = parseFloat(
-    aiLineItems.reduce(
-      (acc, item) => (item.debit === false ? DecimalOperations.add(acc, item.amount) : acc),
-      '0'
-    )
-  );
-  const aiTotalDebit = parseFloat(
-    aiLineItems.reduce(
-      (acc, item) => (item.debit === true ? DecimalOperations.add(acc, item.amount) : acc),
-      '0'
-    )
-  );
-
   const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
-
-  const getResult = useCallback(async () => {
-    // Info: (20241220 - Julian) 問 AI 分析結果
-    const analysisResult = await getAIResult({
-      params: { accountBookId, resultId },
-      query: { reason: 'voucher' },
-    });
-
-    if (analysisResult.data) {
-      setResultData(analysisResult.data);
-      setAiState(AIState.FINISH);
-    } else {
-      setAiState(AIState.FAILED);
-    }
-  }, [resultId]);
-
-  // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
-  const askAIAnalysis = async (targetIds: number[]) => {
-    const aiResult = await askAI({
-      params: { accountBookId },
-      query: { reason: 'voucher' },
-      body: { targetIdList: targetIds },
-    });
-
-    setResultId(aiResult.data?.resultId ?? '');
-  };
-
-  useEffect(() => {
-    // Info: (20241220 - Julian) 如果有 resultId，則問 AI 分析結果
-    if (resultId) getResult();
-  }, [resultId]);
 
   // Info: (20241018 - Tzuhan) 選擇憑證
   const handleSelect = useCallback(
@@ -269,14 +178,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
       setCertificates(updatedData);
       setSelectedCertificates(selectedCerts);
-
-      const targetIds = selectedCerts.map((item) => item.file.id);
-      setTargetIdList(targetIds);
-
-      // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
-      setAiState(AIState.WORKING);
-      // Info: (20241021 - Julian) 呼叫 ask AI
-      askAIAnalysis(targetIds);
     },
     [certificates, selectedIds]
   );
@@ -514,7 +415,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
   // };
 
   // Info: (20241018 - Julian) 欄位顯示
-  const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterParty);
+  const isShowCounter = isCounterpartyRequired;
 
   // Info: (20240926 - Julian) type 字串轉換
   const translateType = (voucherType: string) => {
@@ -566,39 +467,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fillUpWithAIResult = () => {
-    setDate(aiDate);
-    setType(aiType);
-    setNote((prev) => ({
-      ...prev,
-      note: aiNote,
-      name: aiCounterParty?.name,
-      taxId: aiCounterParty?.taxId,
-    }));
-    setCounterparty(aiCounterParty);
-    const aiLineItemsUI = aiLineItems.map((item) => {
-      return {
-        ...item,
-        isReverse: false,
-        reverseList: [],
-      } as ILineItemUI;
-    });
-    setLineItems(aiLineItemsUI);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const retryAIHandler = () => {
-    setAiState(AIState.WORKING);
-    if (resultId) {
-      // Info: (20241220 - Julian) 如果有 resultId，則直接 GET AI 分析結果
-      getResult();
-    } else {
-      // Info: (20241220 - Julian) 如果沒有 resultId，則重新 POST ASK AI
-      askAIAnalysis(targetIdList);
-    }
   };
 
   const saveVoucher = async () => {
@@ -1075,7 +943,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           <DatePicker
             id="voucher-date"
             type={DatePickerType.TEXT_DATE}
-            period={isShowAnalysisPreview ? aiDate : date}
+            period={date}
             setFilteredPeriod={setDate}
             btnClassName={
               isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
@@ -1099,7 +967,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
               <p
                 className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
               >
-                {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
+                {translateType(type)}
               </p>
               <div className={typeVisible ? 'rotate-180' : 'rotate-0'}>
                 <FaChevronDown size={20} />
@@ -1118,7 +986,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             type="text"
             value={note.note}
             onChange={noteChangeHandler}
-            placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
+            placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
             className={`rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
           />
         </div>
@@ -1141,30 +1009,23 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
-        {isShowAnalysisPreview ? (
-          <VoucherLinePreview
-            totalCredit={aiTotalCredit}
-            totalDebit={aiTotalDebit}
-            lineItems={aiLineItems}
+        <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
+          <VoucherLineBlock
+            lineItems={voucherLineItems}
+            setLineItems={setLineItems}
+            flagOfClear={flagOfClear}
+            flagOfSubmit={flagOfSubmit}
+            isShowReverseHint={isShowReverseHint}
+            setIsTotalZero={setIsTotalZero}
+            setIsTotalNotEqual={setIsTotalNotEqual}
+            setHaveZeroLine={setHaveZeroLine}
+            setIsAccountingNull={setIsAccountingNull}
+            setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+            setIsCounterpartyRequired={setIsCounterpartyRequired}
+            setIsAssetRequired={setIsAssetRequired}
           />
-        ) : (
-          <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
-            <VoucherLineBlock
-              lineItems={voucherLineItems}
-              setLineItems={setLineItems}
-              flagOfClear={flagOfClear}
-              flagOfSubmit={flagOfSubmit}
-              isShowReverseHint={isShowReverseHint}
-              setIsTotalZero={setIsTotalZero}
-              setIsTotalNotEqual={setIsTotalNotEqual}
-              setHaveZeroLine={setHaveZeroLine}
-              setIsAccountingNull={setIsAccountingNull}
-              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-              setIsCounterpartyRequired={setIsCounterpartyRequired}
-              setIsAssetRequired={setIsAssetRequired}
-            />
-          </div>
-        )}
+        </div>
+
         {/* Info: (20240926 - Julian) buttons */}
         <div className="flex items-center gap-24px tablet:col-span-2 tablet:ml-auto tablet:gap-12px">
           <Button

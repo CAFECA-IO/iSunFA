@@ -8,9 +8,11 @@ import {
   RepresentativeIDType,
   UploadDocumentKeys,
 } from '@/constants/kyc';
-import { z, ZodRawShape } from 'zod';
+import Zod, { z } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { zodTimestampInSeconds, nullSchema } from '@/lib/utils/zod_schema/common';
+
+type ZodRawShape = Zod.ZodRawShape;
 
 export const iCompanyKYCFormValidator = z.object({
   [BasicInfoKeys.LEGAL_COMPANY_NAME]: z.string(),

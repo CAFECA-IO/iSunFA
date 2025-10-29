@@ -226,7 +226,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
     if (!certificate) return;
-    const { isSelected, actions, ...rest } = certificate;
+    const { ...rest } = certificate;
 
     const updatedCertificate = {
       ...rest,

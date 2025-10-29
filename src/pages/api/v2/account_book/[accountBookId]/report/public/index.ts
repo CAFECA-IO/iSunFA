@@ -47,6 +47,7 @@ const handlePostRequest: IHandleRequest<APIName.REPORT_GENERATE, PostApiResponse
       errorType: 'generateReport failed',
       errorMessage: 'Func. generateReport in company/companyId/report/index.ts failed',
     };
+    (error as Error).message += ` | accountBookId: ${accountBookId} | reportType: ${reportType}`;
     loggerError(errorInfo);
   }
   return {

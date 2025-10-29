@@ -7,10 +7,9 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData,
-  ChartOptions,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import type { ChartData, ChartOptions } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 

@@ -40,6 +40,7 @@ const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler 
         setIsReferralCodeValid(false);
       }
     } catch (error) {
+      (error as Error).message += ' (from verifyReferralCode)';
       discountHandler({ discountAmount: 0, discountPercentage: 0 });
       setIsReferralCodeValid(false);
     }

@@ -45,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error) {
     // Info: (20250113 - Luphia) unexpected exception, pass to global handler
+    (error as Error).message += ` | Method: ${method} | Path: ${req.url}`;
   }
 
   res.status(httpCode).json(result);

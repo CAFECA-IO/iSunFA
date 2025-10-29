@@ -150,6 +150,7 @@ const VoucherListPageBody: React.FC = () => {
 
         setVoucherList(voucherListUI);
       } catch (error) {
+        (error as Error).message += ' (from handleApiResponse)';
         toastHandler({
           id: 'voucher-list-error',
           type: ToastType.ERROR,

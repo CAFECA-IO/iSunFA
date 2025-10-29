@@ -23,7 +23,7 @@ const handleGetRequest: IHandleRequest<APIName.USER_SETTING_GET, IUserSettingOut
   const getUserSetting = await getUserSettingByUserId(userId);
 
   if (getUserSetting) {
-    const { countryId, ...rest } = getUserSetting;
+    const { ...rest } = getUserSetting;
     payload = {
       ...rest,
       country: LocaleKey.tw,
@@ -58,7 +58,7 @@ const handlePutRequest: IHandleRequest<
     const updatedUserSetting = await updateUserSettingById(userSettingData.id, userSettingData);
 
     if (updatedUserSetting) {
-      const { countryId, ...rest } = updatedUserSetting;
+      const { ...rest } = updatedUserSetting;
       payload = {
         ...rest,
         country: LocaleKey.tw,
@@ -69,6 +69,7 @@ const handlePutRequest: IHandleRequest<
     }
   } catch (error) {
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    (error as Error).message += ' - updateUserSetting failed';
   }
 
   return { statusMessage, payload };

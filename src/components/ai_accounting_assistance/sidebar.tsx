@@ -144,6 +144,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     };
     return (
       <button
+        key={option}
         type="button"
         onClick={clickHandler}
         className="px-12px py-8px text-left text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"

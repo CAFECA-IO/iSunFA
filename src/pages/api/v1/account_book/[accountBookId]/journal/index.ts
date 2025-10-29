@@ -5,11 +5,12 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { formatIJournalListItems } from '@/lib/utils/formatter/journal.formatter';
 import { IJournalListItem } from '@/interfaces/journal';
 import { IPaginatedData } from '@/interfaces/pagination';
-import { JOURNAL_EVENT } from '@/constants/journal';
+import { JOURNAL_EVENT, SortBy } from '@/constants/journal';
 import { getSession } from '@/lib/utils/session';
 import { validateRequest } from '@/lib/utils/validator';
 import { APIName } from '@/constants/api_connection';
 import { listInvoiceVoucherJournal } from '@/lib/utils/repo/beta_transition.repo';
+import { SortOrder } from '@/constants/sort';
 
 async function handleGetRequest(req: NextApiRequest) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -24,12 +25,21 @@ async function handleGetRequest(req: NextApiRequest) {
 
     if (query) {
       const { page, pageSize, eventType, sortBy, sortOrder, startDate, endDate, searchQuery } =
-        query;
+        query as {
+          page: number;
+          pageSize: number;
+          eventType?: string;
+          sortBy?: SortBy;
+          sortOrder?: SortOrder;
+          startDate?: number;
+          endDate?: number;
+          searchQuery?: string;
+        };
       try {
         const uploadedPaginatedJournalList = await listInvoiceVoucherJournal(
           companyId,
           JOURNAL_EVENT.UPLOADED,
-          eventType,
+          eventType as string,
           page,
           pageSize,
           sortBy,
@@ -67,6 +77,7 @@ async function handleGetRequest(req: NextApiRequest) {
         };
         statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
       } catch (error) {
+        (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
         statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
     }

@@ -287,7 +287,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
     };
 
     return (
-      <div className="flex items-center gap-8px">
+      <div key={opt} className="flex items-center gap-8px">
         <input
           type="radio"
           id={opt}
@@ -350,7 +350,7 @@ const PreferenceForm: React.FC<IPreferenceFormProps> = ({ toPrevStep, toNextStep
       }
     };
     return (
-      <div className="flex items-center gap-8px">
+      <div key={opt} className="flex items-center gap-8px">
         <input
           type="radio"
           id={opt}

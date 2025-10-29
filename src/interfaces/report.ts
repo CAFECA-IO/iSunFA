@@ -43,7 +43,9 @@ export interface IReport {
   updatedAt: number;
 }
 
-export interface IPaginatedReport extends IPaginatedData<IReport[]> {}
+export interface IPaginatedReport extends IPaginatedData<IReport[]> {
+  id?: number;
+}
 
 export const MOCK_TOTAL_PAGES = 10;
 
