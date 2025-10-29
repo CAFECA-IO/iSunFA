@@ -1,4 +1,5 @@
-import Zod, { z } from 'zod';
+import { z } from 'zod';
+import type { ZodRawShape } from 'zod';
 import { IZodValidator } from '@/interfaces/zod_validator';
 import { DEFAULT_PAGE_LIMIT, DEFAULT_PAGE_START_AT } from '@/constants/config';
 import {
@@ -9,8 +10,6 @@ import {
 import { EVENT_TYPE } from '@/constants/account';
 import { SortBy } from '@/constants/journal';
 import { SortOrder } from '@/constants/sort';
-
-type ZodRawShape = Zod.ZodRawShape;
 
 const journalListQueryValidator = z.object({
   page: zodStringToNumberWithDefault(DEFAULT_PAGE_START_AT), // Info: (20240912 - Murky) If page not provided, default to 1

@@ -1,5 +1,6 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import Zod, { z } from 'zod';
+import { z } from 'zod';
+import type { ZodRawShape } from 'zod';
 import {
   zodFilterSectionSortingOptions,
   zodStringToNumber,
@@ -17,8 +18,6 @@ import { InvoiceTaxType, InvoiceTransactionDirection, InvoiceType } from '@/cons
 import { CurrencyType } from '@/constants/currency';
 import { CounterpartyType } from '@/constants/counterparty';
 import { paginatedDataQuerySchema, paginatedDataSchema } from '@/lib/utils/zod_schema/pagination';
-
-type ZodRawShape = Zod.ZodRawShape;
 
 const nullSchema = z.union([z.object({}), z.string()]);
 
