@@ -66,6 +66,7 @@ const FloatingUploadPopup: React.FC<FloatingUploadPopupProps> = ({
             closeable: true,
           });
         } catch (error) {
+          (error as Error).message += ' (from handleDelete)';
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_ERROR,
             type: ToastType.ERROR,

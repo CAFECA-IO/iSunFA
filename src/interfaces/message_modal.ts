@@ -1,5 +1,5 @@
 import { buttonVariants } from '@/components/button/button';
-import { VariantProps } from 'class-variance-authority';
+import type { VariantProps } from 'class-variance-authority';
 
 export enum MessageType {
   WARNING = 'warning',

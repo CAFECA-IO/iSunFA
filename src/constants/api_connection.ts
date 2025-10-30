@@ -63,9 +63,6 @@ export enum APIName {
   COUNTERPARTY_UPDATE = 'COUNTERPARTY_UPDATE',
   COUNTERPARTY_DELETE = 'COUNTERPARTY_DELETE',
   IMAGE_GET_BY_ID = 'IMAGE_GET_BY_ID',
-  ASK_AI_STATUS = 'ASK_AI_STATUS',
-  ASK_AI_V2 = 'ASK_AI_V2',
-  ASK_AI_RESULT_V2 = 'ASK_AI_RESULT_V2',
   VOUCHER_POST_V2 = 'VOUCHER_POST_V2',
   VOUCHER_GET_BY_ID_V2 = 'VOUCHER_GET_BY_ID_V2',
   VOUCHER_PUT_V2 = 'VOUCHER_PUT_V2',
@@ -219,9 +216,6 @@ export enum APIPath {
   COUNTERPARTY_DELETE = `${apiPrefixV2}/counterparty/:counterpartyId`,
 
   IMAGE_GET_BY_ID = `${apiPrefixV2}/image/:imageId`,
-  ASK_AI_STATUS = `${apiPrefixV2}/account_book/:accountBookId/ask_ai/:resultId/status`,
-  ASK_AI_V2 = `${apiPrefixV2}/ask_ai`,
-  ASK_AI_RESULT_V2 = `${apiPrefixV2}/ask_ai/:resultId`,
   VOUCHER_POST_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher`,
   VOUCHER_GET_BY_ID_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
   VOUCHER_PUT_V2 = `${apiPrefixV2}/account_book/:accountBookId/voucher/:voucherId`,
@@ -411,11 +405,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.IMAGE_GET_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.IMAGE_GET_BY_ID,
-  }),
-  [APIName.ASK_AI_STATUS]: createConfig({
-    name: APIName.ASK_AI_STATUS,
-    method: HttpMethod.GET,
-    path: APIPath.ASK_AI_STATUS,
   }),
   [APIName.VOUCHER_PUT_V2]: createConfig({
     name: APIName.VOUCHER_PUT_V2,
@@ -641,16 +630,6 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
     method: HttpMethod.GET,
     path: APIPath.VOUCHER_LIST_GET_BY_ACCOUNT_V2,
-  }),
-  [APIName.ASK_AI_V2]: createConfig({
-    name: APIName.ASK_AI_V2,
-    method: HttpMethod.POST,
-    path: APIPath.ASK_AI_V2,
-  }),
-  [APIName.ASK_AI_RESULT_V2]: createConfig({
-    name: APIName.ASK_AI_RESULT_V2,
-    method: HttpMethod.GET,
-    path: APIPath.ASK_AI_RESULT_V2,
   }),
   [APIName.ACCOUNTING_SETTING_GET]: createConfig({
     name: APIName.ACCOUNTING_SETTING_GET,

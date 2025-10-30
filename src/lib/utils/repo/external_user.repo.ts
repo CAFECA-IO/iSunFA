@@ -26,7 +26,8 @@ export const createExternalUser = async (
     })) as IExternalUser;
     return externalUser;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    (error as Error).message = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+    throw error;
   }
 };
 
@@ -51,6 +52,7 @@ export const getExternalUserByProviderAndUid = async (
 
     return externalUser;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+    (error as Error).message = STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR;
+    throw error;
   }
 };

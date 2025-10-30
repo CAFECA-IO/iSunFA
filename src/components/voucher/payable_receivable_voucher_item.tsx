@@ -105,7 +105,8 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedTotalAmount = (
     <div className="whitespace-nowrap text-right">
-      {DecimalOperations.format(totalAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {DecimalOperations.format(totalAmount)}{' '}
+      <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
@@ -118,7 +119,8 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
 
   const displayedRemainAmount = (
     <div className="whitespace-nowrap text-right">
-      {DecimalOperations.format(remainAmount)} <span className="text-text-neutral-tertiary">TWD</span>
+      {DecimalOperations.format(remainAmount)}{' '}
+      <span className="text-text-neutral-tertiary">TWD</span>
     </div>
   );
 
@@ -129,6 +131,7 @@ const PayableReceivableVoucherItem: React.FC<IPayableReceivableVoucherItemProps>
         // eslint-disable-next-line react/prop-types
         reverseVouchers.map((voucher) => (
           <Link
+            key={voucher.id}
             href={`/users/accounting/${voucher.id}?voucherNo=${voucherNo}`}
             className="text-center text-link-text-primary hover:underline"
           >

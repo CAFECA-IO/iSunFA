@@ -37,7 +37,8 @@ export async function createFile({
   iv?: Buffer;
 }) {
   const nowInSecond = getTimestampNow();
-
+  // ToDo: (20251028 - Luphia) workaround for prisma not support Buffer type
+  const ivArrayBuffer: Uint8Array<ArrayBuffer> = iv ? new Uint8Array(iv) : new Uint8Array();
   const fileData: Prisma.FileCreateInput = {
     name,
     size,
@@ -46,7 +47,7 @@ export async function createFile({
     url,
     isEncrypted,
     encryptedSymmetricKey,
-    iv,
+    iv: ivArrayBuffer,
     createdAt: nowInSecond,
     updatedAt: nowInSecond,
   };

@@ -7,7 +7,10 @@ interface ITrialBalanceItemProps {
   totalExpanded: boolean; // Info: (20241029 - Anna) Receive expanded state from parent
 }
 
-const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanceItemProps) => {
+const TrialBalanceItemRow = React.memo(function TrialBalanceItemRow({
+  account,
+  totalExpanded,
+}: ITrialBalanceItemProps) {
   // Info: (20241025 - Anna) 新增狀態來追蹤按鈕展開狀態
   const [localIsExpanded, setLocalIsExpanded] = useState(totalExpanded); // Info: (20241029 - Anna) 使用解構的 totalExpanded 作為初始值
 
@@ -38,38 +41,26 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
   );
 
   const displayedBeginningDebitAmount = (
-    <div className="flex items-center justify-end">
-      {account.beginningDebitAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.beginningDebitAmount}</div>
   );
 
   const displayedBeginningCreditAmount = (
-    <div className="flex items-center justify-end">
-      {account.beginningCreditAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.beginningCreditAmount}</div>
   );
   const displayedMidtermDebitAmount = (
-    <div className="flex items-center justify-end">
-      {account.midtermDebitAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.midtermDebitAmount}</div>
   );
 
   const displayedMidtermCreditAmount = (
-    <div className="flex items-center justify-end">
-      {account.midtermCreditAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.midtermCreditAmount}</div>
   );
 
   const displayedEndingDebitAmount = (
-    <div className="flex items-center justify-end">
-      {account.endingDebitAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.endingDebitAmount}</div>
   );
 
   const displayedEndingCreditAmount = (
-    <div className="flex items-center justify-end">
-      {account.endingCreditAmount}
-    </div>
+    <div className="flex items-center justify-end">{account.endingCreditAmount}</div>
   );
 
   return (
@@ -142,7 +133,9 @@ const TrialBalanceItemRow = React.memo(({ account, totalExpanded }: ITrialBalanc
             {/* Info: (20241025 - Anna) print:max-w-150px */}
             <div className="table-cell text-center align-middle print:max-w-150px print:bg-neutral-50 print:text-start">
               <div className="flex items-center justify-center font-medium print:justify-start">
-                <span className="ml-12 flex items-center print:ml-6">{subAccount.accountingTitle}</span>
+                <span className="ml-12 flex items-center print:ml-6">
+                  {subAccount.accountingTitle}
+                </span>
               </div>
             </div>
             {/* Info: (20241025 - Anna) print:max-w-65px print:px-1 */}

@@ -48,8 +48,9 @@ function isTaxReport401(report: TaxReport401Content): boolean {
   const purchases = report.content.purchases ? report.content.purchases : '0';
   const taxCalculation = report.content.taxCalculation ? report.content.taxCalculation : '0';
   const imports = report.content.imports ? report.content.imports : '0';
-  const bondedAreaSalesToTaxArea =
-    DecimalOperations.isZero(report.content.bondedAreaSalesToTaxArea) ? '0' : report.content.bondedAreaSalesToTaxArea;
+  const bondedAreaSalesToTaxArea = DecimalOperations.isZero(report.content.bondedAreaSalesToTaxArea)
+    ? '0'
+    : report.content.bondedAreaSalesToTaxArea;
   return !!(
     basicInfo &&
     sales &&
@@ -191,6 +192,7 @@ const ViewFinancialSection = ({
 
         setFinancialReport(reportFinancial);
       } catch (error) {
+        (error as Error).message += ' (from getFinancialReport)';
         // console.log('error:', error);
       } finally {
         setIsReportFinancialIsLoading(false);

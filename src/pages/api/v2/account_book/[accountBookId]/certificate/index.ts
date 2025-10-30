@@ -111,7 +111,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       isDeleted: false,
     });
 
-    const { data: certificatesFromPrisma, where, ...pagination } = paginationCertificates;
+    const { data: certificatesFromPrisma, ...pagination } = paginationCertificates;
 
     const currency = await getListUtils.getCurrencyFromSetting(accountBookId);
 

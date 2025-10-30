@@ -36,6 +36,7 @@ const SubscriptionsPage = () => {
       }
     } catch (error) {
       loggerFront.error('取得使用者擁有的所有團隊失敗');
+      loggerFront.error(error);
     } finally {
       setIsLoading(false);
     }

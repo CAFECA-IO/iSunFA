@@ -120,6 +120,7 @@ const ViewFinancialSectionNew = ({
 
         setFinancialReport(reportFinancial);
       } catch (error) {
+        (error as Error).message += ' (from ViewFinancialSectionNew - getFinancialReport)';
         // console.log('error:', error);
       } finally {
         setIsReportFinancialIsLoading(false);

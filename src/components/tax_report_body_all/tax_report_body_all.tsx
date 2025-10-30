@@ -65,6 +65,7 @@ const TaxReportBodyAll = ({ reportId }: ITaxReportBodyAllProps) => {
 
         setFinancialReport(report);
       } catch (error) {
+        (error as Error).message += ' (from getFinancialReport)';
         // console.log('error:', error);
       } finally {
         setIsLoading(false);

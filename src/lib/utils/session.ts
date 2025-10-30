@@ -94,6 +94,7 @@ class SessionHandler {
       fs.promises.writeFile(filePath, data);
     } catch (error) {
       // Info: (20250108 - Luphia) log error message and nothing to do
+      (error as Error).message += ` | Session Backup Failed`;
     }
     return true;
   }
@@ -115,6 +116,7 @@ class SessionHandler {
       });
     } catch (error) {
       // Info: (20250108 - Luphia) log error message and nothing to do
+      (error as Error).message += ` | Session Restore Failed`;
     }
     return true;
   }

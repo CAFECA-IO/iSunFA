@@ -11,6 +11,7 @@ module.exports = {
         '50vh': '50vh',
       },
       scale: {
+        60: '0.6',
         80: '0.8',
         90: '0.9',
         flip: '-1',
@@ -260,6 +261,7 @@ module.exports = {
           70: 'var(--surface-brand-primary-70)',
           moderate: 'var(--surface-brand-primary-moderate)',
           soft: 'var(--surface-brand-primary-soft)',
+          lv3: 'var(--surface-brand-primary-lv-3)',
         },
 
         'surface-brand-secondary': {
@@ -752,6 +754,8 @@ module.exports = {
         'join-us': 'url("/elements/join_us_bg.png")',
         'job-detail': "url('/elements/job_detail.png')",
         finish: "url('/elements/finish.png')",
+
+        aaa: 'url("/elements/aaa_bg.png")',
       },
       zIndex: {
         '-10': '-10',

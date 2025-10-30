@@ -210,6 +210,7 @@
     --surface-brand-primary-70: var(--orange-500-70);
     --surface-brand-primary-moderate: var(--orange-400);
     --surface-brand-primary-soft: var(--orange-200);
+    --surface-brand-primary-lv-3: var(--orange-300);
     --surface-brand-secondary: var(--navy-blue-500);
     --surface-brand-secondary-10: var(--navy-blue-500-10);
     --surface-brand-secondary-30: var(--navy-blue-500-30);
@@ -641,6 +642,7 @@
     --surface-brand-primary-70: var(--orange-500-70);
     --surface-brand-primary-moderate: var(--orange-300);
     --surface-brand-primary-soft: var(--orange-100);
+    --surface-brand-primary-lv-3: var(--orange-300);
     --surface-brand-secondary: var(--royal-blue-300);
     --surface-brand-secondary-10: var(--royal-blue-500-10);
     --surface-brand-secondary-30: var(--royal-blue-500-30);

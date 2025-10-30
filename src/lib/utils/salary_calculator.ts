@@ -245,7 +245,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       : realDaysInMonth < 30
         ? (employeeEndDate - employeeStartDate + 1 + 30 - realDaysInMonth) / 30
         : (employeeEndDate - employeeStartDate + 1) / 30
-    : // Info: (20250814 - Luphia) 際日曆天數計算方式
+    : // Info: (20250814 - Luphia) 實際日曆天數計算方式
       (employeeEndDate - employeeStartDate + 1) / realDaysInMonth;
 
   // Info: (20250814 - Luphia) 計算約定月薪
@@ -276,10 +276,11 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
 
   // Info: (20250727 - Luphia) 計算當月總日數
   const daysInMonth = isUsing30DaysSystem ? 30 : new Date(year, month, 0).getDate();
+  const hoursInMonth = daysInMonth * 8;
 
   // Info: (20250727 - Luphia) 計算每小時薪資
-  const baseSalaryTaxablePerHour = baseSalaryTaxable / (daysInMonth * 8);
-  const baseSalaryTaxFreePerHour = baseSalaryTaxFree / (daysInMonth * 8);
+  const baseSalaryTaxablePerHour = baseSalaryTaxable / hoursInMonth;
+  const baseSalaryTaxFreePerHour = baseSalaryTaxFree / hoursInMonth;
   const baseSalaryPerHour = baseSalaryTaxablePerHour + baseSalaryTaxFreePerHour;
 
   // Info: (20250825 - Luphia) 取得有效休假換算薪資時數，並計算折抵薪資，採四捨五入計算
@@ -310,20 +311,22 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       baseSalaryPerHour
   );
 
-  // Info: (20250727 - Luphia) 計算請假扣薪，採四捨五入計算
-  const leaveDeductionTaxable = Math.round(totalLeaveHours * baseSalaryTaxablePerHour);
-  const leaveDeductionTaxFree = Math.round(totalLeaveHours * baseSalaryTaxFreePerHour);
+  // Info: (20250727 - Luphia) 計算本薪（應稅）與伙食費（未稅），用出席時數計算，採四捨五入
+  const resultBaseSalaryTaxable = Math.round(
+    baseSalaryTaxable * (baseSalaryRatio - totalLeaveHours / hoursInMonth)
+  );
+  const resultBaseSalaryTaxFree = Math.round(
+    baseSalaryTaxFree * (baseSalaryRatio - totalLeaveHours / hoursInMonth)
+  );
 
-  // Info: (20250727 - Luphia) 計算本薪（應稅），無條件進入整數位
-  const resultBaseSalaryTaxable = Math.ceil(baseSalaryTaxablePay - leaveDeductionTaxable);
+  // Info: (20250815 - Luphia) 透過當月基礎薪資反推方式計算出員工請假扣薪
+  const leaveDeductionTaxable = baseSalaryTaxablePay - resultBaseSalaryTaxable;
+  const leaveDeductionTaxFree = baseSalaryTaxFreePay - resultBaseSalaryTaxFree;
 
   // Info: (20250815 - Luphia) 計算二代健保費，若未保健保則需計算 2.11% 二代健保費，採四捨五入
   const employeeBurdenSecondGenerationHealthInsurancePremiums = isHealthInsuranceEnrolled
     ? 0
     : Math.round(resultBaseSalaryTaxable * 0.0211);
-
-  // Info: (20250727 - Luphia) 計算伙食費，無條件進入整數位
-  const resultBaseSalaryTaxFree = Math.ceil(baseSalaryTaxFreePay - leaveDeductionTaxFree);
 
   // Info: (20250727 - Luphia) 計算薪資加項
   const totalSalaryTaxable = resultBaseSalaryTaxable + overTimePayTaxable + otherAllowancesTaxable;
@@ -468,6 +471,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     employeeBurdenSecondGenerationHealthInsurancePremiums, // Info: (20251009 - Luphia) 代扣二代健保費
     employeeBurdenOtherOverflowDeductions, // Info: (20251009 - Luphia) 其他溢扣／補收
     leaveDeduction: leaveDeductionTaxable, // Info: (20250727 - Luphia) 請假扣薪
+    leaveDeductionTaxFree: leaveDeductionTaxFree, // Info: (20250815 - Luphia) 免稅請假扣除免稅加給
     totalEmployeeBurden, // Info: (20250727 - Luphia) 員工負擔總計
     companyBurdenLaborInsurance: companyBurdenLaborInsurance + companyBurdenEmploymentInsurance, // Info: (20251009 - Luphia) 公司負擔勞保費 + 就保費
     companyBurdenHealthInsurance, // Info: (20251009 - Luphia) 公司負擔健保費

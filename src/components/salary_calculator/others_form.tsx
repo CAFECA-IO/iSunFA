@@ -33,7 +33,11 @@ const OthersForm: React.FC = () => {
     const changeVpc = () => changeVoluntaryPensionContribution(i);
 
     return (
-      <label htmlFor={`radio-vpc-${i}`} className="flex h-44px items-center gap-8px">
+      <label
+        key={`radio-vpc-${i}`}
+        htmlFor={`radio-vpc-${i}`}
+        className="flex h-44px items-center gap-8px"
+      >
         <input
           id={`radio-vpc-${i}`}
           name="radio-vpc"

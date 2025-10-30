@@ -44,7 +44,9 @@ const handleGetRequest: IHandleRequest<
       payload.user = {
         ...userFromDB,
         imageId: userFromDB?.imageFile?.url ?? '',
-        agreementList: userFromDB.userAgreements.map((ua) => ua.agreementHash),
+        agreementList: userFromDB.userAgreements.map(
+          (ua: { agreementHash: string }) => ua.agreementHash
+        ),
         email: userFromDB?.email ?? '',
         deletedAt: userFromDB?.deletedAt ?? 0,
       };
@@ -72,6 +74,10 @@ const handleGetRequest: IHandleRequest<
     } catch (error) {
       // Info: (20250626 - Shirley) 如果獲取團隊數據失敗，返回空數組
       payload.teams = [];
+      (error as Error).message +=
+        ` | Failed to get teams for userId: ${userId} with teamIds: ${teams
+          .map((t) => t.id)
+          .join(', ')}`;
     }
   }
 

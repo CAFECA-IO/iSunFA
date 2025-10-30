@@ -44,6 +44,7 @@ const LedgerList: React.FunctionComponent<LedgerListProps> = ({
       }
       return JSON.parse(noteString) as ILedgerNote;
     } catch (error) {
+      (error as Error).message += ' (解析 ledger note 失敗)';
       // Info: (20250214 - Shirley) 如果note為空字串、其他原因造成解析失敗，返回預設值
       return {
         currencyAlias: CurrencyType.TWD,

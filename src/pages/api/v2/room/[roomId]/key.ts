@@ -28,7 +28,8 @@ const handleGetRequest: IHandleRequest<APIName.ROOM_GET_PUBLIC_KEY_BY_ID, JsonWe
       roomPublicKey = await roomManager.getCompanyPublicKeyByRoomId(roomId);
     } catch (error) {
       loggerBack.error(`Failed to get room public key with id ${roomId}.`);
-      throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+      (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+      throw error;
     }
 
     if (!roomPublicKey) {

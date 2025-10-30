@@ -48,6 +48,7 @@ const InvoicePage = () => {
         }
       } catch (error) {
         loggerFront.error('取得團隊資料失敗');
+        loggerFront.error(error);
       } finally {
         setIsLoading(false);
       }
@@ -70,6 +71,7 @@ const InvoicePage = () => {
         }
       } catch (error) {
         loggerFront.error('取得發票資料失敗');
+        loggerFront.error(error);
       } finally {
         setIsLoading(false);
       }

@@ -15,8 +15,6 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx', '**/*.ts', '**/*.tsx'],
       extends: [
-        'airbnb',
-        'airbnb-typescript',
         'plugin:@typescript-eslint/eslint-recommended',
         'plugin:@typescript-eslint/recommended',
         'plugin:import/recommended',
@@ -87,8 +85,6 @@ module.exports = {
     },
   ],
   extends: [
-    'airbnb',
-    'airbnb-typescript',
     'plugin:import/typescript',
     'plugin:tailwindcss/recommended',
     'plugin:@next/next/recommended',

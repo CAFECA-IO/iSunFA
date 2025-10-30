@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
     }
   } catch (error) {
-    // Info: (20241127 - tzuhan) 錯誤處理
+    (error as Error).message += ' | Failed to sign out.';
     /* Info: (20250108 - Luphia) 登出失敗不需要紀錄
     const userFriendlyMessage = 'Failed to sign out';
     statusMessage = (error as Error).message || userFriendlyMessage;

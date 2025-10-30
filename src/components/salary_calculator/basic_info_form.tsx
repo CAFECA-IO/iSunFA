@@ -105,6 +105,7 @@ const BasicInfoForm: React.FC = () => {
     const clickHandler = () => changeSelectedYear(year);
     return (
       <button
+        key={year}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
@@ -120,6 +121,7 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <button
+        key={month.name}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
@@ -134,6 +136,7 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <button
+        key={option}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
@@ -155,6 +158,7 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <button
+        key={day}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
@@ -170,6 +174,7 @@ const BasicInfoForm: React.FC = () => {
 
     return (
       <button
+        key={day}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"

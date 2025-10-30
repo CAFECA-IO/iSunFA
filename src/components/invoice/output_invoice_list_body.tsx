@@ -40,11 +40,10 @@ import { jsPDF } from 'jspdf';
 import { ITeamMember } from '@/interfaces/team';
 import { ISortOption } from '@/interfaces/sort';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { EmptyObject } from '@/interfaces/common';
 // import FilterSideMenu from '@/components/filter_section/filter_sidemenu';
 
-interface CertificateListBodyProps {}
-
-const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
+const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   const { t } = useTranslation(['certificate']);
   const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250418 - Anna) 引用下載範圍
 
@@ -258,6 +257,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
 
         setCertificates(certificateData);
       } catch (error) {
+        (error as Error).message += ' (from handleApiResponse)';
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
@@ -324,6 +324,7 @@ const OutputInvoiceListBody: React.FC<CertificateListBodyProps> = () => {
           });
         } else throw new Error(t('certificate:DELETE.ERROR'));
       } catch (error) {
+        (error as Error).message += ' (from deleteSelectedCertificates)';
         toastHandler({
           id: ToastId.DELETE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,

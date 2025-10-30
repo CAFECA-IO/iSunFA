@@ -120,6 +120,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       if (coolDown) setVerifyCountdown(coolDown); // Info: (20250509 - Liz) 驗證碼的有效時間
       setStep(LOGIN_STEP.VERIFY_CODE);
     } catch (err) {
+      (err as Error).message += ' (寄送驗證信失敗)';
       setSendEmailError('寄送驗證信失敗，請稍後再試');
     } finally {
       setIsSendingEmail(false);
@@ -161,6 +162,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
       // Info: (20250630 - Luphia) 驗證成功跳轉回到登入頁面，該頁面會處理服務條款確認、角色創建、角色選擇等流程
       router.push(ISUNFA_ROUTE.LOGIN);
     } catch (err) {
+      (err as Error).message += ' (驗證碼驗證失敗)';
       setVerifyCodeError('驗證失敗，請稍後再試');
     } finally {
       setIsVerifyingCode(false);
@@ -191,6 +193,7 @@ const NewLoginPageBody = ({ invitation, action }: NewLoginPageProps) => {
 
       if (coolDown) setVerifyCountdown(coolDown); // Info: (20250509 - Liz) 驗證碼的有效時間
     } catch (err) {
+      (err as Error).message += ' (重新寄送驗證信失敗)';
       setVerifyCodeError('重新寄送驗證信失敗，請稍後再試');
     } finally {
       setIsResendingEmail(false);
