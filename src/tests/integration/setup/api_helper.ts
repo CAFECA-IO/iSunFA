@@ -495,6 +495,9 @@ export class APITestHelper {
       // Info: (20250707 - Shirley) Check if user has agreement data
       return Boolean(userData?.hasAgreedToTerms || userData?.agreementHash);
     } catch (error) {
+      if (error instanceof Error) {
+        error.message += ' - Ignored during cleanup';
+      }
       return false;
     }
   }

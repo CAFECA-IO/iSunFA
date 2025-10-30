@@ -101,7 +101,8 @@ const handleGetRequest = async (req: NextApiRequest) => {
       errorType: 'generateReport failed',
       errorMessage: 'Func. generateReport in company/companyId/report/index.ts failed',
     });
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    throw error;
   }
 
   // Info: (20250502 - Shirley) 驗證輸出資料

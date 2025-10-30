@@ -1,6 +1,5 @@
 import prisma from '@/client';
 import { ReportSheetType, ReportStatusType, ReportType } from '@/constants/report';
-// import { IAccountReadyForFrontend } from '@/interfaces/accounting_account'; // Info: (20240729 - Murky)
 import { LeaveStatus, Prisma, PrismaClient, Report } from '@prisma/client';
 import { getTimestampNow, pageToOffset } from '@/lib/utils/common';
 import { DEFAULT_PAGE_LIMIT } from '@/constants/config';
@@ -243,7 +242,7 @@ export const getReportByUserId = async (
       select: { teamId: true },
     });
     // Info: (20250703 - Julian) 抽取 teamId
-    const teamIds = teams.map((team) => team.teamId);
+    const teamIds = teams.map((team: { teamId: number }) => team.teamId);
 
     // Info: (20250703 - Julian) Step 2: 再從 team 取得 accountBook
     const accountBooks = await tx.accountBook.findMany({
@@ -258,7 +257,9 @@ export const getReportByUserId = async (
       },
     });
     // Info: (20250704 - Julian) 抽取 accountBook id
-    const accountBookIds = accountBooks.map((accountBook) => accountBook.id);
+    const accountBookIds = accountBooks.map(
+      (accountBook: { id: number; name: string }) => accountBook.id
+    );
 
     // Info: (20250704 - Julian) Step 3: 最後從 accountBook 取得 report id
     const reports = await tx.report.findMany({
@@ -276,25 +277,27 @@ export const getReportByUserId = async (
 
     // Info: (20250704 - Julian) Step 4: 整理成指定格式
     const reportLinks = accountBookIds
-      .map((accountBook) => {
+      .map((accountBook: number) => {
         const balanceReport = reports.find(
-          (report) =>
+          (report: { accountBookId: number; reportType: string }) =>
             report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.BALANCE_SHEET
         );
         const cashFlowReport = reports.find(
-          (report) =>
+          (report: { accountBookId: number; reportType: string }) =>
             report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.CASH_FLOW_STATEMENT
         );
         const comprehensiveIncomeReport = reports.find(
-          (report) =>
+          (report: { accountBookId: number; reportType: string }) =>
             report.accountBookId === accountBook &&
             report.reportType === ReportSheetType.INCOME_STATEMENT
         );
 
         return {
-          name: accountBooks.find((ab) => ab.id === accountBook)?.name || '',
+          name:
+            accountBooks.find((ab: { id: number; name: string }) => ab.id === accountBook)?.name ||
+            '',
           balance: balanceReport
             ? `https://isunfa.tw/embed/view/${balanceReport.id}?report_type=balance`
             : '',
@@ -306,13 +309,21 @@ export const getReportByUserId = async (
             : '',
         };
       })
-      .filter((report) => {
-        // Info: (20250704 - Julian) 過濾掉沒有報表的帳本
-        return report.balance || report.cashFlow || report.comprehensiveIncome;
-      });
+      .filter(
+        (report: {
+          name: string;
+          balance: string;
+          cashFlow: string;
+          comprehensiveIncome: string;
+        }) => {
+          // Info: (20250704 - Julian) 過濾掉沒有報表的帳本
+          return report.balance || report.cashFlow || report.comprehensiveIncome;
+        }
+      );
 
     return reportLinks;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+    (error as Error).message = STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR;
+    throw error;
   }
 };

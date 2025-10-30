@@ -21,6 +21,7 @@ const handleGetRequest: IHandleRequest<APIName.FILE_GET, File> = async ({ query 
     payload = file;
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
   } catch (error) {
+    (error as Error).message += ' - Failed to get file record from database.';
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
@@ -41,6 +42,7 @@ const handlePutRequest: IHandleRequest<APIName.FILE_PUT_V2, File> = async ({ que
     payload = file;
     statusMessage = STATUS_MESSAGE.SUCCESS_UPDATE;
   } catch (error) {
+    (error as Error).message += ' - Failed to update file record in database.';
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 
@@ -64,6 +66,7 @@ const handleDeleteRequest: IHandleRequest<APIName.FILE_DELETE_V2, File> = async 
         statusMessage = STATUS_MESSAGE.SUCCESS_DELETE;
         payload = file;
       } catch (fsError) {
+        (fsError as Error).message += ' - Failed to delete file from filesystem.';
         statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       }
     } else {
@@ -71,6 +74,7 @@ const handleDeleteRequest: IHandleRequest<APIName.FILE_DELETE_V2, File> = async 
       payload = file;
     }
   } catch (error) {
+    (error as Error).message += ' - Failed to delete file record from database.';
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   }
 

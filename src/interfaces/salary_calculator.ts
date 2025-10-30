@@ -59,6 +59,7 @@ interface ISalaryCalculatorResult {
   employeeBurdenIncomeTax: number; // Info: (20250727 - Luphia) 代扣所得稅款
   employeeBurdenSecondGenerationHealthInsurancePremiums: number; // Info: (20250727 - Luphia) 代扣二代健保費
   leaveDeduction: number; // Info: (20250727 - Luphia) 請假扣薪
+  leaveDeductionTaxFree: number; // Info: (20250727 - Luphia) 請假扣除免稅加給
   employeeBurdenOtherOverflowDeductions: number; // Info: (20250727 - Luphia) 其他溢扣／補收
   totalEmployeeBurden: number; // Info: (20250814 - Luphia) 扣項總計
   companyBurdenLaborInsurance: number; // Info: (20270727 - Luphia) 公司負擔勞保費

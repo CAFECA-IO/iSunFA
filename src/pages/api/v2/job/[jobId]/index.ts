@@ -2,32 +2,9 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
-import { z } from 'zod';
+import { Job } from '@/pages/api/v2/job/index';
 
-const jobSchema = z.object({
-  id: z.number(),
-  companyName: z.string(),
-  companyLogo: z.string(),
-  issueType: z.string(),
-  publicationDate: z.number(),
-  estimatedWorkingHours: z.object({
-    start: z.number(),
-    end: z.number(),
-  }),
-  deadline: z.number(),
-  hourlyWage: z.number(),
-  caseDescription: z.string(),
-  targetCandidates: z.string(),
-  remarks: z.string(),
-  applicationsCount: z.number(),
-  isMatched: z.boolean(),
-  createdAt: z.number(),
-  updatedAt: z.number(),
-});
-
-type IJob = z.infer<typeof jobSchema>;
-
-const jobs: IJob[] = [
+const jobs: Job[] = [
   {
     id: 1,
     companyName: 'A 公司',
@@ -74,11 +51,11 @@ export async function handleGetRequest(
   req: NextApiRequest,
   // ToDo: implement the logic to get the job data from the database (20240924 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  res: NextApiResponse<IResponseData<IJob | null>>
+  res: NextApiResponse<IResponseData<Job | null>>
 ) {
   const { jobId } = req.query;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IJob | null = null;
+  let payload: Job | null = null;
 
   const job = jobs.find((g) => g.id === parseInt(jobId as string, 10));
   if (job) {
@@ -96,17 +73,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IJob | null }>;
+  ) => Promise<{ statusMessage: string; payload: Job | null }>;
 } = {
   GET: handleGetRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IJob | null>>
+  res: NextApiResponse<IResponseData<Job | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IJob | null = null;
+  let payload: Job | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -120,7 +97,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IJob | null>(statusMessage, payload);
+    const { httpCode, result } = formatApiResponse<Job | null>(statusMessage, payload);
     res.status(httpCode).json(result);
   }
 }

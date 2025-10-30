@@ -36,7 +36,9 @@ export interface IAccount {
   deletedAt: number | null;
 }
 
-export interface IPaginatedAccount extends IPaginatedData<IAccount[]> {}
+export interface IPaginatedAccount extends IPaginatedData<IAccount[]> {
+  id?: number;
+}
 
 // Info Murky (20240416): Interface
 export interface IAccountResultStatus {

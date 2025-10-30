@@ -147,7 +147,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
       hideReversedRelated,
     });
 
-    const { data, where, ...pagination } = paginationVouchers;
+    const { data, ...pagination } = paginationVouchers;
 
     const voucherBetas = data.map(buildVoucherBeta);
     const note = {
@@ -228,7 +228,6 @@ const handlePostRequest = async (req: NextApiRequest) => {
       certificateIds,
       invoiceRC2Ids,
       lineItems,
-      recurringInfo,
       assetIds,
       reverseVouchers: reverseVouchersInfo,
       counterPartyId,

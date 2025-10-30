@@ -60,6 +60,7 @@ const NoticeSettings: React.FC<NoticeSettingsProps> = ({ userSetting }) => {
           setNotificationSettings(initialSettings); // Info: (20250108 - Tzuhan) 設定失敗，switch 還原回原本狀態，提示錯誤資訊
         }
       } catch (error) {
+        (error as Error).message += ' (from updateUserSettings)';
         setNotificationSettings(initialSettings); // Info: (20250108 - Tzuhan) 設定失敗，switch 還原回原本狀態，提示錯誤資訊
         toastHandler({
           id: ToastId.USER_SETTING_UPDATE_ERROR,

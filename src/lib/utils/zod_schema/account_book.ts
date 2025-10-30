@@ -27,6 +27,8 @@ const countrySchema = z.object({
   phoneCode: z.string(),
   phoneExample: z.string(),
 });
+// Info: (20251028 - Luphia) workaround for Zod object used only as a type
+countrySchema.array();
 
 // Info: (2025) `roleSchema` 不再需要，因為 `role` 已經改為 `accountBookRole`
 export const accountBookSchema = z.object({
@@ -305,6 +307,8 @@ const connectAccountBookQuerySchema = z.object({
 const connectAccountBookResponseSchema = z.object({
   accountBookId: z.number(),
 });
+// Info: (20251028 - Luphia) Workaround for Zod object used only as a type
+connectAccountBookResponseSchema.array();
 
 export const connectAccountBookSchema = {
   input: {

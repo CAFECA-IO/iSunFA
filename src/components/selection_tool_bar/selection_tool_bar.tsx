@@ -79,6 +79,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
             {addOperations &&
               addOperations.map((operation) => (
                 <Button
+                  key={operation.operation}
                   type="button"
                   variant="tertiary"
                   className="h-36px py-1.5"

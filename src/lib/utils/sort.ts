@@ -27,6 +27,7 @@ export function parseSortOption(
     const sortOptionParsed = parseResult.data;
     return sortOptionParsed;
   } catch (error) {
+    (error as Error).message += ` | parseSortOption Failed`;
     return defaultSortOption;
   }
 }

@@ -69,6 +69,7 @@ const FilterSection: React.FC<{
 
         return (
           <button
+            key={year}
             type="button"
             onClick={clickHandler}
             className="px-12px py-10px hover:bg-input-surface-input-hover"
@@ -89,6 +90,7 @@ const FilterSection: React.FC<{
         };
         return (
           <button
+            key={month}
             type="button"
             onClick={clickHandler}
             className="px-12px py-10px hover:bg-input-surface-input-hover"

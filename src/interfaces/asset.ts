@@ -360,10 +360,16 @@ export interface ICreateAssetWithVouchersRepoInput {
 
 export type IAssetPostOutput = z.infer<typeof IAssetPostOutputValidator>;
 
-export interface IAssetBulkPostRepoInput extends ICreateAssetWithVouchersRepoInput {}
-export interface IAssetBulkPostRepoOutput extends Array<IAssetPostOutput> {}
+export interface IAssetBulkPostRepoInput extends ICreateAssetWithVouchersRepoInput {
+  id?: number;
+}
+export interface IAssetBulkPostRepoOutput extends Array<IAssetPostOutput> {
+  id?: number;
+}
 
-export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {}
+export interface IPaginatedAsset extends IPaginatedData<IAssetItem[]> {
+  id?: number;
+}
 
 export type IAssetPutRepoInput = z.infer<typeof IAssetPutRepoInputValidator>;
 

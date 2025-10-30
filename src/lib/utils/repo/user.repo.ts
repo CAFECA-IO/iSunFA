@@ -29,7 +29,7 @@ export async function listUser(): Promise<
 export async function handleInviteTeamMember(userId: number, email: string): Promise<void> {
   if (!email) return;
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Info: (20250318 - Tzuhan) 查找所有 `inviteTeamMember` 還未處理的邀請
     const invitedTeams = await tx.inviteTeamMember.findMany({
       where: { email, status: InviteStatus.PENDING },
@@ -43,7 +43,7 @@ export async function handleInviteTeamMember(userId: number, email: string): Pro
 
       // Info: (20250318 - Tzuhan) 批量將用戶加入 `teamMember`
       await tx.teamMember.createMany({
-        data: invitedTeams.map((invite) => ({
+        data: invitedTeams.map((invite: { teamId: number }) => ({
           teamId: invite.teamId,
           userId,
           role: TeamRole.EDITOR, // Info: (20250318 - Tzuhan) 預設角色
@@ -54,7 +54,10 @@ export async function handleInviteTeamMember(userId: number, email: string): Pro
 
       // Info: (20250318 - Tzuhan) 更新 `inviteTeamMember` 為 `COMPLETED`
       await tx.inviteTeamMember.updateMany({
-        where: { email, teamId: { in: invitedTeams.map((invite) => invite.teamId) } },
+        where: {
+          email,
+          teamId: { in: invitedTeams.map((invite: { teamId: number }) => invite.teamId) },
+        },
         data: {
           status: InviteStatus.COMPLETED,
           completedAt: nowTimestamp,
@@ -77,7 +80,7 @@ export async function createUser({
   const nowTimestamp = timestampInSeconds(now);
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Info: (20250317 - Tzuhan) Step 1: 查找是否有邀請
       const invitedTeams = await tx.inviteTeamMember.findMany({
         where: { email, status: InviteStatus.PENDING },
@@ -111,7 +114,7 @@ export async function createUser({
 
       if (invitedTeams.length > 0) {
         // Info: (20250317 - Tzuhan) Step 1: 批量創建 `teamMember`
-        const newTeamMembers = invitedTeams.map((invite) => ({
+        const newTeamMembers = invitedTeams.map((invite: { teamId: number }) => ({
           teamId: invite.teamId,
           userId: createdUser.id,
           role: TeamRole.EDITOR, // Info: (20250317 - Tzuhan) 預設角色
@@ -124,7 +127,7 @@ export async function createUser({
         });
 
         // Info: (20250317 - Tzuhan) Step 2: 批量更新 `inviteTeamMember` 為 `COMPLETED`
-        const teamIds = invitedTeams.map((invite) => invite.teamId); // Info: (20250317 - Tzuhan) 取出所有 teamId
+        const teamIds = invitedTeams.map((invite: { teamId: number }) => invite.teamId); // Info: (20250317 - Tzuhan) 取出所有 teamId
 
         await tx.inviteTeamMember.updateMany({
           where: {
@@ -140,9 +143,9 @@ export async function createUser({
 
       return createdUser;
     });
-  } catch (e) {
-    const error = new Error(STATUS_MESSAGE.CREATE_USER_FAILED);
-    error.name = STATUS_CODE.CREATE_USER_FAILED;
+  } catch (error) {
+    (error as Error).message = STATUS_MESSAGE.CREATE_USER_FAILED;
+    (error as Error).name = STATUS_CODE.CREATE_USER_FAILED;
     throw error;
   }
 }

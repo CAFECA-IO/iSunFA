@@ -450,7 +450,7 @@ export async function updateInvoiceRC2Input(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
-  const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
+  const { file, uploaderName, voucherNo, ...rest } = data;
 
   const certForCheck: InvoiceRC2Type = {
     ...rest,
@@ -512,7 +512,7 @@ export async function updateInvoiceRC2Output(
     action: TeamPermissionAction.UPDATE_CERTIFICATE,
   });
   const now = getTimestampNow();
-  const { id, createdAt, file, uploaderName, voucherNo, ...rest } = data;
+  const { file, uploaderName, voucherNo, ...rest } = data;
 
   const certForCheck: InvoiceRC2Type = {
     ...rest,

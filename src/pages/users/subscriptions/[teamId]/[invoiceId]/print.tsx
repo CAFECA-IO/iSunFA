@@ -34,6 +34,7 @@ const InvoicePrintPage = () => {
         }
       } catch (error) {
         loggerFront.error('取得發票資料失敗');
+        loggerFront.error(error);
       }
     };
 

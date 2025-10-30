@@ -41,6 +41,7 @@ const TeamSubscriptionPage = () => {
       }
     } catch (error) {
       loggerFront.log('取得團隊資料失敗');
+      loggerFront.error(error);
     } finally {
       setIsLoading(false);
     }

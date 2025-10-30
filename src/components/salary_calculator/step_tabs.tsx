@@ -100,6 +100,7 @@ const StepTabs: React.FC = () => {
 
     return (
       <button
+        key={step}
         type="button"
         onClick={clickHandler}
         className={`${stepClass} flex h-40px w-full items-center justify-center gap-8px rounded-sm border px-12px py-lv-3 text-xs font-medium tablet:py-8px`}

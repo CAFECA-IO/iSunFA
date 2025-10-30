@@ -49,8 +49,6 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             className={orangeRadioStyle}
             required
           />
-          {/* Deprecated: (20250410 - Julian) remove eslint-disable */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-yes`} className="hover:cursor-pointer">
             {t('hiring:PERSONAL_INFO.YES')}
           </label>
@@ -66,8 +64,6 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             className={orangeRadioStyle}
             required
           />
-          {/* Deprecrated: (20250410 - Julian) remove eslint-disable */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-no`} className="hover:cursor-pointer">
             {t('hiring:PERSONAL_INFO.NO')}
           </label>

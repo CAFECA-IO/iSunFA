@@ -254,6 +254,7 @@ const UploadArea = ({
         handleFileUpload(file);
       }
     } catch (error) {
+      (error as Error).message += ' (讀取本地檔案失敗)';
       handleError(t('kyc:KYC.READ_FILE_FAILED'), t('kyc:KYC.FILE_READ_ERROR'));
     }
   }, []);
