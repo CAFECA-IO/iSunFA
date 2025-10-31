@@ -89,7 +89,7 @@ const TeamNameEditModal: React.FC<TeamNameEditModalProps> = ({
           <input
             id="team-name"
             type="text"
-            className="w-full rounded-sm border border-input-stroke-input p-2 text-input-text-input-filled"
+            className="w-full rounded-sm border border-input-stroke-input p-2 text-input-text-input-filled outline-none"
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
           />

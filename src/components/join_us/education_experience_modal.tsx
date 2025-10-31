@@ -55,7 +55,7 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
     status: SchoolStatus.GRADUATED,
   };
 
-  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const inputStyle = `${haloStyle} rounded-full outline-none h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const [selectedDegree, setSelectedDegree] = useState<Degree>(initDegree);
   const [schoolNameInput, setSchoolNameInput] = useState<string>(initSchoolName);
@@ -94,17 +94,11 @@ const EducationExperienceModal: React.FC<IEducationExperienceModalProps> = ({
   };
   const changeStartTimestamp = (e: React.ChangeEvent<HTMLInputElement>) => {
     const date = new Date(e.target.value);
-    setStartInput({
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-    });
+    setStartInput({ year: date.getFullYear(), month: date.getMonth() + 1 });
   };
   const changeEndTimestamp = (e: React.ChangeEvent<HTMLInputElement>) => {
     const date = new Date(e.target.value);
-    setEndInput({
-      year: date.getFullYear(),
-      month: date.getMonth() + 1,
-    });
+    setEndInput({ year: date.getFullYear(), month: date.getMonth() + 1 });
   };
 
   // Info: (20250505 - Julian) 刪除按鈕

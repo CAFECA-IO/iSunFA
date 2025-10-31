@@ -88,7 +88,7 @@ const AboutEditModal: React.FC<AboutEditModalProps> = ({
           <input
             id="team-description"
             type="text"
-            className="w-full rounded-sm border border-input-stroke-input p-2 text-input-text-input-filled"
+            className="w-full rounded-sm border border-input-stroke-input p-2 text-input-text-input-filled outline-none"
             value={teamDescription}
             placeholder={
               initialDescription.trim() === ''
