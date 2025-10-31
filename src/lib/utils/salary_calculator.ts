@@ -291,31 +291,31 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
   // Info: (20250727 - Luphia) 總扣薪時數
   const totalLeaveHours = sickLeaveHours * 0.5 + personalLeaveHours;
 
-  // Info: (20250727 - Luphia) 計算加班費，採四捨五入計算
-  const overTimePayTaxable = Math.round(
+  // Info: (20250727 - Luphia) 計算加班費，需足額，故採無條件進入
+  const overTimePayTaxable = Math.ceil(
     (overTimeHoursTaxable100 +
-      overTimeHoursTaxable133 * 1.34 +
-      overTimeHoursTaxable166 * 1.67 +
+      overTimeHoursTaxable133 * (4 / 3) +
+      overTimeHoursTaxable166 * (5 / 3) +
       overTimeHoursTaxable200 * 2 +
-      overTimeHoursTaxable233 * 2.34 +
-      overTimeHoursTaxable266 * 2.67) *
+      overTimeHoursTaxable233 * (7 / 3) +
+      overTimeHoursTaxable266 * (8 / 3)) *
       baseSalaryPerHour
   );
-  const overTimePayTaxFree = Math.round(
+  const overTimePayTaxFree = Math.ceil(
     (overTimeHoursTaxFree100 +
-      overTimeHoursTaxFree133 * 1.34 +
-      overTimeHoursTaxFree166 * 1.67 +
+      overTimeHoursTaxFree133 * (4 / 3) +
+      overTimeHoursTaxFree166 * (5 / 3) +
       overTimeHoursTaxFree200 * 2 +
-      overTimeHoursTaxFree233 * 2.34 +
-      overTimeHoursTaxFree266 * 2.67) *
+      overTimeHoursTaxFree233 * (7 / 3) +
+      overTimeHoursTaxFree266 * (8 / 3)) *
       baseSalaryPerHour
   );
 
-  // Info: (20250727 - Luphia) 計算本薪（應稅）與伙食費（未稅），用出席時數計算，採四捨五入
-  const resultBaseSalaryTaxable = Math.round(
+  // Info: (20250727 - Luphia) 計算本薪（應稅）與伙食費（未稅），用出席時數計算，需足額，故採無條件進入
+  const resultBaseSalaryTaxable = Math.ceil(
     baseSalaryTaxable * (baseSalaryRatio - totalLeaveHours / hoursInMonth)
   );
-  const resultBaseSalaryTaxFree = Math.round(
+  const resultBaseSalaryTaxFree = Math.ceil(
     baseSalaryTaxFree * (baseSalaryRatio - totalLeaveHours / hoursInMonth)
   );
 
