@@ -135,7 +135,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
                 type="text"
                 value={nameInput}
                 onChange={changeNameHandler}
-                className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
+                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
                 placeholder={t('calculator:EMPLOYEE_LIST.NAME_PLACEHOLDER')}
               />
             </div>
@@ -150,7 +150,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
                 type="text"
                 value={numberInput}
                 onChange={changeNumberHandler}
-                className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
+                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
                 placeholder={t('calculator:EMPLOYEE_LIST.NUMBER_PLACEHOLDER')}
               />
             </div>
@@ -186,7 +186,7 @@ const EmployeeActionModal: React.FC<IEmployeeActionModalProps> = ({
                 type="text"
                 value={emailInput}
                 onChange={changeEmailHandler}
-                className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
+                className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
                 placeholder={t('calculator:EMPLOYEE_LIST.EMAIL_PLACEHOLDER')}
               />
             </div>
