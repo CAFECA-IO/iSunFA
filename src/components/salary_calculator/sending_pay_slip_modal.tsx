@@ -5,9 +5,9 @@ import { useTranslation } from 'next-i18next';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { Button } from '@/components/button/button';
 
-const SendingPaySlipModal: React.FC<{
-  modalVisibleHandler: () => void;
-}> = ({ modalVisibleHandler }) => {
+const SendingPaySlipModal: React.FC<{ modalVisibleHandler: () => void }> = ({
+  modalVisibleHandler,
+}) => {
   const { t } = useTranslation(['calculator', 'common', 'date_picker']);
   const { employeeName, employeeEmail, selectedMonth } = useCalculatorCtx();
 
@@ -75,7 +75,7 @@ const SendingPaySlipModal: React.FC<{
               value={emailInput}
               onChange={changeEmailInput}
               placeholder={t('calculator:SENDING_PAY_SLIP_MODAL.EMAIL_PLACEHOLDER')}
-              className={`flex-1 bg-transparent px-12px py-10px font-medium ${isValidEmail ? 'placeholder:text-input-text-input-placeholder' : 'text-input-text-error'}`}
+              className={`flex-1 bg-transparent px-12px py-10px font-medium outline-none ${isValidEmail ? 'placeholder:text-input-text-input-placeholder' : 'text-input-text-error'}`}
             />
           </div>
           {/* Info: (20250723 - Julian) Invalid Email Message */}

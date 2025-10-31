@@ -102,7 +102,7 @@ const ReferralCodeInput: React.FC<IReferralCodeInputProps> = ({ discountHandler 
             value={referralCodeInput}
             onChange={changeReferralCodeInput}
             placeholder={t('subscriptions:PAYMENT_PAGE.REFERRAL_CODE_PLACEHOLDER')}
-            className={`${inputStyle} w-150px bg-transparent text-base placeholder:text-input-text-input-placeholder`}
+            className={`${inputStyle} w-150px bg-transparent text-base outline-none placeholder:text-input-text-input-placeholder`}
           />
 
           <div className="h-20px w-20px shrink-0">

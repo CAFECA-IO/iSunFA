@@ -20,7 +20,7 @@ const LanguageSkillModal: React.FC<ILanguageSkillModalProps> = ({
   const { tempLanguageList, addLanguageSkill, updateLanguageSkill, removeLanguageSkill } =
     useHiringCtx();
 
-  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px outline-none placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
   const isEditMode = editId !== null;
 
   const initialData = tempLanguageList.find((lang) => lang.id === editId);
