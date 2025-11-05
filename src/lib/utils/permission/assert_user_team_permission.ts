@@ -118,12 +118,13 @@ export const assertUserCan = async ({
   teamId,
   action,
 }: AssertUserCanOptions): Promise<{
+  isExpired: boolean;
   actualRole: TeamRole;
   effectiveRole: TeamRole;
   can: boolean;
   alterableRoles?: TeamRole[];
 }> => {
-  const { actualRole, effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  const { actualRole, effectiveRole, isExpired } = await assertUserIsTeamMember(userId, teamId);
 
   // Info: (20250411 - Tzuhan) 根據行為是否為敏感操作，決定使用哪種角色進行判斷
   const useActual = ACTION_USE_ACTUAL_ROLE.includes(action);
@@ -132,6 +133,7 @@ export const assertUserCan = async ({
   const result = convertTeamRoleCanDo({ teamRole: roleToUse, canDo: action });
 
   return {
+    isExpired,
     actualRole,
     effectiveRole,
     can: result.can,
@@ -167,6 +169,7 @@ export const assertUserCanByAccountBook = async ({
   effectiveRole: TeamRole;
   can: boolean;
   alterableRoles?: TeamRole[];
+  isExpired: boolean;
 }> => {
   const accountBook = await prisma.accountBook.findFirst({
     where: {

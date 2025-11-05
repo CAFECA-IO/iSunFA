@@ -1,4 +1,4 @@
-import { STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -88,6 +88,12 @@ async function handleGetRequest(req: NextApiRequest) {
     action: TeamPermissionAction.VIEW_TRIAL_BALANCE,
   });
 
+  if (assertResult.isExpired) {
+    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
+    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
+    throw error;
+  }
+
   if (!assertResult.can) {
     loggerBack.info(
       `User ${userId} does not have permission to view trial balance for company ${accountBookId}`
@@ -165,8 +171,7 @@ async function handleGetRequest(req: NextApiRequest) {
 
     // Info: (20250424 - Shirley) Step 4 整理資料 - Use decimal operations for precise calculations
     const lineItemsWithDebitCredit: ILineItemInTrialBalanceItem[] = lineItems.map((item) => {
-      const itemAmount =
-        typeof item.amount === 'string' ? item.amount : item.amount.toString();
+      const itemAmount = typeof item.amount === 'string' ? item.amount : item.amount.toString();
       return {
         ...item,
         debitAmount: item.debit ? itemAmount : '0',
@@ -196,15 +201,9 @@ async function handleGetRequest(req: NextApiRequest) {
         pageSize ?? DEFAULT_PAGE_LIMIT
       );
 
-      const note = {
-        currencyAlias,
-        total: APIData.total,
-      };
+      const note = { currencyAlias, total: APIData.total };
 
-      payload = {
-        ...paginatedTrialBalance,
-        note: JSON.stringify(note),
-      };
+      payload = { ...paginatedTrialBalance, note: JSON.stringify(note) };
 
       statusMessage = STATUS_MESSAGE.SUCCESS_LIST;
       loggerBack.info(

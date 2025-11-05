@@ -46,22 +46,11 @@ type GetOneVoucherResponse = IVoucherEntity & {
   originalEvents: IEventEntity[];
   resultEvents: IEventEntity[];
   asset: IAssetEntity[];
-  certificates: (ICertificateEntity & {
-    invoice: IInvoiceEntity;
-    file: IFileEntity;
-  })[];
+  certificates: (ICertificateEntity & { invoice: IInvoiceEntity; file: IFileEntity })[];
   invoiceRC2List: InvoiceRC2WithFullRelations[];
   lineItems: (ILineItemEntity & { account: IAccountEntity })[];
-  payableInfo?: {
-    total: string;
-    alreadyHappened: string;
-    remain: string;
-  };
-  receivingInfo?: {
-    total: string;
-    alreadyHappened: string;
-    remain: string;
-  };
+  payableInfo?: { total: string; alreadyHappened: string; remain: string };
+  receivingInfo?: { total: string; alreadyHappened: string; remain: string };
 };
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -96,10 +85,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   try {
     const voucherFromPrisma: IGetOneVoucherResponse = await getUtils.getVoucherFromPrisma(
       voucherId,
-      {
-        isVoucherNo,
-        companyId: accountBookId,
-      }
+      { isVoucherNo, companyId: accountBookId }
     );
 
     const voucher: IVoucherEntity = getUtils.initVoucherEntity(voucherFromPrisma);
@@ -141,8 +127,20 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     if (!isOutputDataValid) {
       statusMessage = STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+      if (process.env.NODE_ENV === 'development') {
+        loggerBack.warn(
+          `[DEV ONLY] Data validation failed for VOUCHER_GET_BY_ID_V2. Returning raw data for debugging.`
+        );
+        payload = {
+          _debug_validation_failed: true, // Info: (20251104 - Tzuhan) 標記這是個除錯用的回應
+          _debug_message: 'Data validation failed. Check _debug_raw_data.',
+          _debug_raw_data: mockVoucher, // Info: (20251104 - Tzuhan) 傳送驗證失敗前的原始物件
+          _debug_parsed_data: outputData, // Info: (20251104 - Tzuhan) 傳送 Zod (validator) 解析後的物件
+        };
+      }
     } else {
       payload = outputData;
+      statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     }
 
     statusMessage = STATUS_MESSAGE.SUCCESS_GET;
@@ -173,11 +171,17 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { accountBookId, voucherId, isVoucherNo } = query;
   const { userId } = session;
 
-  const { can } = await assertUserCanByAccountBook({
+  const { isExpired, can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.MODIFY_VOUCHER,
   });
+
+  if (isExpired) {
+    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
+    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
+    throw error;
+  }
 
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
@@ -245,11 +249,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
     if (hasLineItemChanged) {
       const nowInSecond = getTimestampNow();
       const { deleteVoucher, deleteEvent, newVoucher } = putUtils.createReversedAndNewVoucherEntity(
-        {
-          nowInSecond,
-          voucherFromPrisma: origin,
-          newLineItems,
-        }
+        { nowInSecond, voucherFromPrisma: origin, newLineItems }
       );
 
       const company = await postUtils.initCompanyFromPrisma(accountBookId);
@@ -273,11 +273,7 @@ const handlePutRequest = async (req: NextApiRequest) => {
         company,
         originalVoucher: newVoucher,
         issuer,
-        eventControlPanel: {
-          revertEvent: deleteEvent,
-          recurringEvent: null,
-          assetEvent: null,
-        },
+        eventControlPanel: { revertEvent: deleteEvent, recurringEvent: null, assetEvent: null },
         certificateIds,
         invoiceRC2Ids,
       });
@@ -324,18 +320,9 @@ const handlePutRequest = async (req: NextApiRequest) => {
       issuerId: issuer.id,
       counterPartyId,
       voucherInfo,
-      certificateOptions: {
-        certificateIdsNeedToBeRemoved,
-        certificateIdsNeedToBeAdded,
-      },
-      invoiceRC2Options: {
-        invoiceRC2IdsNeedToBeRemoved,
-        invoiceRC2IdsNeedToBeAdded,
-      },
-      assetOptions: {
-        assetIdsNeedToBeRemoved,
-        assetIdsNeedToBeAdded,
-      },
+      certificateOptions: { certificateIdsNeedToBeRemoved, certificateIdsNeedToBeAdded },
+      invoiceRC2Options: { invoiceRC2IdsNeedToBeRemoved, invoiceRC2IdsNeedToBeAdded },
+      assetOptions: { assetIdsNeedToBeRemoved, assetIdsNeedToBeAdded },
       reverseRelationNeedToBeReplace,
     });
 
@@ -360,11 +347,16 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   const { accountBookId, voucherId, isVoucherNo } = query;
   const { userId } = session;
-  const { can } = await assertUserCanByAccountBook({
+  const { isExpired, can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.DELETE_VOUCHER,
   });
+  if (isExpired) {
+    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
+    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
+    throw error;
+  }
 
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
