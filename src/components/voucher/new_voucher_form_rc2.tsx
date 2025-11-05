@@ -42,6 +42,7 @@ import InvoiceSelection from '@/components/voucher/invoice_selection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import loggerFront from '@/lib/utils/logger_front';
 import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import { STATUS_CODE } from '@/constants/status_code';
 
 interface NewVoucherFormProps {
   selectedData: { [id: string]: IInvoiceRC2UI };
@@ -76,6 +77,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     trigger: createVoucher,
     success: createSuccess,
     isLoading: isCreating,
+    code: createCode,
   } = APIHandler(APIName.VOUCHER_POST_V2);
 
   // Info: (20241105 - Julian) 從 useAccountingCtx 取得反轉傳票
@@ -611,6 +613,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       if (createSuccess) {
         router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
+        if (createCode === STATUS_CODE.FREE_TRIAL_EXPIRED) {
+          toastHandler({
+            id: ToastId.CREATE_VOUCHER_ERROR,
+            type: ToastType.ERROR,
+            content: t('subscriptions:ERROR.FREE_TRIAL_EXPIRED'),
+            closeable: true,
+          });
+        }
         toastHandler({
           id: ToastId.CREATE_VOUCHER_ERROR,
           type: ToastType.ERROR,

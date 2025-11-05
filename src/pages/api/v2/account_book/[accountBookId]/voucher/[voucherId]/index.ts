@@ -171,17 +171,11 @@ const handlePutRequest = async (req: NextApiRequest) => {
   const { accountBookId, voucherId, isVoucherNo } = query;
   const { userId } = session;
 
-  const { isExpired, can } = await assertUserCanByAccountBook({
+  const { can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.MODIFY_VOUCHER,
   });
-
-  if (isExpired) {
-    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
-    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
-    throw error;
-  }
 
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
@@ -347,17 +341,11 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
 
   const { accountBookId, voucherId, isVoucherNo } = query;
   const { userId } = session;
-  const { isExpired, can } = await assertUserCanByAccountBook({
+  const { can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.DELETE_VOUCHER,
   });
-  if (isExpired) {
-    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
-    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
-    throw error;
-  }
-
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
     error.name = STATUS_CODE.PERMISSION_DENIED;

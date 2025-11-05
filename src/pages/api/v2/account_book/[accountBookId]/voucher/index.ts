@@ -197,17 +197,11 @@ const handlePostRequest = async (req: NextApiRequest) => {
 
   const { accountBookId } = query;
 
-  const { isExpired, can } = await assertUserCanByAccountBook({
+  const { can } = await assertUserCanByAccountBook({
     userId,
     accountBookId,
     action: TeamPermissionAction.CREATE_VOUCHER,
   });
-
-  if (isExpired) {
-    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
-    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
-    throw error;
-  }
 
   if (!can) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);

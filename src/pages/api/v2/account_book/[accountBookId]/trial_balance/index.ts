@@ -1,4 +1,4 @@
-import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_MESSAGE } from '@/constants/status_code';
 import { IResponseData } from '@/interfaces/response_data';
 import { formatApiResponse } from '@/lib/utils/common';
 import { NextApiRequest, NextApiResponse } from 'next';
@@ -87,12 +87,6 @@ async function handleGetRequest(req: NextApiRequest) {
     accountBookId,
     action: TeamPermissionAction.VIEW_TRIAL_BALANCE,
   });
-
-  if (assertResult.isExpired) {
-    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
-    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
-    throw error;
-  }
 
   if (!assertResult.can) {
     loggerBack.info(

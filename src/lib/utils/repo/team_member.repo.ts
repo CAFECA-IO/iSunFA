@@ -413,12 +413,8 @@ export const listTeamMemberByTeamId = async (
   teamId: number,
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
-  const { isExpired, effectiveRole } = await assertUserIsTeamMember(userId, teamId);
-  if (isExpired) {
-    const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
-    error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
-    throw error;
-  }
+  const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+
   if (!effectiveRole) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
     error.name = STATUS_CODE.PERMISSION_DENIED;
