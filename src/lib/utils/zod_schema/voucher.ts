@@ -511,16 +511,16 @@ const voucherGetOneOutputValidatorV2 = z
     ),
     payableInfo: z
       .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
+        total: z.string(),
+        alreadyHappened: z.string(),
+        remain: z.string(),
       })
       .optional(),
     receivingInfo: z
       .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
+        total: z.string(),
+        alreadyHappened: z.string(),
+        remain: z.string(),
       })
       .optional(),
     isReverseRelated: z.boolean().optional(),
