@@ -21,16 +21,16 @@ export const ExtendTrialToastButton: React.FC<Props> = ({ teamId, closeToast }) 
         throw new Error(errorData.message || '延長試用失敗，請稍後再試。');
       }
 
-      // 成功！
+      // Info: (20251105 - Tzuhan) 成功！
       toast.success('試用期已成功延長 1 個月！');
 
-      // 關閉目前的錯誤 toast
+      // Info: (20251105 - Tzuhan) 關閉目前的錯誤 toast
       closeToast();
     } catch (error) {
       toast.error((error as Error).message || '延長失敗');
       setIsLoading(false);
     }
-    // 不管成功或失敗，loading 都結束了 (成功時 Toast 已關閉)
+    // Info: (20251105 - Tzuhan) 不管成功或失敗，loading 都結束了 (成功時 Toast 已關閉)
   };
 
   return (
