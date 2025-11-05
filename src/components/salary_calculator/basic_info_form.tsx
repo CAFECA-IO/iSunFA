@@ -206,7 +206,7 @@ const BasicInfoForm: React.FC = () => {
               id="input-employee-name"
               name="input-employee-name"
               type="text"
-              className={`flex-1 bg-transparent px-12px py-10px text-base font-medium ${isNameError ? 'placeholder:text-input-text-error' : 'placeholder:text-input-text-input-placeholder'}`}
+              className={`flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none ${isNameError ? 'placeholder:text-input-text-error' : 'placeholder:text-input-text-input-placeholder'}`}
               placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME_PLACEHOLDER')}
               value={employeeName}
               onChange={handleEmployeeNameChange}
@@ -238,7 +238,7 @@ const BasicInfoForm: React.FC = () => {
               id="input-employee-number"
               name="input-employee-number"
               type="text"
-              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
+              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
               placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER_PLACEHOLDER')}
               value={employeeNumber}
               onChange={handleEmployeeNumberChange}

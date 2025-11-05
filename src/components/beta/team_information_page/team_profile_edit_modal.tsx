@@ -95,7 +95,7 @@ const TeamProfileEditModal: React.FC<TeamProfileEditModalProps> = ({
             <input
               id="team-profile"
               type="text"
-              className="w-full rounded-sm border border-input-stroke-input p-2 pl-10 text-input-text-input-filled"
+              className="w-full rounded-sm border border-input-stroke-input p-2 pl-10 text-input-text-input-filled outline-none"
               value={teamProfile}
               placeholder={
                 initialProfile.trim() === '' ? t('team:TEAM_INFO_PAGE.LINK') : initialProfile
