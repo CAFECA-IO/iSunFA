@@ -36,11 +36,16 @@ export const handleRestoreRequest: IHandleRequest<APIName.VOUCHER_RESTORE_V2, nu
 
   try {
     const now = getTimestampNow();
-    const { can } = await assertUserCanByAccountBook({
+    const { isExpired, can } = await assertUserCanByAccountBook({
       userId,
       accountBookId,
       action: TeamPermissionAction.RESTORE_VOUCHER,
     });
+    if (isExpired) {
+      const error = new Error(STATUS_MESSAGE.EXCEED_PLAN_LIMIT);
+      error.name = STATUS_CODE.EXCEED_PLAN_LIMIT;
+      throw error;
+    }
 
     if (!can) {
       const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
