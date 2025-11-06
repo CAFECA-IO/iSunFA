@@ -22,6 +22,7 @@ export interface IToastify {
   position?: ToastPosition;
   autoClose?: false | number;
   errorCode?: string;
+  teamId?: number | string;
   onClose?: () => void;
   onOpen?: () => void;
 }

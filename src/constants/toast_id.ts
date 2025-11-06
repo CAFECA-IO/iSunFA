@@ -71,4 +71,5 @@ export enum ToastId {
   CONNECT_ACCOUNT_BOOK_FAILED = 'toast-connect-account-book-failed',
   DISCONNECT_ACCOUNT_BOOK_FAILED = 'toast-disconnect-account-book-failed',
   CANCEL_TRANSFER_ACCOUNT_BOOK_FAILED = 'toast-cancel-transfer-account-book-failed',
+  FREE_TRIAL_EXPIRED = 'free-trial-expired-toast',
 }

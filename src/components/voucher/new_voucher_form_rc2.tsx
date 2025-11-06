@@ -42,7 +42,6 @@ import InvoiceSelection from '@/components/voucher/invoice_selection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import loggerFront from '@/lib/utils/logger_front';
 import VoucherLineBlock from '@/components/voucher/voucher_line_block';
-import { STATUS_CODE } from '@/constants/status_code';
 
 interface NewVoucherFormProps {
   selectedData: { [id: string]: IInvoiceRC2UI };
@@ -613,19 +612,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       if (createSuccess) {
         router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
-        if (createCode === STATUS_CODE.FREE_TRIAL_EXPIRED) {
-          toastHandler({
-            id: ToastId.CREATE_VOUCHER_ERROR,
-            type: ToastType.ERROR,
-            content: t('subscriptions:ERROR.FREE_TRIAL_EXPIRED'),
-            closeable: true,
-          });
-        }
         toastHandler({
           id: ToastId.CREATE_VOUCHER_ERROR,
           type: ToastType.ERROR,
           content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_CREATE'),
           closeable: true,
+          errorCode: createCode,
+          teamId: connectedAccountBook?.teamId,
         });
       }
     }

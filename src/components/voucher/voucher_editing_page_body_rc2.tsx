@@ -71,6 +71,7 @@ const VoucherEditingPageBody: React.FC<{
     trigger: updateVoucher,
     success: updateSuccess,
     isLoading: isUpdating,
+    code: updateCode,
   } = APIHandler(APIName.VOUCHER_PUT_V2);
 
   // Info: (20241118 - Julian) 如果有改動到 Voucher line -> 先 DELETE 舊的再 POST 新的
@@ -78,11 +79,13 @@ const VoucherEditingPageBody: React.FC<{
     trigger: deleteVoucher,
     success: deleteSuccess,
     isLoading: isDeleting,
+    code: deleteCode,
   } = APIHandler(APIName.VOUCHER_DELETE_V2);
   const {
     trigger: createNewVoucher,
     success: createNewSuccess,
     isLoading: isCreating,
+    code: createNewCode,
   } = APIHandler(APIName.VOUCHER_POST_V2);
 
   // Info: (20241118 - Julian) 將 API 回傳的資料轉換成 UI 顯示用的格式
@@ -596,10 +599,12 @@ const VoucherEditingPageBody: React.FC<{
           type: ToastType.ERROR,
           content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
+          errorCode: updateCode,
+          teamId: connectedAccountBook?.teamId,
         });
       }
     }
-  }, [updateSuccess, isUpdating]);
+  }, [updateSuccess, isUpdating, updateCode]);
 
   // Info: (20241119 - Julian) DELETE && POST 的成功與失敗處理
   useEffect(() => {
@@ -612,10 +617,12 @@ const VoucherEditingPageBody: React.FC<{
           type: ToastType.ERROR,
           content: t('journal:ADD_NEW_VOUCHER.TOAST_FAILED_TO_UPDATE'),
           closeable: true,
+          errorCode: deleteCode || createNewCode,
+          teamId: connectedAccountBook?.teamId,
         });
       }
     }
-  }, [deleteSuccess, isDeleting, createNewSuccess, isCreating]);
+  }, [deleteSuccess, isDeleting, createNewSuccess, isCreating, createNewCode, deleteCode]);
 
   const typeDropdownMenu = typeVisible ? (
     <div className="absolute left-0 top-50px flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px text-dropdown-text-primary shadow-dropmenu">

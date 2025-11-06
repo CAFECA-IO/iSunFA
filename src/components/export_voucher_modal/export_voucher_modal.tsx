@@ -32,6 +32,7 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
     success,
     isLoading,
     data: downloadFile,
+    code,
   } = APIHandler(APIName.FILE_EXPORT);
 
   // Info: (20241126 - Julian) 關閉 Modal 時，清空所有輸入框
@@ -52,6 +53,8 @@ const ExportVoucherModal = ({ isModalVisible, modalVisibilityHandler }: IExportV
           type: ToastType.ERROR,
           content: t('journal:VOUCHER.TOAST_EXPORT_FAILED'),
           closeable: true,
+          errorCode: code,
+          teamId: connectedAccountBook?.teamId,
         });
       } else {
         // Info: (20241126 - Julian) 顯示成功 Toast ，下載檔案並關閉 Modal

@@ -6,6 +6,9 @@ import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
 import loggerFront from '@/lib/utils/logger_front';
+import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { ToastId } from '@/constants/toast_id';
+import { ExtendTrialToastButton } from '@/components/common/ExtendTrialToastButton';
 
 interface ModalContextType {
   isMessageModalVisible: boolean;
@@ -61,6 +64,8 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       position: toastPosition,
       onClose = () => {},
       onOpen = () => {},
+      teamId,
+      errorCode,
     }: IToastify) => {
       const bodyStyle =
         'before:absolute before:h-100vh before:w-10px before:top-0 before:left-0 flex items-center gap-12px px-14px w-max text-sm font-barlow pointer-events-auto';
@@ -80,6 +85,27 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
             </div>
           )
         : false;
+
+      if (errorCode === STATUS_CODE.FREE_TRIAL_EXPIRED) {
+        id = ToastId.FREE_TRIAL_EXPIRED;
+        closeable = false;
+
+        if (teamId) {
+          // Info: (20251106 - Tzuhan) 如果有 teamId，顯示按鈕
+          content = (
+            <div>
+              <p>{STATUS_MESSAGE.FREE_TRIAL_EXPIRED}</p>
+              <ExtendTrialToastButton
+                teamId={teamId}
+                closeToast={() => toastify.dismiss(ToastId.FREE_TRIAL_EXPIRED)}
+              />
+            </div>
+          );
+        } else {
+          // Info: (20251106 - Tzuhan) 如果沒有 teamId，只顯示文字
+          content = STATUS_MESSAGE.FREE_TRIAL_EXPIRED;
+        }
+      }
 
       switch (type) {
         case ToastType.SUCCESS:

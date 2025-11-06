@@ -62,6 +62,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
     isLoading: isDeleting,
     success: deleteSuccess,
     error: deleteError,
+    code: deleteCode,
   } = APIHandler(
     APIName.VOUCHER_DELETE_V2,
     // { params }
@@ -124,7 +125,7 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
 
   // Info: (20250221 - Julian) 恢復刪除的傳票
   const undoDeleteVoucher = async () => {
-    const { success } = await restoreVoucher();
+    const { success, code } = await restoreVoucher();
     if (success) {
       toastHandler({
         id: 'restore-voucher-toast',
@@ -140,6 +141,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
         type: ToastType.ERROR,
         content: t('journal:COMMON.RESTORE_FAIL_TOAST'),
         closeable: true,
+        errorCode: code,
+        teamId: connectedAccountBook?.teamId,
       });
     }
   };
@@ -221,6 +224,8 @@ const VoucherDetailPageBody: React.FC<IVoucherDetailPageBodyProps> = ({
           type: ToastType.ERROR,
           content: t('journal:VOUCHER_DETAIL_PAGE.DELETE_FAIL_TOAST'),
           closeable: true,
+          errorCode: deleteCode,
+          teamId: connectedAccountBook?.teamId,
         });
       }
     }
