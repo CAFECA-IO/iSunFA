@@ -21,7 +21,7 @@ CRON_SCHEDULE="0 3 * * *" # 每天凌晨 3 點執行
 # Info: (20251107 - Tzuhan) 以下變數定義了執行 TypeScript 腳本所需的路徑。
 SCRIPT_PATH="$PROJECT_ROOT/scripts/extend_daily_trials.ts"
 LOG_DIR="$PROJECT_ROOT/private/logs"
-LOG_PATH="$LOG_DIR/cron_extend_daily_trials.log"
+LOG_PATH="$LOG_DIR/extend_daily_trials.log"
 
 echo "Ensuring log directory exists: $LOG_DIR"
 mkdir -p "$LOG_DIR"
