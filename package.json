@@ -30,7 +30,8 @@
     "generate-signature": "ts-node -r tsconfig-paths/register --project tsconfig.cli.json src/lib/utils/ethers/generate_signature.ts",
     "clear_jest": "jest --clearCache",
     "refresh": "rimraf .next node_modules && npm ci",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "script:extend_trials": "ts-node -r tsconfig-paths/register scripts/extend_daily_trials.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
