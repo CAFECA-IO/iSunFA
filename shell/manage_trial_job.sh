@@ -19,13 +19,18 @@ CRON_JOB_ID="# DAILY_TRIAL_EXTENSION_JOB"
 CRON_SCHEDULE="0 3 * * *" # 每天凌晨 3 點執行
 
 # Info: (20251107 - Tzuhan) 以下變數定義了執行 TypeScript 腳本所需的路徑。
-TS_NODE_PATH="$PROJECT_ROOT/node_modules/.bin/ts-node"
-TSCONFIG_PATHS_REGISTER="$PROJECT_ROOT/node_modules/tsconfig-paths/register"
-SCRIPT_PATH="$PROJECT_ROOT/scripts/extend_daily_trials.ts" # 腳本路徑
-LOG_PATH="$PROJECT_ROOT/private/logs/cron_extend_daily_trials.log" # 日誌路徑
+SCRIPT_PATH="$PROJECT_ROOT/scripts/extend_daily_trials.ts"
+LOG_DIR="$PROJECT_ROOT/private/logs"
+LOG_PATH="$LOG_DIR/cron_extend_daily_trials.log"
+
+echo "Ensuring log directory exists: $LOG_DIR"
+mkdir -p "$LOG_DIR"
 
 # Info: (20251107 - Tzuhan) 完整的 cron 命令
-CRON_CMD="$CRON_SCHEDULE cd $PROJECT_ROOT && $TS_NODE_PATH -r $TSCONFIG_PATHS_REGISTER $SCRIPT_PATH >> $LOG_PATH 2>&1 $CRON_JOB_ID"
+SCRIPT_RUN_CMD="cd $PROJECT_ROOT && npx tsx $SCRIPT_PATH >> $LOG_PATH 2>&1"
+
+# Info: (20251107 - Tzuhan) 完整的 cron 任務命令
+CRON_CMD="$CRON_SCHEDULE $SCRIPT_RUN_CMD $CRON_JOB_ID"
 
 start_job() {
     echo "Starting cron job..."
@@ -41,6 +46,14 @@ start_job() {
         if [ $? -eq 0 ]; then
             echo "Successfully added job to crontab:"
             echo "$CRON_CMD"
+
+            # Info: (20251107 - Tzuhan) 立即執行一次任務（背景執行）
+            echo "Running the job immediately for the first time in the background..."
+            # Info: (20251107 - Tzuhan) 使用 eval 執行命令
+            (eval "$SCRIPT_RUN_CMD") &
+            echo "Job started. Check logs for details: $LOG_PATH"
+            # Info: (20251107 - Tzuhan) 提示用戶查看日誌
+            
         else
             echo "Error: Failed to add job to crontab." >&2
         fi

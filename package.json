@@ -31,7 +31,7 @@
     "clear_jest": "jest --clearCache",
     "refresh": "rimraf .next node_modules && npm ci",
     "typecheck": "tsc --noEmit",
-    "script:extend_trials": "ts-node -r tsconfig-paths/register scripts/extend_daily_trials.ts"
+    "script:extend_trials": "npx tsx scripts/extend_daily_trials.ts"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.11.1",
