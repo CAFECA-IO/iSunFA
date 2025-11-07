@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 const logInfo = (message: string) => {
   const timestamp = new Date().toISOString();
   // Info: (20251107 - Tzuhan) 輸出資訊日誌
-
   // eslint-disable-next-line no-console
   console.log(`${timestamp} [INFO]: ${message}`);
 };
