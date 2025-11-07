@@ -242,8 +242,11 @@ export async function listInvoiceRC2ByDirection<
     action: TeamPermissionAction.VIEW_CERTIFICATE,
   });
 
-  //Info: (20251107 - Tzuhan)  1. 這是基礎的 where 條件 (Base Where)
-  // 包含所有 "非" 頁籤 (tab) 和 "非" 刪除 (isDeleted) 的篩選條件
+  /**
+   * Info: (20251107 - Tzuhan)
+   * 1. 這是基礎的 where 條件 (Base Where)
+   * 包含所有 "非" 頁籤 (tab) 和 "非" 刪除 (isDeleted) 的篩選條件
+   */
   const baseWhereClause: Prisma.InvoiceRC2WhereInput = {
     accountBookId,
     direction,
@@ -268,8 +271,11 @@ export async function listInvoiceRC2ByDirection<
       : undefined,
   };
 
-  // Info: (20251107 - Tzuhan) 2. 這是用於 totalCount 和 findMany 的 where 條件
-  // Info: (20251107 - Tzuhan) 它在 baseWhereClause 基礎上，增加了 "tab" 和 "isDeleted" 的條件
+  /**
+   * Info: (20251107 - Tzuhan)
+   * 2. 這是用於 totalCount 和 findMany 的 where 條件
+   * 它在 baseWhereClause 基礎上，增加了 "tab" 和 "isDeleted" 的條件
+   */
   const mainWhereClause: Prisma.InvoiceRC2WhereInput = {
     ...baseWhereClause,
     deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
