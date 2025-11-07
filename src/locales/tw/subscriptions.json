@@ -131,7 +131,11 @@
     "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " 天後到期，請續訂以保留該服務，否則方案將會降級。",
     "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "您的訂閱方案將在今天到期，請續訂以保留該服務，否則方案將會降級。",
     "RENEW_PAYMENT": "續訂付款",
-    "FREE_TRIAL_EXPIRED": "免費試用已到期，請申請延長試用。"
+    "TRIAL_EXPIRED_TITLE": "您的免費試用已到期",
+    "EXTEND_TRIAL_BUTTON": "申請延長試用1個月",
+    "TRIAL_EXTEND_SUCCESS": "您的免費試用已成功延長1個月！",
+    "TRIAL_EXTEND_FAILED": "免費試用延長失敗，請稍後再試。",
+    "LOADING": "處理中..."
   },
 
   "MODAL": {

@@ -131,7 +131,11 @@
     "TOAST_EXPIRED_REMINDER_MESSAGE_SUFFIX": " days, please renew your payment to keep the service, or it will be downgraded after.",
     "TOAST_EXPIRED_REMINDER_MESSAGE_FOR_TODAY": "- Your plan is going to expired today, please renew your payment to keep the service, or it will be downgraded after.",
     "RENEW_PAYMENT": "Renew Payment",
-    "FREE_TRIAL_EXPIRED": "Free trial has expired, please apply for an extension."
+    "TRIAL_EXPIRED_TITLE": "Your free trial has expired",
+    "EXTEND_TRIAL_BUTTON": "Apply to extend trial for 1 month",
+    "TRIAL_EXTEND_SUCCESS": "Your free trial has been successfully extended for 1 month!",
+    "TRIAL_EXTEND_FAILED": "Failed to extend free trial, please try again later.",
+    "LOADING": "Loading..."
   },
 
   "MODAL": {

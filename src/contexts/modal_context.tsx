@@ -6,9 +6,10 @@ import { IAddCounterPartyModalData } from '@/interfaces/add_counterparty_modal';
 import { toast as toastify } from 'react-toastify';
 import { RxCross2 } from 'react-icons/rx';
 import loggerFront from '@/lib/utils/logger_front';
-import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
+import { STATUS_CODE } from '@/constants/status_code';
 import { ToastId } from '@/constants/toast_id';
 import { ExtendTrialToastButton } from '@/components/common/ExtendTrialToastButton';
+import { useTranslation } from 'react-i18next';
 
 interface ModalContextType {
   isMessageModalVisible: boolean;
@@ -29,6 +30,7 @@ interface ModalProviderProps {
   children: React.ReactNode;
 }
 export const ModalProvider = ({ children }: ModalProviderProps) => {
+  const { t } = useTranslation(['subscription']);
   const [isMessageModalVisible, setIsMessageModalVisible] = useState(false);
   const [messageModalData, setMessageModalData] = useState<IMessageModal>(dummyMessageModalData);
   const [isAddBookmarkModalVisible, setIsAddBookmarkModalVisible] = useState(false);
@@ -90,11 +92,13 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
         id = ToastId.FREE_TRIAL_EXPIRED;
         closeable = false;
 
+        // eslint-disable-next-line no-console
+        console.log('teamId in toastHandler:', teamId);
+
         if (teamId) {
           // Info: (20251106 - Tzuhan) 如果有 teamId，顯示按鈕
           content = (
             <div>
-              <p>{STATUS_MESSAGE.FREE_TRIAL_EXPIRED}</p>
               <ExtendTrialToastButton
                 teamId={teamId}
                 closeToast={() => toastify.dismiss(ToastId.FREE_TRIAL_EXPIRED)}
@@ -103,7 +107,7 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
           );
         } else {
           // Info: (20251106 - Tzuhan) 如果沒有 teamId，只顯示文字
-          content = STATUS_MESSAGE.FREE_TRIAL_EXPIRED;
+          content = t('subscription:ERROR.FREE_TRIAL_EXPIRED');
         }
       }
 

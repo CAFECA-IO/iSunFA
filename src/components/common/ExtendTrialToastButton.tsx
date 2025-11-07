@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'next-i18next';
 import { toast } from 'react-toastify';
 // import { useSWRConfig } from 'swr';
 
@@ -11,6 +12,7 @@ interface Props {
  * 顯示在 FREE_TRIAL_EXPIRED Toast 內的按鈕
  */
 export const ExtendTrialToastButton: React.FC<Props> = ({ teamId, closeToast }) => {
+  const { t } = useTranslation(['subscription']);
   const [isLoading, setIsLoading] = useState(false);
   // const { mutate } = useSWRConfig();
 
@@ -23,11 +25,11 @@ export const ExtendTrialToastButton: React.FC<Props> = ({ teamId, closeToast }) 
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || '延長試用失敗，請稍後再試。');
+        throw new Error(errorData.message || t('subscription:ERROR.TRIAL_EXTEND_FAILED'));
       }
 
       // Info: (20251105 - Tzuhan) 成功！
-      toast.success('試用期已成功延長 1 個月！');
+      toast.success(t('subscription:ERROR.TRIAL_EXTEND_SUCCESS'));
 
       // Info: (20251105 - Tzuhan) 關閉目前的錯誤 toast
       closeToast();
@@ -40,7 +42,7 @@ export const ExtendTrialToastButton: React.FC<Props> = ({ teamId, closeToast }) 
        */
       window.location.reload();
     } catch (error) {
-      toast.error((error as Error).message || '延長失敗');
+      toast.error((error as Error).message || t('subscription:ERROR.TRIAL_EXTEND_FAILED'));
       setIsLoading(false);
     }
   };
@@ -54,7 +56,14 @@ export const ExtendTrialToastButton: React.FC<Props> = ({ teamId, closeToast }) 
           padding: '8px 12px',
         }}
       >
-        {isLoading ? '處理中...' : '申請延長試用1個月'}
+        {isLoading ? (
+          t('subscription:ERROR.LOADING')
+        ) : (
+          <>
+            <span>{t('subscription:ERROR.TRIAL_EXPIRED_TITLE')}</span>{' '}
+            <span>{t('subscription:ERROR.EXTEND_TRIAL_BUTTON')}</span>
+          </>
+        )}
       </button>
     </div>
   );

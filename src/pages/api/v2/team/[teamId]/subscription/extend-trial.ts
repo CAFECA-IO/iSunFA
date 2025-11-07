@@ -32,23 +32,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Info: (20251105 - Tzuhan) 3. 呼叫現有的 repo 函式
-    // Info: (20251105 - Tzuhan) updateSubscription 內部已包含 assertUserCan 權限檢查，因此這裡不需要重複檢查
     const updatedTeamSubscription = await updateSubscription(Number(userId), Number(teamId), {
       plan: TPlanType.TRIAL,
     });
-
     // Info: (20251105 - Tzuhan) 4. 成功回應
-    return formatApiResponse(STATUS_MESSAGE.SUCCESS, updatedTeamSubscription);
+    return res
+      .status(HTTP_STATUS.OK)
+      .json(formatApiResponse(STATUS_MESSAGE.SUCCESS, updatedTeamSubscription));
   } catch (error) {
-    // Info: (20251105 - Tzuhan) 5. 捕捉 repo 拋出的錯誤，這將捕捉 updateSubscription 內部 assertUserCan 拋出的權限錯誤
+    // Info: (20251105 - Tzuhan) 5. 捕捉 repo 拋出的錯誤
     loggerError({
       userId: userId || DefaultValue.USER_ID.GUEST,
       errorType: 'Internal Server Error, handler auth error failed',
       errorMessage: (error as Error).message,
     });
-
+    const errorCode = (error as Error).name || STATUS_CODE.INTERNAL_SERVICE_ERROR;
     const errorMessage = (error as Error).message || STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    const httpStatusCode =
+      errorCode === STATUS_CODE.PERMISSION_DENIED
+        ? HTTP_STATUS.FORBIDDEN
+        : errorCode === STATUS_CODE.UNAUTHORIZED_ACCESS
+          ? HTTP_STATUS.UNAUTHORIZED
+          : HTTP_STATUS.INTERNAL_SERVER_ERROR;
 
-    return formatApiResponse(errorMessage, null);
+    return res.status(httpStatusCode).json({
+      message: errorMessage,
+      errorCode: errorCode,
+    });
   }
 }

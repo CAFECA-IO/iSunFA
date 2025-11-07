@@ -98,7 +98,7 @@ export async function assertUserIsTeamMember(
     gracePeriodEndAt,
     isExpired,
     effectivePlanType: isExpired ? TPlanType.BEGINNER : (subscription?.plan?.type as TPlanType),
-    planType: subscription?.plan?.type as TPlanType,
+    planType: (subscription?.plan?.type as TPlanType) || TPlanType.TRIAL,
   };
 }
 
@@ -135,7 +135,7 @@ export const assertUserCan = async ({
   );
 
   // Info: (20251105 - Tzuhan) 1. 檢查是否為「試用期已過期」
-  if (isExpired && planType === TPlanType.TRIAL) {
+  if ((isExpired && planType === TPlanType.TRIAL) || planType === undefined) {
     // Info: (20251105 - Tzuhan) 2. 檢查這個 action 是否為「會被 paywall 阻擋」的核心付費功能
     if (ACTION_BLOCKED_BY_TRIAL_PAYWALL.includes(action)) {
       const error = new Error(STATUS_MESSAGE.FREE_TRIAL_EXPIRED);
