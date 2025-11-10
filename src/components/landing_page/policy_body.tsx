@@ -21,16 +21,16 @@ const CategoriesList: React.FC<{ leftList: string[]; rightList: string[] }> = ({
   rightList,
 }) => {
   return (
-    <div className="mt-40px grid grid-cols-2 gap-80px rounded-md border border-landing-page-white px-40px py-20px">
+    <div className="mt-40px grid grid-cols-1 gap-20px rounded-md border border-landing-page-white p-10px lg:grid-cols-2 lg:gap-80px lg:px-40px lg:py-20px">
       {/* Info: (20250219 - Julian) Left List */}
-      <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
+      <ul className="ml-20px flex list-outside list-disc flex-col gap-20px text-sm lg:text-base">
         {leftList.map((item, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <li key={index}>{item}</li>
         ))}
       </ul>
       {/* Info: (20250219 - Julian) Right List */}
-      <ul className="ml-20px flex list-outside list-disc flex-col gap-40px">
+      <ul className="ml-20px flex list-outside list-disc flex-col gap-20px text-sm lg:text-base">
         {rightList.map((item, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <li key={index}>{item}</li>
@@ -66,26 +66,28 @@ const PrivacyPolicyPageBody: React.FC = () => {
       <LandingNavbar />
 
       <main className="z-10 overflow-y-auto overflow-x-hidden">
-        <div className="flex flex-col gap-100px px-150px py-100px">
+        <div className="flex flex-col gap-40px px-20px py-40px lg:gap-100px lg:px-150px lg:py-100px">
           {/* Info: (20250219 - Julian) Title */}
           <div className="flex flex-col gap-lv-3">
             <LinearGradientText size={LinearTextSize.XL} align={TextAlign.LEFT}>
               {t('terms:PRIVACY_POLICY_PAGE.MAIN_TITLE')}
             </LinearGradientText>
-            <p className="text-xl font-medium">{t('terms:PRIVACY_POLICY_PAGE.MAIN_DESC')}</p>
+            <p className="text-base font-medium lg:text-xl">
+              {t('terms:PRIVACY_POLICY_PAGE.MAIN_DESC')}
+            </p>
           </div>
 
           {/* Info: (20250219 - Julian) Content */}
-          <div className="flex flex-col gap-80px tracking-wide">
+          <div className="flex flex-col gap-40px tracking-wide lg:gap-80px">
             {/* Info: (20250219 - Julian) Where does this policy apply */}
             <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_01')} />
-            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <ol className="ml-24px flex list-decimal flex-col gap-80px text-base leading-10 text-landing-page-white lg:text-xl">
               <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_01'))}</li>
             </ol>
 
             {/* Info: (20250219 - Julian) How might my personal information would be used */}
             <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_02')} />
-            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <ol className="ml-24px flex list-decimal flex-col gap-40px text-base leading-10 text-landing-page-white lg:gap-80px lg:text-xl">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
                 {formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_02_01'))}
@@ -113,7 +115,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
 
             {/* Info: (20250219 - Julian) How can I manage my personal information */}
             <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_03')} />
-            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <ol className="ml-24px flex list-decimal flex-col gap-40px text-base leading-10 text-landing-page-white lg:gap-80px lg:text-xl">
               {/* Info: (20250219 - Julian) 1. */}
               <li>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_03_01'))}</li>
               {/* Info: (20250219 - Julian) 2. */}
@@ -128,7 +130,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
             <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_04')} />
-            <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <ol className="ml-24px flex list-decimal flex-col gap-40px text-base leading-10 text-landing-page-white lg:gap-80px lg:text-xl">
               {/* Info: (20250219 - Julian) 1. */}
               <li>
                 {t('terms:PRIVACY_POLICY_PAGE.TEXT_04_01')}
@@ -223,7 +225,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
 
             {/* Info: (20250219 - Julian) What personal information would we collect */}
             <Divider text={t('terms:PRIVACY_POLICY_PAGE.DIVIDER_05')} />
-            <div className="flex flex-col gap-80px text-xl leading-10 text-landing-page-white">
+            <div className="flex flex-col gap-40px text-base leading-10 text-landing-page-white lg:gap-80px lg:text-xl">
               <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_01'))}</p>
               <p>{formatText(t('terms:PRIVACY_POLICY_PAGE.TEXT_05_02'))}</p>
             </div>
