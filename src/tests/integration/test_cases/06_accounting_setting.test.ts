@@ -658,6 +658,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
             .set('Cookie', cookies.join('; '));
         } catch (error) {
           // Info: (20250715 - Shirley) Ignore cleanup errors
+          if (error instanceof Error) {
+            error.message += ' - Ignored during cleanup';
+          }
         }
       }
     });
@@ -830,6 +833,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
             .set('Cookie', cookies.join('; '));
         } catch (error) {
           // Info: (20250715 - Shirley) Ignore cleanup errors
+          if (error instanceof Error) {
+            error.message += ' - Ignored during cleanup';
+          }
         }
       }
     });
@@ -1057,6 +1063,9 @@ describe('Integration Test - Accounting Setting Configuration', () => {
             .set('Cookie', cookies.join('; '));
         } catch (error) {
           // Info: (20250715 - Shirley) Ignore cleanup errors
+          if (error instanceof Error) {
+            error.message += ' - Ignored during cleanup';
+          }
         }
       }
     });

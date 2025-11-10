@@ -14,6 +14,7 @@ export function parseJsonWebKeyFromString(jwkString: string): JsonWebKey {
     // Info: (20241225 - Murky) Step 3 返回驗證成功的 JWK 物件
     return result.data;
   } catch (error) {
-    throw new Error('Failed to parse JWK string');
+    (error as Error).message = 'Failed to parse JWK string';
+    throw error;
   }
 }

@@ -107,6 +107,7 @@
     "EMPLOYER_PAID_LABOR_INSURANCE": "公司負擔勞保費",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "公司負擔健保費",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "公司負擔退休金",
+    "COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE": "公司負擔職保費",
     "TOTAL_EMPLOYER_COST": "公司總負擔",
     "REPORTED": "扣繳憑單金額",
     "PAID": "實際發放金額"
@@ -155,8 +156,8 @@
   "MESSAGE": {
     "NAME_ERROR_TITLE": "員工姓名未填寫",
     "NAME_ERROR_CONTENT": "請在前往下一步之前輸入員工姓名",
-    "SALARY_ERROR_TITLE": "本薪未填寫",
-    "SALARY_ERROR_CONTENT": "本薪必須高於或等於最低工資。",
+    "SALARY_ERROR_TITLE": "薪資輸入有誤",
+    "SALARY_ERROR_CONTENT": "本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）必須高於或等於最低工資。",
     "REMOVE_EMPLOYEE_TITLE": "移除員工",
     "REMOVE_EMPLOYEE_CONTENT": "您確定要從員工列表中移除 {{name}} 嗎？",
     "REMOVE_EMPLOYEE_SUBMIT_BTN": "是的，移除員工。",

@@ -7,7 +7,7 @@ import { useCurrencyCtx } from '@/contexts/currency_context';
 
 let currentPage = 1;
 export const createRenderedFooter = () => {
-  return () => {
+  const footer = () => {
     const page = currentPage;
     currentPage += 1;
     return (
@@ -26,6 +26,7 @@ export const createRenderedFooter = () => {
       </footer>
     );
   };
+  return footer;
 };
 
 interface DownloadBalanceSheetProps {

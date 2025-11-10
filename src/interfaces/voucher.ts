@@ -26,7 +26,6 @@ import type { ICounterPartyEntityPartial, ICounterpartyOptional } from '@/interf
 import type { IAssetDetails, IAssetEntity } from '@/interfaces/asset';
 import type { ICertificate, ICertificateEntity } from '@/interfaces/certificate';
 import type { IUserEntity } from '@/interfaces/user';
-import { AI_TYPE } from '@/constants/aich';
 import { CounterpartyType } from '@/constants/counterparty';
 import { IInvoiceRC2 } from '@/interfaces/invoice_rc2';
 import { InvoiceRC2WithFullRelations } from '@/lib/utils/repo/invoice_rc2.repo';
@@ -608,7 +607,7 @@ export type IGetManyVoucherResponseButOne = PrismaVoucher & {
 
 export interface IAIResultVoucher {
   aiStatus: string;
-  aiType: AI_TYPE;
+  aiType: string;
   voucherDate: number;
   type: string;
   note: string;

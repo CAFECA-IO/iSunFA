@@ -76,6 +76,7 @@ const TeamPageBody = ({ team, getTeamData }: TeamPageBodyProps) => {
 
       setAccountBookList(accountBookListData.data);
     } catch (error) {
+      (error as Error).message += ' (from getAccountBookListByTeamId)';
       loggerFront.error('取得團隊帳本清單失敗');
     } finally {
       setIsLoading(false);

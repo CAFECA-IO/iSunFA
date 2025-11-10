@@ -26,7 +26,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
   const paginationVouchers = await listBaifaVouchers(query);
-  const { data, where, ...pagination } = paginationVouchers;
+  const { data, ...pagination } = paginationVouchers;
 
   const voucherBetas = data.map(buildVoucherBeta);
 

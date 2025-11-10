@@ -66,6 +66,7 @@ const TrialBalanceList: React.FC<TrialBalanceListProps> = ({ selectedDateRange }
       }
       return JSON.parse(noteString) as ITrialBalanceNote;
     } catch (error) {
+      (error as Error).message += ' (from parseNote)';
       return {
         currencyAlias: CurrencyType.TWD,
         total: {

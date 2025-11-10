@@ -80,7 +80,7 @@ const KYCForm = () => {
     e.preventDefault();
 
     if (!hasCompanyId) return;
-    const { areaCode, contactNumber, ...restContactInfoValues } = contactInfoValues;
+    const { ...restContactInfoValues } = contactInfoValues;
 
     // Info: (20240830 - Murky) To Emily and Jacky, File update down below
     const intUploadDocuments = {
@@ -177,11 +177,7 @@ const KYCForm = () => {
   );
 
   const isContactInfoFormComplete = () => {
-    const {
-      [ContactInfoKeys.COMPANY_WEBSITE]: _, // Info: (20240801 - Liz) _ means ignore this value
-      [ContactInfoKeys.CONTACT_PHONE]: __, // Info: (20240801 - Liz) __ means ignore this value
-      ...requiredFields
-    } = contactInfoValues;
+    const { ...requiredFields } = contactInfoValues;
     return Object.values(requiredFields).every((value) => value !== '');
   };
 

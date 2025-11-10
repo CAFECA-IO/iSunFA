@@ -75,7 +75,8 @@ export async function listEmployees(
       hasPreviousPage,
     };
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR);
+    (error as Error).message = STATUS_MESSAGE.DATABASE_READ_FAILED_ERROR;
+    throw error;
   }
 }
 
@@ -132,7 +133,8 @@ export async function createEmployee(
       updatedAt: employeeData.updatedAt,
     };
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR);
+    (error as Error).message = STATUS_MESSAGE.DATABASE_CREATE_FAILED_ERROR;
+    throw error;
   }
 }
 

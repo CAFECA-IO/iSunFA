@@ -40,10 +40,9 @@ import { IInvoiceRC2Input, IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
 import { ITeamMember } from '@/interfaces/team';
 import { ISortOption } from '@/interfaces/sort';
 import useOuterClick from '@/lib/hooks/use_outer_click';
+import { EmptyObject } from '@/interfaces/common';
 
-interface InvoiceListBodyProps {}
-
-const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
+const InputInvoiceListBody: React.FC<EmptyObject> = () => {
   const { t } = useTranslation(['certificate']);
   const downloadRef = useRef<HTMLDivElement>(null); // Info: (20250418 - Anna) 引用下載範圍
 
@@ -261,6 +260,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
 
         setCertificates(certificateData);
       } catch (error) {
+        (error as Error).message += ' (from handleApiResponse)';
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
@@ -327,6 +327,7 @@ const InputInvoiceListBody: React.FC<InvoiceListBodyProps> = () => {
           });
         } else throw new Error(t('certificate:DELETE.ERROR'));
       } catch (error) {
+        (error as Error).message += ' (from deleteSelectedCertificates)';
         toastHandler({
           id: ToastId.DELETE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,

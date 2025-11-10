@@ -44,6 +44,7 @@ const IntroButtons = ({ displayedRole, togglePreviewModal }: IntroButtonsProps) 
       // Info: (20241107 - Liz) 選擇角色成功，導向至儀表板
       router.push(ISUNFA_ROUTE.DASHBOARD);
     } catch (error) {
+      (error as Error).message += ' (from createAndSelectRole)';
       // Info: (20241029 - Liz) 處理錯誤的邏輯，例如顯示錯誤訊息
       // console.error("發生錯誤:", error);
     } finally {

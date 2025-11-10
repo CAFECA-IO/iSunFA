@@ -67,6 +67,7 @@ const MemberListModal = ({ team, setIsMemberListModalOpen }: MemberListModalProp
         setTotalPage(memberListData.totalPages);
       }
     } catch (error) {
+      (error as Error).message += ' (from getMemberList)';
       loggerFront.error('取得成員清單失敗');
     } finally {
       setIsLoading(false);

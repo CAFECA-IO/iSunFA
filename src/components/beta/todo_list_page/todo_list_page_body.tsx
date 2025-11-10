@@ -76,6 +76,7 @@ const TodoListPageBody = () => {
         loggerFront.log('取得待辦事項清單失敗');
       }
     } catch (error) {
+      (error as Error).message += ' (from getTodoList)';
       loggerFront.error('取得待辦事項清單失敗');
     }
   }, [userId]);
@@ -100,6 +101,7 @@ const TodoListPageBody = () => {
         getTodoList();
       }
     } catch (error) {
+      (error as Error).message += ' (from deleteTodo)';
       loggerFront.error('刪除待辦事項失敗');
     } finally {
       setIsLoading(false);

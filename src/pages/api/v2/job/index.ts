@@ -26,9 +26,13 @@ const jobSchema = z.object({
   updatedAt: z.number(),
 });
 
-type IJob = z.infer<typeof jobSchema>;
+export type Job = z.infer<typeof jobSchema>;
 
-const jobs: IJob[] = [
+/**
+ * Info: (20251028 - Luphia) dummy data for job listing page
+ */
+
+const jobs: Job[] = jobSchema.array().parse([
   {
     id: 1,
     companyName: 'A 公司',
@@ -69,16 +73,16 @@ const jobs: IJob[] = [
     createdAt: 1692489600,
     updatedAt: 1692489600,
   },
-];
+]);
 
 export async function handleGetRequest(
   req: NextApiRequest,
   // ToDo: implement the logic to get the job data from the database (20240924 - Shirley)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  res: NextApiResponse<IResponseData<IPaginatedData<IJob[]> | null>>
+  res: NextApiResponse<IResponseData<IPaginatedData<Job[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IJob[]> | null = null;
+  let payload: IPaginatedData<Job[]> | null = null;
 
   const {
     page = 1,
@@ -115,9 +119,9 @@ export async function handleGetRequest(
 
   filteredJobs = filteredJobs.sort((a, b) => {
     if (sortOrder === 'asc') {
-      return a[sortBy as keyof IJob] > b[sortBy as keyof IJob] ? 1 : -1;
+      return a[sortBy as keyof Job] > b[sortBy as keyof Job] ? 1 : -1;
     } else {
-      return a[sortBy as keyof IJob] < b[sortBy as keyof IJob] ? 1 : -1;
+      return a[sortBy as keyof Job] < b[sortBy as keyof Job] ? 1 : -1;
     }
   });
 
@@ -148,17 +152,17 @@ const methodHandlers: {
   [key: string]: (
     req: NextApiRequest,
     res: NextApiResponse
-  ) => Promise<{ statusMessage: string; payload: IPaginatedData<IJob[]> | null }>;
+  ) => Promise<{ statusMessage: string; payload: IPaginatedData<Job[]> | null }>;
 } = {
   GET: handleGetRequest,
 };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPaginatedData<IJob[]> | null>>
+  res: NextApiResponse<IResponseData<IPaginatedData<Job[]> | null>>
 ) {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPaginatedData<IJob[]> | null = null;
+  let payload: IPaginatedData<Job[]> | null = null;
 
   try {
     const handleRequest = methodHandlers[req.method || ''];
@@ -172,7 +176,7 @@ export default async function handler(
     statusMessage = error.message;
     payload = null;
   } finally {
-    const { httpCode, result } = formatApiResponse<IPaginatedData<IJob[]> | null>(
+    const { httpCode, result } = formatApiResponse<IPaginatedData<Job[]> | null>(
       statusMessage,
       payload
     );

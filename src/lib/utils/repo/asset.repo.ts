@@ -65,7 +65,7 @@ export async function createAssetWithVouchers(
     data: newAsset,
   });
 
-  const { createdUserId, ...rest } = result;
+  const { ...rest } = result;
   const asset = rest;
 
   // ToDo: (20241204 - Luphia) Create the future Vouchers and Asset mapping

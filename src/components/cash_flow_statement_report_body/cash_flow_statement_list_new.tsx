@@ -117,7 +117,7 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
         prevSelectedDateRange.current = selectedDateRange; // Info: (20241001 - Anna) 更新日期範圍
       }
     } catch (error) {
-      (() => {})(); // Info: (20241024 - Anna) Empty function, does nothing
+      (error as Error).message += ' (from getCashFlowReport)';
     }
   }, [hasCompanyId, connectedAccountBook?.id, selectedDateRange, trigger]);
 
@@ -220,7 +220,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                 // Info: (20250213 - Anna) 先過濾掉 `curPeriodAmount` 和 `prePeriodAmount` 都為 0 的行
                 .filter(
                   (value) =>
-                    !(DecimalOperations.isZero(value.curPeriodAmount) && DecimalOperations.isZero(value.prePeriodAmount))
+                    !(
+                      DecimalOperations.isZero(value.curPeriodAmount) &&
+                      DecimalOperations.isZero(value.prePeriodAmount)
+                    )
                 )
                 .map((value) => {
                   if (!value.code) {
@@ -317,22 +320,26 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               {t('reports:REPORTS.CASH_INFLOWS_FROM_OPERATING')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow)
+              {DecimalOperations.isZero(
+                reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow
+              )
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow)})` // Info: (20241021 - Anna) 如果是負數，使用括號表示，並加千分位
-                  : reportFinancial?.otherInfo?.freeCash[
-                      currentYear
-                    ]?.operatingCashFlow}
+                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.operatingCashFlow}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow)
+              {DecimalOperations.isZero(
+                reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow
+              )
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow)})`
-                  : reportFinancial?.otherInfo?.freeCash[
-                      previousYear
-                    ]?.operatingCashFlow}
+                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.operatingCashFlow}
             </td>
           </tr>
           <tr>
@@ -342,14 +349,18 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe)
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe)})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.ppe}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe)
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe)})`
                   : reportFinancial?.otherInfo?.freeCash[previousYear]?.ppe}
             </td>
@@ -359,22 +370,26 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
               {t('reports:REPORTS.EXPENDITURES_ON_INTANGIBLE_ASSETS')}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset)
+              {DecimalOperations.isZero(
+                reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset
+              )
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset)})`
-                  : reportFinancial?.otherInfo?.freeCash[
-                      currentYear
-                    ]?.intangibleAsset}
+                  : reportFinancial?.otherInfo?.freeCash[currentYear]?.intangibleAsset}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset)
+              {DecimalOperations.isZero(
+                reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset
+              )
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset)})`
-                  : reportFinancial?.otherInfo?.freeCash[
-                      previousYear
-                    ]?.intangibleAsset}
+                  : reportFinancial?.otherInfo?.freeCash[previousYear]?.intangibleAsset}
             </td>
           </tr>
           <tr>
@@ -384,14 +399,20 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
               {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash)
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash)})`
                   : reportFinancial?.otherInfo?.freeCash[currentYear]?.freeCash}
             </td>
             <td className="border border-stroke-neutral-quaternary p-10px text-end text-sm font-normal leading-5 text-text-neutral-secondary">
-              {DecimalOperations.isZero(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash)
+              {DecimalOperations.isZero(
+                reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash
+              )
                 ? '-'
-                : DecimalOperations.isNegative(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash)
+                : DecimalOperations.isNegative(
+                      reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash
+                    )
                   ? `(${DecimalOperations.abs(reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash)})`
                   : reportFinancial?.otherInfo?.freeCash[previousYear]?.freeCash}
             </td>
@@ -504,7 +525,10 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
             </div>
             <div className="mb-16 flex flex-col lg:flex-row">
               <div className="mt-18px w-full lg:w-3/5">
-                <LineChart data={lineChartData.map((val) => parseFloat(val))} labels={lineChartLabels} />
+                <LineChart
+                  data={lineChartData.map((val) => parseFloat(val))}
+                  labels={lineChartLabels}
+                />
               </div>
               <div className="mt-18px w-full lg:w-2/5 lg:pl-8">
                 <p className="mb-1 text-xs iphonese:text-sm">
@@ -581,19 +605,21 @@ const CashFlowStatementList: React.FC<CashFlowStatementListProps> = ({
                           className="border border-stroke-neutral-quaternary p-10px text-end text-sm"
                         >
                           {
-                            DecimalOperations.isZero(reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
-                              year
-                            ])
+                            DecimalOperations.isZero(
+                              reportFinancial.otherInfo.operatingStabilized
+                                .amortizationDepreciation[year]
+                            )
                               ? '-' // Info: (20241021 - Anna) 如果數字是 0，顯示 "-"
-                              : DecimalOperations.isNegative(reportFinancial.otherInfo.operatingStabilized
-                                    .amortizationDepreciation[year])
+                              : DecimalOperations.isNegative(
+                                    reportFinancial.otherInfo.operatingStabilized
+                                      .amortizationDepreciation[year]
+                                  )
                                 ? `(${DecimalOperations.abs(
                                     reportFinancial.otherInfo.operatingStabilized
                                       .amortizationDepreciation[year]
                                   )})` // Info: (20241021 - Anna) 負數用括號並加千分位
-                                : reportFinancial.otherInfo.operatingStabilized.amortizationDepreciation[
-                                    year
-                                  ] // Info: (20241021 - Anna) 正數顯示千分位
+                                : reportFinancial.otherInfo.operatingStabilized
+                                    .amortizationDepreciation[year] // Info: (20241021 - Anna) 正數顯示千分位
                           }
                         </td>
                       ))}

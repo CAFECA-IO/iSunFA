@@ -1,4 +1,4 @@
-type ISalaryCalculatorOptions = {
+interface ISalaryCalculatorOptions {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
   job?: number; // Info: (20250727 - Luphia) 行業別代碼，預設 41 電腦程式設計、諮詢及相關服務業、資訊服務業
@@ -32,9 +32,9 @@ type ISalaryCalculatorOptions = {
   employeeBurdenPensionInsurance?: number; // Info: (20250727 - Luphia) 個人自願提繳退休金
   dependentsCount?: number; // Info: (20250814 - Luphia) 扶養人數
   baseSalary30Days?: boolean; // Info: (20250814 - Luphia) 薪資基準日數以30日計算
-};
+}
 
-type ISalaryCalculatorResult = {
+interface ISalaryCalculatorResult {
   totalPayment: number; // Info: (20250727 - Luphia) 實際給付金額
   baseSalaryTaxable: number; // Info: (20250727 - Luphia) 本薪（應稅）
   overTimePayTaxable: number; // Info: (20250727 - Luphia) 加班費（應稅）
@@ -59,6 +59,7 @@ type ISalaryCalculatorResult = {
   employeeBurdenIncomeTax: number; // Info: (20250727 - Luphia) 代扣所得稅款
   employeeBurdenSecondGenerationHealthInsurancePremiums: number; // Info: (20250727 - Luphia) 代扣二代健保費
   leaveDeduction: number; // Info: (20250727 - Luphia) 請假扣薪
+  leaveDeductionTaxFree: number; // Info: (20250727 - Luphia) 請假扣除免稅加給
   employeeBurdenOtherOverflowDeductions: number; // Info: (20250727 - Luphia) 其他溢扣／補收
   totalEmployeeBurden: number; // Info: (20250814 - Luphia) 扣項總計
   companyBurdenLaborInsurance: number; // Info: (20270727 - Luphia) 公司負擔勞保費
@@ -66,11 +67,11 @@ type ISalaryCalculatorResult = {
   companyBurdenPensionInsurance: number; // Info: (20270727 - Luphia) 公司負擔退休金
   companyBurdenOccupationalAccidentInsurance: number; // Info: (20270727 - Luphia) 公司負擔職災保險
   totalCompanyBurden: number; // Info: (20270727 - Luphia) 公司負擔勞健退
-};
+}
 
-type IGetSalaryLevelOptions = {
+interface IGetSalaryLevelOptions {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   salary: number; // Info: (20250727 - Luphia) 薪資金額
-};
+}
 
 export type { ISalaryCalculatorOptions, ISalaryCalculatorResult, IGetSalaryLevelOptions };

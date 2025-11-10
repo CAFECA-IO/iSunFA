@@ -18,12 +18,14 @@ export const parseJWT = (jwtString: string) => {
         // headerString maybe not a valid JSON string
         header = JSON.parse(headerString);
       } catch (error) {
+        (error as Error).message = 'No valid JWT header';
         header = {};
       }
       try {
         // payloadString maybe not a valid JSON string
         payload = JSON.parse(payloadString);
       } catch (error) {
+        (error as Error).message = 'No valid JWT payload';
         payload = payloadString;
       }
 
@@ -31,6 +33,7 @@ export const parseJWT = (jwtString: string) => {
     }
   } catch (error) {
     // Info: (20250111 - Luphia) Invalid JWT format
+    (error as Error).message = 'No valid JWT format anywhere';
   }
   return result;
 };

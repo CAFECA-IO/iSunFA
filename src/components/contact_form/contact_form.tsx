@@ -106,6 +106,7 @@ function ContactForm() {
     try {
       await sendEmail();
     } catch (error) {
+      (error as Error).message += ' (from submitHandler)';
       await failedProcess();
     }
   };
@@ -119,6 +120,7 @@ function ContactForm() {
     try {
       await sendEmail();
     } catch (error) {
+      (error as Error).message += ' (from retryHandler)';
       await failedProcess();
     }
   };

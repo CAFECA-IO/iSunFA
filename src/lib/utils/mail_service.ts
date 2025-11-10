@@ -29,6 +29,8 @@ export default class MailService {
       await this.transporter.sendMail(options);
       return true;
     } catch (error) {
+      (error as Error).message =
+        `Failed to send email to ${options.to}: ${(error as Error).message}`;
       return false;
     }
   }

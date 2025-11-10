@@ -49,8 +49,6 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             className={orangeRadioStyle}
             required
           />
-          {/* Deprecated: (20250410 - Julian) remove eslint-disable */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-yes`} className="hover:cursor-pointer">
             {t('hiring:PERSONAL_INFO.YES')}
           </label>
@@ -66,8 +64,6 @@ const TFQuestion: React.FC<ITFQuestionProps> = ({ id, question, answer, onChange
             className={orangeRadioStyle}
             required
           />
-          {/* Deprecrated: (20250410 - Julian) remove eslint-disable */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label htmlFor={`${id}-no`} className="hover:cursor-pointer">
             {t('hiring:PERSONAL_INFO.NO')}
           </label>
@@ -82,21 +78,12 @@ const PersonalInfoForm: React.FC<IPersonalInfoFormProps> = ({ toPrevStep, toNext
 
   const { tempPersonalInfo, savePersonalInfo } = useHiringCtx();
 
-  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const inputStyle = `${haloStyle} rounded-full h-60px w-full outline-none px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const questions = [
-    {
-      id: 'related-company',
-      question: 'hiring:PERSONAL_INFO.QUESTION_1_TITLE',
-    },
-    {
-      id: 'working-isuncloud',
-      question: 'hiring:PERSONAL_INFO.QUESTION_2_TITLE',
-    },
-    {
-      id: 'criminal-record',
-      question: 'hiring:PERSONAL_INFO.QUESTION_3_TITLE',
-    },
+    { id: 'related-company', question: 'hiring:PERSONAL_INFO.QUESTION_1_TITLE' },
+    { id: 'working-isuncloud', question: 'hiring:PERSONAL_INFO.QUESTION_2_TITLE' },
+    { id: 'criminal-record', question: 'hiring:PERSONAL_INFO.QUESTION_3_TITLE' },
   ];
 
   const learnAboutJobOptions = ['104', 'FB', 'Linkedin', 'OW', 'Others'];

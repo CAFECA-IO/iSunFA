@@ -6,7 +6,10 @@ import { SortOrder } from '@/constants/sort';
 import { updateTeamMemberSession } from '@/lib/utils/session';
 import { STATUS_CODE, STATUS_MESSAGE } from '@/constants/status_code';
 import { getTimestampNow } from '@/lib/utils/common';
-import { GRACE_PERIOD_SECONDS } from '@/constants/team/permissions';
+import {
+  ACTION_BLOCKED_BY_TRIAL_PAYWALL,
+  GRACE_PERIOD_SECONDS,
+} from '@/constants/team/permissions';
 import { TPlanType } from '@/interfaces/subscription';
 
 const ACTION_USE_ACTUAL_ROLE: TeamPermissionAction[] = [
@@ -36,6 +39,7 @@ type TeamAndTeamMemberRoleInfo = {
   gracePeriodEndAt: number; // Info: (20250411 - Tzuhan) 團隊訂閱寬限期結束時間（Unix 秒數）
   isExpired: boolean;
   planType: TPlanType;
+  effectivePlanType: TPlanType;
 };
 
 export async function assertUserIsTeamMember(
@@ -93,7 +97,8 @@ export async function assertUserIsTeamMember(
     inGracePeriod,
     gracePeriodEndAt,
     isExpired,
-    planType: isValid || isInGrace ? (subscription?.plan?.type as TPlanType) : TPlanType.BEGINNER,
+    effectivePlanType: isExpired ? TPlanType.BEGINNER : (subscription?.plan?.type as TPlanType),
+    planType: subscription?.plan?.type as TPlanType,
   };
 }
 
@@ -118,12 +123,26 @@ export const assertUserCan = async ({
   teamId,
   action,
 }: AssertUserCanOptions): Promise<{
+  isExpired: boolean;
   actualRole: TeamRole;
   effectiveRole: TeamRole;
   can: boolean;
   alterableRoles?: TeamRole[];
 }> => {
-  const { actualRole, effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+  const { actualRole, effectiveRole, isExpired, planType } = await assertUserIsTeamMember(
+    userId,
+    teamId
+  );
+
+  // Info: (20251105 - Tzuhan) 1. 檢查是否為「試用期已過期」
+  if ((isExpired && planType === TPlanType.TRIAL) || planType === undefined) {
+    // Info: (20251105 - Tzuhan) 2. 檢查這個 action 是否為「會被 paywall 阻擋」的核心付費功能
+    if (ACTION_BLOCKED_BY_TRIAL_PAYWALL.includes(action)) {
+      const error = new Error(STATUS_MESSAGE.FREE_TRIAL_EXPIRED);
+      error.name = STATUS_CODE.FREE_TRIAL_EXPIRED;
+      throw error;
+    }
+  }
 
   // Info: (20250411 - Tzuhan) 根據行為是否為敏感操作，決定使用哪種角色進行判斷
   const useActual = ACTION_USE_ACTUAL_ROLE.includes(action);
@@ -132,6 +151,7 @@ export const assertUserCan = async ({
   const result = convertTeamRoleCanDo({ teamRole: roleToUse, canDo: action });
 
   return {
+    isExpired,
     actualRole,
     effectiveRole,
     can: result.can,
@@ -167,6 +187,7 @@ export const assertUserCanByAccountBook = async ({
   effectiveRole: TeamRole;
   can: boolean;
   alterableRoles?: TeamRole[];
+  isExpired: boolean;
 }> => {
   const accountBook = await prisma.accountBook.findFirst({
     where: {

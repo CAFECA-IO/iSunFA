@@ -1,12 +1,14 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
 import { ISalaryCalculator } from '@/interfaces/calculator';
-import { salaryCalculator } from '@/lib/utils/salary_calculator';
+import { salaryCalculator, getMinimumWage } from '@/lib/utils/salary_calculator';
 
 type TabStep = {
   step: number;
   completed: boolean;
 };
+
+const defaultEmployeeName = '王小明';
 
 const defaultTabSteps: TabStep[] = [
   { step: 1, completed: true }, // Info: (20250714 - Julian) 由第一步開始，所以第一步永遠為已完成
@@ -140,12 +142,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
   const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
 
+  // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
+  const defaultBasicSalary = getMinimumWage(thisYear);
+
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
 
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
-  const [employeeName, setEmployeeName] = useState<string>('');
+  const [employeeName, setEmployeeName] = useState<string>(defaultEmployeeName);
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
@@ -160,7 +165,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [isNameError, setIsNameError] = useState<boolean>(false);
 
   // Info: (20250709 - Julian) Step 2: 基本薪資相關 state
-  const [baseSalary, setBaseSalary] = useState<number>(0);
+  const [baseSalary, setBaseSalary] = useState<number>(defaultBasicSalary);
   const [mealAllowance, setMealAllowance] = useState<number>(0);
   const [otherAllowanceWithTax, setOtherAllowanceWithTax] = useState<number>(0);
   const [otherAllowanceWithoutTax, setOtherAllowanceWithoutTax] = useState<number>(0);
@@ -326,6 +331,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         employerPaidLaborInsurance: result.companyBurdenLaborInsurance,
         employerPaidHealthInsurance: result.companyBurdenHealthInsurance,
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,
+        companyBurdenOccupationalAccidentInsurance:
+          result.companyBurdenOccupationalAccidentInsurance,
         totalEmployerCost: result.totalCompanyBurden,
       },
     };
@@ -383,7 +390,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) 重置表單
   const resetFormHandler = () => {
     // Info: (20250710 - Julian) 清空 input 欄位
-    setEmployeeName('');
+    setEmployeeName(defaultEmployeeName);
     setEmployeeNumber('');
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
@@ -393,7 +400,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setIsLeft(false);
     setDayOfJoining('01');
     setDayOfLeaving('01');
-    setBaseSalary(0);
+    setBaseSalary(defaultBasicSalary);
     setMealAllowance(0);
     setOtherAllowanceWithTax(0);
     setOtherAllowanceWithoutTax(0);

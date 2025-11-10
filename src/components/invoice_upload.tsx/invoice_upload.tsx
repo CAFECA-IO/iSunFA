@@ -82,6 +82,7 @@ const InvoiceUpload: React.FC<InvoiceUploadProps> = ({
       formData.append('iv', Array.from(iv).join(','));
       return formData;
     } catch (error) {
+      (error as Error).message += ' (from encryptFileWithKey)';
       throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
     }
   };

@@ -52,6 +52,8 @@ export const publicGenerateReportUtils = {
         errorType: 'generateReport failed',
         errorMessage: 'Func. generateReport in company/companyId/report/index.ts failed',
       };
+      (error as Error).message +=
+        ` | accountBookId: ${accountBookId} | reportSheetType: ${reportSheetType}`;
       loggerError(errorInfo);
     }
     return reportContent;

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { NotificationType } from '@prisma/client';
 import { zodStringToNumber, nullSchema } from '@/lib/utils/zod_schema/common';
 
-export const NotificationContentSchema = z.record(z.any());
+export const NotificationContentSchema = z.record(z.any(), z.any());
 
 export const NotificationSchema = z.object({
   id: z.number(),
@@ -12,7 +12,7 @@ export const NotificationSchema = z.object({
   event: z.string(),
   title: z.string(),
   message: z.string(),
-  content: z.record(z.any()),
+  content: z.record(z.any(), z.any()),
   actionUrl: z.string().optional(),
   imageUrl: z.string().optional(),
   read: z.boolean(),
@@ -76,7 +76,7 @@ export const listNotificationSchema = z.array(
     event: z.string(),
     title: z.string(),
     message: z.string(),
-    content: z.record(z.any()),
+    content: z.record(z.any(), z.any()),
     actionUrl: z.string().optional(),
     imageUrl: z.string().optional(),
     read: z.boolean(),
@@ -95,7 +95,7 @@ export const getNotificationSchema = z.object({
   event: z.string(),
   title: z.string(),
   message: z.string(),
-  content: z.record(z.any()),
+  content: z.record(z.any(), z.any()),
   actionUrl: z.string().optional(),
   imageUrl: z.string().optional(),
   read: z.boolean(),

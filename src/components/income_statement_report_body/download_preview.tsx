@@ -79,7 +79,7 @@ interface DownloadPreviewProps {
 }
 
 const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
-  (
+  function DownloadPreview(
     {
       financialReport,
       formattedCurFromDate,
@@ -90,7 +90,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
       isDownloading,
     },
     ref
-  ) => {
+  ) {
     const { t } = useTranslation(['reports']);
     const { currency } = useCurrencyCtx();
 
@@ -164,6 +164,7 @@ const DownloadPreview = React.forwardRef<HTMLDivElement, DownloadPreviewProps>(
           // Info: (20250214 - Anna) Print ItemSummary
           groupedGeneral.map((group, index) => (
             <div
+              key={index}
               style={{
                 breakBefore: 'page',
                 breakAfter: 'page',

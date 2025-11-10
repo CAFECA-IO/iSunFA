@@ -111,6 +111,7 @@ const CreditCardInfo = ({
         sendEmailHandler();
       }
     } catch (error) {
+      (error as Error).message += ' (from getCreditCardInfo)';
       // Info: (20250324 - Julian) 顯示錯誤訊息
       toastHandler({
         id: 'GET_CREDIT_CARD_INFO_FAILED',
@@ -179,6 +180,7 @@ const CreditCardInfo = ({
         });
       }
     } catch (error) {
+      (error as Error).message += ' (from updateSubscription)';
       toastHandler({
         id: 'UPDATE_SUBSCRIPTION_FAILED',
         type: ToastType.ERROR,

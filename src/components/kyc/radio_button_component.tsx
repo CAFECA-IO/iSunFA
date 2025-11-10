@@ -25,7 +25,7 @@ const RadioButtonGroup: React.FC<RadioButtonGroupProps> = ({
       {options.map((option, index) => {
         const id = `${name}-${index}`;
         return (
-          <label htmlFor={id} className="inline-flex items-center">
+          <label key={id} htmlFor={id} className="inline-flex items-center">
             <input
               id={id}
               type="radio"

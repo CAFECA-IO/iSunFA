@@ -30,6 +30,7 @@ const TeamList: React.FC = () => {
         setTeamList(ownedTeams.data);
       }
     } catch (error) {
+      (error as Error).message += ' (from getUserOwnedTeams)';
       loggerFront.error('取得使用者擁有的所有團隊失敗');
     } finally {
       setIsLoading(false);

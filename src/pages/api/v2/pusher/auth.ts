@@ -47,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Info: (20241120 - tzuhan) 返回授權結果
       return res.status(200).json(authResponse);
     } catch (error) {
+      (error as Error).message += ` | Method: ${req.method} | Path: ${req.url}`;
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   } else {

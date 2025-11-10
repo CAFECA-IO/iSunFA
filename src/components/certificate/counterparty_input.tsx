@@ -37,7 +37,7 @@ export interface CounterpartyInputRef {
 let debounceTimer: NodeJS.Timeout | null = null;
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
-  (props, ref) => {
+  function CounterpartyInput(props, ref) {
     const { counterparty, counterpartyList, onSelect, className } = props;
     const { t } = useTranslation(['certificate', 'common']);
 

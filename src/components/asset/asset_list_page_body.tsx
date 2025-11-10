@@ -100,6 +100,7 @@ const AssetListPageBody: React.FC = () => {
         content: t('asset:ASSET.TOAST_GET_ACCOUNT_LIST_FAILED'),
         closeable: true,
       });
+      (error as Error).message = t('asset:ASSET.TOAST_GET_ACCOUNT_LIST_FAILED');
     }
   };
 

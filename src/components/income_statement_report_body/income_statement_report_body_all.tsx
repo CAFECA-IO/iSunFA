@@ -98,6 +98,7 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
         setIsGetFinancialReportSuccess(getFRSuccess);
         setErrorCode(getFRCode);
       } catch (error) {
+        (error as Error).message += ' (from getFinancialReport)';
         // console.log('error:', error);
       } finally {
         setIsLoading(false);
@@ -135,22 +136,26 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
 
   /* Info: (20240730 - Anna) 計算 totalCost 和 salesExpense 的 curPeriodAmount 和 prePeriodAmount 的總和 */
   const curPeriodTotal = numberBeDashIfFalsyWithoutCommas(
-    parseFloat(DecimalOperations.add(
+    parseFloat(
       DecimalOperations.add(
-        otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
-        otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || '0'
-      ),
-      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || '0'
-    ))
+        DecimalOperations.add(
+          otherInfo?.revenueAndExpenseRatio.totalCost?.curPeriodAmount || '0',
+          otherInfo?.revenueAndExpenseRatio.salesExpense?.curPeriodAmount || '0'
+        ),
+        otherInfo?.revenueAndExpenseRatio.administrativeExpense?.curPeriodAmount || '0'
+      )
+    )
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
   const prePeriodTotal = numberBeDashIfFalsyWithoutCommas(
-    parseFloat(DecimalOperations.add(
+    parseFloat(
       DecimalOperations.add(
-        otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',
-        otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || '0'
-      ),
-      otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || '0'
-    ))
+        DecimalOperations.add(
+          otherInfo?.revenueAndExpenseRatio.totalCost?.prePeriodAmount || '0',
+          otherInfo?.revenueAndExpenseRatio.salesExpense?.prePeriodAmount || '0'
+        ),
+        otherInfo?.revenueAndExpenseRatio.administrativeExpense?.prePeriodAmount || '0'
+      )
+    )
   ); // Info: (20241021 - Murky) @Anna, add administrativeExpense
 
   /* Info: (20240730 - Anna) 提取 curRatio 、 preRatio 、revenueToRD */
@@ -865,13 +870,17 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
                     {value.name}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-                    {DecimalOperations.isZero(value.curPeriodAmount ?? '0') ? '-' : value.curPeriodAmount}
+                    {DecimalOperations.isZero(value.curPeriodAmount ?? '0')
+                      ? '-'
+                      : value.curPeriodAmount}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-end text-xs">
-                    {DecimalOperations.isZero(value.prePeriodAmount ?? '0') ? '-' : value.prePeriodAmount}
+                    {DecimalOperations.isZero(value.prePeriodAmount ?? '0')
+                      ? '-'
+                      : value.prePeriodAmount}
                   </td>
                   <td className="border border-stroke-neutral-quaternary p-10px text-center text-xs">
                     &nbsp;
@@ -1075,7 +1084,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               {formattedCurFromDate} {t('reports:COMMON.TO')} {formattedCurToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(curRatio.toString()).toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', {
+                ratio: parseFloat(curRatio.toString()).toFixed(2),
+              })}
             </span>
           </p>
         )}
@@ -1085,7 +1096,9 @@ const IncomeStatementReportBodyAll = ({ reportId }: IIncomeStatementReportBodyAl
               {formattedPreFromDate} {t('reports:COMMON.TO')} {formattedPreToDate}
             </span>
             <span className="ml-2">
-              {t('reports:REPORTS.REVENUE_RATIO', { ratio: parseFloat(preRatio.toString()).toFixed(2) })}
+              {t('reports:REPORTS.REVENUE_RATIO', {
+                ratio: parseFloat(preRatio.toString()).toFixed(2),
+              })}
             </span>
           </p>
         )}

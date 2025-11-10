@@ -1,5 +1,6 @@
 import { IZodValidator } from '@/interfaces/zod_validator';
-import { z, ZodRawShape } from 'zod';
+import { z } from 'zod';
+import type { ZodRawShape } from 'zod';
 import {
   zodFilterSectionSortingOptions,
   zodStringToNumber,

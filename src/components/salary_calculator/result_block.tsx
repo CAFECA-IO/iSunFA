@@ -39,6 +39,7 @@ const ResultBlock: React.FC<IResultBlockProps> = ({ backgroundColor, rowItems })
 
       return (
         <div
+          key={item.label}
           className={`flex items-center justify-between ${isBold ? 'font-bold' : 'font-normal'}`}
         >
           <p>{item.label}:</p>

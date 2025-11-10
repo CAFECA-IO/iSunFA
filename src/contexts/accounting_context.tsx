@@ -1,5 +1,4 @@
 import { ProgressStatus } from '@/constants/account';
-import { APIName } from '@/constants/api_connection';
 import { EXPIRATION_FOR_DATA_IN_INDEXED_DB_IN_SECONDS } from '@/constants/config';
 import { useUserCtx } from '@/contexts/user_context';
 import { IAssetDetails, IAssetPostOutput } from '@/interfaces/asset';
@@ -7,7 +6,6 @@ import { IJournal } from '@/interfaces/journal';
 import { IOCR, IOCRItem } from '@/interfaces/ocr';
 import { IReverseItemUI } from '@/interfaces/line_item';
 import { IVoucher } from '@/interfaces/voucher';
-import APIHandler from '@/lib/utils/api_handler';
 import { getTimestampNow } from '@/lib/utils/common';
 import {
   clearAllItems,
@@ -46,11 +44,6 @@ interface IAccountingContext {
   deleteOCRHandler: (aichId: string) => void;
   addPendingOCRHandler: (item: IOCRItem) => void;
   deletePendingOCRHandler: (uploadIdentifier: string) => void;
-  getAIStatusHandler: (
-    params: { companyId: number; askAIId: string } | undefined,
-    update: boolean
-  ) => void;
-  AIStatus: ProgressStatus;
   inputDescription: string;
 
   selectedOCR: IOCR | undefined;
@@ -94,8 +87,6 @@ const initialAccountingContext: IAccountingContext = {
   deleteOCRHandler: () => {},
   addPendingOCRHandler: () => {},
   deletePendingOCRHandler: () => {},
-  getAIStatusHandler: () => {},
-  AIStatus: ProgressStatus.IN_PROGRESS,
   selectedOCR: undefined,
   selectOCRHandler: () => {},
   selectedJournal: undefined,
@@ -131,7 +122,6 @@ export const AccountingContext = createContext<IAccountingContext>(initialAccoun
 
 export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const { userAuth, connectedAccountBook, isSignIn } = useUserCtx();
-  const { trigger: getAIStatus } = APIHandler<ProgressStatus>(APIName.ASK_AI_STATUS);
 
   const [OCRList, setOCRList] = useState<IOCR[]>([]);
 
@@ -140,10 +130,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [invoiceId, setInvoiceId] = useState<string | undefined>('');
   const [voucherId, setVoucherId] = useState<string | undefined>(undefined);
   const [voucherPreview, setVoucherPreview] = useState<IVoucher | undefined>(undefined);
-  const [AIStatus, setAIStatus] = useState<ProgressStatus>(ProgressStatus.IN_PROGRESS);
-  const [stopAskAI, setStopAskAI] = useState<boolean>(false);
 
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [inputDescription, setInputDescription] = useState<string>('');
 
   const [pendingOCRList, setPendingOCRList] = useState<IOCRItem[]>([]);
@@ -157,38 +144,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
   const [reverseList, setReverseList] = useState<{ [key: string]: IReverseItemUI[] }>({});
 
   const [flagOfRefreshVoucherList, setFlagOfRefreshVoucherList] = useState(false);
-
-  const getAIStatusHandler = useCallback(
-    (params: { companyId: number; askAIId: string } | undefined, update: boolean) => {
-      if (update) {
-        setAIStatus(ProgressStatus.IN_PROGRESS);
-        setStopAskAI(false);
-        const interval = setInterval(async () => {
-          const { success, data } = await getAIStatus({
-            params: {
-              accountBookId: params!.companyId,
-              resultId: params!.askAIId,
-            },
-          });
-          if ((success && data !== ProgressStatus.IN_PROGRESS) || success === false) {
-            setAIStatus(data ?? ProgressStatus.LLM_ERROR);
-            clearInterval(interval);
-          }
-        }, 5000);
-        setIntervalId(interval);
-      } else {
-        setStopAskAI(true);
-      }
-    },
-    [stopAskAI]
-  );
-
-  useEffect(() => {
-    if (stopAskAI && intervalId) {
-      clearInterval(intervalId);
-      setIntervalId(null);
-    }
-  }, [stopAskAI, intervalId]);
 
   // Info: (20240820 - Shirley) 新增一個合併 OCR 列表的函數
   const mergeOCRLists = useCallback((upcomingList: IOCR[], currentList: IOCR[]) => {
@@ -319,6 +274,7 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       await initDB();
       setIsDBReady(true);
     } catch (error) {
+      (error as Error).message += ' (from initializeDB)';
       setIsDBReady(false);
     }
   };
@@ -435,8 +391,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
       deleteOCRHandler,
       addPendingOCRHandler,
       deletePendingOCRHandler,
-      getAIStatusHandler,
-      AIStatus,
 
       invoiceId,
       setInvoiceIdHandler,
@@ -471,7 +425,6 @@ export const AccountingProvider = ({ children }: IAccountingProvider) => {
     }),
     [
       OCRList,
-      AIStatus,
       invoiceId,
       voucherId,
       voucherPreview,

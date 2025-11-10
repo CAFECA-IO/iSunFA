@@ -1,5 +1,4 @@
 import dynamic from 'next/dynamic';
-import { ApexOptions } from 'apexcharts';
 import React, { useEffect } from 'react';
 import Tooltip from '@/components/tooltip/tooltip';
 import { Button } from '@/components/button/button';
@@ -8,6 +7,7 @@ import { useGlobalCtx } from '@/contexts/global_context';
 import { Period } from '@/interfaces/chart_unit';
 import { DUMMY_PROFIT_TREND_CHART_DATA } from '@/interfaces/profit_trend_chart';
 import { useTranslation } from 'next-i18next';
+import type { ApexOptions } from 'apexcharts';
 
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
@@ -162,7 +162,7 @@ const LineChart = ({ data }: LineChartProps) => {
         // formatter: value => `${value}`, // Info: (20240416 - Shirley)
       },
       y: {
-        formatter: (value) => `${value}%`,
+        formatter: (value: unknown) => `${value}%`,
       },
       marker: {
         show: false,

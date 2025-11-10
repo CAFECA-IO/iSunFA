@@ -87,11 +87,13 @@ export function validateRequestData<T extends APIName>(
   let query: query<T>;
   let body: body<T>;
   try {
-    query = validateAndFormatData(querySchema, req.query);
-    body = validateAndFormatData(bodySchema, req.body);
+    // ToDo: (20251028 - Luphia) reDesign validateAndFormatData function.
+    query = validateAndFormatData(querySchema, req.query) as query<T>;
+    body = validateAndFormatData(bodySchema, req.body) as body<T>;
   } catch (error) {
     query = null as unknown as query<T>;
     body = null as unknown as body<T>;
+    (error as Error).message += ` | API Name: ${apiName} | Request Data Validation Failed`;
   }
 
   return { query, body };
@@ -110,6 +112,7 @@ export function validateOutputData<T extends keyof typeof ZOD_SCHEMA_API>(
   } catch (error) {
     isOutputDataValid = false;
     outputData = null;
+    (error as Error).message += ` | API Name: ${apiName} | Output Data Validation Failed`;
   }
 
   return { isOutputDataValid, outputData };
@@ -133,9 +136,9 @@ export function validateRequest<T extends keyof typeof API_ZOD_SCHEMA>(
   };
 
   try {
-    // Info: (20240909 - Murky) Validate query and body
-    payload.query = validateAndFormatData(queryValidator, query);
-    payload.body = validateAndFormatData(bodyValidator, body);
+    // ToDo: (20251028 - Luphia) reDesign validateAndFormatData function.
+    payload.query = validateAndFormatData(queryValidator, query) as QueryType<T>;
+    payload.body = validateAndFormatData(bodyValidator, body) as BodyType<T>;
   } catch (_error) {
     const error = _error as ApiValidationError;
     loggerError({

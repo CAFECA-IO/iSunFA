@@ -63,7 +63,7 @@ const InvoiceRC2BaseSchema = z.object({
   isGenerated: z.boolean().optional().default(false),
   incomplete: z.boolean(),
   description: z.string().nullable().optional(),
-  note: z.record(z.any()).nullable().optional(),
+  note: z.record(z.any(), z.any()).nullable().optional(),
 
   totalOfSummarizedInvoices: z
     .string()

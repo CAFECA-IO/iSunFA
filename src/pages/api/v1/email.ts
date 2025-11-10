@@ -42,6 +42,7 @@ export async function handlePostRequest(
     // Info: (20240823 - Julian) 回應失敗
     statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     payload = false;
+    (error as Error).message += ' | Failed to send email.';
   }
 
   return { statusMessage, payload };

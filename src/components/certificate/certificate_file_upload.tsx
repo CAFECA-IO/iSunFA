@@ -116,6 +116,7 @@ const CertificateFileUpload: React.FC<CertificateFileUploadProps> = ({
           updateFileStatus(fileId, '', ProgressStatus.SUCCESS, 100, data.id);
         }
       } catch (error) {
+        (error as Error).message += ' (from createCertificate)';
         updateFileStatus(fileId, '', ProgressStatus.FAILED);
       }
     },

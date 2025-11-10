@@ -1,9 +1,10 @@
 import { IPlan } from '@/interfaces/subscription';
 import { useTranslation } from 'next-i18next';
+import { IDiscount } from '@/interfaces/discount';
 
 interface PaymentInfoProps {
   plan: IPlan | undefined;
-  discount?: number;
+  discount?: IDiscount;
 }
 
 const PaymentInfo = ({ plan, discount }: PaymentInfoProps) => {
@@ -16,10 +17,26 @@ const PaymentInfo = ({ plan, discount }: PaymentInfoProps) => {
     );
   }
 
-  const isShowDiscount = discount && discount > 0;
-
+  // Info: (20251002 - Julian) 預設稅額為 0
   const tax = 0;
-  const totalPrice = plan.price + tax - (discount ?? 0);
+
+  // Info: (20251002 - Julian) 預設沒有折扣： 折扣百分比 = 1，折扣金額 = 0
+  const discountPercentage = discount?.discountPercentage ?? 1;
+  const discountAmount = discount?.discountAmount ?? 0;
+
+  // Info: (20251002 - Julian) 是否取得折扣
+  const isDiscount = discount !== undefined && (discountAmount !== 0 || discountPercentage !== 0);
+
+  // Info: (20251002 - Julian) 計算含稅價格 = 原價 + 稅額
+  const price = plan.price + tax;
+
+  // Info: (20251002 - Julian) 計算總折扣金額 = 含稅價格 * (1 - 折扣百分比) + 折扣金額，並四捨五入到整數
+  const totalDiscount = isDiscount
+    ? Math.round(price * (1 - discountPercentage) + discountAmount)
+    : 0;
+
+  // Info: (20251002 - Julian) 計算總價格 = 含稅價格 + 稅額 - 總折扣金額
+  const totalPrice = price - totalDiscount;
 
   return (
     <section className="flex flex-col gap-lv-4 rounded-md bg-surface-neutral-surface-lv2 px-lv-6 py-lv-5 shadow-Dropshadow_XS">
@@ -47,13 +64,13 @@ const PaymentInfo = ({ plan, discount }: PaymentInfoProps) => {
       </p>
 
       <div
-        className={`${isShowDiscount ? 'grid-rows-1' : 'grid-rows-0'} grid grid-cols-1 overflow-hidden transition-all duration-300 ease-in-out`}
+        className={`${isDiscount ? 'grid-rows-1' : 'grid-rows-0'} grid grid-cols-1 overflow-hidden transition-all duration-300 ease-in-out`}
       >
         <p className="flex items-center justify-between">
           <span className="text-sm font-semibold text-text-neutral-tertiary tablet:text-lg">
             {t('subscriptions:PAYMENT_PAGE.DISCOUNT')}
           </span>
-          <span className="text-xl font-bold leading-8 text-text-state-error">{`$ -${discount?.toLocaleString('zh-TW')} NTD`}</span>
+          <span className="text-xl font-bold leading-8 text-text-state-error">{`$ -${totalDiscount?.toLocaleString('zh-TW')} NTD`}</span>
         </p>
       </div>
 

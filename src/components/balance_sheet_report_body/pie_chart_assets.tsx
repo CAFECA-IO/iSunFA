@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ApexOptions } from 'apexcharts'; // Info: (20240726 - Anna) 導入 ApexOptions 類型
+import type { ApexOptions } from 'apexcharts'; // Info: (20240726 - Anna) 導入 ApexOptions 類型
 
 // Info: (20240726 - Anna) 動態導入 ApexCharts，以避免在服務器端渲染時執行
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });

@@ -14,6 +14,11 @@ const SalaryCalculatorPage: React.FC = () => {
       <Head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta content="薪資計算機" property="og:title" />
+        <meta
+          content="快速計算每月薪資、代扣所得稅、勞保、就保、職保、勞退、健保、二代健保補充保費及加班費。適用於全職、兼職與時薪工作者，還能生成薪資條。"
+          property="og:description"
+        />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>iSunFA - {t('calculator:PAGE.MAIN_TITLE')}</title>
       </Head>

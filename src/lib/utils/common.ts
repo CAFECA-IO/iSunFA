@@ -612,7 +612,8 @@ export const loadFileFromLocalStorage = (
 
     return fileObject;
   } catch (error) {
-    throw new Error(STATUS_MESSAGE.INTERNAL_SERVICE_ERROR);
+    (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
+    throw error;
   }
 };
 
@@ -665,10 +666,10 @@ export function getEnumValue<T extends object>(enumObj: T, value: string): T[key
  */
 // prettier-ignore
 export function throttle<F extends (
-...args: unknown[]) => unknown>(
-  func: F,
-  limit: number
-): (...args: Parameters<F>) => void {
+  ...args: unknown[]) => unknown>(
+    func: F,
+    limit: number
+  ): (...args: Parameters<F>) => void {
   let lastFunc: NodeJS.Timeout | null;
   let lastRan: number | null = null;
 

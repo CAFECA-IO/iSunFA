@@ -1,11 +1,5 @@
 import { APIName } from '@/constants/api_connection';
 import {
-  askAIGetResultV2Schema,
-  askAiPostSchema,
-  askAIPostValidatorV2,
-  askAIStatusSchema,
-} from '@/lib/utils/zod_schema/ask_ai';
-import {
   certificateDeleteValidator,
   certificateGetOneSchema,
   certificateGetOneValidator,
@@ -170,7 +164,6 @@ export const API_ZOD_SCHEMA = {
   [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
-  [APIName.ASK_AI_V2]: askAIPostValidatorV2,
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
   [APIName.CERTIFICATE_GET_V2]: certificateGetOneValidator,
   [APIName.CERTIFICATE_LIST_V2]: certificateListValidator,
@@ -224,7 +217,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.VOUCHER_RESTORE_V2]: voucherRestoreSchema,
   [APIName.REVERSE_LINE_ITEM_GET_BY_ACCOUNT_V2]: lineItemGetByAccountSchema,
   [APIName.VOUCHER_LIST_GET_BY_ACCOUNT_V2]: voucherGetByAccountSchema,
-  [APIName.ASK_AI_RESULT_V2]: askAIGetResultV2Schema,
   [APIName.CERTIFICATE_LIST_V2]: certificateListSchema,
   [APIName.LIST_INVOICE_RC2]: listInvoiceRC2Grouped,
   [APIName.LIST_INVOICE_RC2_INPUT]: listInvoiceRC2Input,
@@ -255,8 +247,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.CERTIFICATE_DELETE_V2]: nullAPISchema,
   [APIName.IMAGE_GET_BY_ID]: imageGetByIdSchema,
   [APIName.GET_IMAGE]: imageGetSchema,
-  [APIName.ASK_AI_STATUS]: askAIStatusSchema,
-  [APIName.ASK_AI_V2]: askAiPostSchema,
   [APIName.JOURNAL_LIST]: nullAPISchema,
   [APIName.REPORT_LIST]: nullAPISchema,
   [APIName.REPORT_GET_BY_ID]: getPublicReportSchemaV2,

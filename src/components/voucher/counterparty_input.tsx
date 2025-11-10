@@ -34,7 +34,7 @@ export interface CounterpartyInputRef {
 }
 
 const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputProps>(
-  (props, ref) => {
+  function CounterpartyInput(props, ref) {
     const { counterparty, onSelect, isShowRedHint, className, onTriggerSave } = props;
     const { t } = useTranslation(['certificate', 'common']);
 

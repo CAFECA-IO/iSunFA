@@ -118,7 +118,8 @@ const MobileUploadPage: React.FC = () => {
       formData.append('iv', Array.from(iv).join(','));
       return formData;
     } catch (error) {
-      throw new Error(t('certificate:ERROR.ENCRYPT_FILE'));
+      (error as Error).message += ' - encryptFileWithKey failed';
+      throw error;
     }
   };
 

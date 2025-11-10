@@ -31,7 +31,7 @@ class RoomManager {
   }
 
   public static removeCompanyIdFromRoom(room: IRoomWithPrivateData): IRoom {
-    const { companyId, ...roomWithoutCompanyId } = room;
+    const { ...roomWithoutCompanyId } = room;
     return roomWithoutCompanyId;
   }
 

@@ -8,7 +8,7 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import AssetSection from '@/components/voucher/asset_section';
-import VoucherLineBlock, { VoucherLinePreview } from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemBeta, ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
@@ -23,10 +23,6 @@ import {
   EVENT_TYPE_TO_VOUCHER_TYPE_MAP,
   VOUCHER_TYPE_TO_EVENT_TYPE_MAP,
 } from '@/constants/account';
-import { DecimalOperations } from '@/lib/utils/decimal_operations';
-// Deprecated: (20250311 - Julian) remove eslint-disable
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import AIWorkingArea, { AIState } from '@/components/voucher/ai_working_area';
 import { ICertificate, ICertificateUI } from '@/interfaces/certificate';
 import CertificateSelectorModal from '@/components/certificate/certificate_selector_modal';
 import CertificateUploaderModal from '@/components/certificate/certificate_uploader_modal';
@@ -51,22 +47,6 @@ import { TbArrowBackUp } from 'react-icons/tb';
 
 type FocusableElement = HTMLInputElement | HTMLButtonElement | HTMLDivElement;
 
-// ToDo: (20241021 - Julian) 確認完後移動到 interfaces
-interface IAIResultVoucher {
-  voucherDate: number;
-  type: string;
-  note: string;
-  counterParty?: ICounterpartyOptional;
-  lineItems: ILineItemUI[];
-}
-
-const dummyAIResult: IAIResultVoucher = {
-  voucherDate: 0,
-  type: '',
-  note: '',
-  lineItems: [],
-};
-
 const VoucherEditingPageBody: React.FC<{
   voucherData: IVoucherDetailForFrontend;
   voucherNo: string | undefined;
@@ -82,21 +62,6 @@ const VoucherEditingPageBody: React.FC<{
 
   const accountBookId = connectedAccountBook?.id ?? FREE_ACCOUNT_BOOK_ID;
   const temporaryAssetListByCompany = temporaryAssetList[accountBookId] ?? [];
-
-  // Info: (20241108 - Julian) POST ASK AI
-  // Deprecated: (20250311 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { trigger: askAI, isLoading: isAskingAI } = APIHandler<{
-    reason: string;
-    resultId: string;
-  }>(APIName.ASK_AI_V2);
-
-  // Info: (20241108 - Julian) GET AI RESULT
-  // Deprecated: (20250311 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { trigger: getAIResult, success: analyzeSuccess } = APIHandler<IAIResultVoucher>(
-    APIName.ASK_AI_RESULT_V2
-  );
 
   // Info: (20241118 - Julian) 如果只改動 Voucher line 以外的內容(date, counterparty 等) ，用 PUT
   const {
@@ -196,18 +161,6 @@ const VoucherEditingPageBody: React.FC<{
   const [isShowAssetHint, setIsShowAssetHint] = useState<boolean>(false);
   const [isShowReverseHint, setIsShowReverseHint] = useState<boolean>(false);
 
-  // Info: (20241018 - Tzuhan) AI 分析相關 state
-  // ToDo: (20250311 - Julian) 暫時隱藏 AI 分析功能
-  // Deprecated: (20250311 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [aiState, setAiState] = useState<AIState>(AIState.RESTING);
-  // Deprecated: (20250311 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isShowAnalysisPreview, setIsShowAnalysisPreview] = useState<boolean>(false);
-  const [targetIdList, setTargetIdList] = useState<number[]>([]);
-  const [resultId, setResultId] = useState<string>('');
-  const [resultData, setResultData] = useState<IAIResultVoucher | null>(null);
-
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
   const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
@@ -229,62 +182,7 @@ const VoucherEditingPageBody: React.FC<{
   const [selectedCertificatesUI, setSelectedCertificatesUI] =
     useState<ICertificateUI[]>(defaultCertificateUI);
 
-  // Info: (20241108 - Julian) 取得 AI 分析結果
-  const {
-    voucherDate: aiVoucherDate,
-    type: aiType,
-    note: aiNote,
-    counterParty: aiCounterParty,
-    lineItems: aiLineItems,
-  } = resultData ?? dummyAIResult;
-
-  const aiDate = { startTimeStamp: aiVoucherDate, endTimeStamp: aiVoucherDate };
-
-  const aiTotalCredit = parseFloat(
-    aiLineItems.reduce(
-      (acc, item) => (item.debit === false ? DecimalOperations.add(acc, item.amount) : acc),
-      '0'
-    )
-  );
-  const aiTotalDebit = parseFloat(
-    aiLineItems.reduce(
-      (acc, item) => (item.debit === true ? DecimalOperations.add(acc, item.amount) : acc),
-      '0'
-    )
-  );
-
   const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
-
-  const getResult = useCallback(async () => {
-    // Info: (20241220 - Julian) 問 AI 分析結果
-    const analysisResult = await getAIResult({
-      params: { accountBookId, resultId },
-      query: { reason: 'voucher' },
-    });
-
-    if (analysisResult.data) {
-      setResultData(analysisResult.data);
-      setAiState(AIState.FINISH);
-    } else {
-      setAiState(AIState.FAILED);
-    }
-  }, [resultId]);
-
-  // Info: (20241220 - Julian) 從 resultId 判斷是否已經 POST 成功
-  const askAIAnalysis = async (targetIds: number[]) => {
-    const aiResult = await askAI({
-      params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
-      query: { reason: 'voucher' },
-      body: { targetIdList: targetIds },
-    });
-
-    setResultId(aiResult.data?.resultId ?? '');
-  };
-
-  useEffect(() => {
-    // Info: (20241220 - Julian) 如果有 resultId，則問 AI 分析結果
-    if (resultId) getResult();
-  }, [resultId]);
 
   useEffect(() => {
     const storedCertificates = localStorage.getItem('selectedCertificates');
@@ -345,15 +243,8 @@ const VoucherEditingPageBody: React.FC<{
       const selectedList = Object.values(merged).filter((i) => i.isSelected);
       setSelectedCertificatesUI(selectedList);
       setSelectedIds(selectedList.map((item) => item.id));
-
-      // Info: (20241230 - Tzuhan) 後續動作
-      const targetIds = selectedList.map((item) => item.file.id);
-      setTargetIdList(targetIds);
-
-      setAiState(AIState.WORKING);
-      askAIAnalysis(targetIds);
     },
-    [certificates, bindedCertificateUI, askAIAnalysis]
+    [certificates, bindedCertificateUI]
   );
 
   const handleDelete = useCallback(
@@ -386,19 +277,6 @@ const VoucherEditingPageBody: React.FC<{
     },
     [certificates]
   );
-
-  useEffect(() => {
-    if (selectedCertificatesUI.length > 0) {
-      // ToDo: (20241018 - Tzuhan) To Julian: 這邊之後用來呼叫AI分析的API
-      setAiState(AIState.WORKING);
-      // Info: (20241021 - Julian) 呼叫 ask AI
-      askAI({
-        params: { companyId: accountBookId }, // ToDo: (20250212 - Liz) 因應設計稿修改將公司改為帳本，後端 API 也需要將 companyId 修改成 accountBookId
-        query: { reason: 'voucher' },
-        body: { certificateId: selectedCertificatesUI[0].id },
-      });
-    }
-  }, [selectedCertificatesUI]);
 
   // Info: (20241018 - Tzuhan) 開啟選擇憑證 Modal
   const handleOpenSelectorModal = useCallback(() => {
@@ -532,7 +410,7 @@ const VoucherEditingPageBody: React.FC<{
   };
 
   // Info: (20241018 - Julian) 欄位顯示
-  const isShowCounter = isCounterpartyRequired || (isShowAnalysisPreview && aiCounterParty);
+  const isShowCounter = isCounterpartyRequired;
 
   // Info: (20240926 - Julian) type 字串轉換
   const translateType = (typeStr: string) => {
@@ -572,40 +450,6 @@ const VoucherEditingPageBody: React.FC<{
       backBtnStr: t('common:COMMON.CANCEL'),
     });
     messageModalVisibilityHandler();
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fillUpWithAIResult = () => {
-    setDate(aiDate);
-    setType(aiType);
-    setNote((prev) => ({
-      ...prev,
-      note: aiNote,
-      name: aiCounterParty?.name,
-      taxId: aiCounterParty?.taxId,
-    }));
-    setCounterparty(aiCounterParty);
-    const aiLineItemsUI = aiLineItems.map((item) => {
-      return {
-        ...item,
-        isReverse: false,
-        reverseList: [],
-      } as ILineItemUI;
-    });
-    setLineItems(aiLineItemsUI);
-  };
-
-  // Deprecated: (20250311 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const retryAIHandler = () => {
-    setAiState(AIState.WORKING);
-    if (resultId) {
-      // Info: (20241220 - Julian) 如果有 resultId，則直接 GET AI 分析結果
-      getResult();
-    } else {
-      // Info: (20241220 - Julian) 如果沒有 resultId，則重新 POST ASK AI
-      askAIAnalysis(targetIdList);
-    }
   };
 
   // Info: (20241119 - Julian) 逐一比對 line item 是否有異動
@@ -908,11 +752,9 @@ const VoucherEditingPageBody: React.FC<{
           <DatePicker
             id="voucher-date"
             type={DatePickerType.TEXT_DATE}
-            period={isShowAnalysisPreview ? aiDate : date}
+            period={date}
             setFilteredPeriod={setDate}
-            btnClassName={
-              isShowDateHint ? inputStyle.ERROR : isShowAnalysisPreview ? inputStyle.PREVIEW : ''
-            }
+            btnClassName={isShowDateHint ? inputStyle.ERROR : ''}
           />
         </div>
         {/* Info: (20240926 - Julian) Type */}
@@ -927,11 +769,7 @@ const VoucherEditingPageBody: React.FC<{
             onClick={typeToggleHandler}
             className="relative flex items-center justify-between rounded-sm border border-input-stroke-input bg-input-surface-input-background px-12px py-10px hover:cursor-pointer hover:border-input-stroke-input-hover"
           >
-            <p
-              className={`text-base ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'text-input-text-input-filled'}`}
-            >
-              {isShowAnalysisPreview ? translateType(aiType) : translateType(type)}
-            </p>
+            <p className={'text-base text-input-text-input-filled'}>{translateType(type)}</p>
             <div className={typeVisible ? 'rotate-180' : 'rotate-0'}>
               <FaChevronDown size={20} />
             </div>
@@ -948,8 +786,10 @@ const VoucherEditingPageBody: React.FC<{
             type="text"
             value={note.note}
             onChange={noteChangeHandler}
-            placeholder={isShowAnalysisPreview ? aiNote : t('journal:ADD_NEW_VOUCHER.NOTE')}
-            className={`rounded-sm border border-input-stroke-input px-12px py-10px ${isShowAnalysisPreview ? inputStyle.PREVIEW : 'placeholder:text-input-text-input-placeholder'}`}
+            placeholder={t('journal:ADD_NEW_VOUCHER.NOTE')}
+            className={
+              'rounded-sm border border-input-stroke-input px-12px py-10px placeholder:text-input-text-input-placeholder'
+            }
           />
         </div>
         {/* Info: (20240926 - Julian) Counterparty */}
@@ -973,37 +813,27 @@ const VoucherEditingPageBody: React.FC<{
           </div>
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
-        {isShowAnalysisPreview ? (
-          <VoucherLinePreview
-            totalCredit={aiTotalCredit}
-            totalDebit={aiTotalDebit}
-            lineItems={aiLineItems}
-          />
-        ) : (
-          <>
-            {isShowReverseHint ? (
-              <p className="text-text-state-error">
-                {t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}
-              </p>
-            ) : null}
-            <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
-              <VoucherLineBlock
-                lineItems={lineItems}
-                setLineItems={setLineItems}
-                flagOfClear={flagOfClear}
-                flagOfSubmit={flagOfSubmit}
-                isShowReverseHint={isShowReverseHint}
-                setIsTotalZero={setIsTotalZero}
-                setIsTotalNotEqual={setIsTotalNotEqual}
-                setHaveZeroLine={setHaveZeroLine}
-                setIsAccountingNull={setIsAccountingNull}
-                setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-                setIsCounterpartyRequired={setIsCounterpartyRequired}
-                setIsAssetRequired={setIsAssetRequired}
-              />
-            </div>
-          </>
-        )}
+        <>
+          {isShowReverseHint ? (
+            <p className="text-text-state-error">{t('journal:VOUCHER_LINE_BLOCK.REVERSE_HINT')}</p>
+          ) : null}
+          <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
+            <VoucherLineBlock
+              lineItems={lineItems}
+              setLineItems={setLineItems}
+              flagOfClear={flagOfClear}
+              flagOfSubmit={flagOfSubmit}
+              isShowReverseHint={isShowReverseHint}
+              setIsTotalZero={setIsTotalZero}
+              setIsTotalNotEqual={setIsTotalNotEqual}
+              setHaveZeroLine={setHaveZeroLine}
+              setIsAccountingNull={setIsAccountingNull}
+              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+              setIsCounterpartyRequired={setIsCounterpartyRequired}
+              setIsAssetRequired={setIsAssetRequired}
+            />
+          </div>
+        </>
         {/* Info: (20240926 - Julian) buttons */}
         <div className="flex items-center justify-end gap-12px tablet:col-span-2">
           <Button

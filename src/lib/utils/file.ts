@@ -103,7 +103,8 @@ export async function decryptImageFile({
     if (!privateKey) {
       throw new Error(STATUS_MESSAGE.FORBIDDEN);
     }
-    const ivUint8Array = bufferToUint8Array(iv);
+    const ivBuffer = Buffer.from(iv);
+    const ivUint8Array = bufferToUint8Array(ivBuffer);
 
     let decryptedArrayBuffer: ArrayBuffer | null;
     try {

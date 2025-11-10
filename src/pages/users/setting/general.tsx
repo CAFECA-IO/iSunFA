@@ -40,7 +40,7 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: t('settings:ERROR.FETCH_DATA'),
+        content: t('settings:ERROR.FETCH_DATA', { error }),
         closeable: true,
       });
     }
@@ -58,7 +58,7 @@ const GeneralSettingsPage: React.FC = () => {
       toastHandler({
         id: ToastId.USER_SETTING_ERROR,
         type: ToastType.ERROR,
-        content: t('settings:ERROR.FETCH_DATA'),
+        content: t('settings:ERROR.FETCH_DATA', { error }),
         closeable: true,
       });
     }

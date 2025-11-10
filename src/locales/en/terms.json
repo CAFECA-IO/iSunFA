@@ -2,13 +2,11 @@
   "TERMS_OF_SERVICE": {
     "DEAR_USER": "Dear User,",
     "TEXT0": "Thank you for choosing to use our accounting software. During your use of this software, we may collect and process some of your personal information. This statement aims to inform you about the information we collect, how it is used, and how we protect your privacy.",
-
     "TEXT1_TITLE": "1. Types of Information Collected",
     "TEXT1_P": "During your use of the accounting software, we may collect the following information:",
     "TEXT1_1": "Personal Identification Information: Including but not limited to your name, email address, phone number, company name, etc.",
     "TEXT1_2": "Usage Data: Such as your operation records within the software, usage duration, access frequency, etc.",
     "TEXT1_3": "Technical Information: Such as IP address, device information, operating system, browser type, etc.",
-
     "TEXT2_TITLE": "2. Use of Information",
     "TEXT2_P": "The information we collect will primarily be used for the following purposes:",
     "TEXT2_1": "Providing and Maintaining Services: Ensuring the normal operation of the accounting software and improving the user experience.",
@@ -16,42 +14,35 @@
     "TEXT2_3": "Customer Support: Addressing your questions, handling your requests and complaints.",
     "TEXT2_4": "Security Assurance: Detecting and preventing potential security threats, protecting your data security.",
     "TEXT2_5": "Data Analysis: Conducting statistical analysis to improve our products and services.",
-
     "TEXT3_TITLE": "3. Protection of Information",
     "TEXT3_P": "We commit to taking reasonable technical and organizational measures to protect your personal information from unauthorized access, disclosure, alteration, or destruction. These measures include but are not limited to:",
     "TEXT3_1": "Data Encryption: Encrypting sensitive data.",
     "TEXT3_2": "Access Control: Restricting data access rights to employees and third parties.",
     "TEXT3_3": "Regular Audits: Regularly reviewing our security measures and policies.",
-
     "TEXT4_TITLE": "4. Sharing of Information",
     "TEXT4_P": "We will not sell, rent, or trade your personal information to any third party without your consent. However, we may share your information in the following circumstances:",
     "TEXT4_1": "Legal Requirements: When required by law or requested by government authorities.",
     "TEXT4_2": "Service Providers: With third-party service providers who work with us, provided they only use your information to perform our instructions and comply with appropriate confidentiality and security measures.",
     "TEXT4_3": "Business Transfers: In the event of a company merger, acquisition, or asset sale, we may transfer your information.",
-
     "TEXT5_TITLE": "5. Your Rights",
     "TEXT5_P": "You have the right to access, correct, or delete your personal information at any time. If you wish to exercise these rights or have any questions, please contact us via:",
     "TEXT5_1": "Email: ",
     "TEXT5_2": "Phone: ",
     "TEXT5_3": "We will strive to respond to your request within a reasonable time frame.",
-
     "TEXT6_TITLE": "6. Changes to the Statement",
     "TEXT6_P": "We may update this statement from time to time to reflect changes in our information handling practices. When we make significant changes to this statement, we will notify you through in-software notifications or via email.",
-
     "TEXT_END": "Thank you for your trust and support in our accounting software!",
     "TEXT_BY": "iSunFA  August 6, 2024"
   },
-
   "MODAL": {
     "PLEASE_READ_AND_AGREE_THE_FIRST_TIME_YOU_LOGIN": "Please read and agree the first time you login",
     "CONFIRM": "Confirm",
     "CANCEL": "Cancel",
     "I_AGREE_WITH_THE_TERM_AFTER_READING_IT_CAREFULLY": "I agree with the term after reading it carefully."
   },
-
   "PRIVACY_POLICY_PAGE": {
     "MAIN_TITLE": "Privacy Policy",
-    "MAIN_DESC": "Please read it carefully before using the service.",
+    "MAIN_DESC": "Please read carefully before using the service. iSunFA is operated and maintained by CAFECA Fintech Co., Ltd., Unified Business Number 52650861 (formerly known as MerMer Co., Ltd., hereinafter referred to as “the Company” or “we”).",
     "DIVIDER_01": "Where does this policy apply",
     "TEXT_01": "This privacy policy applies to the personal information you provide when using this website (including the App, hereafter referred to as this website or 'we'). When you click on links provided by this website to access other websites, **the privacy policy of this website does not apply to those other websites.**",
     "DIVIDER_02": "How might my personal information would be used",
@@ -146,10 +137,9 @@
     "TEXT_05_01": "Cookies are files stored by a web server on your computer's hard drive, which can **store your browsing information and provide you with a smoother and more convenient internet experience.** To offer you the best and most personalized service, this website will place and access our Cookies on your computer.",
     "TEXT_05_02": "**You may choose to accept or refuse Cookies.** Most browsers automatically accept Cookies, but you can refuse them by modifying your privacy settings. However, this may cause certain functions of this website to not work properly, preventing you from fully utilizing all the services provided by this website."
   },
-
   "TERMS_OF_SERVICE_PAGE": {
     "MAIN_TITLE": "Terms of Service",
-    "MAIN_DESC": "Please read it carefully before using the service.",
+    "MAIN_DESC": "Please read carefully before using the service. iSunFA is operated and maintained by CAFECA Fintech Co., Ltd., Unified Business Number 52650861 (formerly known as MerMer Co., Ltd., hereinafter referred to as “the Company” or “we”).",
     "TEXT_01_01": "Once a customer account or business registration number is registered on this website (including the app, hereafter referred to as this website or 'we'), **the account and registration number cannot be changed.**",
     "TEXT_01_02": "Please ensure the accuracy of your account and registration number. If the account or registration number needs to be changed in the future, it cannot be modified simultaneously, and you will need to re-register.",
     "TEXT_02": "Any changes or modifications to customer rights will be announced on this website, and there will be **no separate individual notifications.**",

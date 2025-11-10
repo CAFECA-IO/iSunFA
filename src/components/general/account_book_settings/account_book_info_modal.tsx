@@ -123,6 +123,7 @@ const AccountBookInfoModal = ({
       closeAccountBookInfoModal(); // Info: (20250415 - Liz) 關閉 modal
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250415 - Liz) 重新整理帳本清單
     } catch (error) {
+      (error as Error).message += ' (from handleSubmit)';
       toastHandler({
         id: ToastId.ACCOUNT_BOOK_INFO_UPDATE_ERROR,
         type: ToastType.ERROR,
@@ -165,6 +166,7 @@ const AccountBookInfoModal = ({
       closeAccountBookInfoModal(); // Info: (20250416 - Liz) 關閉 modal
       if (setRefreshKey) setRefreshKey((prev) => prev + 1); // Info: (20250416 - Liz) 重新整理帳本清單
     } catch (error) {
+      (error as Error).message += ' (from handleDelete)';
       toastHandler({
         id: ToastId.ACCOUNT_BOOK_DELETE_ERROR,
         type: ToastType.ERROR,
@@ -211,6 +213,7 @@ const AccountBookInfoModal = ({
           setPhoneNumber(data.phoneNumber);
         }
       } catch (error) {
+        (error as Error).message += ' (from getAccountBookInfo)';
         toastHandler({
           id: ToastId.ACCOUNT_BOOK_INFO_GET_ERROR,
           type: ToastType.ERROR,

@@ -33,10 +33,9 @@ import FloatingUploadPopup from '@/components/floating_upload_popup/floating_upl
 import { ProgressStatus } from '@/constants/account';
 import { IFileUIBeta } from '@/interfaces/file';
 import { ISortOption } from '@/interfaces/sort';
+import { EmptyObject } from '@/interfaces/common';
 
-interface CertificateListBodyProps {}
-
-const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
+const CertificateListBody: React.FC<EmptyObject> = () => {
   const { t } = useTranslation(['certificate']);
   const router = useRouter();
   const { userAuth, connectedAccountBook } = useUserCtx();
@@ -189,6 +188,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
 
         setCertificates(certificateData);
       } catch (error) {
+        (error as Error).message += ' (from API response)';
         toastHandler({
           id: ToastId.LIST_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
@@ -253,6 +253,7 @@ const CertificateListBody: React.FC<CertificateListBodyProps> = () => {
           });
         } else throw new Error(t('certificate:DELETE.ERROR'));
       } catch (error) {
+        (error as Error).message += ' (from deleteSelectedCertificates)';
         toastHandler({
           id: ToastId.DELETE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,

@@ -11,7 +11,10 @@ interface ICounterpartyItemProps {
   handleSave: (data: { name: string; taxId: string; type: CounterpartyType; note: string }) => void; // Info: (20241115 - Anna) 新增 handleSave 作為屬性
 }
 
-const CounterpartyItem = React.memo(({ counterparty, handleSave }: ICounterpartyItemProps) => {
+const CounterpartyItem = React.memo(function CounterpartyItem({
+  counterparty,
+  handleSave,
+}: ICounterpartyItemProps) {
   const { t } = useTranslation(['certificate']);
   const { name, type, note, taxId, id: counterpartyId } = counterparty; // Info: (20241110 - Anna) 使用符合 ICounterparty 的屬性名稱，將 id 重命名為 counterpartyId
 

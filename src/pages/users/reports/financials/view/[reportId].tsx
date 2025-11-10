@@ -70,6 +70,7 @@ const ViewFinancialReportPage = ({ reportId, reportType }: IServerSideProps) => 
         setIsGetFinancialReportSuccess(getFRSuccess);
       } catch (error) {
         // console.log('error:', error);
+        (error as Error).message += ' - getFinancialReport failed';
       }
     };
 

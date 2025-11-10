@@ -107,6 +107,7 @@
     "EMPLOYER_PAID_LABOR_INSURANCE": "Employer Paid Labor Insurance",
     "EMPLOYER_PAID_HEALTH_INSURANCE": "Employer Paid Health Insurance",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
+    "COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE": "Company Burden Occupational Accident Insurance",
     "TOTAL_EMPLOYER_COST": "Total Employer Cost",
     "REPORTED": "Reported",
     "PAID": "Paid"

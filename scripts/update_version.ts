@@ -14,6 +14,7 @@ function getLastCommittedVersion(): string | null {
     const lastCommittedPackageJson = JSON.parse(lastCommittedPackageJsonContent);
     lastCommittedVersion = lastCommittedPackageJson.version;
   } catch (error) {
+    (error as Error).message = 'Failed to get last committed version';
     lastCommittedVersion = null;
   }
   return lastCommittedVersion;

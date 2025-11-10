@@ -42,6 +42,7 @@ const TeamInfoPage = () => {
       setIsLoading(false);
     } catch (error) {
       loggerFront.error('取得團隊資訊失敗');
+      loggerFront.error(error);
     }
   }, []);
 

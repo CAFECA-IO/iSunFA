@@ -50,6 +50,7 @@ const DashboardBody = () => {
         loggerFront.log('取得待辦事項清單失敗');
       }
     } catch (error) {
+      (error as Error).message += ' (from getTodoList)';
       loggerFront.error('取得待辦事項清單失敗');
     }
   }, [userAuth]);

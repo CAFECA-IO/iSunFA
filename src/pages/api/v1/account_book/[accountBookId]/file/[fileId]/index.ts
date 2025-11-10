@@ -41,6 +41,7 @@ async function handleGetRequest(req: NextApiRequest) {
       }
       statusMessage = STATUS_MESSAGE.SUCCESS_GET;
     } catch (error) {
+      (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }
@@ -88,6 +89,7 @@ async function handleDeleteRequest(req: NextApiRequest) {
       }
     } catch (error) {
       // ToDo: (20240828 - Jacky) Log error message
+      (error as Error).message = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
       statusMessage = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
     }
   }

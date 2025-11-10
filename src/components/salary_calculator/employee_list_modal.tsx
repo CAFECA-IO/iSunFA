@@ -44,6 +44,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
 
         return (
           <div
+            key={employee.id}
             onClick={handleClick}
             className="group flex items-center bg-surface-neutral-surface-lv2 px-24px py-12px hover:cursor-pointer hover:bg-surface-brand-primary-soft"
           >
@@ -100,7 +101,7 @@ const EmployeeListModal: React.FC<IEmployeeListModalProps> = ({ modalVisibleHand
               value={keyword}
               onChange={changeKeyword}
               placeholder={t('calculator:EMPLOYEE_LIST.SEARCH_PLACEHOLDER')}
-              className="flex-1 bg-transparent px-12px py-10px placeholder:text-input-text-input-placeholder"
+              className="flex-1 bg-transparent px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
             />
           </div>
           {/* Info: (20250711 - Julian) Employee list content */}

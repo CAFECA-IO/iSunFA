@@ -69,6 +69,7 @@ const FilterSection: React.FC<{
 
         return (
           <button
+            key={year}
             type="button"
             onClick={clickHandler}
             className="px-12px py-10px hover:bg-input-surface-input-hover"
@@ -89,6 +90,7 @@ const FilterSection: React.FC<{
         };
         return (
           <button
+            key={month}
             type="button"
             onClick={clickHandler}
             className="px-12px py-10px hover:bg-input-surface-input-hover"
@@ -154,7 +156,7 @@ const FilterSection: React.FC<{
           value={searchQuery}
           onChange={changeSearchQuery}
           placeholder={t('calculator:MY_PAY_SLIP.SEARCH_PLACEHOLDER')}
-          className="flex-1 bg-transparent px-12px py-10px text-base font-medium placeholder:text-input-text-input-placeholder"
+          className="flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none placeholder:text-input-text-input-placeholder"
         />
       </div>
     </div>

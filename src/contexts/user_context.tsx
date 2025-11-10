@@ -535,6 +535,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       // ToDo: (20240814-Tzuhan) [Beta] handle error
+      (error as Error).message += ' (from authenticateUser)';
     }
   };
 
@@ -555,6 +556,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       // Info: (20241107 - Liz) 建立失敗回傳 null
       return { success: false, userRole: null };
     } catch (error) {
+      (error as Error).message += ' (from createRole)';
       return { success: false, userRole: null };
     }
   };
@@ -573,6 +575,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return { success: false };
     } catch (error) {
+      (error as Error).message += ' (from selectRole)';
       return { success: false };
     }
   };
@@ -589,6 +592,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return null;
     } catch (error) {
       // Info: (20241107 - Liz) Handle error if needed
+      (error as Error).message += ' (from getSystemRoleList)';
       return null;
     }
   };
@@ -609,6 +613,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       return null;
     } catch (error) {
       // Info: (20241107 - Liz) Handle error if needed
+      (error as Error).message += ' (from getUserRoleList)';
       return null;
     }
   };
@@ -657,6 +662,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return { success: true, code: '', errorMsg: '' };
     } catch (error) {
+      (error as Error).message += ' (from createAccountBook)';
       return { success: false, code: '', errorMsg: 'unknown error' };
     }
   };
@@ -720,6 +726,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       return { success: true, code: '', errorMsg: '' };
     } catch (error) {
+      (error as Error).message += ' (from updateAccountBook)';
       return { success: false, code: '', errorMsg: 'unknown error' };
     }
   };
@@ -735,6 +742,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (!success) return { success: false };
       return { success: true };
     } catch (error) {
+      (error as Error).message += ' (from updateAccountBookTag)';
       return { success: false };
     }
   };
@@ -758,6 +766,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setTeam(team);
       return { success: true };
     } catch (error) {
+      (error as Error).message += ' (from connectAccountBook)';
       return { success: false };
     }
   };
@@ -774,6 +783,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       setTeam(null);
       return { success: true };
     } catch (error) {
+      (error as Error).message += ' - disconnectAccountBook failed';
       return { success: false };
     }
   };
@@ -794,6 +804,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return { success: true };
     } catch (error) {
+      (error as Error).message += ' - deleteAccountBook failed';
       return { success: false };
     }
   };

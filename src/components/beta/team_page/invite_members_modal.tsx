@@ -85,6 +85,7 @@ const InviteMembersModal = ({
 
       loggerFront.log('邀請成員成功');
     } catch (error) {
+      (error as Error).message += ' (from inviteMembers)';
       loggerFront.error('邀請成員失敗');
     } finally {
       setIsLoading(false);

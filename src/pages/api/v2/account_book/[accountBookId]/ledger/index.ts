@@ -30,8 +30,6 @@ import { validateOutputData } from '@/lib/utils/validator';
 import loggerBack from '@/lib/utils/logger_back';
 import { HTTP_STATUS } from '@/constants/http';
 
-interface IPayload extends ILedgerPayload {}
-
 /**
  * Info: (20250425 - Shirley) Handle GET request for ledger data
  * This function follows the flat coding style, with clear steps:
@@ -47,7 +45,7 @@ interface IPayload extends ILedgerPayload {}
 async function handleGetRequest(req: NextApiRequest) {
   const apiName = APIName.LEDGER_LIST;
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
-  let payload: IPayload | null = null;
+  let payload: ILedgerPayload | null = null;
 
   // Info: (20250425 - Shirley) Get user session
   const session = await getSession(req);
@@ -200,10 +198,10 @@ async function handleGetRequest(req: NextApiRequest) {
  */
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseData<IPayload | null>>
+  res: NextApiResponse<IResponseData<ILedgerPayload | null>>
 ) {
   let httpCode: number = HTTP_STATUS.BAD_REQUEST;
-  let result: IResponseData<IPayload | null>;
+  let result: IResponseData<ILedgerPayload | null>;
 
   try {
     // Info: (20250425 - Shirley) Handle different HTTP methods
