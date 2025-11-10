@@ -41,17 +41,19 @@ const TermsOfServicePageBody: React.FC = () => {
       <LandingNavbar />
 
       <main className="z-10 overflow-y-auto overflow-x-hidden">
-        <div className="flex flex-col gap-100px px-150px py-100px">
+        <div className="flex flex-col gap-40px px-20px py-40px lg:gap-100px lg:px-150px lg:py-100px">
           {/* Info: (20250220 - Julian) Title */}
           <div className="flex flex-col gap-lv-3">
             <LinearGradientText size={LinearTextSize.XL} align={TextAlign.LEFT}>
               {t('terms:TERMS_OF_SERVICE_PAGE.MAIN_TITLE')}
             </LinearGradientText>
-            <p className="text-xl font-medium">{t('terms:TERMS_OF_SERVICE_PAGE.MAIN_DESC')}</p>
+            <p className="text-base font-medium lg:text-xl">
+              {t('terms:TERMS_OF_SERVICE_PAGE.MAIN_DESC')}
+            </p>
           </div>
 
           {/* Info: (20250220 - Julian) Content */}
-          <ol className="ml-24px flex list-decimal flex-col gap-80px text-xl leading-10 text-landing-page-white">
+          <ol className="ml-24px flex list-decimal flex-col gap-20px text-base leading-10 text-landing-page-white lg:gap-80px lg:text-xl">
             <li>
               <p>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_01_01'))}</p>
               <p>{formatText(t('terms:TERMS_OF_SERVICE_PAGE.TEXT_01_02'))}</p>
