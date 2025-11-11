@@ -32,8 +32,10 @@ const LandingFooter: React.FC = () => {
   // ToDo: (20241219 - Julian) 補上正確的路徑
   const displayNavigation = (
     <>
-      <h3 className="text-lg font-bold">{t('landing_page_v2:FOOTER.QUICK_LINKS')}</h3>
-      <ul className="flex list-inside list-arrow flex-col gap-4px">
+      <h3 className="hidden text-lg font-bold lg:block">
+        {t('landing_page_v2:FOOTER.QUICK_LINKS')}
+      </h3>
+      <ul className="flex list-inside list-none flex-row gap-20px lg:list-arrow lg:flex-col lg:gap-4px">
         <li className="whitespace-nowrap hover:cursor-pointer hover:text-landing-page-orange">
           <Link href={ISUNFA_ROUTE.LANDING_PAGE}>{t('landing_page_v2:FOOTER.HOME')}</Link>
         </li>
@@ -138,7 +140,7 @@ const LandingFooter: React.FC = () => {
         </div>
 
         {/* Info: (20241204 - Julian) Navigation */}
-        <div className="hidden w-300px flex-col gap-24px text-landing-page-white lg:flex">
+        <div className="flex flex-col gap-24px text-landing-page-white lg:w-300px">
           {displayNavigation}
         </div>
 

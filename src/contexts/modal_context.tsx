@@ -63,7 +63,7 @@ export const ModalProvider = ({ children }: ModalProviderProps) => {
       onOpen = () => {},
     }: IToastify) => {
       const bodyStyle =
-        'before:absolute before:h-100vh before:w-10px before:top-0 before:left-0 flex items-center gap-12px px-14px w-max text-sm font-barlow pointer-events-auto';
+        'before:absolute before:h-100vh before:w-10px before:top-0 before:left-0 flex overflow-hidden items-center gap-12px px-24px w-max text-sm font-barlow pointer-events-auto';
 
       const toastId = id;
       const position = toastPosition ?? ToastPosition.TOP_CENTER; // Info:(20240513 - Julian) default position 'top-center'
