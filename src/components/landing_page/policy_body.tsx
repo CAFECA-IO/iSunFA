@@ -25,6 +25,7 @@ const CategoriesList: React.FC<{ leftList: string[]; rightList: string[] }> = ({
       {/* Info: (20250219 - Julian) Left List */}
       <ul className="ml-20px flex list-outside list-disc flex-col gap-20px text-sm lg:text-base">
         {leftList.map((item, index) => (
+          // Deprecated: (20251110 - Luphia) remove eslint-disable
           // eslint-disable-next-line react/no-array-index-key
           <li key={index}>{item}</li>
         ))}
@@ -32,6 +33,7 @@ const CategoriesList: React.FC<{ leftList: string[]; rightList: string[] }> = ({
       {/* Info: (20250219 - Julian) Right List */}
       <ul className="ml-20px flex list-outside list-disc flex-col gap-20px text-sm lg:text-base">
         {rightList.map((item, index) => (
+          // Deprecated: (20251110 - Luphia) remove eslint-disable
           // eslint-disable-next-line react/no-array-index-key
           <li key={index}>{item}</li>
         ))}
@@ -47,6 +49,7 @@ const PrivacyPolicyPageBody: React.FC = () => {
     return text.split(/(\*\*.*?\*\*)/g).map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return (
+          // Deprecated: (20251110 - Luphia) remove eslint-disable
           // eslint-disable-next-line react/no-array-index-key
           <span key={index} className="font-bold text-text-brand-primary-lv3">
             {part.slice(2, -2)}

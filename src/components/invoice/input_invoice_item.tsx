@@ -93,7 +93,7 @@ const InputInvoiceItem: React.FC<InputInvoiceListIrops> = ({
             <div className={`${isExporting ? 'pb-4' : ''} text-text-neutral-primary`}>
               {certificate.no ||
                 certificate.carrierSerialNumber ||
-                certificate.otherCertificateNo ||
+                certificate.otherInvoiceNo ||
                 ''}
             </div>
           </div>
