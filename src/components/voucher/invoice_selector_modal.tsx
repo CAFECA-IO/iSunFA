@@ -22,7 +22,7 @@ interface InvoiceSelectorModalProps {
   handleSelect: (ids: number[]) => void; // Info: (20240926 - tzuhan) 保存數據的回調函數
   invoices: IInvoiceRC2UI[]; // Info: (20240926 - tzuhan) 證書列表
   handleApiResponse: (data: IPaginatedData<IInvoiceRC2[]>) => void; // Info: (20240926 - tzuhan) 處理 API 回應的回調函數
-  openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
+  // openUploaderModal: () => void; // Info: (20240926 - tzuhan) 打開上傳模態框的回調函數
 }
 
 const InvoiceSelectorModal: React.FC<InvoiceSelectorModalProps> = ({
@@ -34,7 +34,7 @@ const InvoiceSelectorModal: React.FC<InvoiceSelectorModalProps> = ({
   invoices,
   selectedIds,
   setSelectedIds,
-  openUploaderModal,
+  // openUploaderModal,
 }) => {
   const { t } = useTranslation(['certificate', 'common']);
   const [isSelectAll, setIsSelectAll] = useState(false);
@@ -130,7 +130,7 @@ const InvoiceSelectorModal: React.FC<InvoiceSelectorModalProps> = ({
             invoices={invoices}
             selectedIds={selectedIds}
             handleSelect={handleSelectOne}
-            openUploaderModal={openUploaderModal}
+            // openUploaderModal={openUploaderModal}
           />
         </div>
 
