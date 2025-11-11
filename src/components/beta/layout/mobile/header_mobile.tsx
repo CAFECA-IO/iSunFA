@@ -15,7 +15,6 @@ import { MenuContent } from '@/interfaces/side_menu';
 import SubMenu from '@/components/beta/layout/mobile/sub_menu';
 import NotificationMobile from '@/components/beta/layout/mobile/notification_mobile';
 import { INotification } from '@/interfaces/notification';
-import { FAKE_NOTIFICATIONS } from '@/constants/notification';
 
 const HeaderMobile = () => {
   const { asPath } = useRouter();
@@ -27,7 +26,7 @@ const HeaderMobile = () => {
   const [selectedMenuOption, setSelectedMenuOption] = useState<string>('');
   // ToDo: (20250516 - Liz) 打 API 取得通知 (useEffect)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [notifications, setNotifications] = useState<INotification[]>(FAKE_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
   const hasUnreadNotifications = notifications.some((notification) => !notification.isRead);
 
   const openMenu = () => setIsMenuOpen(true);
