@@ -1,3 +1,4 @@
+import Script from 'next/script';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { NotificationProvider } from '@/contexts/notification_context';
 import 'react-toastify/dist/ReactToastify.css';
@@ -33,11 +34,12 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
                         <Component {...pageProps} />
 
                         {/* Info:(20251111 - Julian) Start of isunfa Zendesk Widget script */}
-                        <script
+                        <Script
                           id="ze-snippet"
                           src={`https://static.zdassets.com/ekr/snippet.js?key=${widgetKey}`}
+                          strategy="afterInteractive"
                           defer // Info:(20251111 - Julian) Avoid blocking page rendering
-                        ></script>
+                        ></Script>
                       </GlobalProvider>
                     </HiringProvider>
                   </ModalProvider>
