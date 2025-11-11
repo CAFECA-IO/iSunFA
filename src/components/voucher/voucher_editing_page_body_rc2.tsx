@@ -708,7 +708,7 @@ const VoucherEditingPageBody: React.FC<{
         accountBookId={accountBookId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
-        openUploaderModal={() => setOpenUploaderModal(true)}
+        // openUploaderModal={() => setOpenUploaderModal(true)}
         handleSelect={handleSelect}
         handleApiResponse={handleInvoiceApiResponse}
         invoices={Object.values(invoices)}

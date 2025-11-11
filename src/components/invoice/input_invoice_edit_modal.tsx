@@ -117,7 +117,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
         // Info: (20250429 - Anna)「是否為彙總金額代表憑證」
         isSharedAmount: certificate?.isSharedAmount ?? false,
         // Info: (20250429 - Anna)「其他憑證編號」
-        otherCertificateNo: certificate?.otherCertificateNo ?? '',
+        otherInvoiceNo: certificate?.otherInvoiceNo ?? '',
         // Info: (20250514 - Anna)「載具流水號」
         carrierSerialNumber: certificate?.carrierSerialNumber ?? '',
       }) as Partial<IInvoiceRC2Input>
@@ -136,7 +136,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       taxAmount,
       type,
       no,
-      otherCertificateNo,
+      otherInvoiceNo,
       carrierSerialNumber,
       totalOfSummarizedInvoices,
     } = formStateRef.current;
@@ -178,7 +178,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
     if (
       type !== InvoiceType.INPUT_20 &&
       ((!needsAlternativeNo && !no) ||
-        (needsAlternativeNo && !no && !otherCertificateNo && !carrierSerialNumber))
+        (needsAlternativeNo && !no && !otherInvoiceNo && !carrierSerialNumber))
     ) {
       newErrors.no = t('certificate:ERROR.PLEASE_FILL_UP_THIS_FORM');
     }
@@ -328,7 +328,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
 
       // Info: (20250609 - Anna) 清除不適用的欄位，避免殘留舊值
       if (id !== InvoiceType.INPUT_22 && id !== InvoiceType.INPUT_27) {
-        updated.otherCertificateNo = '';
+        updated.otherInvoiceNo = '';
       }
 
       if (id !== InvoiceType.INPUT_25) {
@@ -544,7 +544,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
       salesName: certificate.salesName,
       deductionType: certificate.deductionType ?? DeductionType.DEDUCTIBLE_PURCHASE_AND_EXPENSE,
       isSharedAmount: certificate.isSharedAmount,
-      otherCertificateNo: certificate.otherCertificateNo,
+      otherInvoiceNo: certificate.otherInvoiceNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
       carrierSerialNumber: certificate.carrierSerialNumber,
     };
@@ -879,7 +879,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               className="h-44px w-16 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                               placeholder="AB"
                               disabled={
-                                !!formState.otherCertificateNo ||
+                                !!formState.otherInvoiceNo ||
                                 !!formState.carrierSerialNumber?.trim().length
                               }
                             />
@@ -897,7 +897,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none md:w-28 lg:flex-none"
                               placeholder="12345678"
                               disabled={
-                                !!formState.otherCertificateNo ||
+                                !!formState.otherInvoiceNo ||
                                 !!formState.carrierSerialNumber?.trim().length
                               }
                             />
@@ -921,9 +921,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               <input
                                 id="other-certificate-no w-full"
                                 type="text"
-                                value={formState.otherCertificateNo ?? ''}
+                                value={formState.otherInvoiceNo ?? ''}
                                 onChange={(e) => {
-                                  handleInputChange('otherCertificateNo', e.target.value);
+                                  handleInputChange('otherInvoiceNo', e.target.value);
                                 }}
                                 className="h-44px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none lg:w-40"
                                 placeholder="CC12345678"
@@ -999,7 +999,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               }}
                               className="h-44px w-16 rounded-l-sm border border-r-0 border-input-stroke-input bg-input-surface-input-background p-16px text-center uppercase outline-none"
                               placeholder="AB"
-                              disabled={!!formState.otherCertificateNo}
+                              disabled={!!formState.otherInvoiceNo}
                             />
 
                             <input
@@ -1014,7 +1014,7 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                               }}
                               className="h-44px min-w-0 flex-1 rounded-r-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="12345678"
-                              disabled={!!formState.otherCertificateNo}
+                              disabled={!!formState.otherInvoiceNo}
                             />
                           </div>
                         </div>
@@ -1033,9 +1033,9 @@ const InputInvoiceEditModal: React.FC<InputInvoiceEditModalProps> = ({
                             <input
                               id="other-certificate-no"
                               type="text"
-                              value={formState.otherCertificateNo ?? ''}
+                              value={formState.otherInvoiceNo ?? ''}
                               onChange={(e) => {
-                                handleInputChange('otherCertificateNo', e.target.value);
+                                handleInputChange('otherInvoiceNo', e.target.value);
                               }}
                               className="h-44px min-w-0 flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-16px outline-none"
                               placeholder="CC12345678"

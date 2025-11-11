@@ -2,7 +2,7 @@ import React from 'react';
 import Pagination from '@/components/pagination/pagination';
 import { DISPLAY_LIST_VIEW_TYPE } from '@/constants/display';
 import InputInvoiceTable from '@/components/invoice/input_invoice_table';
-import CertificateGrid from '@/components/certificate/certificate_grid';
+import InvoiceGrid from '@/components/certificate/certificate_grid';
 import { SortOrder } from '@/constants/sort';
 import { InvoiceTab } from '@/constants/invoice_rc2';
 import { IInvoiceRC2InputUI } from '@/interfaces/invoice_rc2';
@@ -30,8 +30,8 @@ interface InputInvoiceProps {
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
-  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
+  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   isExporting: boolean;
   uploaderAvatarMap: Record<string, string>;
 }
@@ -60,8 +60,8 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setCertificateTypeSort,
-  setCertificateNoSort,
+  setInvoiceTypeSort,
+  setInvoiceNoSort,
   isExporting,
   uploaderAvatarMap,
 }) => {
@@ -84,14 +84,14 @@ const InputInvoice: React.FC<InputInvoiceProps> = ({
           setDateSort={setDateSort}
           setAmountSort={setAmountSort}
           setVoucherSort={setVoucherSort}
-          setCertificateTypeSort={setCertificateTypeSort}
-          setCertificateNoSort={setCertificateNoSort}
+          setInvoiceTypeSort={setInvoiceTypeSort}
+          setInvoiceNoSort={setInvoiceNoSort}
           isExporting={isExporting}
           uploaderAvatarMap={uploaderAvatarMap}
         />
       )}
       {viewType === DISPLAY_LIST_VIEW_TYPE.GRID && (
-        <CertificateGrid
+        <InvoiceGrid
           certificates={certificates}
           activeSelection={activeSelection}
           handleSelect={handleSelect}
