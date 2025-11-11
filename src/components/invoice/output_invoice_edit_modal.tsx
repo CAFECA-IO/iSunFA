@@ -502,7 +502,7 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
       buyerName: certificate.buyerName,
       isReturnOrAllowance: certificate.isReturnOrAllowance,
       type: certificate.type ?? InvoiceType.OUTPUT_31,
-      otherCertificateNo: certificate.otherCertificateNo,
+      otherInvoiceNo: certificate.otherInvoiceNo,
       totalOfSummarizedInvoices: certificate.totalOfSummarizedInvoices,
       taxType: certificate.taxType ?? TaxType.TAXABLE,
     };
@@ -723,8 +723,8 @@ const OutputInvoiceEditModal: React.FC<OutputInvoiceEditModalProps> = ({
                       <input
                         id="invoiceno"
                         type="text"
-                        value={formState.otherCertificateNo}
-                        onChange={(e) => handleInputChange('otherCertificateNo', e.target.value)}
+                        value={formState.otherInvoiceNo}
+                        onChange={(e) => handleInputChange('otherInvoiceNo', e.target.value)}
                         className="h-46px flex-1 rounded-sm border border-input-stroke-input bg-input-surface-input-background p-10px outline-none"
                         placeholder={
                           formState.type === InvoiceType.OUTPUT_36 ||

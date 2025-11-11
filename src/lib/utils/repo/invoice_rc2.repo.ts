@@ -42,8 +42,8 @@ export const createOrderByList = (
         case SortBy.VOUCHER_NUMBER:
           return [{ voucher: { no: sortOrder } }];
         case SortBy.INVOICE_NUMBER:
-          // Info: (20250513 - Tzuhan) sort by `no`, fallback to `otherCertificateNo` if `no` is null
-          return [{ no: sortOrder }, { otherCertificateNo: sortOrder }];
+          // Info: (20250513 - Tzuhan) sort by `no`, fallback to `otherInvoiceNo` if `no` is null
+          return [{ no: sortOrder }, { otherInvoiceNo: sortOrder }];
         default:
           return [{ createdAt: SortOrder.DESC }];
       }

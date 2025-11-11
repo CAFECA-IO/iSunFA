@@ -4,7 +4,7 @@ import { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Layout from '@/components/beta/layout/layout';
-import VoucherEditingPageBody from '@/components/voucher/voucher_editing_page_body';
+import VoucherEditingPageBody from '@/components/voucher/voucher_editing_page_body_rc2';
 import { APIName } from '@/constants/api_connection';
 import { IVoucherDetailForFrontend } from '@/interfaces/voucher';
 import APIHandler from '@/lib/utils/api_handler';
