@@ -16,6 +16,8 @@ import '@/styles/globals.css';
 
 function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID || '';
+  const widgetKey = process.env.ZENDESK_WIDGET_KEY || '';
+
   return (
     <div className="font-barlow selection:bg-text-brand-primary-lv3 selection:text-button-surface-strong-secondary">
       <GoogleAnalytics gaId={gaId} />
@@ -29,6 +31,13 @@ function App({ Component, pageProps: { session, ...pageProps } }: AppProps) {
                     <HiringProvider>
                       <GlobalProvider>
                         <Component {...pageProps} />
+
+                        {/* Info:(20251111 - Julian) Start of isunfa Zendesk Widget script */}
+                        <script
+                          id="ze-snippet"
+                          src={`https://static.zdassets.com/ekr/snippet.js?key=${widgetKey}`}
+                          defer // Info:(20251111 - Julian) Avoid blocking page rendering
+                        ></script>
                       </GlobalProvider>
                     </HiringProvider>
                   </ModalProvider>
