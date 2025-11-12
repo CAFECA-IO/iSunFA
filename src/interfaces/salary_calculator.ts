@@ -1,6 +1,7 @@
 interface ISalaryCalculatorOptions {
   year: number; // Info: (20250727 - Luphia) 計薪年度
   month: number; // Info: (20250727 - Luphia) 計薪月份
+  foreignWorker?: boolean; // Info: (20250727 - Luphia) 外籍員工或課稅年度內在中華民國境內居住不滿31天
   job?: number; // Info: (20250727 - Luphia) 行業別代碼，預設 41 電腦程式設計、諮詢及相關服務業、資訊服務業
   employeeStartDate?: number; // Info: (20250727 - Luphia) 員工入職日期
   employeeEndDate?: number; // Info: (20250727 - Luphia) 員工離職日期
@@ -59,7 +60,8 @@ interface ISalaryCalculatorResult {
   employeeBurdenIncomeTax: number; // Info: (20250727 - Luphia) 代扣所得稅款
   employeeBurdenSecondGenerationHealthInsurancePremiums: number; // Info: (20250727 - Luphia) 代扣二代健保費
   leaveDeduction: number; // Info: (20250727 - Luphia) 請假扣薪
-  leaveDeductionTaxFree: number; // Info: (20250727 - Luphia) 請假扣除免稅加給
+  leaveDeductionTaxable: number; // Info: (20250727 - Luphia) 請假扣薪(應稅本薪)
+  leaveDeductionTaxFree: number; // Info: (20250727 - Luphia) 請假扣薪(免稅加給)
   employeeBurdenOtherOverflowDeductions: number; // Info: (20250727 - Luphia) 其他溢扣／補收
   totalEmployeeBurden: number; // Info: (20250814 - Luphia) 扣項總計
   companyBurdenLaborInsurance: number; // Info: (20270727 - Luphia) 公司負擔勞保費
