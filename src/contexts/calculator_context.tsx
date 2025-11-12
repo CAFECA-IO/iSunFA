@@ -1,6 +1,6 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
-import { ISalaryCalculator } from '@/interfaces/calculator';
+import { ISalaryCalculator, EmploymentType, TaxResidencyStatus } from '@/interfaces/calculator';
 import { salaryCalculator, getMinimumWage } from '@/lib/utils/salary_calculator';
 
 type TabStep = {
@@ -35,6 +35,12 @@ interface ICalculatorContext {
   changeEmployeeName: (name: string) => void;
   employeeNumber: string;
   changeEmployeeNumber: (number: string) => void;
+  employmentType: EmploymentType;
+  changeEmploymentType: (type: EmploymentType) => void;
+  taxResidencyStatus: TaxResidencyStatus;
+  changeTaxResidencyStatus: (status: TaxResidencyStatus) => void;
+  industryCategory: string;
+  changeIndustryCategory: (category: string) => void;
   employeeEmail: string; // Info: (20250723 - Julian) 員工電子郵件
   changeEmployeeEmail: (email: string) => void;
   selectedYear: string;
@@ -152,6 +158,11 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>(defaultEmployeeName);
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>(EmploymentType.FULL_TIME);
+  const [taxResidencyStatus, setTaxResidencyStatus] = useState<TaxResidencyStatus>(
+    TaxResidencyStatus.TAIWAN
+  );
+  const [industryCategory, setIndustryCategory] = useState<string>('');
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
@@ -391,6 +402,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const resetFormHandler = () => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName(defaultEmployeeName);
+    setEmploymentType(EmploymentType.FULL_TIME);
     setEmployeeNumber('');
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
@@ -441,6 +453,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setEmployeeName(name);
     setIsNameError(name === ''); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
   };
+  const changeEmploymentType = (type: EmploymentType) => {
+    setEmploymentType(type);
+  };
+  const changeTaxResidencyStatus = (status: TaxResidencyStatus) => {
+    setTaxResidencyStatus(status);
+  };
+  const changeIndustryCategory = (category: string) => {
+    setIndustryCategory(category);
+  };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
   };
@@ -487,6 +508,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeEmployeeName,
       employeeNumber,
       changeEmployeeNumber,
+      employmentType,
+      changeEmploymentType,
+      taxResidencyStatus,
+      changeTaxResidencyStatus,
+      industryCategory,
+      changeIndustryCategory,
       employeeEmail,
       changeEmployeeEmail,
       selectedYear,

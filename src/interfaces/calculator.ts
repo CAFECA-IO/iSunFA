@@ -3,6 +3,16 @@ export type RowItem = {
   value: number;
 };
 
+export enum EmploymentType {
+  FULL_TIME = 'Full-time',
+  PART_TIME = 'Part-time',
+}
+
+export enum TaxResidencyStatus {
+  TAIWAN = 'Taiwan Resident',
+  NON_TAIWAN = 'Non-Taiwan Resident',
+}
+
 export interface IMonthlySalary {
   baseSalaryWithTax: number; // Info: (20250722 - Julian) 本薪（應稅）
   overtimePayWithTax: number; // Info: (20250722 - Julian) 加班費（應稅）
