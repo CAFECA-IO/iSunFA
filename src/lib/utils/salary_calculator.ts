@@ -471,7 +471,8 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     employeeBurdenSecondGenerationHealthInsurancePremiums, // Info: (20251009 - Luphia) 代扣二代健保費
     employeeBurdenOtherOverflowDeductions, // Info: (20251009 - Luphia) 其他溢扣／補收
     leaveDeduction: leaveDeductionTaxable, // Info: (20250727 - Luphia) 請假扣薪
-    leaveDeductionTaxFree: leaveDeductionTaxFree, // Info: (20250815 - Luphia) 免稅請假扣除免稅加給
+    leaveDeductionTaxable: leaveDeductionTaxable, // Info: (20250815 - Luphia) 請假扣除(應稅本薪)
+    leaveDeductionTaxFree: leaveDeductionTaxFree, // Info: (20250815 - Luphia) 請假扣除(免稅加給)
     totalEmployeeBurden, // Info: (20250727 - Luphia) 員工負擔總計
     companyBurdenLaborInsurance: companyBurdenLaborInsurance + companyBurdenEmploymentInsurance, // Info: (20251009 - Luphia) 公司負擔勞保費 + 就保費
     companyBurdenHealthInsurance, // Info: (20251009 - Luphia) 公司負擔健保費
