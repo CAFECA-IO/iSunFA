@@ -65,6 +65,7 @@ export const ISUNFA_ROUTE = {
   SALARY_CALCULATOR: '/salary_calculator',
   EMPLOYEE_LIST: '/salary_calculator/employee_list',
   PAY_SLIP: '/salary_calculator/my_pay_slip',
+  OPERATING_MECHANISM: '/salary_calculator/operating_mechanism',
 };
 
 export const EXTERNAL_API = {

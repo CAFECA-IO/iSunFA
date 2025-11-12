@@ -101,6 +101,12 @@ const CalculatorNavbar: React.FC = () => {
         <p className="text-base font-bold text-text-brand-primary-lv2 tablet:text-lg">
           {t('calculator:PAGE.MAIN_TITLE')}
         </p>
+        <Link
+          href={ISUNFA_ROUTE.OPERATING_MECHANISM}
+          className="text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover"
+        >
+          How it Works
+        </Link>
       </div>
 
       {/* Info: (20250715 - Julian) Links / Login Button */}
