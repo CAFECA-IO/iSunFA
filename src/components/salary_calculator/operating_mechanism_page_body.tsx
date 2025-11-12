@@ -23,7 +23,9 @@ const OperatingMechanismContent: React.FC = () => {
   }, []);
 
   if (!data) {
-    return <div className="flex items-center justify-center px-100px">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center px-20px tablet:px-100px">Loading...</div>
+    );
   }
 
   const { version, lastUpdated, content } = data;
@@ -41,17 +43,17 @@ const OperatingMechanismContent: React.FC = () => {
     .replace(/<p/g, '<p class="text-base font-medium text-text-neutral-secondary"');
 
   return (
-    <div className="flex flex-col items-stretch p-80px">
+    <div className="flex flex-col items-stretch p-20px tablet:p-80px">
+      {/* Info: (20251112 - Julian) Title & Version */}
       <div className="flex flex-col items-center gap-4px">
         <h1 className="text-center text-xl font-semibold text-text-neutral-primary">
-          {t('Salary Calculator Operating Mechanism')}
+          {t('calculator:OPERATING_MECHANISM.MAIN_TITLE')}
         </h1>
         <p className="text-xs font-normal text-text-neutral-tertiary">{subtitle}</p>
       </div>
 
-      <div className="flex flex-col gap-4px">
-        <article dangerouslySetInnerHTML={{ __html: formattedContent }} />
-      </div>
+      {/* Info: (20251112 - Julian) Content */}
+      <article dangerouslySetInnerHTML={{ __html: formattedContent }} />
     </div>
   );
 };

@@ -94,18 +94,21 @@ const CalculatorNavbar: React.FC = () => {
   return (
     <div className="flex w-full items-center justify-between bg-surface-neutral-surface-lv1 px-lv-4 py-12px tablet:bg-surface-neutral-main-background tablet:px-60px">
       {/* Info: (20250715 - Julian) Logo and Title */}
-      <div className="flex flex-1 flex-col items-start gap-x-lv-4 tablet:flex-row tablet:items-center">
+      <div className="flex flex-1 items-center gap-x-lv-4">
         <Link href={ISUNFA_ROUTE.DASHBOARD}>
           <Image src="/logo/isunfa_logo_light.svg" alt="iSunFa_logo" width={100} height={30} />
         </Link>
-        <p className="text-base font-bold text-text-brand-primary-lv2 tablet:text-lg">
+        <Link
+          href={ISUNFA_ROUTE.SALARY_CALCULATOR}
+          className="text-base font-bold text-text-brand-primary-lv2 hover:text-text-brand-primary-solid tablet:text-lg"
+        >
           {t('calculator:PAGE.MAIN_TITLE')}
-        </p>
+        </Link>
         <Link
           href={ISUNFA_ROUTE.OPERATING_MECHANISM}
-          className="text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover"
+          className="text-xs font-semibold text-link-text-primary hover:text-link-text-primary-hover tablet:text-sm"
         >
-          How it Works
+          {t('calculator:NAVBAR.HOW_IT_WORKS')}
         </Link>
       </div>
 

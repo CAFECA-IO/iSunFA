@@ -6,6 +6,7 @@
     "CALCULATOR": "計算機",
     "PAY_SLIP": "我的薪資單",
     "EMPLOYEE_LIST": "員工列表",
+    "HOW_IT_WORKS": "計算說明",
     "LOGIN": "登入",
     "LOGOUT": "登出"
   },
@@ -171,5 +172,8 @@
     "RESEND_PAY_SLIP_SUBMIT_BTN": "是的，重寄薪資單",
     "RESEND_SUCCESS_TITLE": "薪資單已寄出！",
     "RESEND_SUCCESS_CONTENT": "薪資單已成功寄送至員工的電子郵件。"
+  },
+  "OPERATING_MECHANISM": {
+    "MAIN_TITLE": "薪資計算機的運作機制"
   }
 }
