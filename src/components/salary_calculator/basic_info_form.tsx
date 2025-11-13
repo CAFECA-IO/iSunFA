@@ -10,14 +10,12 @@ import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useUserCtx } from '@/contexts/user_context';
 import { radioButtonStyle } from '@/constants/display';
 import { EmploymentType, TaxResidencyStatus } from '@/interfaces/calculator';
+import { INDUSTRY_CATEGORY_OPTIONS } from '@/constants/industry_category';
 
 const BasicInfoForm: React.FC = () => {
   const { t } = useTranslation(['calculator', 'date_picker']);
 
   const [isShowEmployeeListModal, setIsShowEmployeeListModal] = useState<boolean>(false);
-
-  // ToDo: (20251112 - Julian) 行業別選項待補齊
-  const industryCategoryOptions: string[] = [];
 
   const {
     yearOptions,
@@ -170,16 +168,16 @@ const BasicInfoForm: React.FC = () => {
     );
   });
 
-  const industryDropdown = industryCategoryOptions.map((category) => {
+  const industryDropdown = INDUSTRY_CATEGORY_OPTIONS.map((category) => {
     const clickHandler = () => changeIndustryCategory(category);
     return (
       <button
-        key={category}
+        key={category.CODE}
         type="button"
         onClick={clickHandler}
         className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
       >
-        {category}
+        {category.CODE} - {category.INDUSTRY}
       </button>
     );
   });
@@ -352,8 +350,8 @@ const BasicInfoForm: React.FC = () => {
             onClick={toggleIndustryDropdown}
             className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
           >
-            <div className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
-              {t(`${industryCategory}`)}
+            <div className="flex-1 truncate bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+              {industryCategory.CODE} - {industryCategory.INDUSTRY}
             </div>
             <div className="px-12px py-10px">
               <FaChevronDown size={16} />

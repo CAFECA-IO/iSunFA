@@ -3,6 +3,11 @@ export type RowItem = {
   value: number;
 };
 
+export type IndustryCategoryItem = {
+  CODE: number;
+  INDUSTRY: string;
+};
+
 export enum EmploymentType {
   FULL_TIME = 'Full-time',
   PART_TIME = 'Part-time',
