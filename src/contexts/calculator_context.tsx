@@ -1,7 +1,13 @@
 import React, { useState, useMemo, createContext, useContext, useEffect } from 'react';
 import { MONTHS, MonthType } from '@/constants/month';
-import { ISalaryCalculator } from '@/interfaces/calculator';
+import {
+  ISalaryCalculator,
+  EmploymentType,
+  TaxResidencyStatus,
+  IndustryCategoryItem,
+} from '@/interfaces/calculator';
 import { salaryCalculator, getMinimumWage } from '@/lib/utils/salary_calculator';
+import { INDUSTRY_CATEGORY_OPTIONS } from '@/constants/industry_category';
 
 type TabStep = {
   step: number;
@@ -16,6 +22,10 @@ const defaultTabSteps: TabStep[] = [
   { step: 3, completed: false },
   { step: 4, completed: false },
 ];
+
+const defaultIndustryCategory: IndustryCategoryItem = INDUSTRY_CATEGORY_OPTIONS.sort(
+  (a, b) => a.CODE - b.CODE
+).find((item) => item.CODE === 42)!; // Info: (20251113 - Julian) 預設為「42 電腦程式設計、諮詢及相關服務業、資訊服務業」
 
 interface ICalculatorContext {
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
@@ -35,6 +45,12 @@ interface ICalculatorContext {
   changeEmployeeName: (name: string) => void;
   employeeNumber: string;
   changeEmployeeNumber: (number: string) => void;
+  employmentType: EmploymentType;
+  changeEmploymentType: (type: EmploymentType) => void;
+  taxResidencyStatus: TaxResidencyStatus;
+  changeTaxResidencyStatus: (status: TaxResidencyStatus) => void;
+  industryCategory: IndustryCategoryItem;
+  changeIndustryCategory: (category: IndustryCategoryItem) => void;
   employeeEmail: string; // Info: (20250723 - Julian) 員工電子郵件
   changeEmployeeEmail: (email: string) => void;
   selectedYear: string;
@@ -152,6 +168,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250709 - Julian) Step 1: 基本資訊相關 state
   const [employeeName, setEmployeeName] = useState<string>(defaultEmployeeName);
   const [employeeNumber, setEmployeeNumber] = useState<string>('');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>(EmploymentType.FULL_TIME);
+  const [taxResidencyStatus, setTaxResidencyStatus] = useState<TaxResidencyStatus>(
+    TaxResidencyStatus.TAIWAN
+  );
+  const [industryCategory, setIndustryCategory] =
+    useState<IndustryCategoryItem>(defaultIndustryCategory);
   const [employeeEmail, setEmployeeEmail] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>(yearOptions[0]);
   const [selectedMonth, setSelectedMonth] = useState<MonthType>(defaultMonth);
@@ -262,6 +284,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const result = salaryCalculator({
       year: yearInt,
       month: monthIndex,
+      job: industryCategory.CODE, // Info: (20251113 - Julian) 行業別代碼
+      foreignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN, // Info: (20251113 - Julian) 是否為外籍員工
       employeeStartDate, // Info: (20250822 - Julian) 員工入職日期
       employeeEndDate, // Info: (20250822 - Julian) 員工離職日期
       baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
@@ -293,7 +317,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     });
 
     const formattedResult: ISalaryCalculator = {
-      totalSalary: result.totalPayment,
+      totalPayment: result.totalPayment,
       totalSalaryTaxable: result.totalSalaryTaxable,
       monthlySalary: {
         baseSalaryWithTax: result.baseSalaryTaxable,
@@ -314,7 +338,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         withheldIncomeTax: result.employeeBurdenIncomeTax,
         withheldSecondGenerationNHIPremium:
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
-        salaryDeductionForLeave: result.leaveDeduction,
+        leaveDeductionTaxable: result.leaveDeductionTaxable,
+        leaveDeductionTaxFree: result.leaveDeductionTaxFree,
         otherDeductionsOrAdjustments: result.employeeBurdenOtherOverflowDeductions,
         totalEmployeeBurden: result.totalEmployeeBurden,
       },
@@ -333,6 +358,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,
         companyBurdenOccupationalAccidentInsurance:
           result.companyBurdenOccupationalAccidentInsurance,
+        totalSalary: result.totalSalary,
         totalEmployerCost: result.totalCompanyBurden,
       },
     };
@@ -391,7 +417,10 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const resetFormHandler = () => {
     // Info: (20250710 - Julian) 清空 input 欄位
     setEmployeeName(defaultEmployeeName);
+    setEmploymentType(EmploymentType.FULL_TIME);
     setEmployeeNumber('');
+    setTaxResidencyStatus(TaxResidencyStatus.TAIWAN);
+    setIndustryCategory(defaultIndustryCategory);
     setEmployeeEmail('');
     setSelectedYear(yearOptions[0]);
     setSelectedMonth(defaultMonth);
@@ -441,6 +470,15 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     setEmployeeName(name);
     setIsNameError(name === ''); // Info: (20250711 - Julian) 如果未填姓名則顯示錯誤
   };
+  const changeEmploymentType = (type: EmploymentType) => {
+    setEmploymentType(type);
+  };
+  const changeTaxResidencyStatus = (status: TaxResidencyStatus) => {
+    setTaxResidencyStatus(status);
+  };
+  const changeIndustryCategory = (category: IndustryCategoryItem) => {
+    setIndustryCategory(category);
+  };
   const changeEmployeeNumber = (number: string) => {
     setEmployeeNumber(number);
   };
@@ -487,6 +525,12 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
       changeEmployeeName,
       employeeNumber,
       changeEmployeeNumber,
+      employmentType,
+      changeEmploymentType,
+      taxResidencyStatus,
+      changeTaxResidencyStatus,
+      industryCategory,
+      changeIndustryCategory,
       employeeEmail,
       changeEmployeeEmail,
       selectedYear,

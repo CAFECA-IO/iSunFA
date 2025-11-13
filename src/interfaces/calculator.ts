@@ -3,6 +3,21 @@ export type RowItem = {
   value: number;
 };
 
+export type IndustryCategoryItem = {
+  CODE: number;
+  INDUSTRY: string;
+};
+
+export enum EmploymentType {
+  FULL_TIME = 'Full-time',
+  PART_TIME = 'Part-time',
+}
+
+export enum TaxResidencyStatus {
+  TAIWAN = 'Taiwan Resident',
+  NON_TAIWAN = 'Non-Taiwan Resident',
+}
+
 export interface IMonthlySalary {
   baseSalaryWithTax: number; // Info: (20250722 - Julian) 本薪（應稅）
   overtimePayWithTax: number; // Info: (20250722 - Julian) 加班費（應稅）
@@ -22,7 +37,8 @@ export interface IEmployeeContribution {
   voluntaryPensionContribution: number; // Info: (20250710 - Julian) 自提勞退
   withheldIncomeTax: number; // Info: (20250710 - Julian) 代扣所得稅款
   withheldSecondGenerationNHIPremium: number; // Info: (20250710 - Julian) 代扣二代健保
-  salaryDeductionForLeave: number; // Info: (20250710 - Julian) 請假扣薪
+  leaveDeductionTaxable: number; // Info: (20251113 - Julian) 請假扣薪（應稅本薪）
+  leaveDeductionTaxFree: number; // Info: (20251113 - Julian) 請假扣薪(免稅加給)
   otherDeductionsOrAdjustments: number; // Info: (20250819 - Julian) 其他溢扣/ 補收
   totalEmployeeBurden: number; // Info: (20250819 - Julian) 扣項總計
 }
@@ -42,6 +58,7 @@ export interface IEmployerContribution {
   employerPaidHealthInsurance: number; // Info: (20250710 - Julian) 公司負擔健保費
   employerPaidPensionContribution: number; // Info: (20250710 - Julian) 公司負擔退休金
   companyBurdenOccupationalAccidentInsurance: number; // Info: (20251003 - Julian) 公司負擔職災保險
+  totalSalary: number; // Info: (2025113 - Julian) 本月薪資
   totalEmployerCost: number; // Info: (20250710 - Julian) 雇主總負擔
 }
 
@@ -50,7 +67,7 @@ export interface ISalaryCalculator {
   employeeContribution: IEmployeeContribution; // Info: (20250710 - Julian) 員工負擔項目
   insuredSalary: IInsuredSalary; // Info: (20250710 - Julian) 投保薪資
   employerContribution: IEmployerContribution; // Info: (20250710 - Julian) 雇主負擔項目
-  totalSalary: number; // Info: (20250710 - Julian) 實際發放金額
+  totalPayment: number; // Info: (20250710 - Julian) 實際發放金額
   totalSalaryTaxable: number; // Info: (20250825 - Julian) 扣繳憑單金額
 }
 
@@ -73,7 +90,8 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     voluntaryPensionContribution: 0,
     withheldIncomeTax: 0,
     withheldSecondGenerationNHIPremium: 0,
-    salaryDeductionForLeave: 0,
+    leaveDeductionTaxable: 0,
+    leaveDeductionTaxFree: 0,
     otherDeductionsOrAdjustments: 0,
     totalEmployeeBurden: 0,
   },
@@ -91,8 +109,9 @@ export const defaultSalaryCalculatorResult: ISalaryCalculator = {
     employerPaidHealthInsurance: 0,
     employerPaidPensionContribution: 0,
     companyBurdenOccupationalAccidentInsurance: 0,
+    totalSalary: 0,
     totalEmployerCost: 0,
   },
-  totalSalary: 0,
+  totalPayment: 0,
   totalSalaryTaxable: 0,
 };

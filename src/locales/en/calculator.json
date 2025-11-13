@@ -6,6 +6,7 @@
     "CALCULATOR": "Calculator",
     "PAY_SLIP": "My Pay Slip",
     "EMPLOYEE_LIST": "Employee List",
+    "HOW_IT_WORKS": "How it Works",
     "LOGIN": "Login",
     "LOGOUT": "Logout"
   },
@@ -21,8 +22,14 @@
   "BASIC_INFO_FORM": {
     "EMPLOYEE_NAME": "Employee Name",
     "EMPLOYEE_NAME_PLACEHOLDER": "Enter employee name",
+    "FULL_TIME": "Full-time",
+    "PART_TIME": "Part-time",
     "EMPLOYEE_NUMBER": "Employee Number",
     "EMPLOYEE_NUMBER_PLACEHOLDER": "Enter employee number",
+    "TAX_RESIDENCY_STATUS": "Tax Residency Status",
+    "RESIDENCY_OPTION_TAIWAN": "Taiwan Resident",
+    "RESIDENCY_OPTION_NON_TAIWAN": "Non-Taiwan Resident",
+    "INDUSTRY_CATEGORY": "Industry Category",
     "YEAR": "Year",
     "MONTH": "Month",
     "PAYROLL_DAYS_BASE": "Payroll Days Base",
@@ -94,7 +101,8 @@
     "VOLUNTARY_PENSION_CONTRIBUTION": "Voluntary Pension Contribution",
     "WITHHELD_INCOME_TAX": "Withheld Income Tax",
     "WITHHELD_SECOND_GENERATION_NHI_PREMIUM": "Withheld 2nd Gen NHI Premium",
-    "SALARY_DEDUCTION_FOR_LEAVE": "Salary Deduction for Leave",
+    "LEAVE_DEDUCTION_WITH_TAX": "Leave Deduction (TaxAble)",
+    "LEAVE_DEDUCTION_WITHOUT_TAX": "Leave Deduction (Non-taxable)",
     "OTHER_DEDUCTIONS_ADJUSTMENTS": "Other Deductions / Adjustments",
     "TOTAL_DEDUCTIONS": "Total Deduction",
     "HEALTH_INSURANCE_SALARY_BRACKET": "Health Insurance Salary Bracket",
@@ -108,6 +116,7 @@
     "EMPLOYER_PAID_HEALTH_INSURANCE": "Employer Paid Health Insurance",
     "EMPLOYER_PAID_PENSION_CONTRIBUTION": "Employer Paid Pension Contribution",
     "COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE": "Company Burden Occupational Accident Insurance",
+    "MONTHLY_PAY": "Monthly Pay",
     "TOTAL_EMPLOYER_COST": "Total Employer Cost",
     "REPORTED": "Reported",
     "PAID": "Paid"
@@ -171,5 +180,8 @@
     "RESEND_PAY_SLIP_SUBMIT_BTN": "Yes, Send the pay Slip",
     "RESEND_SUCCESS_TITLE": "Pay Slip Sent !",
     "RESEND_SUCCESS_CONTENT": "The pay slip has been sent to the employee’s email successfully."
+  },
+  "OPERATING_MECHANISM": {
+    "MAIN_TITLE": "Salary Calculator Operating Mechanism"
   }
 }
