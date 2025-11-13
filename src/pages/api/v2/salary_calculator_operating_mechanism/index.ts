@@ -52,7 +52,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       version,
       lastUpdated,
       content,
-      recentFile,
     };
 
     res.status(200).json(responseData);
