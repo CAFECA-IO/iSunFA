@@ -47,18 +47,27 @@ export async function createCounterparty(
 ): Promise<Counterparty> {
   const now = Date.now();
   const nowTimestamp = timestampInSeconds(now);
-  const newCounterparty = await prisma.counterparty.create({
-    data: {
-      accountBookId,
-      name,
-      taxId,
-      type,
-      note,
-      createdAt: nowTimestamp,
-      updatedAt: nowTimestamp,
-    },
-  });
-  return newCounterparty;
+  try {
+    const newCounterparty = await prisma.counterparty.create({
+      data: {
+        accountBookId,
+        name,
+        taxId,
+        type,
+        note,
+        createdAt: nowTimestamp,
+        updatedAt: nowTimestamp,
+      },
+    });
+    return newCounterparty;
+  } catch (error) {
+    loggerError({
+      userId: DefaultValue.USER_ID.SYSTEM,
+      errorType: 'Create counterparty in createCounterparty failed',
+      errorMessage: (error as Error).message,
+    });
+    throw error;
+  }
 }
 
 // Info: (20241022 - Jacky) List

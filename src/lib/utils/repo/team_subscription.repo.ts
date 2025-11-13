@@ -182,7 +182,7 @@ export async function listTeamSubscription(
     return {
       id: team.id,
       name: team.name,
-      plan: meta.planType,
+      plan: meta.effectivePlanType,
       enableAutoRenewal: true,
       expiredTimestamp: meta.expiredAt,
       nextRenewalTimestamp: meta.expiredAt,

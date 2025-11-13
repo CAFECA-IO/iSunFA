@@ -32,7 +32,6 @@ export const ACTION_BLOCKED_BY_TRIAL_PAYWALL: TeamPermissionAction[] = [
   TeamPermissionAction.MODIFY_TAG,
   TeamPermissionAction.MODIFY_PRIVACY,
   TeamPermissionAction.CREATE_PRIVATE_ACCOUNT_BOOK,
-  TeamPermissionAction.VIEW_PRIVATE_ACCOUNT_BOOK,
 
   TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
   TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,

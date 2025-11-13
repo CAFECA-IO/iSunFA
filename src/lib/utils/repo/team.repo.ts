@@ -91,18 +91,32 @@ export const getTeamList = async (
 
   const teamData = await Promise.all(
     teams.map(async (team) => {
-      const { actualRole, effectiveRole, expiredAt, inGracePeriod, gracePeriodEndAt, planType } =
-        await assertUserIsTeamMember(userId, team.id);
+      const {
+        actualRole,
+        effectiveRole,
+        expiredAt,
+        inGracePeriod,
+        gracePeriodEndAt,
+        effectivePlanType,
+      } = await assertUserIsTeamMember(userId, team.id);
 
       if (syncSession) {
         updatedSessionPromises.push(updateTeamMemberSession(userId, team.id, effectiveRole));
       }
 
-      const { can } = await assertUserCan({
-        userId,
-        teamId: team.id,
-        action: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
-      });
+      let can = false;
+      try {
+        const { can: canResult } = await assertUserCan({
+          userId,
+          teamId: team.id,
+          action: TeamPermissionAction.CREATE_ACCOUNT_BOOK,
+        });
+        can = canResult;
+      } catch (error) {
+        loggerBack.info(
+          `Error asserting user can create account book for team ${team.id} and user ${userId}: ${error}`
+        );
+      }
 
       if (canCreateAccountBookOnly && !can) return null;
 
@@ -114,7 +128,7 @@ export const getTeamList = async (
         about: { value: team.about || '', editable: effectiveRole !== TeamRole.VIEWER },
         profile: { value: team.profile || '', editable: effectiveRole !== TeamRole.VIEWER },
         planType: {
-          value: planType,
+          value: effectivePlanType,
           editable: false,
         },
         totalMembers: team.members.length,
