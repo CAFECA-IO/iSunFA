@@ -4,12 +4,17 @@ import { ILocale } from '@/interfaces/locale';
 import { useTranslation } from 'next-i18next';
 import Layout from '@/components/beta/layout/layout';
 import DashboardBody from '@/components/beta/dashboard/dashboard_body';
+import StructuredData from '@/components/seo/structured_data';
 import { useUserCtx } from '@/contexts/user_context';
 import { SkeletonList } from '@/components/skeleton/skeleton';
 
 const Dashboard = () => {
   const { t } = useTranslation(['dashboard']);
   const { userAuth } = useUserCtx();
+
+  const pageName = 'iSunFA Dashboard';
+  const pageDesc =
+    'iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations.';
 
   if (!userAuth) {
     return (
@@ -26,18 +31,15 @@ const Dashboard = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>{t('dashboard:DASHBOARD.DASHBOARD')}</title>
-        <meta
-          name="description"
-          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
-        />
+        <meta name="description" content={pageDesc} />
         <meta name="author" content="CAFECA" />
         <meta name="keywords" content="區塊鏈,人工智慧,會計" />
 
-        <meta property="og:title" content="iSunFA" />
-        <meta
-          property="og:description"
-          content="iSunFA: Blockchain AI Forensic Accounting and Auditing is where simplicity meets accuracy in the realm of financial investigations."
-        />
+        <meta property="og:title" content={pageName} />
+        <meta property="og:description" content={pageDesc} />
+
+        {/* Info: (20251113 - Julian) Structured Data for SEO */}
+        <StructuredData name={pageName} description={pageDesc} />
       </Head>
 
       <Layout isDashboard>
