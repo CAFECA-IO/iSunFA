@@ -71,7 +71,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       totalSalary, // Info: (20251113 - Julian) 本月薪資
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
-    totalPayment, // Info: (20250710 - Julian) 實際發放金額
+    // totalPayment, // Info: (20250710 - Julian) 實際發放金額
     totalSalaryTaxable, // Info: (20250825 - Julian) 扣繳憑單金額
   } = resultData;
 
@@ -208,7 +208,7 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     },
     {
       label: t('calculator:RESULT.MONTHLY_PAY'),
-      value: totalPayment,
+      value: totalSalary,
     },
     {
       label: t('calculator:RESULT.TOTAL_EMPLOYER_COST'),
