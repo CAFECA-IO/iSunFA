@@ -113,6 +113,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
     it('應該成功建立團隊訂閱', async () => {
       // Info: (20250604 - Shirley) 準備
       mockAssertUserCan.mockResolvedValue({
+        isExpired: false,
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
@@ -152,6 +153,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
     it('應該在權限不足時拋出錯誤', async () => {
       // Info: (20250604 - Shirley) 準備
       mockAssertUserCan.mockResolvedValue({
+        isExpired: true,
         actualRole: TeamRole.VIEWER,
         effectiveRole: TeamRole.VIEWER,
         can: false,
@@ -167,6 +169,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
     it('應該在資料庫建立失敗時拋出錯誤', async () => {
       // Info: (20250604 - Shirley) 準備
       mockAssertUserCan.mockResolvedValue({
+        isExpired: false,
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
@@ -190,6 +193,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
       };
       mockAssertUserCan.mockResolvedValue({
         actualRole: TeamRole.ADMIN,
+        isExpired: false,
         effectiveRole: TeamRole.ADMIN,
         can: true,
       });
@@ -358,6 +362,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.PROFESSIONAL,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: mockTimestamp + 2592000,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -413,6 +418,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.PROFESSIONAL,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: mockTimestamp + 2592000,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -452,6 +458,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.PROFESSIONAL,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: mockTimestamp + 2592000,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -480,6 +487,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.BEGINNER,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: 0,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -534,6 +542,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.PROFESSIONAL,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: mockTimestamp + 2592000,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -543,6 +552,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.team.findUnique.mockResolvedValue(mockTeam);
 
@@ -576,6 +586,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.VIEWER,
         effectiveRole: TeamRole.VIEWER,
         planType: TPlanType.BEGINNER,
+        effectivePlanType: TPlanType.BEGINNER,
         expiredAt: 0,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -584,6 +595,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
       mockAssertUserCan.mockResolvedValue({
         actualRole: TeamRole.VIEWER,
         effectiveRole: TeamRole.VIEWER,
+        isExpired: true,
         can: false,
       });
 
@@ -599,6 +611,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.PROFESSIONAL,
+        effectivePlanType: TPlanType.PROFESSIONAL,
         expiredAt: mockTimestamp + 2592000,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -608,6 +621,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.team.findUnique.mockResolvedValue(null);
 
@@ -624,6 +638,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.BEGINNER,
+        effectivePlanType: TPlanType.BEGINNER,
         expiredAt: 0,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -633,6 +648,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.team.findUnique.mockResolvedValue({
         id: mockTeamId,
@@ -702,6 +718,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.teamSubscription.create.mockResolvedValue({
         ...mockPrismaSubscription,
@@ -746,6 +763,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.teamOrder.findFirst.mockResolvedValue(mockOrder);
       mockPrisma.teamOrder.update.mockResolvedValue({
@@ -776,6 +794,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.VIEWER,
         effectiveRole: TeamRole.VIEWER,
         can: false,
+        isExpired: true,
       });
 
       // Info: (20250604 - Shirley) 執行 & 驗證
@@ -790,6 +809,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.team.findUnique.mockResolvedValue({
         id: mockTeamId,
@@ -821,6 +841,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.teamSubscription.create.mockRejectedValue(dbError);
 
@@ -859,6 +880,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         planType: TPlanType.BEGINNER,
+        effectivePlanType: TPlanType.BEGINNER,
         expiredAt: 0,
         inGracePeriod: false,
         gracePeriodEndAt: 0,
@@ -869,6 +891,7 @@ describe('團隊訂閱管理 Repository 測試', () => {
         actualRole: TeamRole.ADMIN,
         effectiveRole: TeamRole.ADMIN,
         can: true,
+        isExpired: false,
       });
       mockPrisma.team.findUnique.mockResolvedValue({
         id: mockTeamId,
