@@ -121,6 +121,7 @@ const BasicInfoForm: React.FC = () => {
 
   const employmentRadioBtn = Object.keys(EmploymentType).map((type) => {
     const isChecked = employmentType === EmploymentType[type as keyof typeof EmploymentType];
+    const str = t(`calculator:BASIC_INFO_FORM.${type.toUpperCase()}`);
     const changeType = () =>
       changeEmploymentType(EmploymentType[type as keyof typeof EmploymentType]);
 
@@ -138,7 +139,7 @@ const BasicInfoForm: React.FC = () => {
           onChange={changeType}
           className={radioButtonStyle}
         />
-        <p className="text-sm font-normal text-checkbox-text-primary">{type}</p>
+        <p className="text-sm font-normal text-checkbox-text-primary">{str}</p>
       </label>
     );
   });
@@ -146,6 +147,7 @@ const BasicInfoForm: React.FC = () => {
   const taxResidencyRadioBtn = Object.keys(TaxResidencyStatus).map((type) => {
     const isChecked =
       taxResidencyStatus === TaxResidencyStatus[type as keyof typeof TaxResidencyStatus];
+    const str = t(`calculator:BASIC_INFO_FORM.RESIDENCY_OPTION_${type.toUpperCase()}`);
     const changeType = () =>
       changeTaxResidencyStatus(TaxResidencyStatus[type as keyof typeof TaxResidencyStatus]);
 
@@ -157,13 +159,13 @@ const BasicInfoForm: React.FC = () => {
       >
         <input
           id={`radio-${type}`}
-          name="radio-employment-type"
+          name="radio-tax-residency-status"
           type="radio"
           checked={isChecked}
           onChange={changeType}
           className={radioButtonStyle}
         />
-        <p className="text-sm font-normal text-checkbox-text-primary">{type}</p>
+        <p className="text-sm font-normal text-checkbox-text-primary">{str}</p>
       </label>
     );
   });
@@ -506,7 +508,6 @@ const BasicInfoForm: React.FC = () => {
           )}
         </div>
       </form>
-
       {/* Info: (20250711 - Julian) 員工列表 Modal */}
       {isShowEmployeeListModal && (
         <EmployeeListModal modalVisibleHandler={toggleEmployeeListModal} />

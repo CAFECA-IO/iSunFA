@@ -273,6 +273,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     const result = salaryCalculator({
       year: yearInt,
       month: monthIndex,
+      foreignWorker: taxResidencyStatus === TaxResidencyStatus.NON_TAIWAN,
       employeeStartDate, // Info: (20250822 - Julian) 員工入職日期
       employeeEndDate, // Info: (20250822 - Julian) 員工離職日期
       baseSalaryTaxable: baseSalary, // Info: (20250728 - Julian) 當月應稅基本工資
@@ -304,7 +305,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
     });
 
     const formattedResult: ISalaryCalculator = {
-      totalSalary: result.totalPayment,
+      totalPayment: result.totalPayment,
       totalSalaryTaxable: result.totalSalaryTaxable,
       monthlySalary: {
         baseSalaryWithTax: result.baseSalaryTaxable,
@@ -325,7 +326,8 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         withheldIncomeTax: result.employeeBurdenIncomeTax,
         withheldSecondGenerationNHIPremium:
           result.employeeBurdenSecondGenerationHealthInsurancePremiums,
-        salaryDeductionForLeave: result.leaveDeduction,
+        leaveDeductionTaxable: result.leaveDeductionTaxable,
+        leaveDeductionTaxFree: result.leaveDeductionTaxFree,
         otherDeductionsOrAdjustments: result.employeeBurdenOtherOverflowDeductions,
         totalEmployeeBurden: result.totalEmployeeBurden,
       },
@@ -344,6 +346,7 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
         employerPaidPensionContribution: result.companyBurdenPensionInsurance,
         companyBurdenOccupationalAccidentInsurance:
           result.companyBurdenOccupationalAccidentInsurance,
+        totalSalary: result.totalSalary,
         totalEmployerCost: result.totalCompanyBurden,
       },
     };
