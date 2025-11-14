@@ -5,6 +5,7 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import NewVoucherFormRC2 from '@/components/voucher/new_voucher_form_rc2';
 import Layout from '@/components/beta/layout/layout';
+import StructuredData from '@/components/seo/structured_data';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { useAccountingCtx } from '@/contexts/accounting_context';
 import { IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
@@ -14,6 +15,9 @@ import { IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 const AddNewVoucherRC2Page: React.FC = () => {
   const { t } = useTranslation('common');
   // const { teamRole } = useUserCtx();
+
+  const pageName = '新增傳票';
+  const pageDesc = '在 iSunFA 平台上輕鬆建立和管理您的會計傳票，提升財務處理效率。';
 
   const [selectedInvoices, setSelectedInvoices] = useState<{
     [id: string]: IInvoiceRC2UI;
@@ -49,6 +53,9 @@ const AddNewVoucherRC2Page: React.FC = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>{t('journal:ADD_NEW_VOUCHER.PAGE_TITLE')} - iSunFA</title>
+
+        {/* Info: (20251113 - Julian) Structured Data for SEO */}
+        <StructuredData name={pageName} description={pageDesc} />
       </Head>
 
       <Layout

@@ -396,6 +396,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
       )
     : 0;
   const totalCompanyBurden =
+    totalSalary +
     companyBurdenHealthInsurance +
     companyBurdenLaborInsurance +
     companyBurdenEmploymentInsurance +
@@ -478,7 +479,7 @@ const salaryCalculator = (options: ISalaryCalculatorOptions): ISalaryCalculatorR
     companyBurdenHealthInsurance, // Info: (20251009 - Luphia) 公司負擔健保費
     companyBurdenPensionInsurance, // Info: (20251009 - Luphia) 公司負擔退休金
     companyBurdenOccupationalAccidentInsurance, // Info: (20251009 - Luphia) 公司負擔職災保險
-    totalCompanyBurden, // Info: (20251009 - Luphia) 公司負擔勞健退
+    totalCompanyBurden, // Info: (20251009 - Luphia) 公司總負擔
   };
   return result;
 };

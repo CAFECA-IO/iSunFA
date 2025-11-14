@@ -5,11 +5,15 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { ILocale } from '@/interfaces/locale';
 import AssetListPageBody from '@/components/asset/asset_list_page_body';
 import Layout from '@/components/beta/layout/layout';
+import StructuredData from '@/components/seo/structured_data';
 // import { useUserCtx } from '@/contexts/user_context'; // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
 // import { TeamRole } from '@/interfaces/team'; // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
 
 const AssetListPage = () => {
   const { t } = useTranslation('common');
+
+  const pageName = '資產清單';
+  const pageDesc = '在 iSunFA 平台上管理和追蹤您的資產，提升資產管理效率。';
 
   // Deprecated: (20250603 - Liz) 移除檢視者透過 URL 直接進入頁面的權限阻擋
   // const { teamRole } = useUserCtx();
@@ -29,6 +33,9 @@ const AssetListPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon/favicon.ico" />
         <title>{t('asset:ASSET.ASSET_LIST_PAGE_TITLE')} - iSunFA</title>
+
+        {/* Info: (20251113 - Julian) Structured Data for SEO */}
+        <StructuredData name={pageName} description={pageDesc} />
       </Head>
 
       <Layout isDashboard={false} pageTitle={t('asset:ASSET.ASSET_LIST_PAGE_TITLE')}>
