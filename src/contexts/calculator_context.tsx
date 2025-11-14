@@ -367,6 +367,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   }, [
     selectedYear,
     selectedMonth,
+    employmentType,
+    taxResidencyStatus,
+    industryCategory,
     isJoined,
     dayOfJoining,
     isLeft,
