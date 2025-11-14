@@ -54,7 +54,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   // Info: (20251113 - Julian) 結束 response
   ctx.res.end();
 
-  // 返回一個空的 props 對象，因為在 SSR 中必須返回一個包含數據的對象
+  // Info: (20251113 - Julian) 返回一個空的 props 對象，因為在 SSR 中必須返回一個包含數據的對象
   return {
     props: {},
   };
