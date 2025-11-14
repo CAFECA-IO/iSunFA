@@ -123,20 +123,35 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) =>
       <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
         Currency: TWD
       </p>
-      <div className="flex flex-col rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">
+      <div className="table overflow-hidden rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">
         {/* Info: (20251114 - Julian) Table Header */}
-        <div className="grid grid-cols-6 border-b border-stroke-neutral-quaternary text-center text-xs font-medium text-text-neutral-tertiary">
-          <div className="border-r border-stroke-neutral-quaternary">Particulars</div>
-          <div className="col-span-3 border-r border-stroke-neutral-quaternary">Accounting</div>
-          <div className="border-r border-stroke-neutral-quaternary">Credit</div>
-          <div className="">Debit</div>
+        <div className="table-header-group text-center text-xs font-medium text-text-neutral-tertiary">
+          <div className="table-row">
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
+              Particulars
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
+              Accounting
+            </div>
+            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
+              Credit
+            </div>
+            <div className="table-cell border-b p-8px align-middle">Debit</div>
+          </div>
         </div>
         {/* Info: (20251114 - Julian) Table Content */}
-        <div className="grid grid-cols-6 text-xs font-medium">
-          <div>Printer-0001</div>
-          <div className="col-span-3 flex flex-col gap-4px font-semibold text-text-neutral-tertiary">
-            <div className="flex items-center gap-4px">
-              <p>1141</p> <p>Accounts receivable</p>
+        <div className="table-row-group text-xs font-medium">
+          <div className="table-row">
+            <div className="table-cell px-16px py-24px text-text-neutral-primary">Printer-0001</div>
+            <div className="table-cell px-16px py-24px font-semibold text-text-neutral-tertiary">
+              <div className="flex flex-col gap-4px">
+                <div className="flex items-center gap-4px">
+                  <p>1141</p> <p>Accounts receivable</p>
+                </div>
+                <div className="flex items-center gap-4px">
+                  <p>1141</p> <p>Accounts receivable</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
