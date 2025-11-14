@@ -50,7 +50,7 @@ const ChatInput: React.FC = () => {
   return (
     <div className="flex flex-col items-center gap-4px">
       <div
-        className={`${isOverFourLines ? 'items-end' : 'items-center'} flex h-auto w-full gap-16px rounded-md border border-input-stroke-input bg-input-surface-input-background p-12px`}
+        className={`${isOverFourLines ? 'items-end' : 'items-center'} flex h-auto w-full max-w-920px gap-16px rounded-md border border-input-stroke-input bg-input-surface-input-background p-12px`}
       >
         <Button type="button" size="defaultSquare">
           <FaPlus />
