@@ -1,6 +1,7 @@
 import React from 'react';
 import AAALayout from '@/components/ai_accounting_assistance/layout';
 import { Button } from '@/components/button/button';
+import ChatInput from '@/components/ai_accounting_assistance/chat_input';
 
 const AAAHomePageBody: React.FC = () => {
   return (
@@ -20,12 +21,7 @@ const AAAHomePageBody: React.FC = () => {
         </div>
       </div>
       {/* Info: (20251014 - Julian) Chat Input */}
-      <div className="flex flex-col items-center">
-        <div>Upload a certificate or say something to start</div>
-        <p className="text-sm font-medium text-input-text-secondary">
-          AI may make mistakes. Please verify important information.
-        </p>
-      </div>
+      <ChatInput />
     </AAALayout>
   );
 };
