@@ -4,10 +4,13 @@ import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
 import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
+import ImageZoom from '@/components/image_zoom/image_zoom';
+import { IInvoiceData } from '@/interfaces/invoice_edit_area';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
   toggle: () => void;
+  invoiceData: IInvoiceData;
 }
 
 enum InvoiceEditTab {
@@ -15,7 +18,7 @@ enum InvoiceEditTab {
   VOUCHER = 'Voucher',
 }
 
-const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) => {
+const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceData }) => {
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
@@ -39,14 +42,14 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) =>
 
   const tabContent =
     invoiceEditTab === InvoiceEditTab.TAX_INFO ? (
-      <InvoiceEditTaxInfoTab />
+      <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
     ) : (
-      <InvoiceEditVoucherTab />
+      <InvoiceEditVoucherTab lineItems={invoiceData.voucherInfo.lineItemsInfo} />
     );
 
   return (
     <div
-      className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
+      className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px overflow-y-auto bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
     >
       {/* Info: (20251114 - Julian) Header */}
       <div className="flex items-center">
@@ -58,11 +61,13 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) =>
         </p>
       </div>
 
-      {/* Info: (20251114 - Julian) Image Zoom In */}
-      <div
-      // className="flex-1"
-      >
-        Image Zoom In
+      {/* Info: (20251117 - Julian) Image Zoom In */}
+      <div>
+        <ImageZoom
+          imageUrl={'/elements/auditing_tool_1.png'}
+          className="h-450px w-full"
+          controlPosition="bottom-right"
+        />
       </div>
 
       {/* Info: (20251114 - Julian) Invoice Details */}

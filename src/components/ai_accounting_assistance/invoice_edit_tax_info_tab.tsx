@@ -1,36 +1,10 @@
 import React from 'react';
 import { TaxType } from '@/constants/invoice_rc2';
 import { numberWithCommas, timestampToString } from '@/lib/utils/common';
+import { ITaxInfo } from '@/interfaces/invoice_edit_area';
 
-interface IInvoiceDetail {
-  invoiceNo: string;
-  issueDate: number;
-  tradingPartner: {
-    name: string;
-    taxId: string;
-  };
-  taxType: TaxType;
-  taxRate: number;
-  salesAmount: number;
-  tax: number;
-}
-
-const mockInvoiceDetail: IInvoiceDetail = {
-  invoiceNo: 'AB-12345678',
-  issueDate: 1762109170,
-  tradingPartner: {
-    name: 'XYZ Corporation',
-    taxId: '12345678',
-  },
-  taxType: TaxType.TAXABLE,
-  taxRate: 0.05,
-  salesAmount: 10000,
-  tax: 500,
-};
-
-const InvoiceEditTaxInfoTab: React.FC = () => {
-  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } =
-    mockInvoiceDetail;
+const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
+  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } = data;
 
   const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
 

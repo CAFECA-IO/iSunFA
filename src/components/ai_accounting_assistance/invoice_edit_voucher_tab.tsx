@@ -99,7 +99,18 @@ const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
   );
 };
 
-const InvoiceEditVoucherTab: React.FC = () => {
+const InvoiceEditVoucherTab: React.FC<{ lineItems: ILineItemsInfo[] }> = ({ lineItems }) => {
+  const displayedLineItems =
+    lineItems.length > 0 ? (
+      lineItems.map((item, index) => (
+        // Deprecated: (20251117 - Julian) remove eslint-disable
+        // eslint-disable-next-line react/no-array-index-key
+        <VoucherItem key={index} lineItems={item.lineItems} sum={item.sum} />
+      ))
+    ) : (
+      <p className="p-16px text-center text-text-neutral-tertiary">No line items available.</p>
+    );
+
   return (
     <div className="flex flex-col gap-8px">
       <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
@@ -125,53 +136,7 @@ const InvoiceEditVoucherTab: React.FC = () => {
             </div>
           </div>
           {/* Info: (20251114 - Julian) Table Content */}
-          <div className="table-row-group text-xs font-medium">
-            <VoucherItem
-              lineItems={[
-                {
-                  id: 1,
-                  account: {
-                    id: 1260,
-                    accountBookId: 1002,
-                    system: 'IFRS',
-                    type: 'asset',
-                    debit: true,
-                    liquidity: true,
-                    code: '1139',
-                    name: '避險之金融資產－流動',
-                    note: null,
-                    createdAt: 0,
-                    updatedAt: 0,
-                    deletedAt: null,
-                  },
-                  amount: '2002',
-                  description: 'Pen-0001',
-                  debit: false,
-                },
-                {
-                  id: 2,
-                  account: {
-                    id: 1260,
-                    accountBookId: 2342,
-                    system: 'IFRS',
-                    type: 'asset',
-                    debit: true,
-                    liquidity: true,
-                    code: '3242',
-                    name: '現金及約當現金',
-                    note: null,
-                    createdAt: 0,
-                    updatedAt: 0,
-                    deletedAt: null,
-                  },
-                  amount: '2002',
-                  description: '',
-                  debit: true,
-                },
-              ]}
-              sum={{ debit: true, amount: '2002' }}
-            />
-          </div>
+          <div className="table-row-group text-xs font-medium">{displayedLineItems}</div>
         </div>
       </div>
     </div>

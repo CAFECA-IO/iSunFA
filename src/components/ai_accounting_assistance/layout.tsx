@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AAASidebar from '@/components/ai_accounting_assistance/sidebar';
 import InvoiceEditArea from '@/components/ai_accounting_assistance/invoice_edit_area';
+import { mockInvoiceData } from '@/interfaces/invoice_edit_area';
 
 interface ILayoutProps {
   children: React.ReactNode;
@@ -33,7 +34,11 @@ const AAALayout: React.FC<ILayoutProps> = ({ children }) => {
       </div>
 
       {/* Info: (20251114 - Julian) Invoice Edit Area */}
-      <InvoiceEditArea isOpen={isInvoiceAreaOpen} toggle={toggleInvoiceArea} />
+      <InvoiceEditArea
+        isOpen={isInvoiceAreaOpen}
+        toggle={toggleInvoiceArea}
+        invoiceData={mockInvoiceData} // ToDo: (20251114 - Julian) replace with real data
+      />
     </main>
   );
 };

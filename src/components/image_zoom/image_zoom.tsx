@@ -137,7 +137,7 @@ const ImageZoom = ({
     <div className="relative flex h-full w-full flex-col">
       {/* Info: (20250307 - Julian) 縮放倍率 */}
       <div
-        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} ${controlPosition === 'bottom-center' ? 'absolute -bottom-20 left-1/2 m-16px -translate-x-1/2' : ''} hidden items-center gap-12px text-button-stroke-secondary tablet:flex`}
+        className={`${controlPosition === 'top-right' ? 'ml-auto py-16px' : ''} ${controlPosition === 'bottom-right' ? 'absolute bottom-0 right-0 m-16px' : ''} ${controlPosition === 'bottom-center' ? 'absolute -bottom-20 left-1/2 m-16px -translate-x-1/2' : ''} z-10 hidden items-center gap-12px text-button-stroke-secondary tablet:flex`}
       >
         <Button
           type="button"
