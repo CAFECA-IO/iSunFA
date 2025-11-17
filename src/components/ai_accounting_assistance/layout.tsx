@@ -23,13 +23,6 @@ const AAALayout: React.FC<ILayoutProps> = ({ children }) => {
       <div
         className={`${isSidebarOpen ? 'ml-250px' : 'ml-70px'} ${isInvoiceAreaOpen ? 'mr-500px' : 'mr-0'} flex h-screen grow flex-col justify-center gap-140px px-40px py-120px transition-all duration-200 ease-in-out`}
       >
-        <button
-          type="button"
-          onClick={toggleInvoiceArea}
-          className="w-fit rounded-sm bg-rose-400 p-10px"
-        >
-          open invoice area
-        </button>
         {children}
       </div>
 
