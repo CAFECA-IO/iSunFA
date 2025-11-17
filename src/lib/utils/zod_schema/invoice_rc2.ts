@@ -71,7 +71,7 @@ const InvoiceRC2BaseSchema = z.object({
     .nullable()
     .optional(),
   carrierSerialNumber: z.string().nullable().optional(),
-  otherCertificateNo: z.string().nullable().optional(),
+  otherInvoiceNo: z.string().nullable().optional(),
 
   deductionType: z.nativeEnum(DeductionType).nullable().optional(),
   salesName: z.string().nullable().optional(),

@@ -23,8 +23,8 @@ interface OutputInvoiceTableProps {
   setDateSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setAmountSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
   setVoucherSort: React.Dispatch<React.SetStateAction<SortOrder | null>>;
-  setCertificateNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
-  setCertificateTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
+  setInvoiceNoSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證號碼排序
+  setInvoiceTypeSort: React.Dispatch<React.SetStateAction<SortOrder | null>>; // Info: (20250416 - Anna) 憑證類型排序
   isExporting: boolean;
   uploaderAvatarMap: Record<string, string>;
 }
@@ -45,8 +45,8 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
   setDateSort,
   setAmountSort,
   setVoucherSort,
-  setCertificateNoSort,
-  setCertificateTypeSort,
+  setInvoiceNoSort,
+  setInvoiceTypeSort,
   isExporting,
   uploaderAvatarMap,
 }) => {
@@ -58,8 +58,8 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
     handleReset: () => {
       setAmountSort(null);
       setVoucherSort(null);
-      setCertificateNoSort(null);
-      setCertificateTypeSort(null);
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
@@ -70,8 +70,8 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setVoucherSort(null);
-      setCertificateNoSort(null);
-      setCertificateTypeSort(null);
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
@@ -82,34 +82,34 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
-      setCertificateNoSort(null);
-      setCertificateTypeSort(null);
+      setInvoiceNoSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證號碼表頭
-  const displayedCertificateNo = SortingButton({
+  const displayedInvoiceNo = SortingButton({
     string: t('certificate:TABLE.INVOICE_NUMBER'),
     sortOrder: certificateNoSort,
-    setSortOrder: setCertificateNoSort,
+    setSortOrder: setInvoiceNoSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setCertificateTypeSort(null);
+      setInvoiceTypeSort(null);
     },
   });
 
   // Info: (20250416 - Anna) 憑證類型表頭
-  const displayedCertificateType = SortingButton({
+  const displayedInvoiceType = SortingButton({
     string: t('certificate:TABLE.INVOICE_TYPE'),
     sortOrder: certificateTypeSort,
-    setSortOrder: setCertificateTypeSort,
+    setSortOrder: setInvoiceTypeSort,
     handleReset: () => {
       setDateSort(null);
       setAmountSort(null);
       setVoucherSort(null);
-      setCertificateNoSort(null);
+      setInvoiceNoSort(null);
     },
   });
 
@@ -141,14 +141,14 @@ const OutputInvoiceTable: React.FC<OutputInvoiceTableProps> = ({
                 isExporting ? 'pb-4' : ''
               }`}
             >
-              {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedCertificateNo}
+              {isExporting ? t('certificate:TABLE.INVOICE_NUMBER') : displayedInvoiceNo}
             </div>
             <div
               className={`col-span-full table-cell min-w-100px border-b border-r border-stroke-neutral-quaternary px-lv-2 text-center align-middle ${
                 isExporting ? 'pb-4' : ''
               }`}
             >
-              {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedCertificateType}
+              {isExporting ? t('certificate:TABLE.INVOICE_TYPE') : displayedInvoiceType}
             </div>
 
             <div

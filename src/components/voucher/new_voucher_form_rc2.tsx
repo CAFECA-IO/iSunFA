@@ -37,11 +37,12 @@ import { KEYBOARD_EVENT_CODE } from '@/constants/keyboard_event_code';
 import { TbArrowBackUp } from 'react-icons/tb';
 import { IInvoiceRC2, IInvoiceRC2UI } from '@/interfaces/invoice_rc2';
 import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
-import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
+// import InvoiceUploaderModal from '@/components/certificate/certificate_uploader_modal';
 import InvoiceSelection from '@/components/voucher/invoice_selection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import loggerFront from '@/lib/utils/logger_front';
 import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import { STATUS_CODE } from '@/constants/status_code';
 
 interface NewVoucherFormProps {
   selectedData: { [id: string]: IInvoiceRC2UI };
@@ -76,6 +77,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
     trigger: createVoucher,
     success: createSuccess,
     isLoading: isCreating,
+    code: createCode,
   } = APIHandler(APIName.VOUCHER_POST_V2);
 
   // Info: (20241105 - Julian) 從 useAccountingCtx 取得反轉傳票
@@ -133,7 +135,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241018 - Tzuhan) 選擇憑證相關 state
   const [openSelectorModal, setOpenSelectorModal] = useState<boolean>(false);
-  const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
+  // const [openUploaderModal, setOpenUploaderModal] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const [invoices, setInvoices] = useState<{ [id: string]: IInvoiceRC2UI }>({});
@@ -611,6 +613,14 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       if (createSuccess) {
         router.push(ISUNFA_ROUTE.VOUCHER_LIST);
       } else {
+        if (createCode === STATUS_CODE.FREE_TRIAL_EXPIRED) {
+          toastHandler({
+            id: ToastId.CREATE_VOUCHER_ERROR,
+            type: ToastType.ERROR,
+            content: t('subscriptions:ERROR.FREE_TRIAL_EXPIRED'),
+            closeable: true,
+          });
+        }
         toastHandler({
           id: ToastId.CREATE_VOUCHER_ERROR,
           type: ToastType.ERROR,
@@ -876,17 +886,17 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         accountBookId={accountBookId}
         isOpen={openSelectorModal}
         onClose={() => setOpenSelectorModal(false)}
-        openUploaderModal={() => setOpenUploaderModal(true)}
+        // openUploaderModal={() => setOpenUploaderModal(true)}
         handleSelect={handleSelect}
         handleApiResponse={handleInvoiceApiResponse}
         invoices={Object.values(invoices)}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
       />
-      <InvoiceUploaderModal
+      {/* <InvoiceUploaderModal
         isOpen={openUploaderModal}
         onClose={() => setOpenUploaderModal(false)}
-      />
+      /> */}
       {/* Info: (20240926 - Julian) AI analyze */}
       {/* ToDo: (20250122 - Julian) 暫時隱藏 */}
       {/* <AIWorkingArea

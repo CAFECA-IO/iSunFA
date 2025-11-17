@@ -42,8 +42,8 @@ export const createOrderByList = (
         case SortBy.VOUCHER_NUMBER:
           return [{ voucher: { no: sortOrder } }];
         case SortBy.INVOICE_NUMBER:
-          // Info: (20250513 - Tzuhan) sort by `no`, fallback to `otherCertificateNo` if `no` is null
-          return [{ no: sortOrder }, { otherCertificateNo: sortOrder }];
+          // Info: (20250513 - Tzuhan) sort by `no`, fallback to `otherInvoiceNo` if `no` is null
+          return [{ no: sortOrder }, { otherInvoiceNo: sortOrder }];
         default:
           return [{ createdAt: SortOrder.DESC }];
       }
@@ -242,16 +242,14 @@ export async function listInvoiceRC2ByDirection<
     action: TeamPermissionAction.VIEW_CERTIFICATE,
   });
 
-  const whereClause: Prisma.InvoiceRC2WhereInput = {
+  /**
+   * Info: (20251107 - Tzuhan)
+   * 1. 這是基礎的 where 條件 (Base Where)
+   * 包含所有 "非" 頁籤 (tab) 和 "非" 刪除 (isDeleted) 的篩選條件
+   */
+  const baseWhereClause: Prisma.InvoiceRC2WhereInput = {
     accountBookId,
     direction,
-    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
-    voucherId:
-      tab === InvoiceTab.WITHOUT_VOUCHER
-        ? null
-        : tab === InvoiceTab.WITH_VOUCHER
-          ? { not: null }
-          : undefined,
     type: type ?? undefined,
     issuedDate: {
       gte: startDate || undefined,
@@ -273,10 +271,27 @@ export async function listInvoiceRC2ByDirection<
       : undefined,
   };
 
+  /**
+   * Info: (20251107 - Tzuhan)
+   * 2. 這是用於 totalCount 和 findMany 的 where 條件
+   * 它在 baseWhereClause 基礎上，增加了 "tab" 和 "isDeleted" 的條件
+   */
+  const mainWhereClause: Prisma.InvoiceRC2WhereInput = {
+    ...baseWhereClause,
+    deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
+    voucherId:
+      tab === InvoiceTab.WITHOUT_VOUCHER
+        ? null
+        : tab === InvoiceTab.WITH_VOUCHER
+          ? { not: null }
+          : undefined,
+  };
+
+  // Info: (20251107 - Tzuhan) 3. 平行執行主要的資料查詢
   const [totalCount, invoices, totalPrice] = await Promise.all([
-    prisma.invoiceRC2.count({ where: whereClause }),
+    prisma.invoiceRC2.count({ where: mainWhereClause }),
     prisma.invoiceRC2.findMany({
-      where: whereClause,
+      where: mainWhereClause,
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: createOrderByList(sortOption || []),
@@ -287,17 +302,7 @@ export async function listInvoiceRC2ByDirection<
       },
     }),
     prisma.invoiceRC2.aggregate({
-      where: {
-        accountBookId,
-        direction,
-        deletedAt: isDeleted === true ? { not: null } : isDeleted === false ? null : undefined,
-        voucherId:
-          tab === InvoiceTab.WITHOUT_VOUCHER
-            ? null
-            : tab === InvoiceTab.WITH_VOUCHER
-              ? { not: null }
-              : undefined,
-      },
+      where: mainWhereClause,
       _sum: { totalAmount: true },
     }),
   ]);
@@ -311,27 +316,43 @@ export async function listInvoiceRC2ByDirection<
     await getAccountingSettingByCompanyId(accountBookId);
   const currency = (accountSetting?.currency as CurrencyCode) || CurrencyCode.TWD;
 
-  let extraStats: Record<string, unknown> = {};
+  // Info: (20251107 - Tzuhan) 4. 平行執行 "頁籤計數" (extraStats) 查詢
+  let extraStats: Record<string, Record<string, number>> = {};
 
-  const [withVoucher, withoutVoucher] = await Promise.all([
+  const [withVoucher, withoutVoucher, deleted] = await Promise.all([
+    // Info: (20251107 - Tzuhan) [有傳票] 數量: 基礎篩選 + 未刪除 + 有傳票
     prisma.invoiceRC2.count({
       where: {
-        accountBookId,
-        direction,
-        voucherId: { not: null },
+        ...baseWhereClause,
         deletedAt: null,
+        voucherId: { not: null },
       },
     }),
+    // Info: (20251107 - Tzuhan) [無傳票] 數量: 基礎篩選 + 未刪除 + 無傳票
     prisma.invoiceRC2.count({
       where: {
-        accountBookId,
-        direction,
-        voucherId: null,
+        ...baseWhereClause,
         deletedAt: null,
+        voucherId: null,
+      },
+    }),
+    // Info: (20251107 - Tzuhan) [已刪除] 數量: 基礎篩選 + 已刪除 (不論是否有傳票)
+    prisma.invoiceRC2.count({
+      where: {
+        ...baseWhereClause,
+        deletedAt: { not: null },
       },
     }),
   ]);
-  extraStats = { count: { withVoucher, withoutVoucher } };
+
+  extraStats = {
+    count: {
+      all: withVoucher + withoutVoucher,
+      withVoucher: withVoucher,
+      withoutVoucher: withoutVoucher,
+      deleted: deleted,
+    },
+  };
 
   return toPaginatedData<InvoiceRC2MappedOutput<T>[]>({
     ...query,

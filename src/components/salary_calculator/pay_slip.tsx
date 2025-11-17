@@ -49,7 +49,8 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       voluntaryPensionContribution, // Info: (20250710 - Julian) 自提勞退
       withheldIncomeTax, // Info: (20250710 - Julian) 代扣所得稅款
       withheldSecondGenerationNHIPremium, // Info: (20250710 - Julian) 代扣二代健保
-      salaryDeductionForLeave, // Info: (20250710 - Julian) 請假扣薪
+      leaveDeductionTaxable, // Info: (20251113 - Julian) 請假扣薪（應稅）
+      leaveDeductionTaxFree, // Info: (20251113 - Julian) 請假扣薪(免稅)
       otherDeductionsOrAdjustments, // Info: (20250825 - Julian) 其他溢扣/ 補收
       totalEmployeeBurden, // Info: (20250819 - Julian) 扣項總計
     },
@@ -67,9 +68,10 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       employerPaidHealthInsurance, // Info: (20250710 - Julian) 公司負擔健保費
       employerPaidPensionContribution, // Info: (20250710 - Julian) 公司負擔退休金
       companyBurdenOccupationalAccidentInsurance, // Info: (20251003 - Julian) 公司負擔職保費
+      totalSalary, // Info: (20251113 - Julian) 本月薪資
       totalEmployerCost, // Info: (20250710 - Julian) 雇主總負擔
     },
-    totalSalary, // Info: (20250710 - Julian) 實際發放金額
+    // totalPayment, // Info: (20250710 - Julian) 實際發放金額
     totalSalaryTaxable, // Info: (20250825 - Julian) 扣繳憑單金額
   } = resultData;
 
@@ -137,8 +139,12 @@ const PaySlip: React.FC<IPaySlipProps> = ({
       value: withheldSecondGenerationNHIPremium,
     },
     {
-      label: t('calculator:RESULT.SALARY_DEDUCTION_FOR_LEAVE'),
-      value: salaryDeductionForLeave,
+      label: t('calculator:RESULT.LEAVE_DEDUCTION_WITH_TAX'),
+      value: leaveDeductionTaxable,
+    },
+    {
+      label: t('calculator:RESULT.LEAVE_DEDUCTION_WITHOUT_TAX'),
+      value: leaveDeductionTaxFree,
     },
     {
       label: t('calculator:RESULT.OTHER_DEDUCTIONS_ADJUSTMENTS'),
@@ -199,6 +205,10 @@ const PaySlip: React.FC<IPaySlipProps> = ({
     {
       label: t('calculator:RESULT.COMPANY_BURDEN_OCCUPATIONAL_ACCIDENT_INSURANCE'),
       value: companyBurdenOccupationalAccidentInsurance,
+    },
+    {
+      label: t('calculator:RESULT.MONTHLY_PAY'),
+      value: totalSalary,
     },
     {
       label: t('calculator:RESULT.TOTAL_EMPLOYER_COST'),

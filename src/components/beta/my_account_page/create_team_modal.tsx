@@ -267,11 +267,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
   const createTeamHandler = async () => {
     try {
       const { success, data, error } = await createTeam({
-        body: {
-          name: teamNameInput,
-          members: teamMembers,
-          planType: selectedPlan.id,
-        },
+        body: { name: teamNameInput, members: teamMembers, planType: selectedPlan.id },
       });
 
       // Info: (20250326 - Julian) 建立團隊成功 -> 邀請成員和升級訂閱方案
@@ -303,10 +299,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
               userId: userAuth.id,
               paymentMethodId: paymentMethod[paymentMethod.length - 1].id,
             },
-            body: {
-              teamPlanType: selectedPlan.id,
-              teamId: data.id,
-            },
+            body: { teamPlanType: selectedPlan.id, teamId: data.id },
           });
 
           // Info: (20250326 - Julian) 升級訂閱方案失敗：顯示錯誤訊息
@@ -338,9 +331,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
         toastHandler({
           id: 'create-team-fail',
           type: ToastType.ERROR,
-          content: t('team:CREATE_TEAM_MODAL.TOAST_CREATE_FAILED', {
-            error: error?.message,
-          }),
+          content: t('team:CREATE_TEAM_MODAL.TOAST_CREATE_FAILED', { error: error?.message }),
           closeable: true,
         });
       }
@@ -552,7 +543,7 @@ const CreateTeamModal: React.FC<ICreateTeamModalProps> = ({ modalVisibilityHandl
           value={teamNameInput}
           onChange={(e) => setTeamNameInput(e.target.value)}
           onKeyDown={nameKeyDown}
-          className="rounded-sm border border-input-stroke-input px-12px py-10px placeholder:text-input-text-input-placeholder"
+          className="rounded-sm border border-input-stroke-input px-12px py-10px outline-none placeholder:text-input-text-input-placeholder"
           placeholder={t('team:CREATE_TEAM_MODAL.TEAM_NAME')}
         />
       </div>

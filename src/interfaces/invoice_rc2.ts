@@ -50,7 +50,7 @@ export interface IInvoiceRC2Base {
 
   totalOfSummarizedInvoices?: string;
   carrierSerialNumber?: string;
-  otherCertificateNo?: string;
+  otherInvoiceNo?: string;
 
   uploaderName: string;
   voucherNo: string | null;

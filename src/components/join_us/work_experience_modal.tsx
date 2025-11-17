@@ -28,7 +28,7 @@ const WorkExperienceModal: React.FC<IWorkExperienceModalProps> = ({
   const initialData = tempWorkList.find((work) => work.id === editId);
   const isEditMode = editId !== null;
 
-  const inputStyle = `${haloStyle} rounded-full h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
+  const inputStyle = `${haloStyle} rounded-full outline-none h-60px w-full px-24px placeholder:text-landing-page-gray placeholder:opacity-50 focus:border-surface-brand-primary`;
 
   const {
     companyName: initialCompanyName,

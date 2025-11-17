@@ -27,7 +27,7 @@ import SelectionToolbar, {
 import OutputInvoice from '@/components/invoice/output_invoice';
 import OutputInvoiceEditModal from '@/components/invoice/output_invoice_edit_modal';
 import { ISUNFA_ROUTE } from '@/constants/url';
-import CertificateFileUpload from '@/components/certificate/certificate_file_upload';
+import InvoiceFileUpload from '@/components/certificate/certificate_file_upload';
 import { getPusherInstance } from '@/lib/utils/pusher_client';
 import { INVOICE_EVENT, PRIVATE_CHANNEL } from '@/constants/pusher';
 import { CurrencyType } from '@/constants/currency';
@@ -52,13 +52,13 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   const accountBookId = connectedAccountBook?.id;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
-  const { trigger: updateCertificateAPI } = APIHandler<IInvoiceRC2Output>(
+  const { trigger: updateInvoiceAPI } = APIHandler<IInvoiceRC2Output>(
     APIName.UPDATE_INVOICE_RC2_OUTPUT
   );
-  const { trigger: createCertificateAPI } = APIHandler<IInvoiceRC2Output>(
+  const { trigger: createInvoiceAPI } = APIHandler<IInvoiceRC2Output>(
     APIName.CREATE_INVOICE_RC2_OUTPUT
   );
-  const { trigger: deleteCertificatesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
+  const { trigger: deleteInvoicesAPI } = APIHandler<{ success: boolean; deletedIds: number[] }>(
     APIName.DELETE_INVOICE_RC2_OUTPUT
   ); // Info: (20241128 - Murky) @Anna 這邊會回傳成功被刪掉的certificate
 
@@ -75,10 +75,10 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   } = useOuterClick<HTMLDivElement>(false);
 
   const [activeTab, setActiveTab] = useState<InvoiceTab>(InvoiceTab.WITHOUT_VOUCHER);
-  const [certificates, setCertificates] = useState<IInvoiceRC2OutputUI[]>([]);
-  const [selectedCertificates, setSelectedCertificates] = useState<IInvoiceRC2OutputUI[]>([]);
+  const [certificates, setInvoices] = useState<IInvoiceRC2OutputUI[]>([]);
+  const [selectedInvoices, setSelectedInvoices] = useState<IInvoiceRC2OutputUI[]>([]);
 
-  const [totalCertificatePrice, setTotalCertificatePrice] = useState<string>('0');
+  const [totalInvoicePrice, setTotalInvoicePrice] = useState<string>('0');
   const [count, setCount] = useState<{
     withVoucher: number;
     withoutVoucher: number;
@@ -94,8 +94,8 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   const [dateSort, setDateSort] = useState<null | SortOrder>(null);
   const [amountSort, setAmountSort] = useState<null | SortOrder>(null);
   const [voucherSort, setVoucherSort] = useState<null | SortOrder>(null);
-  const [certificateNoSort, setCertificateNoSort] = useState<null | SortOrder>(null);
-  const [certificateTypeSort, setCertificateTypeSort] = useState<null | SortOrder>(null);
+  const [certificateNoSort, setInvoiceNoSort] = useState<null | SortOrder>(null);
+  const [certificateTypeSort, setInvoiceTypeSort] = useState<null | SortOrder>(null);
   const [selectedSort, setSelectedSort] = useState<ISortOption | undefined>();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -107,7 +107,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   const [uploaderAvatarMap, setUploaderAvatarMap] = useState<Record<string, string>>({});
 
   // Info: (20250415 - Anna) 用 useMemo 依賴 editingId 和 certificates，當 setEditingId(...)，React 重新算出新的 certificate 並傳給 modal
-  const currentEditingCertificate = useMemo(() => {
+  const currentEditingInvoice = useMemo(() => {
     return editingId ? certificates.find((certificate) => certificate.id === editingId) : undefined;
   }, [editingId, certificates]);
 
@@ -146,7 +146,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     router.push({
       pathname: ISUNFA_ROUTE.ADD_NEW_VOUCHER,
     });
-  }, [selectedCertificates]);
+  }, [selectedInvoices]);
 
   const [addOperations, setAddOperations] = useState<ISelectionToolBarOperation[]>([
     {
@@ -236,7 +236,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
         };
         // Info: (20250616 - Anna) 因為後端回傳的欄位名稱為 "_sum"，需暫時忽略 ESLint 的 no-underscore-dangle 規則
         // eslint-disable-next-line no-underscore-dangle
-        setTotalCertificatePrice(note.totalPrice?._sum?.totalAmount || '0');
+        setTotalInvoicePrice(note.totalPrice?._sum?.totalAmount || '0');
         setCount(note.count);
         setTotalPages(Math.ceil(resData.totalCount / DEFAULT_PAGE_LIMIT));
         setTotalCount(resData.totalCount);
@@ -255,7 +255,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
               : [CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD],
         }));
 
-        setCertificates(certificateData);
+        setInvoices(certificateData);
       } catch (error) {
         (error as Error).message += ' (from handleApiResponse)';
         toastHandler({
@@ -277,16 +277,16 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
 
       const selectedData = isSelected
         ? Array.from(
-            new Set([...selectedCertificates, ...certificates.filter((c) => ids.includes(c.id))])
+            new Set([...selectedInvoices, ...certificates.filter((c) => ids.includes(c.id))])
           )
-        : selectedCertificates.filter((c) => !ids.includes(c.id));
+        : selectedInvoices.filter((c) => !ids.includes(c.id));
 
-      localStorage.setItem('selectedCertificates', JSON.stringify(selectedData));
-      setCertificates(updatedData);
-      setSelectedCertificates(selectedData);
+      localStorage.setItem('selectedInvoices', JSON.stringify(selectedData));
+      setInvoices(updatedData);
+      setSelectedInvoices(selectedData);
       setIsSelectedAll(updatedData.every((cert) => cert.isSelected));
     },
-    [certificates, selectedCertificates]
+    [certificates, selectedInvoices]
   );
 
   // Info: (20240920 - Anna) 全選操作
@@ -302,19 +302,17 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     handleSelect(ids, !isSelectedAll);
   }, [certificates, activeTab, isSelectedAll]);
 
-  const deleteSelectedCertificates = useCallback(
+  const deleteSelectedInvoices = useCallback(
     async (selectedIds: number[]) => {
       try {
-        const { success, data } = await deleteCertificatesAPI({
+        const { success, data } = await deleteInvoicesAPI({
           params: { accountBookId },
           body: { invoiceIds: selectedIds },
         });
 
         if (success && data?.success && data.deletedIds) {
-          setCertificates((prev) => prev.filter((cert) => !data.deletedIds.includes(cert.id)));
-          setSelectedCertificates((prev) =>
-            prev.filter((cert) => !data.deletedIds.includes(cert.id))
-          );
+          setInvoices((prev) => prev.filter((cert) => !data.deletedIds.includes(cert.id)));
+          setSelectedInvoices((prev) => prev.filter((cert) => !data.deletedIds.includes(cert.id)));
 
           toastHandler({
             id: ToastId.DELETE_CERTIFICATE_SUCCESS,
@@ -324,7 +322,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
           });
         } else throw new Error(t('certificate:DELETE.ERROR'));
       } catch (error) {
-        (error as Error).message += ' (from deleteSelectedCertificates)';
+        (error as Error).message += ' (from deleteSelectedInvoices)';
         toastHandler({
           id: ToastId.DELETE_CERTIFICATE_ERROR,
           type: ToastType.ERROR,
@@ -345,7 +343,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          await deleteSelectedCertificates([selectedId]);
+          await deleteSelectedInvoices([selectedId]);
           setIsEditModalOpen(false); // Info: (20250604 - Anna) 關閉編輯 Modal
         },
         backBtnStr: t('certificate:DELETE.NO'),
@@ -358,7 +356,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
   const handleDeleteSelectedItems = useCallback(() => {
     setActiveSelection(false);
 
-    const selectedIds = selectedCertificates.map((c) => c.id);
+    const selectedIds = selectedInvoices.map((c) => c.id);
 
     if (selectedIds.length > 0) {
       messageModalDataHandler({
@@ -367,14 +365,14 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
         messageType: MessageType.WARNING,
         submitBtnStr: t('certificate:DELETE.YES'),
         submitBtnFunction: async () => {
-          await deleteSelectedCertificates(selectedIds);
+          await deleteSelectedInvoices(selectedIds);
         },
         backBtnStr: t('certificate:DELETE.NO'),
       });
 
       messageModalVisibilityHandler();
     }
-  }, [selectedCertificates]);
+  }, [selectedInvoices]);
 
   const onTabClick = useCallback(
     (tab: string) => {
@@ -407,7 +405,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
 
   const onUpdateFilename = useCallback(
     (id: number, filename: string) => {
-      setCertificates((prev) =>
+      setInvoices((prev) =>
         prev.map((cert) => {
           return cert.id === id
             ? {
@@ -426,27 +424,27 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     async (certificate: Partial<IInvoiceRC2Output>) => {
       try {
         const postOrPutAPI = certificate.id
-          ? updateCertificateAPI({
+          ? updateInvoiceAPI({
               params: {
                 accountBookId,
                 invoiceId: certificate.id,
               },
               body: certificate,
             })
-          : createCertificateAPI({
+          : createInvoiceAPI({
               params: { accountBookId, invoiceId: certificate.id },
               body: certificate,
             });
 
-        const { success, data: updatedCertificate } = await postOrPutAPI;
+        const { success, data: updatedInvoice } = await postOrPutAPI;
 
-        if (success && updatedCertificate) {
+        if (success && updatedInvoice) {
           let updatedData: IInvoiceRC2OutputUI[] = [];
-          setCertificates((prev) => {
+          setInvoices((prev) => {
             updatedData = [...prev];
-            const index = updatedData.findIndex((d) => d.id === updatedCertificate.id);
+            const index = updatedData.findIndex((d) => d.id === updatedInvoice.id);
             updatedData[index] = {
-              ...updatedCertificate,
+              ...updatedInvoice,
               isSelected: false,
               actions: [
                 CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
@@ -475,12 +473,12 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     [certificates, accountBookId]
   );
 
-  const handleNewCertificateComing = useCallback(async (newCertificate: IInvoiceRC2Output) => {
-    setCertificates((prev) => [
+  const handleNewInvoiceComing = useCallback(async (newInvoice: IInvoiceRC2Output) => {
+    setInvoices((prev) => [
       {
-        ...newCertificate,
+        ...newInvoice,
         isSelected: false,
-        actions: !newCertificate.voucherNo
+        actions: !newInvoice.voucherNo
           ? [
               CERTIFICATE_USER_INTERACT_OPERATION.DOWNLOAD,
               CERTIFICATE_USER_INTERACT_OPERATION.REMOVE,
@@ -491,16 +489,16 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     ]);
   }, []);
 
-  const parseCertificateCreateEventMessage = useCallback(
+  const parseInvoiceCreateEventMessage = useCallback(
     (data: { message: string }) => {
-      const newCertificate: IInvoiceRC2Output = JSON.parse(data.message);
-      handleNewCertificateComing(newCertificate);
+      const newInvoice: IInvoiceRC2Output = JSON.parse(data.message);
+      handleNewInvoiceComing(newInvoice);
       setCount((prev) => ({
         ...prev,
         withoutVoucher: prev.withoutVoucher + 1,
       }));
     },
-    [handleNewCertificateComing]
+    [handleNewInvoiceComing]
   );
 
   useEffect(() => {
@@ -523,11 +521,11 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
     if (!accountBookId) return () => {};
     const pusher = getPusherInstance(userAuth?.id);
     const channel = pusher.subscribe(`${PRIVATE_CHANNEL.INVOICE}-${accountBookId}`);
-    channel.bind(INVOICE_EVENT.CREATE, parseCertificateCreateEventMessage);
+    channel.bind(INVOICE_EVENT.CREATE, parseInvoiceCreateEventMessage);
 
     return () => {
       if (channel) {
-        channel.unbind(INVOICE_EVENT.CREATE, parseCertificateCreateEventMessage);
+        channel.unbind(INVOICE_EVENT.CREATE, parseInvoiceCreateEventMessage);
         channel.unsubscribe();
       }
       pusher.unsubscribe(`${PRIVATE_CHANNEL.INVOICE}-${accountBookId}`);
@@ -577,7 +575,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
           isOpen={isEditModalOpen}
           toggleModel={() => setIsEditModalOpen((prev) => !prev)}
           currencyAlias={currency}
-          certificate={currentEditingCertificate}
+          certificate={currentEditingInvoice}
           onUpdateFilename={onUpdateFilename}
           onSave={handleEditItem}
           onDelete={handleDeleteItem}
@@ -592,7 +590,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
         className={`flex grow flex-col gap-4 ${Object.values(certificates) && Object.values(certificates).length > 0 ? 'hide-scrollbar overflow-scroll' : ''} `}
       >
         {/* Info: (20240919 - Anna) Upload Area */}
-        <CertificateFileUpload
+        <InvoiceFileUpload
           isDisabled={false}
           setFiles={setFiles}
           direction={InvoiceDirection.OUTPUT}
@@ -635,7 +633,7 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
           toggleSideMenu={toggleSideMenu}
         />
 
-        {/* Info: (20240919 - Anna) Certificate Table */}
+        {/* Info: (20240919 - Anna) Invoice Table */}
         {Object.values(certificates) && Object.values(certificates).length > 0 ? (
           <>
             <SelectionToolbar
@@ -645,9 +643,9 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
               onActiveChange={setActiveSelection}
               items={Object.values(certificates)}
               subtitle={`${t('certificate:LIST.OUTPUT_TOTAL_PRICE')}:`}
-              totalPrice={totalCertificatePrice}
+              totalPrice={totalInvoicePrice}
               currency={currency}
-              selectedCount={Object.values(selectedCertificates).length}
+              selectedCount={Object.values(selectedInvoices).length}
               totalCount={Object.values(certificates).length || 0}
               handleSelect={handleSelect}
               handleSelectAll={handleSelectAll}
@@ -680,8 +678,8 @@ const OutputInvoiceListBody: React.FC<EmptyObject> = () => {
                 setDateSort={setDateSort}
                 setAmountSort={setAmountSort}
                 setVoucherSort={setVoucherSort}
-                setCertificateNoSort={setCertificateNoSort}
-                setCertificateTypeSort={setCertificateTypeSort}
+                setInvoiceNoSort={setInvoiceNoSort}
+                setInvoiceTypeSort={setInvoiceTypeSort}
                 isExporting={isExporting}
                 uploaderAvatarMap={uploaderAvatarMap}
               />

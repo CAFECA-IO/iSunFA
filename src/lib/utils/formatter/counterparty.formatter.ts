@@ -4,6 +4,7 @@ import { ICounterPartyEntity, ICounterPartyEntityPartial } from '@/interfaces/co
 import { FormatterError } from '@/lib/utils/error/formatter_error';
 import {
   counterPartyEntityValidator,
+  CounterpartyType,
   partialCounterPartyEntityValidator,
 } from '@/constants/counterparty';
 
@@ -14,8 +15,19 @@ import {
 export function parsePrismaCounterPartyToCounterPartyEntity(
   dto: PrismaCounterParty
 ): ICounterPartyEntity {
+  const entity = {
+    id: dto.id,
+    companyId: dto.accountBookId,
+    name: dto.name,
+    taxId: dto.taxId,
+    type: dto.type as CounterpartyType,
+    note: dto.note,
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    deletedAt: dto.deletedAt,
+  };
   // ToDo: (20241023 - Murky) Need to move to other place
-  const { data, success, error } = counterPartyEntityValidator.safeParse(dto);
+  const { data, success, error } = counterPartyEntityValidator.safeParse(entity);
 
   if (!success) {
     throw new FormatterError('CounterPartyEntity format prisma data error', {

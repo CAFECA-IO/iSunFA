@@ -17,6 +17,45 @@ export const TEAM_PENDING_DECISIONS = {
   ACCOUNT_BOOK_TRANSFER_BETWEEN_PAID_PLANS: false, // Info: (20250311 - Tzuhan) ❌ 付費版帳本轉移問題（待決議）
 };
 
+export const ACTION_BLOCKED_BY_TRIAL_PAYWALL: TeamPermissionAction[] = [
+  TeamPermissionAction.INVITE_MEMBER,
+  TeamPermissionAction.DELETE_TEAM,
+  TeamPermissionAction.MODIFY_NAME,
+  TeamPermissionAction.MODIFY_IMAGE,
+  TeamPermissionAction.MODIFY_ABOUT,
+  TeamPermissionAction.MODIFY_PROFILE,
+  TeamPermissionAction.MODIFY_BANK_ACCOUNT,
+
+  TeamPermissionAction.CREATE_ACCOUNT_BOOK,
+  TeamPermissionAction.DELETE_ACCOUNT_BOOK,
+  TeamPermissionAction.MODIFY_ACCOUNT_BOOK,
+  TeamPermissionAction.MODIFY_TAG,
+  TeamPermissionAction.MODIFY_PRIVACY,
+  TeamPermissionAction.CREATE_PRIVATE_ACCOUNT_BOOK,
+
+  TeamPermissionAction.REQUEST_ACCOUNT_BOOK_TRANSFER,
+  TeamPermissionAction.CANCEL_ACCOUNT_BOOK_TRANSFER,
+  TeamPermissionAction.ACCEPT_ACCOUNT_BOOK_TRANSFER,
+  TeamPermissionAction.DECLINE_ACCOUNT_BOOK_TRANSFER,
+
+  TeamPermissionAction.BOOKKEEPING,
+  TeamPermissionAction.ACCOUNTING_SETTING_CREATE,
+  TeamPermissionAction.ACCOUNTING_SETTING_UPDATE,
+  TeamPermissionAction.ACCOUNTING_SETTING_DELETE,
+  TeamPermissionAction.EXPORT_TRIAL_BALANCE,
+  TeamPermissionAction.EXPORT_LEDGER,
+  TeamPermissionAction.CREATE_ASSET,
+  TeamPermissionAction.UPDATE_ASSET,
+  TeamPermissionAction.DELETE_ASSET,
+  TeamPermissionAction.EXPORT_ASSET,
+
+  TeamPermissionAction.CREATE_VOUCHER,
+  TeamPermissionAction.MODIFY_VOUCHER,
+  TeamPermissionAction.DELETE_VOUCHER,
+  TeamPermissionAction.RESTORE_VOUCHER,
+  TeamPermissionAction.CHANGE_TEAM_ROLE,
+];
+
 // Info: (20250313 - Tzuhan) ✅ 把所有權限統一管理在一個 `ALL_PERMISSIONS` 物件
 export const ALL_PERMISSIONS: Record<TeamPermissionAction, TeamRole[]> = {
   // Info: (20250313 - Tzuhan) 團隊操作權限

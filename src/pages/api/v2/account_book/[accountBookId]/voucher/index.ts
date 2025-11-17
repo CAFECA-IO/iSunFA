@@ -55,10 +55,7 @@ export const buildVoucherBeta = (
     counterParty: getUtils.initCounterPartyEntity(voucher),
     issuer: getUtils.initIssuerAndFileEntity(voucher),
     lineItems,
-    sum: {
-      debit: false,
-      amount: lineItemSum ?? '0',
-    },
+    sum: { debit: false, amount: lineItemSum ?? '0' },
     payableInfo: {
       total: payableInfo?.total ?? '0',
       alreadyHappened: payableInfo?.alreadyHappened ?? '0',
@@ -151,12 +148,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 
     const voucherBetas = data.map(buildVoucherBeta);
     const note = {
-      incomplete: {
-        uploadedVoucher: 0,
-        upcomingEvents: 0,
-        paymentVoucher: 0,
-        receivingVoucher: 0,
-      },
+      incomplete: { uploadedVoucher: 0, upcomingEvents: 0, paymentVoucher: 0, receivingVoucher: 0 },
     };
 
     const paginatedVoucher: IVoucherGetOutput = toPaginatedData({
@@ -234,11 +226,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
       ...voucherInfo
     } = body;
 
-    const eventControlPanel = {
-      revertEvent: null,
-      recurringEvent: null,
-      assetEvent: null,
-    } as {
+    const eventControlPanel = { revertEvent: null, recurringEvent: null, assetEvent: null } as {
       revertEvent: IEventEntity | null;
       recurringEvent: IEventEntity | null;
       assetEvent: IEventEntity | null;

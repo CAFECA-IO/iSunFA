@@ -6,7 +6,7 @@ import Head from 'next/head';
 import InputInvoiceListBody from '@/components/invoice/input_invoice_list_body';
 import Layout from '@/components/beta/layout/layout';
 
-const CertificateListPage: React.FC = () => {
+const InputInvoiceListPage: React.FC = () => {
   const { t } = useTranslation('certificate');
 
   return (
@@ -44,4 +44,4 @@ export const getServerSideProps = async ({ locale }: ILocale) => {
   };
 };
 
-export default CertificateListPage;
+export default InputInvoiceListPage;

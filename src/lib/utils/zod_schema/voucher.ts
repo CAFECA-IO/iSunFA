@@ -468,7 +468,7 @@ export const InvoiceRC2WithFullRelationsValidator = z.object({
 
   totalOfSummarizedInvoices: z.string().nullable().optional(),
   carrierSerialNumber: z.string().nullable().optional(),
-  otherCertificateNo: z.string().nullable().optional(),
+  otherInvoiceNo: z.string().nullable().optional(),
 });
 
 const voucherGetOneOutputValidatorV2 = z
@@ -511,16 +511,16 @@ const voucherGetOneOutputValidatorV2 = z
     ),
     payableInfo: z
       .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
+        total: z.string(),
+        alreadyHappened: z.string(),
+        remain: z.string(),
       })
       .optional(),
     receivingInfo: z
       .object({
-        total: z.number(),
-        alreadyHappened: z.number(),
-        remain: z.number(),
+        total: z.string(),
+        alreadyHappened: z.string(),
+        remain: z.string(),
       })
       .optional(),
     isReverseRelated: z.boolean().optional(),
@@ -740,7 +740,7 @@ const voucherGetOneOutputValidatorV2 = z
 
           totalOfSummarizedInvoices: (invoice.totalOfSummarizedInvoices ?? 0).toString(),
           carrierSerialNumber: invoice.carrierSerialNumber ?? undefined,
-          otherCertificateNo: invoice.otherCertificateNo ?? undefined,
+          otherInvoiceNo: invoice.otherInvoiceNo ?? undefined,
 
           voucherNo: invoice.voucher?.no ?? null,
         };

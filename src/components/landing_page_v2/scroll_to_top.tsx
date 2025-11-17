@@ -33,7 +33,7 @@ const ScrollToTopButton: React.FC = () => {
       onClick={scrollToTop}
       variant="primary"
       size="square"
-      className={`fixed bottom-6 right-8 z-50 rounded-sm text-center font-bold transition ${
+      className={`fixed bottom-24 right-6 z-50 rounded-sm text-center font-bold transition ${
         isVisible ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}
     >

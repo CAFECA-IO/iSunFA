@@ -414,6 +414,7 @@ export const listTeamMemberByTeamId = async (
   queryParams: z.infer<typeof paginatedDataQuerySchema>
 ): Promise<IPaginatedData<ITeamMember[]>> => {
   const { effectiveRole } = await assertUserIsTeamMember(userId, teamId);
+
   if (!effectiveRole) {
     const error = new Error(STATUS_MESSAGE.PERMISSION_DENIED);
     error.name = STATUS_CODE.PERMISSION_DENIED;

@@ -8,6 +8,9 @@ import EmployeeListModal from '@/components/salary_calculator/employee_list_moda
 import ToggleSwitch from '@/components/salary_calculator/toggle_switch';
 import { useCalculatorCtx } from '@/contexts/calculator_context';
 import { useUserCtx } from '@/contexts/user_context';
+import { radioButtonStyle } from '@/constants/display';
+import { EmploymentType, TaxResidencyStatus } from '@/interfaces/calculator';
+import { INDUSTRY_CATEGORY_OPTIONS } from '@/constants/industry_category';
 
 const BasicInfoForm: React.FC = () => {
   const { t } = useTranslation(['calculator', 'date_picker']);
@@ -19,6 +22,12 @@ const BasicInfoForm: React.FC = () => {
     monthOptions,
     employeeName,
     changeEmployeeName,
+    employmentType,
+    changeEmploymentType,
+    taxResidencyStatus,
+    changeTaxResidencyStatus,
+    industryCategory,
+    changeIndustryCategory,
     employeeNumber,
     changeEmployeeNumber,
     selectedYear,
@@ -39,6 +48,12 @@ const BasicInfoForm: React.FC = () => {
     changeLeavingDay,
   } = useCalculatorCtx();
   const { isSignIn } = useUserCtx();
+
+  const {
+    targetRef: industryDropdownRef,
+    componentVisible: isIndustryOpen,
+    setComponentVisible: setIsIndustryOpen,
+  } = useOuterClick<HTMLDivElement>(false);
 
   const {
     targetRef: yearDropdownRef,
@@ -87,6 +102,7 @@ const BasicInfoForm: React.FC = () => {
   // Info: (20250711 - Julian) 員工列表開關
   const toggleEmployeeListModal = () => setIsShowEmployeeListModal((prev) => !prev);
   // Info: (20250709 - Julian) 下拉選單開關
+  const toggleIndustryDropdown = () => setIsIndustryOpen((prev) => !prev);
   const toggleYearDropdown = () => setIsYearOpen((prev) => !prev);
   const toggleMonthDropdown = () => setIsMonthOpen((prev) => !prev);
   const togglePayrollDropdown = () => setIsPayrollOpen((prev) => !prev);
@@ -100,6 +116,71 @@ const BasicInfoForm: React.FC = () => {
   const handleEmployeeNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     changeEmployeeNumber(e.target.value);
   };
+
+  const employmentRadioBtn = Object.keys(EmploymentType).map((type) => {
+    const isChecked = employmentType === EmploymentType[type as keyof typeof EmploymentType];
+    const str = t(`calculator:BASIC_INFO_FORM.${type.toUpperCase()}`);
+    const changeType = () =>
+      changeEmploymentType(EmploymentType[type as keyof typeof EmploymentType]);
+
+    return (
+      <label
+        key={`radio-${type}`}
+        htmlFor={`radio-${type}`}
+        className="flex h-44px items-center gap-8px"
+      >
+        <input
+          id={`radio-${type}`}
+          name="radio-employment-type"
+          type="radio"
+          checked={isChecked}
+          onChange={changeType}
+          className={radioButtonStyle}
+        />
+        <p className="text-sm font-normal text-checkbox-text-primary">{str}</p>
+      </label>
+    );
+  });
+
+  const taxResidencyRadioBtn = Object.keys(TaxResidencyStatus).map((type) => {
+    const isChecked =
+      taxResidencyStatus === TaxResidencyStatus[type as keyof typeof TaxResidencyStatus];
+    const str = t(`calculator:BASIC_INFO_FORM.RESIDENCY_OPTION_${type.toUpperCase()}`);
+    const changeType = () =>
+      changeTaxResidencyStatus(TaxResidencyStatus[type as keyof typeof TaxResidencyStatus]);
+
+    return (
+      <label
+        key={`radio-${type}`}
+        htmlFor={`radio-${type}`}
+        className="flex h-44px items-center gap-8px"
+      >
+        <input
+          id={`radio-${type}`}
+          name="radio-tax-residency-status"
+          type="radio"
+          checked={isChecked}
+          onChange={changeType}
+          className={radioButtonStyle}
+        />
+        <p className="text-sm font-normal text-checkbox-text-primary">{str}</p>
+      </label>
+    );
+  });
+
+  const industryDropdown = INDUSTRY_CATEGORY_OPTIONS.map((category) => {
+    const clickHandler = () => changeIndustryCategory(category);
+    return (
+      <button
+        key={category.CODE}
+        type="button"
+        onClick={clickHandler}
+        className="px-12px py-10px text-left text-base font-medium text-input-text-input-filled hover:bg-input-surface-input-hover"
+      >
+        {category.CODE} - {category.INDUSTRY}
+      </button>
+    );
+  });
 
   const yearDropdown = yearOptions.map((year) => {
     const clickHandler = () => changeSelectedYear(year);
@@ -189,7 +270,7 @@ const BasicInfoForm: React.FC = () => {
       {/* Info: (20250711 - Julian) 員工基本資料表單 */}
       <form className="grid grid-cols-2 gap-24px">
         {/* Info: (20250708 - Julian) 員工姓名 */}
-        <div className="col-span-2 flex flex-col gap-8px">
+        <div className="flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
             {t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME')}
             <span className="text-text-state-error">*</span>
@@ -206,7 +287,7 @@ const BasicInfoForm: React.FC = () => {
               id="input-employee-name"
               name="input-employee-name"
               type="text"
-              className={`flex-1 bg-transparent px-12px py-10px text-base font-medium ${isNameError ? 'placeholder:text-input-text-error' : 'placeholder:text-input-text-input-placeholder'}`}
+              className={`flex-1 bg-transparent px-12px py-10px text-base font-medium outline-none ${isNameError ? 'placeholder:text-input-text-error' : 'placeholder:text-input-text-input-placeholder'}`}
               placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NAME_PLACEHOLDER')}
               value={employeeName}
               onChange={handleEmployeeNameChange}
@@ -228,6 +309,9 @@ const BasicInfoForm: React.FC = () => {
           </div>
         </div>
 
+        {/* Info: (20251112 - Julian) 就業類型 */}
+        <div className="flex items-end gap-36px">{employmentRadioBtn}</div>
+
         {/* Info: (20250708 - Julian) 員工編號 */}
         <div className="col-span-2 flex flex-col gap-8px">
           <p className="text-sm font-semibold text-input-text-primary">
@@ -238,11 +322,45 @@ const BasicInfoForm: React.FC = () => {
               id="input-employee-number"
               name="input-employee-number"
               type="text"
-              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled placeholder:text-input-text-input-placeholder"
+              className="flex-1 bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
               placeholder={t('calculator:BASIC_INFO_FORM.EMPLOYEE_NUMBER_PLACEHOLDER')}
               value={employeeNumber}
               onChange={handleEmployeeNumberChange}
             />
+          </div>
+        </div>
+
+        {/* Info: (20251112 - Julian) 稅務居住狀態 */}
+        <div className="col-span-2 flex flex-col gap-8px">
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('calculator:BASIC_INFO_FORM.TAX_RESIDENCY_STATUS')}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <div className="flex items-end gap-36px">{taxResidencyRadioBtn}</div>
+        </div>
+
+        {/* Info: (20251112 - Julian) 行業別 */}
+        <div className="col-span-2 flex flex-col gap-8px">
+          <p className="text-sm font-semibold text-input-text-primary">
+            {t('calculator:BASIC_INFO_FORM.INDUSTRY_CATEGORY')}{' '}
+            <span className="text-text-state-error">*</span>
+          </p>
+          <div
+            ref={industryDropdownRef}
+            onClick={toggleIndustryDropdown}
+            className="relative flex h-44px items-center rounded-sm border border-input-stroke-input bg-input-surface-input-background hover:cursor-pointer"
+          >
+            <div className="flex-1 truncate bg-transparent px-12px py-10px text-base font-medium text-input-text-input-filled">
+              {industryCategory.CODE} - {industryCategory.INDUSTRY}
+            </div>
+            <div className="px-12px py-10px">
+              <FaChevronDown size={16} />
+            </div>
+            {isIndustryOpen && (
+              <div className="absolute top-50px z-10 flex max-h-200px w-full flex-col overflow-y-auto rounded-sm border border-input-stroke-input bg-input-surface-input-background shadow-Dropshadow_XS">
+                {industryDropdown}
+              </div>
+            )}
           </div>
         </div>
 
@@ -388,7 +506,6 @@ const BasicInfoForm: React.FC = () => {
           )}
         </div>
       </form>
-
       {/* Info: (20250711 - Julian) 員工列表 Modal */}
       {isShowEmployeeListModal && (
         <EmployeeListModal modalVisibleHandler={toggleEmployeeListModal} />
