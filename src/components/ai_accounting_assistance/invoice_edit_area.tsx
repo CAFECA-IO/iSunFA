@@ -19,6 +19,8 @@ enum InvoiceEditTab {
 }
 
 const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceData }) => {
+  const { id, imageUrl, taxInfo, voucherInfo } = invoiceData;
+
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
@@ -42,9 +44,9 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
 
   const tabContent =
     invoiceEditTab === InvoiceEditTab.TAX_INFO ? (
-      <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
+      <InvoiceEditTaxInfoTab data={taxInfo} />
     ) : (
-      <InvoiceEditVoucherTab lineItems={invoiceData.voucherInfo.lineItemsInfo} />
+      <InvoiceEditVoucherTab lineItems={voucherInfo.lineItemsInfo} />
     );
 
   return (
@@ -56,17 +58,16 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
         <button type="button" className="p-10px text-button-text-secondary" onClick={toggle}>
           <RxCross2 size={20} />
         </button>
-        <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">
-          AB-12345678
-        </p>
+        <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">{id}</p>
       </div>
 
       {/* Info: (20251117 - Julian) Image Zoom In */}
       <div>
         <ImageZoom
-          imageUrl={'/elements/auditing_tool_1.png'}
+          imageUrl={imageUrl}
           className="h-450px w-full"
           controlPosition="bottom-right"
+          isControlBackground
         />
       </div>
 
