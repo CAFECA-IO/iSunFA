@@ -528,6 +528,7 @@ module.exports = {
         'chat-bubbles-text-note': 'var(--chat-bubbles-text-note)',
         'chat-bubbles-text-primary': 'var(--chat-bubbles-text-primary)',
         'chat-bubbles-text-solid--dark': 'var(--chat-bubbles-text-solid--dark)',
+        'chat-bubbles-text-brand': 'var(--chat-bubbles-text-brand)',
         'checkbox-stroke-check-mark': 'var(--checkbox-stroke-check-mark)',
         'checkbox-stroke-disable': 'var(--checkbox-stroke-disable)',
         'checkbox-stroke-focus': 'var(--checkbox-stroke-focus)',

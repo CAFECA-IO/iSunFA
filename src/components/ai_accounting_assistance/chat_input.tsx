@@ -5,10 +5,16 @@ import { Button } from '@/components/button/button';
 
 const FOUR_LINE_HEIGHT_PX = 24 * 4;
 
-const ChatInput: React.FC = () => {
+interface IChatInputProps {
+  askQuestion: (question: string) => void;
+}
+
+const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [inputValue, setInputValue] = useState<string>('');
   const [isOverFourLines, setIsOverFourLines] = useState<boolean>(false);
+
+  const isNullValue = inputValue.trim() === '';
 
   const autoResize = () => {
     const el = textareaRef.current;
@@ -27,8 +33,11 @@ const ChatInput: React.FC = () => {
     autoResize();
   };
 
-  // ToDo: (20251114 - Julian) Send message logic here
   const sendMessage = () => {
+    // Info: (20251118 - Julian) 防止送出空訊息
+    if (isNullValue) return;
+
+    askQuestion(inputValue);
     setInputValue('');
 
     const el = textareaRef.current;
@@ -70,6 +79,7 @@ const ChatInput: React.FC = () => {
           size="defaultSquare"
           variant="tertiaryBorderless"
           onClick={sendMessage}
+          disabled={isNullValue}
         >
           <FiSend size={24} />
         </Button>

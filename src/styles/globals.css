@@ -443,6 +443,7 @@
     --chat-bubbles-text-note: var(--text-neutral-tertiary);
     --chat-bubbles-text-primary: var(--text-neutral-primary);
     --chat-bubbles-text-solid--dark: var(--text-neutral-solid-dark);
+    --chat-bubbles-text-brand: var(--text-brand-primary-lv1);
     --checkbox-stroke-check-mark: var(--stroke-neutral-invert);
     --checkbox-stroke-disable: var(--stroke-neutral-mute);
     --checkbox-stroke-focus: var(--stroke-brand-secondary-soft);
@@ -590,7 +591,7 @@
     --tabs-surface-active: var(--surface-brand-secondary-moderate);
     --tabs-surface-disable: var(--surface-neutral-mute);
     --tabs-surface-hover: var(--surface-brand-secondary-10);
-    --tabs-text-active: var(--text-brand-primary-lv2);
+    --tabs-text-active: var(--text-brand-primary-lv1);
     --tabs-text-default: var(--text-neutral-secondary);
     --tabs-text-disable: var(--text-neutral-mute);
     --tabs-text-hover: var(--text-brand-primary-lv3);
@@ -1270,7 +1271,8 @@ input[type='checkbox']:checked::before {
 /* // Info: (20240725 - Liz) 使用自定義樣式調整 toast container */
 
 .pricing-header {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       49.58% 61.81% at 50% 100%,
       rgba(255, 255, 255, 0.24) 0%,
       rgba(255, 255, 255, 0.12) 43%,
@@ -1293,7 +1295,8 @@ input[type='checkbox']:checked::before {
 
 .bg-pricing {
   backdrop-filter: blur(6px);
-  background-image: url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
+  background-image:
+    url('/elements/bg_pricing_top.png'), url('/elements/bg_pricing_middle.png'),
     url('/elements/bg_pricing_bottom.png');
   background-position:
     top center,
@@ -1341,7 +1344,8 @@ input[type='checkbox']:checked::before {
 }
 
 .bg-brand-gradient {
-  background: linear-gradient(
+  background:
+    linear-gradient(
       0deg,
       var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 0%,
       var(--surface-brand-primary-10, rgba(255, 165, 2, 0.1)) 100%
