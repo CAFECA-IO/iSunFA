@@ -32,7 +32,7 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
         .replaceAll(/<h1/g, '<h1 class="text-xl font-bold" ')
         // Info: (20251118 - Julian) ul 列表
         .replaceAll(/<ul/g, '<ul class="list-disc list-inside ml-8px" ')
-        //// Info: (20251118 - Julian) a 連結
+        // Info: (20251118 - Julian) a 連結
         .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ');
 
       setMessageText(styledMessage);
