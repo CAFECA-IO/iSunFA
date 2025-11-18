@@ -14,6 +14,8 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   const [inputValue, setInputValue] = useState<string>('');
   const [isOverFourLines, setIsOverFourLines] = useState<boolean>(false);
 
+  const isNullValue = inputValue.trim() === '';
+
   const autoResize = () => {
     const el = textareaRef.current;
     if (!el) return;
@@ -32,6 +34,9 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   };
 
   const sendMessage = () => {
+    // Info: (20251118 - Julian) 防止送出空訊息
+    if (isNullValue) return;
+
     askQuestion(inputValue);
     setInputValue('');
 
@@ -74,6 +79,7 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
           size="defaultSquare"
           variant="tertiaryBorderless"
           onClick={sendMessage}
+          disabled={isNullValue}
         >
           <FiSend size={24} />
         </Button>

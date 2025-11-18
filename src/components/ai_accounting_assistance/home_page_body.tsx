@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import AAALayout from '@/components/ai_accounting_assistance/layout';
 import { Button } from '@/components/button/button';
 import ChatInput from '@/components/ai_accounting_assistance/chat_input';
@@ -48,15 +49,32 @@ enum ChatRole {
   USER = 'user',
   ASSISTANT = 'assistant',
 }
+
+enum LoadingType {
+  LOADING = 'Loading...',
+  CALCULATING = 'Calculating the {{calculateEvent}}...',
+  IMPORTING = 'Importing to {{companyName}}',
+}
 interface IChatQueue {
   from: ChatRole;
   content: string;
 }
 
 const AAAHomePageBody: React.FC = () => {
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+
   const [newQueueItem, setNewQueueItem] = useState<IChatQueue | null>(null);
   const [chatQueues, setChatQueues] = useState<IChatQueue[]>([]);
   const [isAnsLoading, setIsAnsLoading] = useState<boolean>(false);
+  const [loadingType, setLoadingType] = useState<LoadingType>(LoadingType.LOADING);
+
+  useEffect(() => {
+    // Info: (20251118 - Julian) 只要收到新的 chatQueues，就自動滾動到最底部
+    const el = chatAreaRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [chatQueues]);
 
   useEffect(() => {
     // ToDo: (20251118 - Julian) sent question to backend and get answer
@@ -70,6 +88,7 @@ const AAAHomePageBody: React.FC = () => {
       from: ChatRole.ASSISTANT,
       content: TEST_ANSWER,
     };
+    setLoadingType(LoadingType.LOADING);
     setIsAnsLoading(true);
     setTimeout(() => {
       setChatQueues((prev) => [...prev, assistantQueueItem]);
@@ -92,6 +111,14 @@ const AAAHomePageBody: React.FC = () => {
   // Info: (20251118 - Julian) 判斷是否已開始聊天
   const isChatStarted = chatQueues.length > 0;
 
+  // Info: (20251118 - Julian) loading 狀態字串
+  const loadingStr = isAnsLoading && (
+    <div className="flex min-h-200px items-center gap-8px text-text-brand-primary-lv1">
+      <Image src="/animations/yellow_loading.gif" width={30} height={30} alt="loading" />
+      <p>{loadingType}</p>
+    </div>
+  );
+
   const chatMessages = chatQueues.map((chat) =>
     chat.from === ChatRole.USER ? (
       <QuestionBubble key={chat.content} questionContent={chat.content} />
@@ -101,9 +128,9 @@ const AAAHomePageBody: React.FC = () => {
   );
 
   const chatArea = isChatStarted ? (
-    <div className="mb-20px flex flex-1 flex-col gap-24px overflow-y-auto">
+    <div ref={chatAreaRef} className="mb-20px flex flex-1 flex-col gap-24px overflow-y-auto">
       {chatMessages}
-      {isAnsLoading && <div className="animate-pulse">Loading...</div>}
+      {loadingStr}
     </div>
   ) : (
     <ChatMain askQuestion={askQuestion} />
