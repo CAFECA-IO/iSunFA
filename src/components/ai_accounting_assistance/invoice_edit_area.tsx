@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { FiEdit } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
-import { TaxType } from '@/constants/invoice_rc2';
-import { numberWithCommas, timestampToString } from '@/lib/utils/common';
+import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
+import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
+import ImageZoom from '@/components/image_zoom/image_zoom';
+import { IInvoiceData } from '@/interfaces/invoice_edit_area';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
   toggle: () => void;
+  invoiceData: IInvoiceData;
 }
 
 enum InvoiceEditTab {
@@ -15,41 +18,10 @@ enum InvoiceEditTab {
   VOUCHER = 'Voucher',
 }
 
-interface IInvoiceDetail {
-  invoiceNo: string;
-  issueDate: number;
-  tradingPartner: {
-    name: string;
-    taxId: string;
-  };
-  taxType: TaxType;
-  taxRate: number;
-  salesAmount: number;
-  tax: number;
-}
+const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceData }) => {
+  const { id, imageUrl, taxInfo, voucherInfo } = invoiceData;
 
-const mockInvoiceDetail: IInvoiceDetail = {
-  invoiceNo: 'AB-12345678',
-  issueDate: 1762109170,
-  tradingPartner: {
-    name: 'XYZ Corporation',
-    taxId: '12345678',
-  },
-  taxType: TaxType.TAXABLE,
-  taxRate: 0.05,
-  salesAmount: 10000,
-  tax: 500,
-};
-
-const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) => {
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
-
-  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } =
-    mockInvoiceDetail;
-
-  const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
-
-  const formattedIssueDate = timestampToString(issueDate).date;
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
     const isActive = invoiceEditTab === tab;
@@ -70,116 +42,33 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) =>
     );
   });
 
-  const taxTypeStr =
-    taxType === TaxType.TAXABLE ? (
-      <p>
-        Taxable
-        <span className="text-input-text-primary"> {taxRate * 100}%</span>
-      </p>
+  const tabContent =
+    invoiceEditTab === InvoiceEditTab.TAX_INFO ? (
+      <InvoiceEditTaxInfoTab data={taxInfo} />
     ) : (
-      <p>Tax Free</p>
+      <InvoiceEditVoucherTab lineItems={voucherInfo.lineItemsInfo} />
     );
-
-  const taxInfoTab = (
-    <div className="flex flex-col gap-24px text-sm font-semibold text-text-neutral-tertiary">
-      <div className="flex items-center justify-between">
-        <p>Invoice No.</p>
-        <p>{invoiceNo}</p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Issue Date</p>
-        <p>{formattedIssueDate}</p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Trading Partner</p>
-        <p>
-          {tradingPartner.taxId}{' '}
-          <span className="text-input-text-primary">{tradingPartner.name}</span>
-        </p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Tax Type</p>
-        {taxTypeStr}
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Sales Amount</p>
-        <p>
-          <span className="text-input-text-primary">{numberWithCommas(salesAmount)}</span> TWD
-        </p>
-      </div>
-      {/* ToDo: (20251114 - Julian) AI Modify Style for testing, will remove later */}
-      <div className="flex items-center justify-between">
-        <p className={aiModifyStyle}>Tax</p>
-        <p>
-          <span className={aiModifyStyle}>{numberWithCommas(tax)}</span> TWD
-        </p>
-      </div>
-    </div>
-  );
-
-  // ToDo: (20251114 - Julian) During development
-  const voucherTab = (
-    <div className="flex flex-col gap-8px">
-      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
-        Currency: TWD
-      </p>
-      <div className="table overflow-hidden rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">
-        {/* Info: (20251114 - Julian) Table Header */}
-        <div className="table-header-group text-center text-xs font-medium text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Particulars
-            </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Accounting
-            </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Credit
-            </div>
-            <div className="table-cell border-b p-8px align-middle">Debit</div>
-          </div>
-        </div>
-        {/* Info: (20251114 - Julian) Table Content */}
-        <div className="table-row-group text-xs font-medium">
-          <div className="table-row">
-            <div className="table-cell px-16px py-24px text-text-neutral-primary">Printer-0001</div>
-            <div className="table-cell px-16px py-24px font-semibold text-text-neutral-tertiary">
-              <div className="flex flex-col gap-4px">
-                <div className="flex items-center gap-4px">
-                  <p>1141</p> <p>Accounts receivable</p>
-                </div>
-                <div className="flex items-center gap-4px">
-                  <p>1141</p> <p>Accounts receivable</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const tabContent = invoiceEditTab === InvoiceEditTab.TAX_INFO ? taxInfoTab : voucherTab;
 
   return (
     <div
-      className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
+      className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px overflow-y-auto bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
     >
       {/* Info: (20251114 - Julian) Header */}
       <div className="flex items-center">
         <button type="button" className="p-10px text-button-text-secondary" onClick={toggle}>
           <RxCross2 size={20} />
         </button>
-        <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">
-          AB-12345678
-        </p>
+        <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">{id}</p>
       </div>
 
-      {/* Info: (20251114 - Julian) Image Zoom In */}
-      <div
-      // className="flex-1"
-      >
-        Image Zoom In
+      {/* Info: (20251117 - Julian) Image Zoom In */}
+      <div>
+        <ImageZoom
+          imageUrl={imageUrl}
+          className="h-450px w-full"
+          controlPosition="bottom-right"
+          isControlBackground
+        />
       </div>
 
       {/* Info: (20251114 - Julian) Invoice Details */}

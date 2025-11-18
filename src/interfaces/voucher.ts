@@ -201,6 +201,15 @@ export interface IVoucherListSummary {
     paymentVoucher: number;
   };
 }
+
+export interface ILineItemsInfo {
+  sum: {
+    debit: boolean;
+    amount: string;
+  };
+  lineItems: ILineItemBeta[];
+}
+
 // Info: (20240926 - Julian) temp interface
 export interface IVoucherBeta {
   id: number;
@@ -216,14 +225,7 @@ export interface IVoucherBeta {
     name: string;
   };
   incomplete: boolean;
-
-  lineItemsInfo: {
-    sum: {
-      debit: boolean;
-      amount: string;
-    };
-    lineItems: ILineItemBeta[];
-  };
+  lineItemsInfo: ILineItemsInfo;
   payableInfo: {
     total: string;
     alreadyHappened: string;
