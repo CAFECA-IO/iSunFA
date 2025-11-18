@@ -125,7 +125,7 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
   );
 
   return (
-    <div className="flex flex-col gap-5px">
+    <div className="mr-auto flex flex-col gap-5px">
       {/* Info: (20251118 - Julian) Message Bubble */}
       <div className="w-fit min-w-300px rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
         <article
