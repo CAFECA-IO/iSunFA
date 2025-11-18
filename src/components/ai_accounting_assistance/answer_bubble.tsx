@@ -4,15 +4,42 @@ import { SlRefresh } from 'react-icons/sl';
 import { FaCheck } from 'react-icons/fa6';
 import { FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { HiOutlineLightBulb } from 'react-icons/hi2';
+import { marked } from 'marked';
 
-const ChatBubble: React.FC = () => {
-  const message = `###This is Title`;
+interface IAnswerBubbleProps {
+  answerContent: string;
+}
 
+const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
+  const [messageText, setMessageText] = useState<string>('');
   const [isCopySuccess, setIsCopySuccess] = useState<boolean>(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
+  const [isShowThinkingChain, setIsShowThinkingChain] = useState<boolean>(false);
 
   const isLikeActive = isLiked === true;
   const isDislikeActive = isLiked === false;
+
+  // Info: (20251118 - Julian) 取得純文字，用於複製到剪貼簿
+  const pureTextMessage = messageText.replace(/<[^>]+>/g, '');
+
+  useEffect(() => {
+    const fetchMessage = async () => {
+      const htmlMessage = await marked.parse(answerContent);
+
+      // Info: (20251118 - Julian) 加入樣式
+      const styledMessage = htmlMessage
+        // Info: (20251118 - Julian) h1 標題
+        .replaceAll(/<h1/g, '<h1 class="text-xl font-bold" ')
+        // Info: (20251118 - Julian) ul 列表
+        .replaceAll(/<ul/g, '<ul class="list-disc list-inside ml-8px" ')
+        //// Info: (20251118 - Julian) a 連結
+        .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ');
+
+      setMessageText(styledMessage);
+    };
+
+    fetchMessage();
+  }, []);
 
   useEffect(() => {
     if (isCopySuccess) {
@@ -25,10 +52,11 @@ const ChatBubble: React.FC = () => {
   }, [isCopySuccess]);
 
   const copyHandler = () => {
-    navigator.clipboard.writeText(message);
+    navigator.clipboard.writeText(pureTextMessage);
     setIsCopySuccess(true);
   };
 
+  // ToDo: (20251118 - Julian) refresh 功能待實作
   const refreshHandler = () => {};
 
   const likeHandler = () => {
@@ -47,7 +75,10 @@ const ChatBubble: React.FC = () => {
     }
   };
 
-  const thinkingHandler = () => {};
+  // ToDo: (20251118 - Julian) thinking chain 功能待實作
+  const thinkingHandler = () => {
+    setIsShowThinkingChain((prev) => !prev);
+  };
 
   const copyBtn = isCopySuccess ? (
     <div className="p-10px text-text-state-success">
@@ -69,7 +100,7 @@ const ChatBubble: React.FC = () => {
       onClick={likeHandler}
       className={`${isLikeActive ? 'text-tabs-text-active' : 'text-button-text-secondary hover:text-button-text-secondary-hover'} flex items-center gap-10px p-10px`}
     >
-      <FiThumbsUp size={24} />
+      <FiThumbsUp className="" size={24} />
       <p
         className={`${isLikeActive ? 'w-160px' : 'w-0'} overflow-hidden whitespace-nowrap text-left text-xs text-chat-bubbles-text-brand transition-all duration-200 ease-in-out`}
       >
@@ -95,7 +126,13 @@ const ChatBubble: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5px">
-      <div className="flex flex-col gap-8px rounded-lg bg-cyan-400 p-20px"></div>
+      {/* Info: (20251118 - Julian) Message Bubble */}
+      <div className="w-fit min-w-300px rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
+        <article
+          className="flex flex-col gap-8px"
+          dangerouslySetInnerHTML={{ __html: messageText }}
+        />
+      </div>
 
       {/* Info: (20251118 - Julian) Toolbar */}
       <div className="flex items-center py-4px">
@@ -112,7 +149,7 @@ const ChatBubble: React.FC = () => {
         <button
           type="button"
           onClick={thinkingHandler}
-          className="p-10px text-button-text-secondary hover:text-button-text-secondary-hover"
+          className={`${isShowThinkingChain ? 'text-tabs-text-active' : 'text-button-text-secondary hover:text-button-text-secondary-hover'} p-10px`}
         >
           <HiOutlineLightBulb size={24} />
         </button>
@@ -121,4 +158,4 @@ const ChatBubble: React.FC = () => {
   );
 };
 
-export default ChatBubble;
+export default AnswerBubble;
