@@ -5,9 +5,10 @@ import { mockInvoiceData } from '@/interfaces/invoice_edit_area';
 
 interface ILayoutProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-const AAALayout: React.FC<ILayoutProps> = ({ children }) => {
+const AAALayout: React.FC<ILayoutProps> = ({ children, className }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isInvoiceAreaOpen, setIsInvoiceAreaOpen] = useState<boolean>(false);
 
@@ -21,7 +22,7 @@ const AAALayout: React.FC<ILayoutProps> = ({ children }) => {
 
       {/* Info: (20251014 - Julian) Right: Main Area */}
       <div
-        className={`${isSidebarOpen ? 'ml-250px' : 'ml-70px'} ${isInvoiceAreaOpen ? 'mr-500px' : 'mr-0'} flex h-screen grow flex-col justify-center gap-140px px-40px py-120px transition-all duration-200 ease-in-out`}
+        className={`${isSidebarOpen ? 'ml-250px' : 'ml-70px'} ${isInvoiceAreaOpen ? 'mr-500px' : 'mr-0'} ${className} flex h-screen grow flex-col justify-center px-40px py-32px transition-all duration-200 ease-in-out`}
       >
         {children}
       </div>
