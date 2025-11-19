@@ -71,13 +71,21 @@ const InvoiceList: React.FC<{
   };
 
   const deleteInvoices = () => {
-    // ToDo: (20251119 - Julian) delete selected invoices logic, show warning modal
+    // ToDo: (20251119 - Julian) delete selected invoices logic
+    // eslint-disable-next-line no-console
+    console.log(`Deleting invoices: ${selectedInvoiceIds.join(', ')}`);
+    messageModalVisibilityHandler();
+  };
+
+  const deleteHandler = () => {
     messageModalDataHandler({
       messageType: MessageType.WARNING,
       title: 'Delete Invoices',
-      content: `Are you sure you want to delete ${selectedInvoiceIds.length} selected invoices? This action cannot be undone.`,
-      submitBtnStr: 'Delete',
-      submitBtnFunction: () => {},
+      content: `Are you sure you want to remove ${selectedInvoiceIds.length} selected invoices from your draft?`,
+      backBtnStr: 'No, Cancel',
+      backBtnFunction: messageModalVisibilityHandler,
+      submitBtnStr: 'Yes. Remove it.',
+      submitBtnFunction: deleteInvoices,
     });
     messageModalVisibilityHandler();
   };
@@ -165,12 +173,7 @@ const InvoiceList: React.FC<{
       <Button type="button" className="w-170px">
         Import to iSunFA ({selectedInvoiceIds.length})
       </Button>
-      <Button
-        type="button"
-        variant="secondaryOutline"
-        size="defaultSquare"
-        onClick={deleteInvoices}
-      >
+      <Button type="button" variant="secondaryOutline" size="defaultSquare" onClick={deleteHandler}>
         <FiTrash2 size={20} />
       </Button>
     </div>

@@ -5,7 +5,9 @@ import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
 import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { useModalContext } from '@/contexts/modal_context';
 import { checkboxStyle } from '@/constants/display';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IInvoiceItemProps {
   invoice: IInvoiceData;
@@ -26,6 +28,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   selectHandler,
 }) => {
   const { id, unread, imageUrl } = invoice;
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   // ToDo: (20251015 - Julian) mock state for UI test
   const unfinished = true;
@@ -43,12 +46,29 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   const itemStyle = disabled ? disabledStyle : enableStyle;
 
   const deleteInvoice = () => {
+    // ToDo: (20251119 - Julian) delete selected invoices logic
+    // eslint-disable-next-line no-console
+    console.log(`Deleting invoice ${id}`);
+    messageModalVisibilityHandler();
+  };
+
+  const deleteHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     // Info: (20251015 - Julian) disabled 狀態下不執行任何動作
     if (disabled) return;
 
-    // ToDo: (20251014 - Julian) delete invoice function
-    // eslint-disable-next-line no-console
-    console.log(`Delete invoice ${id}`);
+    event.stopPropagation(); // Info: (20251119 - Julian) 阻止事件冒泡，避免觸發 clickItem
+
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Remove Invoice',
+      content: `Are you sure you want to remove ${id} from your draft?`,
+      backBtnStr: 'No, Cancel',
+      backBtnFunction: messageModalVisibilityHandler,
+      submitBtnStr: 'Yes. Remove it.',
+      submitBtnFunction: deleteInvoice,
+      submitBtnVariant: 'default',
+    });
+    messageModalVisibilityHandler();
   };
 
   const clickItem = () => {
@@ -98,7 +118,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   const deleteBtn = disabled ? null : (
     <button
       type="button"
-      onClick={deleteInvoice}
+      onClick={deleteHandler}
       className="p-8px text-icon-surface-single-color-primary"
     >
       <FiTrash2 size={20} />
