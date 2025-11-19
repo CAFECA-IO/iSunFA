@@ -4,15 +4,10 @@ import Image from 'next/image';
 import { FaRegCheckCircle } from 'react-icons/fa';
 import { FiLayout, FiLogIn } from 'react-icons/fi';
 import { LuArchive } from 'react-icons/lu';
-import { PiSliders } from 'react-icons/pi';
-import useOuterClick from '@/lib/hooks/use_outer_click';
 import { Button } from '@/components/button/button';
-import Toggle from '@/components/toggle/toggle';
-import InvoiceItem from '@/components/ai_accounting_assistance/invoice_item';
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
+import InvoiceList, { SORT_BY_OPTIONS } from '@/components/ai_accounting_assistance/invoice_list';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import { default30DayPeriodInSec } from '@/constants/display';
-import { numberWithCommas } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { IInvoiceData, mockInvoiceList } from '@/interfaces/invoice_edit_area';
@@ -37,33 +32,14 @@ const AAASidebar: React.FC<ISidebarProps> = ({
 }) => {
   const { isSignIn } = useUserCtx();
 
-  const {
-    targetRef: sortRef,
-    componentVisible: isSortOpen,
-    setComponentVisible: setIsSortOpen,
-  } = useOuterClick<HTMLDivElement>(false);
-
   // ToDo: (20251014 - Julian) Replace mock data with real data from backend
   const invoiceData: IInvoiceData[] = mockInvoiceList;
-  const invoiceCount = numberWithCommas(invoiceData.length);
-
-  // ToDo: (20251021 - Julian) 目前先用 string 儲存排序選項，之後再改成其他更合適的型別
-  const sortByOptions = [
-    'Invoice Date: New →Old',
-    'Invoice Date: Old →New',
-    'Upload Date: New →Old',
-    'Upload Date: Old →New',
-  ];
 
   const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [isShownOnlyIncomplete, setIsShownOnlyIncomplete] = useState<boolean>(false);
   // ToDo: (20251021 - Julian) Develop sorting function
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortBy, setSortBy] = useState<string>(sortByOptions[0]);
-
-  const toggleSortDropdown = () => setIsSortOpen((prev) => !prev);
-  const toggleShownOnlyIncomplete = () => setIsShownOnlyIncomplete((prev) => !prev);
+  const [sortBy, setSortBy] = useState<string>(SORT_BY_OPTIONS[0]);
 
   const displayedTabs = isSignIn && (
     <div className="grid grid-cols-2 gap-8px">
@@ -100,88 +76,18 @@ const AAASidebar: React.FC<ISidebarProps> = ({
     </Link>
   );
 
-  const displayedSortOptions = sortByOptions.map((option) => {
-    const clickHandler = () => {
-      setSortBy(option);
-      setIsSortOpen(false);
-    };
-    return (
-      <button
-        key={option}
-        type="button"
-        onClick={clickHandler}
-        className="px-12px py-8px text-left text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
-      >
-        {option}
-      </button>
-    );
-  });
-
-  const displayedSortDropdown = isSortOpen && (
-    <div
-      ref={sortRef}
-      className="absolute right-0 top-50px z-10 flex w-full flex-col rounded-sm border border-dropdown-stroke-menu bg-dropdown-surface-menu-background-primary p-8px shadow-Dropshadow_M"
-    >
-      <p className="px-12px py-8px text-xs font-semibold uppercase text-dropdown-text-head">
-        Sort by
-      </p>
-      {displayedSortOptions}
-      <hr className="m-8px border-t border-divider-stroke-lv-4" />
-      <div className="flex items-center justify-between gap-8px px-12px py-8px text-xs font-medium text-switch-text-primary">
-        <p>Show Incomplete Only</p>
-        <Toggle
-          id="show_incomplete_only_toggle"
-          toggleStateFromParent={isShownOnlyIncomplete}
-          getToggledState={toggleShownOnlyIncomplete}
-        />
-      </div>
-    </div>
-  );
-
-  const displayedInvoices = invoiceData.map((invoice) => {
-    const isActive = invoice.id === activeInvoiceId;
-    const clickHandler = () => clickInvoiceHandler(invoice.id);
-    return (
-      <InvoiceItem
-        key={invoice.id}
-        invoice={invoice}
-        isActive={isActive}
-        clickHandler={clickHandler}
-      />
-    );
-  });
-
   const displayedList =
     invoiceData.length > 0 ? (
       // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
-      <div className="flex min-h-0 flex-col gap-8px">
-        {/* Info: (20251021 - Julian) Develop Filter section */}
-        <div className="relative flex items-center gap-4px">
-          <DatePicker
-            type={DatePickerType.TEXT_PERIOD}
-            period={selectedPeriod}
-            setFilteredPeriod={setSelectedPeriod}
-            calenderClassName="scale-75 w-250px md:scale-60 origin-top-left"
-            buttonStyleAfterDateSelected="w-100px truncate"
-          />
-          <button
-            type="button"
-            onClick={toggleSortDropdown}
-            className="p-12px text-button-text-secondary hover:text-button-text-secondary-hover"
-          >
-            <PiSliders size={24} />
-          </button>
-
-          {displayedSortDropdown}
-        </div>
-        <p className="text-sm font-medium text-text-neutral-tertiary">
-          {invoiceCount} Certificates
-        </p>
-        {/* Info: (20251015 - Julian) Invoice List */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-col gap-8px">{displayedInvoices}</div>
-        </div>
-      </div>
+      <InvoiceList
+        invoiceData={invoiceData}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        selectedPeriod={selectedPeriod}
+        setSelectedPeriod={setSelectedPeriod}
+        activeInvoiceId={activeInvoiceId}
+        clickInvoiceHandler={clickInvoiceHandler}
+      />
     ) : (
       <div className="flex flex-col items-center">
         <p className="text-center text-sm font-medium text-text-neutral-tertiary">

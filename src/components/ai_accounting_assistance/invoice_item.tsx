@@ -5,15 +5,26 @@ import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
 import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { checkboxStyle } from '@/constants/display';
 
 interface IInvoiceItemProps {
   invoice: IInvoiceData;
   isActive: boolean;
   clickHandler: () => void;
+  isSelected: boolean;
+  isSelectedMode: boolean;
+  selectHandler: () => void;
 }
 
 // ToDo: (20251014 - Julian) during development
-const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isActive, clickHandler }) => {
+const InvoiceItem: React.FC<IInvoiceItemProps> = ({
+  invoice,
+  isActive,
+  clickHandler,
+  isSelected,
+  isSelectedMode,
+  selectHandler,
+}) => {
   const { id, unread, imageUrl } = invoice;
 
   // ToDo: (20251015 - Julian) mock state for UI test
@@ -38,6 +49,14 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isActive, clickHand
     // ToDo: (20251014 - Julian) delete invoice function
     // eslint-disable-next-line no-console
     console.log(`Delete invoice ${id}`);
+  };
+
+  const clickItem = () => {
+    if (isSelectedMode) {
+      selectHandler();
+    } else {
+      clickHandler();
+    }
   };
 
   // Info: (20251015 - Julian) =========== Loading 樣式 ===========
@@ -86,18 +105,26 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isActive, clickHand
     </button>
   );
 
+  const selectCheckbox = isSelectedMode ? (
+    <div className="w-20px">
+      <input type="checkbox" checked={isSelected} className={checkboxStyle} />
+    </div>
+  ) : (
+    unread && (
+      <Image src="/icons/unread_indicator.svg" width={10} height={10} alt="unread_indicator" />
+    )
+  );
+
   if (isLoading) return LoadingItem;
   if (isError) return ErrorItem;
 
   return (
     <div
-      onClick={clickHandler}
+      onClick={clickItem}
       className={`${itemStyle} flex items-center gap-8px rounded-xs border p-8px`}
     >
-      {/* Info: (20251014 - Julian) Unread icon */}
-      {unread && (
-        <Image src="/icons/unread_indicator.svg" width={10} height={10} alt="unread_indicator" />
-      )}
+      {/* Info: (20251014 - Julian) Unread icon / Select Checkbox */}
+      {selectCheckbox}
       {/* Info: (20251014 - Julian) Thumbnail */}
       <div className="relative h-48px w-48px shrink-0 rounded-xs border border-stroke-neutral-quaternary">
         <Image src={imageUrl} fill objectFit="contain" alt="invoice_thumbnail" />
