@@ -4,24 +4,17 @@ import { CiImageOn } from 'react-icons/ci';
 import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
-
-// ToDo: (20251014 - Julian) During development
-interface IInvoiceItem {
-  id: number;
-  name: string;
-  thumbnail: string;
-  unread: boolean;
-}
+import { IInvoiceData } from '@/interfaces/invoice_edit_area';
 
 interface IInvoiceItemProps {
-  invoice: IInvoiceItem;
-  isSelected: boolean;
+  invoice: IInvoiceData;
+  isActive: boolean;
   clickHandler: () => void;
 }
 
 // ToDo: (20251014 - Julian) during development
-const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHandler }) => {
-  const { id, name, unread, thumbnail } = invoice;
+const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isActive, clickHandler }) => {
+  const { id, unread, imageUrl } = invoice;
 
   // ToDo: (20251015 - Julian) mock state for UI test
   const unfinished = true;
@@ -29,7 +22,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
   const isError = false;
   const disabled = false;
 
-  const enableStyle = isSelected
+  const enableStyle = isActive
     ? 'bg-surface-brand-primary-lv3 border-stroke-brand-primary'
     : 'border-stroke-neutral-quaternary hover:border-stroke-brand-primary hover:bg-surface-brand-primary-30 hover:cursor-pointer';
 
@@ -107,11 +100,11 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
       )}
       {/* Info: (20251014 - Julian) Thumbnail */}
       <div className="relative h-48px w-48px shrink-0 rounded-xs border border-stroke-neutral-quaternary">
-        <Image src={thumbnail} fill objectFit="contain" alt="invoice_thumbnail" />
+        <Image src={imageUrl} fill objectFit="contain" alt="invoice_thumbnail" />
       </div>
       {/* Info: (20251014 - Julian) Id */}
       <div className="flex flex-1 items-center gap-4px">
-        <p className="max-w-60px truncate text-sm font-medium text-text-neutral-primary">{name}</p>
+        <p className="max-w-60px truncate text-sm font-medium text-text-neutral-primary">{id}</p>
         {unfinished && <IoWarningOutline size={16} className="shrink-0 text-icon-surface-error" />}
       </div>
       {/* Info: (20251014 - Julian) Delete Button */}

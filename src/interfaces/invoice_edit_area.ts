@@ -21,6 +21,7 @@ export interface IInvoiceData {
   voucherInfo: {
     lineItemsInfo: ILineItemsInfo[];
   };
+  unread: boolean;
 }
 
 export const mockInvoiceData: IInvoiceData = {
@@ -87,4 +88,7 @@ export const mockInvoiceData: IInvoiceData = {
       },
     ],
   },
+  unread: true,
 };
+
+export const mockInvoiceList: IInvoiceData[] = [mockInvoiceData];

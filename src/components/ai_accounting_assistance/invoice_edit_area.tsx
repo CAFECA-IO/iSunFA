@@ -5,12 +5,12 @@ import { Button } from '@/components/button/button';
 import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
 import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
 import ImageZoom from '@/components/image_zoom/image_zoom';
-import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { mockInvoiceList } from '@/interfaces/invoice_edit_area';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
   toggle: () => void;
-  invoiceData: IInvoiceData;
+  invoiceId: string;
 }
 
 enum InvoiceEditTab {
@@ -18,7 +18,14 @@ enum InvoiceEditTab {
   VOUCHER = 'Voucher',
 }
 
-const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceData }) => {
+const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceId }) => {
+  // ToDo: (20251119 - Julian) get invoice data by id via API
+  const invoiceData = mockInvoiceList.find((invoice) => invoice.id === invoiceId);
+
+  if (!invoiceData) {
+    return null;
+  }
+
   const { id, imageUrl, taxInfo, voucherInfo } = invoiceData;
 
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);

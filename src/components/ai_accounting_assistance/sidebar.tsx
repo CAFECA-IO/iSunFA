@@ -15,6 +15,7 @@ import { default30DayPeriodInSec } from '@/constants/display';
 import { numberWithCommas } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { IInvoiceData, mockInvoiceList } from '@/interfaces/invoice_edit_area';
 
 enum InvoiceTab {
   DRAFT = 'draft',
@@ -24,38 +25,16 @@ enum InvoiceTab {
 interface ISidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
+  activeInvoiceId: string;
+  clickInvoiceHandler: (invoiceId: string) => void;
 }
 
-// ToDo: (20251014 - Julian) During development
-interface IInvoiceItem {
-  id: number;
-  name: string;
-  thumbnail: string;
-  unread: boolean;
-}
-
-const mockInvoiceList: IInvoiceItem[] = [
-  {
-    id: 1,
-    name: 'Invoice 001',
-    thumbnail: '/public/images/fake_avatar.png',
-    unread: false,
-  },
-  {
-    id: 2,
-    name: 'Invoice 002',
-    thumbnail: '/public/images/fake_avatar.png',
-    unread: false,
-  },
-  {
-    id: 3,
-    name: 'Invoice 003',
-    thumbnail: '/public/images/fake_avatar.png',
-    unread: true,
-  },
-];
-
-const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
+const AAASidebar: React.FC<ISidebarProps> = ({
+  isOpen,
+  toggleSidebar,
+  activeInvoiceId,
+  clickInvoiceHandler,
+}) => {
   const { isSignIn } = useUserCtx();
 
   const {
@@ -65,7 +44,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
   } = useOuterClick<HTMLDivElement>(false);
 
   // ToDo: (20251014 - Julian) Replace mock data with real data from backend
-  const invoiceData: IInvoiceItem[] = mockInvoiceList;
+  const invoiceData: IInvoiceData[] = mockInvoiceList;
   const invoiceCount = numberWithCommas(invoiceData.length);
 
   // ToDo: (20251021 - Julian) 目前先用 string 儲存排序選項，之後再改成其他更合適的型別
@@ -76,9 +55,6 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     'Upload Date: Old →New',
   ];
 
-  const invoiceList = invoiceData.map((invoice) => ({ ...invoice, isSelected: false }));
-
-  const [uiInvoiceList, setUiInvoiceList] = useState(invoiceList);
   const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   const [isShownOnlyIncomplete, setIsShownOnlyIncomplete] = useState<boolean>(false);
@@ -88,19 +64,6 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
 
   const toggleSortDropdown = () => setIsSortOpen((prev) => !prev);
   const toggleShownOnlyIncomplete = () => setIsShownOnlyIncomplete((prev) => !prev);
-
-  // Info: (20251015 - Julian) 點擊 invoice item 事件
-  const clickInvoice = (id: number) => {
-    // Info: (20251015 - Julian) 找到目前點擊的 item 狀態
-    const selected = uiInvoiceList.find((invoice) => invoice.id === id)?.isSelected;
-
-    const newInvoiceList = uiInvoiceList.map((invoice) => ({
-      ...invoice,
-      // Info: (20251015 - Julian) 找到被點擊的 item 後，將狀態反轉，其他 item 狀態不變
-      isSelected: invoice.id === id ? !selected : invoice.isSelected,
-    }));
-    setUiInvoiceList(newInvoiceList);
-  };
 
   const displayedTabs = isSignIn && (
     <div className="grid grid-cols-2 gap-8px">
@@ -119,7 +82,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
             type="button"
             key={tab}
             onClick={clickHandler}
-            className={` ${isActive ? 'border-tabs-stroke-active text-tabs-text-active' : 'border-tabs-stroke-default text-tabs-text-default'} flex items-center gap-8px border-b-2 px-12px py-8px text-base font-medium`}
+            className={`${isActive ? 'border-tabs-stroke-active text-tabs-text-active' : 'border-tabs-stroke-default text-tabs-text-default'} flex items-center gap-8px border-b-2 px-12px py-8px text-base font-medium`}
           >
             {icon}
             <p>{tab}</p>
@@ -175,20 +138,21 @@ const AAASidebar: React.FC<ISidebarProps> = ({ isOpen, toggleSidebar }) => {
     </div>
   );
 
-  const displayedInvoices = uiInvoiceList.map((invoice) => {
-    const clickHandler = () => clickInvoice(invoice.id);
+  const displayedInvoices = invoiceData.map((invoice) => {
+    const isActive = invoice.id === activeInvoiceId;
+    const clickHandler = () => clickInvoiceHandler(invoice.id);
     return (
       <InvoiceItem
         key={invoice.id}
         invoice={invoice}
-        isSelected={invoice.isSelected}
+        isActive={isActive}
         clickHandler={clickHandler}
       />
     );
   });
 
   const displayedList =
-    uiInvoiceList.length > 0 ? (
+    invoiceData.length > 0 ? (
       // Info: (20251015 - Julian) min-h-0 ➡️ 讓 list 可以撐滿剩餘空間，讓 overflow-y-auto 正常運作
       <div className="flex min-h-0 flex-col gap-8px">
         {/* Info: (20251021 - Julian) Develop Filter section */}
