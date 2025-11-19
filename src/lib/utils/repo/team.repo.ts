@@ -150,8 +150,18 @@ export const getTeamList = async (
     await Promise.all(updatedSessionPromises);
   }
 
+  const filteredTeamData = teamData.filter(
+    (team): team is NonNullable<typeof team> => team !== null
+  );
+
+  if (canCreateAccountBookOnly && filteredTeamData.length === 0 && totalCount > 0) {
+    const error = new Error(STATUS_MESSAGE.FREE_TRIAL_EXPIRED);
+    error.name = STATUS_CODE.FREE_TRIAL_EXPIRED;
+    throw error;
+  }
+
   return toPaginatedData({
-    data: teamData.filter((team): team is NonNullable<typeof team> => team !== null),
+    data: filteredTeamData,
     page,
     totalPages: Math.ceil(totalCount / pageSize),
     totalCount,
