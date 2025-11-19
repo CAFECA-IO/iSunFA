@@ -37,6 +37,7 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
       mimeType: file.type,
       data: base64String.split(',')[1], // Info: (20251119 - Julian) Remove the data URL prefix
     };
+    // Deprecated: (20251119 - Luphia) remove eslint-disable
     // eslint-disable-next-line no-console
     console.log('Uploading file:', inlineData);
   };
