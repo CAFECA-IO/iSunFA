@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { FiSend } from 'react-icons/fi';
+import { useBase64 } from '@/lib/hooks/use_base_64';
 import { Button } from '@/components/button/button';
 
 const FOUR_LINE_HEIGHT_PX = 24 * 4;
@@ -12,6 +13,8 @@ interface IChatInputProps {
 const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { convertToBase64 } = useBase64();
 
   const [inputValue, setInputValue] = useState<string>('');
   const [isOverFourLines, setIsOverFourLines] = useState<boolean>(false);
@@ -27,9 +30,15 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   };
 
   const handleUpload = async (file: File) => {
-    // ToDo: (20251119 - Julian) Upload file logic
+    // ToDo: (20251119 - Julian) Upload file logic, turn file into base64 to send to backend
+    const base64String = await convertToBase64(file);
+
+    const inlineData = {
+      mimeType: file.type,
+      data: base64String.split(',')[1], // Info: (20251119 - Julian) Remove the data URL prefix
+    };
     // eslint-disable-next-line no-console
-    console.log('Uploading file:', file.name);
+    console.log('Uploading file:', inlineData);
   };
 
   // Info: (20251119 - Julian) 上傳檔案
