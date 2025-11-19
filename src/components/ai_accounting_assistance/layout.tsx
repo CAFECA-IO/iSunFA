@@ -16,12 +16,12 @@ const AAALayout: React.FC<ILayoutProps> = ({ children, className }) => {
   const toggleInvoiceArea = () => setIsInvoiceAreaOpen((prev) => !prev);
 
   const clickInvoiceHandler = (invoiceId: string) => {
-    if (invoiceId === activeInvoiceId) {
+    if (invoiceId === activeInvoiceId || invoiceId === '') {
       // Info: (20251119 - Julian) 關閉已開啟的發票編輯區
       setIsInvoiceAreaOpen(false);
       setActiveInvoiceId('');
     } else {
-      // Info: (20251119 - Julian) 開啟發票編輯區s
+      // Info: (20251119 - Julian) 開啟發票編輯區
       setActiveInvoiceId(invoiceId);
       setIsInvoiceAreaOpen(true);
     }

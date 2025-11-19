@@ -52,7 +52,10 @@ const InvoiceList: React.FC<{
   const [isSelectingMode, setIsSelectingMode] = useState<boolean>(false);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
 
-  const openSelectingMode = () => setIsSelectingMode(true);
+  const openSelectingMode = () => {
+    setIsSelectingMode(true);
+    clickInvoiceHandler(''); // Info: (20251119 - Julian) 進入選取模式時，清除 activeInvoiceId
+  };
   const closeSelectingMode = () => {
     setIsSelectingMode(false);
     setSelectedInvoiceIds([]); // Info: (20251119 - Julian) 關閉選取模式時，連帶清空 selectedInvoiceIds
