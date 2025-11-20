@@ -134,15 +134,10 @@ const PopulateDates = ({
           return;
         }
 
-        if (selectTimeOne !== 0 && selectTimeTwo !== 0) {
-          // Info: (20240417 - Shirley) 如果有已選擇的日期區間，則先清除
-          selectDateOne(null);
-          selectDateTwo(null);
-        }
         if (selectTimeOne === 0) {
           // Info: (20240417 - Shirley) 如果第一個日期尚未選擇，則將 el 填入第一個日期
           selectDateOne(el);
-        } else if (selectTimeTwo === 0) {
+        } else if (selectTimeOne !== 0 && selectTimeTwo === 0) {
           // Info: (20240417 - Shirley) 如果第二個日期尚未選擇，則將 el 填入第二個日期
           if (selectTimeOne > elTime) {
             // Info: (20240417 - Shirley) 檢查 TimeOne 是否大於 TimeTwo，如果是則交換
@@ -161,6 +156,10 @@ const PopulateDates = ({
             selectDateTwo(el);
           }
           setComponentVisible(false);
+        } else {
+          // Info: (20251120 - Julian) 如果兩個日期都已選擇，則重新選擇第一個日期
+          selectDateOne(el);
+          selectDateTwo(null);
         }
       }
     };
@@ -390,6 +389,16 @@ const DatePicker = ({
     }
   }, [dateOne, dateTwo, type]);
 
+  useEffect(() => {
+    // Info: (20251120 - Julian) 如果選擇區間時，使用者只選了一個日期就關閉選單，則清除所有已選的日期
+    if (type === DatePickerType.ICON_PERIOD || type === DatePickerType.TEXT_PERIOD) {
+      if (dateOne === null || dateTwo === null) {
+        setDateOne(null);
+        setDateTwo(null);
+      }
+    }
+  }, [componentVisible]);
+
   // Info: (20240417 - Shirley) 取得該月份第一天是星期幾
   const firstDayOfMonth = (year: number, month: number) => {
     return new Date(`${year}/${month}/01`).getDay();
@@ -463,6 +472,12 @@ const DatePicker = ({
     newDate.setHours(23, 59, 59);
     setDateTwo(newDate);
   }, []);
+
+  // Info: (20251120 - Julian) 清除日期
+  const clearHandler = () => {
+    setDateOne(null);
+    setDateTwo(null);
+  };
 
   // Info: (20240417 - Shirley) 選單開關
   const openCalenderHandler = () => {
@@ -710,6 +725,12 @@ const DatePicker = ({
               type={type}
             />
           )}
+
+          <div className="ml-auto">
+            <Button type="button" variant="linkBorderless" size="small" onClick={clearHandler}>
+              Clear
+            </Button>
+          </div>
         </div>
       </div>
     </div>
