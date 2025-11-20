@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, useRef, ChangeEvent } from 'react';
 import Image from 'next/image';
 import { RxCross2 } from 'react-icons/rx';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
@@ -6,9 +6,14 @@ import ImageZoom from '@/components/image_zoom/image_zoom';
 import { Button } from '@/components/button/button';
 import TaxMenu from '@/components/invoice/invoice_tax_menu';
 import NumericInput from '@/components/numeric_input/numeric_input';
+import CounterpartyInput, {
+  CounterpartyInputRef,
+} from '@/components/certificate/counterparty_input';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { TaxType } from '@/constants/invoice_rc2';
+import { CounterpartyType } from '@/constants/counterparty';
 
 interface ITaxEditModalProps {
   isModalOpen: boolean;
@@ -16,14 +21,31 @@ interface ITaxEditModalProps {
 }
 
 const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) => {
+  const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
+
   // ToDo: (20251120 - Julian) Get data from props or API
   const imageUrl: string = '/images/demo_certifate.png';
   const currency: string = 'TWD';
+  const counterpartyList: ICounterparty[] = [
+    {
+      id: 1,
+      companyId: 1,
+      type: CounterpartyType.CLIENT,
+      note: 'Important client',
+      createdAt: 1697040000,
+      updatedAt: 1697040000,
+      name: 'Demo Company Ltd.',
+      taxId: '12345678',
+    },
+  ];
   const initialTaxType: TaxType = TaxType.TAXABLE;
   const initialTaxRate: number | null = 5;
 
   const [noInputValue, setNoInputValue] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<IDatePeriod>(default30DayPeriodInSec);
+  const [selectedCounterparty, setSelectedCounterparty] = useState<ICounterpartyOptional>(
+    counterpartyList[0]
+  );
   const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(initialTaxType);
   const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(initialTaxRate);
   const [salesAmountValue, setSalesAmountValue] = useState<number>(0);
@@ -36,7 +58,11 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
     setNoInputValue(e.target.value);
   };
 
-  const selectTaxHandler = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
+  const handleCounterpartyChange = (cp: ICounterpartyOptional) => {
+    setSelectedCounterparty(cp);
+  };
+
+  const handleTaxChange = ({ taxRate, taxType }: { taxRate: number | null; taxType: TaxType }) => {
     setSelectedTaxType(taxType);
     setSelectedTaxRate(taxRate);
   };
@@ -45,6 +71,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
     const data = {
       invoiceNo: noInputValue,
       issueDate: selectedDate,
+      counterparty: selectedCounterparty,
       taxType: selectedTaxType,
       taxRate: selectedTaxRate,
       salesAmount: salesAmountValue,
@@ -102,7 +129,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
               </div>
             </div>
             {/* Info: (20251120 - Julian) ========= Issue Date ========= */}
-            <div className="col-span-2 flex flex-col gap-8px">
+            <div className="z-50 col-span-2 flex flex-col gap-8px">
               <p className="text-sm font-semibold text-input-text-primary">
                 Issue Date <span className="text-text-state-error">*</span>
               </p>
@@ -115,16 +142,13 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
               />
             </div>
             {/* Info: (20251120 - Julian) ========= Trading Partner ========= */}
-            <div className="col-span-2 flex flex-col gap-8px">
-              <p className="text-sm font-semibold text-input-text-primary">Trading Partner</p>
-              <div className="rounded-sm border border-input-text-input-placeholder px-12px py-10px">
-                {/* ToDo: (20251120 - Julian) During Develop */}
-                <input
-                  type="text"
-                  placeholder="12345678"
-                  className="bg-transparent outline-none placeholder:text-input-text-input-placeholder"
-                />
-              </div>
+            <div className="z-30 col-span-2">
+              <CounterpartyInput
+                ref={counterpartyInputRef}
+                counterparty={selectedCounterparty}
+                counterpartyList={counterpartyList}
+                onSelect={(cp: ICounterpartyOptional) => handleCounterpartyChange(cp)}
+              />
             </div>
             {/* Info: (20251120 - Julian) ========= Tax Type ========= */}
             <div className="col-span-2 flex flex-col gap-8px">
@@ -132,7 +156,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
                 Tax Type <span className="text-text-state-error">*</span>
               </p>
               <TaxMenu
-                selectTaxHandler={selectTaxHandler}
+                selectTaxHandler={handleTaxChange}
                 initialTaxType={initialTaxType}
                 initialTaxRate={initialTaxRate}
                 btnClassName="border-input-text-input-placeholder text-input-text-input-filled"
