@@ -1,10 +1,16 @@
 import React from 'react';
 
-const UploadingToast: React.FC = () => {
-  const progress: number = 70;
-  const countOfAllUploading: number = 5;
-  const countOfDone: number = 3;
+interface IUploadingToastProps {
+  progress: number;
+  countOfAllUploading: number;
+  countOfDone: number;
+}
 
+const UploadingToast: React.FC<IUploadingToastProps> = ({
+  progress,
+  countOfAllUploading,
+  countOfDone,
+}) => {
   const progressStr = `(${countOfDone}/${countOfAllUploading})`;
 
   return (

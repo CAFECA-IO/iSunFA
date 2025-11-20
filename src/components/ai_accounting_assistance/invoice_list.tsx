@@ -31,7 +31,7 @@ const InvoiceList: React.FC<{
   clickInvoiceHandler: (invoiceId: string) => void;
 }> = ({
   invoiceData,
-  // sortBy,
+  sortBy,
   setSortBy,
   selectedPeriod,
   setSelectedPeriod,
@@ -129,6 +129,7 @@ const InvoiceList: React.FC<{
   const toggleShownOnlyIncomplete = () => setIsShownOnlyIncomplete((prev) => !prev);
 
   const displayedSortOptions = SORT_BY_OPTIONS.map((option) => {
+    const isActive = sortBy === option;
     const clickHandler = () => {
       setSortBy(option);
       setIsSortOpen(false);
@@ -138,7 +139,7 @@ const InvoiceList: React.FC<{
         key={option}
         type="button"
         onClick={clickHandler}
-        className="px-12px py-8px text-left text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+        className={`${isActive ? 'text-tabs-text-active' : 'text-dropdown-text-primary hover:bg-dropdown-surface-item-hover'} px-12px py-8px text-left text-sm font-medium`}
       >
         {option}
       </button>

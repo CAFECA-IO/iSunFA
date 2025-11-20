@@ -153,8 +153,8 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
         AI may make mistakes. Please verify important information.
       </p>
 
-      {/* Info: (20251114 - Julian) Uploading Toast */}
-      <UploadingToast />
+      {/* ToDo: (20251120 - Julian) Uploading Toast */}
+      {isUploading && <UploadingToast progress={38} countOfAllUploading={6} countOfDone={3} />}
     </div>
   );
 };
