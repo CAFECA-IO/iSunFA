@@ -26,12 +26,14 @@ interface ITaxMenuProps {
   selectTaxHandler: (params: { taxRate: number | null; taxType: TaxType }) => void;
   initialTaxType?: TaxType;
   initialTaxRate?: number | null;
+  btnClassName?: string;
 }
 
 const TaxMenu: React.FC<ITaxMenuProps> = ({
   selectTaxHandler,
   initialTaxType,
   initialTaxRate,
+  btnClassName = '',
 }: ITaxMenuProps) => {
   const { t } = useTranslation(['certificate', 'common']);
   const initialTax =
@@ -137,7 +139,7 @@ const TaxMenu: React.FC<ITaxMenuProps> = ({
       className={`group relative z-10 flex h-46px cursor-pointer ${
         isTaxRatioMenuOpen
           ? 'border-input-stroke-selected text-dropdown-stroke-input-hover'
-          : 'border-input-stroke-input text-input-text-input-filled'
+          : (btnClassName ?? 'border-input-stroke-input text-input-text-input-filled')
       } w-full items-center justify-between rounded-sm border bg-input-surface-input-background p-10px hover:border-input-stroke-selected hover:text-dropdown-stroke-input-hover`}
     >
       <div className="flex w-full min-w-110px justify-between text-input-text-input-filled">
