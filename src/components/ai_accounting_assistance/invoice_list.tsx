@@ -7,7 +7,7 @@ import InvoiceItem from '@/components/ai_accounting_assistance/invoice_item';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { Button } from '@/components/button/button';
 import { numberWithCommas } from '@/lib/utils/common';
-// import { useUserCtx } from '@/contexts/user_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { IInvoiceData } from '@/interfaces/invoice_edit_area';
@@ -31,19 +31,17 @@ const InvoiceList: React.FC<{
   clickInvoiceHandler: (invoiceId: string) => void;
 }> = ({
   invoiceData,
-  // sortBy,
+  sortBy,
   setSortBy,
   selectedPeriod,
   setSelectedPeriod,
   activeInvoiceId,
   clickInvoiceHandler,
 }) => {
-  //   const { isSignIn } = useUserCtx();
+  const { isSignIn } = useUserCtx();
   const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   const invoiceCount = numberWithCommas(invoiceData.length);
-
-  const isSignIn = true; // ToDo: (20251014 - Julian) Remove mock sign-in state
 
   const linkStyle =
     'text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover';
@@ -131,6 +129,7 @@ const InvoiceList: React.FC<{
   const toggleShownOnlyIncomplete = () => setIsShownOnlyIncomplete((prev) => !prev);
 
   const displayedSortOptions = SORT_BY_OPTIONS.map((option) => {
+    const isActive = sortBy === option;
     const clickHandler = () => {
       setSortBy(option);
       setIsSortOpen(false);
@@ -140,7 +139,7 @@ const InvoiceList: React.FC<{
         key={option}
         type="button"
         onClick={clickHandler}
-        className="px-12px py-8px text-left text-sm font-medium text-dropdown-text-primary hover:bg-dropdown-surface-item-hover"
+        className={`${isActive ? 'text-tabs-text-active' : 'text-dropdown-text-primary hover:bg-dropdown-surface-item-hover'} px-12px py-8px text-left text-sm font-medium`}
       >
         {option}
       </button>

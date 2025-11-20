@@ -3,6 +3,7 @@ import { FaPlus } from 'react-icons/fa6';
 import { FiSend } from 'react-icons/fi';
 import { useBase64 } from '@/lib/hooks/use_base_64';
 import { Button } from '@/components/button/button';
+import UploadingToast from '@/components/ai_accounting_assistance/uploading_toast';
 
 const FOUR_LINE_HEIGHT_PX = 24 * 4;
 
@@ -151,6 +152,9 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
       <p className="text-sm font-medium text-input-text-secondary">
         AI may make mistakes. Please verify important information.
       </p>
+
+      {/* ToDo: (20251120 - Julian) Uploading Toast */}
+      {isUploading && <UploadingToast progress={38} countOfAllUploading={6} countOfDone={3} />}
     </div>
   );
 };

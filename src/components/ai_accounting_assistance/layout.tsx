@@ -7,7 +7,7 @@ interface ILayoutProps {
   className?: string;
 }
 
-const AAALayout: React.FC<ILayoutProps> = ({ children, className }) => {
+const AAALayout: React.FC<ILayoutProps> = ({ children, className = '' }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isInvoiceAreaOpen, setIsInvoiceAreaOpen] = useState<boolean>(false);
   const [activeInvoiceId, setActiveInvoiceId] = useState<string>('');
@@ -36,12 +36,14 @@ const AAALayout: React.FC<ILayoutProps> = ({ children, className }) => {
         activeInvoiceId={activeInvoiceId}
         clickInvoiceHandler={clickInvoiceHandler}
       />
+
       {/* Info: (20251014 - Julian) Right: Main Area */}
       <div
-        className={`${isSidebarOpen ? 'ml-250px' : 'ml-70px'} ${isInvoiceAreaOpen ? 'mr-500px' : 'mr-0'} ${className} flex h-screen grow flex-col justify-center px-40px py-32px transition-all duration-200 ease-in-out`}
+        className={`${isSidebarOpen ? 'ml-250px' : 'ml-70px'} ${isInvoiceAreaOpen ? 'mr-500px' : 'mr-0'} ${className} relative flex h-screen flex-col justify-center px-40px py-32px transition-all duration-200 ease-in-out`}
       >
         {children}
       </div>
+
       {/* Info: (20251114 - Julian) Invoice Edit Area */}
       <InvoiceEditArea
         isOpen={isInvoiceAreaOpen}

@@ -312,7 +312,7 @@ const CounterpartyInput = forwardRef<CounterpartyInputRef, ICounterpartyInputPro
     }));
 
     return (
-      <div className={`relative flex w-full flex-1 flex-col items-start gap-2 ${className}`}>
+      <div className={`relative z-30 flex w-full flex-1 flex-col items-start gap-2 ${className}`}>
         <p className={`text-sm font-semibold ${props.labelClassName ?? 'text-input-text-primary'}`}>
           {t(
             props.counterpartyRole === 'seller'
