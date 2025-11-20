@@ -170,7 +170,7 @@ const PopulateDates = ({
         key={el?.date || `${Date.now()}-${index}`}
         type="button"
         disabled={el?.disable ?? true} // Info: (20241108 - Julian) 禁用範圍外和空白日期
-        className={`relative z-10 flex h-36px items-center justify-center whitespace-nowrap px-1 transition-all duration-150 ease-in-out disabled:text-date-picker-text-disable ${isSelectedDateStyle} ${isSelectedPeriodStyle} ${!el?.disable ? 'hover:bg-date-picker-surface-date-period' : ''} hover:rounded-full`}
+        className={`relative z-10 flex h-36px items-center justify-center whitespace-nowrap px-1 transition-all duration-150 ease-in-out enabled:hover:bg-date-picker-surface-date-period disabled:text-date-picker-text-disable ${isSelectedDateStyle} ${isSelectedPeriodStyle} hover:rounded-full`}
         onClick={dateClickHandler}
       >
         {el?.date ?? ' '}
