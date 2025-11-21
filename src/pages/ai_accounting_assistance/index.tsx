@@ -31,6 +31,7 @@ const getStaticPropsFunction = async ({ locale }: ILocale) => ({
       'calculator',
       'date_picker',
       'certificate',
+      'journal',
     ])),
   },
 });

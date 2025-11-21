@@ -6,6 +6,7 @@ import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice
 import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
+import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
 import { mockInvoiceList } from '@/interfaces/invoice_edit_area';
 
 interface IInvoiceEditAreaProps {
@@ -30,9 +31,19 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const { id, imageUrl, taxInfo, voucherInfo } = invoiceData;
 
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
-  const [isOpenEditModal, setIsOpenEditModal] = useState<boolean>(false);
+  const [isOpenTaxEditModal, setIsTaxOpenEditModal] = useState<boolean>(false);
+  const [isOpenVoucherEditModal, setIsVoucherOpenEditModal] = useState<boolean>(false);
 
-  const toggleEditModal = () => setIsOpenEditModal((prev) => !prev);
+  const toggleTaxEditModal = () => setIsTaxOpenEditModal((prev) => !prev);
+  const toggleVoucherEditModal = () => setIsVoucherOpenEditModal((prev) => !prev);
+
+  const editBtnClickHandler = () => {
+    if (invoiceEditTab === InvoiceEditTab.TAX_INFO) {
+      toggleTaxEditModal();
+    } else {
+      toggleVoucherEditModal();
+    }
+  };
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
     const isActive = invoiceEditTab === tab;
@@ -88,7 +99,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
           <div className="grid grid-cols-2 gap-24px">{tabs}</div>
           {tabContent}
           <div className="ml-auto">
-            <Button type="button" variant="tertiary" onClick={toggleEditModal}>
+            <Button type="button" variant="tertiary" onClick={editBtnClickHandler}>
               <FiEdit size={20} />
               <p>Edit</p>
             </Button>
@@ -98,11 +109,13 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
 
       {/* Info: (20251120 - Julian) Edit Modal */}
       <TaxEditModal
-        isModalOpen={isOpenEditModal}
-        onClose={toggleEditModal}
+        isModalOpen={isOpenTaxEditModal}
+        onClose={toggleTaxEditModal}
         imageUrl={imageUrl}
         taxInfoData={taxInfo}
       />
+
+      <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
     </>
   );
 };

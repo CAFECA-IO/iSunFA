@@ -100,6 +100,9 @@ const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
 };
 
 const InvoiceEditVoucherTab: React.FC<{ lineItems: ILineItemsInfo[] }> = ({ lineItems }) => {
+  // ToDo: (20251121 - Julian) Get data from props or API
+  const currency: string = 'TWD';
+
   const displayedLineItems =
     lineItems.length > 0 ? (
       lineItems.map((item, index) => (
@@ -114,7 +117,7 @@ const InvoiceEditVoucherTab: React.FC<{ lineItems: ILineItemsInfo[] }> = ({ line
   return (
     <div className="flex flex-col gap-8px">
       <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
-        Currency: TWD
+        Currency: {currency}
       </p>
       <div className="max-h-250px overflow-y-auto">
         <div className="table w-full overflow-hidden rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">

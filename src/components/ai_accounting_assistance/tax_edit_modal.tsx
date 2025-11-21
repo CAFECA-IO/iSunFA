@@ -84,7 +84,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({
       <div className="flex flex-col gap-32px rounded-lg bg-surface-neutral-surface-lv2 px-40px py-16px">
         {/* Info: (20251120 - Julian) Modal Header */}
         <div className="relative flex flex-col items-center">
-          <h2 className="test-xl font-bold text-card-text-primary">Edit Voucher</h2>
+          <h2 className="text-xl font-bold text-card-text-primary">Edit Voucher</h2>
           <p className="text-xs font-normal text-card-text-secondary">Invoice information</p>
           <button
             type="button"
