@@ -8,11 +8,17 @@ import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { marked } from 'marked';
 import { ToastType } from '@/interfaces/toastify';
 
+export enum ChatRole {
+  USER = 'user',
+  ASSISTANT = 'assistant',
+}
+
 interface IMessageBubbleProps {
+  chatRole: ChatRole;
   messageContent: string;
 }
 
-const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
+const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent }) => {
   const { toastHandler } = useModalContext();
 
   const [messageText, setMessageText] = useState<string>('');
@@ -22,6 +28,12 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
 
   const isLikeActive = isLiked === true;
   const isDislikeActive = isLiked === false;
+
+  const isUserMessage = chatRole === ChatRole.USER;
+
+  const bubbleColor = isUserMessage
+    ? 'border-chat-bubbles-surface-primary bg-chat-bubbles-surface-primary'
+    : 'border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary';
 
   // Info: (20251118 - Julian) 取得純文字，用於複製到剪貼簿
   const pureTextMessage = messageText.replace(/<[^>]+>/g, '');
@@ -37,7 +49,9 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
         // Info: (20251118 - Julian) ul 列表
         .replaceAll(/<ul/g, '<ul class="list-disc list-inside ml-8px" ')
         // Info: (20251118 - Julian) a 連結
-        .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ');
+        .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ')
+        // Info: (20251118 - Julian) img 圖片
+        .replaceAll(/<img /g, '<img class="max-w-250px h-auto" ');
 
       setMessageText(styledMessage);
     };
@@ -138,7 +152,9 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
   );
 
   const messageBubble = (
-    <div className="w-fit min-w-300px whitespace-pre-wrap rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
+    <div
+      className={`${bubbleColor} w-fit min-w-300px whitespace-pre-wrap rounded-lg border p-20px font-medium text-chat-bubbles-text-primary`}
+    >
       <article
         className="flex flex-col gap-8px"
         dangerouslySetInnerHTML={{ __html: messageText }}
@@ -146,9 +162,9 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
     </div>
   );
 
-  <div className="border-chat-bubbles-surface-primary bg-chat-bubbles-surface-primary">
-    {'questionContent'}
-  </div>;
+  if (isUserMessage) {
+    return <div className="ml-auto">{messageBubble}</div>;
+  }
 
   return (
     <div className="mr-auto flex flex-col gap-5px">

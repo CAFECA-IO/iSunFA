@@ -3,8 +3,7 @@ import Image from 'next/image';
 import AAALayout from '@/components/ai_accounting_assistance/layout';
 import { Button } from '@/components/button/button';
 import ChatInput from '@/components/ai_accounting_assistance/chat_input';
-import QuestionBubble from '@/components/ai_accounting_assistance/question_bubble';
-import MessageBubble from '@/components/ai_accounting_assistance/message_bubble';
+import MessageBubble, { ChatRole } from '@/components/ai_accounting_assistance/message_bubble';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
 import { IFaithContent } from '@/interfaces/faith';
@@ -44,11 +43,6 @@ const ChatMain: React.FC<IChatMainProps> = ({ askQuestion }) => {
     </div>
   );
 };
-
-enum ChatRole {
-  USER = 'user',
-  ASSISTANT = 'assistant',
-}
 
 enum LoadingType {
   LOADING = 'Loading...',
@@ -162,13 +156,9 @@ const AAAHomePageBody: React.FC = () => {
     </div>
   );
 
-  const chatMessages = dialogs.map((chat) =>
-    chat.from === ChatRole.USER ? (
-      <QuestionBubble key={chat.content} questionContent={chat.content} />
-    ) : (
-      <MessageBubble key={chat.content} messageContent={chat.content} />
-    )
-  );
+  const chatMessages = dialogs.map((chat) => (
+    <MessageBubble key={chat.content} messageContent={chat.content} chatRole={chat.from} />
+  ));
 
   const chatArea = isChatStarted ? (
     <div
