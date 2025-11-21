@@ -7,7 +7,7 @@ import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { dummyFaithCertificates } from '@/pages/api/v2/faith/session/[session_id]/certificate/index';
+import { dummyFaithCertificates } from '@/pages/api/v2/faith/session/[session_id]/certificate';
 
 const apiNameGET = APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION;
 const apiNameDELETE = APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION;

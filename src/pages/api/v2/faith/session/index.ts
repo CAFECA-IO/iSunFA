@@ -14,7 +14,7 @@ const apiNamePOST = APIName.CREATE_FAITH_SESSION;
 
 export const dummyFaithSessions: IFaithSession[] = [
   {
-    id: 'session-001',
+    id: '10000001',
     title: '費思：最受信任的人工智能會計師',
     description:
       '費思（FAITH）是一個基於區塊鏈技術的人工智能會計師，旨在為用戶提供安全、透明和高效的財務管理服務。',
@@ -23,7 +23,7 @@ export const dummyFaithSessions: IFaithSession[] = [
     updatedAt: 1713951200,
   },
   {
-    id: 'session-002',
+    id: '10000002',
     title: '費思：智能財務管理的未來',
     description:
       '費思（FAITH）利用先進的人工智能技術，為用戶提供個性化的財務建議和解決方案，幫助他們更好地管理財務。',
@@ -47,7 +47,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = {};
+  const result = dummyFaithSessions;
 
   const { isOutputDataValid, outputData } = validateOutputData(apiNameGET, result);
 
@@ -71,7 +71,7 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = dummyFaithSessions;
+  const result = { id: '10000003' };
 
   const { isOutputDataValid, outputData } = validateOutputData(apiNamePOST, result);
 

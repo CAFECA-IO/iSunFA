@@ -7,22 +7,9 @@ import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { IFaithContent } from '@/interfaces/faith';
+import { dummyFaithContents } from '@/pages/api/v2/faith/session/[session_id]/content';
 
 const apiName = APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION;
-
-const dummyContent: IFaithContent = {
-  id: 'content-001',
-  role: {
-    id: 'role-001',
-    name: 'Student',
-    image: 'https://storage.cafeca.io/api/v1/file/QmWZ3tiDVhEpSfvwLaHrVeBSkk4PSerFSHkUR7c6EqoFFd',
-  },
-  content: 'This is a sample content.',
-  like: true,
-  dislike: false,
-  createdAt: 1756550400,
-};
 
 const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
@@ -38,7 +25,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = dummyContent;
+  const result = dummyFaithContents[0];
 
   const { isOutputDataValid, outputData } = validateOutputData(apiName, result);
 
