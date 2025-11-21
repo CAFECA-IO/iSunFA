@@ -7,10 +7,11 @@ import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
+import { IFaithCertificate } from '@/interfaces/faith';
 
 const apiName = APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID;
 
-export const dummyFaithCertificates = [
+export const dummyFaithCertificates: IFaithCertificate[] = [
   {
     id: 'cert-001',
     name: '購置電腦週邊憑證',
