@@ -49,7 +49,6 @@ import {
   voucherPutSchema,
   voucherRestoreSchema,
 } from '@/lib/utils/zod_schema/voucher';
-import { zodExampleValidators } from '@/lib/utils/zod_schema/zod_example';
 import {
   accountingSettingGetSchema,
   accountingSettingPutSchema,
@@ -161,7 +160,6 @@ export const API_ZOD_SCHEMA = {
   // Info: (20241016 - Jacky) V1 Validators
   [APIName.JOURNAL_LIST]: journalRequestValidators.GET_LIST,
   [APIName.KYC_UPLOAD]: kycRequestValidators.POST,
-  [APIName.ZOD_EXAMPLE]: zodExampleValidators.GET_ONE,
 
   // Info: (20241016 - Jacky) V2 Validators
   [APIName.CERTIFICATE_DELETE_V2]: certificateDeleteValidator,
@@ -265,7 +263,6 @@ export const ZOD_SCHEMA_API = {
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: accountUpdateSchema,
   [APIName.DELETE_ACCOUNT_BY_ID]: accountDeleteSchema,
   [APIName.PUBLIC_KEY_GET]: publicKeyGetSchema,
-  [APIName.ZOD_EXAMPLE]: nullAPISchema, // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: nullAPISchema,
   [APIName.PUSHER_AUTH]: nullAPISchema,
   [APIName.ASSET_LIST_V2]: assetListSchema,
@@ -335,4 +332,23 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_BAIFA_VOUCHER]: listBaifaVoucherSchema,
   [APIName.GET_VACANCY_BY_ID]: nullAPISchema, // ToDo: (20250704 - Julian) need to define the schema for get vacancy by id
   [APIName.GET_REFERRAL_CODE]: getReferralCodeSchema,
+
+  // Info: (20251120 - Luphia) Faith Session API Zod schema
+  [APIName.LIST_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for list faith session
+  [APIName.CREATE_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create faith session
+  [APIName.GET_FAITH_SESSION_BY_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for get faith session by id
+  [APIName.DELETE_FAITH_SESSION_BY_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for delete faith session by id
+  [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for list content by faith session id
+  [APIName.CREATE_CONTENT_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create content in faith session
+  [APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for get content by id in faith session
+  [APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for list certificate by faith session id
+  [APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for get certificate by id in faith session
+  [APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for delete certificate by id in faith session
+  [APIName.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for like content by id in faith session
+  [APIName.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for delete like content by id in faith session
+  [APIName.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for dislike content by id in faith session
+  [APIName.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for delete dislike content by id in faith session
+  [APIName.CREATE_SHARE_FOR_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create share for faith session
+  [APIName.CREATE_SHARE_FOR_FAITH_CONTENT]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create share for faith content
+  [APIName.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for regenerate content by id in faith session
 };
