@@ -11,45 +11,39 @@ import CounterpartyInput, {
 } from '@/components/certificate/counterparty_input';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
-import { default30DayPeriodInSec } from '@/constants/display';
+import { ITaxInfo } from '@/interfaces/invoice_edit_area';
 import { TaxType } from '@/constants/invoice_rc2';
-import { CounterpartyType } from '@/constants/counterparty';
 
 interface ITaxEditModalProps {
   isModalOpen: boolean;
   onClose: () => void;
+  imageUrl: string;
+  taxInfoData: ITaxInfo;
 }
 
-const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) => {
+const TaxEditModal: React.FC<ITaxEditModalProps> = ({
+  isModalOpen,
+  onClose,
+  imageUrl,
+  taxInfoData,
+}) => {
+  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } = taxInfoData;
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
   // ToDo: (20251120 - Julian) Get data from props or API
-  const imageUrl: string = '/images/demo_certifate.png';
   const currency: string = 'TWD';
-  const counterpartyList: ICounterparty[] = [
-    {
-      id: 1,
-      companyId: 1,
-      type: CounterpartyType.CLIENT,
-      note: 'Important client',
-      createdAt: 1697040000,
-      updatedAt: 1697040000,
-      name: 'Demo Company Ltd.',
-      taxId: '12345678',
-    },
-  ];
-  const initialTaxType: TaxType = TaxType.TAXABLE;
-  const initialTaxRate: number | null = 5;
+  const counterpartyList: ICounterparty[] = [tradingPartner];
 
-  const [noInputValue, setNoInputValue] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<IDatePeriod>(default30DayPeriodInSec);
-  const [selectedCounterparty, setSelectedCounterparty] = useState<ICounterpartyOptional>(
-    counterpartyList[0]
-  );
-  const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(initialTaxType);
-  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(initialTaxRate);
-  const [salesAmountValue, setSalesAmountValue] = useState<number>(0);
-  const [taxValue, setTaxValue] = useState<number>(0);
+  const initialDate = { startTimeStamp: issueDate, endTimeStamp: issueDate };
+
+  const [noInputValue, setNoInputValue] = useState<string>(invoiceNo);
+  const [selectedDate, setSelectedDate] = useState<IDatePeriod>(initialDate);
+  const [selectedCounterparty, setSelectedCounterparty] =
+    useState<ICounterpartyOptional>(tradingPartner);
+  const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(taxType);
+  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(taxRate);
+  const [salesAmountValue, setSalesAmountValue] = useState<number>(salesAmount);
+  const [taxValue, setTaxValue] = useState<number>(tax);
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
   const saveDisabled = noInputValue === '' || salesAmountValue === 0 || taxValue === 0;
@@ -90,7 +84,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
       <div className="flex flex-col gap-32px rounded-lg bg-surface-neutral-surface-lv2 px-40px py-16px">
         {/* Info: (20251120 - Julian) Modal Header */}
         <div className="relative flex flex-col items-center">
-          <h2 className="test-xl font-bold text-card-text-primary">Edit Voucher</h2>
+          <h2 className="text-xl font-bold text-card-text-primary">Edit Voucher</h2>
           <p className="text-xs font-normal text-card-text-secondary">Invoice information</p>
           <button
             type="button"
@@ -157,8 +151,8 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({ isModalOpen, onClose }) =>
               </p>
               <TaxMenu
                 selectTaxHandler={handleTaxChange}
-                initialTaxType={initialTaxType}
-                initialTaxRate={initialTaxRate}
+                initialTaxType={taxType}
+                initialTaxRate={taxRate}
                 btnClassName="border-input-text-input-placeholder text-input-text-input-filled"
               />
             </div>

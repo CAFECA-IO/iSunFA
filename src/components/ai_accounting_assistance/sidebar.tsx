@@ -149,7 +149,7 @@ const AAASidebar: React.FC<ISidebarProps> = ({
 
   return (
     <div
-      className={`${isOpen ? 'w-250px px-16px' : 'w-70px px-12px'} fixed flex h-screen flex-col gap-32px bg-surface-neutral-surface-lv1 py-16px transition-all duration-200 ease-in-out`}
+      className={`${isOpen ? 'w-250px px-16px' : 'w-70px px-12px'} fixed z-10 flex h-screen flex-col gap-32px bg-surface-neutral-surface-lv1 py-16px transition-all duration-200 ease-in-out`}
     >
       {/* Info: (20251014 - Julian) Header */}
       <button type="button" onClick={toggleSidebar} className="group flex items-center gap-8px">
