@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaRegCheckCircle } from 'react-icons/fa';
@@ -10,7 +10,9 @@ import { ISUNFA_ROUTE } from '@/constants/url';
 import { default30DayPeriodInSec } from '@/constants/display';
 import { useUserCtx } from '@/contexts/user_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { IInvoiceData, mockInvoiceList } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 enum InvoiceTab {
   DRAFT = 'draft',
@@ -32,14 +34,31 @@ const AAASidebar: React.FC<ISidebarProps> = ({
 }) => {
   const { isSignIn } = useUserCtx();
 
-  // ToDo: (20251014 - Julian) Replace mock data with real data from backend
-  const invoiceData: IInvoiceData[] = mockInvoiceList;
+  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
+  const params = { sessionId: '123' };
+
+  const { trigger: getInvoiceList } = APIHandler<IFaithCertificate[]>(
+    APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID,
+    { params }
+  );
 
   const [currentTab, setCurrentTab] = useState<InvoiceTab>(InvoiceTab.DRAFT);
   const [selectedPeriod, setSelectedPeriod] = useState<IDatePeriod>(default30DayPeriodInSec);
   // ToDo: (20251021 - Julian) Develop sorting function
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sortBy, setSortBy] = useState<string>(SORT_BY_OPTIONS[0]);
+  const [invoiceData, setInvoiceData] = useState<IFaithCertificate[]>([]);
+
+  useEffect(() => {
+    // Info: (20251121 - Julian) 取得發票列表
+    const getInvoices = async () => {
+      const { data } = await getInvoiceList({ params });
+      // Info: (20251121 - Julian) 將取得的發票列表轉成 IInvoiceData 格式
+      setInvoiceData(data ?? []);
+    };
+
+    getInvoices();
+  }, []);
 
   const displayedTabs = isSignIn && (
     <div className="grid grid-cols-2 gap-8px">

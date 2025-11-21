@@ -68,7 +68,7 @@ const AAAHomePageBody: React.FC = () => {
 
   const {
     trigger: postNewDialog,
-    isLoading: isPostNewDialogLoading = true,
+    // isLoading: isPostNewDialogLoading = true,
     success: postSuccess,
   } = APIHandler(APIName.CREATE_CONTENT_IN_FAITH_SESSION, { params });
 
@@ -77,7 +77,7 @@ const AAAHomePageBody: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingType, setLoadingType] = useState<LoadingType>(LoadingType.LOADING);
 
-  const sendDisabled = isDialogListLoading || isPostNewDialogLoading;
+  const sendDisabled = isDialogListLoading;
 
   useEffect(() => {
     // Info: (20251118 - Julian) 只要收到新的 dialog，就自動滾動到最底部

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiEdit } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
-import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
+// import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
 import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
-import { mockInvoiceList } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
@@ -20,19 +22,33 @@ enum InvoiceEditTab {
   VOUCHER = 'Voucher',
 }
 
+// ToDo: (20251121 - Julian) 補上 Loading Skeleton
+
 const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceId }) => {
-  // ToDo: (20251119 - Julian) get invoice data by id via API
-  const invoiceData = mockInvoiceList.find((invoice) => invoice.id === invoiceId);
-
-  if (!invoiceData) {
-    return null;
-  }
-
-  const { id, imageUrl, taxInfo, voucherInfo } = invoiceData;
-
+  const [invoiceData, setInvoiceData] = useState<IFaithCertificate | null>(null);
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
   const [isOpenTaxEditModal, setIsTaxOpenEditModal] = useState<boolean>(false);
   const [isOpenVoucherEditModal, setIsVoucherOpenEditModal] = useState<boolean>(false);
+
+  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
+  const params = { sessionId: '123', certificateId: invoiceId };
+
+  const { trigger: getInvoice } = APIHandler<IFaithCertificate>(
+    APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+    { params }
+  );
+
+  useEffect(() => {
+    const fetchInvoiceData = async () => {
+      const { data, success } = await getInvoice({ params });
+      if (data && success) {
+        setInvoiceData(data);
+      } else {
+        setInvoiceData(null);
+      }
+    };
+    fetchInvoiceData();
+  }, [invoiceId, isOpen]);
 
   const toggleTaxEditModal = () => setIsTaxOpenEditModal((prev) => !prev);
   const toggleVoucherEditModal = () => setIsVoucherOpenEditModal((prev) => !prev);
@@ -66,9 +82,10 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
 
   const tabContent =
     invoiceEditTab === InvoiceEditTab.TAX_INFO ? (
-      <InvoiceEditTaxInfoTab data={taxInfo} />
+      invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
     ) : (
-      <InvoiceEditVoucherTab lineItems={voucherInfo.lineItemsInfo} />
+      <div></div> // ToDo: (20251121 - Julian) Implement Voucher Tab Content
+      // <InvoiceEditVoucherTab lineItems={voucherInfo.lineItems} />
     );
 
   return (
@@ -81,18 +98,22 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
           <button type="button" className="p-10px text-button-text-secondary" onClick={toggle}>
             <RxCross2 size={20} />
           </button>
-          <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">{id}</p>
+          <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">
+            {invoiceData?.id}
+          </p>
         </div>
 
         {/* Info: (20251117 - Julian) Image Zoom In */}
-        <div>
-          <ImageZoom
-            imageUrl={imageUrl}
-            className="h-450px w-full"
-            controlPosition="bottom-right"
-            isControlBackground
-          />
-        </div>
+        {invoiceData && (
+          <div>
+            <ImageZoom
+              imageUrl={invoiceData.image}
+              className="h-450px w-full"
+              controlPosition="bottom-right"
+              isControlBackground
+            />
+          </div>
+        )}
 
         {/* Info: (20251114 - Julian) Invoice Details */}
         <div className="flex flex-col gap-24px">
@@ -108,12 +129,14 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
       </div>
 
       {/* Info: (20251120 - Julian) Edit Modal */}
-      <TaxEditModal
-        isModalOpen={isOpenTaxEditModal}
-        onClose={toggleTaxEditModal}
-        imageUrl={imageUrl}
-        taxInfoData={taxInfo}
-      />
+      {invoiceData?.taxInfo && (
+        <TaxEditModal
+          isModalOpen={isOpenTaxEditModal}
+          onClose={toggleTaxEditModal}
+          imageUrl={invoiceData.image}
+          taxInfoData={invoiceData.taxInfo}
+        />
+      )}
 
       <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
     </>

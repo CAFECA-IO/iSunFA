@@ -10,7 +10,7 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -25,7 +25,7 @@ export const SORT_BY_OPTIONS = [
 ];
 
 const InvoiceList: React.FC<{
-  invoiceData: IInvoiceData[];
+  invoiceData: IFaithCertificate[];
   sortBy: string;
   setSortBy: React.Dispatch<React.SetStateAction<string>>;
   selectedPeriod: IDatePeriod;

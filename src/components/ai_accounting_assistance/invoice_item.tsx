@@ -4,7 +4,7 @@ import { CiImageOn } from 'react-icons/ci';
 import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
-import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
 import { useModalContext } from '@/contexts/modal_context';
 import { checkboxStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
@@ -13,7 +13,7 @@ import APIHandler from '@/lib/utils/api_handler';
 import { ToastType } from '@/interfaces/toastify';
 
 interface IInvoiceItemProps {
-  invoice: IInvoiceData;
+  invoice: IFaithCertificate;
   isActive: boolean;
   clickHandler: () => void;
   isSelected: boolean;
@@ -30,9 +30,12 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   isSelectedMode,
   selectHandler,
 }) => {
-  const { id, unread, imageUrl } = invoice;
+  const { id, image } = invoice;
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
+
+  // ToDo: (20251121 - Julian) Should get from api
+  const unread = false;
 
   // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
   const params = { sessionId: '123', certificateId: id };
@@ -183,7 +186,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
       {selectCheckbox}
       {/* Info: (20251014 - Julian) Thumbnail */}
       <div className="relative h-48px w-48px shrink-0 rounded-xs border border-stroke-neutral-quaternary">
-        <Image src={imageUrl} fill objectFit="contain" alt="invoice_thumbnail" />
+        <Image src={image} fill objectFit="contain" alt="invoice_thumbnail" />
       </div>
       {/* Info: (20251014 - Julian) Id */}
       <div className="flex flex-1 items-center gap-4px">
