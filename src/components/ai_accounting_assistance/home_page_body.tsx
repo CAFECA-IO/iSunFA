@@ -63,6 +63,7 @@ interface IDialog {
 const AAAHomePageBody: React.FC = () => {
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
+  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
   const params = { sessionId: '123' };
 
   const { trigger: getDialogList, isLoading: isDialogListLoading = true } = APIHandler<
