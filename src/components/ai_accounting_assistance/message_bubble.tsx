@@ -8,11 +8,11 @@ import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { marked } from 'marked';
 import { ToastType } from '@/interfaces/toastify';
 
-interface IAnswerBubbleProps {
-  answerContent: string;
+interface IMessageBubbleProps {
+  messageContent: string;
 }
 
-const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
+const MessageBubble: React.FC<IMessageBubbleProps> = ({ messageContent }) => {
   const { toastHandler } = useModalContext();
 
   const [messageText, setMessageText] = useState<string>('');
@@ -28,7 +28,7 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
 
   useEffect(() => {
     const fetchMessage = async () => {
-      const htmlMessage = await marked.parse(answerContent);
+      const htmlMessage = await marked.parse(messageContent);
 
       // Info: (20251118 - Julian) 加入樣式
       const styledMessage = htmlMessage
@@ -137,15 +137,23 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
     </button>
   );
 
+  const messageBubble = (
+    <div className="w-fit min-w-300px whitespace-pre-wrap rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
+      <article
+        className="flex flex-col gap-8px"
+        dangerouslySetInnerHTML={{ __html: messageText }}
+      />
+    </div>
+  );
+
+  <div className="border-chat-bubbles-surface-primary bg-chat-bubbles-surface-primary">
+    {'questionContent'}
+  </div>;
+
   return (
     <div className="mr-auto flex flex-col gap-5px">
       {/* Info: (20251118 - Julian) Message Bubble */}
-      <div className="w-fit min-w-300px rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
-        <article
-          className="flex flex-col gap-8px"
-          dangerouslySetInnerHTML={{ __html: messageText }}
-        />
-      </div>
+      {messageBubble}
 
       {/* Info: (20251118 - Julian) Toolbar */}
       <div className="flex items-center py-4px">
@@ -171,4 +179,4 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
   );
 };
 
-export default AnswerBubble;
+export default MessageBubble;
