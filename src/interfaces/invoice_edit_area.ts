@@ -1,13 +1,12 @@
 import { TaxType } from '@/constants/invoice_rc2';
 import { ILineItemsInfo } from '@/interfaces/voucher';
+import { ICounterparty } from '@/interfaces/counterparty';
+import { CounterpartyType } from '@/constants/counterparty';
 
 export interface ITaxInfo {
   invoiceNo: string;
   issueDate: number;
-  tradingPartner: {
-    name: string;
-    taxId: string;
-  };
+  tradingPartner: ICounterparty;
   taxType: TaxType;
   taxRate: number;
   salesAmount: number;
@@ -31,7 +30,13 @@ export const mockInvoiceData: IInvoiceData = {
     invoiceNo: 'AB-12345678',
     issueDate: 1762109170,
     tradingPartner: {
-      name: 'XYZ Corporation',
+      id: 1,
+      companyId: 1,
+      type: CounterpartyType.CLIENT,
+      note: 'Important client',
+      createdAt: 1697040000,
+      updatedAt: 1697040000,
+      name: 'Demo Company Ltd.',
       taxId: '12345678',
     },
     taxType: TaxType.TAXABLE,

@@ -6,7 +6,8 @@ import { ITaxInfo } from '@/interfaces/invoice_edit_area';
 const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
   const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } = data;
 
-  const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
+  // ToDo: (20251121 - Julian) Change Style for AI Modify Feature testing
+  // const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
 
   const formattedIssueDate = timestampToString(issueDate).date;
 
@@ -49,9 +50,9 @@ const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
       </div>
       {/* ToDo: (20251114 - Julian) AI Modify Style for testing, will remove later */}
       <div className="flex items-center justify-between">
-        <p className={aiModifyStyle}>Tax</p>
+        <p>Tax</p>
         <p>
-          <span className={aiModifyStyle}>{numberWithCommas(tax)}</span> TWD
+          <span>{numberWithCommas(tax)}</span> TWD
         </p>
       </div>
     </div>

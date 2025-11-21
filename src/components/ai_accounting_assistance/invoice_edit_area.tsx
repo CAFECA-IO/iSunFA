@@ -97,7 +97,12 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
       </div>
 
       {/* Info: (20251120 - Julian) Edit Modal */}
-      <TaxEditModal isModalOpen={isOpenEditModal} onClose={toggleEditModal} />
+      <TaxEditModal
+        isModalOpen={isOpenEditModal}
+        onClose={toggleEditModal}
+        imageUrl={imageUrl}
+        taxInfoData={taxInfo}
+      />
     </>
   );
 };
