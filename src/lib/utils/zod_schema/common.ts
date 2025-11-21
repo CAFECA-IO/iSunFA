@@ -82,7 +82,7 @@ export function zodFilterSectionSortingOptions() {
   return setting;
 }
 
-export const nullSchema = z.union([z.object({}), z.string(), z.undefined()]);
+export const nullSchema = z.any();
 
 export const nullAPISchema = {
   input: {

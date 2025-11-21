@@ -32,7 +32,7 @@ async function getLatestFile(dir: string) {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Info: (20251112 - Julian) 薪資計算機說明資料夾路徑
-    const dir = 'src/salary_calculator_operating_mechanism';
+    const dir = 'documents/salary_calculator_operating_mechanism';
 
     // Info: (20251112 - Julian) 讀取資料夾中最新的 md 檔案
     const recentFile = await getLatestFile(dir);
