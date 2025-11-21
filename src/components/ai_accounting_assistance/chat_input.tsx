@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { FiSend } from 'react-icons/fi';
+import { useBase64 } from '@/lib/hooks/use_base_64';
 import { Button } from '@/components/button/button';
+import UploadingToast from '@/components/ai_accounting_assistance/uploading_toast';
 
 const FOUR_LINE_HEIGHT_PX = 24 * 4;
 
@@ -10,11 +12,56 @@ interface IChatInputProps {
 }
 
 const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { convertToBase64 } = useBase64();
+
   const [inputValue, setInputValue] = useState<string>('');
   const [isOverFourLines, setIsOverFourLines] = useState<boolean>(false);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   const isNullValue = inputValue.trim() === '';
+
+  // Info: (20251119 - Julian) 打開檔案選擇對話框
+  const openFileDialog = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleUpload = async (file: File) => {
+    // ToDo: (20251119 - Julian) Upload file logic, turn file into base64 to send to backend
+    const base64String = await convertToBase64(file);
+
+    const inlineData = {
+      mimeType: file.type,
+      data: base64String.split(',')[1], // Info: (20251119 - Julian) Remove the data URL prefix
+    };
+    // Deprecated: (20251119 - Luphia) remove eslint-disable
+    // eslint-disable-next-line no-console
+    console.log('Uploading file:', inlineData);
+  };
+
+  // Info: (20251119 - Julian) 上傳檔案
+  const handleFileUpload = useCallback(
+    async (files: FileList | null) => {
+      if (isUploading || !files) return;
+
+      setIsUploading(true);
+      await Promise.all(Array.from(files).map(async (file) => handleUpload(file)));
+      setIsUploading(false);
+    },
+    [isUploading, handleUpload]
+  );
+
+  // Info: (20251119 - Julian) 選擇檔案
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleFileUpload(event.target.files);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const autoResize = () => {
     const el = textareaRef.current;
@@ -61,9 +108,23 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
       <div
         className={`${isOverFourLines ? 'items-end' : 'items-center'} flex h-auto w-full max-w-920px gap-16px rounded-md border border-input-stroke-input bg-input-surface-input-background p-12px`}
       >
-        <Button type="button" size="defaultSquare">
+        {/* Info: (20251119 - Julian) 上傳檔案按鈕 */}
+        <Button type="button" size="defaultSquare" disabled={isUploading} onClick={openFileDialog}>
           <FaPlus />
         </Button>
+
+        {/* Info: (20251119 - Julian) 上傳檔案按鈕 Input */}
+        <input
+          ref={fileInputRef}
+          id="invoice-upload"
+          name="invoice-upload"
+          accept="application/pdf, image/jpeg, image/png"
+          type="file"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+
+        {/* Info: (20251119 - Julian) 訊息輸入框 */}
         <textarea
           id="chat-input"
           value={inputValue}
@@ -74,6 +135,8 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
           className="h-auto flex-1 resize-none overflow-y-hidden bg-transparent outline-none"
           placeholder="Upload a certificate or say something to start"
         />
+
+        {/* Info: (20251119 - Julian) 送出按鈕 */}
         <Button
           type="button"
           size="defaultSquare"
@@ -84,9 +147,14 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
           <FiSend size={24} />
         </Button>
       </div>
+
+      {/* Info: (20251119 - Julian) 提示文字 */}
       <p className="text-sm font-medium text-input-text-secondary">
         AI may make mistakes. Please verify important information.
       </p>
+
+      {/* ToDo: (20251120 - Julian) Uploading Toast */}
+      {isUploading && <UploadingToast progress={38} countOfAllUploading={6} countOfDone={3} />}
     </div>
   );
 };

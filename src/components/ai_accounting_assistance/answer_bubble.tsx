@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useModalContext } from '@/contexts/modal_context';
 import { PiCopySimple } from 'react-icons/pi';
 import { SlRefresh } from 'react-icons/sl';
 import { FaCheck } from 'react-icons/fa6';
 import { FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
 import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { marked } from 'marked';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IAnswerBubbleProps {
   answerContent: string;
 }
 
 const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
+  const { toastHandler } = useModalContext();
+
   const [messageText, setMessageText] = useState<string>('');
   const [isCopySuccess, setIsCopySuccess] = useState<boolean>(false);
   const [isLiked, setIsLiked] = useState<boolean | null>(null);
@@ -54,6 +58,15 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
   const copyHandler = () => {
     navigator.clipboard.writeText(pureTextMessage);
     setIsCopySuccess(true);
+
+    // Info: (20251119 - Julian) 顯示複製成功 Toast
+    toastHandler({
+      id: 'copy-success',
+      type: ToastType.SUCCESS,
+      content: 'Copied!',
+      closeable: true,
+      autoClose: 1000,
+    });
   };
 
   // ToDo: (20251118 - Julian) refresh 功能待實作

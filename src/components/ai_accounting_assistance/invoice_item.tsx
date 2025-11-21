@@ -4,24 +4,31 @@ import { CiImageOn } from 'react-icons/ci';
 import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
-
-// ToDo: (20251014 - Julian) During development
-interface IInvoiceItem {
-  id: number;
-  name: string;
-  thumbnail: string;
-  unread: boolean;
-}
+import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { useModalContext } from '@/contexts/modal_context';
+import { checkboxStyle } from '@/constants/display';
+import { MessageType } from '@/interfaces/message_modal';
 
 interface IInvoiceItemProps {
-  invoice: IInvoiceItem;
-  isSelected: boolean;
+  invoice: IInvoiceData;
+  isActive: boolean;
   clickHandler: () => void;
+  isSelected: boolean;
+  isSelectedMode: boolean;
+  selectHandler: () => void;
 }
 
 // ToDo: (20251014 - Julian) during development
-const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHandler }) => {
-  const { id, name, unread, thumbnail } = invoice;
+const InvoiceItem: React.FC<IInvoiceItemProps> = ({
+  invoice,
+  isActive,
+  clickHandler,
+  isSelected,
+  isSelectedMode,
+  selectHandler,
+}) => {
+  const { id, unread, imageUrl } = invoice;
+  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
 
   // ToDo: (20251015 - Julian) mock state for UI test
   const unfinished = true;
@@ -29,7 +36,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
   const isError = false;
   const disabled = false;
 
-  const enableStyle = isSelected
+  const enableStyle = isActive
     ? 'bg-surface-brand-primary-lv3 border-stroke-brand-primary'
     : 'border-stroke-neutral-quaternary hover:border-stroke-brand-primary hover:bg-surface-brand-primary-30 hover:cursor-pointer';
 
@@ -39,12 +46,37 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
   const itemStyle = disabled ? disabledStyle : enableStyle;
 
   const deleteInvoice = () => {
+    // ToDo: (20251119 - Julian) delete selected invoices logic
+    // eslint-disable-next-line no-console
+    console.log(`Deleting invoice ${id}`);
+    messageModalVisibilityHandler();
+  };
+
+  const deleteHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
     // Info: (20251015 - Julian) disabled 狀態下不執行任何動作
     if (disabled) return;
 
-    // ToDo: (20251014 - Julian) delete invoice function
-    // eslint-disable-next-line no-console
-    console.log(`Delete invoice ${id}`);
+    event.stopPropagation(); // Info: (20251119 - Julian) 阻止事件冒泡，避免觸發 clickItem
+
+    messageModalDataHandler({
+      messageType: MessageType.WARNING,
+      title: 'Remove Invoice',
+      content: `Are you sure you want to remove ${id} from your draft?`,
+      backBtnStr: 'No, Cancel',
+      backBtnFunction: messageModalVisibilityHandler,
+      submitBtnStr: 'Yes. Remove it.',
+      submitBtnFunction: deleteInvoice,
+      submitBtnVariant: 'default',
+    });
+    messageModalVisibilityHandler();
+  };
+
+  const clickItem = () => {
+    if (isSelectedMode) {
+      selectHandler();
+    } else {
+      clickHandler();
+    }
   };
 
   // Info: (20251015 - Julian) =========== Loading 樣式 ===========
@@ -86,11 +118,21 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
   const deleteBtn = disabled ? null : (
     <button
       type="button"
-      onClick={deleteInvoice}
+      onClick={deleteHandler}
       className="p-8px text-icon-surface-single-color-primary"
     >
       <FiTrash2 size={20} />
     </button>
+  );
+
+  const selectCheckbox = isSelectedMode ? (
+    <div className="w-20px">
+      <input type="checkbox" checked={isSelected} className={checkboxStyle} />
+    </div>
+  ) : (
+    unread && (
+      <Image src="/icons/unread_indicator.svg" width={10} height={10} alt="unread_indicator" />
+    )
   );
 
   if (isLoading) return LoadingItem;
@@ -98,20 +140,18 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({ invoice, isSelected, clickHa
 
   return (
     <div
-      onClick={clickHandler}
+      onClick={clickItem}
       className={`${itemStyle} flex items-center gap-8px rounded-xs border p-8px`}
     >
-      {/* Info: (20251014 - Julian) Unread icon */}
-      {unread && (
-        <Image src="/icons/unread_indicator.svg" width={10} height={10} alt="unread_indicator" />
-      )}
+      {/* Info: (20251014 - Julian) Unread icon / Select Checkbox */}
+      {selectCheckbox}
       {/* Info: (20251014 - Julian) Thumbnail */}
       <div className="relative h-48px w-48px shrink-0 rounded-xs border border-stroke-neutral-quaternary">
-        <Image src={thumbnail} fill objectFit="contain" alt="invoice_thumbnail" />
+        <Image src={imageUrl} fill objectFit="contain" alt="invoice_thumbnail" />
       </div>
       {/* Info: (20251014 - Julian) Id */}
       <div className="flex flex-1 items-center gap-4px">
-        <p className="max-w-60px truncate text-sm font-medium text-text-neutral-primary">{name}</p>
+        <p className="max-w-60px truncate text-sm font-medium text-text-neutral-primary">{id}</p>
         {unfinished && <IoWarningOutline size={16} className="shrink-0 text-icon-surface-error" />}
       </div>
       {/* Info: (20251014 - Julian) Delete Button */}

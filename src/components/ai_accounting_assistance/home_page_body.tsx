@@ -128,7 +128,10 @@ const AAAHomePageBody: React.FC = () => {
   );
 
   const chatArea = isChatStarted ? (
-    <div ref={chatAreaRef} className="mb-20px flex flex-1 flex-col gap-24px overflow-y-auto">
+    <div
+      ref={chatAreaRef}
+      className="relative mb-20px flex flex-1 flex-col gap-24px overflow-y-auto"
+    >
       {chatMessages}
       {loadingStr}
     </div>

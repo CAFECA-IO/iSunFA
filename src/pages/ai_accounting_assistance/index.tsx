@@ -26,7 +26,12 @@ const AAAHomePage: React.FC = () => {
 
 const getStaticPropsFunction = async ({ locale }: ILocale) => ({
   props: {
-    ...(await serverSideTranslations(locale, ['common', 'calculator', 'date_picker'])),
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'calculator',
+      'date_picker',
+      'certificate',
+    ])),
   },
 });
 
