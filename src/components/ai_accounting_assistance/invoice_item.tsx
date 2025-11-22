@@ -4,13 +4,16 @@ import { CiImageOn } from 'react-icons/ci';
 import { FiTrash2 } from 'react-icons/fi';
 import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
-import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
 import { useModalContext } from '@/contexts/modal_context';
 import { checkboxStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
 
 interface IInvoiceItemProps {
-  invoice: IInvoiceData;
+  invoice: IFaithCertificate;
   isActive: boolean;
   clickHandler: () => void;
   isSelected: boolean;
@@ -27,12 +30,23 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   isSelectedMode,
   selectHandler,
 }) => {
-  const { id, unread, imageUrl } = invoice;
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { id, image } = invoice;
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
+
+  // ToDo: (20251121 - Julian) Should get from api
+  const unread = false;
+
+  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
+  const params = { sessionId: '123', certificateId: id };
+
+  const { trigger: deleteById, isLoading } = APIHandler(
+    APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+    { params }
+  );
 
   // ToDo: (20251015 - Julian) mock state for UI test
   const unfinished = true;
-  const isLoading = false;
   const isError = false;
   const disabled = false;
 
@@ -45,11 +59,36 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
 
   const itemStyle = disabled ? disabledStyle : enableStyle;
 
-  const deleteInvoice = () => {
-    // ToDo: (20251119 - Julian) delete selected invoices logic
-    // eslint-disable-next-line no-console
-    console.log(`Deleting invoice ${id}`);
-    messageModalVisibilityHandler();
+  const deleteInvoice = async () => {
+    try {
+      // ToDo: (20251121 - Julian) 須確認 body 格式
+      const body = { id };
+      const { success } = await deleteById({ params, body });
+
+      if (success) {
+        toastHandler({
+          id: `delete_invoice_${id}_success`,
+          type: ToastType.SUCCESS,
+          content: `Invoice ${id} has been removed from your draft.`,
+          closeable: true,
+          autoClose: 3000,
+        });
+      } else {
+        toastHandler({
+          id: `delete_invoice_${id}_failed`,
+          type: ToastType.ERROR,
+          content: `Failed to remove invoice ${id}. Please try again.`,
+          closeable: true,
+        });
+      }
+    } catch (err) {
+      toastHandler({
+        id: `delete_invoice_${id}_error`,
+        type: ToastType.ERROR,
+        content: `Error message: ${(err as Error).message}`,
+        closeable: true,
+      });
+    }
   };
 
   const deleteHandler = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -147,7 +186,7 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
       {selectCheckbox}
       {/* Info: (20251014 - Julian) Thumbnail */}
       <div className="relative h-48px w-48px shrink-0 rounded-xs border border-stroke-neutral-quaternary">
-        <Image src={imageUrl} fill objectFit="contain" alt="invoice_thumbnail" />
+        <Image src={image} fill objectFit="contain" alt="invoice_thumbnail" />
       </div>
       {/* Info: (20251014 - Julian) Id */}
       <div className="flex flex-1 items-center gap-4px">

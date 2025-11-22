@@ -21,7 +21,7 @@ export const dummyFaithContents: IFaithContent[] = [
       image: 'https://storage.cafeca.io/api/v1/file/QmWZ3tiDVhEpSfvwLaHrVeBSkk4PSerFSHkUR7c6EqoFFd',
     },
     content:
-      '我的公司統一編號是 52650861，請幫我分析這張憑證並轉換成會計傳票\n[上傳圖片](https://storage.cafeca.io/api/v1/file/Qmayze1Lxpi7ywY3vTHh9QKaxpHaxcRFiUVX627xEDk8KF)',
+      '我的公司統一編號是 52650861，請幫我分析這張憑證並轉換成會計傳票\n![上傳圖片](https://storage.cafeca.io/api/v1/file/Qmayze1Lxpi7ywY3vTHh9QKaxpHaxcRFiUVX627xEDk8KF)',
     like: true,
     dislike: false,
     createdAt: 1756550400,

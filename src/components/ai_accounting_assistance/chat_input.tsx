@@ -9,9 +9,10 @@ const FOUR_LINE_HEIGHT_PX = 24 * 4;
 
 interface IChatInputProps {
   askQuestion: (question: string) => void;
+  sendDisabled: boolean;
 }
 
-const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
+const ChatInput: React.FC<IChatInputProps> = ({ askQuestion, sendDisabled }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -22,6 +23,7 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
   const isNullValue = inputValue.trim() === '';
+  const sendBtnDisabled = isNullValue || sendDisabled;
 
   // Info: (20251119 - Julian) 打開檔案選擇對話框
   const openFileDialog = () => {
@@ -142,7 +144,7 @@ const ChatInput: React.FC<IChatInputProps> = ({ askQuestion }) => {
           size="defaultSquare"
           variant="tertiaryBorderless"
           onClick={sendMessage}
-          disabled={isNullValue}
+          disabled={sendBtnDisabled}
         >
           <FiSend size={24} />
         </Button>

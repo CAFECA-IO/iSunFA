@@ -10,8 +10,11 @@ import { numberWithCommas } from '@/lib/utils/common';
 import { useUserCtx } from '@/contexts/user_context';
 import { useModalContext } from '@/contexts/modal_context';
 import { IDatePeriod } from '@/interfaces/date_period';
-import { IInvoiceData } from '@/interfaces/invoice_edit_area';
+import { IFaithCertificate } from '@/interfaces/faith';
 import { MessageType } from '@/interfaces/message_modal';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { ToastType } from '@/interfaces/toastify';
 
 // ToDo: (20251021 - Julian) 目前先用 string 儲存排序選項，之後再改成其他更合適的型別
 export const SORT_BY_OPTIONS = [
@@ -22,7 +25,7 @@ export const SORT_BY_OPTIONS = [
 ];
 
 const InvoiceList: React.FC<{
-  invoiceData: IInvoiceData[];
+  invoiceData: IFaithCertificate[];
   sortBy: string;
   setSortBy: React.Dispatch<React.SetStateAction<string>>;
   selectedPeriod: IDatePeriod;
@@ -39,7 +42,12 @@ const InvoiceList: React.FC<{
   clickInvoiceHandler,
 }) => {
   const { isSignIn } = useUserCtx();
-  const { messageModalDataHandler, messageModalVisibilityHandler } = useModalContext();
+  const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
+    useModalContext();
+
+  const { trigger: deleteCertificates, isLoading: isDeleting } = APIHandler(
+    APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION
+  );
 
   const invoiceCount = numberWithCommas(invoiceData.length);
 
@@ -49,6 +57,8 @@ const InvoiceList: React.FC<{
   const [isShownOnlyIncomplete, setIsShownOnlyIncomplete] = useState<boolean>(false);
   const [isSelectingMode, setIsSelectingMode] = useState<boolean>(false);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+
+  const isNotSelecting = selectedInvoiceIds.length === 0;
 
   const openSelectingMode = () => {
     setIsSelectingMode(true);
@@ -68,11 +78,40 @@ const InvoiceList: React.FC<{
     setSelectedInvoiceIds([]);
   };
 
-  const deleteInvoices = () => {
-    // ToDo: (20251119 - Julian) delete selected invoices logic
-    // eslint-disable-next-line no-console
-    console.log(`Deleting invoices: ${selectedInvoiceIds.join(', ')}`);
-    messageModalVisibilityHandler();
+  const deleteInvoices = async () => {
+    try {
+      // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
+      const params = { sessionId: '123', certificateId: {} };
+      // ToDo: (20251121 - Julian) 須確認 body 格式
+      const body = {
+        certificateIds: selectedInvoiceIds,
+      };
+
+      const { success } = await deleteCertificates({ params, body });
+      if (success) {
+        toastHandler({
+          id: `delete_invoices_success`,
+          type: ToastType.SUCCESS,
+          content: `${selectedInvoiceIds.length} invoices have been removed from your draft.`,
+          closeable: true,
+          autoClose: 3000,
+        });
+      } else {
+        toastHandler({
+          id: `delete_invoices_failed`,
+          type: ToastType.ERROR,
+          content: `Failed to remove selected invoices. Please try again.`,
+          closeable: true,
+        });
+      }
+    } catch (err) {
+      toastHandler({
+        id: `delete_invoices_error`,
+        type: ToastType.ERROR,
+        content: `Error message: ${(err as Error).message}`,
+        closeable: true,
+      });
+    }
   };
 
   const deleteHandler = () => {
@@ -169,10 +208,16 @@ const InvoiceList: React.FC<{
 
   const displayedFilter = isSelectingMode ? (
     <div className="flex items-center justify-between gap-4px">
-      <Button type="button" className="w-170px">
+      <Button type="button" className="w-170px" disabled={isDeleting || isNotSelecting}>
         Import to iSunFA ({selectedInvoiceIds.length})
       </Button>
-      <Button type="button" variant="secondaryOutline" size="defaultSquare" onClick={deleteHandler}>
+      <Button
+        type="button"
+        variant="secondaryOutline"
+        size="defaultSquare"
+        disabled={isDeleting || isNotSelecting}
+        onClick={deleteHandler}
+      >
         <FiTrash2 size={20} />
       </Button>
     </div>

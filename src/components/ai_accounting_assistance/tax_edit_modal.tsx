@@ -13,6 +13,7 @@ import { IDatePeriod } from '@/interfaces/date_period';
 import { ICounterparty, ICounterpartyOptional } from '@/interfaces/counterparty';
 import { ITaxInfo } from '@/interfaces/invoice_edit_area';
 import { TaxType } from '@/constants/invoice_rc2';
+import { CounterpartyType } from '@/constants/counterparty';
 
 interface ITaxEditModalProps {
   isModalOpen: boolean;
@@ -27,23 +28,47 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({
   imageUrl,
   taxInfoData,
 }) => {
-  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } = taxInfoData;
+  const {
+    invoiceNo,
+    issueDate,
+    // tradingPartner,
+    taxType,
+    taxRate,
+    salesAmount,
+    tax,
+  } = taxInfoData;
   const counterpartyInputRef = useRef<CounterpartyInputRef>(null);
 
+  const initialInvoiceNo = invoiceNo ?? '';
+  const initialDate = { startTimeStamp: issueDate ?? 0, endTimeStamp: issueDate ?? 0 };
+
   // ToDo: (20251120 - Julian) Get data from props or API
+  const initialCounterparty: ICounterpartyOptional = {
+    id: 0,
+    companyId: 0,
+    name: 'ABC Company Ltd.',
+    taxId: 'ABC-123456',
+    type: CounterpartyType.CLIENT,
+    note: '',
+    createdAt: 0,
+    updatedAt: 0,
+  };
+  const initialTaxType = (taxType as TaxType) ?? TaxType.TAXABLE;
+  const initialTaxRate = taxRate ?? 0.05;
+  const initialSalesAmount = salesAmount ?? 0;
+  const initialTax = tax ?? 0;
+
   const currency: string = 'TWD';
-  const counterpartyList: ICounterparty[] = [tradingPartner];
+  const counterpartyList: ICounterparty[] = [];
 
-  const initialDate = { startTimeStamp: issueDate, endTimeStamp: issueDate };
-
-  const [noInputValue, setNoInputValue] = useState<string>(invoiceNo);
+  const [noInputValue, setNoInputValue] = useState<string>(initialInvoiceNo);
   const [selectedDate, setSelectedDate] = useState<IDatePeriod>(initialDate);
   const [selectedCounterparty, setSelectedCounterparty] =
-    useState<ICounterpartyOptional>(tradingPartner);
-  const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(taxType);
-  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(taxRate);
-  const [salesAmountValue, setSalesAmountValue] = useState<number>(salesAmount);
-  const [taxValue, setTaxValue] = useState<number>(tax);
+    useState<ICounterpartyOptional>(initialCounterparty);
+  const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(initialTaxType);
+  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(initialTaxRate);
+  const [salesAmountValue, setSalesAmountValue] = useState<number>(initialSalesAmount);
+  const [taxValue, setTaxValue] = useState<number>(initialTax);
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
   const saveDisabled = noInputValue === '' || salesAmountValue === 0 || taxValue === 0;
@@ -151,7 +176,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({
               </p>
               <TaxMenu
                 selectTaxHandler={handleTaxChange}
-                initialTaxType={taxType}
+                initialTaxType={(taxType as TaxType) ?? TaxType.TAXABLE} // ToDo: (20251120 - Julian) Fix type issue
                 initialTaxRate={taxRate}
                 btnClassName="border-input-text-input-placeholder text-input-text-input-filled"
               />

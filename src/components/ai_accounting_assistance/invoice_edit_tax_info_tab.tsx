@@ -9,13 +9,13 @@ const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
   // ToDo: (20251121 - Julian) Change Style for AI Modify Feature testing
   // const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
 
-  const formattedIssueDate = timestampToString(issueDate).date;
+  const formattedIssueDate = timestampToString(issueDate ?? 0).date;
 
   const taxTypeStr =
     taxType === TaxType.TAXABLE ? (
       <p>
         Taxable
-        <span className="text-input-text-primary"> {taxRate * 100}%</span>
+        <span className="text-input-text-primary"> {(taxRate ?? 0) * 100}%</span>
       </p>
     ) : (
       <p>Tax Free</p>
@@ -45,14 +45,14 @@ const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
       <div className="flex items-center justify-between">
         <p>Sales Amount</p>
         <p>
-          <span className="text-input-text-primary">{numberWithCommas(salesAmount)}</span> TWD
+          <span className="text-input-text-primary">{numberWithCommas(salesAmount ?? 0)}</span> TWD
         </p>
       </div>
       {/* ToDo: (20251114 - Julian) AI Modify Style for testing, will remove later */}
       <div className="flex items-center justify-between">
         <p>Tax</p>
         <p>
-          <span>{numberWithCommas(tax)}</span> TWD
+          <span>{numberWithCommas(tax ?? 0)}</span> TWD
         </p>
       </div>
     </div>

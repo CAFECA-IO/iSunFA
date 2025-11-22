@@ -8,11 +8,17 @@ import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { marked } from 'marked';
 import { ToastType } from '@/interfaces/toastify';
 
-interface IAnswerBubbleProps {
-  answerContent: string;
+export enum ChatRole {
+  USER = 'user',
+  ASSISTANT = 'assistant',
 }
 
-const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
+interface IMessageBubbleProps {
+  chatRole: ChatRole;
+  messageContent: string;
+}
+
+const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent }) => {
   const { toastHandler } = useModalContext();
 
   const [messageText, setMessageText] = useState<string>('');
@@ -23,12 +29,18 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
   const isLikeActive = isLiked === true;
   const isDislikeActive = isLiked === false;
 
+  const isUserMessage = chatRole === ChatRole.USER;
+
+  const bubbleColor = isUserMessage
+    ? 'border-chat-bubbles-surface-primary bg-chat-bubbles-surface-primary'
+    : 'border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary';
+
   // Info: (20251118 - Julian) 取得純文字，用於複製到剪貼簿
   const pureTextMessage = messageText.replace(/<[^>]+>/g, '');
 
   useEffect(() => {
     const fetchMessage = async () => {
-      const htmlMessage = await marked.parse(answerContent);
+      const htmlMessage = await marked.parse(messageContent);
 
       // Info: (20251118 - Julian) 加入樣式
       const styledMessage = htmlMessage
@@ -37,7 +49,9 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
         // Info: (20251118 - Julian) ul 列表
         .replaceAll(/<ul/g, '<ul class="list-disc list-inside ml-8px" ')
         // Info: (20251118 - Julian) a 連結
-        .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ');
+        .replaceAll(/<a /g, '<a class="text-link-text-primary font-semibold" ')
+        // Info: (20251118 - Julian) img 圖片
+        .replaceAll(/<img /g, '<img class="max-w-250px h-auto" ');
 
       setMessageText(styledMessage);
     };
@@ -137,15 +151,25 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
     </button>
   );
 
+  const messageBubble = (
+    <div
+      className={`${bubbleColor} w-fit min-w-300px whitespace-pre-wrap rounded-lg border p-20px font-medium text-chat-bubbles-text-primary`}
+    >
+      <article
+        className="flex flex-col gap-8px"
+        dangerouslySetInnerHTML={{ __html: messageText }}
+      />
+    </div>
+  );
+
+  if (isUserMessage) {
+    return <div className="ml-auto">{messageBubble}</div>;
+  }
+
   return (
     <div className="mr-auto flex flex-col gap-5px">
       {/* Info: (20251118 - Julian) Message Bubble */}
-      <div className="w-fit min-w-300px rounded-lg border border-chat-bubbles-stroke-bubble-outline bg-chat-bubbles-surface-secondary p-20px font-medium text-chat-bubbles-text-primary">
-        <article
-          className="flex flex-col gap-8px"
-          dangerouslySetInnerHTML={{ __html: messageText }}
-        />
-      </div>
+      {messageBubble}
 
       {/* Info: (20251118 - Julian) Toolbar */}
       <div className="flex items-center py-4px">
@@ -171,4 +195,4 @@ const AnswerBubble: React.FC<IAnswerBubbleProps> = ({ answerContent }) => {
   );
 };
 
-export default AnswerBubble;
+export default MessageBubble;
