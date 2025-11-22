@@ -74,6 +74,7 @@ const AAAHomePageBody: React.FC = () => {
 
   const [newDialogItem, setNewDialogItem] = useState<IDialog | null>(null);
   const [dialogs, setDialogs] = useState<IDialog[]>([]);
+  // Deprecated: (20251121 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingType, setLoadingType] = useState<LoadingType>(LoadingType.LOADING);
 
