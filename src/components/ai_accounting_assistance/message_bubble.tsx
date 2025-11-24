@@ -4,6 +4,7 @@ import { PiCopySimple } from 'react-icons/pi';
 import { SlRefresh } from 'react-icons/sl';
 import { FaCheck } from 'react-icons/fa6';
 import { FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
+import { LuShare2 } from 'react-icons/lu';
 import { HiOutlineLightBulb } from 'react-icons/hi2';
 import { marked } from 'marked';
 import { ToastType } from '@/interfaces/toastify';
@@ -16,12 +17,14 @@ export enum ChatRole {
 interface IMessageBubbleProps {
   chatRole: ChatRole;
   messageContent: string;
+  toggleShareModal?: () => void;
   readonly?: boolean;
 }
 
 const MessageBubble: React.FC<IMessageBubbleProps> = ({
   chatRole,
   messageContent,
+  toggleShareModal,
   readonly = false,
 }) => {
   const { toastHandler } = useModalContext();
@@ -137,6 +140,17 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({
     </button>
   );
 
+  // Info: (20251124 - Julian) 唯獨模式下 share 按鈕不可用
+  const shareBtn = readonly ? null : (
+    <button
+      type="button"
+      onClick={toggleShareModal}
+      className="p-10px text-button-text-secondary hover:text-button-text-secondary-hover"
+    >
+      <LuShare2 size={24} />
+    </button>
+  );
+
   // Info: (20251124 - Julian) 唯獨模式下 like 按鈕不可用
   const likeBtn = readonly ? null : (
     <button
@@ -203,6 +217,7 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({
       <div className="flex items-center py-4px">
         {copyBtn}
         {refreshBtn}
+        {shareBtn}
         {likeBtn}
         {dislikeBtn}
         {thinkingBtn}

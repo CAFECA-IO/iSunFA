@@ -3,8 +3,10 @@ import Image from 'next/image';
 import AAALayout from '@/components/ai_accounting_assistance/layout';
 import { Button } from '@/components/button/button';
 import ChatInput from '@/components/ai_accounting_assistance/chat_input';
+import ShareModal from '@/components/ai_accounting_assistance/share_link_modal';
 import MessageBubble, { ChatRole } from '@/components/ai_accounting_assistance/message_bubble';
 import { APIName } from '@/constants/api_connection';
+import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { IFaithContent } from '@/interfaces/faith';
 
@@ -55,10 +57,12 @@ interface IDialog {
 }
 
 const AAAHomePageBody: React.FC = () => {
+  const domain = process.env.NEXT_PUBLIC_DOMAIN;
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
   // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-  const params = { sessionId: '123' };
+  const sessionId = '123';
+  const params = { sessionId };
 
   const { trigger: getDialogList, isLoading: isDialogListLoading = true } = APIHandler<
     IFaithContent[]
@@ -75,8 +79,10 @@ const AAAHomePageBody: React.FC = () => {
   // Deprecated: (20251121 - Luphia) remove eslint-disable
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [loadingType, setLoadingType] = useState<LoadingType>(LoadingType.LOADING);
+  const [isShowShareModal, setIsShowShareModal] = useState<boolean>(false);
 
   const sendDisabled = isDialogListLoading;
+  const shareLink = `${domain}${ISUNFA_ROUTE.AI_ACCOUNTING_ASSISTANCE}/share/${sessionId}`;
 
   useEffect(() => {
     // Info: (20251118 - Julian) 只要收到新的 dialog，就自動滾動到最底部
@@ -135,6 +141,8 @@ const AAAHomePageBody: React.FC = () => {
   //   setNewDialogItem(null);
   // }, [newDialogItem]);
 
+  const toggleShareModal = () => setIsShowShareModal((prev) => !prev);
+
   const askQuestion = (question: string) => {
     // Info: (20251118 - Julian) 將新問題包成 chat queue item
     const userDialogItem: IDialog = {
@@ -160,6 +168,7 @@ const AAAHomePageBody: React.FC = () => {
       key={chat.content}
       messageContent={chat.content}
       chatRole={chat.from}
+      toggleShareModal={toggleShareModal}
       readonly={false}
     />
   ));
@@ -182,6 +191,9 @@ const AAAHomePageBody: React.FC = () => {
       {chatArea}
       {/* Info: (20251014 - Julian) Chat Input */}
       <ChatInput askQuestion={askQuestion} sendDisabled={sendDisabled} />
+
+      {/* Info: (20251124 - Julian) Share Modal */}
+      {isShowShareModal && <ShareModal copyLink={shareLink} onClose={toggleShareModal} />}
     </AAALayout>
   );
 };
