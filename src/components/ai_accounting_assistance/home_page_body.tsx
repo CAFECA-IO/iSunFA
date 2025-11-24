@@ -62,9 +62,7 @@ const AAAHomePageBody: React.FC = () => {
 
   const { trigger: getDialogList, isLoading: isDialogListLoading = true } = APIHandler<
     IFaithContent[]
-  >(APIName.LIST_CONTENT_BY_FAITH_SESSION_ID, {
-    params,
-  });
+  >(APIName.LIST_CONTENT_BY_FAITH_SESSION_ID, { params });
 
   const {
     trigger: postNewDialog,
@@ -158,7 +156,12 @@ const AAAHomePageBody: React.FC = () => {
   );
 
   const chatMessages = dialogs.map((chat) => (
-    <MessageBubble key={chat.content} messageContent={chat.content} chatRole={chat.from} />
+    <MessageBubble
+      key={chat.content}
+      messageContent={chat.content}
+      chatRole={chat.from}
+      readonly={false}
+    />
   ));
 
   const chatArea = isChatStarted ? (

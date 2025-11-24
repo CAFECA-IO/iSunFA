@@ -16,9 +16,14 @@ export enum ChatRole {
 interface IMessageBubbleProps {
   chatRole: ChatRole;
   messageContent: string;
+  readonly?: boolean;
 }
 
-const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent }) => {
+const MessageBubble: React.FC<IMessageBubbleProps> = ({
+  chatRole,
+  messageContent,
+  readonly = false,
+}) => {
   const { toastHandler } = useModalContext();
 
   const [messageText, setMessageText] = useState<string>('');
@@ -121,7 +126,19 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent
     </button>
   );
 
-  const likeBtn = (
+  // Info: (20251124 - Julian) 唯獨模式下 refresh 按鈕不可用
+  const refreshBtn = readonly ? null : (
+    <button
+      type="button"
+      onClick={refreshHandler}
+      className="p-10px text-button-text-secondary hover:text-button-text-secondary-hover"
+    >
+      <SlRefresh size={24} />
+    </button>
+  );
+
+  // Info: (20251124 - Julian) 唯獨模式下 like 按鈕不可用
+  const likeBtn = readonly ? null : (
     <button
       type="button"
       onClick={likeHandler}
@@ -136,7 +153,8 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent
     </button>
   );
 
-  const dislikeBtn = (
+  // Info: (20251124 - Julian) 唯獨模式下 dislike 按鈕不可用
+  const dislikeBtn = readonly ? null : (
     <button
       type="button"
       onClick={dislikeHandler}
@@ -148,6 +166,16 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent
       >
         Thank you for your feed back!
       </p>
+    </button>
+  );
+
+  const thinkingBtn = (
+    <button
+      type="button"
+      onClick={thinkingHandler}
+      className={`${isShowThinkingChain ? 'text-tabs-text-active' : 'text-button-text-secondary hover:text-button-text-secondary-hover'} p-10px`}
+    >
+      <HiOutlineLightBulb size={24} />
     </button>
   );
 
@@ -174,22 +202,10 @@ const MessageBubble: React.FC<IMessageBubbleProps> = ({ chatRole, messageContent
       {/* Info: (20251118 - Julian) Toolbar */}
       <div className="flex items-center py-4px">
         {copyBtn}
-        <button
-          type="button"
-          onClick={refreshHandler}
-          className="p-10px text-button-text-secondary hover:text-button-text-secondary-hover"
-        >
-          <SlRefresh size={24} />
-        </button>
+        {refreshBtn}
         {likeBtn}
         {dislikeBtn}
-        <button
-          type="button"
-          onClick={thinkingHandler}
-          className={`${isShowThinkingChain ? 'text-tabs-text-active' : 'text-button-text-secondary hover:text-button-text-secondary-hover'} p-10px`}
-        >
-          <HiOutlineLightBulb size={24} />
-        </button>
+        {thinkingBtn}
       </div>
     </div>
   );

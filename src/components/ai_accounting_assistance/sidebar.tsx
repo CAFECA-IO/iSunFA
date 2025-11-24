@@ -130,9 +130,21 @@ const AAASidebar: React.FC<ISidebarProps> = ({
       <p className="text-xs font-normal text-text-neutral-tertiary">iSunFA 2024 Beta V1.0.0</p>
       <p className="text-sm font-semibold text-link-text-primary">Support</p>
       <div className="flex items-center gap-8px">
-        <p className="text-sm font-semibold text-link-text-primary">Private Policy</p>
+        <Link
+          href={ISUNFA_ROUTE.PRIVACY_POLICY}
+          target="_blank"
+          className="text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover"
+        >
+          Private Policy
+        </Link>
         <hr className="h-full w-px border border-stroke-neutral-quaternary" />
-        <p className="text-sm font-semibold text-link-text-primary">Service Term</p>
+        <Link
+          href={ISUNFA_ROUTE.TERMS_OF_SERVICE}
+          target="_blank"
+          className="text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover"
+        >
+          Service Term
+        </Link>
       </div>
     </div>
   );
