@@ -80,7 +80,7 @@ const FlexibleFeatureSelection: React.FC = () => {
   // Info: (20241219 - Julian) 第一分類：主要功能
   const featuresOfFirstPart = [
     { title: 'Dashboard', link: ISUNFA_ROUTE.DASHBOARD },
-    // { title: 'AI Assistant', link: '/' }, // ToDo: (20250106 - Julian) AI 助手先隱藏
+    { title: 'AI Assistant', link: ISUNFA_ROUTE.AI_ACCOUNTING_ASSISTANCE }, // ToDo: (20250106 - Julian) AI 助手先隱藏
     { title: 'Accounting System', link: ISUNFA_ROUTE.ADD_NEW_VOUCHER },
     { title: 'Asset Management', link: ISUNFA_ROUTE.ASSET_LIST },
     // { title: 'CRM', link: '/' }, // ToDo: (20250106 - Julian) 客戶關係管理先隱藏

@@ -74,6 +74,25 @@ const AAASharePageBody: React.FC<IAAASharePageBodyProps> = ({ sessionId }) => {
     </div>
   ) : null;
 
+  if (dialogs.length === 0) {
+    return (
+      <main className="flex min-h-screen w-screen flex-col items-center justify-center gap-10px overflow-x-hidden bg-surface-neutral-main-background bg-aaa bg-cover bg-no-repeat">
+        <h1 className="text-6xl font-bold text-text-neutral-primary">No chat history found</h1>
+        <p className="text-lg font-semibold text-text-neutral-secondary">
+          Please check the link or create a new chat session.
+        </p>
+        <div className="">
+          <Link
+            href={ISUNFA_ROUTE.AI_ACCOUNTING_ASSISTANCE}
+            className="text-sm font-semibold text-link-text-primary hover:text-link-text-primary-hover"
+          >
+            Back to AI Accounting Assistance
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen w-screen overflow-x-hidden bg-surface-neutral-main-background bg-aaa bg-cover bg-no-repeat">
       {/* Info: (20251124 - Julian) Sidebar */}
