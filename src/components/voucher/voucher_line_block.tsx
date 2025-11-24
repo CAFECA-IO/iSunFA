@@ -17,6 +17,7 @@ import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
 
+// ToDo: (20251124 - Julian) Props 過於繁瑣，可能需要重構
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
@@ -44,12 +45,9 @@ interface IVoucherLinePreviewProps {
 const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   lineItems,
   setLineItems,
-
   flagOfClear,
   flagOfSubmit,
-
   isShowReverseHint,
-
   setIsTotalZero,
   setIsTotalNotEqual,
   setHaveZeroLine,
@@ -86,9 +84,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
     // Info: (20250818 - Shirley) 計算總借貸金額 - 使用 DecimalOperations 保持精確度
-    const debitAmounts = lineItems
-      .filter((item) => item.debit === true)
-      .map((item) => item.amount);
+    const debitAmounts = lineItems.filter((item) => item.debit === true).map((item) => item.amount);
     const debitTotal = DecimalOperations.sum(debitAmounts);
 
     const creditAmounts = lineItems
@@ -97,7 +93,9 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     const creditTotal = DecimalOperations.sum(creditAmounts);
 
     // Info: (20241004 - Julian) 檢查是否有未填的數字的傳票列
-    const zeroLine = lineItems.some((item) => DecimalOperations.isZero(item.amount) || item.debit === null);
+    const zeroLine = lineItems.some(
+      (item) => DecimalOperations.isZero(item.amount) || item.debit === null
+    );
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = lineItems.some((item) => item.account === null);
 

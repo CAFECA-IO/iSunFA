@@ -3,9 +3,11 @@ import { FaChevronDown } from 'react-icons/fa6';
 import { RxCross2 } from 'react-icons/rx';
 import { useTranslation } from 'next-i18next';
 import useOuterClick from '@/lib/hooks/use_outer_click';
-import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { IDatePeriod } from '@/interfaces/date_period';
+import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { Button } from '@/components/button/button';
+import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
 
 interface IVoucherEditModalProps {
@@ -16,12 +18,32 @@ interface IVoucherEditModalProps {
 const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClose }) => {
   const { t } = useTranslation('journal');
 
+  const initialLineItems: ILineItemUI[] = [initialVoucherLine, { ...initialVoucherLine, id: 1 }];
+
   const [selectedDate, setSelectedDate] = useState<IDatePeriod>({
     startTimeStamp: 0,
     endTimeStamp: 0,
   });
   const [selectedType, setSelectedType] = useState<VoucherType>(VoucherType.RECEIVE);
   const [noteInputValue, setNoteInputValue] = useState<string>('');
+
+  // Info: (20251124 - Julian) 傳票列
+  const [lineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
+
+  // Info: (20251124 - Julian) 傳票列驗證條件
+  const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
+  const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
+  const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
+  const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
+  const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
+
+  // Info: (20251124 - Julian) 追加項目
+  // ToDo: (20251124 - Julian) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
+  // ToDo: (20251124 - Julian) remove eslint-disable
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
 
   const {
     targetRef: typeRef,
@@ -33,7 +55,8 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
   const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
-  const saveDisabled = false;
+  const saveDisabled =
+    isTotalNotEqual || isTotalZero || haveZeroLine || isAccountingNull || isVoucherLineEmpty;
 
   const typeToggleHandler = () => setTypeVisible((prev) => !prev);
 
@@ -102,7 +125,7 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
         </div>
 
         {/* Info: (20251120 - Julian) Modal Body */}
-        <div className="grid grid-cols-2 gap-16px">
+        <div className="grid grid-cols-2 gap-24px">
           {/* Info: (20251120 - Julian) ========= Voucher Date ========= */}
           <div className="z-50 flex flex-col gap-8px">
             <p className="text-sm font-semibold text-input-text-primary">
@@ -148,6 +171,24 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
                 className="bg-transparent text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
               />
             </div>
+          </div>
+
+          {/* Info: (20251124 - Julian) ========= Note ========= */}
+          <div className="col-span-2 overflow-x-auto">
+            <VoucherLineBlock
+              lineItems={lineItems}
+              setLineItems={setLineItems}
+              flagOfClear={false}
+              flagOfSubmit={false}
+              isShowReverseHint={false}
+              setIsTotalZero={setIsTotalZero}
+              setIsTotalNotEqual={setIsTotalNotEqual}
+              setHaveZeroLine={setHaveZeroLine}
+              setIsAccountingNull={setIsAccountingNull}
+              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+              setIsCounterpartyRequired={setIsCounterpartyRequired}
+              setIsAssetRequired={setIsAssetRequired}
+            />
           </div>
         </div>
 

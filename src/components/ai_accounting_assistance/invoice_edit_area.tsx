@@ -91,7 +91,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   return (
     <>
       <div
-        className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px overflow-y-auto bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
+        className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
       >
         {/* Info: (20251114 - Julian) Header */}
         <div className="flex items-center">
@@ -103,27 +103,29 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
           </p>
         </div>
 
-        {/* Info: (20251117 - Julian) Image Zoom In */}
-        {invoiceData && (
-          <div>
-            <ImageZoom
-              imageUrl={invoiceData.image}
-              className="h-450px w-full"
-              controlPosition="bottom-right"
-              isControlBackground
-            />
-          </div>
-        )}
+        <div className="flex flex-col gap-24px overflow-y-auto">
+          {/* Info: (20251117 - Julian) Image Zoom In */}
+          {invoiceData && (
+            <div>
+              <ImageZoom
+                imageUrl={invoiceData.image}
+                className="h-450px w-full"
+                controlPosition="bottom-right"
+                isControlBackground
+              />
+            </div>
+          )}
 
-        {/* Info: (20251114 - Julian) Invoice Details */}
-        <div className="flex flex-col gap-24px">
-          <div className="grid grid-cols-2 gap-24px">{tabs}</div>
-          {tabContent}
-          <div className="ml-auto">
-            <Button type="button" variant="tertiary" onClick={editBtnClickHandler}>
-              <FiEdit size={20} />
-              <p>Edit</p>
-            </Button>
+          {/* Info: (20251114 - Julian) Invoice Details */}
+          <div className="flex flex-col gap-24px">
+            <div className="grid grid-cols-2 gap-24px">{tabs}</div>
+            {tabContent}
+            <div className="ml-auto">
+              <Button type="button" variant="tertiary" onClick={editBtnClickHandler}>
+                <FiEdit size={20} />
+                <p>Edit</p>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
