@@ -22,6 +22,7 @@ async function generateSitemap(): Promise<string> {
     { url: ISUNFA_ROUTE.TODO_LIST_PAGE, updated },
     { url: ISUNFA_ROUTE.TRIAL_BALANCE, updated },
     { url: ISUNFA_ROUTE.SALARY_CALCULATOR, updated },
+    { url: ISUNFA_ROUTE.AI_ACCOUNTING_ASSISTANCE, updated },
   ];
 
   // Info: (20251113 - Julian) 生成 XML 字串

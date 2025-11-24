@@ -66,6 +66,9 @@ export const ISUNFA_ROUTE = {
   EMPLOYEE_LIST: '/salary_calculator/employee_list',
   PAY_SLIP: '/salary_calculator/my_pay_slip',
   OPERATING_MECHANISM: '/salary_calculator/operating_mechanism',
+
+  // Info: (20251124 - Julian) AI Accounting Assistance
+  AI_ACCOUNTING_ASSISTANCE: '/ai_accounting_assistance',
 };
 
 export const EXTERNAL_API = {
