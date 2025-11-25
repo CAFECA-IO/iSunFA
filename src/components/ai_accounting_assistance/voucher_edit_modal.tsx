@@ -31,11 +31,11 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
   const [lineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
 
   // Info: (20251124 - Julian) 傳票列驗證條件
-  const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
-  const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
-  const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
-  const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
-  const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
+  // const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
+  // const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
+  // const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
+  // const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
+  // const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
 
   // Info: (20251124 - Julian) 追加項目
   // ToDo: (20251124 - Julian) remove eslint-disable
@@ -55,8 +55,8 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
   const typeList = Object.values(VoucherType).filter((type) => type !== VoucherType.OPENING);
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
-  const saveDisabled =
-    isTotalNotEqual || isTotalZero || haveZeroLine || isAccountingNull || isVoucherLineEmpty;
+  const saveDisabled = false;
+  // isTotalNotEqual || isTotalZero || haveZeroLine || isAccountingNull || isVoucherLineEmpty;
 
   const typeToggleHandler = () => setTypeVisible((prev) => !prev);
 
@@ -178,16 +178,15 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
             <VoucherLineBlock
               lineItems={lineItems}
               setLineItems={setLineItems}
-              flagOfClear={false}
-              flagOfSubmit={false}
               isShowReverseHint={false}
-              setIsTotalZero={setIsTotalZero}
-              setIsTotalNotEqual={setIsTotalNotEqual}
-              setHaveZeroLine={setHaveZeroLine}
-              setIsAccountingNull={setIsAccountingNull}
-              setIsVoucherLineEmpty={setIsVoucherLineEmpty}
+              // setIsTotalZero={setIsTotalZero}
+              // setIsTotalNotEqual={setIsTotalNotEqual}
+              // setHaveZeroLine={setHaveZeroLine}
+              // setIsAccountingNull={setIsAccountingNull}
+              // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
               setIsCounterpartyRequired={setIsCounterpartyRequired}
               setIsAssetRequired={setIsAssetRequired}
+              setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
             />
           </div>
         </div>
