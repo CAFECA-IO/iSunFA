@@ -52,6 +52,7 @@ interface IVoucherLineBlockProps {
   setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
   setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
 
+  errorMessages: string[]; // Info: (20251125 - Julian) 錯誤訊息陣列
   setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>; // Info: (20251125 - Julian) 將錯誤訊息回傳給父層
 }
 
@@ -69,6 +70,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   isShowReverseHint = false,
   setIsCounterpartyRequired,
   setIsAssetRequired,
+  errorMessages,
   setErrorMessages,
 }) => {
   const { t } = useTranslation('common');
@@ -158,6 +160,15 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     setErrorMessages(errors);
   }, [lineItems]);
 
+  const isAccountError =
+    errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
+
+  const isAmountError =
+    errorMessages.includes(VoucherLineValidation.HAVE_ZERO_LINE) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_ZERO);
+
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
       lineItems.map((lineItem) => (
@@ -168,9 +179,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           setLineItems={setLineItems}
           flagOfClear={flagOfClear}
           flagOfSubmit={flagOfSubmit}
-          // accountIsNull={lineItem.account === null}
-          // amountIsZero={DecimalOperations.isZero(lineItem.amount)}
-          // amountNotEqual={totalCredit !== totalDebit}
+          isAccountError={isAccountError}
+          isAmountError={isAmountError}
           isShowReverseHint={isShowReverseHint}
         />
       ))

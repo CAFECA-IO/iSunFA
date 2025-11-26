@@ -551,16 +551,16 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //   setIsShowRecurringArrayHint(true);
       //   router.push('#voucher-recurring');
     } else if (errorMessages.length > 0) {
-      // setFlagOfSubmit(!flagOfSubmit);
+      setFlagOfSubmit((prev) => !prev);
       if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
 
-      const isShowLineItem1Error = errorMessages.includes(
-        VoucherLineValidation.HAVE_ZERO_LINE || VoucherLineValidation.IS_TOTAL_NOT_EQUAL
-      );
+      const isShowLineItem1Error =
+        errorMessages.includes(VoucherLineValidation.HAVE_ZERO_LINE) ||
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
       const isShowLineItem2Error = errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL);
-      const isShowLineItem3Error = errorMessages.includes(
-        VoucherLineValidation.IS_TOTAL_ZERO || VoucherLineValidation.IS_VOUCHER_LINE_EMPTY
-      );
+      const isShowLineItem3Error =
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_ZERO) ||
+        errorMessages.includes(VoucherLineValidation.IS_VOUCHER_LINE_EMPTY);
 
       const toastMessage = (
         <div className="flex flex-col">
@@ -613,7 +613,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       // setIsShowRecurringArrayHint(false);
       setIsShowAssetHint(false);
       setIsShowReverseHint(false);
-      setFlagOfSubmit(!flagOfSubmit);
+      setFlagOfSubmit((prev) => !prev);
     }
   };
 
@@ -1006,12 +1006,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
         <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
-          <div className="flex flex-col text-xl text-pink-400">
-            errorMessages:{' '}
-            {errorMessages.map((err) => (
-              <p key={err}>{err}</p>
-            ))}
-          </div>
           <VoucherLineBlock
             lineItems={voucherLineItems}
             setLineItems={setLineItems}
@@ -1020,6 +1014,7 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             isShowReverseHint={isShowReverseHint}
             setIsCounterpartyRequired={setIsCounterpartyRequired}
             setIsAssetRequired={setIsAssetRequired}
+            errorMessages={errorMessages}
             setErrorMessages={setErrorMessages}
           />
         </div>

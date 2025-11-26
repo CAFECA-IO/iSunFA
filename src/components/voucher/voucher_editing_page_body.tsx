@@ -833,6 +833,7 @@ const VoucherEditingPageBody: React.FC<{
               // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
               setIsCounterpartyRequired={setIsCounterpartyRequired}
               setIsAssetRequired={setIsAssetRequired}
+              errorMessages={[]}
               setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
             />
           </div>

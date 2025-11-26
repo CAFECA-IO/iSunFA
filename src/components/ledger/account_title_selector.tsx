@@ -23,8 +23,8 @@ interface IAccountTitleSelectorProps {
   toggleModal?: () => void;
 
   // Info: (20241125 - Julian) 檢查
-  // flagOfSubmit?: boolean;
-  // accountIsNull?: boolean;
+  flagOfSubmit?: boolean;
+  isAccountError?: boolean;
 
   // Info: (20250306 - Julian) 樣式
   className?: string;
@@ -368,8 +368,8 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   defaultAccount,
   accountSelectedHandler,
   toggleModal,
-  // flagOfSubmit,
-  // accountIsNull,
+  flagOfSubmit,
+  isAccountError,
   className = '',
 }) => {
   const { t } = useTranslation(['common', 'reports']);
@@ -386,10 +386,11 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   // Info: (20241125 - Julian) input state
   const [accountStyle, setAccountStyle] = useState<string>(inputStyle.NORMAL);
 
-  // useEffect(() => {
-  //   // Info: (20241007 - Julian) 檢查是否填入會計科目
-  //   setAccountStyle(accountIsNull ? inputStyle.ERROR : inputStyle.NORMAL);
-  // }, [flagOfSubmit]);
+  useEffect(() => {
+    // Info: (20241007 - Julian) 檢查是否填入會計科目
+    const isError = isAccountError && defaultAccount === null;
+    setAccountStyle(isError ? inputStyle.ERROR : inputStyle.NORMAL);
+  }, [flagOfSubmit]);
 
   useEffect(() => {
     // Info: (20241007 - Julian) 修改會計科目時，樣式改回 NORMAL

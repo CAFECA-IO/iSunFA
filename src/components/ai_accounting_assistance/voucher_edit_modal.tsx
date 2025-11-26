@@ -186,6 +186,7 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
               // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
               setIsCounterpartyRequired={setIsCounterpartyRequired}
               setIsAssetRequired={setIsAssetRequired}
+              errorMessages={[]}
               setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
             />
           </div>

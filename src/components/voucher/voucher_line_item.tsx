@@ -15,11 +15,10 @@ interface IVoucherLineItemProps {
   id: number;
   data: ILineItemUI; // Info: (20241121 - Julian) 單筆 LineItem 資料
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>; // Info: (20241121 - Julian) 更新 LineItem
-  flagOfClear?: boolean;
-  // flagOfSubmit?: boolean;
-  // accountIsNull?: boolean;
-  // amountNotEqual?: boolean;
-  // amountIsZero?: boolean;
+  flagOfClear: boolean;
+  flagOfSubmit: boolean;
+  isAccountError: boolean;
+  isAmountError: boolean;
   isShowReverseHint?: boolean; // Info: (20250304 - Julian) 是否顯示反轉分錄提示
 }
 
@@ -27,12 +26,11 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   id,
   data,
   setLineItems,
-  flagOfClear = false,
-  // flagOfSubmit = false,
-  // accountIsNull = false,
-  // amountNotEqual = false,
-  // amountIsZero = false,
-  isShowReverseHint = false,
+  flagOfClear,
+  flagOfSubmit,
+  isAccountError,
+  isAmountError,
+  isShowReverseHint,
 }) => {
   const { t } = useTranslation('common');
   const { reverseList: commonReverseList, addReverseListHandler } = useAccountingCtx();
@@ -272,16 +270,9 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
     setCreditInput(0);
   }, [flagOfClear]);
 
-  // useEffect(() => {
-  //   setAmountStyle(
-  //     // Info: (20241007 - Julian) 檢查借貸金額是否為零
-  //     (amountIsZero && (debitInput === 0 || creditInput === 0)) ||
-  //       // Info: (20241007 - Julian) 檢查借貸金額是否相等
-  //       amountNotEqual
-  //       ? inputStyle.ERROR
-  //       : inputStyle.NORMAL
-  //   );
-  // }, [flagOfSubmit]);
+  useEffect(() => {
+    setAmountStyle(isAmountError ? inputStyle.ERROR : inputStyle.NORMAL);
+  }, [flagOfSubmit]);
 
   useEffect(() => {
     // Info: (20241007 - Julian) 修改借貸金額時，樣式改回 NORMAL
@@ -421,8 +412,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
         <AccountTitleSelector
           defaultAccount={lineItemAccount}
           accountSelectedHandler={accountSelectedHandler}
-          // accountIsNull={accountIsNull}
-          // flagOfSubmit={flagOfSubmit}
+          flagOfSubmit={flagOfSubmit}
+          isAccountError={isAccountError}
           className="col-span-3 mt-lv-5"
         />
         {/* Info: (20240927 - Julian) Particulars */}

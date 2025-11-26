@@ -824,6 +824,7 @@ const VoucherEditingPageBody: React.FC<{
               // setIsAccountingNull={setIsAccountingNull}
               // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
               setIsCounterpartyRequired={setIsCounterpartyRequired}
+              errorMessages={[]}
               setIsAssetRequired={setIsAssetRequired}
               setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
             />
