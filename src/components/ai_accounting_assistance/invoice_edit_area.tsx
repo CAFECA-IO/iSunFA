@@ -69,7 +69,6 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
         key={tab}
         type="button"
         onClick={clickHandler}
-        // disabled={tab === InvoiceEditTab.VOUCHER} // ToDo: (20251121 - Julian) Disable Voucher Tab before implementation
         className={`${
           isActive
             ? 'border-tabs-stroke-active text-tabs-text-active'

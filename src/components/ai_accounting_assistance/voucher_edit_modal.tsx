@@ -39,14 +39,6 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
   // Info: (20251126 - Julian) 提交表單的 flag，用來觸發 Voucher Line Block 的驗證
   const [flagOfSubmit, setFlagOfSubmit] = useState<boolean>(false);
 
-  // Info: (20251124 - Julian) 追加項目
-  // ToDo: (20251124 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isCounterpartyRequired, setIsCounterpartyRequired] = useState<boolean>(false);
-  // ToDo: (20251124 - Julian) remove eslint-disable
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAssetRequired, setIsAssetRequired] = useState<boolean>(false);
-
   const {
     targetRef: typeRef,
     componentVisible: typeVisible,
