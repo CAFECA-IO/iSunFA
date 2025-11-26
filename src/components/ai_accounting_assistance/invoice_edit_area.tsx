@@ -3,7 +3,7 @@ import { FiEdit } from 'react-icons/fi';
 import { RxCross2 } from 'react-icons/rx';
 import { Button } from '@/components/button/button';
 import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
-// import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
+import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
 import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
@@ -69,7 +69,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
         key={tab}
         type="button"
         onClick={clickHandler}
-        disabled={tab === InvoiceEditTab.VOUCHER} // ToDo: (20251121 - Julian) Disable Voucher Tab before implementation
+        // disabled={tab === InvoiceEditTab.VOUCHER} // ToDo: (20251121 - Julian) Disable Voucher Tab before implementation
         className={`${
           isActive
             ? 'border-tabs-stroke-active text-tabs-text-active'
@@ -82,12 +82,14 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   });
 
   const tabContent =
-    invoiceEditTab === InvoiceEditTab.TAX_INFO ? (
-      invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
-    ) : (
-      <div></div> // ToDo: (20251121 - Julian) Implement Voucher Tab Content
-      // <InvoiceEditVoucherTab lineItems={voucherInfo.lineItems} />
-    );
+    invoiceEditTab === InvoiceEditTab.TAX_INFO
+      ? invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
+      : invoiceData?.voucherInfo && (
+          <InvoiceEditVoucherTab
+            lineItems={invoiceData.voucherInfo.lineItems}
+            sum={invoiceData.voucherInfo.sum}
+          />
+        );
 
   return (
     <>
@@ -122,7 +124,12 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
             <div className="grid grid-cols-2 gap-24px">{tabs}</div>
             {tabContent}
             <div className="ml-auto">
-              <Button type="button" variant="tertiary" onClick={editBtnClickHandler}>
+              <Button
+                type="button"
+                variant="tertiary"
+                disabled // ToDo: (20251126 - Julian) Voucher Edit Modal 尚未完成，先鎖住
+                onClick={editBtnClickHandler}
+              >
                 <FiEdit size={20} />
                 <p>Edit</p>
               </Button>

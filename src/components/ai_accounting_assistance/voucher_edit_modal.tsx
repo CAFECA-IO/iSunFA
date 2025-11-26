@@ -13,6 +13,7 @@ import { useModalContext } from '@/contexts/modal_context';
 import { ToastType } from '@/interfaces/toastify';
 import { ToastId } from '@/constants/toast_id';
 
+// ToDo: (20251126 - Julian) Get initial data from props
 interface IVoucherEditModalProps {
   isModalOpen: boolean;
   onClose: () => void;
@@ -86,6 +87,7 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
         content: toastMessage,
         closeable: true,
       });
+      return;
     }
 
     const data = {};
@@ -195,7 +197,7 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
                 type="text"
                 value={noteInputValue}
                 onChange={handleNoteInputChange}
-                className="bg-transparent text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
+                className="w-full bg-transparent text-input-text-input-filled outline-none placeholder:text-input-text-input-placeholder"
               />
             </div>
           </div>
