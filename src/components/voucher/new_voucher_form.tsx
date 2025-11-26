@@ -9,7 +9,7 @@ import { Button } from '@/components/button/button';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 // import Toggle from '@/components/toggle/toggle';
 import AssetSection from '@/components/voucher/asset_section';
-import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock, { VoucherLineValidation } from '@/components/voucher/voucher_line_block';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { MessageType } from '@/interfaces/message_modal';
@@ -110,13 +110,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 傳票列
   const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
-
-  // Info: (20241004 - Julian) 傳票列驗證條件
-  // const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
-  // const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
-  // const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
-  // const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
-  // const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
+  // Info: (20251125 - Julian) 讓 Voucher Line Block 驗證用的錯誤訊息 array
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   // Info: (20241004 - Julian) 清空表單 flag
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
@@ -562,32 +557,33 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //   // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
       //   setIsShowRecurringArrayHint(true);
       //   router.push('#voucher-recurring');
-    }
-    // else if (
-    //   isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
-    //   isTotalNotEqual || // Info: (20241004 - Julian) 借貸金額需相等
-    //   haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
-    //   isAccountingNull || // Info: (20241004 - Julian) 沒有未選擇的會計科目
-    //   isVoucherLineEmpty // Info: (20241004 - Julian) 沒有傳票列
-    // ) {
-    //   setFlagOfSubmit(!flagOfSubmit);
-    //   if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
-    //   toastHandler({
-    //     id: ToastId.FILL_UP_VOUCHER_FORM,
-    //     type: ToastType.ERROR,
-    //     content: (
-    //       <>
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}
-    //         <br />
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}
-    //         <br />
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}
-    //       </>
-    //     ),
-    //     closeable: true,
-    //   });
-    // }
-    else if (isReverseRequired && reverses.length === 0) {
+    } else if (errorMessages.length > 0) {
+      setFlagOfSubmit((prev) => !prev);
+      if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
+
+      const isShowLineItem1Error =
+        errorMessages.includes(VoucherLineValidation.HAVE_ZERO_LINE) ||
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
+      const isShowLineItem2Error = errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL);
+      const isShowLineItem3Error =
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_ZERO) ||
+        errorMessages.includes(VoucherLineValidation.IS_VOUCHER_LINE_EMPTY);
+
+      const toastMessage = (
+        <div className="flex flex-col">
+          {isShowLineItem1Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}</p>}
+          {isShowLineItem2Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}</p>}
+          {isShowLineItem3Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}</p>}
+        </div>
+      );
+
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: toastMessage,
+        closeable: true,
+      });
+    } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
       toastHandler({
@@ -1018,15 +1014,10 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
             flagOfClear={flagOfClear}
             flagOfSubmit={flagOfSubmit}
             isShowReverseHint={isShowReverseHint}
-            // setIsTotalZero={setIsTotalZero}
-            // setIsTotalNotEqual={setIsTotalNotEqual}
-            // setHaveZeroLine={setHaveZeroLine}
-            // setIsAccountingNull={setIsAccountingNull}
-            // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
             setIsCounterpartyRequired={setIsCounterpartyRequired}
             setIsAssetRequired={setIsAssetRequired}
-            errorMessages={[]}
-            setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
+            errorMessages={errorMessages}
+            setErrorMessages={setErrorMessages}
           />
         </div>
 

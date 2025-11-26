@@ -104,13 +104,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   // Info: (20241004 - Julian) 傳票列
   const [voucherLineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
-
-  // Info: (20241004 - Julian) 傳票列驗證條件
-  // const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
-  // const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
-  // const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
-  // const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
-  // const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
+  // Info: (20251125 - Julian) 讓 Voucher Line Block 驗證用的錯誤訊息 array
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   // Info: (20241004 - Julian) 清空表單 flag
   const [flagOfClear, setFlagOfClear] = useState<boolean>(false);
@@ -140,9 +135,6 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
 
   const [invoices, setInvoices] = useState<{ [id: string]: IInvoiceRC2UI }>({});
   const [selectedInvoices, setSelectedInvoices] = useState<IInvoiceRC2UI[]>([]);
-
-  // Info: (20251125 - Julian) For Voucher Line Block, verify line items
-  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   const goBack = () => router.push(ISUNFA_ROUTE.BETA_VOUCHER_LIST);
 
@@ -596,15 +588,8 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         });
         if (assetRef.current) assetRef.current.scrollIntoView();
       }
-
-      if (errorMessages.length > 0) {
-        alert('表單有誤，請修正後再送出');
-        return;
-      }
-
       // Info: (20241007 - Julian) 儲存傳票
       saveVoucher();
-      alert('已送出！');
 
       // Info: (20241007 - Julian) 重設提示
       setIsShowDateHint(false);

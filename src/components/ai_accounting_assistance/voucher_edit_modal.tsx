@@ -6,9 +6,12 @@ import useOuterClick from '@/lib/hooks/use_outer_click';
 import { IDatePeriod } from '@/interfaces/date_period';
 import { ILineItemUI, initialVoucherLine } from '@/interfaces/line_item';
 import { Button } from '@/components/button/button';
-import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock, { VoucherLineValidation } from '@/components/voucher/voucher_line_block';
 import DatePicker, { DatePickerType } from '@/components/date_picker/date_picker';
 import { VoucherType, EventType, EVENT_TYPE_TO_VOUCHER_TYPE_MAP } from '@/constants/account';
+import { useModalContext } from '@/contexts/modal_context';
+import { ToastType } from '@/interfaces/toastify';
+import { ToastId } from '@/constants/toast_id';
 
 interface IVoucherEditModalProps {
   isModalOpen: boolean;
@@ -17,6 +20,7 @@ interface IVoucherEditModalProps {
 
 const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClose }) => {
   const { t } = useTranslation('journal');
+  const { toastHandler } = useModalContext();
 
   const initialLineItems: ILineItemUI[] = [initialVoucherLine, { ...initialVoucherLine, id: 1 }];
 
@@ -29,13 +33,10 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
 
   // Info: (20251124 - Julian) 傳票列
   const [lineItems, setLineItems] = useState<ILineItemUI[]>(initialLineItems);
-
-  // Info: (20251124 - Julian) 傳票列驗證條件
-  // const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
-  // const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
-  // const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
-  // const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
-  // const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
+  // Info: (20251125 - Julian) 讓 Voucher Line Block 驗證用的錯誤訊息 array
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
+  // Info: (20251126 - Julian) 提交表單的 flag，用來觸發 Voucher Line Block 的驗證
+  const [flagOfSubmit, setFlagOfSubmit] = useState<boolean>(false);
 
   // Info: (20251124 - Julian) 追加項目
   // ToDo: (20251124 - Julian) remove eslint-disable
@@ -56,11 +57,37 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
   const saveDisabled = false;
-  // isTotalNotEqual || isTotalZero || haveZeroLine || isAccountingNull || isVoucherLineEmpty;
 
   const typeToggleHandler = () => setTypeVisible((prev) => !prev);
 
   const saveHandler = () => {
+    if (errorMessages.length > 0) {
+      setFlagOfSubmit((prev) => !prev);
+
+      const isShowLineItem1Error =
+        errorMessages.includes(VoucherLineValidation.HAVE_ZERO_LINE) ||
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
+      const isShowLineItem2Error = errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL);
+      const isShowLineItem3Error =
+        errorMessages.includes(VoucherLineValidation.IS_TOTAL_ZERO) ||
+        errorMessages.includes(VoucherLineValidation.IS_VOUCHER_LINE_EMPTY);
+
+      const toastMessage = (
+        <div className="flex flex-col">
+          {isShowLineItem1Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}</p>}
+          {isShowLineItem2Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}</p>}
+          {isShowLineItem3Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}</p>}
+        </div>
+      );
+
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: toastMessage,
+        closeable: true,
+      });
+    }
+
     const data = {};
 
     // ToDo: (20251120 - Julian) post data to API
@@ -178,16 +205,9 @@ const VoucherEditModal: React.FC<IVoucherEditModalProps> = ({ isModalOpen, onClo
             <VoucherLineBlock
               lineItems={lineItems}
               setLineItems={setLineItems}
-              isShowReverseHint={false}
-              // setIsTotalZero={setIsTotalZero}
-              // setIsTotalNotEqual={setIsTotalNotEqual}
-              // setHaveZeroLine={setHaveZeroLine}
-              // setIsAccountingNull={setIsAccountingNull}
-              // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
-              setIsCounterpartyRequired={setIsCounterpartyRequired}
-              setIsAssetRequired={setIsAssetRequired}
-              errorMessages={[]}
-              setErrorMessages={() => {}} // ToDo: (20251125 - Julian)
+              errorMessages={errorMessages}
+              setErrorMessages={setErrorMessages}
+              flagOfSubmit={flagOfSubmit}
             />
           </div>
         </div>

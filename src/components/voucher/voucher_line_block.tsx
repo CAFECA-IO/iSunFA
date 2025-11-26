@@ -39,21 +39,16 @@ interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
 
+  errorMessages: string[]; // Info: (20251125 - Julian) 錯誤訊息陣列
+  setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>; // Info: (20251125 - Julian) 將錯誤訊息回傳給父層
+
   flagOfClear?: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
   flagOfSubmit?: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
 
   isShowReverseHint?: boolean; // Info: (20250304 - Julian) 是否顯示反轉提示
 
-  // setIsTotalZero: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否為 0
-  // setIsTotalNotEqual: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否不相等
-  // setHaveZeroLine: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有金額為 0 的傳票列
-  // setIsAccountingNull: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有空的會計科目
-  // setIsVoucherLineEmpty: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否傳票列為空
-  setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
-  setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
-
-  errorMessages: string[]; // Info: (20251125 - Julian) 錯誤訊息陣列
-  setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>; // Info: (20251125 - Julian) 將錯誤訊息回傳給父層
+  setIsCounterpartyRequired?: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
+  setIsAssetRequired?: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
 }
 
 interface IVoucherLinePreviewProps {
@@ -132,8 +127,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     // Info: (20250818 - Shirley) 保存字串格式的總計以保持精確度
     setTotalDebit(parseFloat(debitTotal));
     setTotalCredit(parseFloat(creditTotal));
-    setIsCounterpartyRequired(isAPorAR);
-    setIsAssetRequired(isAsset);
+    if (setIsCounterpartyRequired) setIsCounterpartyRequired(isAPorAR);
+    if (setIsAssetRequired) setIsAssetRequired(isAsset);
 
     // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確比較
     // Info: (20251125 - Julian) 條件 1: 總借貸金額是否為 0
