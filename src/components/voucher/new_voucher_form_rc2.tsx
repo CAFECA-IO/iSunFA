@@ -41,7 +41,7 @@ import InvoiceSelectorModal from '@/components/voucher/invoice_selector_modal';
 import InvoiceSelection from '@/components/voucher/invoice_selection';
 import { IPaginatedData } from '@/interfaces/pagination';
 import loggerFront from '@/lib/utils/logger_front';
-import VoucherLineBlock from '@/components/voucher/voucher_line_block';
+import VoucherLineBlock, { VoucherLineValidation } from '@/components/voucher/voucher_line_block';
 import { STATUS_CODE } from '@/constants/status_code';
 
 interface NewVoucherFormProps {
@@ -550,32 +550,33 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
       //   // Info: (20241007 - Julian) 顯示週期提示，並定位到週期欄位
       //   setIsShowRecurringArrayHint(true);
       //   router.push('#voucher-recurring');
-    }
-    // else if (
-    //   isTotalZero || // Info: (20241004 - Julian) 借貸總金額不可為 0
-    //   isTotalNotEqual || // Info: (20241004 - Julian) 借貸金額需相等
-    //   haveZeroLine || // Info: (20241004 - Julian) 沒有未填的數字的傳票列
-    //   isAccountingNull || // Info: (20241004 - Julian) 沒有未選擇的會計科目
-    //   isVoucherLineEmpty // Info: (20241004 - Julian) 沒有傳票列
-    // ) {
-    //   setFlagOfSubmit(!flagOfSubmit);
-    //   if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
-    //   toastHandler({
-    //     id: ToastId.FILL_UP_VOUCHER_FORM,
-    //     type: ToastType.ERROR,
-    //     content: (
-    //       <>
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}
-    //         <br />
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}
-    //         <br />
-    //         {t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}
-    //       </>
-    //     ),
-    //     closeable: true,
-    //   });
-    // }
-    else if (isReverseRequired && reverses.length === 0) {
+    } else if (errorMessages.length > 0) {
+      // setFlagOfSubmit(!flagOfSubmit);
+      if (voucherLineRef.current) voucherLineRef.current.scrollIntoView();
+
+      const isShowLineItem1Error = errorMessages.includes(
+        VoucherLineValidation.HAVE_ZERO_LINE || VoucherLineValidation.IS_TOTAL_NOT_EQUAL
+      );
+      const isShowLineItem2Error = errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL);
+      const isShowLineItem3Error = errorMessages.includes(
+        VoucherLineValidation.IS_TOTAL_ZERO || VoucherLineValidation.IS_VOUCHER_LINE_EMPTY
+      );
+
+      const toastMessage = (
+        <div className="flex flex-col">
+          {isShowLineItem1Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_1')}</p>}
+          {isShowLineItem2Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_2')}</p>}
+          {isShowLineItem3Error && <p>{t('journal:ADD_NEW_VOUCHER.LINE_ITEM_3')}</p>}
+        </div>
+      );
+
+      toastHandler({
+        id: ToastId.FILL_UP_VOUCHER_FORM,
+        type: ToastType.ERROR,
+        content: toastMessage,
+        closeable: true,
+      });
+    } else if (isReverseRequired && reverses.length === 0) {
       // Info: (20241011 - Julian) 如果需填入沖銷傳票，但沖銷傳票為空，則顯示沖銷提示，並定位到沖銷欄位、吐司通知
       setIsShowReverseHint(true);
       toastHandler({
@@ -596,17 +597,13 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         if (assetRef.current) assetRef.current.scrollIntoView();
       }
 
-      // Info: (20241007 - Julian) 儲存傳票
-      saveVoucher();
       if (errorMessages.length > 0) {
-        toastHandler({
-          id: 'voucher-line-validation-error',
-          type: ToastType.ERROR,
-          content: errorMessages.join(', '),
-          closeable: true,
-        });
+        alert('表單有誤，請修正後再送出');
         return;
       }
+
+      // Info: (20241007 - Julian) 儲存傳票
+      saveVoucher();
       alert('已送出！');
 
       // Info: (20241007 - Julian) 重設提示
@@ -1009,23 +1006,18 @@ const NewVoucherForm: React.FC<NewVoucherFormProps> = ({ selectedData }) => {
         )}
         {/* Info: (20240926 - Julian) Voucher line block */}
         <div ref={voucherLineRef} className="overflow-x-auto tablet:col-span-2">
-          {/* <div className="flex flex-col text-xl text-pink-400">
+          <div className="flex flex-col text-xl text-pink-400">
             errorMessages:{' '}
             {errorMessages.map((err) => (
-              <p>{err}</p>
+              <p key={err}>{err}</p>
             ))}
-          </div> */}
+          </div>
           <VoucherLineBlock
             lineItems={voucherLineItems}
             setLineItems={setLineItems}
             flagOfClear={flagOfClear}
             flagOfSubmit={flagOfSubmit}
             isShowReverseHint={isShowReverseHint}
-            // setIsTotalZero={setIsTotalZero}
-            // setIsTotalNotEqual={setIsTotalNotEqual}
-            // setHaveZeroLine={setHaveZeroLine}
-            // setIsAccountingNull={setIsAccountingNull}
-            // setIsVoucherLineEmpty={setIsVoucherLineEmpty}
             setIsCounterpartyRequired={setIsCounterpartyRequired}
             setIsAssetRequired={setIsAssetRequired}
             setErrorMessages={setErrorMessages}

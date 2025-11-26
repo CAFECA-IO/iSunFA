@@ -17,7 +17,24 @@ import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
 
-// ToDo: (20251124 - Julian) Props 過於繁瑣，可能需要重構
+/* Info: (20251125 - Julian) 傳票列驗證條件：
+ * 1. isTotalZero：總借貸金額是否為 0
+ * 2. isTotalNotEqual：總借貸金額是否不相等
+ * 3. haveZeroLine：是否有金額為 0 的傳票列
+ * 4. isAccountingNull：是否有未選擇的會計科目
+ * 5. isVoucherLineEmpty：傳票列是否為空
+ * 6. isCounterpartyNull：是否需要交易對象，但未填寫 🔧
+ * 7. isAssetNull：是否需要資產，但未填寫 🔧
+ */
+
+export enum VoucherLineValidation {
+  IS_TOTAL_ZERO = 'isTotalZero',
+  IS_TOTAL_NOT_EQUAL = 'isTotalNotEqual',
+  HAVE_ZERO_LINE = 'haveZeroLine',
+  IS_ACCOUNTING_NULL = 'isAccountingNull',
+  IS_VOUCHER_LINE_EMPTY = 'isVoucherLineEmpty',
+}
+
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
@@ -48,13 +65,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   lineItems,
   setLineItems,
   flagOfClear = false,
-  // flagOfSubmit = false,
+  flagOfSubmit = false,
   isShowReverseHint = false,
-  // setIsTotalZero,
-  // setIsTotalNotEqual,
-  // setHaveZeroLine,
-  // setIsAccountingNull,
-  // setIsVoucherLineEmpty,
   setIsCounterpartyRequired,
   setIsAssetRequired,
   setErrorMessages,
@@ -63,30 +75,6 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   const [totalDebit, setTotalDebit] = useState<number>(0);
   const [totalCredit, setTotalCredit] = useState<number>(0);
-
-  /* Info: (20251125 - Julian) 傳票列驗證條件：
-   * 1. isTotalZero：總借貸金額是否為 0
-   * 2. isTotalNotEqual：總借貸金額是否不相等
-   * 3. haveZeroLine：是否有金額為 0 的傳票列
-   * 4. isAccountingNull：是否有未選擇的會計科目
-   * 5. isVoucherLineEmpty：傳票列是否為空
-   * 6. isCounterpartyNull：是否需要交易對象，但未填寫 🔧
-   * 7. isAssetNull：是否需要資產，但未填寫 🔧
-   */
-
-  enum VoucherLineValidation {
-    IS_TOTAL_ZERO = 'isTotalZero',
-    IS_TOTAL_NOT_EQUAL = 'isTotalNotEqual',
-    HAVE_ZERO_LINE = 'haveZeroLine',
-    IS_ACCOUNTING_NULL = 'isAccountingNull',
-    IS_VOUCHER_LINE_EMPTY = 'isVoucherLineEmpty',
-  }
-
-  // const [isTotalZero, setIsTotalZero] = useState<boolean>(false);
-  // const [isTotalNotEqual, setIsTotalNotEqual] = useState<boolean>(false);
-  // const [haveZeroLine, setHaveZeroLine] = useState<boolean>(false);
-  // const [isAccountingNull, setIsAccountingNull] = useState<boolean>(false);
-  // const [isVoucherLineEmpty, setIsVoucherLineEmpty] = useState<boolean>(false);
 
   // Info: (20241004 - Julian) 如果借貸金額相等且不為 0，顯示綠色，否則顯示紅色
   const totalStyle =
@@ -109,6 +97,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
+    // Info: (20251126 - Julian) 儲存錯誤訊息
     const errors: string[] = [];
 
     // Info: (20250818 - Shirley) 計算總借貸金額 - 使用 DecimalOperations 保持精確度
@@ -141,16 +130,10 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     // Info: (20250818 - Shirley) 保存字串格式的總計以保持精確度
     setTotalDebit(parseFloat(debitTotal));
     setTotalCredit(parseFloat(creditTotal));
-
-    // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確比較
-    // setIsTotalZero(DecimalOperations.isZero(debitTotal) && DecimalOperations.isZero(creditTotal));
-    // setIsTotalNotEqual(!DecimalOperations.isEqual(debitTotal, creditTotal));
-    // setHaveZeroLine(zeroLine);
-    // setIsAccountingNull(accountingNull);
-    // setIsVoucherLineEmpty(lineItems.length === 0);
     setIsCounterpartyRequired(isAPorAR);
     setIsAssetRequired(isAsset);
 
+    // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確比較
     // Info: (20251125 - Julian) 條件 1: 總借貸金額是否為 0
     if (DecimalOperations.isZero(debitTotal) && DecimalOperations.isZero(creditTotal)) {
       errors.push(VoucherLineValidation.IS_TOTAL_ZERO);
@@ -171,6 +154,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     if (lineItems.length === 0) {
       errors.push(VoucherLineValidation.IS_VOUCHER_LINE_EMPTY);
     }
+
     setErrorMessages(errors);
   }, [lineItems]);
 
@@ -183,7 +167,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           data={lineItem}
           setLineItems={setLineItems}
           flagOfClear={flagOfClear}
-          // flagOfSubmit={flagOfSubmit}
+          flagOfSubmit={flagOfSubmit}
           // accountIsNull={lineItem.account === null}
           // amountIsZero={DecimalOperations.isZero(lineItem.amount)}
           // amountNotEqual={totalCredit !== totalDebit}
