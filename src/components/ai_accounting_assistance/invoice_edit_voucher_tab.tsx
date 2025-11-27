@@ -1,8 +1,23 @@
 import React from 'react';
-import { ILineItemsInfo } from '@/interfaces/voucher';
 import { DecimalOperations } from '@/lib/utils/decimal_operations';
 
-const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
+interface IVoucherInfo {
+  lineItems: {
+    account: {
+      name: string;
+      code: string;
+    };
+    description: string;
+    debit: boolean;
+    amount: number;
+  }[];
+  sum: {
+    debit: boolean;
+    amount: number;
+  };
+}
+
+const VoucherItem: React.FC<IVoucherInfo> = ({ lineItems, sum }) => {
   // Info: (20251117 - Julian) 借貸總和
   const total = sum.amount ?? 0;
 
@@ -29,11 +44,14 @@ const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
   // Info: (20251117 - Julian) ===== Accounting UI =====
   const displayedAccounting =
     accounting.length > 0 ? (
-      accounting.map((acc) => (
-        <div key={acc?.id} className="flex items-center gap-4px">
-          <p>{acc?.code}</p> <p>{acc?.name}</p>
-        </div>
-      ))
+      accounting.map((acc) => {
+        const str = acc ? `${acc.code} ${acc.name}` : '-';
+        return (
+          <div key={acc.name} className="flex items-center gap-4px whitespace-nowrap">
+            <p>{str}</p>
+          </div>
+        );
+      })
     ) : (
       <p>-</p>
     );
@@ -84,9 +102,9 @@ const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
     <div className="table-row">
       {/* Info: (20251117 - Julian) Particular */}
       <div className="table-cell px-16px py-24px text-text-neutral-primary">
-        <div className="flex flex-col gap-4px">{displayedParticular}</div>
+        <div className="flex flex-col gap-4px text-xxs">{displayedParticular}</div>
       </div>
-      <div className="table-cell px-16px py-24px font-semibold text-text-neutral-tertiary">
+      <div className="table-cell px-16px py-24px text-xxs font-semibold text-text-neutral-tertiary">
         <div className="flex flex-col gap-4px">{displayedAccounting}</div>
       </div>
       <div className="table-cell w-80px py-24px pl-16px text-xs font-medium">
@@ -99,17 +117,13 @@ const VoucherItem: React.FC<ILineItemsInfo> = ({ lineItems, sum }) => {
   );
 };
 
-const InvoiceEditVoucherTab: React.FC<{ lineItems: ILineItemsInfo[] }> = ({ lineItems }) => {
+const InvoiceEditVoucherTab: React.FC<IVoucherInfo> = ({ lineItems, sum }) => {
   // ToDo: (20251121 - Julian) Get data from props or API
   const currency: string = 'TWD';
 
   const displayedLineItems =
     lineItems.length > 0 ? (
-      lineItems.map((item, index) => (
-        // Deprecated: (20251117 - Julian) remove eslint-disable
-        // eslint-disable-next-line react/no-array-index-key
-        <VoucherItem key={index} lineItems={item.lineItems} sum={item.sum} />
-      ))
+      <VoucherItem lineItems={lineItems} sum={sum} />
     ) : (
       <p className="p-16px text-center text-text-neutral-tertiary">No line items available.</p>
     );

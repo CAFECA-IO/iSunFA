@@ -17,23 +17,38 @@ import { LuTrash2 } from 'react-icons/lu';
 import { AccountCodesOfAPandAR, AccountCodesOfAsset } from '@/constants/asset';
 import { useHotkeys } from 'react-hotkeys-hook';
 
-// ToDo: (20251124 - Julian) Props 過於繁瑣，可能需要重構
+/* Info: (20251125 - Julian) 傳票列驗證條件：
+ * 1. isTotalZero：總借貸金額是否為 0
+ * 2. isTotalNotEqual：總借貸金額是否不相等
+ * 3. haveZeroLine：是否有金額為 0 的傳票列
+ * 4. isAccountingNull：是否有未選擇的會計科目
+ * 5. isVoucherLineEmpty：傳票列是否為空
+ * 6. isCounterpartyNull：是否需要交易對象，但未填寫 🔧
+ * 7. isAssetNull：是否需要資產，但未填寫 🔧
+ */
+
+export enum VoucherLineValidation {
+  IS_TOTAL_ZERO = 'isTotalZero',
+  IS_TOTAL_NOT_EQUAL = 'isTotalNotEqual',
+  HAVE_ZERO_LINE = 'haveZeroLine',
+  IS_ACCOUNTING_NULL = 'isAccountingNull',
+  IS_VOUCHER_LINE_EMPTY = 'isVoucherLineEmpty',
+}
+
 interface IVoucherLineBlockProps {
   lineItems: ILineItemUI[];
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>;
 
-  flagOfClear: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
-  flagOfSubmit: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
+  errorMessages: string[]; // Info: (20251125 - Julian) 錯誤訊息陣列
+  setErrorMessages: React.Dispatch<React.SetStateAction<string[]>>; // Info: (20251125 - Julian) 將錯誤訊息回傳給父層
 
-  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉提示
+  flagOfClear?: boolean; // Info: (20241104 - Julian) 判斷是否按下清除按鈕
+  flagOfSubmit?: boolean; // Info: (20241104 - Julian) 判斷是否按下送出按鈕
 
-  setIsTotalZero: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否為 0
-  setIsTotalNotEqual: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷總借貸金額是否不相等
-  setHaveZeroLine: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有金額為 0 的傳票列
-  setIsAccountingNull: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否有空的會計科目
-  setIsVoucherLineEmpty: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否傳票列為空
-  setIsCounterpartyRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
-  setIsAssetRequired: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
+  isShowReverseHint?: boolean; // Info: (20250304 - Julian) 是否顯示反轉提示
+
+  setIsCounterpartyRequired?: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要交易對象
+  setIsAssetRequired?: React.Dispatch<React.SetStateAction<boolean>>; // Info: (20241104 - Julian) 判斷是否需要資產
 }
 
 interface IVoucherLinePreviewProps {
@@ -45,16 +60,13 @@ interface IVoucherLinePreviewProps {
 const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
   lineItems,
   setLineItems,
-  flagOfClear,
-  flagOfSubmit,
-  isShowReverseHint,
-  setIsTotalZero,
-  setIsTotalNotEqual,
-  setHaveZeroLine,
-  setIsAccountingNull,
-  setIsVoucherLineEmpty,
+  flagOfClear = false,
+  flagOfSubmit = false,
+  isShowReverseHint = false,
   setIsCounterpartyRequired,
   setIsAssetRequired,
+  errorMessages,
+  setErrorMessages,
 }) => {
   const { t } = useTranslation('common');
 
@@ -78,11 +90,13 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     event.preventDefault();
     addNewVoucherLine();
   };
-
   useHotkeys('ctrl+enter', handleCtrlEnter);
 
   // Info: (20241004 - Julian) 傳票列條件
   useEffect(() => {
+    // Info: (20251126 - Julian) 儲存錯誤訊息
+    const errors: string[] = [];
+
     // Info: (20250818 - Shirley) 計算總借貸金額 - 使用 DecimalOperations 保持精確度
     const debitAmounts = lineItems.filter((item) => item.debit === true).map((item) => item.amount);
     const debitTotal = DecimalOperations.sum(debitAmounts);
@@ -96,6 +110,7 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     const zeroLine = lineItems.some(
       (item) => DecimalOperations.isZero(item.amount) || item.debit === null
     );
+
     // Info: (20241004 - Julian) 檢查是否有未選擇的會計科目
     const accountingNull = lineItems.some((item) => item.account === null);
 
@@ -112,16 +127,42 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
     // Info: (20250818 - Shirley) 保存字串格式的總計以保持精確度
     setTotalDebit(parseFloat(debitTotal));
     setTotalCredit(parseFloat(creditTotal));
+    if (setIsCounterpartyRequired) setIsCounterpartyRequired(isAPorAR);
+    if (setIsAssetRequired) setIsAssetRequired(isAsset);
 
     // Info: (20250818 - Shirley) 使用 DecimalOperations 進行精確比較
-    setIsTotalZero(DecimalOperations.isZero(debitTotal) && DecimalOperations.isZero(creditTotal));
-    setIsTotalNotEqual(!DecimalOperations.isEqual(debitTotal, creditTotal));
-    setHaveZeroLine(zeroLine);
-    setIsAccountingNull(accountingNull);
-    setIsVoucherLineEmpty(lineItems.length === 0);
-    setIsCounterpartyRequired(isAPorAR);
-    setIsAssetRequired(isAsset);
+    // Info: (20251125 - Julian) 條件 1: 總借貸金額是否為 0
+    if (DecimalOperations.isZero(debitTotal) && DecimalOperations.isZero(creditTotal)) {
+      errors.push(VoucherLineValidation.IS_TOTAL_ZERO);
+    }
+    // Info: (20251125 - Julian) 條件 2: 總借貸金額是否不相等
+    if (!DecimalOperations.isEqual(debitTotal, creditTotal)) {
+      errors.push(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
+    }
+    // Info: (20251125 - Julian) 條件 3: 是否有金額為 0 的傳票列
+    if (zeroLine) {
+      errors.push(VoucherLineValidation.HAVE_ZERO_LINE);
+    }
+    // Info: (20251125 - Julian) 條件 4: 是否有未選擇的會計科目
+    if (accountingNull) {
+      errors.push(VoucherLineValidation.IS_ACCOUNTING_NULL);
+    }
+    // Info: (20251125 - Julian) 條件 5: 傳票列是否為空
+    if (lineItems.length === 0) {
+      errors.push(VoucherLineValidation.IS_VOUCHER_LINE_EMPTY);
+    }
+
+    setErrorMessages(errors);
   }, [lineItems]);
+
+  const isAccountError =
+    errorMessages.includes(VoucherLineValidation.IS_ACCOUNTING_NULL) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL);
+
+  const isAmountError =
+    errorMessages.includes(VoucherLineValidation.HAVE_ZERO_LINE) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_NOT_EQUAL) ||
+    errorMessages.includes(VoucherLineValidation.IS_TOTAL_ZERO);
 
   const voucherLines =
     lineItems && lineItems.length > 0 ? (
@@ -133,9 +174,8 @@ const VoucherLineBlock: React.FC<IVoucherLineBlockProps> = ({
           setLineItems={setLineItems}
           flagOfClear={flagOfClear}
           flagOfSubmit={flagOfSubmit}
-          accountIsNull={lineItem.account === null}
-          amountIsZero={DecimalOperations.isZero(lineItem.amount)}
-          amountNotEqual={totalCredit !== totalDebit}
+          isAccountError={isAccountError}
+          isAmountError={isAmountError}
           isShowReverseHint={isShowReverseHint}
         />
       ))

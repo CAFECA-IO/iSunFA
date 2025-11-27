@@ -15,7 +15,6 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import { TbArrowBackUp } from 'react-icons/tb';
 
 interface IAccountTitleSelectorProps {
-  id?: number;
   defaultAccount?: IAccount | null;
   accountSelectedHandler: (account: IAccount) => void;
 
@@ -25,7 +24,7 @@ interface IAccountTitleSelectorProps {
 
   // Info: (20241125 - Julian) 檢查
   flagOfSubmit?: boolean;
-  accountIsNull?: boolean;
+  isAccountError?: boolean;
 
   // Info: (20250306 - Julian) 樣式
   className?: string;
@@ -42,6 +41,8 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 }) => {
   const { t, i18n } = useTranslation(['common', 'reports']);
   const { connectedAccountBook } = useUserCtx();
+
+  const accountBookId = connectedAccountBook?.id;
 
   // Info: (20250306 - Julian) 搜尋欄 ref
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +72,7 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 
   const { trigger: getAccountList, data: accountTitleList } = APIHandler<IPaginatedAccount>(
     APIName.ACCOUNT_LIST,
-    { params: { accountBookId: connectedAccountBook?.id }, query: queryCondition },
+    { params: { accountBookId }, query: queryCondition },
     false,
     true
   );
@@ -364,12 +365,11 @@ const AccountSelectorModal: React.FC<IAccountSelectorModalProps> = ({
 };
 
 const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
-  id,
   defaultAccount,
   accountSelectedHandler,
   toggleModal,
   flagOfSubmit,
-  accountIsNull,
+  isAccountError,
   className = '',
 }) => {
   const { t } = useTranslation(['common', 'reports']);
@@ -382,14 +382,14 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
     : t('journal:ADD_NEW_VOUCHER.SELECT_ACCOUNTING');
 
   // Info: (20250305 - Julian) 開啟 Account Selector modal
-  const [isAccountSelectorOpen, setIsAccountSelectorMenuOpen] = useState(false);
-
+  const [isAccountSelectorOpen, setIsAccountSelectorMenuOpen] = useState<boolean>(false);
   // Info: (20241125 - Julian) input state
   const [accountStyle, setAccountStyle] = useState<string>(inputStyle.NORMAL);
 
   useEffect(() => {
     // Info: (20241007 - Julian) 檢查是否填入會計科目
-    setAccountStyle(accountIsNull ? inputStyle.ERROR : inputStyle.NORMAL);
+    const isError = isAccountError && defaultAccount === null;
+    setAccountStyle(isError ? inputStyle.ERROR : inputStyle.NORMAL);
   }, [flagOfSubmit]);
 
   useEffect(() => {
@@ -417,7 +417,6 @@ const AccountTitleSelector: React.FC<IAccountTitleSelectorProps> = ({
   return (
     <div className={`relative ${className}`}>
       <button
-        id={`account-title-${id}`}
         ref={accountRef}
         type="button"
         onClick={accountEditingHandler}
