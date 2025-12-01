@@ -17,10 +17,9 @@ interface IVoucherLineItemProps {
   setLineItems: React.Dispatch<React.SetStateAction<ILineItemUI[]>>; // Info: (20241121 - Julian) 更新 LineItem
   flagOfClear: boolean;
   flagOfSubmit: boolean;
-  accountIsNull: boolean;
-  amountNotEqual: boolean;
-  amountIsZero: boolean;
-  isShowReverseHint: boolean; // Info: (20250304 - Julian) 是否顯示反轉分錄提示
+  isAccountError: boolean;
+  isAmountError: boolean;
+  isShowReverseHint?: boolean; // Info: (20250304 - Julian) 是否顯示反轉分錄提示
 }
 
 const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
@@ -29,9 +28,8 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   setLineItems,
   flagOfClear,
   flagOfSubmit,
-  accountIsNull,
-  amountNotEqual,
-  amountIsZero,
+  isAccountError,
+  isAmountError,
   isShowReverseHint,
 }) => {
   const { t } = useTranslation('common');
@@ -273,14 +271,7 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
   }, [flagOfClear]);
 
   useEffect(() => {
-    setAmountStyle(
-      // Info: (20241007 - Julian) 檢查借貸金額是否為零
-      (amountIsZero && (debitInput === 0 || creditInput === 0)) ||
-        // Info: (20241007 - Julian) 檢查借貸金額是否相等
-        amountNotEqual
-        ? inputStyle.ERROR
-        : inputStyle.NORMAL
-    );
+    setAmountStyle(isAmountError ? inputStyle.ERROR : inputStyle.NORMAL);
   }, [flagOfSubmit]);
 
   useEffect(() => {
@@ -317,7 +308,11 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       const duplicateList = [...prev];
       const index = duplicateList.findIndex((item) => item.id === data.id);
       if (index !== -1) {
-        duplicateList[index] = { ...duplicateList[index], amount: debitValue.toString(), debit: true };
+        duplicateList[index] = {
+          ...duplicateList[index],
+          amount: debitValue.toString(),
+          debit: true,
+        };
       }
       return duplicateList;
     });
@@ -337,7 +332,11 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       const duplicateList = [...prev];
       const index = duplicateList.findIndex((item) => item.id === data.id);
       if (index !== -1) {
-        duplicateList[index] = { ...duplicateList[index], amount: creditValue.toString(), debit: false };
+        duplicateList[index] = {
+          ...duplicateList[index],
+          amount: creditValue.toString(),
+          debit: false,
+        };
       }
       return duplicateList;
     });
@@ -411,16 +410,14 @@ const VoucherLineItem: React.FC<IVoucherLineItemProps> = ({
       <>
         {/* Info: (20241125 - Julian) Accounting */}
         <AccountTitleSelector
-          id={id}
           defaultAccount={lineItemAccount}
           accountSelectedHandler={accountSelectedHandler}
-          accountIsNull={accountIsNull}
           flagOfSubmit={flagOfSubmit}
+          isAccountError={isAccountError}
           className="col-span-3 mt-lv-5"
         />
         {/* Info: (20240927 - Julian) Particulars */}
         <input
-          id={`particulars-input-${id}`}
           type="string"
           value={particulars}
           onChange={particularsInputChangeHandler}
