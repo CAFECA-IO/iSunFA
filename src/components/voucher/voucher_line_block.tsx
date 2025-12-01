@@ -23,8 +23,6 @@ import { useHotkeys } from 'react-hotkeys-hook';
  * 3. haveZeroLine：是否有金額為 0 的傳票列
  * 4. isAccountingNull：是否有未選擇的會計科目
  * 5. isVoucherLineEmpty：傳票列是否為空
- * 6. isCounterpartyNull：是否需要交易對象，但未填寫 🔧
- * 7. isAssetNull：是否需要資產，但未填寫 🔧
  */
 
 export enum VoucherLineValidation {
