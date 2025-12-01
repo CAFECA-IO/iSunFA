@@ -181,6 +181,7 @@
     --stroke-brand-primary: var(--orange-500);
     --stroke-brand-primary-moderate: var(--orange-400);
     --stroke-brand-primary-soft: var(--orange-200);
+    --stroke-brand-primary-lv-1: var(--orange-500);
     --stroke-brand-secondary: var(--navy-blue-500);
     --stroke-brand-secondary-moderate: var(--navy-blue-400);
     --stroke-brand-secondary-soft: var(--navy-blue-100);
@@ -614,6 +615,7 @@
     --stroke-brand-primary: var(--orange-400);
     --stroke-brand-primary-moderate: var(--orange-300);
     --stroke-brand-primary-soft: var(--orange-100);
+    --stroke-brand-primary-lv-1: var(--orange-500);
     --stroke-brand-secondary: var(--royal-blue-300);
     --stroke-brand-secondary-moderate: var(--royal-blue-200);
     --stroke-brand-secondary-soft: var(--royal-blue-100);

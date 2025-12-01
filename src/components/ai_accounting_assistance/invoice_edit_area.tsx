@@ -9,6 +9,7 @@ import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
 import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
+import SelectAccountBookModal from '@/components/ai_accounting_assistance/select_account_book_modal';
 import { IFaithCertificate } from '@/interfaces/faith';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -73,6 +74,8 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     }, 3000);
   };
 
+  const importBtnClickHandler = () => {};
+
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
     const isActive = invoiceEditTab === tab;
     const clickHandler = () => setInvoiceEditTab(tab as InvoiceEditTab);
@@ -120,7 +123,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const actionButtons = (
     <div className="grid grid-cols-2 gap-24px">
       {recheckBtn}
-      <Button type="button" variant="default" onClick={recheckBtnClickHandler}>
+      <Button type="button" variant="default" onClick={importBtnClickHandler}>
         <p>Import to iSunFA</p> <FiUpload size={16} />
       </Button>
     </div>
@@ -185,6 +188,9 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
       )}
 
       <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
+
+      {/* Info: (20251201 - Julian) Select Account Book Modal */}
+      <SelectAccountBookModal />
     </>
   );
 };
