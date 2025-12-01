@@ -487,8 +487,8 @@ model InvoiceRC2 {
 
   // Info: (20250429 - Tzuhan) 特殊情境（匯總發票/載具）
   totalOfSummarizedInvoices Decimal? @map("total_of_summarized_invoices") @db.Decimal(26, 8)
-  carrierSerialNumber       String? @map("carrier_serial_number")
-  otherCertificateNo        String? @map("other_certificate_no")
+  carrierSerialNumber       String?  @map("carrier_serial_number")
+  otherCertificateNo        String?  @map("other_certificate_no")
 
   // Info: (20250429 - Tzuhan) 關聯
   accountbook AccountBook @relation(fields: [accountBookId], references: [id])
@@ -1788,4 +1788,134 @@ model ExternalUser {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("external_user")
+}
+
+model FaithSession {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @map("user_id")
+  title       String
+  description String
+  createdAt   Int    @map("created_at")
+  updatedAt   Int    @map("updated_at")
+
+  contents     FaithContent[]     @relation("faith_session_to_content")
+  certificates FaithCertificate[] @relation("faith_session_to_certificate")
+
+  @@map("faith_session")
+}
+
+model FaithContent {
+  id             Int    @id @default(autoincrement())
+  faithSessionId Int    @map("faith_session_id")
+  roleId         String @map("role_id")
+  roleName       String @map("role_name")
+  roleImage      String @map("role_image")
+  content        Json
+  createdAt      Int    @map("created_at")
+  updatedAt      Int    @map("updated_at")
+
+  session FaithSession @relation("faith_session_to_content", fields: [faithSessionId], references: [id], onDelete: Cascade)
+
+  like    FaithLike[]    @relation("faith_content_to_like")
+  dislike FaithDislike[] @relation("faith_content_to_dislike")
+
+  @@map("faith_content")
+}
+
+model FaithCertificate {
+  id             Int    @id @default(autoincrement())
+  faithSessionId Int    @map("faith_session_id")
+  name           String
+  description    String
+  image          String
+  createdAt      Int    @map("created_at")
+  updatedAt      Int    @map("updated_at")
+
+  faithSession FaithSession @relation("faith_session_to_certificate", fields: [faithSessionId], references: [id], onDelete: Cascade)
+
+  taxInfo     FaithCertificateTax[]     @relation("faith_certificate_to_tax_info")
+  voucherInfo FaithCertificateVoucher[] @relation("faith_certificate_to_voucher_info")
+
+  @@map("faith_certificate")
+}
+
+model FaithCertificateTax {
+  id                  Int     @id @default(autoincrement())
+  faithCertificateId  Int     @map("faith_certificate_id")
+  invoiceNo           String? @map("invoice_no")
+  issueDate           Int?    @map("issue_date")
+  tradingPartnerName  String? @map("trading_partner_name")
+  tradingPartnerTaxId String? @map("trading_partner_tax_id")
+  taxType             String? @map("tax_type")
+  taxRate             Decimal? @db.Decimal(26, 8)  @map("tax_rate")
+  salesAmount         Decimal? @db.Decimal(26, 8)    @map("sales_amount")
+  tax                 Decimal? @db.Decimal(26, 8)
+
+  certificate FaithCertificate @relation("faith_certificate_to_tax_info", fields: [faithCertificateId], references: [id], onDelete: Cascade)
+
+  @@map("faith_certificate_tax")
+}
+
+model FaithCertificateVoucher {
+  id                 Int    @id @default(autoincrement())
+  faithCertificateId Int    @map("faith_certificate_id")
+  voucherType        String @map("voucher_type")
+  voucherNo          String @map("voucher_no")
+  issueDate          Int    @map("issue_date")
+  description        String
+
+  certificate FaithCertificate @relation("faith_certificate_to_voucher_info", fields: [faithCertificateId], references: [id], onDelete: Cascade)
+
+  lineItems FaithCertificateVoucherLineItem[] @relation("faith_certificate_voucher_to_line_items")
+
+  @@map("faith_certificate_voucher")
+}
+
+model FaithCertificateVoucherLineItem {
+  id                        Int     @id @default(autoincrement())
+  faithCertificateVoucherId Int     @map("faith_certificate_voucher_id")
+  accountName               String  @map("account_name")
+  accountCode               String  @map("account_code")
+  description               String
+  debit                     Boolean
+  amount                    Decimal @db.Decimal(26, 8)
+
+  voucher FaithCertificateVoucher @relation("faith_certificate_voucher_to_line_items", fields: [faithCertificateVoucherId], references: [id], onDelete: Cascade)
+
+  @@map("faith_certificate_voucher_line_item")
+}
+
+model FaithShare {
+  id             Int  @id @default(autoincrement())
+  faithSessionId Int  @map("faith_session_id")
+  data           Json
+  views          Int
+  createdAt      Int  @map("created_at")
+  updatedAt      Int  @map("updated_at")
+
+  @@map("faith_share")
+}
+
+model FaithLike {
+  id             Int @id @default(autoincrement())
+  faithContentId Int @map("faith_content_id")
+  userId         Int @map("userId")
+  createdAt      Int @map("created_at")
+
+  content FaithContent @relation("faith_content_to_like", fields: [faithContentId], references: [id], onDelete: Cascade)
+
+  @@unique([faithContentId, userId])
+  @@map("faith_like")
+}
+
+model FaithDislike {
+  id             Int @id @default(autoincrement())
+  faithContentId Int @map("faith_content_id")
+  userId         Int @map("userId")
+  createdAt      Int @map("created_at")
+
+  content FaithContent @relation("faith_content_to_dislike", fields: [faithContentId], references: [id], onDelete: Cascade)
+
+  @@unique([faithContentId, userId])
+  @@map("faith_dislike")
 }

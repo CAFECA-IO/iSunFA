@@ -109,7 +109,7 @@ const AAAHomePageBody: React.FC = () => {
       const fetchedDialogs: IDialog[] = data
         ? data.map((item) => ({
             from: item.role.name === 'user' ? ChatRole.USER : ChatRole.ASSISTANT,
-            content: item.content,
+            content: item.textContent,
           }))
         : [];
       setDialogs(fetchedDialogs);

@@ -80,15 +80,22 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     );
   });
 
+  const lineItems =
+    invoiceData?.voucherInfo?.lineItems.map((item) => ({
+      account: item.account,
+      description: item.description,
+      debit: item.debit,
+      amount: Number(item.amount),
+    })) || [];
+  const sum = {
+    debit: invoiceData?.voucherInfo?.sum.debit || true,
+    amount: Number(invoiceData?.voucherInfo?.sum.amount) || 0,
+  };
+
   const tabContent =
     invoiceEditTab === InvoiceEditTab.TAX_INFO
       ? invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
-      : invoiceData?.voucherInfo && (
-          <InvoiceEditVoucherTab
-            lineItems={invoiceData.voucherInfo.lineItems}
-            sum={invoiceData.voucherInfo.sum}
-          />
-        );
+      : invoiceData?.voucherInfo && <InvoiceEditVoucherTab lineItems={lineItems} sum={sum} />;
 
   return (
     <>

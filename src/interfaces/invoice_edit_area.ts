@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { ILineItemsInfo } from '@/interfaces/voucher';
 
 export interface ITaxInfo {
@@ -8,9 +9,9 @@ export interface ITaxInfo {
     taxId: string | null;
   };
   taxType: string | null;
-  taxRate: number | null;
-  salesAmount: number | null;
-  tax: number | null;
+  taxRate: Prisma.Decimal | null;
+  salesAmount: Prisma.Decimal | null;
+  tax: Prisma.Decimal | null;
 }
 
 export interface IInvoiceData {

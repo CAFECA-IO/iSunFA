@@ -46,7 +46,12 @@ const AAASharePageBody: React.FC<IAAASharePageBodyProps> = ({ sessionId }) => {
   const chatMessages = dialogs.map((chat) => {
     const from = chat.role.name === 'user' ? ChatRole.USER : ChatRole.ASSISTANT;
     return (
-      <MessageBubble key={chat.content} messageContent={chat.content} chatRole={from} readonly />
+      <MessageBubble
+        key={chat.textContent}
+        messageContent={chat.textContent}
+        chatRole={from}
+        readonly
+      />
     );
   });
 

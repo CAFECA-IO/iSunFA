@@ -15,7 +15,7 @@ const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
     taxType === TaxType.TAXABLE ? (
       <p>
         Taxable
-        <span className="text-input-text-primary"> {(taxRate ?? 0) * 100}%</span>
+        <span className="text-input-text-primary"> {Number(taxRate ?? 0) * 100}%</span>
       </p>
     ) : (
       <p>Tax Free</p>
@@ -45,14 +45,17 @@ const InvoiceEditTaxInfoTab: React.FC<{ data: ITaxInfo }> = ({ data }) => {
       <div className="flex items-center justify-between">
         <p>Sales Amount</p>
         <p>
-          <span className="text-input-text-primary">{numberWithCommas(salesAmount ?? 0)}</span> TWD
+          <span className="text-input-text-primary">
+            {numberWithCommas(Number(salesAmount ?? 0))}
+          </span>{' '}
+          TWD
         </p>
       </div>
       {/* ToDo: (20251114 - Julian) AI Modify Style for testing, will remove later */}
       <div className="flex items-center justify-between">
         <p>Tax</p>
         <p>
-          <span>{numberWithCommas(tax ?? 0)}</span> TWD
+          <span>{numberWithCommas(Number(tax ?? 0))}</span> TWD
         </p>
       </div>
     </div>
