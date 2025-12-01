@@ -34,6 +34,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const [isOpenVoucherEditModal, setIsVoucherOpenEditModal] = useState<boolean>(false);
 
   const [isRechecking, setIsRechecking] = useState<boolean>(false);
+  const [isOpenSelectAccountBookModal, setIsOpenSelectAccountBookModal] = useState<boolean>(false);
 
   // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
   const params = { sessionId: '123', certificateId: invoiceId };
@@ -57,6 +58,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
 
   const toggleTaxEditModal = () => setIsTaxOpenEditModal((prev) => !prev);
   const toggleVoucherEditModal = () => setIsVoucherOpenEditModal((prev) => !prev);
+  const toggleSelectAccountBookModal = () => setIsOpenSelectAccountBookModal((prev) => !prev);
 
   const editBtnClickHandler = () => {
     if (invoiceEditTab === InvoiceEditTab.TAX_INFO) {
@@ -66,7 +68,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     }
   };
 
-  // Info: (20251201 - Julian) 模擬 AI Recheck 的時間
+  // ToDo: (20251201 - Julian) 模擬 AI Recheck 的時間
   const recheckBtnClickHandler = () => {
     setIsRechecking(true);
     setTimeout(() => {
@@ -74,7 +76,11 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     }, 3000);
   };
 
-  const importBtnClickHandler = () => {};
+  const importAccountBook = (accountBookId: string) => {
+    // ToDo: (20251201 - Julian) 實作匯入帳本功能
+    // eslint-disable-next-line no-console
+    console.log('Import to Account Book ID:', accountBookId);
+  };
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
     const isActive = invoiceEditTab === tab;
@@ -123,7 +129,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const actionButtons = (
     <div className="grid grid-cols-2 gap-24px">
       {recheckBtn}
-      <Button type="button" variant="default" onClick={importBtnClickHandler}>
+      <Button type="button" variant="default" onClick={toggleSelectAccountBookModal}>
         <p>Import to iSunFA</p> <FiUpload size={16} />
       </Button>
     </div>
@@ -190,7 +196,11 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
       <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
 
       {/* Info: (20251201 - Julian) Select Account Book Modal */}
-      <SelectAccountBookModal />
+      <SelectAccountBookModal
+        isModalOpen={isOpenSelectAccountBookModal}
+        onClose={toggleSelectAccountBookModal}
+        importAccountBook={importAccountBook}
+      />
     </>
   );
 };
