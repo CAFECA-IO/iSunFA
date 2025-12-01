@@ -181,6 +181,7 @@ export enum APIName {
   LIST_FAITH_SESSION = 'LIST_FAITH_SESSION',
   CREATE_FAITH_SESSION = 'CREATE_FAITH_SESSION',
   GET_FAITH_SESSION_BY_ID = 'GET_FAITH_SESSION_BY_ID',
+  PUT_FAITH_SESSION_BY_ID = 'PUT_FAITH_SESSION_BY_ID',
   DELETE_FAITH_SESSION_BY_ID = 'DELETE_FAITH_SESSION_BY_ID',
   CREATE_SHARE_FOR_FAITH_SESSION = 'CREATE_SHARE_FOR_FAITH_SESSION',
   LIST_CONTENT_BY_FAITH_SESSION_ID = 'LIST_CONTENT_BY_FAITH_SESSION_ID',
@@ -352,6 +353,7 @@ export enum APIPath {
   LIST_FAITH_SESSION = `${apiPrefixV2}/faith/session`,
   CREATE_FAITH_SESSION = `${apiPrefixV2}/faith/session`,
   GET_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
+  PUT_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
   DELETE_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
   CREATE_SHARE_FOR_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/share`,
   LIST_CONTENT_BY_FAITH_SESSION_ID = `${apiPrefixV2}/faith/session/:sessionId/content`,
@@ -1161,6 +1163,11 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_FAITH_SESSION_BY_ID,
     method: HttpMethod.GET,
     path: APIPath.GET_FAITH_SESSION_BY_ID,
+  }),
+  [APIName.PUT_FAITH_SESSION_BY_ID]: createConfig({
+    name: APIName.PUT_FAITH_SESSION_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.PUT_FAITH_SESSION_BY_ID,
   }),
   [APIName.DELETE_FAITH_SESSION_BY_ID]: createConfig({
     name: APIName.DELETE_FAITH_SESSION_BY_ID,

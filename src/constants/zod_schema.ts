@@ -337,6 +337,7 @@ export const ZOD_SCHEMA_API = {
   [APIName.LIST_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for list faith session
   [APIName.CREATE_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create faith session
   [APIName.GET_FAITH_SESSION_BY_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for get faith session by id
+  [APIName.PUT_FAITH_SESSION_BY_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for put faith session by id
   [APIName.DELETE_FAITH_SESSION_BY_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for delete faith session by id
   [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for list content by faith session id
   [APIName.CREATE_CONTENT_IN_FAITH_SESSION]: nullAPISchema, // ToDo: (20251120 - Luphia) need to define the schema for create content in faith session

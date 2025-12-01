@@ -66,9 +66,9 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({
   const [selectedCounterparty, setSelectedCounterparty] =
     useState<ICounterpartyOptional>(initialCounterparty);
   const [selectedTaxType, setSelectedTaxType] = useState<TaxType>(initialTaxType);
-  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(initialTaxRate);
-  const [salesAmountValue, setSalesAmountValue] = useState<number>(initialSalesAmount);
-  const [taxValue, setTaxValue] = useState<number>(initialTax);
+  const [selectedTaxRate, setSelectedTaxRate] = useState<number | null>(Number(initialTaxRate));
+  const [salesAmountValue, setSalesAmountValue] = useState<number>(Number(initialSalesAmount));
+  const [taxValue, setTaxValue] = useState<number>(Number(initialTax));
 
   // ToDo: (20251120 - Julian) Disable save button when input is not complete/changed
   const saveDisabled = noInputValue === '' || salesAmountValue === 0 || taxValue === 0;
@@ -177,7 +177,7 @@ const TaxEditModal: React.FC<ITaxEditModalProps> = ({
               <TaxMenu
                 selectTaxHandler={handleTaxChange}
                 initialTaxType={(taxType as TaxType) ?? TaxType.TAXABLE} // ToDo: (20251120 - Julian) Fix type issue
-                initialTaxRate={taxRate}
+                initialTaxRate={Number(taxRate)}
                 btnClassName="border-input-text-input-placeholder text-input-text-input-filled"
               />
             </div>

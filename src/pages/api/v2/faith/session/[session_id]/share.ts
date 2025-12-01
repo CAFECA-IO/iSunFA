@@ -7,25 +7,31 @@ import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
+import { createShare } from '@/lib/utils/repo/faith/share.repo';
 
-const apiName = APIName.CREATE_SHARE_FOR_FAITH_SESSION;
+const apiNamePOST = APIName.CREATE_SHARE_FOR_FAITH_SESSION;
 
 const handlePostRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
   const session = await getSession(req);
 
-  await checkUserAuthorization(apiName, req, session);
+  await checkUserAuthorization(apiNamePOST, req, session);
 
-  const { query, body } = checkRequestData(apiName, req, session);
-  if (!body || !query) {
+  const { query } = checkRequestData(apiNamePOST, req, session);
+  if (!query) {
     throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
   }
 
-  // ToDo: (20251120 - Luphia) Business logic here.
-  const result = {};
+  const sessionId = Number(query.session_id);
 
-  const { isOutputDataValid, outputData } = validateOutputData(apiName, result);
+  if (isNaN(sessionId)) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  const result = await createShare(sessionId);
+
+  const { isOutputDataValid, outputData } = validateOutputData(apiNamePOST, result);
 
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;
@@ -41,13 +47,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let response;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   const session = await getSession(req);
-  const apiName = APIName.LIST_FAITH_SESSION;
 
   try {
     switch (method) {
       case HttpMethod.POST:
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);
+        await logUserAction(session, apiNamePOST, req, statusMessage);
         break;
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
@@ -61,6 +67,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }

@@ -7,7 +7,8 @@ import { HTTP_STATUS } from '@/constants/http';
 import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
-import { IFaithSession } from '@/interfaces/faith';
+import { ICreateSessionOptions, IFaithSession } from '@/interfaces/faith';
+import { listSessionsByUserId, createSession } from '@/lib/utils/repo/faith/session.repo';
 
 const apiNameGET = APIName.LIST_FAITH_SESSION;
 const apiNamePOST = APIName.CREATE_FAITH_SESSION;
@@ -37,6 +38,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
   const session = await getSession(req);
+  const { userId } = await getSession(req);
 
   await checkUserAuthorization(apiNameGET, req, session);
 
@@ -47,7 +49,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = dummyFaithSessions;
+  const result = await listSessionsByUserId(userId);
 
   const { isOutputDataValid, outputData } = validateOutputData(apiNameGET, result);
 
@@ -61,6 +63,7 @@ const handleGetRequest = async (req: NextApiRequest) => {
 const handlePostRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
+
   const session = await getSession(req);
 
   await checkUserAuthorization(apiNamePOST, req, session);
@@ -71,13 +74,19 @@ const handlePostRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = { id: '10000003' };
+  const { userId } = await getSession(req);
+  const { title, description } = body;
+  const options: ICreateSessionOptions = {
+    userId,
+    title,
+    description,
+  };
+  const result = await createSession(options);
 
   const { isOutputDataValid, outputData } = validateOutputData(apiNamePOST, result);
 
   statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
   payload = isOutputDataValid ? outputData : null;
-
   const response = formatApiResponse(statusMessage, payload);
   return { response, statusMessage };
 };
@@ -93,10 +102,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     switch (method) {
+      // Info: (20251130 - Luphia) 列出用戶所有聊天室
       case HttpMethod.GET:
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
         break;
+      // Info: (20251130 - Luphia) 新增用戶聊天室
       case HttpMethod.POST:
         ({ response, statusMessage } = await handlePostRequest(req));
         ({ httpCode, result } = response);
