@@ -8,8 +8,10 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { dummyFaithSessions } from '@/pages/api/v2/faith/session';
+import { deleteSession, updateSession } from '@/lib/utils/repo/faith/session.repo';
 
 const apiNameGET = APIName.GET_FAITH_SESSION_BY_ID;
+const apiNamePUT = APIName.PUT_FAITH_SESSION_BY_ID;
 const apiNameDELETE = APIName.DELETE_FAITH_SESSION_BY_ID;
 
 const handleGetRequest = async (req: NextApiRequest) => {
@@ -37,6 +39,40 @@ const handleGetRequest = async (req: NextApiRequest) => {
   return { response, statusMessage };
 };
 
+const handlePutRequest = async (req: NextApiRequest) => {
+  let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
+  let payload = null;
+  const session = await getSession(req);
+
+  await checkUserAuthorization(apiNamePUT, req, session);
+
+  const { query, body } = checkRequestData(apiNamePUT, req, session);
+
+  if (!query || !body) {
+    throw new Error(STATUS_MESSAGE.INVALID_INPUT_PARAMETER);
+  }
+
+  // ToDo: (20251120 - Luphia) Business logic here.
+  const { userId } = session;
+  const sessionId = query.session_id;
+  const { title, description } = body;
+  const options = {
+    id: sessionId,
+    userId,
+    title,
+    description,
+  };
+  const result = await updateSession(options);
+
+  const { isOutputDataValid, outputData } = validateOutputData(apiNamePUT, result);
+
+  statusMessage = isOutputDataValid ? STATUS_MESSAGE.SUCCESS : STATUS_MESSAGE.INVALID_OUTPUT_DATA;
+  payload = isOutputDataValid ? outputData : null;
+
+  const response = formatApiResponse(statusMessage, payload);
+  return { response, statusMessage };
+};
+
 const handleDeleteRequest = async (req: NextApiRequest) => {
   let statusMessage: string = STATUS_MESSAGE.BAD_REQUEST;
   let payload = null;
@@ -50,7 +86,8 @@ const handleDeleteRequest = async (req: NextApiRequest) => {
   }
 
   // ToDo: (20251120 - Luphia) Business logic here.
-  const result = {};
+  const sessionId = query.session_id;
+  const result = await deleteSession(sessionId);
 
   const { isOutputDataValid, outputData } = validateOutputData(apiNameDELETE, result);
 
@@ -68,17 +105,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let response;
   let statusMessage: string = STATUS_MESSAGE.INTERNAL_SERVICE_ERROR;
   const session = await getSession(req);
-  const apiName = APIName.LIST_FAITH_SESSION;
 
   try {
     switch (method) {
       case HttpMethod.GET:
         ({ response, statusMessage } = await handleGetRequest(req));
         ({ httpCode, result } = response);
+        await logUserAction(session, APIName.GET_FAITH_SESSION_BY_ID, req, statusMessage);
+        break;
+      case HttpMethod.PUT:
+        ({ response, statusMessage } = await handlePutRequest(req));
+        ({ httpCode, result } = response);
+        await logUserAction(session, APIName.PUT_FAITH_SESSION_BY_ID, req, statusMessage);
         break;
       case HttpMethod.DELETE:
         ({ response, statusMessage } = await handleDeleteRequest(req));
         ({ httpCode, result } = response);
+        await logUserAction(session, APIName.DELETE_FAITH_SESSION_BY_ID, req, statusMessage);
         break;
       default:
         statusMessage = STATUS_MESSAGE.METHOD_NOT_ALLOWED;
@@ -92,6 +135,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     ({ httpCode, result } = formatApiResponse<null>(statusMessage, null));
   }
 
-  await logUserAction(session, apiName, req, statusMessage);
   res.status(httpCode).json(result);
 }

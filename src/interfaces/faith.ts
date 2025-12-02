@@ -1,3 +1,6 @@
+import { Prisma } from '@prisma/client';
+import { JSONValue } from '@/interfaces/common';
+
 export interface IFaithRole {
   id: string;
   name: string;
@@ -12,12 +15,14 @@ export interface IFaithSession {
   createdAt: number;
   updatedAt: number;
   contents?: IFaithContent[];
+  certificates?: IFaithCertificate[];
 }
 
 export interface IFaithContent {
   id: string;
   role: IFaithRole;
-  content: string;
+  textContent: string;
+  content: JSONValue;
   like: boolean;
   dislike: boolean;
   createdAt: number;
@@ -36,9 +41,9 @@ export interface IFaithCertificate {
       taxId: string | null;
     };
     taxType: string | null;
-    taxRate: number | null;
-    salesAmount: number | null;
-    tax: number | null;
+    taxRate: Prisma.Decimal | null;
+    salesAmount: Prisma.Decimal | null;
+    tax: Prisma.Decimal | null;
   };
   voucherInfo: {
     voucherType: string;
@@ -52,11 +57,75 @@ export interface IFaithCertificate {
       };
       description: string;
       debit: boolean;
-      amount: number;
+      amount: Prisma.Decimal;
     }[];
     sum: {
       debit: boolean;
-      amount: number;
+      amount: Prisma.Decimal;
     };
   };
+}
+
+export interface ICreateSessionOptions {
+  id?: number;
+  userId: number;
+  title: string;
+  description: string;
+}
+
+export interface ICreateContentOptions {
+  id?: number;
+  sessionId: number;
+  role: IFaithRole;
+  content: string;
+}
+
+export interface ICreateCertificateOptions {
+  id: number;
+  name: string;
+  description: string;
+  image: string;
+  taxInfo: IFaithCertificate['taxInfo'];
+  voucherInfo: IFaithCertificate['voucherInfo'];
+}
+
+export interface ICreateTaxOptions {
+  id?: number;
+  certificateId: number;
+  invoiceNo: string;
+  issueDate: number;
+  tradingPartnerName: string;
+  tradingPartnerTaxId: string;
+  taxType: string;
+  taxRate: Prisma.Decimal;
+  salesAmount: Prisma.Decimal;
+  tax: Prisma.Decimal;
+}
+
+export interface ICreateVoucherOptions {
+  id?: number;
+  certificateId: number;
+  voucherType: string;
+  voucherNo: string;
+  issueDate: number;
+  description: string;
+  lineItems: {
+    accountName: string;
+    accountCode: string;
+    description: string;
+    debit: boolean;
+    amount: Prisma.Decimal;
+  }[];
+  sumDebit: boolean;
+  sumAmount: Prisma.Decimal;
+}
+
+export interface ICreateLineItemOptions {
+  id?: number;
+  voucherId: number;
+  accountName: string;
+  accountCode: string;
+  description: string;
+  debit: boolean;
+  amount: Prisma.Decimal;
 }

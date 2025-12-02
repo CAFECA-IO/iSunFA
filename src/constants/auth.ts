@@ -200,6 +200,7 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.LIST_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
   [APIName.GET_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.PUT_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.CREATE_SHARE_FOR_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
   [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: [AuthFunctionsKeysNew.user],

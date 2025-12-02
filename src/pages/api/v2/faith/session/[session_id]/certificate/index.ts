@@ -8,6 +8,7 @@ import { STATUS_MESSAGE } from '@/constants/status_code';
 import loggerBack from '@/lib/utils/logger_back';
 import { validateOutputData } from '@/lib/utils/validator';
 import { IFaithCertificate } from '@/interfaces/faith';
+import { Prisma } from '@prisma/client';
 
 const apiName = APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID;
 
@@ -27,8 +28,8 @@ export const dummyFaithCertificates: IFaithCertificate[] = [
       },
       taxType: null,
       taxRate: null,
-      salesAmount: 3969,
-      tax: 199,
+      salesAmount: Prisma.Decimal(3969),
+      tax: Prisma.Decimal(199),
     },
     voucherInfo: {
       voucherType: 'Payment Voucher',
@@ -44,7 +45,7 @@ export const dummyFaithCertificates: IFaithCertificate[] = [
           },
           description: '購置電腦週邊',
           debit: true,
-          amount: 3969,
+          amount: Prisma.Decimal(3969),
         },
         {
           account: {
@@ -53,7 +54,7 @@ export const dummyFaithCertificates: IFaithCertificate[] = [
           },
           description: '支付營業稅',
           debit: true,
-          amount: 199,
+          amount: Prisma.Decimal(199),
         },
         {
           account: {
@@ -62,12 +63,12 @@ export const dummyFaithCertificates: IFaithCertificate[] = [
           },
           description: '支付德縂電腦有限公司款項',
           debit: false,
-          amount: 4168,
+          amount: Prisma.Decimal(4168),
         },
       ],
       sum: {
         debit: true,
-        amount: 4168,
+        amount: Prisma.Decimal(4168),
       },
     },
   },
