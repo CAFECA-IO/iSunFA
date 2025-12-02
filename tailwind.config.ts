@@ -220,6 +220,7 @@ module.exports = {
           DEFAULT: 'var(--stroke-brand-primary)',
           moderate: 'var(--stroke-brand-primary-moderate)',
           soft: 'var(--stroke-brand-primary-soft)',
+          lv1: 'var(--stroke-brand-primary-lv-1)',
         },
         'stroke-brand-secondary': {
           DEFAULT: 'var(--stroke-brand-secondary)',

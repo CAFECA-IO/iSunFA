@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { FiEdit } from 'react-icons/fi';
+import { FiEdit, FiUpload } from 'react-icons/fi';
+import { RiLoader2Line } from 'react-icons/ri';
 import { RxCross2 } from 'react-icons/rx';
+import { HiOutlineSparkles } from 'react-icons/hi';
 import { Button } from '@/components/button/button';
 import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
 import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
 import ImageZoom from '@/components/image_zoom/image_zoom';
 import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
 import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
+import SelectAccountBookModal from '@/components/ai_accounting_assistance/select_account_book_modal';
 import { IFaithCertificate } from '@/interfaces/faith';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
@@ -30,6 +33,9 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const [isOpenTaxEditModal, setIsTaxOpenEditModal] = useState<boolean>(false);
   const [isOpenVoucherEditModal, setIsVoucherOpenEditModal] = useState<boolean>(false);
 
+  const [isRechecking, setIsRechecking] = useState<boolean>(false);
+  const [isOpenSelectAccountBookModal, setIsOpenSelectAccountBookModal] = useState<boolean>(false);
+
   // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
   const params = { sessionId: '123', certificateId: invoiceId };
 
@@ -52,6 +58,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
 
   const toggleTaxEditModal = () => setIsTaxOpenEditModal((prev) => !prev);
   const toggleVoucherEditModal = () => setIsVoucherOpenEditModal((prev) => !prev);
+  const toggleSelectAccountBookModal = () => setIsOpenSelectAccountBookModal((prev) => !prev);
 
   const editBtnClickHandler = () => {
     if (invoiceEditTab === InvoiceEditTab.TAX_INFO) {
@@ -59,6 +66,20 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     } else {
       toggleVoucherEditModal();
     }
+  };
+
+  // ToDo: (20251201 - Julian) 模擬 AI Recheck 的時間
+  const recheckBtnClickHandler = () => {
+    setIsRechecking(true);
+    setTimeout(() => {
+      setIsRechecking(false);
+    }, 3000);
+  };
+
+  const importAccountBook = (accountBookId: string) => {
+    // ToDo: (20251201 - Julian) 實作匯入帳本功能
+    // eslint-disable-next-line no-console
+    console.log('Import to Account Book ID:', accountBookId);
   };
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
@@ -96,6 +117,30 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
     invoiceEditTab === InvoiceEditTab.TAX_INFO
       ? invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
       : invoiceData?.voucherInfo && <InvoiceEditVoucherTab lineItems={lineItems} sum={sum} />;
+
+  const recheckBtn = isRechecking ? (
+    <Button type="button" disabled className="cursor-wait">
+      <p>Rechecking...</p> <RiLoader2Line size={16} className="animate-spin" />
+    </Button>
+  ) : (
+    <Button
+      type="button"
+      variant="tertiary"
+      disabled={isRechecking}
+      onClick={recheckBtnClickHandler}
+    >
+      <p>Recheck with AI</p> <HiOutlineSparkles size={16} />
+    </Button>
+  );
+
+  const actionButtons = (
+    <div className="grid grid-cols-2 gap-24px">
+      {recheckBtn}
+      <Button type="button" variant="default" onClick={toggleSelectAccountBookModal}>
+        <p>Import to iSunFA</p> <FiUpload size={16} />
+      </Button>
+    </div>
+  );
 
   return (
     <>
@@ -140,6 +185,7 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
                 <p>Edit</p>
               </Button>
             </div>
+            {actionButtons}
           </div>
         </div>
       </div>
@@ -155,6 +201,13 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
       )}
 
       <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
+
+      {/* Info: (20251201 - Julian) Select Account Book Modal */}
+      <SelectAccountBookModal
+        isModalOpen={isOpenSelectAccountBookModal}
+        onClose={toggleSelectAccountBookModal}
+        importAccountBook={importAccountBook}
+      />
     </>
   );
 };
