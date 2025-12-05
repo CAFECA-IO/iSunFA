@@ -9,6 +9,7 @@ import { APIName } from '@/constants/api_connection';
 import { ISUNFA_ROUTE } from '@/constants/url';
 import APIHandler from '@/lib/utils/api_handler';
 import { IFaithContent } from '@/interfaces/faith';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface IChatMainProps {
   askQuestion: (question: string) => void;
@@ -60,8 +61,13 @@ const AAAHomePageBody: React.FC = () => {
   const domain = process.env.NEXT_PUBLIC_DOMAIN;
   const chatAreaRef = useRef<HTMLDivElement>(null);
 
-  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-  const sessionId = '123';
+  const { userAuth } = useUserCtx();
+
+  // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+  const nowInSecond = Math.floor(Date.now() / 1000);
+  const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
+
+  // Info: (20251205 - Julian) api parameters
   const params = { sessionId };
 
   const { trigger: getDialogList, isLoading: isDialogListLoading = true } = APIHandler<

@@ -13,6 +13,7 @@ import SelectAccountBookModal from '@/components/ai_accounting_assistance/select
 import { IFaithCertificate } from '@/interfaces/faith';
 import { APIName } from '@/constants/api_connection';
 import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ enum InvoiceEditTab {
 // ToDo: (20251121 - Julian) 補上 Loading Skeleton
 
 const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceId }) => {
+  const { userAuth } = useUserCtx();
+
   const [invoiceData, setInvoiceData] = useState<IFaithCertificate | null>(null);
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
   const [isOpenTaxEditModal, setIsTaxOpenEditModal] = useState<boolean>(false);
@@ -36,8 +39,12 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invo
   const [isRechecking, setIsRechecking] = useState<boolean>(false);
   const [isOpenSelectAccountBookModal, setIsOpenSelectAccountBookModal] = useState<boolean>(false);
 
-  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-  const params = { sessionId: '123', certificateId: invoiceId };
+  // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+  const nowInSecond = Math.floor(Date.now() / 1000);
+  const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
+
+  // Info: (20251205 - Julian) api parameters
+  const params = { sessionId, certificateId: invoiceId };
 
   const { trigger: getInvoice } = APIHandler<IFaithCertificate>(
     APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
