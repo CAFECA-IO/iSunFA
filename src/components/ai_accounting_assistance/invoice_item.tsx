@@ -6,6 +6,7 @@ import { RxReload } from 'react-icons/rx';
 import { IoWarningOutline } from 'react-icons/io5';
 import { IFaithCertificate } from '@/interfaces/faith';
 import { useModalContext } from '@/contexts/modal_context';
+import { useUserCtx } from '@/contexts/user_context';
 import { checkboxStyle } from '@/constants/display';
 import { MessageType } from '@/interfaces/message_modal';
 import { APIName } from '@/constants/api_connection';
@@ -34,11 +35,17 @@ const InvoiceItem: React.FC<IInvoiceItemProps> = ({
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
+  const { userAuth } = useUserCtx();
+
+  // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+  const nowInSecond = Math.floor(Date.now() / 1000);
+  const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
+
+  // Info: (20251205 - Julian) api parameters
+  const params = { sessionId, certificateId: id };
+
   // ToDo: (20251121 - Julian) Should get from api
   const unread = false;
-
-  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-  const params = { sessionId: '123', certificateId: id };
 
   const { trigger: deleteById, isLoading } = APIHandler(
     APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION,

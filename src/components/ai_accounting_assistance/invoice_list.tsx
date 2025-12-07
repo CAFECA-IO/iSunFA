@@ -45,6 +45,8 @@ const InvoiceList: React.FC<{
   const { messageModalDataHandler, messageModalVisibilityHandler, toastHandler } =
     useModalContext();
 
+  const { userAuth } = useUserCtx();
+
   const { trigger: deleteCertificates, isLoading: isDeleting } = APIHandler(
     APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION
   );
@@ -80,8 +82,12 @@ const InvoiceList: React.FC<{
 
   const deleteInvoices = async () => {
     try {
-      // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-      const params = { sessionId: '123', certificateId: {} };
+      // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+      const nowInSecond = Math.floor(Date.now() / 1000);
+      const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
+
+      // ToDo: (20251205 - Julian) certificateId 參數暫時給空物件
+      const params = { sessionId, certificateId: {} };
       // ToDo: (20251121 - Julian) 須確認 body 格式
       const body = {
         certificateIds: selectedInvoiceIds,

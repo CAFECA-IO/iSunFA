@@ -32,10 +32,14 @@ const AAASidebar: React.FC<ISidebarProps> = ({
   activeInvoiceId,
   clickInvoiceHandler,
 }) => {
-  const { isSignIn } = useUserCtx();
+  const { isSignIn, userAuth } = useUserCtx();
 
-  // ToDo: (20251121 - Julian) 目前先用固定的 sessionId
-  const params = { sessionId: '123' };
+  // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+  const nowInSecond = Math.floor(Date.now() / 1000);
+  const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
+
+  // Info: (20251205 - Julian) api parameters
+  const params = { sessionId };
 
   const { trigger: getInvoiceList } = APIHandler<IFaithCertificate[]>(
     APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID,
