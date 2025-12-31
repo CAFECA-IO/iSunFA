@@ -1,0 +1,31 @@
+export const ko = {
+  common: {
+    loading: '로딩 중...',
+    error: '오류',
+    close: '닫기',
+  },
+  header: {
+    free_trial: '무료 체험',
+    pricing: '요금제',
+    login: '로그인',
+  },
+  auth_modal: {
+    welcome_back: '다시 오신 것을 환영합니다',
+    create_account: '계정 생성',
+    login_tab: '로그인',
+    register_tab: '가입',
+    login_desc: '비밀번호 없이 Passkey로 안전하게 로그인하세요.',
+    login_btn: 'Passkey로 로그인',
+    authenticating: '인증 중...',
+    creating: '계정 생성 중...',
+    create_btn: '계정 생성',
+    username: '사용자 이름',
+    username_placeholder: '사용자 이름을 입력하세요',
+    username_required: '사용자 이름이 필요합니다',
+    tos_agree: '동의합니다',
+    tos_link: '이용 약관',
+    tos_required: '이용 약관에 동의해야 합니다',
+    login_failed: '로그인 실패',
+    reg_failed: '가입 실패',
+  },
+};

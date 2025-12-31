@@ -1,0 +1,31 @@
+export const zhCn = {
+  common: {
+    loading: '载入中...',
+    error: '错误',
+    close: '关闭',
+  },
+  header: {
+    free_trial: '免费试用',
+    pricing: '收费模式',
+    login: '登录',
+  },
+  auth_modal: {
+    welcome_back: '欢迎回来',
+    create_account: '建立帐号',
+    login_tab: '登录',
+    register_tab: '注册',
+    login_desc: '使用 Passkey 安全登录，无需密码。',
+    login_btn: '使用 Passkey 登录',
+    authenticating: '验证中...',
+    creating: '建立帐号中...',
+    create_btn: '建立帐号',
+    username: '用户名',
+    username_placeholder: '请输入用户名',
+    username_required: '请输入用户名',
+    tos_agree: '我同意',
+    tos_link: '服务条款',
+    tos_required: '您必须同意服务条款',
+    login_failed: '登录失败',
+    reg_failed: '注册失败',
+  },
+};

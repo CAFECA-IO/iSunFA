@@ -1,0 +1,31 @@
+export const zhTw = {
+  common: {
+    loading: '載入中...',
+    error: '錯誤',
+    close: '關閉',
+  },
+  header: {
+    free_trial: '免費試用',
+    pricing: '收費模式',
+    login: '登入',
+  },
+  auth_modal: {
+    welcome_back: '歡迎回來',
+    create_account: '建立帳號',
+    login_tab: '登入',
+    register_tab: '註冊',
+    login_desc: '使用 Passkey 安全登入，無需密碼。',
+    login_btn: '使用 Passkey 登入',
+    authenticating: '驗證中...',
+    creating: '建立帳號中...',
+    create_btn: '建立帳號',
+    username: '使用者名稱',
+    username_placeholder: '請輸入使用者名稱',
+    username_required: '請輸入使用者名稱',
+    tos_agree: '我同意',
+    tos_link: '服務條款',
+    tos_required: '您必須同意服務條款',
+    login_failed: '登入失敗',
+    reg_failed: '註冊失敗',
+  },
+};

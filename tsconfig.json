@@ -1,9 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
-    "downlevelIteration": true, // Info: (20240710 - Murky) for Map<T, U> loop
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -12,21 +16,42 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["src/*", "prisma/*"],
-      "@package": ["package.json"],
-      "@next/third-parties/*": ["node_modules/@next/third-parties/dist/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/package": [
+        "./package.json"
+      ],
+      "@/i18nconfig": [
+        "./i18n-config.ts"
+      ]
     }
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "tailwind.config.ts",
-    "scripts/update_version.js"
+    "next.config.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/app/page.tsx",
+    // "scripts/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    ".next",
+    "scripts",
+    "scripts",
+    "test",
+    "ignition",
+    "dist"
+  ]
 }

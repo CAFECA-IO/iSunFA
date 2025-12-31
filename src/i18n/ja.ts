@@ -1,0 +1,31 @@
+export const ja = {
+  common: {
+    loading: '読み込み中...',
+    error: 'エラー',
+    close: '閉じる',
+  },
+  header: {
+    free_trial: '無料トライアル',
+    pricing: '料金',
+    login: 'ログイン',
+  },
+  auth_modal: {
+    welcome_back: 'おかえりなさい',
+    create_account: 'アカウント作成',
+    login_tab: 'ログイン',
+    register_tab: '登録',
+    login_desc: 'パスキーで安全にログイン。パスワードは不要です。',
+    login_btn: 'パスキーでログイン',
+    authenticating: '認証中...',
+    creating: 'アカウント作成中...',
+    create_btn: 'アカウント作成',
+    username: 'ユーザー名',
+    username_placeholder: 'ユーザー名を入力してください',
+    username_required: 'ユーザー名は必須です',
+    tos_agree: '同意します',
+    tos_link: '利用規約',
+    tos_required: '利用規約に同意する必要があります',
+    login_failed: 'ログイン失敗',
+    reg_failed: '登録失敗',
+  },
+};

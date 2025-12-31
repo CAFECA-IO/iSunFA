@@ -1,0 +1,31 @@
+export const en = {
+  common: {
+    loading: 'Loading...',
+    error: 'Error',
+    close: 'Close',
+  },
+  header: {
+    free_trial: 'Free Trial',
+    pricing: 'Pricing',
+    login: 'Login',
+  },
+  auth_modal: {
+    welcome_back: 'Welcome Back',
+    create_account: 'Create Account',
+    login_tab: 'Login',
+    register_tab: 'Register',
+    login_desc: 'Login securely with your passkey. No password required.',
+    login_btn: 'Login with Passkey',
+    authenticating: 'Authenticating...',
+    creating: 'Creating Account...',
+    create_btn: 'Create Account',
+    username: 'Username',
+    username_placeholder: 'Enter your username',
+    username_required: 'Username is required',
+    tos_agree: 'I agree to the',
+    tos_link: 'Terms of Service',
+    tos_required: 'You must agree to the Terms of Service',
+    login_failed: 'Login failed',
+    reg_failed: 'Registration failed',
+  },
+};
