@@ -30,4 +30,34 @@ export const en = {
     login_failed: 'Login failed',
     reg_failed: 'Registration failed',
   },
+  pricing: {
+    title: 'Simple, transparent pricing',
+    subtitle: 'Choose the plan that right for you',
+    monthly: 'Monthly',
+    yearly: 'Yearly',
+    save_percent: 'Save 17%',
+    cta: 'Get Started',
+    features: 'Features',
+    per_key: ' / key',
+    plans: {
+      personal: {
+        name: 'Personal',
+        desc: 'Perfect for individuals',
+        price_monthly: 'Free',
+        price_yearly: 'Free',
+      },
+      business: {
+        name: 'Business',
+        desc: 'For growing teams',
+        price_monthly: '$29',
+        price_yearly: '$290',
+      },
+      agency: {
+        name: 'Agency',
+        desc: 'For large scale operations',
+        price_monthly: '$99',
+        price_yearly: '$990',
+      },
+    },
+  },
 };

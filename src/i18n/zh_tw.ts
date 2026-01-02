@@ -30,4 +30,34 @@ export const zhTw = {
     login_failed: '登入失敗',
     reg_failed: '註冊失敗',
   },
+  pricing: {
+    title: '簡單透明的收費模式',
+    subtitle: '選擇最適合您的方案',
+    monthly: '月繳',
+    yearly: '年繳',
+    save_percent: '省下 17%',
+    cta: '立即開始',
+    features: '功能特色',
+    per_key: ' / 鑰匙',
+    plans: {
+      personal: {
+        name: '個人版',
+        desc: '適合個人使用者',
+        price_monthly: '免費',
+        price_yearly: '免費',
+      },
+      business: {
+        name: '企業版',
+        desc: '適合成長中的團隊',
+        price_monthly: 'NT$ 870',
+        price_yearly: 'NT$ 8,700',
+      },
+      agency: {
+        name: '事務所版',
+        desc: '適合大型機構與事務所',
+        price_monthly: 'NT$ 2,970',
+        price_yearly: 'NT$ 29,700',
+      },
+    },
+  },
 };

@@ -30,4 +30,34 @@ export const zhCn = {
     login_failed: '登录失败',
     reg_failed: '注册失败',
   },
+  pricing: {
+    title: '简单透明的收费模式',
+    subtitle: '选择最适合您的方案',
+    monthly: '月缴',
+    yearly: '年缴',
+    save_percent: '省下 17%',
+    cta: '立即开始',
+    features: '功能特色',
+    per_key: ' / 钥匙',
+    plans: {
+      personal: {
+        name: '个人版',
+        desc: '适合个人使用者',
+        price_monthly: '免费',
+        price_yearly: '免费',
+      },
+      business: {
+        name: '企业版',
+        desc: '适合成长中的团队',
+        price_monthly: '¥ 200',
+        price_yearly: '¥ 2,000',
+      },
+      agency: {
+        name: '事务所版',
+        desc: '适合大型机构与事务所',
+        price_monthly: '¥ 700',
+        price_yearly: '¥ 7,000',
+      },
+    },
+  },
 };

@@ -30,4 +30,34 @@ export const ja = {
     login_failed: 'ログイン失敗',
     reg_failed: '登録失敗',
   },
+  pricing: {
+    title: 'シンプルで透明な料金プラン',
+    subtitle: 'あなたに最適なプランをお選びください',
+    monthly: '月払い',
+    yearly: '年払い',
+    save_percent: '17% お得',
+    cta: '始める',
+    features: '機能',
+    per_key: ' / キー',
+    plans: {
+      personal: {
+        name: '個人向け',
+        desc: '個人ユーザーに最適',
+        price_monthly: '無料',
+        price_yearly: '無料',
+      },
+      business: {
+        name: 'ビジネス',
+        desc: '成長中のチーム向け',
+        price_monthly: '¥ 4,000',
+        price_yearly: '¥ 40,000',
+      },
+      agency: {
+        name: 'エージェンシー',
+        desc: '大規模な組織向け',
+        price_monthly: '¥ 14,000',
+        price_yearly: '¥ 140,000',
+      },
+    },
+  },
 };

@@ -30,4 +30,34 @@ export const ko = {
     login_failed: '로그인 실패',
     reg_failed: '가입 실패',
   },
+  pricing: {
+    title: '단순하고 투명한 요금제',
+    subtitle: '자신에게 맞는 요금제를 선택하세요',
+    monthly: '월 결제',
+    yearly: '연 결제',
+    save_percent: '17% 할인',
+    cta: '시작하기',
+    features: '기능',
+    per_key: ' / 키',
+    plans: {
+      personal: {
+        name: '개인용',
+        desc: '개인 사용자에게 적합',
+        price_monthly: '무료',
+        price_yearly: '무료',
+      },
+      business: {
+        name: '비즈니스',
+        desc: '성장하는 팀을 위해',
+        price_monthly: '₩ 40,000',
+        price_yearly: '₩ 400,000',
+      },
+      agency: {
+        name: '에이전시',
+        desc: '대규모 조직을 위해',
+        price_monthly: '₩ 140,000',
+        price_yearly: '₩ 1,400,000',
+      },
+    },
+  },
 };

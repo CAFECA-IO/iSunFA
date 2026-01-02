@@ -3,34 +3,48 @@ import remarkGfm from 'remark-gfm';
 
 interface IMarkdownContentProps {
   content: string;
+  theme?: 'dark' | 'light';
 }
 
-const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content }) => {
+const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content, theme = 'dark' }) => {
+  const isDark = theme === 'dark';
+  const textColor = isDark ? 'text-white' : 'text-gray-900';
+  const secondaryTextColor = isDark ? 'text-[#E0E0E0]' : 'text-gray-700';
+  const accentColor = '#FF9800'; // Keep orange accent
+  const linkColor = isDark ? 'text-[#64B5F6]' : 'text-blue-600';
+  const borderColor = isDark ? 'border-[#444]' : 'border-gray-200';
+  const blockquoteBg = isDark ? 'bg-[#FF9800]/10' : 'bg-orange-50';
+  const blockquoteText = isDark ? 'text-[#FFE0B2]' : 'text-orange-800';
+  const tableBorder = isDark ? 'border-[#444]' : 'border-gray-300';
+  const theadBg = isDark ? 'bg-white/5' : 'bg-gray-50';
+  const thText = isDark ? 'text-[#FFB74D]' : 'text-orange-700';
+  const rowBorder = isDark ? 'border-[#333]' : 'border-gray-200';
+
   const result = (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
         h1: ({ children, ...props }: React.ComponentPropsWithoutRef<'h1'>) => (
           <h1
-            className="mb-3 mt-5 flex items-center gap-2 border-b border-[#444] pb-2 text-[1.4rem] text-white"
+            className={`mb-3 mt-5 flex items-center gap-2 border-b ${borderColor} pb-2 text-[1.4rem] ${textColor}`}
             {...props}
           >
             {children}
           </h1>
         ),
         h2: ({ children, ...props }: React.ComponentPropsWithoutRef<'h2'>) => (
-          <h2 className="mb-2 mt-4 flex items-center gap-2 text-[1.2rem] text-white" {...props}>
-            <span className="inline-block h-[18px] w-1 rounded-sm bg-[#FF9800]"></span>
+          <h2 className={`mb-2 mt-4 flex items-center gap-2 text-[1.2rem] ${textColor}`} {...props}>
+            <span className={`inline-block h-[18px] w-1 rounded-sm bg-[${accentColor}]`}></span>
             {children}
           </h2>
         ),
         h3: ({ children, ...props }: React.ComponentPropsWithoutRef<'h3'>) => (
-          <h3 className="mb-1.5 mt-3 text-[1.1rem] font-semibold text-white" {...props}>
+          <h3 className={`mb-1.5 mt-3 text-[1.1rem] font-semibold ${textColor}`} {...props}>
             {children}
           </h3>
         ),
         strong: ({ children, ...props }: React.ComponentPropsWithoutRef<'strong'>) => (
-          <strong className="text-white" {...props}>
+          <strong className={textColor} {...props}>
             {children}
           </strong>
         ),
@@ -51,13 +65,13 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content }) => {
           const { ordered, ...rest } = props;
           if (ordered) {
             return (
-              <li className="mb-1.5 pl-1" {...rest}>
+              <li className={`mb-1.5 pl-1 ${secondaryTextColor}`} {...rest}>
                 {children}
               </li>
             );
           }
           return (
-            <li className="relative mb-1.5 pl-0" {...rest}>
+            <li className={`relative mb-1.5 pl-0 ${secondaryTextColor}`} {...rest}>
               {/* Info: (20251220 - Luphia) 小圓裝飾點 */}
               {/* <span className="absolute -left-[25px] top-[7px] size-1.5 bg-[#FF9800] rounded-full"></span> */}
               {children}
@@ -65,18 +79,18 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content }) => {
           );
         },
         p: ({ children, ...props }: React.ComponentPropsWithoutRef<'p'>) => (
-          <p className="mb-2.5 leading-relaxed text-[#E0E0E0]" {...props}>
+          <p className={`mb-2.5 leading-relaxed ${secondaryTextColor}`} {...props}>
             {children}
           </p>
         ),
         a: ({ children, ...props }: React.ComponentPropsWithoutRef<'a'>) => (
-          <a className="text-[#64B5F6] underline" {...props}>
+          <a className={`${linkColor} underline`} {...props}>
             {children}
           </a>
         ),
         blockquote: ({ children, ...props }: React.ComponentPropsWithoutRef<'blockquote'>) => (
           <blockquote
-            className="my-2.5 rounded border-l-4 border-[#FF9800] bg-[#FF9800]/10 px-3.5 py-2.5 italic text-[#FFE0B2]"
+            className={`my-2.5 rounded border-l-4 border-[${accentColor}] ${blockquoteBg} px-3.5 py-2.5 italic ${blockquoteText}`}
             {...props}
           >
             {children}
@@ -84,13 +98,13 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content }) => {
         ),
         table: ({ children, ...props }: React.ComponentPropsWithoutRef<'table'>) => (
           <div className="my-5 overflow-x-auto">
-            <table className="w-full border-collapse border border-[#444] text-sm" {...props}>
+            <table className={`w-full border-collapse border ${tableBorder} text-sm`} {...props}>
               {children}
             </table>
           </div>
         ),
         thead: ({ children, ...props }: React.ComponentPropsWithoutRef<'thead'>) => (
-          <thead className="bg-white/5" {...props}>
+          <thead className={theadBg} {...props}>
             {children}
           </thead>
         ),
@@ -98,20 +112,20 @@ const MarkdownContent: React.FC<IMarkdownContentProps> = ({ content }) => {
           <tbody {...props}>{children}</tbody>
         ),
         tr: ({ children, ...props }: React.ComponentPropsWithoutRef<'tr'>) => (
-          <tr className="border-b border-[#333]" {...props}>
+          <tr className={`border-b ${rowBorder}`} {...props}>
             {children}
           </tr>
         ),
         th: ({ children, ...props }: React.ComponentPropsWithoutRef<'th'>) => (
           <th
-            className="border-r border-[#444] p-3 text-left font-semibold text-[#FFB74D]"
+            className={`border-r ${tableBorder} p-3 text-left font-semibold ${thText}`}
             {...props}
           >
             {children}
           </th>
         ),
         td: ({ children, ...props }: React.ComponentPropsWithoutRef<'td'>) => (
-          <td className="border-r border-[#444] p-3 text-left text-[#E0E0E0]" {...props}>
+          <td className={`border-r ${tableBorder} p-3 text-left ${secondaryTextColor}`} {...props}>
             {children}
           </td>
         ),
