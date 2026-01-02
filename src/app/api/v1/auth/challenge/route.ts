@@ -8,13 +8,13 @@ export async function POST() {
     // Info: (20251231 - Tzuhan) Usernameless flow: address is not needed for challenge generation
     const challenge = await webAuthnService.generateLoginOptions();
 
-    // Set challenge in HTTP-only cookie
+    // Info: (20260102 - Luphia) Set challenge in HTTP-only cookie
     const cookieStore = await cookies();
     cookieStore.set('login_challenge', challenge, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 300, // 5 minutes
+      maxAge: 300,
       path: '/',
     });
 

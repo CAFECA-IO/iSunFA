@@ -1,3 +1,6 @@
+import { promises as fs } from 'fs';
+import path from 'path';
+import { createHash, randomBytes } from 'crypto';
 import { publicClient } from '@/lib/viem';
 import { parseAbiItem } from 'viem';
 import { CONTRACT_ADDRESSES } from '@/config/contracts';
@@ -13,7 +16,6 @@ import { webAuthnRepo } from '@/repositories/webauthn.repo';
 import { AppError } from '@/lib/utils/error';
 import { ApiCode } from '@/lib/utils/status';
 import { extractXYFromSPKI } from '@/lib/auth/fido2_parse';
-import { randomBytes } from 'crypto';
 
 interface ILoginResult {
   dewt: string;
@@ -34,9 +36,28 @@ class WebAuthnService {
   constructor(private readonly repo: IWebAuthnRepository) { }
 
   public async generateLoginOptions(): Promise<string> {
-    const challenge = randomBytes(32).toString('base64url');
-    // Info: (20251231 - Tzuhan) Challenge is now stateless (verified via cookie), no DB update needed.
-    return challenge;
+    try {
+      const termsPath = path.join(process.cwd(), 'documents/terms_of_service.md');
+      const privacyPath = path.join(process.cwd(), 'documents/privacy_policy.md');
+
+      const [termsContent, privacyContent] = await Promise.all([
+        fs.readFile(termsPath, 'utf8'),
+        fs.readFile(privacyPath, 'utf8'),
+      ]);
+
+      const signedAt = new Date().toISOString();
+
+      // Info: (20260102 - Luphia) Combine contents and timestamp
+      const dataToHash = `${termsContent}${privacyContent}${signedAt}`;
+
+      // Info: (20260102 - Luphia) Generate SHA-256 hash
+      const hash = createHash('sha256').update(dataToHash).digest('base64url');
+
+      return hash;
+    } catch (error) {
+      console.error('Failed to generate challenge from documents:', error);
+      throw new AppError(ApiCode.INTERNAL_SERVER_ERROR, 'Failed to generate challenge from documents');
+    }
   }
 
   /**

@@ -29,16 +29,16 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
     setLoading(true);
     setError(null);
     try {
-      // 1. Get Challenge
+      // Info: (20260102 - Luphia) 1. Get Challenge
       const { payload: { challenge } } = await request<{ payload: { challenge: string } }>('/api/v1/auth/challenge', {
         method: 'POST',
         body: JSON.stringify({}),
       });
 
-      // 2. Authenticate
+      // Info: (20260102 - Luphia) 2. Authenticate
       const authentication = await authenticateFido2(challenge);
 
-      // 3. Submit
+      // Info: (20260102 - Luphia) 3. Submit
       const loginData = await request<{ payload: { dewt: string; user: { address: string } } }>('/api/v1/auth/login', {
         method: 'POST',
         body: JSON.stringify({ authentication }),
@@ -61,11 +61,11 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreedToTos) {
-      setError('You must agree to the Terms of Service');
+      setError(t('auth_modal.tos_required'));
       return;
     }
     if (!username) {
-      setError('Username is required');
+      setError(t('auth_modal.username_required'));
       return;
     }
 
@@ -73,16 +73,16 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
     setError(null);
 
     try {
-      // 1. Get Challenge
-      const { payload: { challenge } } = await request<{ payload: { challenge: string } }>('/api/v1/auth/register/challenge', {
+      // Info: (20260102 - Luphia) 1. Get Challenge
+      const { payload: { challenge } } = await request<{ payload: { challenge: string } }>('/api/v1/auth/challenge', {
         method: 'POST',
         body: JSON.stringify({}),
       });
 
-      // 2. Register Credential
+      // Info: (20260102 - Luphia) 2. Register Credential
       const registration = await registerFido2(username, challenge);
 
-      // 3. Submit
+      // Info: (20260102 - Luphia) 3. Submit
       const regData = await request<{ payload: { dewt: string; user: { address: string } } }>('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({ username, registration }),
@@ -226,7 +226,14 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
                         </div>
                         <div className="ml-3 text-sm leading-6">
                           <label htmlFor="tos" className="font-medium text-gray-900">
-                            {t('auth_modal.tos_agree')} <Link href="/terms" className="font-semibold text-orange-600 hover:text-orange-500">{t('auth_modal.tos_link')}</Link>
+                            {t('auth_modal.tos_agree')}{' '}
+                            <Link href="/terms" className="font-semibold text-orange-600 hover:text-orange-500">
+                              {t('auth_modal.tos_link')}
+                            </Link>
+                            {' '}{t('auth_modal.and')}{' '}
+                            <Link href="/privacy" className="font-semibold text-orange-600 hover:text-orange-500">
+                              {t('auth_modal.privacy_link')}
+                            </Link>
                           </label>
                         </div>
                       </div>

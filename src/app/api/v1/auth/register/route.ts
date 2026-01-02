@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     const { dewt, user } = await webAuthnService.registerUser(username, registration, challenge);
 
-    // Clear challenge cookie
+    // Info: (20260102 - Luphia) Clear challenge cookie
     cookieStore.delete('register_challenge');
 
     return jsonOk({ dewt, user });
