@@ -842,13 +842,13 @@ const salaryData = `
 499,501 ~ 500,000 100,700 97,340 93,970 91,430 88,900 86,380 83,850 81,330 78,800 76,280 73,750 71,230
 `;
 
-// Info: (20260103 - Luphia) 整理為 [[80001, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ...]
+// Info: (20260103 - Luphia) 整理為 [[80500, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], ...]
 const DATA = salaryData
   .trim()
   .split('\n')
   .map((line: string) => {
     const parts = line.split(' ');
-    const range = parseInt(parts[0].replace(/,/g, '').trim(), 10);
+    const range = parseInt(parts[2].replace(/,/g, '').trim(), 10);
     const salaries = parts
       .slice(3)
       .map((num: string) => parseInt(num.replace(/,/g, '').trim(), 10));
