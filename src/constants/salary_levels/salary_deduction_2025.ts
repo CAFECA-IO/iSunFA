@@ -1,3 +1,4 @@
+// Info: (20260103 - Luphia) 資料來源 https://www.ntbca.gov.tw/singlehtml/a15c33c827e4470c9263930ab2087812?cntId=822c27718d4c4cb8beaf536773e81dca#gsc.tab=0
 const salaryData = `
 80,001 ~ 80,500 0 0 0 0 0 0 0 0 0 0 0 0
 80,501 ~ 81,000 0 0 0 0 0 0 0 0 0 0 0 0

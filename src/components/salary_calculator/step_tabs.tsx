@@ -25,11 +25,12 @@ const StepTabs: React.FC = () => {
     otherAllowanceWithTax,
     otherAllowanceWithoutTax,
     setIsNameError,
+    selectedYear,
   } = useCalculatorCtx();
   const { messageModalVisibilityHandler, messageModalDataHandler } = useModalContext();
 
   // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
-  const thisYear = new Date().getFullYear();
+  const thisYear = parseInt(selectedYear);
   const minBasicSalary = getMinimumWage(thisYear);
 
   // Info: (20251002 - Julian) 本薪（應稅）＋伙食費（免稅）＋其他加給（應稅）＋其他加給（免稅）應大於等於最低基本薪資

@@ -158,9 +158,6 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   // Info: (20250806 - Julian) 基準天數選項：1. 固定 30 天、2. 實際天數
   const payrollDaysBaseOptions = ['FIXED', 'ACTUAL'];
 
-  // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
-  const defaultBasicSalary = getMinimumWage(thisYear);
-
   // Info: (20250709 - Julian) 計算機整體的 state 和 functions
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [completeSteps, setCompleteSteps] = useState<TabStep[]>(defaultTabSteps);
@@ -182,6 +179,9 @@ export const CalculatorProvider = ({ children }: ICalculatorProvider) => {
   const [dayOfJoining, setDayOfJoining] = useState<string>('01'); // Info: (20250709 - Julian) 入職日期
   const [isLeft, setIsLeft] = useState<boolean>(false);
   const [dayOfLeaving, setDayOfLeaving] = useState<string>('01'); // Info: (20250709 - Julian) 離職日期
+
+  // Info: (20251002 - Julian) 取得當前年份的最低基本薪資
+  const defaultBasicSalary = getMinimumWage(parseInt(selectedYear));
 
   // Info: (20250711 - Julian) 是否有姓名錯誤
   const [isNameError, setIsNameError] = useState<boolean>(false);
