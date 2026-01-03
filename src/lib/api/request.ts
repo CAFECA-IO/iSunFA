@@ -28,8 +28,10 @@ export async function request<T = unknown>(url: string, options: IRequestOptions
     }
   }
 
+  const token = localStorage.getItem('dewt');
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
   };
 
   const config: RequestInit = {

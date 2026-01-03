@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { X, User } from 'lucide-react';
 import { authenticateFido2, registerFido2 } from '@/lib/auth/fido2_client';
-import { useRouter } from 'next/navigation';
 import { request } from '@/lib/api/request';
 import { useTranslation } from '@/i18n/i18n_context';
 import LegalModal from '@/components/common/legal_modal';
+import { useAuth } from '@/contexts/auth_context';
 
 interface IAuthModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ type AuthMode = 'login' | 'register';
 
 export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
   const { t } = useTranslation();
-  const router = useRouter();
+  const { refreshAuth } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
@@ -42,14 +42,13 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
       // Info: (20260102 - Luphia) 3. Submit
       const loginData = await request<{ payload: { dewt: string; user: { address: string } } }>('/api/v1/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ authentication }),
+        body: JSON.stringify({ authentication, challenge }),
       });
 
       localStorage.setItem('dewt', loginData.payload.dewt);
       localStorage.setItem('user_address', loginData.payload.user.address);
-
+      await refreshAuth();
       onClose();
-      router.push('/users/dashboard');
     } catch (err: unknown) {
       console.error('Login error:', err);
       const message = err instanceof Error ? err.message : 'Login failed';
@@ -86,15 +85,13 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
       // Info: (20260102 - Luphia) 3. Submit
       const regData = await request<{ payload: { dewt: string; user: { address: string } } }>('/api/v1/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ username, registration }),
+        body: JSON.stringify({ username, registration, challenge }),
       });
 
       localStorage.setItem('dewt', regData.payload.dewt);
       localStorage.setItem('user_address', regData.payload.user.address);
-
+      await refreshAuth();
       onClose();
-      router.push('/users/dashboard');
-
     } catch (err: unknown) {
       console.error('Registration error:', err);
       const message = err instanceof Error ? err.message : 'Registration failed';
@@ -148,7 +145,7 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
                       </DialogTitle>
                     </div>
 
-                    {/* Tabs */}
+                    {/* Info: (20260103 - Luphia) Tabs */}
                     <div className="flex border-b border-gray-200 mb-6">
                       <button
                         type="button"
@@ -166,7 +163,7 @@ export default function AuthModal({ isOpen, onClose }: IAuthModalProps) {
                       </button>
                     </div>
 
-                    {/* Error Message */}
+                    {/* Info: (20260103 - Luphia) Error Message */}
                     {error && (
                       <div className="mb-4 rounded-md bg-red-50 p-4">
                         <div className="flex">
