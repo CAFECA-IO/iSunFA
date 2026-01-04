@@ -8,6 +8,9 @@ export const en = {
     free_trial: 'Free Trial',
     pricing: 'Pricing',
     login: 'Login',
+    plan: 'Current Plan',
+    credits: 'Credits',
+    logout: 'Sign out',
   },
   auth_modal: {
     welcome_back: 'Welcome Back',
@@ -30,6 +33,63 @@ export const en = {
     login_failed: 'Login failed',
     reg_failed: 'Registration failed',
   },
+  features: {
+    title: 'Smarter Financial Management',
+    subtitle: 'Core Advantages of iSunFA',
+    description: 'From automated bookkeeping and payroll to real-time reports and tax filing, iSunFA streamlines your entire financial workflow with AI-driven precision.',
+    items: {
+      bookkeeping: {
+        title: 'Automated Bookkeeping',
+        desc: 'Automate bookkeeping through AI recognition of vouchers, significantly saving time and labor costs.',
+      },
+      adjustment: {
+        title: 'Account Adjustment',
+        desc: 'Flexible account adjustment functions ensure the accuracy and compliance of accounting records.',
+      },
+      cashier: {
+        title: 'Cashier Management',
+        desc: 'Master cash flow in real-time and easily manage daily income, expenses, and bank transactions.',
+      },
+      analysis: {
+        title: 'Financial Analysis',
+        desc: 'Provide in-depth financial data analysis to help you make wise business decisions.',
+      },
+      tax: {
+        title: 'Tax Filing',
+        desc: 'Automatically generate data required for tax filing, making tax reporting simple and easy.',
+      },
+      salary: {
+        title: 'Salary Management',
+        desc: 'Automatically calculate salary and withholding to ensure accurate payroll distribution.',
+      },
+      financial_report: {
+        title: 'Financial Reports',
+        desc: 'Generate the three major financial statements with one click to keep abreast of business operations.',
+      },
+    },
+  },
+  tech_specs: {
+    title: 'Advanced Technologies',
+    subtitle: 'Financial Analysis & Reasoning',
+    description: 'Integrating cutting-edge encryption and AI technologies to build the most trusted automated accounting platform.',
+    items: {
+      zkp: {
+        title: 'Zero-Knowledge Proofs & Homomorphic Encryption',
+        desc: 'Verify and compute without decrypting data, effectively protecting privacy and establishing consensus trust.',
+      },
+      faith: {
+        title: 'FAITH Multimodal Financial Model',
+        desc: 'AI model designed specifically for finance, with deep understanding and reasoning capabilities for complex accounting issues.',
+      },
+      locutus: {
+        title: 'Locutus Edge Computing Platform',
+        desc: 'Leverage distributed edge computing architecture for high-performance, low-latency data processing and real-time synchronization.',
+      },
+    },
+  },
+  acknowledgement: {
+    text: 'Model training completed using Taipei-1 H100 high-end GPU computing power',
+  },
   pricing: {
     title: 'Simple, transparent pricing',
     subtitle: 'Choose the plan that right for you',
@@ -40,24 +100,112 @@ export const en = {
     features: 'Features',
     per_key: ' / key',
     plans: {
-      personal: {
-        name: 'Personal',
+      free: {
+        name: 'Free',
         desc: 'Perfect for individuals',
         price_monthly: 'Free',
         price_yearly: 'Free',
+        features: {
+          fido: '1 FIDO2 Key',
+          vouchers: '10 Vouchers / Month',
+          vouchers_overage_tooltip: 'Overage: 1 Credit/Voucher',
+          ai_reports: '1 AI Report / Month',
+          ai_overage_tooltip: 'Overage: 500 Credits/Report',
+        },
       },
-      business: {
-        name: 'Business',
+      team: {
+        name: 'Team',
         desc: 'For growing teams',
         price_monthly: '$29',
         price_yearly: '$290',
+        features: {
+          fido: 'Unlimited FIDO2 Keys',
+          fido_tooltip: 'Subscription fee charged based on the number of FIDO2 keys',
+          vouchers: '300 Vouchers / Month',
+          vouchers_overage_tooltip: 'Overage: 1 Credit/Voucher',
+          ai_reports: '5 AI Reports / Month',
+          ai_overage_tooltip: 'Overage: 500 Credits/Report',
+          analytics: 'Advanced Analytics',
+          support: 'Priority Support',
+          branding: 'Custom Branding',
+        },
       },
-      agency: {
-        name: 'Agency',
+      business: {
+        name: 'Enterprise',
         desc: 'For large scale operations',
         price_monthly: '$99',
         price_yearly: '$990',
+        features: {
+          fido: 'Unlimited FIDO2 Keys',
+          fido_tooltip: 'Subscription fee charged based on the number of FIDO2 keys',
+          vouchers: '3000 Vouchers / Month',
+          vouchers_overage_tooltip: 'Overage: 1 Credit/Voucher',
+          ai_reports: '30 AI Reports / Month',
+          ai_overage_tooltip: 'Overage: 500 Credits/Report',
+          analytics: 'Advanced Analytics',
+          support: 'Priority Support',
+          branding: 'Custom Branding',
+          api: 'API Access',
+          white_label: 'White-label Option',
+        },
       },
     },
+    credits: {
+      title: 'Flexible Credit Packs',
+      subtitle: 'Top up anytime, credits never expire',
+      tab_subscription: 'Subscriptions',
+      tab_credits: 'Buy Credits',
+      buy_btn: 'Buy Now',
+      items: {
+        all_features: 'Use for AI Reports & Extra Vouchers',
+        validity: 'Credits never expire',
+      },
+      plans: {
+        tier1: {
+          credits: '150 Credits',
+          price: '$5',
+          desc: 'Starter Pack',
+        },
+        tier2: {
+          credits: '700 Credits',
+          price: '$20',
+          desc: 'Bonus: 100 (+16%)',
+          popular: true,
+        },
+        tier3: {
+          credits: '2,000 Credits',
+          price: '$50',
+          desc: 'Bonus: 500 (+33%)',
+        },
+        tier4: {
+          credits: '4,500 Credits',
+          price: '$100',
+          desc: 'Bonus: 1,500 (+50%)',
+        },
+        tier5: {
+          credits: '25,000 Credits',
+          price: '$500',
+          desc: 'Bonus: 10,000 (+66%)',
+        },
+        tier6: {
+          credits: '60,000 Credits',
+          price: '$1,000',
+          desc: 'Bonus: 30,000 (+100%)',
+        },
+      },
+    },
+  },
+  chat: {
+    tags: {
+      bookkeeping: 'Bookkeeping',
+      adjustment: 'Adjustment',
+      cashier: 'Cashier',
+      analysis: 'Analysis',
+      tax: 'Tax Filing',
+      salary: 'Salary',
+      financial_report: 'Financial Report',
+      other: 'Other',
+    },
+    input_placeholder: 'Type a message or upload document (Image/PDF/Camera)...',
   },
 };

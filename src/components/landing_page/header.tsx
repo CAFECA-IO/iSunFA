@@ -38,8 +38,8 @@ export default function Header() {
               className="h-8 w-auto"
               src="/isunfa_logo_color.svg"
               alt="iSunFA Logo"
-              width={100}
-              height={32}
+              width={125}
+              height={40}
               priority
             />
           </Link>
@@ -105,10 +105,20 @@ export default function Header() {
                 leaveFrom="transform opacity-100 scale-100"
                 leaveTo="transform opacity-0 scale-95"
               >
-                <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <MenuItems className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm text-gray-900 font-medium truncate">{user.name || 'User'}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.address}</p>
+                    {/* Info: (20260104) Removed address, added Plan and Credits */}
+                    <div className="mt-2 flex flex-col gap-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">{t('header.plan')}:</span>
+                        <span className="font-medium text-orange-600">{t(`pricing.plans.${user.plan || 'personal'}.name`)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">{t('header.credits')}:</span>
+                        <span className="font-medium text-gray-900">{user.credits?.toLocaleString() || 0}</span>
+                      </div>
+                    </div>
                   </div>
                   <MenuItem>
                     {({ focus }) => (
@@ -116,11 +126,11 @@ export default function Header() {
                         onClick={logout}
                         className={`
                           ${focus ? 'bg-orange-50' : ''}
-                          group flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700
+                          group flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-700 cursor-pointer
                         `}
                       >
                         <LogOut className="h-4 w-4" />
-                        Sign out
+                        {t('header.logout')}
                       </button>
                     )}
                   </MenuItem>

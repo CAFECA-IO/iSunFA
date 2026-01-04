@@ -12,6 +12,7 @@
     "swarm": "npm run build && next start -p "
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.9",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.1",
     "@passwordless-id/webauthn": "^2.3.1",

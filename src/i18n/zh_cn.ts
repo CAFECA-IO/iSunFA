@@ -30,6 +30,63 @@ export const zhCn = {
     login_failed: '登录失败',
     reg_failed: '注册失败',
   },
+  features: {
+    title: '更聪明的财务管理',
+    subtitle: 'iSunFA 核心优势',
+    description: '从自动记账、薪资管理到即时报表与税务申报，iSunFA 通过 AI 智能精准优化您的完整财务流程。',
+    items: {
+      bookkeeping: {
+        title: '自动记账',
+        desc: '通过 AI 自动识别凭证，实现自动化记账，大幅节省时间与人力成本。',
+      },
+      adjustment: {
+        title: '账务调整',
+        desc: '灵活的账务调整功能，确保会计记录的准确性与合规性。',
+      },
+      cashier: {
+        title: '出纳管理',
+        desc: '即时掌握现金流向，轻松管理日常收支与银行往来。',
+      },
+      analysis: {
+        title: '财务分析',
+        desc: '提供深入的财务数据分析，协助您做出明智的商业决策。',
+      },
+      tax: {
+        title: '税务申报',
+        desc: '自动生成报税所需资料，让税务申报变得简单轻松。',
+      },
+      salary: {
+        title: '薪资管理',
+        desc: '自动计算薪资与扣缴，确保员工薪资发放准确无误。',
+      },
+      financial_report: {
+        title: '财务报表',
+        desc: '一键生成三大财务报表，随时掌握企业营运状况。',
+      },
+    },
+  },
+  tech_specs: {
+    title: '先进技术',
+    subtitle: '财务分析与推理模型',
+    description: '整合最前沿的加密与 AI 技术，打造最值得信赖的自动化会计平台。',
+    items: {
+      zkp: {
+        title: '零知识证明与同态加密',
+        desc: '在不解密数据的情况下完成验证与计算，有效保护隐私，满足隐私需求，建立共识信任。',
+      },
+      faith: {
+        title: 'FAITH 多模态财务会计专业模型',
+        desc: '专为财务领域设计的 AI 模型，具备深度理解与推理能力，精准处理复杂会计问题。',
+      },
+      locutus: {
+        title: 'Locutus 边缘计算平台',
+        desc: '利用分布式边缘计算架构，实现高性能、低延迟的数据处理与即时同步。',
+      },
+    },
+  },
+  acknowledgement: {
+    text: '本模型训练使用 Taipei-1 H100 高阶 GPU 算力完成',
+  },
   pricing: {
     title: '简单透明的收费模式',
     subtitle: '选择最适合您的方案',
@@ -40,24 +97,112 @@ export const zhCn = {
     features: '功能特色',
     per_key: ' / 钥匙',
     plans: {
-      personal: {
-        name: '个人版',
+      free: {
+        name: '免费版',
         desc: '适合个人使用者',
         price_monthly: '免费',
         price_yearly: '免费',
+        features: {
+          fido: '1 组 FIDO2 密钥',
+          vouchers: '每月 10 份会计凭证',
+          vouchers_overage_tooltip: '超出额度每份 1 点数',
+          ai_reports: '每月 1 份 AI 财报',
+          ai_overage_tooltip: '超出额度每份 500 点数',
+        },
       },
-      business: {
-        name: '企业版',
+      team: {
+        name: '团队版',
         desc: '适合成长中的团队',
         price_monthly: '¥ 200',
         price_yearly: '¥ 2,000',
+        features: {
+          fido: '无限 FIDO2 密钥',
+          fido_tooltip: '根据 fido2 密钥数量收取订阅费',
+          vouchers: '每月 300 份会计凭证',
+          vouchers_overage_tooltip: '超出额度每份 1 点数',
+          ai_reports: '每月 5 份 AI 财报',
+          ai_overage_tooltip: '超出额度每份 500 点数',
+          analytics: '进阶数据分析',
+          support: '优先客户支援',
+          branding: '自订品牌',
+        },
       },
-      agency: {
-        name: '事务所版',
+      business: {
+        name: '企业版',
         desc: '适合大型机构与事务所',
         price_monthly: '¥ 700',
         price_yearly: '¥ 7,000',
+        features: {
+          fido: '无限 FIDO2 密钥',
+          fido_tooltip: '根据 fido2 密钥数量收取订阅费',
+          vouchers: '每月 3000 份会计凭证',
+          vouchers_overage_tooltip: '超出额度每份 1 点数',
+          ai_reports: '每月 30 份 AI 财报',
+          ai_overage_tooltip: '超出额度每份 500 点数',
+          analytics: '进阶数据分析',
+          support: '优先客户支援',
+          branding: '自订品牌',
+          api: 'API 存取权',
+          white_label: '白牌解决方案',
+        },
       },
     },
+    credits: {
+      title: '弹性购买点数',
+      subtitle: '依据您的需求随时补充，点数永久有效',
+      tab_subscription: '订阅方案',
+      tab_credits: '购买点数',
+      buy_btn: '购买',
+      items: {
+        all_features: '适用于 AI 财报与额外凭证',
+        validity: '点数永久有效',
+      },
+      plans: {
+        tier1: {
+          credits: '150 点',
+          price: '¥ 35',
+          desc: '基础体验',
+        },
+        tier2: {
+          credits: '700 点',
+          price: '¥ 140',
+          desc: '加赠 100 点 (+16%)',
+          popular: true,
+        },
+        tier3: {
+          credits: '2,000 点',
+          price: '¥ 350',
+          desc: '加赠 500 点 (+33%)',
+        },
+        tier4: {
+          credits: '4,500 点',
+          price: '¥ 700',
+          desc: '加赠 1,500 点 (+50%)',
+        },
+        tier5: {
+          credits: '25,000 点',
+          price: '¥ 3,500',
+          desc: '加赠 10,000 点 (+66%)',
+        },
+        tier6: {
+          credits: '60,000 点',
+          price: '¥ 7,000',
+          desc: '加赠 30,000 点 (+100%)',
+        },
+      },
+    },
+  },
+  chat: {
+    tags: {
+      bookkeeping: '记账',
+      adjustment: '调账',
+      cashier: '出纳',
+      analysis: '分析',
+      tax: '报税',
+      salary: '薪资',
+      financial_report: '财报',
+      other: '其他',
+    },
+    input_placeholder: '输入信息或上传凭证 (支持图片/PDF/拍照)...',
   },
 };

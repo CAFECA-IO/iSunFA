@@ -1,11 +1,11 @@
-import { Check } from 'lucide-react';
 import { useTranslation } from '@/i18n/i18n_context';
+import { Check, HelpCircle } from 'lucide-react';
 
 // Info: (20260102 - Antigravity) Renamed to IPricingProps for lint compliance
 interface IPricingProps {
-  planKey: 'personal' | 'business' | 'agency';
+  planKey: 'free' | 'team' | 'business';
   billingInterval: 'month' | 'year';
-  features: string[];
+  features: (string | { text: string; tooltip?: string })[];
   popular?: boolean;
 }
 
@@ -41,12 +41,27 @@ export default function PricingCard({ planKey, billingInterval, features, popula
           </span>
         </p>
         <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
-          {features.map((feature) => (
-            <li key={feature} className="flex gap-x-3">
-              <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
-              {feature}
-            </li>
-          ))}
+          {features.map((feature, index) => {
+            const isObject = typeof feature === 'object';
+            const text = isObject ? feature.text : feature;
+            const tooltip = isObject ? feature.tooltip : undefined;
+
+            return (
+              <li key={index} className="flex gap-x-3 items-center">
+                <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
+                <span>{text}</span>
+                {tooltip && (
+                  <div className="group relative flex items-center">
+                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 w-max max-w-xs rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 shadow-lg z-10">
+                      {tooltip}
+                      <span className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900"></span>
+                    </span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
       <button

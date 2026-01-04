@@ -5,10 +5,12 @@ import { useTranslation } from '@/i18n/i18n_context';
 import PricingCard from '@/components/pricing/pricing_card';
 import Header from '@/components/landing_page/header';
 import Footer from '@/components/landing_page/footer';
+import { Check } from 'lucide-react';
 
 export default function PricingPage() {
   const { t } = useTranslation();
   const [billingInterval, setBillingInterval] = useState<'month' | 'year'>('month');
+  const [activeTab, setActiveTab] = useState<'subscription' | 'credits'>('subscription');
 
   return (
     <div className="bg-white">
@@ -17,75 +19,175 @@ export default function PricingPage() {
       <main className="isolate">
         <div className="relative pt-14 text-center sm:pt-20 lg:pt-32">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            {t('pricing.title')}
+            {activeTab === 'subscription' ? t('pricing.title') : t('pricing.credits.title')}
           </h1>
           <p className="mt-4 text-lg leading-8 text-gray-600">
-            {t('pricing.subtitle')}
+            {activeTab === 'subscription' ? t('pricing.subtitle') : t('pricing.credits.subtitle')}
           </p>
         </div>
 
+        {/* Tab Switcher */}
         <div className="mt-8 flex justify-center">
-          <div className="relative flex rounded-full bg-gray-100 p-1">
+          <div className="flex rounded-lg bg-gray-100 p-1">
             <button
-              onClick={() => setBillingInterval('month')}
-              className={`${billingInterval === 'month' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
-                } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              onClick={() => setActiveTab('subscription')}
+              className={`${activeTab === 'subscription' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
+                } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
-              {t('pricing.monthly')}
+              {t('pricing.credits.tab_subscription')}
             </button>
             <button
-              onClick={() => setBillingInterval('year')}
-              className={`${billingInterval === 'year' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
-                } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+              onClick={() => setActiveTab('credits')}
+              className={`${activeTab === 'credits' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
+                } rounded-md px-8 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
             >
-              {t('pricing.yearly')}
+              {t('pricing.credits.tab_credits')}
             </button>
-            {billingInterval === 'year' && (
-              <span className="absolute -right-20 top-2 -rotate-12 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                {t('pricing.save_percent')}
-              </span>
-            )}
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 pt-10">
-          <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-            <PricingCard
-              planKey="personal"
-              billingInterval={billingInterval}
-              features={[
-                '1 FIDO2 Key',
-                '10 Accounting Vouchers / Month',
-                '3 AI Reports / Month',
-              ]}
-            />
-            <PricingCard
-              planKey="business"
-              billingInterval={billingInterval}
-              popular={true}
-              features={[
-                'Unlimited FIDO2 Keys',
-                '300 Accounting Vouchers / Month',
-                '30 AI Reports / Month',
-                'Advanced Analytics',
-                'Priority Support',
-                'Custom Branding'
-              ]}
-            />
-            <PricingCard
-              planKey="agency"
-              billingInterval={billingInterval}
-              features={[
-                'Unlimited FIDO2 Keys',
-                'Unlimited Accounting Vouchers',
-                'Unlimited AI Reports',
-                'Dedicated Account Manager',
-                'API Access',
-                'White-label Option'
-              ]}
-            />
+        {activeTab === 'subscription' ? (
+          <>
+            {/* Billing Interval Toggle */}
+            <div className="mt-8 flex justify-center">
+              <div className="relative flex rounded-full bg-gray-100 p-1">
+                <button
+                  onClick={() => setBillingInterval('month')}
+                  className={`${billingInterval === 'month' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
+                    } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+                >
+                  {t('pricing.monthly')}
+                </button>
+                <button
+                  onClick={() => setBillingInterval('year')}
+                  className={`${billingInterval === 'year' ? 'bg-white shadow-sm' : 'hover:bg-gray-50'
+                    } relative rounded-full px-4 py-2 text-sm font-semibold text-gray-900 transition-all duration-200 focus:outline-none`}
+                >
+                  {t('pricing.yearly')}
+                </button>
+                {billingInterval === 'year' && (
+                  <span className="absolute -right-20 top-2 -rotate-12 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    {t('pricing.save_percent')}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 pt-10">
+              <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                <PricingCard
+                  planKey="free"
+                  billingInterval={billingInterval}
+                  features={[
+                    t('pricing.plans.free.features.fido'),
+                    {
+                      text: t('pricing.plans.free.features.vouchers'),
+                      tooltip: t('pricing.plans.free.features.vouchers_overage_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.free.features.ai_reports'),
+                      tooltip: t('pricing.plans.free.features.ai_overage_tooltip'),
+                    },
+                  ]}
+                />
+                <PricingCard
+                  planKey="team"
+                  billingInterval={billingInterval}
+                  popular={true}
+                  features={[
+                    {
+                      text: t('pricing.plans.team.features.fido'),
+                      tooltip: t('pricing.plans.team.features.fido_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.team.features.vouchers'),
+                      tooltip: t('pricing.plans.team.features.vouchers_overage_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.team.features.ai_reports'),
+                      tooltip: t('pricing.plans.team.features.ai_overage_tooltip'),
+                    },
+                    t('pricing.plans.team.features.analytics'),
+                    t('pricing.plans.team.features.support'),
+                    t('pricing.plans.team.features.branding'),
+                  ]}
+                />
+                <PricingCard
+                  planKey="business"
+                  billingInterval={billingInterval}
+                  features={[
+                    {
+                      text: t('pricing.plans.business.features.fido'),
+                      tooltip: t('pricing.plans.business.features.fido_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.business.features.vouchers'),
+                      tooltip: t('pricing.plans.business.features.vouchers_overage_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.business.features.ai_reports'),
+                      tooltip: t('pricing.plans.business.features.ai_overage_tooltip'),
+                    },
+                    t('pricing.plans.business.features.analytics'),
+                    t('pricing.plans.business.features.support'),
+                    t('pricing.plans.business.features.branding'),
+                    t('pricing.plans.business.features.api'),
+                    t('pricing.plans.business.features.white_label'),
+                  ]}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 pt-10">
+            <div className="mx-auto mt-4 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+              {['tier1', 'tier2', 'tier3', 'tier4', 'tier5', 'tier6'].map((tier) => {
+                const popular = tier === 'tier2';
+                return (
+                  <div key={tier} className={`relative flex flex-col justify-between rounded-3xl bg-white p-8 ring-1 xl:p-10 ${popular ? 'ring-2 ring-orange-600' : 'ring-gray-200'}`}>
+                    {popular && (
+                      <div className="absolute -top-4 left-0 right-0 mx-auto w-32 rounded-full bg-orange-600 px-3 py-1 text-center text-sm font-semibold text-white shadow-sm">
+                        Most Popular
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold leading-8 text-gray-900">
+                        {t(`pricing.credits.plans.${tier}.credits`)}
+                      </h3>
+                      <p className="mt-4 text-sm leading-6 text-gray-600">
+                        {t(`pricing.credits.plans.${tier}.desc`)}
+                      </p>
+                      <p className="mt-6 flex items-baseline gap-x-1">
+                        <span className="text-4xl font-bold tracking-tight text-gray-900">
+                          {t(`pricing.credits.plans.${tier}.price`)}
+                        </span>
+                      </p>
+                      <ul className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+                        <li className="flex gap-x-3">
+                          <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
+                          {t('pricing.credits.items.validity')}
+                        </li>
+                        <li className="flex gap-x-3">
+                          <Check className="h-6 w-5 flex-none text-orange-600" aria-hidden="true" />
+                          {t('pricing.credits.items.all_features')}
+                        </li>
+                      </ul>
+                    </div>
+                    <button
+                      className={`mt-8 block w-full rounded-md px-3 py-2 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${popular
+                        ? 'bg-orange-600 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-orange-600'
+                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100 focus-visible:outline-orange-600'
+                        }`}
+                    >
+                      {t('pricing.credits.buy_btn')}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
+
       </main>
 
       <Footer />

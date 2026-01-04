@@ -8,6 +8,9 @@ export const ko = {
     free_trial: '무료 체험',
     pricing: '요금제',
     login: '로그인',
+    plan: '현재 요금제',
+    credits: '크레딧',
+    logout: '로그아웃',
   },
   auth_modal: {
     welcome_back: '다시 오신 것을 환영합니다',
@@ -30,6 +33,63 @@ export const ko = {
     login_failed: '로그인 실패',
     reg_failed: '가입 실패',
   },
+  features: {
+    title: '더 스마트한 재무 관리',
+    subtitle: 'iSunFA 핵심 장점',
+    description: '자동 기장 및 급여 관리에서 실시간 보고서 및 세금 신고에 이르기까지, iSunFA는 AI 기반의 정밀도로 전체 재무 업무 흐름을 간소화합니다.',
+    items: {
+      bookkeeping: {
+        title: '자동 기장',
+        desc: 'AI 증빙 인식을 통해 기장을 자동화하여 시간과 인건비를 대폭 절감합니다.',
+      },
+      adjustment: {
+        title: '계정 조정',
+        desc: '유연한 계정 조정 기능으로 회계 기록의 정확성과 규정 준수를 보장합니다.',
+      },
+      cashier: {
+        title: '출납 관리',
+        desc: '현금 흐름을 실시간으로 파악하고 일일 수입, 지출 및 은행 거래를 쉽게 관리하세요.',
+      },
+      analysis: {
+        title: '재무 분석',
+        desc: '심층적인 재무 데이터 분석을 제공하여 현명한 비즈니스 의사 결정을 지원합니다.',
+      },
+      tax: {
+        title: '세금 신고',
+        desc: '세금 신고에 필요한 데이터를 자동으로 생성하여 세무 보고를 간편하게 만듭니다.',
+      },
+      salary: {
+        title: '급여 관리',
+        desc: '급여 및 원천 징수를 자동으로 계산하여 정확한 급여 지급을 보장합니다.',
+      },
+      financial_report: {
+        title: '재무 보고서',
+        desc: '클릭 한 번으로 3대 재무 제표를 생성하여 기업 운영 현황을 언제든지 파악하세요.',
+      },
+    },
+  },
+  tech_specs: {
+    title: '첨단 기술',
+    subtitle: '재무 분석 및 추론 모델',
+    description: '최첨단 암호화 및 AI 기술을 통합하여 가장 신뢰할 수 있는 자동화 회계 플랫폼을 구축합니다.',
+    items: {
+      zkp: {
+        title: '영지식 증명 및 동형 암호화',
+        desc: '데이터를 복호화하지 않고 검증 및 계산을 완료하여 개인 정보를 효과적으로 보호하고 합의 신뢰를 구축합니다.',
+      },
+      faith: {
+        title: 'FAITH 멀티모달 재무 회계 모델',
+        desc: '재무 분야를 위해 특별히 설계된 AI 모델로, 복잡한 회계 문제를 정확하게 처리할 수 있는 심층적인 이해 및 추론 기능을 갖추고 있습니다.',
+      },
+      locutus: {
+        title: 'Locutus 엣지 컴퓨팅 플랫폼',
+        desc: '분산 엣지 컴퓨팅 아키텍처를 활용하여 고성능, 저지연 데이터 처리 및 실시간 동기화를 구현합니다.',
+      },
+    },
+  },
+  acknowledgement: {
+    text: '본 모델 훈련은 Taipei-1 H100 하이엔드 GPU 컴퓨팅 파워를 사용하여 완료되었습니다',
+  },
   pricing: {
     title: '단순하고 투명한 요금제',
     subtitle: '자신에게 맞는 요금제를 선택하세요',
@@ -40,24 +100,112 @@ export const ko = {
     features: '기능',
     per_key: ' / 키',
     plans: {
-      personal: {
-        name: '개인용',
-        desc: '개인 사용자에게 적합',
+      free: {
+        name: '무료 버전',
+        desc: '개인 사용자용',
         price_monthly: '무료',
         price_yearly: '무료',
+        features: {
+          fido: 'FIDO2 키 1개',
+          vouchers: '월 10건의 전표',
+          vouchers_overage_tooltip: '초과 시 1 포인트/건',
+          ai_reports: '월 1건의 AI 보고서',
+          ai_overage_tooltip: '초과 시 500 포인트/건',
+        },
       },
-      business: {
-        name: '비즈니스',
+      team: {
+        name: '팀 버전',
         desc: '성장하는 팀을 위해',
         price_monthly: '₩ 40,000',
         price_yearly: '₩ 400,000',
+        features: {
+          fido: '무제한 FIDO2 키',
+          fido_tooltip: 'FIDO2 키 수량에 따라 구독료가 부과됩니다',
+          vouchers: '월 300건의 전표',
+          vouchers_overage_tooltip: '초과 시 1 포인트/건',
+          ai_reports: '월 5건의 AI 보고서',
+          ai_overage_tooltip: '초과 시 500 포인트/건',
+          analytics: '고급 분석',
+          support: '우선 지원',
+          branding: '맞춤형 브랜딩',
+        },
       },
-      agency: {
-        name: '에이전시',
+      business: {
+        name: '엔터프라이즈',
         desc: '대규모 조직을 위해',
         price_monthly: '₩ 140,000',
         price_yearly: '₩ 1,400,000',
+        features: {
+          fido: '무제한 FIDO2 키',
+          fido_tooltip: 'FIDO2 키 수량에 따라 구독료가 부과됩니다',
+          vouchers: '월 3000건의 전표',
+          vouchers_overage_tooltip: '초과 시 1 포인트/건',
+          ai_reports: '월 30건의 AI 보고서',
+          ai_overage_tooltip: '초과 시 500 포인트/건',
+          analytics: '고급 분석',
+          support: '우선 지원',
+          branding: '맞춤형 브랜딩',
+          api: 'API 액세스',
+          white_label: '화이트 라벨 옵션',
+        },
       },
     },
+    credits: {
+      title: '포인트 구매',
+      subtitle: '필요할 때마다 충전, 유효기간 없음',
+      tab_subscription: '구독 요금제',
+      tab_credits: '포인트 구매',
+      buy_btn: '구매',
+      items: {
+        all_features: 'AI 보고서 및 추가 전표에 사용 가능',
+        validity: '포인트 유효기간 없음',
+      },
+      plans: {
+        tier1: {
+          credits: '150 pt',
+          price: '₩ 7,000',
+          desc: '스타터',
+        },
+        tier2: {
+          credits: '700 pt',
+          price: '₩ 28,000',
+          desc: '보너스: 100 (+16%)',
+          popular: true,
+        },
+        tier3: {
+          credits: '2,000 pt',
+          price: '₩ 70,000',
+          desc: '보너스: 500 (+33%)',
+        },
+        tier4: {
+          credits: '4,500 pt',
+          price: '₩ 140,000',
+          desc: '보너스: 1,500 (+50%)',
+        },
+        tier5: {
+          credits: '25,000 pt',
+          price: '₩ 700,000',
+          desc: '보너스: 10,000 (+66%)',
+        },
+        tier6: {
+          credits: '60,000 pt',
+          price: '₩ 1,400,000',
+          desc: '보너스: 30,000 (+100%)',
+        },
+      },
+    },
+  },
+  chat: {
+    tags: {
+      bookkeeping: '기장',
+      adjustment: '조정',
+      cashier: '출납',
+      analysis: '분석',
+      tax: '세금 신고',
+      salary: '급여',
+      financial_report: '재무 보고서',
+      other: '기타',
+    },
+    input_placeholder: '메시지 입력 또는 문서 업로드 (이미지/PDF/카메라)...',
   },
 };

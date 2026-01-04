@@ -8,6 +8,9 @@ export const zhTw = {
     free_trial: '免費試用',
     pricing: '收費模式',
     login: '登入',
+    plan: '目前方案',
+    credits: '持有點數',
+    logout: '登出',
   },
   auth_modal: {
     welcome_back: '歡迎回來',
@@ -30,6 +33,63 @@ export const zhTw = {
     login_failed: '登入失敗',
     reg_failed: '註冊失敗',
   },
+  features: {
+    title: '更聰明的財務管理',
+    subtitle: 'iSunFA 核心優勢',
+    description: '從自動記帳、薪資管理到即時報表與稅務申報，iSunFA 透過 AI 智能精準優化您的完整財務流程。',
+    items: {
+      bookkeeping: {
+        title: '自動記帳',
+        desc: '透過 AI 自動識別憑證，實現自動化記帳，大幅節省時間與人力成本。',
+      },
+      adjustment: {
+        title: '帳務調整',
+        desc: '靈活的帳務調整功能，確保會計紀錄的準確性與合規性。',
+      },
+      cashier: {
+        title: '出納管理',
+        desc: '即時掌握現金流向，輕鬆管理日常收支與銀行往來。',
+      },
+      analysis: {
+        title: '財務分析',
+        desc: '提供深入的財務數據分析，協助您做出明智的商業決策。',
+      },
+      tax: {
+        title: '稅務申報',
+        desc: '自動生成報稅所需資料，讓稅務申報變得簡單輕鬆。',
+      },
+      salary: {
+        title: '薪資管理',
+        desc: '自動計算薪資與扣繳，確保員工薪資發放準確無誤。',
+      },
+      financial_report: {
+        title: '財務報表',
+        desc: '一鍵生成三大財務報表，隨時掌握企業營運狀況。',
+      },
+    },
+  },
+  tech_specs: {
+    title: '先進技術',
+    subtitle: '財務分析與推理模型',
+    description: '整合最前沿的加密與 AI 技術，打造最值得信賴的自動化會計平台。',
+    items: {
+      zkp: {
+        title: '零知識證明與同態加密',
+        desc: '在不解密資料的情況下完成驗證與計算，有效保護隱私，滿足隱私需求，建立共識信任。',
+      },
+      faith: {
+        title: 'FAITH 多模態財務會計專業模型',
+        desc: '專為財務領域設計的 AI 模型，具備深度理解與推理能力，精準處理複雜會計問題。',
+      },
+      locutus: {
+        title: 'Locutus 邊緣運算平台',
+        desc: '利用分散式邊緣運算架構，實現高效能、低延遲的資料處理與即時同步。',
+      },
+    },
+  },
+  acknowledgement: {
+    text: '本模型訓練使用 Taipei-1 H100 高階 GPU 算力完成',
+  },
   pricing: {
     title: '簡單透明的收費模式',
     subtitle: '選擇最適合您的方案',
@@ -40,24 +100,112 @@ export const zhTw = {
     features: '功能特色',
     per_key: ' / 鑰匙',
     plans: {
-      personal: {
-        name: '個人版',
+      free: {
+        name: '免費版',
         desc: '適合個人使用者',
         price_monthly: '免費',
         price_yearly: '免費',
+        features: {
+          fido: '1 組 FIDO2 金鑰',
+          vouchers: '每月 10 份會計憑證',
+          vouchers_overage_tooltip: '超出額度每份 1 點數',
+          ai_reports: '每月 1 份 AI 財報',
+          ai_overage_tooltip: '超出額度每份 500 點數',
+        },
       },
-      business: {
-        name: '企業版',
+      team: {
+        name: '團隊版',
         desc: '適合成長中的團隊',
         price_monthly: 'NT$ 870',
         price_yearly: 'NT$ 8,700',
+        features: {
+          fido: '無限 FIDO2 金鑰',
+          fido_tooltip: '根據 fido2 金鑰數量收取訂閱費',
+          vouchers: '每月 300 份會計憑證',
+          vouchers_overage_tooltip: '超出額度每份 1 點數',
+          ai_reports: '每月 5 份 AI 財報',
+          ai_overage_tooltip: '超出額度每份 500 點數',
+          analytics: '進階數據分析',
+          support: '優先客戶支援',
+          branding: '自訂品牌',
+        },
       },
-      agency: {
-        name: '事務所版',
+      business: {
+        name: '企業版',
         desc: '適合大型機構與事務所',
         price_monthly: 'NT$ 2,970',
         price_yearly: 'NT$ 29,700',
+        features: {
+          fido: '無限 FIDO2 金鑰',
+          fido_tooltip: '根據 fido2 金鑰數量收取訂閱費',
+          vouchers: '每月 3000 份會計憑證',
+          vouchers_overage_tooltip: '超出額度每份 1 點數',
+          ai_reports: '每月 30 份 AI 財報',
+          ai_overage_tooltip: '超出額度每份 500 點數',
+          analytics: '進階數據分析',
+          support: '優先客戶支援',
+          branding: '自訂品牌',
+          api: 'API 存取權限',
+          white_label: '白牌解決方案',
+        },
       },
     },
+    credits: {
+      title: '彈性購買點數',
+      subtitle: '依據您的需求隨時補充，點數永久有效',
+      tab_subscription: '訂閱方案',
+      tab_credits: '購買點數',
+      buy_btn: '購買',
+      items: {
+        all_features: '適用於 AI 財報與額外憑證',
+        validity: '點數永久有效',
+      },
+      plans: {
+        tier1: {
+          credits: '150 點',
+          price: 'NT$ 150',
+          desc: '基礎體驗',
+        },
+        tier2: {
+          credits: '700 點',
+          price: 'NT$ 600',
+          desc: '加贈 100 點 (+16%)',
+          popular: true,
+        },
+        tier3: {
+          credits: '2,000 點',
+          price: 'NT$ 1,500',
+          desc: '加贈 500 點 (+33%)',
+        },
+        tier4: {
+          credits: '4,500 點',
+          price: 'NT$ 3,000',
+          desc: '加贈 1,500 點 (+50%)',
+        },
+        tier5: {
+          credits: '25,000 點',
+          price: 'NT$ 15,000',
+          desc: '加贈 10,000 點 (+66%)',
+        },
+        tier6: {
+          credits: '60,000 點',
+          price: 'NT$ 30,000',
+          desc: '加贈 30,000 點 (+100%)',
+        },
+      },
+    },
+  },
+  chat: {
+    tags: {
+      bookkeeping: '記帳',
+      adjustment: '調帳',
+      cashier: '出納',
+      analysis: '分析',
+      tax: '報稅',
+      salary: '薪資',
+      financial_report: '財報',
+      other: '其他',
+    },
+    input_placeholder: '輸入訊息或上傳憑證 (支援圖片/PDF/拍照)...',
   },
 };

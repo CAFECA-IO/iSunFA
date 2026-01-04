@@ -7,6 +7,8 @@ interface IUser {
   address: string;
   name: string | null;
   role: string | null;
+  plan?: string;
+  credits?: number;
 }
 
 interface IAuthContextType {

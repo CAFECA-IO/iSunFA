@@ -30,6 +30,63 @@ export const ja = {
     login_failed: 'ログイン失敗',
     reg_failed: '登録失敗',
   },
+  features: {
+    title: 'よりスマートな財務管理',
+    subtitle: 'iSunFA の主な利点',
+    description: '自動記帳や給与管理からリアルタイムのレポート作成や税務申告まで、iSunFA は AI を活用して財務プロセス全体を効率化します。',
+    items: {
+      bookkeeping: {
+        title: '自動記帳',
+        desc: 'AI による証憑認識を通じて記帳を自動化し、時間と人件費を大幅に削減します。',
+      },
+      adjustment: {
+        title: '仕訳調整',
+        desc: '柔軟な仕訳調整機能により、会計記録の正確性とコンプライアンスを確保します。',
+      },
+      cashier: {
+        title: '出納管理',
+        desc: 'キャッシュフローをリアルタイムで把握し、日々の収支や銀行取引を簡単に管理します。',
+      },
+      analysis: {
+        title: '財務分析',
+        desc: '詳細な財務データ分析を提供し、賢明なビジネス上の意思決定を支援します。',
+      },
+      tax: {
+        title: '税務申告',
+        desc: '税務申告に必要なデータを自動生成し、税務報告を簡素化します。',
+      },
+      salary: {
+        title: '給与管理',
+        desc: '給与と源泉徴収を自動計算し、正確な給与支払いを保証します。',
+      },
+      financial_report: {
+        title: '財務諸表',
+        desc: 'ワンクリックで財務三表を生成し、企業の運営状況を常に把握できます。',
+      },
+    },
+  },
+  tech_specs: {
+    title: '先進技術',
+    subtitle: '財務分析および推論モデル',
+    description: '最先端の暗号化と AI 技術を統合し、最も信頼できる自動会計プラットフォームを構築します。',
+    items: {
+      zkp: {
+        title: 'ゼロ知識証明と準同型暗号',
+        desc: 'データを復号化せずに検証と計算を完了し、プライバシーを効果的に保護し、コンセンサスを確立します。',
+      },
+      faith: {
+        title: 'FAITH マルチモーダル財務会計モデル',
+        desc: '財務分野向けに設計された AI モデルで、複雑な会計問題を正確に処理するための深い理解と推論能力を備えています。',
+      },
+      locutus: {
+        title: 'Locutus エッジコンピューティング',
+        desc: '分散型エッジコンピューティングアーキテクチャを活用し、高性能かつ低遅延のデータ処理とリアルタイム同期を実現します。',
+      },
+    },
+  },
+  acknowledgement: {
+    text: '本モデルのトレーニングは、Taipei-1 H100 ハイエンド GPU コンピューティングパワーを使用して完了しました',
+  },
   pricing: {
     title: 'シンプルで透明な料金プラン',
     subtitle: 'あなたに最適なプランをお選びください',
@@ -40,24 +97,112 @@ export const ja = {
     features: '機能',
     per_key: ' / キー',
     plans: {
-      personal: {
-        name: '個人向け',
-        desc: '個人ユーザーに最適',
+      free: {
+        name: 'フリープラン',
+        desc: '個人ユーザー向け',
         price_monthly: '無料',
         price_yearly: '無料',
+        features: {
+          fido: 'FIDO2 キー 1個',
+          vouchers: '月 10 件の証憑',
+          vouchers_overage_tooltip: '超過分 1 ポイント/件',
+          ai_reports: '月 1 件の AI レポート',
+          ai_overage_tooltip: '超過分 500 ポイント/件',
+        },
       },
-      business: {
-        name: 'ビジネス',
+      team: {
+        name: 'チームプラン',
         desc: '成長中のチーム向け',
         price_monthly: '¥ 4,000',
         price_yearly: '¥ 40,000',
+        features: {
+          fido: '無制限の FIDO2 キー',
+          fido_tooltip: 'FIDO2 キーの数に基づいてサブスクリプション料金が請求されます',
+          vouchers: '月 300 件の証憑',
+          vouchers_overage_tooltip: '超過分 1 ポイント/件',
+          ai_reports: '月 5 件の AI レポート',
+          ai_overage_tooltip: '超過分 500 ポイント/件',
+          analytics: '高度な分析',
+          support: '優先サポート',
+          branding: 'カスタムブランディング',
+        },
       },
-      agency: {
-        name: 'エージェンシー',
+      business: {
+        name: 'エンタープライズ',
         desc: '大規模な組織向け',
         price_monthly: '¥ 14,000',
         price_yearly: '¥ 140,000',
+        features: {
+          fido: '無制限の FIDO2 キー',
+          fido_tooltip: 'FIDO2 キーの数に基づいてサブスクリプション料金が請求されます',
+          vouchers: '月 3000 件の証憑',
+          vouchers_overage_tooltip: '超過分 1 ポイント/件',
+          ai_reports: '月 30 件の AI レポート',
+          ai_overage_tooltip: '超過分 500 ポイント/件',
+          analytics: '高度な分析',
+          support: '優先サポート',
+          branding: 'カスタムブランディング',
+          api: 'API アクセス',
+          white_label: 'ホワイトラベルオプション',
+        },
       },
     },
+    credits: {
+      title: 'ポイント購入',
+      subtitle: '必要な分だけいつでもチャージ、有効期限なし',
+      tab_subscription: 'サブスクリプション',
+      tab_credits: 'ポイント購入',
+      buy_btn: '購入',
+      items: {
+        all_features: 'AIレポートや追加証憑に利用可能',
+        validity: 'ポイント有効期限なし',
+      },
+      plans: {
+        tier1: {
+          credits: '150 pt',
+          price: '¥ 700',
+          desc: 'スターター',
+        },
+        tier2: {
+          credits: '700 pt',
+          price: '¥ 2,800',
+          desc: 'ボーナス: 100 (+16%)',
+          popular: true,
+        },
+        tier3: {
+          credits: '2,000 pt',
+          price: '¥ 7,000',
+          desc: 'ボーナス: 500 (+33%)',
+        },
+        tier4: {
+          credits: '4,500 pt',
+          price: '¥ 14,000',
+          desc: 'ボーナス: 1,500 (+50%)',
+        },
+        tier5: {
+          credits: '25,000 pt',
+          price: '¥ 70,000',
+          desc: 'ボーナス: 10,000 (+66%)',
+        },
+        tier6: {
+          credits: '60,000 pt',
+          price: '¥ 140,000',
+          desc: 'ボーナス: 30,000 (+100%)',
+        },
+      },
+    },
+  },
+  chat: {
+    tags: {
+      bookkeeping: '記帳',
+      adjustment: '調整',
+      cashier: '出納',
+      analysis: '分析',
+      tax: '納税申告',
+      salary: '給与',
+      financial_report: '財務報告',
+      other: 'その他',
+    },
+    input_placeholder: 'メッセージを入力または文書をアップロード (画像/PDF/カメラ)...',
   },
 };

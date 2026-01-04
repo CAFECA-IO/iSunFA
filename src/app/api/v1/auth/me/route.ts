@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
       address: user.address,
       name: user.name,
       role: user.role,
+      // ToDo: (20260104 - Luphia) Get Plan and Credits from Blockchain
+      plan: 'free',
+      credits: 0,
     });
   } catch (error) {
     console.error('[API] /auth/me error:', error);
