@@ -4,6 +4,18 @@ export const en = {
     error: 'Error',
     close: 'Close',
   },
+  cookie_consent: {
+    message: 'We use cookies to improve your browsing experience and provide more personalized services. By continuing to browse, you agree to our',
+    accept: 'Accept All',
+    reject: 'Reject All',
+    privacy: 'Privacy Policy',
+    customize: 'Customize',
+    save: 'Save Preferences',
+    necessary: 'System Necessary Parameters',
+    security: 'System Security & Analysis',
+    analytics: 'Google Analytics',
+    cookie_settings: 'Cookie Settings',
+  },
   header: {
     free_trial: 'Free Trial',
     pricing: 'Pricing',
@@ -58,6 +70,10 @@ export const en = {
         title: 'Tax Filing',
         desc: 'Automatically generate data required for tax filing, making tax reporting simple and easy.',
       },
+      signing: {
+        title: 'Document Signing',
+        desc: 'Secure, compliant digital document signing process to accelerate approval efficiency.',
+      },
       salary: {
         title: 'Salary Management',
         desc: 'Automatically calculate salary and withholding to ensure accurate payroll distribution.',
@@ -74,7 +90,7 @@ export const en = {
     description: 'Integrating cutting-edge encryption and AI technologies to build the most trusted automated accounting platform.',
     items: {
       zkp: {
-        title: 'Zero-Knowledge Proofs & Homomorphic Encryption',
+        title: 'BOLT Zero-Knowledge Proofs & Homomorphic Encryption',
         desc: 'Verify and compute without decrypting data, effectively protecting privacy and establishing consensus trust.',
       },
       faith: {
@@ -82,7 +98,7 @@ export const en = {
         desc: 'AI model designed specifically for finance, with deep understanding and reasoning capabilities for complex accounting issues.',
       },
       locutus: {
-        title: 'Locutus Edge Computing Platform',
+        title: 'Locutus Edge Computing Protocol',
         desc: 'Leverage distributed edge computing architecture for high-performance, low-latency data processing and real-time synchronization.',
       },
     },
@@ -127,7 +143,6 @@ export const en = {
           ai_overage_tooltip: 'Overage: 500 Credits/Report',
           analytics: 'Advanced Analytics',
           support: 'Priority Support',
-          branding: 'Custom Branding',
         },
       },
       business: {
@@ -144,11 +159,24 @@ export const en = {
           ai_overage_tooltip: 'Overage: 500 Credits/Report',
           analytics: 'Advanced Analytics',
           support: 'Priority Support',
-          branding: 'Custom Branding',
-          api: 'API Access',
-          white_label: 'White-label Option',
+          migration: 'Data Migration Service',
+          migration_tooltip: 'Additional fee based on data years and record count',
+          local_node: 'Local Node Service',
+          local_node_tooltip: 'Locally encrypt & store sensitive info, additional hardware rental fee applies',
         },
       },
+    },
+    hardware_lease: {
+      title: 'Dedicated Hardware Lease',
+      description: 'For your enterprise data providing ultimate security. Combined with Enterprise plan, ensures sensitive information is fully controlled.',
+      price: '$198',
+      period: '/ month',
+      features: [
+        'High-performance computing nodes',
+        'Military-grade encrypted storage',
+        'Hardware monitoring and maintenance',
+        'Dedicated on-site installation',
+      ],
     },
     credits: {
       title: 'Flexible Credit Packs',
@@ -207,5 +235,23 @@ export const en = {
       other: 'Other',
     },
     input_placeholder: 'Type a message or upload document (Image/PDF/Camera)...',
+  },
+  hero: {
+    title: 'Solving all financial and accounting matters',
+    subtitle_line1: 'Providing bookkeeping and tax solutions required for corporate financing and government subsidy applications.',
+    subtitle_line2: 'Providing professional financial statement compilation, financial auditing, and auditing services for clients.',
+    pricing_link: 'Pricing',
+  },
+  footer: {
+    description: 'Let us solve your financial and accounting matters, allowing you to focus on creating improved corporate value.',
+    quick_links: 'Quick Links',
+    home: 'Home',
+    pricing: 'Pricing',
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Service',
+    contact_us: 'Contact Us',
+    address: '14F, No. 521, Sec. 4, Zhongxiao E. Rd., Xinyi Dist., Taipei City 110053, Taiwan (R.O.C.)',
+    hours: 'Mon - Fri, 10:00 - 17:00 Closed on National Holidays',
+    rights_reserved: 'All rights reserved.',
   },
 };

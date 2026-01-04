@@ -6,6 +6,7 @@ import PricingCard from '@/components/pricing/pricing_card';
 import Header from '@/components/landing_page/header';
 import Footer from '@/components/landing_page/footer';
 import { Check } from 'lucide-react';
+import Image from 'next/image';
 
 export default function PricingPage() {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Tab Switcher */}
+        {/* Info: (20260104 - Luphia) Tab Switcher */}
         <div className="mt-8 flex justify-center">
           <div className="flex rounded-lg bg-gray-100 p-1">
             <button
@@ -48,7 +49,7 @@ export default function PricingPage() {
 
         {activeTab === 'subscription' ? (
           <>
-            {/* Billing Interval Toggle */}
+            {/* Info: (20260104 - Luphia) Billing Interval Toggle */}
             <div className="mt-8 flex justify-center">
               <div className="relative flex rounded-full bg-gray-100 p-1">
                 <button
@@ -109,7 +110,6 @@ export default function PricingPage() {
                     },
                     t('pricing.plans.team.features.analytics'),
                     t('pricing.plans.team.features.support'),
-                    t('pricing.plans.team.features.branding'),
                   ]}
                 />
                 <PricingCard
@@ -130,11 +130,56 @@ export default function PricingPage() {
                     },
                     t('pricing.plans.business.features.analytics'),
                     t('pricing.plans.business.features.support'),
-                    t('pricing.plans.business.features.branding'),
-                    t('pricing.plans.business.features.api'),
-                    t('pricing.plans.business.features.white_label'),
+                    {
+                      text: t('pricing.plans.business.features.migration'),
+                      tooltip: t('pricing.plans.business.features.migration_tooltip'),
+                    },
+                    {
+                      text: t('pricing.plans.business.features.local_node'),
+                      tooltip: t('pricing.plans.business.features.local_node_tooltip'),
+                    },
                   ]}
                 />
+              </div>
+
+              {/* Info: (20260104 - Luphia) Hardware Lease Section */}
+              <div className="mt-16 rounded-3xl bg-gray-900 px-6 py-8 shadow-2xl ring-1 ring-white/10 sm:px-12 lg:px-12 lg:py-12">
+                <div className="mx-auto flex max-w-2xl flex-col gap-16 lg:mx-0 lg:max-w-none lg:flex-row lg:items-center">
+                  <div className="w-full flex-auto">
+                    <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      {t('pricing.hardware_lease.title')}
+                    </h2>
+                    <p className="mt-6 text-lg leading-8 text-gray-300">
+                      {t('pricing.hardware_lease.description')}
+                    </p>
+                    <ul className="mt-10 grid grid-cols-1 gap-x-8 gap-y-3 text-base leading-7 text-white sm:grid-cols-2">
+                      {(t('pricing.hardware_lease.features') as unknown as string[]).map((feature, index) => (
+                        <li key={index} className="flex gap-x-3">
+                          <Check className="h-7 w-5 flex-none text-orange-400" aria-hidden="true" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-10 flex items-center gap-x-4">
+                      <h3 className="flex-none text-4xl font-bold tracking-tight text-white">
+                        {t('pricing.hardware_lease.price')}
+                      </h3>
+                      <span className="text-base font-semibold leading-7 text-gray-300">
+                        {t('pricing.hardware_lease.period')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="w-full flex-none lg:w-96">
+                    <div className="relative aspect-[4/3] w-full rounded-2xl bg-gray-800 object-cover shadow-2xl overflow-hidden">
+                      <Image
+                        src="/images/hardware_lease.png"
+                        alt="Hardware Lease"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </>

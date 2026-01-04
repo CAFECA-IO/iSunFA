@@ -9,6 +9,8 @@ import { useTranslation, Language } from '@/i18n/i18n_context';
 import { useAuth } from '@/contexts/auth_context';
 import { Globe, Check, ChevronDown, User, LogOut } from 'lucide-react';
 
+import pkg from '@/package';
+
 export default function Header() {
   const { t, language, setLanguage } = useTranslation();
   const { user, logout } = useAuth();
@@ -29,10 +31,10 @@ export default function Header() {
   const currentLangLabel = languages.find(l => l.code === language)?.label || 'Language';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-xl shadow-sm ring-1 ring-gray-900/5">
       <nav className="flex items-center justify-between p-3 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 transition-opacity hover:opacity-80">
+          <Link href="/" className="-m-1.5 p-1.5 transition-opacity hover:opacity-80 flex items-end gap-2">
             <span className="sr-only">iSunFA</span>
             <Image
               className="h-8 w-auto"
@@ -42,6 +44,7 @@ export default function Header() {
               height={40}
               priority
             />
+            <span className="text-xs text-gray-500 font-mono mb-1.5 ml-1">v{pkg.version}</span>
           </Link>
         </div>
         <div className="flex gap-x-8 items-center">
@@ -93,7 +96,7 @@ export default function Header() {
                 <span className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
                   <User className="h-5 w-5" />
                 </span>
-                <span className="hidden sm:inline">{user.name || user.address.slice(0, 6)}</span>
+                <span className="ml-2 sm:inline">{user.name}</span>
                 <ChevronDown className="h-4 w-4 text-gray-400" aria-hidden="true" />
               </MenuButton>
               <Transition

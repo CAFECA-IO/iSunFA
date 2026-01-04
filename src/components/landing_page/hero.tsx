@@ -1,6 +1,12 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslation } from '@/i18n/i18n_context';
+import SubtitleTypewriter from '@/components/landing_page/subtitle_typewriter';
 
 export default function Hero() {
+  const { t } = useTranslation();
+
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8 bg-white overflow-hidden">
       {/* Background Gradients */}
@@ -20,17 +26,20 @@ export default function Hero() {
       <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
         <div className="text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-amber-500 pb-2">
-            解決財務會計大小事
+            {t('hero.title')}
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
-            為公司提供企業融資及政府補助申請所需的記帳與稅務解決方案。
-            <br />
-            為客戶提供專業的會計報表編製、財務審計及審計服務。
+          <p className="mt-6 text-lg leading-8 text-gray-600 h-24 sm:h-auto">
+            <SubtitleTypewriter
+              lines={[
+                t('hero.subtitle_line1'),
+                t('hero.subtitle_line2'),
+              ]}
+            />
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
 
             <Link href="/pricing" className="text-sm font-semibold leading-6 text-gray-900 hover:text-orange-600 transition-colors">
-              收費模式 <span aria-hidden="true">→</span>
+              {t('hero.pricing_link')} <span aria-hidden="true">→</span>
             </Link>
           </div>
         </div>

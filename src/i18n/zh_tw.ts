@@ -4,6 +4,18 @@ export const zhTw = {
     error: '錯誤',
     close: '關閉',
   },
+  cookie_consent: {
+    message: '我們使用 Cookie 來改善您的瀏覽體驗並提供更個性化的服務。繼續瀏覽即表示您同意我們的',
+    accept: '全部接受',
+    reject: '全部拒絕',
+    privacy: '隱私權政策',
+    customize: '管理偏好',
+    save: '儲存設定',
+    necessary: '系統必要參數',
+    security: '系統安全性分析',
+    analytics: 'Google Analytics',
+    cookie_settings: 'Cookie 設定',
+  },
   header: {
     free_trial: '免費試用',
     pricing: '收費模式',
@@ -58,13 +70,17 @@ export const zhTw = {
         title: '稅務申報',
         desc: '自動生成報稅所需資料，讓稅務申報變得簡單輕鬆。',
       },
+      signing: {
+        title: '文件簽核',
+        desc: '安全、合規的數位文件簽署流程，加速審批效率。',
+      },
       salary: {
         title: '薪資管理',
         desc: '自動計算薪資與扣繳，確保員工薪資發放準確無誤。',
       },
       financial_report: {
-        title: '財務報表',
-        desc: '一鍵生成三大財務報表，隨時掌握企業營運狀況。',
+        title: '會計報表',
+        desc: '一鍵生成三大會計報表，隨時掌握企業營運狀況。',
       },
     },
   },
@@ -74,7 +90,7 @@ export const zhTw = {
     description: '整合最前沿的加密與 AI 技術，打造最值得信賴的自動化會計平台。',
     items: {
       zkp: {
-        title: '零知識證明與同態加密',
+        title: 'BOLT 零知識證明與同態加密',
         desc: '在不解密資料的情況下完成驗證與計算，有效保護隱私，滿足隱私需求，建立共識信任。',
       },
       faith: {
@@ -82,7 +98,7 @@ export const zhTw = {
         desc: '專為財務領域設計的 AI 模型，具備深度理解與推理能力，精準處理複雜會計問題。',
       },
       locutus: {
-        title: 'Locutus 邊緣運算平台',
+        title: 'Locutus 邊緣運算協議',
         desc: '利用分散式邊緣運算架構，實現高效能、低延遲的資料處理與即時同步。',
       },
     },
@@ -127,7 +143,6 @@ export const zhTw = {
           ai_overage_tooltip: '超出額度每份 500 點數',
           analytics: '進階數據分析',
           support: '優先客戶支援',
-          branding: '自訂品牌',
         },
       },
       business: {
@@ -144,11 +159,24 @@ export const zhTw = {
           ai_overage_tooltip: '超出額度每份 500 點數',
           analytics: '進階數據分析',
           support: '優先客戶支援',
-          branding: '自訂品牌',
-          api: 'API 存取權限',
-          white_label: '白牌解決方案',
+          migration: '資料移轉服務',
+          migration_tooltip: '根據資料年份與筆數額外收費',
+          local_node: '本地端節點服務',
+          local_node_tooltip: '本地加密儲存敏感資訊，需額外支付硬體租賃費用',
         },
       },
+    },
+    hardware_lease: {
+      title: '專屬硬體租賃',
+      description: '為您的企業資料提供極致的安全保障。搭配企業版方案，確保敏感資訊完全受控。',
+      price: 'NT$ 5,940',
+      period: '/ 月',
+      features: [
+        '高效能運算節點',
+        '軍規級加密儲存',
+        '硬體監控與維護',
+        '專人到府安裝設定',
+      ],
     },
     credits: {
       title: '彈性購買點數',
@@ -207,5 +235,23 @@ export const zhTw = {
       other: '其他',
     },
     input_placeholder: '輸入訊息或上傳憑證 (支援圖片/PDF/拍照)...',
+  },
+  hero: {
+    title: '解決財務會計大小事',
+    subtitle_line1: '為公司提供企業融資及政府補助申請所需的記帳與稅務解決方案。',
+    subtitle_line2: '為客戶提供專業的會計報表編製、財務審計及審計服務。',
+    pricing_link: '收費模式',
+  },
+  footer: {
+    description: '讓我們解決財務會計大小事，讓您專注於創造企業價值。',
+    quick_links: '快速連結',
+    home: '首頁',
+    pricing: '收費模式',
+    privacy: '隱私權條款',
+    terms: '服務條款',
+    contact_us: '聯絡我們',
+    address: '110053 臺北市信義區忠孝東路四段 521 號 14 樓',
+    hours: '週一至週五，10:00 - 17:00 國定假日休業',
+    rights_reserved: 'All rights reserved.',
   },
 };

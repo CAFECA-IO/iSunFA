@@ -7,7 +7,8 @@ import {
   PieChart,
   Landmark,
   Users,
-  FileText
+  FileText,
+  FileSignature
 } from 'lucide-react';
 
 import { useTranslation } from '@/i18n/i18n_context';
@@ -20,6 +21,7 @@ const featureKeys = [
   { key: 'tax', icon: Landmark },
   { key: 'salary', icon: Users },
   { key: 'financial_report', icon: FileText },
+  { key: 'signing', icon: FileSignature },
 ];
 
 export default function Features() {

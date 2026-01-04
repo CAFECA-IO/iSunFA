@@ -4,10 +4,25 @@ export const zhCn = {
     error: '错误',
     close: '关闭',
   },
+  cookie_consent: {
+    message: '我们使用 Cookie 来改善您的浏览体验并提供更个性化的服务。继续浏览即表示您同意我们的',
+    accept: '全部接受',
+    reject: '全部拒绝',
+    privacy: '隐私权政策',
+    customize: '管理偏好',
+    save: '保存设置',
+    necessary: '系统必要参数',
+    security: '系统安全性分析',
+    analytics: 'Google Analytics',
+    cookie_settings: 'Cookie 设置',
+  },
   header: {
     free_trial: '免费试用',
     pricing: '收费模式',
     login: '登录',
+    plan: '当前方案',
+    credits: '持有点数',
+    logout: '登出',
   },
   auth_modal: {
     welcome_back: '欢迎回来',
@@ -55,13 +70,17 @@ export const zhCn = {
         title: '税务申报',
         desc: '自动生成报税所需资料，让税务申报变得简单轻松。',
       },
+      signing: {
+        title: '文件签核',
+        desc: '安全、合规的数字文件签署流程，加速审批效率。',
+      },
       salary: {
         title: '薪资管理',
         desc: '自动计算薪资与扣缴，确保员工薪资发放准确无误。',
       },
       financial_report: {
-        title: '财务报表',
-        desc: '一键生成三大财务报表，随时掌握企业营运状况。',
+        title: '会计报表',
+        desc: '一键生成三大会计报表，随时掌握企业营运状况。',
       },
     },
   },
@@ -71,7 +90,7 @@ export const zhCn = {
     description: '整合最前沿的加密与 AI 技术，打造最值得信赖的自动化会计平台。',
     items: {
       zkp: {
-        title: '零知识证明与同态加密',
+        title: 'BOLT 零知识证明与同态加密',
         desc: '在不解密数据的情况下完成验证与计算，有效保护隐私，满足隐私需求，建立共识信任。',
       },
       faith: {
@@ -79,7 +98,7 @@ export const zhCn = {
         desc: '专为财务领域设计的 AI 模型，具备深度理解与推理能力，精准处理复杂会计问题。',
       },
       locutus: {
-        title: 'Locutus 边缘计算平台',
+        title: 'Locutus 边缘计算协议',
         desc: '利用分布式边缘计算架构，实现高性能、低延迟的数据处理与即时同步。',
       },
     },
@@ -124,7 +143,6 @@ export const zhCn = {
           ai_overage_tooltip: '超出额度每份 500 点数',
           analytics: '进阶数据分析',
           support: '优先客户支援',
-          branding: '自订品牌',
         },
       },
       business: {
@@ -141,11 +159,24 @@ export const zhCn = {
           ai_overage_tooltip: '超出额度每份 500 点数',
           analytics: '进阶数据分析',
           support: '优先客户支援',
-          branding: '自订品牌',
-          api: 'API 存取权',
-          white_label: '白牌解决方案',
+          migration: '资料迁移服务',
+          migration_tooltip: '根据资料年份与笔数额外收费',
+          local_node: '本地节点服务',
+          local_node_tooltip: '本地加密存储敏感信息，需额外支付硬件租赁费用',
         },
       },
+    },
+    hardware_lease: {
+      title: '专属硬件租赁',
+      description: '为您的企业数据提供极致的安全保障。搭配企业版方案，确保敏感信息完全受控。',
+      price: '¥ 1,400',
+      period: '/ 月',
+      features: [
+        '高性能计算节点',
+        '军规级加密存储',
+        '硬件监控与维护',
+        '专人上门安装设置',
+      ],
     },
     credits: {
       title: '弹性购买点数',
@@ -204,5 +235,23 @@ export const zhCn = {
       other: '其他',
     },
     input_placeholder: '输入信息或上传凭证 (支持图片/PDF/拍照)...',
+  },
+  hero: {
+    title: '解决财务会计大小事',
+    subtitle_line1: '为公司提供企业融资及政府补助申请所需的记账与税务解决方案。',
+    subtitle_line2: '为客户提供专业的会计报表编制、财务审计及审计服务。',
+    pricing_link: '收费模式',
+  },
+  footer: {
+    description: '让我们解决财务会计大小事，让您专注于创造企业价值。',
+    quick_links: '快速链接',
+    home: '首页',
+    pricing: '收费模式',
+    privacy: '隐私政策',
+    terms: '服务条款',
+    contact_us: '联络我们',
+    address: '110053 台北市信义区忠孝东路四段 521 号 14 楼',
+    hours: '周一至周五，10:00 - 17:00 国定假日休业',
+    rights_reserved: 'All rights reserved.',
   },
 };

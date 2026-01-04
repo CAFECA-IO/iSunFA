@@ -1,8 +1,12 @@
+import { promises as fs } from 'fs';
+import path from 'path';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
 import { I18nProvider } from "@/i18n/i18n_context";
 import { AuthProvider } from "@/contexts/auth_context";
+
+import CookieConsent from "@/components/common/cookie_consent";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,11 +26,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const privacyPolicyPath = path.join(process.cwd(), 'documents/privacy_policy.md');
+  const privacyPolicyContent = await fs.readFile(privacyPolicyPath, 'utf8');
+
   return (
     <html lang="en">
       <body
@@ -35,6 +42,7 @@ export default function RootLayout({
         <I18nProvider>
           <AuthProvider>
             {children}
+            <CookieConsent privacyPolicyContent={privacyPolicyContent} />
           </AuthProvider>
         </I18nProvider>
       </body>

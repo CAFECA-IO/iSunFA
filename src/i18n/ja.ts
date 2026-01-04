@@ -4,10 +4,25 @@ export const ja = {
     error: 'エラー',
     close: '閉じる',
   },
+  cookie_consent: {
+    message: '当社は、お客様のブラウジング体験を向上させ、よりパーソナライズされたサービスを提供するためにCookieを使用しています。閲覧を継続することにより、当社の',
+    accept: 'すべて同意',
+    reject: 'すべて拒否',
+    privacy: 'プライバシーポリシー',
+    customize: 'カスタマイズ',
+    save: '設定を保存',
+    necessary: 'システム必須パラメータ',
+    security: 'システムセキュリティ分析',
+    analytics: 'Google Analytics',
+    cookie_settings: 'Cookie 設定',
+  },
   header: {
     free_trial: '無料トライアル',
     pricing: '料金',
     login: 'ログイン',
+    plan: '現在のプラン',
+    credits: 'ポイント',
+    logout: 'ログアウト',
   },
   auth_modal: {
     welcome_back: 'おかえりなさい',
@@ -53,7 +68,11 @@ export const ja = {
       },
       tax: {
         title: '税務申告',
-        desc: '税務申告に必要なデータを自動生成し、税務報告を簡素化します。',
+        desc: '税務申告に必要なデータを自動生成し、税務報告を簡単かつ容易にします。',
+      },
+      signing: {
+        title: '電子署名',
+        desc: '安全でコンプライアンスに準拠したデジタル署名プロセスにより、承認効率を加速します。',
       },
       salary: {
         title: '給与管理',
@@ -71,7 +90,7 @@ export const ja = {
     description: '最先端の暗号化と AI 技術を統合し、最も信頼できる自動会計プラットフォームを構築します。',
     items: {
       zkp: {
-        title: 'ゼロ知識証明と準同型暗号',
+        title: 'BOLT ゼロ知識証明と準同型暗号',
         desc: 'データを復号化せずに検証と計算を完了し、プライバシーを効果的に保護し、コンセンサスを確立します。',
       },
       faith: {
@@ -79,7 +98,7 @@ export const ja = {
         desc: '財務分野向けに設計された AI モデルで、複雑な会計問題を正確に処理するための深い理解と推論能力を備えています。',
       },
       locutus: {
-        title: 'Locutus エッジコンピューティング',
+        title: 'Locutus エッジコンピューティング・プロトコル',
         desc: '分散型エッジコンピューティングアーキテクチャを活用し、高性能かつ低遅延のデータ処理とリアルタイム同期を実現します。',
       },
     },
@@ -124,7 +143,6 @@ export const ja = {
           ai_overage_tooltip: '超過分 500 ポイント/件',
           analytics: '高度な分析',
           support: '優先サポート',
-          branding: 'カスタムブランディング',
         },
       },
       business: {
@@ -141,11 +159,24 @@ export const ja = {
           ai_overage_tooltip: '超過分 500 ポイント/件',
           analytics: '高度な分析',
           support: '優先サポート',
-          branding: 'カスタムブランディング',
-          api: 'API アクセス',
-          white_label: 'ホワイトラベルオプション',
+          migration: 'データ移行サービス',
+          migration_tooltip: 'データの年数とレコード数に基づいて追加料金が発生します',
+          local_node: 'ローカルノードサービス',
+          local_node_tooltip: '機密情報をローカルで暗号化して保存（ハードウェアレンタル料が別途かかります）',
         },
       },
+    },
+    hardware_lease: {
+      title: '専用ハードウェアリース',
+      description: '企業データに究極のセキュリティを提供します。エンタープライズプランとの組み合わせで、機密情報を完全に管理できます。',
+      price: '¥ 28,000',
+      period: '/ 月',
+      features: [
+        '高性能計算ノード',
+        '軍事レベルの暗号化ストレージ',
+        'ハードウェアの監視と保守',
+        '専任スタッフによる訪問設置',
+      ],
     },
     credits: {
       title: 'ポイント購入',
@@ -204,5 +235,23 @@ export const ja = {
       other: 'その他',
     },
     input_placeholder: 'メッセージを入力または文書をアップロード (画像/PDF/カメラ)...',
+  },
+  hero: {
+    title: '財務・会計のあらゆる問題を解決',
+    subtitle_line1: '企業融資や政府補助金申請に必要な記帳および税務ソリューションを提供します。',
+    subtitle_line2: '専門的な財務諸表作成、財務監査、および監査サービスをお客様に提供します。',
+    pricing_link: '料金',
+  },
+  footer: {
+    description: '財務・会計問題を解決し、企業価値の創造に専念できるようにします。',
+    quick_links: 'クイックリンク',
+    home: 'ホーム',
+    pricing: '料金',
+    privacy: 'プライバシーポリシー',
+    terms: '利用規約',
+    contact_us: 'お問い合わせ',
+    address: '110053 台北市信義区忠孝東路四段521号14階',
+    hours: '月〜金 10:00 - 17:00 (祝日休業)',
+    rights_reserved: 'All rights reserved.',
   },
 };

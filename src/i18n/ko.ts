@@ -4,6 +4,18 @@ export const ko = {
     error: '오류',
     close: '닫기',
   },
+  cookie_consent: {
+    message: '당사는 귀하의 브라우징 경험을 개선하고 보다 개인화된 서비스를 제공하기 위해 쿠키를 사용합니다. 계속 탐색함으로써 귀하는 당사의',
+    accept: '모두 동의',
+    reject: '모두 거부',
+    privacy: '개인정보 처리방침',
+    customize: '기본 설정 관리',
+    save: '설정 저장',
+    necessary: '시스템 필수 파라미터',
+    security: '시스템 보안 분석',
+    analytics: 'Google Analytics',
+    cookie_settings: '쿠키 설정',
+  },
   header: {
     free_trial: '무료 체험',
     pricing: '요금제',
@@ -58,6 +70,10 @@ export const ko = {
         title: '세금 신고',
         desc: '세금 신고에 필요한 데이터를 자동으로 생성하여 세무 보고를 간편하게 만듭니다.',
       },
+      signing: {
+        title: '전자 서명',
+        desc: '안전하고 규정을 준수하는 디지털 서명 프로세스로 승인 효율성을 가속화합니다.',
+      },
       salary: {
         title: '급여 관리',
         desc: '급여 및 원천 징수를 자동으로 계산하여 정확한 급여 지급을 보장합니다.',
@@ -74,7 +90,7 @@ export const ko = {
     description: '최첨단 암호화 및 AI 기술을 통합하여 가장 신뢰할 수 있는 자동화 회계 플랫폼을 구축합니다.',
     items: {
       zkp: {
-        title: '영지식 증명 및 동형 암호화',
+        title: 'BOLT 영지식 증명 및 동형 암호화',
         desc: '데이터를 복호화하지 않고 검증 및 계산을 완료하여 개인 정보를 효과적으로 보호하고 합의 신뢰를 구축합니다.',
       },
       faith: {
@@ -82,7 +98,7 @@ export const ko = {
         desc: '재무 분야를 위해 특별히 설계된 AI 모델로, 복잡한 회계 문제를 정확하게 처리할 수 있는 심층적인 이해 및 추론 기능을 갖추고 있습니다.',
       },
       locutus: {
-        title: 'Locutus 엣지 컴퓨팅 플랫폼',
+        title: 'Locutus 엣지 컴퓨팅 프로토콜',
         desc: '분산 엣지 컴퓨팅 아키텍처를 활용하여 고성능, 저지연 데이터 처리 및 실시간 동기화를 구현합니다.',
       },
     },
@@ -127,7 +143,6 @@ export const ko = {
           ai_overage_tooltip: '초과 시 500 포인트/건',
           analytics: '고급 분석',
           support: '우선 지원',
-          branding: '맞춤형 브랜딩',
         },
       },
       business: {
@@ -144,11 +159,24 @@ export const ko = {
           ai_overage_tooltip: '초과 시 500 포인트/건',
           analytics: '고급 분석',
           support: '우선 지원',
-          branding: '맞춤형 브랜딩',
-          api: 'API 액세스',
-          white_label: '화이트 라벨 옵션',
+          migration: '데이터 마이그레이션 서비스',
+          migration_tooltip: '데이터 연도 및 레코드 수에 따라 추가 요금 부과',
+          local_node: '로컬 노드 서비스',
+          local_node_tooltip: '민감한 정보를 로컬에 암호화하여 저장 (추가 하드웨어 임대료 부과)',
         },
       },
+    },
+    hardware_lease: {
+      title: '전용 하드웨어 임대',
+      description: '기업 데이터에 대한 최상의 보안을 제공합니다. 엔터프라이즈 플랜과 결합하여 민감한 정보를 완벽하게 제어할 수 있습니다.',
+      price: '₩ 280,000',
+      period: '/ 월',
+      features: [
+        '고성능 컴퓨팅 노드',
+        '군사 등급 암호화 스토리지',
+        '하드웨어 모니터링 및 유지 보수',
+        '전담 직원의 방문 설치',
+      ],
     },
     credits: {
       title: '포인트 구매',
@@ -207,5 +235,23 @@ export const ko = {
       other: '기타',
     },
     input_placeholder: '메시지 입력 또는 문서 업로드 (이미지/PDF/카메라)...',
+  },
+  hero: {
+    title: '모든 재무 및 회계 문제 해결',
+    subtitle_line1: '기업 자금 조달 및 정부 보조금 신청에 필요한 기장 및 세무 솔루션을 제공합니다.',
+    subtitle_line2: '고객에게 전문적인 재무제표 작성, 재무 감사 및 감사 서비스를 제공합니다.',
+    pricing_link: '요금제',
+  },
+  footer: {
+    description: '기업 가치 창출에 집중할 수 있도록 재무 및 회계 문제를 해결해 드립니다.',
+    quick_links: '빠른 링크',
+    home: '홈',
+    pricing: '요금제',
+    privacy: '개인정보 처리방침',
+    terms: '이용 약관',
+    contact_us: '문의하기',
+    address: '110053 타이베이시 신의구 중효동로 4단 521호 14층',
+    hours: '월 - 금, 10:00 - 17:00 국경일 휴무',
+    rights_reserved: 'All rights reserved.',
   },
 };
