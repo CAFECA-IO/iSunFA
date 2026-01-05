@@ -29,12 +29,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -50,12 +50,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -71,12 +71,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -92,12 +92,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -113,12 +113,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -134,12 +134,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -155,12 +155,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -176,12 +176,12 @@ const data = [
       salary: 11100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -197,12 +197,12 @@ const data = [
       salary: 12540,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -218,12 +218,12 @@ const data = [
       salary: 13500,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -239,12 +239,12 @@ const data = [
       salary: 15840,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -260,12 +260,12 @@ const data = [
       salary: 16500,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -281,12 +281,12 @@ const data = [
       salary: 17280,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -302,12 +302,12 @@ const data = [
       salary: 17880,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -323,12 +323,12 @@ const data = [
       salary: 19047,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -344,12 +344,12 @@ const data = [
       salary: 20008,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -365,12 +365,12 @@ const data = [
       salary: 21009,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -386,12 +386,12 @@ const data = [
       salary: 22000,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -407,12 +407,12 @@ const data = [
       salary: 23100,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -428,12 +428,12 @@ const data = [
       salary: 24000,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -449,12 +449,12 @@ const data = [
       salary: 25250,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -470,12 +470,12 @@ const data = [
       salary: 26400,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -491,12 +491,12 @@ const data = [
       salary: 27600,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -512,12 +512,12 @@ const data = [
       salary: 28590,
     },
     accidentInsurance: {
-      salary: 28590,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 443,
-      company: 1384,
-      salary: 28590,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
@@ -526,24 +526,24 @@ const data = [
     },
   },
   {
-    salary: 28800,
+    salary: 29500,
     laborInsurance: {
-      employee: 720,
-      company: 2520,
-      salary: 28800,
+      employee: 738,
+      company: 2582,
+      salary: 29500,
     },
     accidentInsurance: {
-      salary: 28800,
+      salary: 29500,
     },
     healthInsurance: {
-      employee: 447,
-      company: 1394,
-      salary: 28800,
+      employee: 458,
+      company: 1428,
+      salary: 29500,
     },
     pensionInsurance: {
       employee: 0,
-      company: 1728,
-      salary: 28800,
+      company: 1770,
+      salary: 29500,
     },
   },
   {
@@ -1745,9 +1745,9 @@ const data = [
   },
 ];
 
-const SALARY_LEVELS_2025 = {
-  year: 2025,
+const SALARY_LEVELS_2026 = {
+  year: 2026,
   data,
 };
 
-export { SALARY_LEVELS_2025 };
+export { SALARY_LEVELS_2026 };
