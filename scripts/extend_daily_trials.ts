@@ -61,9 +61,14 @@ async function main() {
       const originalPlan = latestSub?.planType ?? 'None';
       const originalExpiry = latestSub?.expiredDate ?? 0;
 
-      const shouldExtend =
-        !latestSub || latestSub.planType === TeamPlanType.BEGINNER || latestSub.planType === null;
+      // Info: (20251118 - Tzuhan) 檢查訂閱是否已過期 (有設定過期日 且 過期日早于現在)
+      const isExpired = originalExpiry > 0 && originalExpiry < nowTimestamp;
 
+      const shouldExtend =
+        !latestSub || // Info: (20251118 - Tzuhan) 1. 沒有訂閱
+        latestSub.planType === TeamPlanType.BEGINNER || // Info: (20251118 - Tzuhan) 2. 方案為 BEGINNER
+        latestSub.planType === null || // Info: (20251118 - Tzuhan) 3. 方案為 null
+        isExpired; // 4. Info: (20251118 - Tzuhan) 訂閱已過期
       if (shouldExtend) {
         try {
           await prisma.teamSubscription.create({

@@ -1,3 +1,4 @@
+// Info: (20251003 - Luphia) 資料來源 https://www.bli.gov.tw/0103189.html
 const DATA = [
   {
     INDUSTRY: 0.0015,

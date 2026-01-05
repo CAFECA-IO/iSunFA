@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
-import { FiEdit } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiEdit, FiUpload } from 'react-icons/fi';
+import { RiLoader2Line } from 'react-icons/ri';
 import { RxCross2 } from 'react-icons/rx';
+import { HiOutlineSparkles } from 'react-icons/hi';
 import { Button } from '@/components/button/button';
-import { TaxType } from '@/constants/invoice_rc2';
-import { numberWithCommas, timestampToString } from '@/lib/utils/common';
+import InvoiceEditTaxInfoTab from '@/components/ai_accounting_assistance/invoice_edit_tax_info_tab';
+import InvoiceEditVoucherTab from '@/components/ai_accounting_assistance/invoice_edit_voucher_tab';
+import ImageZoom from '@/components/image_zoom/image_zoom';
+import TaxEditModal from '@/components/ai_accounting_assistance/tax_edit_modal';
+import VoucherEditModal from '@/components/ai_accounting_assistance/voucher_edit_modal';
+import SelectAccountBookModal from '@/components/ai_accounting_assistance/select_account_book_modal';
+import { IFaithCertificate } from '@/interfaces/faith';
+import { APIName } from '@/constants/api_connection';
+import APIHandler from '@/lib/utils/api_handler';
+import { useUserCtx } from '@/contexts/user_context';
 
 interface IInvoiceEditAreaProps {
   isOpen: boolean;
   toggle: () => void;
+  invoiceId: string;
 }
 
 enum InvoiceEditTab {
@@ -15,41 +26,68 @@ enum InvoiceEditTab {
   VOUCHER = 'Voucher',
 }
 
-interface IInvoiceDetail {
-  invoiceNo: string;
-  issueDate: number;
-  tradingPartner: {
-    name: string;
-    taxId: string;
-  };
-  taxType: TaxType;
-  taxRate: number;
-  salesAmount: number;
-  tax: number;
-}
+// ToDo: (20251121 - Julian) 補上 Loading Skeleton
 
-const mockInvoiceDetail: IInvoiceDetail = {
-  invoiceNo: 'AB-12345678',
-  issueDate: 1762109170,
-  tradingPartner: {
-    name: 'XYZ Corporation',
-    taxId: '12345678',
-  },
-  taxType: TaxType.TAXABLE,
-  taxRate: 0.05,
-  salesAmount: 10000,
-  tax: 500,
-};
+const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle, invoiceId }) => {
+  const { userAuth } = useUserCtx();
 
-const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) => {
+  const [invoiceData, setInvoiceData] = useState<IFaithCertificate | null>(null);
   const [invoiceEditTab, setInvoiceEditTab] = useState<InvoiceEditTab>(InvoiceEditTab.TAX_INFO);
+  const [isOpenTaxEditModal, setIsTaxOpenEditModal] = useState<boolean>(false);
+  const [isOpenVoucherEditModal, setIsVoucherOpenEditModal] = useState<boolean>(false);
 
-  const { invoiceNo, issueDate, tradingPartner, taxType, taxRate, salesAmount, tax } =
-    mockInvoiceDetail;
+  const [isRechecking, setIsRechecking] = useState<boolean>(false);
+  const [isOpenSelectAccountBookModal, setIsOpenSelectAccountBookModal] = useState<boolean>(false);
 
-  const aiModifyStyle = 'drop-shadow-renew-halo text-text-brand-primary-lv1';
+  // Info: (20251205 - Julian) sessionId 使用 userId * 100 + 1; 若尚未登入，則使用 nowInSecond
+  const nowInSecond = Math.floor(Date.now() / 1000);
+  const sessionId = userAuth?.id ? userAuth.id * 100 + 1 : nowInSecond;
 
-  const formattedIssueDate = timestampToString(issueDate).date;
+  // Info: (20251205 - Julian) api parameters
+  const params = { sessionId, certificateId: invoiceId };
+
+  const { trigger: getInvoice } = APIHandler<IFaithCertificate>(
+    APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+    { params }
+  );
+
+  useEffect(() => {
+    const fetchInvoiceData = async () => {
+      const { data, success } = await getInvoice({ params });
+      if (data && success) {
+        setInvoiceData(data);
+      } else {
+        setInvoiceData(null);
+      }
+    };
+    fetchInvoiceData();
+  }, [invoiceId, isOpen]);
+
+  const toggleTaxEditModal = () => setIsTaxOpenEditModal((prev) => !prev);
+  const toggleVoucherEditModal = () => setIsVoucherOpenEditModal((prev) => !prev);
+  const toggleSelectAccountBookModal = () => setIsOpenSelectAccountBookModal((prev) => !prev);
+
+  const editBtnClickHandler = () => {
+    if (invoiceEditTab === InvoiceEditTab.TAX_INFO) {
+      toggleTaxEditModal();
+    } else {
+      toggleVoucherEditModal();
+    }
+  };
+
+  // ToDo: (20251201 - Julian) 模擬 AI Recheck 的時間
+  const recheckBtnClickHandler = () => {
+    setIsRechecking(true);
+    setTimeout(() => {
+      setIsRechecking(false);
+    }, 3000);
+  };
+
+  const importAccountBook = (accountBookId: string) => {
+    // ToDo: (20251201 - Julian) 實作匯入帳本功能
+    // eslint-disable-next-line no-console
+    console.log('Import to Account Book ID:', accountBookId);
+  };
 
   const tabs = Object.values(InvoiceEditTab).map((tab) => {
     const isActive = invoiceEditTab === tab;
@@ -63,137 +101,121 @@ const InvoiceEditArea: React.FC<IInvoiceEditAreaProps> = ({ isOpen, toggle }) =>
           isActive
             ? 'border-tabs-stroke-active text-tabs-text-active'
             : 'border-tabs-stroke-default text-tabs-text-default'
-        } border-b-2 px-12px py-8px text-base font-medium transition-all duration-200 ease-in-out`}
+        } border-b-2 px-12px py-8px text-base font-medium transition-all duration-200 ease-in-out disabled:border-tabs-stroke-disable disabled:text-tabs-text-disable`}
       >
         {tab}
       </button>
     );
   });
 
-  const taxTypeStr =
-    taxType === TaxType.TAXABLE ? (
-      <p>
-        Taxable
-        <span className="text-input-text-primary"> {taxRate * 100}%</span>
-      </p>
-    ) : (
-      <p>Tax Free</p>
-    );
+  const lineItems =
+    invoiceData?.voucherInfo?.lineItems.map((item) => ({
+      account: item.account,
+      description: item.description,
+      debit: item.debit,
+      amount: Number(item.amount),
+    })) || [];
+  const sum = {
+    debit: invoiceData?.voucherInfo?.sum.debit || true,
+    amount: Number(invoiceData?.voucherInfo?.sum.amount) || 0,
+  };
 
-  const taxInfoTab = (
-    <div className="flex flex-col gap-24px text-sm font-semibold text-text-neutral-tertiary">
-      <div className="flex items-center justify-between">
-        <p>Invoice No.</p>
-        <p>{invoiceNo}</p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Issue Date</p>
-        <p>{formattedIssueDate}</p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Trading Partner</p>
-        <p>
-          {tradingPartner.taxId}{' '}
-          <span className="text-input-text-primary">{tradingPartner.name}</span>
-        </p>
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Tax Type</p>
-        {taxTypeStr}
-      </div>
-      <div className="flex items-center justify-between">
-        <p>Sales Amount</p>
-        <p>
-          <span className="text-input-text-primary">{numberWithCommas(salesAmount)}</span> TWD
-        </p>
-      </div>
-      {/* ToDo: (20251114 - Julian) AI Modify Style for testing, will remove later */}
-      <div className="flex items-center justify-between">
-        <p className={aiModifyStyle}>Tax</p>
-        <p>
-          <span className={aiModifyStyle}>{numberWithCommas(tax)}</span> TWD
-        </p>
-      </div>
-    </div>
+  const tabContent =
+    invoiceEditTab === InvoiceEditTab.TAX_INFO
+      ? invoiceData?.taxInfo && <InvoiceEditTaxInfoTab data={invoiceData.taxInfo} />
+      : invoiceData?.voucherInfo && <InvoiceEditVoucherTab lineItems={lineItems} sum={sum} />;
+
+  const recheckBtn = isRechecking ? (
+    <Button type="button" disabled className="cursor-wait">
+      <p>Rechecking...</p> <RiLoader2Line size={16} className="animate-spin" />
+    </Button>
+  ) : (
+    <Button
+      type="button"
+      variant="tertiary"
+      disabled={isRechecking}
+      onClick={recheckBtnClickHandler}
+    >
+      <p>Recheck with AI</p> <HiOutlineSparkles size={16} />
+    </Button>
   );
 
-  // ToDo: (20251114 - Julian) During development
-  const voucherTab = (
-    <div className="flex flex-col gap-8px">
-      <p className="ml-auto text-xs font-semibold uppercase text-text-neutral-tertiary">
-        Currency: TWD
-      </p>
-      <div className="table overflow-hidden rounded-sm border border-stroke-neutral-quaternary bg-surface-neutral-main-background">
-        {/* Info: (20251114 - Julian) Table Header */}
-        <div className="table-header-group text-center text-xs font-medium text-text-neutral-tertiary">
-          <div className="table-row">
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Particulars
-            </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Accounting
-            </div>
-            <div className="table-cell border-b border-r border-stroke-neutral-quaternary p-8px align-middle">
-              Credit
-            </div>
-            <div className="table-cell border-b p-8px align-middle">Debit</div>
-          </div>
-        </div>
-        {/* Info: (20251114 - Julian) Table Content */}
-        <div className="table-row-group text-xs font-medium">
-          <div className="table-row">
-            <div className="table-cell px-16px py-24px text-text-neutral-primary">Printer-0001</div>
-            <div className="table-cell px-16px py-24px font-semibold text-text-neutral-tertiary">
-              <div className="flex flex-col gap-4px">
-                <div className="flex items-center gap-4px">
-                  <p>1141</p> <p>Accounts receivable</p>
-                </div>
-                <div className="flex items-center gap-4px">
-                  <p>1141</p> <p>Accounts receivable</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  const actionButtons = (
+    <div className="grid grid-cols-2 gap-24px">
+      {recheckBtn}
+      <Button type="button" variant="default" onClick={toggleSelectAccountBookModal}>
+        <p>Import to iSunFA</p> <FiUpload size={16} />
+      </Button>
     </div>
   );
-
-  const tabContent = invoiceEditTab === InvoiceEditTab.TAX_INFO ? taxInfoTab : voucherTab;
 
   return (
-    <div
-      className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col gap-24px bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
-    >
-      {/* Info: (20251114 - Julian) Header */}
-      <div className="flex items-center">
-        <button type="button" className="p-10px text-button-text-secondary" onClick={toggle}>
-          <RxCross2 size={20} />
-        </button>
-        <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">
-          AB-12345678
-        </p>
-      </div>
-
-      {/* Info: (20251114 - Julian) Image Zoom In */}
+    <>
       <div
-      // className="flex-1"
+        className={`${isOpen ? 'translate-x-0' : 'translate-x-500px'} fixed right-0 top-0 z-10 flex h-full w-500px flex-col bg-white/30 px-40px py-24px transition-all duration-200 ease-in-out`}
       >
-        Image Zoom In
-      </div>
+        {/* Info: (20251114 - Julian) Header */}
+        <div className="flex items-center">
+          <button type="button" className="p-10px text-button-text-secondary" onClick={toggle}>
+            <RxCross2 size={20} />
+          </button>
+          <p className="flex-1 text-center text-2xl font-medium text-text-neutral-primary">
+            {invoiceData?.id}
+          </p>
+        </div>
 
-      {/* Info: (20251114 - Julian) Invoice Details */}
-      <div className="flex flex-col gap-24px">
-        <div className="grid grid-cols-2 gap-24px">{tabs}</div>
-        {tabContent}
-        <div className="ml-auto">
-          <Button type="button" variant="tertiary">
-            <FiEdit size={20} />
-            <p>Edit</p>
-          </Button>
+        <div className="flex flex-col gap-24px overflow-y-auto">
+          {/* Info: (20251117 - Julian) Image Zoom In */}
+          {invoiceData && (
+            <div>
+              <ImageZoom
+                imageUrl={invoiceData.image}
+                className="h-450px w-full"
+                controlPosition="bottom-right"
+                isControlBackground
+              />
+            </div>
+          )}
+
+          {/* Info: (20251114 - Julian) Invoice Details */}
+          <div className="flex flex-col gap-24px">
+            <div className="grid grid-cols-2 gap-24px">{tabs}</div>
+            {tabContent}
+            <div className="ml-auto">
+              <Button
+                type="button"
+                variant="tertiary"
+                disabled // ToDo: (20251126 - Julian) Voucher Edit Modal 尚未完成，先鎖住
+                onClick={editBtnClickHandler}
+              >
+                <FiEdit size={20} />
+                <p>Edit</p>
+              </Button>
+            </div>
+            {actionButtons}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Info: (20251120 - Julian) Edit Modal */}
+      {invoiceData?.taxInfo && (
+        <TaxEditModal
+          isModalOpen={isOpenTaxEditModal}
+          onClose={toggleTaxEditModal}
+          imageUrl={invoiceData.image}
+          taxInfoData={invoiceData.taxInfo}
+        />
+      )}
+
+      <VoucherEditModal isModalOpen={isOpenVoucherEditModal} onClose={toggleVoucherEditModal} />
+
+      {/* Info: (20251201 - Julian) Select Account Book Modal */}
+      <SelectAccountBookModal
+        isModalOpen={isOpenSelectAccountBookModal}
+        onClose={toggleSelectAccountBookModal}
+        importAccountBook={importAccountBook}
+      />
+    </>
   );
 };
 

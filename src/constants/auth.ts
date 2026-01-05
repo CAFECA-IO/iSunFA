@@ -17,6 +17,25 @@ export const AUTH_WHITELIST = {
   [APIName.STATUS_INFO_GET]: { query: {} },
   [APIName.REPORT_GET_BY_ID]: { query: {} },
   [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: { query: {} },
+
+  // Info: (20251120 - Luphia) Faith Session API auth config
+  [APIName.LIST_FAITH_SESSION]: { query: {} },
+  [APIName.CREATE_FAITH_SESSION]: { query: {} },
+  [APIName.GET_FAITH_SESSION_BY_ID]: { query: {} },
+  [APIName.DELETE_FAITH_SESSION_BY_ID]: { query: {} },
+  [APIName.CREATE_SHARE_FOR_FAITH_SESSION]: { query: {} },
+  [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: { query: {} },
+  [APIName.CREATE_CONTENT_IN_FAITH_SESSION]: { query: {} },
+  [APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID]: { query: {} },
+  [APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.CREATE_SHARE_FOR_FAITH_CONTENT]: { query: {} },
+  [APIName.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
+  [APIName.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION]: { query: {} },
 };
 
 // ToDo: (20241111 - Jacky) Add more auth functions
@@ -107,7 +126,6 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.UPDATE_ACCOUNT_INFO_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.DELETE_ACCOUNT_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.PUBLIC_KEY_GET]: [AuthFunctionsKeysNew.user],
-  [APIName.ZOD_EXAMPLE]: [AuthFunctionsKeysNew.user], // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   [APIName.CERTIFICATE_LIST]: [AuthFunctionsKeysNew.user],
   [APIName.PUSHER_AUTH]: [AuthFunctionsKeysNew.user],
   [APIName.ASSET_LIST_V2]: [AuthFunctionsKeysNew.user],
@@ -177,4 +195,24 @@ export const AUTH_CHECK: Record<APIName, AuthFunctionsKeysNew[]> = {
   [APIName.GET_VACANCY_BY_ID]: [AuthFunctionsKeysNew.user],
   [APIName.GET_IMAGE]: [AuthFunctionsKeysNew.user],
   [APIName.GET_REFERRAL_CODE]: [AuthFunctionsKeysNew.user],
+
+  // Info: (20251120 - Luphia) Faith Session API auth config
+  [APIName.LIST_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.PUT_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_FAITH_SESSION_BY_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_SHARE_FOR_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_CONTENT_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID]: [AuthFunctionsKeysNew.user],
+  [APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_SHARE_FOR_FAITH_CONTENT]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
+  [APIName.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION]: [AuthFunctionsKeysNew.user],
 };

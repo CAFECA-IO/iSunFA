@@ -1,3 +1,4 @@
+// Info: (20260103 - Luphia) 資料來源 https://www.bli.gov.tw/0005475.html
 const data = [
   {
     salary: 0,

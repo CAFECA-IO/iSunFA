@@ -58,7 +58,7 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
   setAmount,
   deleteHandler,
 }) => {
-  const { id, subcategory, isDebit, beginningAmount } = data;
+  const { subcategory, isDebit, beginningAmount } = data;
 
   // Info: (20250313 - Julian) 如果 isDebit 為 true，則將 beginningAmount 設為初始借值，否則為 0
   const initialDebit = isDebit !== null ? 0 : isDebit ? beginningAmount : 0;
@@ -88,7 +88,6 @@ const ManualAccountOpeningItem: React.FC<IManualAccountOpeningItemProps> = ({
     <div className="table-row bg-surface-neutral-surface-lv2 text-sm">
       {/* Info: (20241112 - Julian) Subcategory Type */}
       <AccountTitleSelector
-        id={id}
         defaultAccount={subcategory}
         accountSelectedHandler={accountSelectedHandler}
         className={`${cellStyle} max-w-200px border-r`}

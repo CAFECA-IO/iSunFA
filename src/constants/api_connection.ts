@@ -107,7 +107,6 @@ export enum APIName {
   UPDATE_TODO = 'UPDATE_TODO',
   DELETE_TODO = 'DELETE_TODO',
   PUBLIC_KEY_GET = 'PUBLIC_KEY_GET',
-  ZOD_EXAMPLE = 'ZOD_EXAMPLE', // Info: (20240909 - Murky) This is a Zod example, to demonstrate how to use Zod schema to validate data.
   CERTIFICATE_LIST = 'CERTIFICATE_LIST', // Deprecated: (20241122 - tzuhan) remove test api
   ASSET_LIST_V2 = 'ASSET_LIST_V2',
   ASSET_GET_BY_ID_V2 = 'ASSET_GET_BY_ID_V2',
@@ -177,6 +176,26 @@ export enum APIName {
   GET_VACANCY_BY_ID = 'GET_VACANCY_BY_ID',
   GET_IMAGE = 'GET_IMAGE',
   GET_REFERRAL_CODE = 'GET_REFERRAL_CODE',
+
+  // Info: (20251120 - Luphia) FAITH API
+  LIST_FAITH_SESSION = 'LIST_FAITH_SESSION',
+  CREATE_FAITH_SESSION = 'CREATE_FAITH_SESSION',
+  GET_FAITH_SESSION_BY_ID = 'GET_FAITH_SESSION_BY_ID',
+  PUT_FAITH_SESSION_BY_ID = 'PUT_FAITH_SESSION_BY_ID',
+  DELETE_FAITH_SESSION_BY_ID = 'DELETE_FAITH_SESSION_BY_ID',
+  CREATE_SHARE_FOR_FAITH_SESSION = 'CREATE_SHARE_FOR_FAITH_SESSION',
+  LIST_CONTENT_BY_FAITH_SESSION_ID = 'LIST_CONTENT_BY_FAITH_SESSION_ID',
+  CREATE_CONTENT_IN_FAITH_SESSION = 'CREATE_CONTENT_IN_FAITH_SESSION',
+  GET_CONTENT_BY_ID_IN_FAITH_SESSION = 'GET_CONTENT_BY_ID_IN_FAITH_SESSION',
+  LIST_CERTIFICATE_BY_FAITH_SESSION_ID = 'LIST_CERTIFICATE_BY_FAITH_SESSION_ID',
+  GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION = 'GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION',
+  DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION = 'DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION',
+  CREATE_SHARE_FOR_FAITH_CONTENT = 'CREATE_SHARE_FOR_FAITH_CONTENT',
+  CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION = 'LIKE_CONTENT_BY_ID_IN_FAITH_SESSION',
+  DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION = 'DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION',
+  CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION = 'DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION',
+  DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION = 'DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION',
+  CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION = 'REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION',
 }
 
 export enum APIPath {
@@ -330,6 +349,25 @@ export enum APIPath {
   GET_VACANCY_BY_ID = `${apiPrefixV2}/vacancy/:vacancyId`,
   GET_IMAGE = `${apiPrefixV2}/account_book/:accountBookId/image/:imageId`,
   GET_REFERRAL_CODE = `${apiPrefixV2}/referral_code/:code`,
+
+  LIST_FAITH_SESSION = `${apiPrefixV2}/faith/session`,
+  CREATE_FAITH_SESSION = `${apiPrefixV2}/faith/session`,
+  GET_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
+  PUT_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
+  DELETE_FAITH_SESSION_BY_ID = `${apiPrefixV2}/faith/session/:sessionId`,
+  CREATE_SHARE_FOR_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/share`,
+  LIST_CONTENT_BY_FAITH_SESSION_ID = `${apiPrefixV2}/faith/session/:sessionId/content`,
+  CREATE_CONTENT_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content`,
+  GET_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId`,
+  LIST_CERTIFICATE_BY_FAITH_SESSION_ID = `${apiPrefixV2}/faith/session/:sessionId/certificate`,
+  GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/certificate/:certificateId`,
+  DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/certificate/:certificateId`,
+  CREATE_SHARE_FOR_FAITH_CONTENT = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/share`,
+  CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/like`,
+  DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/like`,
+  CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/dislike`,
+  DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/dislike`,
+  CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION = `${apiPrefixV2}/faith/session/:sessionId/content/:contentId/regenerate`,
 }
 
 const createConfig = ({
@@ -355,6 +393,15 @@ const createConfig = ({
   useWorker,
 });
 
+/**
+ * ToDo: (20251120 - Luphia) 我看不出來這參數宣告後有什麼用處，預定捨棄此設計
+ * 1. API 設置過於分散，讓新增一支 API 時需要修改多個檔案
+ * 2. 新增一支 API 時需要處理 APIName、APIPath、APIConfig、三個地方，容易出錯
+ * 3. APIConfig 內的設定大多數情況下都很類似，只有少數差異化的部分，可以考慮用更簡潔的方式來描述
+ * 4. 建議改用個別的 API 定義檔案來描述每支 API 的細節，並在需要的地方匯入使用
+ * 5. 例如：在 src/api/ 目錄下建立各個 API 的定義檔案，如 src/api/sign_in.ts，內含該 API 的路徑、方法、輸入輸出格式等
+ * 6. 權限控管等共用邏輯可以放在一個共用的中介軟體或函式庫中，讓各個 API 定義檔案可以重複使用
+ */
 export const APIConfig: Record<IAPIName, IAPIConfig> = {
   [APIName.AGREE_TO_TERMS]: createConfig({
     name: APIName.AGREE_TO_TERMS,
@@ -1087,5 +1134,109 @@ export const APIConfig: Record<IAPIName, IAPIConfig> = {
     name: APIName.GET_REFERRAL_CODE,
     method: HttpMethod.GET,
     path: APIPath.GET_REFERRAL_CODE,
+  }),
+
+  // Info: (20251120 - Luphia) Payment API
+  [APIName.PAYMENT_METHOD_REGISTER_REDIRECT]: createConfig({
+    name: APIName.PAYMENT_METHOD_REGISTER_REDIRECT,
+    method: HttpMethod.GET,
+    path: APIPath.PAYMENT_METHOD_REGISTER_REDIRECT,
+  }),
+  [APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN]: createConfig({
+    name: APIName.PAYMENT_METHOD_REGISTER_CALLBACK_OEN,
+    method: HttpMethod.POST,
+    path: APIPath.PAYMENT_METHOD_REGISTER_CALLBACK_OEN,
+  }),
+
+  // Info: (20251120 - Luphia) FAITH API
+  [APIName.LIST_FAITH_SESSION]: createConfig({
+    name: APIName.LIST_FAITH_SESSION,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_FAITH_SESSION,
+  }),
+  [APIName.CREATE_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_FAITH_SESSION,
+  }),
+  [APIName.GET_FAITH_SESSION_BY_ID]: createConfig({
+    name: APIName.GET_FAITH_SESSION_BY_ID,
+    method: HttpMethod.GET,
+    path: APIPath.GET_FAITH_SESSION_BY_ID,
+  }),
+  [APIName.PUT_FAITH_SESSION_BY_ID]: createConfig({
+    name: APIName.PUT_FAITH_SESSION_BY_ID,
+    method: HttpMethod.PUT,
+    path: APIPath.PUT_FAITH_SESSION_BY_ID,
+  }),
+  [APIName.DELETE_FAITH_SESSION_BY_ID]: createConfig({
+    name: APIName.DELETE_FAITH_SESSION_BY_ID,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_FAITH_SESSION_BY_ID,
+  }),
+  [APIName.CREATE_SHARE_FOR_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_SHARE_FOR_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_SHARE_FOR_FAITH_SESSION,
+  }),
+  [APIName.LIST_CONTENT_BY_FAITH_SESSION_ID]: createConfig({
+    name: APIName.LIST_CONTENT_BY_FAITH_SESSION_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_CONTENT_BY_FAITH_SESSION_ID,
+  }),
+  [APIName.CREATE_CONTENT_IN_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_CONTENT_IN_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_CONTENT_IN_FAITH_SESSION,
+  }),
+  [APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.GET_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.GET,
+    path: APIPath.GET_CONTENT_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID]: createConfig({
+    name: APIName.LIST_CERTIFICATE_BY_FAITH_SESSION_ID,
+    method: HttpMethod.GET,
+    path: APIPath.LIST_CERTIFICATE_BY_FAITH_SESSION_ID,
+  }),
+  [APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.GET,
+    path: APIPath.GET_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_CERTIFICATE_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.CREATE_SHARE_FOR_FAITH_CONTENT]: createConfig({
+    name: APIName.CREATE_SHARE_FOR_FAITH_CONTENT,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_SHARE_FOR_FAITH_CONTENT,
+  }),
+  [APIName.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_LIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.DELETE,
+    path: APIPath.DELETE_DISLIKE_CONTENT_BY_ID_IN_FAITH_SESSION,
+  }),
+  [APIName.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION]: createConfig({
+    name: APIName.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION,
+    method: HttpMethod.POST,
+    path: APIPath.CREATE_REGENERATE_CONTENT_BY_ID_IN_FAITH_SESSION,
   }),
 };
