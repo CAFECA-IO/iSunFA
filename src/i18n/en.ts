@@ -235,12 +235,15 @@ export const en = {
       other: 'Other',
     },
     input_placeholder: 'Type a message or upload document (Image/PDF/Camera)...',
+    login_warning: 'You are not logged in. Conversation content will not be saved.',
+    guest_limit_reached: 'You have used up your trial quota. Please log in to continue using this service.',
   },
   hero: {
     title: 'Solving all financial and accounting matters',
     subtitle_line1: 'Providing bookkeeping and tax solutions required for corporate financing and government subsidy applications.',
     subtitle_line2: 'Providing professional financial statement compilation, financial auditing, and auditing services for clients.',
     pricing_link: 'Pricing',
+    free_trial: 'Free Trial',
   },
   footer: {
     description: 'Let us solve your financial and accounting matters, allowing you to focus on creating improved corporate value.',

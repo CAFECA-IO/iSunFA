@@ -235,12 +235,15 @@ export const zhCn = {
       other: '其他',
     },
     input_placeholder: '输入信息或上传凭证 (支持图片/PDF/拍照)...',
+    login_warning: '您尚未登录，所有对话内容将不会被保存',
+    guest_limit_reached: '已用完试用额度，请登录以继续使用本服务',
   },
   hero: {
     title: '解决财务会计大小事',
     subtitle_line1: '为公司提供企业融资及政府补助申请所需的记账与税务解决方案。',
     subtitle_line2: '为客户提供专业的会计报表编制、财务审计及审计服务。',
     pricing_link: '收费模式',
+    free_trial: '免费试用',
   },
   footer: {
     description: '让我们解决财务会计大小事，让您专注于创造企业价值。',

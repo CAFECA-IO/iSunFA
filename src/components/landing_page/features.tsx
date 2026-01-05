@@ -10,6 +10,7 @@ import {
   FileText,
   FileSignature
 } from 'lucide-react';
+import Link from 'next/link';
 
 import { useTranslation } from '@/i18n/i18n_context';
 
@@ -42,7 +43,11 @@ export default function Features() {
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-3 xl:grid-cols-4">
             {featureKeys.map((feature) => (
-              <div key={feature.key} className="relative flex flex-col bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <Link
+                key={feature.key}
+                href="/user/chat"
+                className="relative flex flex-col bg-white p-8 rounded-2xl shadow-sm ring-1 ring-gray-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 block"
+              >
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-600">
                     <feature.icon className="h-6 w-6 text-white" aria-hidden="true" />
@@ -52,7 +57,7 @@ export default function Features() {
                 <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
                   <p className="flex-auto">{t(`features.items.${feature.key}.desc`)}</p>
                 </dd>
-              </div>
+              </Link>
             ))}
           </dl>
         </div>

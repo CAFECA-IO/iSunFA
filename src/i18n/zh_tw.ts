@@ -235,12 +235,15 @@ export const zhTw = {
       other: '其他',
     },
     input_placeholder: '輸入訊息或上傳憑證 (支援圖片/PDF/拍照)...',
+    login_warning: '您尚未登入，所有對話內容將不會被儲存',
+    guest_limit_reached: '已用完試用額度，請登入以繼續使用本服務',
   },
   hero: {
     title: '解決財務會計大小事',
     subtitle_line1: '為公司提供企業融資及政府補助申請所需的記帳與稅務解決方案。',
     subtitle_line2: '為客戶提供專業的會計報表編製、財務審計及審計服務。',
     pricing_link: '收費模式',
+    free_trial: '免費試用',
   },
   footer: {
     description: '讓我們解決財務會計大小事，讓您專注於創造企業價值。',

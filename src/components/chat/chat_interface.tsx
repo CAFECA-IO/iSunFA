@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ChatInput from '@/components/chat/chat_input';
 import MessageList, { IMessage } from '@/components/chat/message_list';
 import { request } from '@/lib/api/request';
+import { useAuth } from '@/contexts/auth_context';
+import { useTranslation } from '@/i18n/i18n_context';
 
 // Info: (20260104 - Luphia) interface Message removed in favor of import
 
@@ -16,7 +18,27 @@ export default function ChatInterface() {
   ]);
   const [loading, setLoading] = useState(false);
 
+  const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
+  const [guestUsage, setGuestUsage] = useState(0);
+
+  // Info: (20260105 - Luphia) Load usage from localStorage on mount
+  useEffect(() => {
+    const usage = parseInt(localStorage.getItem('guest_usage') || '0', 10);
+    setGuestUsage(usage);
+  }, []);
+
   const handleSend = async (text: string, file: File | null, tags: string[]) => {
+    // Info: (20260105 - Luphia) Check Guest Limit
+    if (!user) {
+      if (guestUsage >= 5) {
+        return;
+      }
+      const newUsage = guestUsage + 1;
+      setGuestUsage(newUsage);
+      localStorage.setItem('guest_usage', newUsage.toString());
+    }
+
     // Info: (20260104 - Luphia) 1. Create User Message
     const fileUrl = file ? URL.createObjectURL(file) : undefined;
     const userMsg: IMessage = {
@@ -51,6 +73,7 @@ export default function ChatInterface() {
           tags,
           image: base64Data,
           mimeType: file?.type,
+
         }),
       });
 
@@ -70,10 +93,17 @@ export default function ChatInterface() {
     }
   };
 
+  const isGuestLimitReached = !user && guestUsage >= 5;
+
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col bg-gray-50">
+    <div className="flex h-[calc(100vh-64px)] flex-col bg-gray-50 relative">
+      {!user && !authLoading && (
+        <div className={`px-4 py-2 text-sm text-center border-b ${isGuestLimitReached ? 'bg-red-50 text-red-800 border-red-100' : 'bg-yellow-50 text-yellow-800 border-yellow-100'}`}>
+          {isGuestLimitReached ? t('chat.guest_limit_reached') : t('chat.login_warning')}
+        </div>
+      )}
       <MessageList messages={messages} loading={loading} />
-      <ChatInput onSend={handleSend} disabled={loading} />
+      <ChatInput onSend={handleSend} disabled={loading || isGuestLimitReached} />
     </div>
   );
 }

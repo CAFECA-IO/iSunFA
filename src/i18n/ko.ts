@@ -235,12 +235,15 @@ export const ko = {
       other: '기타',
     },
     input_placeholder: '메시지 입력 또는 문서 업로드 (이미지/PDF/카메라)...',
+    login_warning: '로그인하지 않았습니다. 대화 내용은 저장되지 않습니다.',
+    guest_limit_reached: '체험 한도를 모두 사용했습니다. 서비스를 계속 이용하려면 로그인해 주십시오.',
   },
   hero: {
     title: '모든 재무 및 회계 문제 해결',
     subtitle_line1: '기업 자금 조달 및 정부 보조금 신청에 필요한 기장 및 세무 솔루션을 제공합니다.',
     subtitle_line2: '고객에게 전문적인 재무제표 작성, 재무 감사 및 감사 서비스를 제공합니다.',
     pricing_link: '요금제',
+    free_trial: '무료 체험',
   },
   footer: {
     description: '기업 가치 창출에 집중할 수 있도록 재무 및 회계 문제를 해결해 드립니다.',

@@ -10,14 +10,15 @@ interface IChatInputProps {
   disabled?: boolean;
 }
 
-const ACCOUNTING_TAG_KEYS = [
-  'chat.tags.bookkeeping',
-  'chat.tags.adjustment',
-  'chat.tags.cashier',
-  'chat.tags.analysis',
-  'chat.tags.tax',
-  'chat.tags.salary',
-  'chat.tags.financial_report'
+const RAW_TAGS = [
+  'bookkeeping',
+  'adjustment',
+  'cashier',
+  'analysis',
+  'tax',
+  'salary',
+  'financial_report',
+  'other'
 ];
 
 export default function ChatInput({ onSend, disabled }: IChatInputProps) {
@@ -30,9 +31,8 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
   const handleSend = () => {
     if ((!message.trim() && !selectedFile) || disabled) return;
-    // Map selected tag keys to translated values
-    const translatedTags = selectedTags.map(key => t(key));
-    onSend(message, selectedFile, translatedTags);
+    // Send raw tags directly
+    onSend(message, selectedFile, selectedTags);
     setMessage('');
     setSelectedFile(null);
     setSelectedTags([]);
@@ -91,7 +91,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
 
       {/* Tags */}
       <div className="mb-2 flex flex-wrap gap-2">
-        {ACCOUNTING_TAG_KEYS.map((tagKey) => (
+        {RAW_TAGS.map((tagKey) => (
           <button
             key={tagKey}
             onClick={() => toggleTag(tagKey)}
@@ -101,7 +101,7 @@ export default function ChatInput({ onSend, disabled }: IChatInputProps) {
               }`}
           >
             <Tag className="h-3 w-3" />
-            {t(tagKey)}
+            {t(`chat.tags.${tagKey}`)}
           </button>
         ))}
       </div>

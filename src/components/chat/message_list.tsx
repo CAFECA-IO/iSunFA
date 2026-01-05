@@ -1,8 +1,10 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { FileText } from 'lucide-react';
 import Image from 'next/image';
 import { MarkdownContent } from '@/components/common/markdown_content';
+import ThinkingLogo from '@/components/chat/thinking_logo';
 
 export interface IMessage {
   role: 'user' | 'model';
@@ -18,6 +20,12 @@ interface IMessageListProps {
 }
 
 export default function MessageList({ messages, loading }: IMessageListProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-6">
       {messages.map((msg, idx) => (
@@ -76,15 +84,15 @@ export default function MessageList({ messages, loading }: IMessageListProps) {
 
       {loading && (
         <div className="flex justify-start">
-          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-none px-5 py-3">
-            <div className="flex space-x-2">
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-none px-5 py-3 flex items-center space-x-3">
+            <div className="h-6 w-6">
+              <ThinkingLogo />
             </div>
+            <span className="text-gray-500 text-sm animate-pulse">Thinking...</span>
           </div>
         </div>
       )}
-    </div>
+      <div ref={messagesEndRef} />
+    </div >
   );
 }

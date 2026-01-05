@@ -235,12 +235,15 @@ export const ja = {
       other: 'その他',
     },
     input_placeholder: 'メッセージを入力または文書をアップロード (画像/PDF/カメラ)...',
+    login_warning: 'ログインしていません。会話の内容は保存されません。',
+    guest_limit_reached: '試用枠を使い切りました。引き続きサービスを利用するにはログインしてください。',
   },
   hero: {
     title: '財務・会計のあらゆる問題を解決',
     subtitle_line1: '企業融資や政府補助金申請に必要な記帳および税務ソリューションを提供します。',
     subtitle_line2: '専門的な財務諸表作成、財務監査、および監査サービスをお客様に提供します。',
     pricing_link: '料金',
+    free_trial: '無料トライアル',
   },
   footer: {
     description: '財務・会計問題を解決し、企業価値の創造に専念できるようにします。',
